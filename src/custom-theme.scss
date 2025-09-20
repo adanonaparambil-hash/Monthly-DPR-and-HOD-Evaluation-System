@@ -1,0 +1,27 @@
+// Import Angular Material theming functionality
+@use '@angular/material' as mat;
+
+html {
+  // Apply Material 3 theming with the required colors and typography
+  @include mat.theme((
+    color: (
+      primary: mat.$magenta-palette,   // Primary color palette
+      tertiary: mat.$violet-palette,   // Tertiary color palette
+    ),
+    typography: 'Roboto',  // Set the typography to Roboto
+    density: 0,  // Set the density level (0 is normal density)
+  ));
+}
+
+body {
+  // Default to a light color scheme, or set it to dark if needed
+  color-scheme: light;
+
+  // Apply Material system-level CSS variables for the body styling
+  background-color: var(--mat-sys-surface);  // Surface background color
+  color: var(--mat-sys-on-surface);  // On-surface text color
+  font: var(--mat-sys-body-medium);  // Body font style
+
+  // Reset margin to 0 to avoid unwanted space around the body
+  margin: 0;
+}

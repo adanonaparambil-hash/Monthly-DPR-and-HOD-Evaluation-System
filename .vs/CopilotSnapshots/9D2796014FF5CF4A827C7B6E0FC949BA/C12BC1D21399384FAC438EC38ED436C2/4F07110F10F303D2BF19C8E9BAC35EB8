@@ -1,0 +1,165 @@
+﻿import { Component } from '@angular/core';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { FormsModule } from '@angular/forms';
+import { Task, KPI } from '../models/task.model';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-monthly-dpr',
+  standalone: true,
+  imports: [FormsModule, CommonModule],
+  templateUrl: './monthly-dpr.component.html',
+  styleUrl: './monthly-dpr.component.css',
+  animations: [
+    trigger('fadeInUp', [
+      transition('* => *', [
+        query(
+          ':enter',
+          [
+            style({ opacity: 0, transform: 'translateY(20px)' }),
+            stagger(100, [
+              animate('0.3s ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+            ]),
+          ],
+          { optional: true }
+        ),
+      ]),
+    ]),
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(-20px)' }),
+        animate('0.4s ease-out', style({ opacity: 1, transform: 'translateX(0)' })),
+      ]),
+    ]),
+    trigger('scaleIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.9)' }),
+        animate('0.3s ease-out', style({ opacity: 1, transform: 'scale(1)' })),
+      ]),
+    ]),
+  ],
+})
+export class MonthlyDprComponent {
+  showTaskDetails = true;
+  showKpiDetails = true;
+  showHodEvaluation = true;
+  showManagementRemarks = true;
+  showRemarksHistory = true;
+
+  tasks: Task[] = [
+    {
+      name: 'Task name',
+      description: 'Description and status',
+      estimatedHours: 0,
+      actualHours: 0,
+      productivity: 0,
+    },
+  ];
+
+  kpis: KPI[] = [
+    {
+      name: 'KPI name',
+      value: 'Value',
+      remarks: 'Remarks',
+    },
+  ];
+
+  monthYear = 'Aug 2025';
+  empId = '';
+  empName = 'Enter your full name';
+  designation = 'Enter your designation';
+  department = 'Select department';
+  reportingTo = 'Enter reporting manager';
+
+  // HOD Evaluation
+  quality = '';
+  timeliness = '';
+  initiative = '';
+  overallScore = '';
+
+  // Management Remarks
+  managementRemarks = "Add your remarks about the employee's performance...";
+
+  achievements =
+    'Describe your major accomplishments, achievements, deliverables and quality deliverables...';
+  challenges = 'Detail the challenges you encountered, the steps taken to address them...';
+  supportNeeded =
+    'Specify the support you need from management, team or resources. Include any suggestions for process improvement...';
+
+  // Remarks History
+  remarksHistory = [
+    {
+      name: 'John Smith (HOD)',
+      status: 'APPROVE',
+      date: '2025-06-15 14:32',
+      comment:
+        'Employee has shown excellent performance this month with high quality deliverables.',
+    },
+    {
+      name: 'Sarah Wilson (Manager)',
+      status: 'REWORK',
+      date: '2025-06-10 10:15',
+      comment: 'Please provide more details on the KPI achievements section.',
+    },
+  ];
+
+  constructor() {}
+
+  toggleTaskDetails() {
+    this.showTaskDetails = !this.showTaskDetails;
+  }
+
+  toggleKpiDetails() {
+    this.showKpiDetails = !this.showKpiDetails;
+  }
+
+  toggleHodEvaluation() {
+    this.showHodEvaluation = !this.showHodEvaluation;
+  }
+
+  toggleManagementRemarks() {
+    this.showManagementRemarks = !this.showManagementRemarks;
+  }
+
+  toggleRemarksHistory() {
+    this.showRemarksHistory = !this.showRemarksHistory;
+  }
+
+  addNewTask() {
+    this.tasks.push({
+      name: '',
+      description: '',
+      estimatedHours: 0,
+      actualHours: 0,
+      productivity: 0,
+    });
+  }
+
+  addNewKPI() {
+    this.kpis.push({
+      name: '',
+      value: '',
+      remarks: '',
+    });
+  }
+
+  saveDraft() {
+    alert('Report saved as draft');
+  }
+
+  makeAvailable() {
+    alert('Report made available');
+  }
+
+  approveReport() {
+    alert('Report approved');
+  }
+
+  switchToEmployee() {
+    alert('Switched to Employee view');
+  }
+
+  addNewHod() {
+    alert('Add new HOD functionality');
+  }
+}

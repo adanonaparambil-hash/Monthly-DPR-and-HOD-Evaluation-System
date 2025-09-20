@@ -1,0 +1,198 @@
+<div class="login-container">
+  <!-- Background Image with Overlay -->
+  <div class="background-overlay">
+    <div class="background-image"></div>
+    <div class="dark-overlay"></div>
+  </div>
+
+  <!-- Header with Logo -->
+  <div class="app-header" [@fadeIn]>
+    <div class="logo-container">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="app-title">Al Adrak DPR Portal</h1>
+    </div>
+    <p class="app-tagline">Streamline your time management</p>
+  </div>
+
+  <!-- Login Card -->
+  <div class="login-card" *ngIf="!forgotPasswordVisible" [@fadeIn]>
+    <div class="login-header">
+      <h2 class="login-title">Welcome Back!</h2>
+      <p class="login-subtitle">Sign in to access your dashboard</p>
+    </div>
+
+    
+    
+    <form class="login-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
+  <!-- Email Field -->
+  <div class="input-group">
+    <label class="input-label">Email Address</label>
+    <div class="input-container">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/>
+        <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <input 
+        type="email" 
+        class="form-input" 
+        placeholder="you@example.com"
+        [(ngModel)]="username"
+        name="username"
+        required
+        #email="ngModel"
+        [class.invalid]="email.invalid && email.touched"
+      >
+    </div>
+    <!-- Error Message for Email -->
+    <div *ngIf="email.invalid && email.touched" class="error-message">
+      Please enter a valid email address.
+    </div>
+  </div>
+
+  <!-- Password Field -->
+  <div class="input-group">
+    <label class="input-label">Password</label>
+    <div class="input-container">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <input 
+        [type]="showPassword() ? 'text' : 'password'" 
+        class="form-input" 
+        placeholder="Enter your password"
+        [(ngModel)]="password"
+        name="password"
+        required
+        #passwordField="ngModel"
+        [class.invalid]="passwordField.invalid && passwordField.touched"
+      >
+      <button 
+        type="button" 
+        class="password-toggle"
+        (click)="togglePasswordVisibility()"
+        [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+        <!-- Toggle password visibility icon -->
+      </button>
+    </div>
+    <!-- Error Message for Password -->
+    <div *ngIf="passwordField.invalid && passwordField.touched" class="error-message">
+      Password must be at least 6 characters long and contain at least one number.
+    </div>
+  </div>
+
+  <!-- Remember Me and Forgot Password -->
+  <div class="form-options">
+    <label class="remember-me">
+      <input type="checkbox" class="checkbox">
+      <span class="checkbox-label">Remember Me</span>
+    </label>
+    <button type="button" class="forgot-password" (click)="onForgotPassword()">
+      Forgot password?
+    </button>
+  </div>
+
+  <!-- Login Button -->
+  <button 
+    type="submit" 
+    class="login-button"
+    [disabled]="!loginForm.valid || isLoggingIn()"
+    [class.loading]="isLoggingIn()"
+  >
+    <span *ngIf="!isLoggingIn()">Sign In</span>
+    <span *ngIf="isLoggingIn()" class="loading-spinner">
+      <!-- Loading Spinner -->
+    </span>
+  </button>
+
+  <!-- Support Link -->
+  <div class="support-link">
+    <button type="button" class="support-button">
+      Need help? Contact support
+    </button>
+  </div>
+
+  <div *ngIf="loginErrorMessage" class="error-message">
+    {{ loginErrorMessage }}
+  </div>
+
+</form>
+
+
+
+  </div>
+
+
+
+  <!-- Forgot Password Form -->
+<div class="forgot-password-card" *ngIf="forgotPasswordVisible" [@fadeIn]>
+  <div class="forgot-password-header">
+    <h2>Set Your New Password</h2>
+    <p>Please set your new password for your account.</p>
+  </div>
+
+  <form class="forgot-password-form" (ngSubmit)="onResetPassword()">
+    <div class="input-group">
+      <label class="input-label">Email Address</label>
+      <input
+        type="email"
+        class="form-input"
+        [(ngModel)]="email"
+        name="email"
+        required
+        placeholder="Email Address"
+      />
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">New Password</label>
+      <input
+        type="password"
+        class="form-input"
+        [(ngModel)]="newPassword"
+        name="newPassword"
+        required
+        placeholder="New Password"
+      />
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Confirm New Password</label>
+      <input
+        type="password"
+        class="form-input"
+        [(ngModel)]="confirmPassword"
+        name="confirmPassword"
+        required
+        placeholder="Confirm New Password"
+      />
+    </div>
+
+     <div *ngIf="PasswordseterrorMessage" class="error-message">
+      {{ PasswordseterrorMessage }}
+    </div>
+
+    <!-- Success message -->
+    <div *ngIf="PasswordsetsuccessMessage" class="success-message">
+      {{ PasswordsetsuccessMessage }}
+    </div>
+
+    <button type="submit" class="submit-button">
+      Submit
+    </button>
+    <button type="button" class="back-to-login" (click)="toggleForgotPassword()">Back to Login</button>
+  </form>
+</div>
+
+
+  <!-- Footer -->
+  <div class="app-footer" [@fadeIn]>
+    <p>&copy; 2025 Al Adrak Timesheet. All rights reserved.</p>
+  </div>
+</div>

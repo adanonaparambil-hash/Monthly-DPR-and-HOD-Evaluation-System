@@ -1,0 +1,37 @@
+<div class="layout-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-chart-bar"></i>
+      <span>DPR Portal</span>
+    </div>
+
+    <nav class="menu">
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </a>
+      <a routerLink="/monthly-dpr" routerLinkActive="active">
+        <i class="fas fa-file-alt"></i> DPR Report
+      </a>
+      <a routerLink="/past-reports" routerLinkActive="active">
+        <i class="fas fa-history"></i> Past Reports
+      </a>
+      <a routerLink="/profile" routerLinkActive="active">
+        <i class="fas fa-user"></i> My Profile
+      </a>
+    </nav>
+
+
+    <div class="logout">
+      
+      <b><a (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>Logout
+      </a></b>
+    </div>
+  </aside>
+
+  
+  <main class="content" [@fadeIn]>
+    <router-outlet></router-outlet>
+  </main>
+</div>

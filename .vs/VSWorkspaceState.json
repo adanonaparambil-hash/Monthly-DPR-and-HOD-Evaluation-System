@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\.angular",
+    "\\.angular\\cache\\20.2.2",
+    "\\.angular\\cache\\20.2.2\\TimeSheet-UI",
+    "\\.angular\\cache\\20.2.2\\TimeSheet-UI\\vite",
+    "\\.angular\\cache\\20.2.2\\TimeSheet-UI\\vite\\deps",
+    "\\.angular\\cache\\20.2.2\\TimeSheet-UI\\vite\\deps_ssr",
+    "\\src"
+  ],
+  "SelectedNode": "\\.angular\\cache",
+  "PreviewInSolutionExplorer": false
+}
