@@ -6,8 +6,7 @@
     <p><i class="fas fa-calendar-alt"></i> <b> {{ monthYear }} </b></p>
   </div>
   <div class="header-actions">
-    <!-- <button class="btn-switch" (click)="switchToEmployee()">Switch to Employee</button>
-    <button class="btn-hod" (click)="addNewHod()">HOD View</button> -->
+
   </div>
 </div>
 
@@ -93,7 +92,7 @@
         <tbody>
           <tr *ngFor="let task of tasks; let i = index" [@scaleIn]>
             <td>{{ i + 1 }}</td>
-            <td><input [(ngModel)]="task.name" placeholder="Task name"></td>
+            <td><input [(ngModel)]="task.taskName" placeholder="Task name"></td>
             <td><input [(ngModel)]="task.description" placeholder="Description and status"></td>
             <td><input type="number" [(ngModel)]="task.estimatedHours" placeholder="0"></td>
             <td><input type="number" [(ngModel)]="task.actualHours" placeholder="0"></td>
@@ -123,8 +122,8 @@
         <tbody>
           <tr *ngFor="let kpi of kpis; let i = index" [@scaleIn]>
             <td>{{ i + 1 }}</td>
-            <td><input [(ngModel)]="kpi.name" placeholder="KPI name"></td>
-            <td><input [(ngModel)]="kpi.value" placeholder="Value"></td>
+            <td><input [(ngModel)]="kpi.kpiDescription" placeholder="KPI name"></td>
+            <td><input [(ngModel)]="kpi.kpiValue" placeholder="Value"></td>
             <td><input [(ngModel)]="kpi.remarks" placeholder="Remarks"></td>
           </tr>
         </tbody>
@@ -149,7 +148,7 @@
         <div class="eval-item">
           <label>Quality</label>
           <select [(ngModel)]="quality" class="rating-dropdown">
-            <option value="">Rate out of 5</option>
+            <option value="0">Rate out of 5</option>
             <option value="1">1 - Poor</option>
             <option value="2">2 - Below Average</option>
             <option value="3">3 - Average</option>
@@ -160,7 +159,7 @@
         <div class="eval-item">
           <label>Timeliness</label>
           <select [(ngModel)]="timeliness" class="rating-dropdown">
-            <option value="">Rate out of 5</option>
+            <option value="0">Rate out of 5</option>
             <option value="1">1 - Poor</option>
             <option value="2">2 - Below Average</option>
             <option value="3">3 - Average</option>
@@ -171,7 +170,7 @@
         <div class="eval-item">
           <label>Initiative</label>
           <select [(ngModel)]="initiative" class="rating-dropdown">
-            <option value="">Rate out of 5</option>
+            <option value="0">Rate out of 5</option>
             <option value="1">1 - Poor</option>
             <option value="2">2 - Below Average</option>
             <option value="3">3 - Average</option>
@@ -182,7 +181,7 @@
         <div class="eval-item">
           <label>Overall Score</label>
           <select [(ngModel)]="overallScore" class="rating-dropdown">
-            <option value="">Rate out of 5</option>
+            <option value="0">Rate out of 5</option>
             <option value="1">1 - Poor</option>
             <option value="2">2 - Below Average</option>
             <option value="3">3 - Average</option>
@@ -225,12 +224,12 @@
         <div class="history-header">
           <div class="history-user">
             <i class="fas fa-user-circle"></i>
-            <span class="user-name">{{ remark.name }}</span>
-            <span class="status-badge" [class]="'status-' + remark.status.toLowerCase()">{{ remark.status }}</span>
+            <span class="user-name">{{ remark.hodId }}</span>
+            <span class="status-badge" [class]="'status-' + remark.commentType.toLowerCase()">{{ remark.commentType }}</span>
           </div>
-          <span class="history-date">{{ remark.date }}</span>
+          <span class="history-date">{{ remark.CREATEDAT }}</span>
         </div>
-        <p class="history-comment">{{ remark.comment }}</p>
+        <p class="history-comment">{{ remark.commentText }}</p>
       </div>
     </div>
   </div>
@@ -244,14 +243,71 @@
     <button class="btn-available colorful-btn" (click)="SubmitReview()">
       <i class="fas fa-check"></i> Submit for Review
     </button>
-    <button class="btn-approve colorful-btn" (click)="approveReport()">
+    <button class="btn-approve colorful-btn" (click)="ApproveReview()">
       <i class="fas fa-thumbs-up"></i> Approve
     </button>
-    <button class="btn-pushback colorful-btn" (click)="pushbackReport()">
+    <button class="btn-pushback colorful-btn" (click)="ReWorkReview()">
       <i class="fas fa-undo"></i> Rework
     </button>
   </div>
 </div>
 
 
+<!-- Modal -->
+<div *ngIf="showModal" class="modal-overlay">
+  <div class="modal-box" [@scaleIn]>
 
+    <!-- Header -->
+    <div class="modal-header">
+      <span class="back-arrow" (click)="closeModal()">&#8592;</span>
+      <h2>ProofHub Task History</h2>
+      <!-- Removed close button from header -->
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Select</th>
+              <th>SL NO</th>
+              <th>TASK NAME</th>
+              <th>TASK DESCRIPTION</th>
+              <th>START DATE</th>
+              <th>DUE DATE</th>
+              <th>ESTIMATED HOURS</th>
+              <th>LOGGED HOURS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let task of Proofhubtasks; let i = index">
+              <td>
+                <input type="checkbox" [(ngModel)]="task.selected" />
+              </td>
+              <td>{{ i + 1 }}</td>
+              <td><input [(ngModel)]="task.TASK_TITLE" placeholder="Task name"></td>
+              <td><input [(ngModel)]="task.TASK_DESCRIPTION" placeholder="Description and status"></td>
+              <td><input type="date" [(ngModel)]="task.START_DATE" placeholder="0"></td>
+              <td><input type="date" [(ngModel)]="task.DUE_DATE" placeholder="0"></td>
+              <td><input type="number" [(ngModel)]="task.ESTIMATED_HOURS" placeholder="0"></td>
+              <td><input type="number" [(ngModel)]="task.LOGGED_HOURS" placeholder="0"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Summary Text Area (Visible by default) -->
+      <div *ngIf="summaryText" class="summary-box">
+        <h3>AI Generated Summary</h3>
+        <textarea readonly>{{ summaryText }}</textarea>
+      </div>
+
+      <!-- Generate Summary Button and Close Button -->
+      <div class="summary-actions">
+        <button class="generate-summary-btn" (click)="generateSummary()">Generate Summary</button>
+        <button class="close-modal-btn" (click)="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

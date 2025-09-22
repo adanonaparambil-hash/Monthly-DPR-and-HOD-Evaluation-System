@@ -808,3 +808,166 @@ h2:hover i {
   gap: 10px; 
 }
 
+/* Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* Modal box */
+.modal-box {
+  background: #fff;
+  width: 90%;
+  max-width: 1200px;
+  height: 90%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  animation: fadeIn 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2f4f2f; /* Dark green */
+  color: #fff;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.modal-header h2 {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.back-arrow {
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 0 10px;
+  transition: transform 0.2s;
+}
+
+.back-arrow:hover {
+  transform: scale(1.2);
+}
+
+/* Body */
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: flex-start;
+  gap: 20px; /* To add space between table, textarea, and buttons */
+}
+
+/* Table styles */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.modal-body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modal-body th {
+  background: #2f4f2f;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.modal-body td {
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.modal-body input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Summary box (textarea visible by default) */
+.summary-box {
+  margin-top: 20px;
+}
+
+.summary-box h3 {
+  margin-bottom: 8px;
+  color: #2f4f2f;
+}
+
+.summary-box textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: right; /* Right-align text */
+}
+
+/* Summary actions (aligned to the right) */
+.summary-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Base styles for buttons */
+.generate-summary-btn, .close-modal-btn {
+  background: #cc9933;  /* Green background */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s ease;  /* Smooth transition */
+}
+.close-modal-btn{
+  background: #4e673b;  /* Red background */
+}
+
+/* Hover effect for Generate Summary button */
+.generate-summary-btn:hover {
+  background: #4e673b;  /* Hover color for Generate Summary button */
+  transform: translateY(-3px);  /* Slight lift effect */
+}
+
+/* Hover effect for Close button */
+.close-modal-btn:hover {
+  background: #e74c3c;  /* Hover color for Close button (red) */
+  transform: translateY(-3px);  /* Slight lift effect */
+}
+
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
