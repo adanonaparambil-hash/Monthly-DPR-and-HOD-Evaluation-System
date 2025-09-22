@@ -15,7 +15,7 @@ export interface KPI {
 }
 
 
-export interface DPRDetails {
+export interface DPRReview  {
   employeeId: string;
   month: number;
   year: number;
