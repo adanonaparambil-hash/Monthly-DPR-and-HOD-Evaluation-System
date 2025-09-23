@@ -820,21 +820,33 @@ h2:hover i {
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  padding: 10px; /* adds spacing on small screens */
 }
 
 /* Modal box */
 .modal-box {
   background: #fff;
-  width: 90%;
-  max-width: 1200px;
-  height: 90%;
+  width: 95%;           /* increased max width for large screens */
+  max-width: 1400px;    /* bigger than before */
+  height: 95%;          /* taller modal */
+  max-height: 95vh;     /* don't exceed viewport height */
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  animation: fadeIn 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+/* Modal body scroll if content overflows */
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: flex-start;
+  gap: 20px;
+  overflow-y: auto;     /* allow scrolling if content is too long */
 }
 
 /* Header */
@@ -842,7 +854,7 @@ h2:hover i {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2f4f2f; /* Dark green */
+  background: #2f4f2f;
   color: #fff;
   padding: 12px 20px;
   font-size: 18px;
@@ -867,46 +879,101 @@ h2:hover i {
   transform: scale(1.2);
 }
 
-/* Body */
-.modal-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: flex-start;
-  gap: 20px; /* To add space between table, textarea, and buttons */
+/* Responsive for Mobile */
+@media (max-width: 768px) {
+  .modal-box {
+    width: 100%;          /* full width on mobile */
+    height: 100%;         /* full height on mobile */
+    border-radius: 0;     /* remove rounded corners for small screens */
+  }
+
+  .modal-body {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .modal-header {
+    font-size: 16px;
+    padding: 10px;
+  }
 }
 
-/* Table styles */
+
 .table-container {
   overflow-x: auto;
   margin-bottom: 20px;
 }
 
-.modal-body table {
+table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* ensures width respect */
 }
 
-.modal-body th {
-  background: #2f4f2f;
-  color: white;
-  padding: 10px;
-  text-align: center;
-}
-
-.modal-body td {
-  border-bottom: 1px solid #ddd;
+th, td {
   padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+/* Column width customizations */
+.task-col {
+  width: 25%; /* more space */
+  text-align: left;
+}
+
+.desc-col {
+  width: 35%; /* more space for description */
+  text-align: left;
+}
+
+.date-col {
+  width: 10%; /* less space for date */
+}
+
+.hours-col {
+  width: 7%; /* very small width */
+}
+
+/* Header styling */
+th {
+  background-color: #2f4f2f;
+  color: white;
   text-align: center;
 }
 
-.modal-body input {
-  width: 100%;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+/* Target only this table's SL No and Select columns */
+.SlNo-col {
+  width: 5%;           /* slightly wider */
+  white-space: nowrap; /* keep in one line */
 }
+
+.select-col {
+  width: 4%;           /* slightly wider */
+  white-space: nowrap; /* keep in one line */
+}
+
+
+
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .task-col, .desc-col {
+    width: auto; /* allow more flexibility */
+  }
+
+  .date-col, .hours-col {
+    width: 10%; /* small but readable */
+  }
+
+  table, th, td {
+    font-size: 8px;
+    padding: 6px;
+  }
+}
+
+
 
 /* Summary box (textarea visible by default) */
 .summary-box {
@@ -970,4 +1037,119 @@ h2:hover i {
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
+}
+
+
+
+
+/* Only affects table with 'my-task-table' class */
+.my-task-table table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.my-task-table th,
+.my-task-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+/* Column width adjustments */
+.my-task-table .SlNo-col {
+  width: 5%;
+  white-space: nowrap;
+}
+
+.my-task-table .task-col {
+  width: 30%;  /* bigger for task name */
+  text-align: left;
+}
+
+.my-task-table .desc-col {
+  width: 35%;  /* bigger for description */
+  text-align: left;
+}
+
+.my-task-table .hours-col {
+  width: 10%;  /* smaller for number inputs */
+}
+
+.my-task-table .productivity-col {
+  width: 10%;
+}
+
+/* Center align number inputs */
+.my-task-table .hours-col input,
+.my-task-table .productivity-col input {
+  text-align: center;
+}
+
+
+
+/* Only affect KPI table */
+.kpi-table table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.kpi-table th,
+.kpi-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Column width adjustments */
+.kpi-table .SlNo-col {
+  width: 8%;
+  white-space: nowrap;
+}
+
+.kpi-table .kpi-col {
+  width: 30%;
+  text-align: left;
+}
+
+.kpi-table .kpi-value-col {
+  width: 12%; /* reduced width for dropdown */
+}
+
+.kpi-table .remarks-col {
+  width: 50%; /* wider textarea */
+  text-align: left;
+}
+
+/* Inputs and selects inside table */
+.kpi-table input,
+.kpi-table select,
+.kpi-table textarea {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.kpi-table .kpi-value-col {
+  width: 18%; /* slightly bigger to fit text */
+  min-width: 150px; /* ensures label is readable */
+}
+
+.kpi-table .kpi-value-col select {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+
+.kpi-table textarea , .my-task-table textarea {
+    height: 60px;        
+    resize: none;         
+    overflow-y: auto;    
 }

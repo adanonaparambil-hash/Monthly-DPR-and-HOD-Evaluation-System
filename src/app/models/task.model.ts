@@ -9,18 +9,16 @@ export interface DPRReview  {
   challenges?: string;
   supportNeeded?: string;
   status?: string;
-  
   hodId?: string;
   scoreQuality?: number;
   scoreTimeliness?: number;
   scoreInitiative?: number;
   scoreOverall?: number;
   tasksList?: DPRTask[];
-  
-  dprid?: number;
   commentsList?: DPRComment[];
   kpiList?: DPRKPI[];
-  
+  dprid?: number;
+  remarks?: string;
 }
 
 
@@ -30,7 +28,7 @@ export interface DPRTask {
   estimatedHours: number;
   actualHours: number;
   productivity: number;
-  selected: boolean;
+  selected?: boolean;
   dprid?: number;
 }
 
@@ -47,33 +45,41 @@ export interface DPRComment {
 
 
 export interface DPRKPI {
-  kpiId: number;
-  dprId: number;
+  kpiId?: number;
+  dprId?: number;
   employeeId: string;
-  kpiMasterId: number;
+  kpiMasterId?: number;
   kpiValue: number | null; 
   remarks: string;
   kpiDescription: string;
-  dprid?: number;
 }
 
 
 export interface ProofhubTaskDto {
-  TASK_ID?: number;
-  PROJECT_ID?: number;
-  TODOLIST_ID?: number;
+  TASK_ID?: string;
+  PROJECT_ID?: string;
+  TODOLIST_ID?: string;
   TASK_TITLE?: string;
-  ASSIGNED_TO?: number;
+  ASSIGNED_TO?: string;
   TASK_DESCRIPTION?: string;
-  START_DATE?: Date;  
-  DUE_DATE?: Date;    
-  ESTIMATED_HOURS?: number;
-  ESTIMATED_MINUTES?: number;
-  LOGGED_HOURS?: number;
-  LOGGED_MINUTES?: number;
+  START_DATE?: string;  
+  DUE_DATE?: string;    
+  ESTIMATED_HOURS?: string;
+  ESTIMATED_MINUTES?: string;
+  LOGGED_HOURS?: string;
+  LOGGED_MINUTES?: string;
   COMPLETED?: string;  
-  PROGRESS?: number;   
+  PROGRESS?: string;   
   PROJECT_DESCRIPTION?: string;
   TODO_DESCRIPTION?: string;
   selected?: boolean;
+}
+
+
+
+export interface KPI {
+  kpiId: number;      
+  kpiName: string;   
+  kpiValue: number;   
+  remarks: string;   
 }

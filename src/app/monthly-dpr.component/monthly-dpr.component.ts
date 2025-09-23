@@ -80,6 +80,7 @@ export class MonthlyDprComponent {
   timeliness = 0;
   initiative = 0;
   overallScore = 0;
+  dprid = 0;
 
 
 
@@ -98,10 +99,10 @@ export class MonthlyDprComponent {
     {
       TASK_TITLE: '',
       TASK_DESCRIPTION: '',
-      START_DATE: new Date(),
-      DUE_DATE: new Date(),
-      ESTIMATED_HOURS: 0,
-      LOGGED_HOURS: 0
+      START_DATE: '',
+      DUE_DATE: '',
+      ESTIMATED_HOURS: '',
+      LOGGED_HOURS: ''
     },
   ];
 
@@ -135,6 +136,8 @@ export class MonthlyDprComponent {
   ngOnInit() {    
 
     this.setPreviousMonthYear();
+
+    this.loadKPIs();
 
     const user = JSON.parse(localStorage.getItem('current_user') || '{}');
     if (user) {
@@ -194,30 +197,6 @@ export class MonthlyDprComponent {
     this.showModal = false;
     this.summaryText = '';
   }
-
-  generateSummary() {
-    // 🔹 Filter selected tasks
-    const selectedTasks = this.tasks.filter(t => t.selected);
-
-    if (selectedTasks.length === 0) {
-      // this.toastr.error('Please select at least one task!','Error');
-      
-      alert('Please select at least one task!');
-      return;
-    }
-
-    // 🔹 Build a simple text (later send this to AI API)
-    const summary = selectedTasks
-      .map((t, i) => `${i + 1}. ${t.taskName} - ${t.description} (Hours: ${t.actualHours}/${t.estimatedHours}, Productivity: ${t.productivity}%)`)
-      .join('\n');
-
-    // 🔹 Stubbed AI response (later replace with OpenAI call)
-    this.summaryText = 
-      "AI Summary of selected tasks:\n\n" + 
-      summary + "\n\n" + 
-      "👉 Key highlights: Efficient work distribution, good productivity, and timely delivery.";
-  }
-
  
 
   loadDpr(dprId: number) {
@@ -271,18 +250,31 @@ export class MonthlyDprComponent {
   }
 
   private HODReviewUpdate() {
-    const dprReview: DPRReview = {
+    this.dprid = 4; 
+    const review: DPRReview = {
       employeeId: this.empId,
       status: this.ApprovalStatus,       
-      hodId: 'HOD01',               
-      scoreQuality: +this.quality,
-      scoreTimeliness: +this.timeliness,
-      scoreInitiative: +this.initiative,
-      scoreOverall: +this.overallScore,
-      kpiList: this.kpis,            
+      hodId: 'Vinod',               
+      scoreQuality: Number (+this.quality),
+      scoreTimeliness: Number(+this.timeliness),
+      scoreInitiative: Number(+this.initiative),
+      scoreOverall: Number(+this.overallScore),
+      remarks: this.managementRemarks,
+      dprid: this.dprid,         
+
+      kpiList: this.kpis.map(t => ({       
+          kpiId: Number(t.kpiId),
+          dprId: Number(this.dprid),
+          employeeId: t.employeeId,
+          kpiMasterId: Number(t.kpiMasterId),
+          kpiValue: Number(t.kpiValue),
+          remarks: t.remarks,
+          kpiDescription: t.kpiDescription
+      })),
+      
     };
 
-    this.api.updateDPRReview(dprReview).subscribe({
+    this.api.updateDPRReview(review).subscribe({
       next: (res: any) => {
         
         if(res.success){
@@ -305,7 +297,7 @@ export class MonthlyDprComponent {
         console.log(res);
       },
       error: (err) => {
-        
+        alert(JSON.stringify(err.error));
       }
     });
   
@@ -316,15 +308,23 @@ export class MonthlyDprComponent {
 
 
     const review: DPRReview = {
-      employeeId: this.empId,
-      month: new Date().getMonth(),
-      year: new Date().getFullYear(),
-      workedHours: this.WorkedHours,
-      achievements: this.achievements,
-      challenges: this.challenges,
-      supportNeeded: this.supportNeeded,
-      status: this.ApprovalStatus,
-      tasksList: this.tasks,
+      
+    employeeId: this.empId,                
+    month: new Date().getMonth() + 1,      
+    year: new Date().getFullYear(),        
+    workedHours: Number(this.WorkedHours), 
+    achievements: this.achievements || '', 
+    challenges: this.challenges || '',     
+    supportNeeded: this.supportNeeded || '', 
+    status: this.ApprovalStatus || '', 
+    hodId: this.reportingTo || 'Vinod',     
+    tasksList: this.tasks.map(t => ({       
+      taskName: t.taskName,
+      description: t.description,
+      actualHours: Number(t.actualHours),
+      estimatedHours: Number(t.estimatedHours),
+      productivity: Number(t.productivity)
+    })),
       
     };
 
@@ -339,12 +339,14 @@ export class MonthlyDprComponent {
 
       },
       error: (err) => {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: err.message,
-          });
+      console.log('Full error response:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Failed',
+        text: JSON.stringify(err.error) 
+      });
       }
+
     });
 
   }
@@ -368,20 +370,38 @@ export class MonthlyDprComponent {
       this.reportingTo = user.reportingTo || '';
     }
 
-    const email = user.email || '';
-    const today = new Date();
-    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const email = user.email || '';
+  const today = new Date();
 
-    this.api.GetUserProofhubTasks(email, startDate, endDate).subscribe({
-      next: (res) => {
-        // const response = res.data as ProofhubTaskDto;
-        this.Proofhubtasks = res.data || [];  
-      },
-      error: (err) => {
-        console.error('Error fetching tasks:', err);
-      }
-    });
+
+  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const startDateString = startDate.toISOString().split('T')[0];  // '2025-08-01'
+  const endDateString = endDate.toISOString().split('T')[0];      // '2025-08-31'
+
+  this.api.GetUserProofhubTasks(email, startDateString, endDateString).subscribe({
+    next: (res) => {
+      console.log('Proofhub tasks response:', res);
+      
+      this.Proofhubtasks = (res.data || []).map((task: any) => ({
+        TASK_ID: task.tasK_ID,
+        TASK_TITLE: task.tasK_TITLE,
+        TASK_DESCRIPTION: task.tasK_DESCRIPTION,
+        START_DATE: task.starT_DATE,
+        DUE_DATE: task.duE_DATE,
+        ESTIMATED_HOURS: task.estimateD_HOURS,
+        LOGGED_HOURS: task.loggeD_HOURS,
+        selected: false
+      }));
+
+
+    },
+    error: (err) => {
+      console.error('Error fetching tasks:', err);
+    }
+  });
+
   }
 
   setPreviousMonthYear(): void {
@@ -392,7 +412,71 @@ export class MonthlyDprComponent {
     this.monthYear = currentDate.toLocaleDateString('en-US', options); 
   }
 
+  
+
+
+  calculateProductivity(task: any) {
+    if (task.estimatedHours && task.actualHours) {
+      task.productivity = ((task.actualHours / task.estimatedHours) * 100).toFixed(2);
+    } else {
+      task.productivity = 0;
+    }
+  }
+
+ loadKPIs(): void {
+  this.api.GetActiveKPIs(this.department).subscribe(
+    (response: any) => {
+      if (response && response.success && response.data) {
+
+        console.log('Loaded KPIs:', response.data);
+
+        this.kpis = response.data.map((item: any) => ({
+          kpiMasterId: item.kpiid,        
+          kpiDescription: item.kpiname,   
+          kpiValue: 0,                    
+          remarks: '',
+          kpiId: 0,
+          dprId: 0,
+          employeeId: this.empId                      
+        }));
+      } else {
+        this.kpis = [];
+      }
+    },
+    (error) => {
+      console.error('Error loading KPIs:', error);
+    }
+  );
 }
 
 
+
+
+  generateSummary() {
+  
+    const selectedTasks = this.Proofhubtasks.filter(t => t.selected);
+
+    if (selectedTasks.length === 0) {
+
+      alert('Please select at least one task!');
+      return;
+
+    }
+
+    
+    const summary = selectedTasks
+      .map((t, i) => `${i + 1}. ${t.TASK_TITLE} - ${t.TASK_DESCRIPTION} (Hours: ${t.LOGGED_HOURS}/${t.ESTIMATED_HOURS}%)`)
+      .join('\n');
+
+   
+    this.summaryText = 
+      "AI Summary of selected tasks:\n\n" + 
+      summary + "\n\n" + 
+      "👉 Key highlights: Efficient work distribution, good productivity, and timely delivery.";
+  }
+
+
+
+
+}
 

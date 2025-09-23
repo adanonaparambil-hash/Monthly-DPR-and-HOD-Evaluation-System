@@ -30,26 +30,38 @@ export class Api {
 
 
   insertDpr(review: DPRReview): Observable<any> {
-    return this.http.post(`${this.apiUrl}/InsertDPREmployeeReviewDetails`, review);
+
+    console.log('Inserting DPR Review:', review); // Debugging line
+
+    return this.http.post(`${this.apiUrl}/DPRReview/InsertDPREmployeeReviewDetails`, review);
   }
 
   updateDPRReview(review: DPRReview): Observable<any> {
-    return this.http.post(`${this.apiUrl}/HODReviewUpdate`, review);
+    return this.http.post(`${this.apiUrl}/DPRReview/HODReviewUpdate`, review);
   }
 
 
   GetDPREmployeeReviewDetails(dprId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/GetDPREmployeeReviewDetails/${dprId}`);
+    return this.http.get(`${this.apiUrl}/DPRReview/GetDPREmployeeReviewDetails/${dprId}`);
   }
 
 
-  GetUserProofhubTasks(email: string, startDate: Date, endDate: Date): Observable<any> {
-    const params = new HttpParams()
-      .set('email', email)
-      .set('startDate', startDate.toISOString()) 
-      .set('endDate', endDate.toISOString());   
+ GetUserProofhubTasks(email: string, startDate: string, endDate: string): Observable<any> {
 
-    return this.http.get(`${this.apiUrl}/GetUserProofhubTasks`, { params });
+  const params = new HttpParams()
+    .set('email', email)
+    .set('startDate', startDate) 
+    .set('endDate', endDate);    
+
+  return this.http.get(`${this.apiUrl}/proofhubtask/GetUserProofhubTasks`, { params });
+}
+
+  GetActiveKPIs(department?: string): Observable<any> {
+    let params = '';
+    if (department) {
+      params = `?department=${department}`;
+    }
+    return this.http.get(`${this.apiUrl}/DPRReview/GetActiveKPIs${params}`);
   }
 
 

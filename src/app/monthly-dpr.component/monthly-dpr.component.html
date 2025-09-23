@@ -39,7 +39,7 @@
 
       <div class="info-item">
         <label><b>Worked Hours</b></label>
-        <input [(ngModel)]="WorkedHours" placeholder="Enter Worked Hours: e.g., 160">
+        <input type="number" [(ngModel)]="WorkedHours" placeholder="Enter Worked Hours: e.g., 160">
       </div>
 
     </div>
@@ -77,30 +77,44 @@
       <button class="add-btn" (click)="addNewTask()">+ Add New Task</button> 
     </div>
     </div>
-    <div class="table-container">
+    
+    <div class="table-container my-task-table">
       <table>
         <thead>
           <tr>
-            <th>SL NO</th>
-            <th>TASK NAME</th>
-            <th>DESCRIPTION + STATUS</th>
-            <th>ESTIMATED HOURS</th>
-            <th>ACTUAL HOURS</th>
-            <th>PRODUCTIVITY %</th>
+            <th class="SlNo-col">SL No</th>
+            <th class="task-col">Task Name</th>
+            <th class="desc-col">Task Description and Status</th>
+            <th class="hours-col">Estimated Hours</th>
+            <th class="hours-col">Actual Hours</th>
+            <th class="productivity-col">Productivity %</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let task of tasks; let i = index" [@scaleIn]>
-            <td>{{ i + 1 }}</td>
-            <td><input [(ngModel)]="task.taskName" placeholder="Task name"></td>
-            <td><input [(ngModel)]="task.description" placeholder="Description and status"></td>
-            <td><input type="number" [(ngModel)]="task.estimatedHours" placeholder="0"></td>
-            <td><input type="number" [(ngModel)]="task.actualHours" placeholder="0"></td>
-            <td><input type="number" [(ngModel)]="task.productivity" placeholder="0"></td>
+          <tr *ngFor="let task of tasks; let i = index">
+            <td class="SlNo-col">{{ i + 1 }}</td>
+            <td class="task-col">
+              <textarea [(ngModel)]="task.taskName" placeholder="Task name"></textarea>
+            </td>
+            <td class="desc-col">
+              <textarea [(ngModel)]="task.description" placeholder="Description and status"></textarea>
+            </td>
+            <td class="hours-col">
+              <input type="number" [(ngModel)]="task.estimatedHours" placeholder="0" (input)="calculateProductivity(task)">
+            </td>
+            <td class="hours-col">
+              <input type="number" [(ngModel)]="task.actualHours" placeholder="0" (input)="calculateProductivity(task)">
+            </td>
+            <td class="productivity-col">
+              <input type="number" [value]="task.productivity" placeholder="0" disabled>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+
+
   </div>
 
   <!-- KPI Performance Section -->
@@ -109,26 +123,49 @@
       <h2><i class="fas fa-chart-line"></i> KPI Performance</h2>
       <button class="add-btn" (click)="addNewKPI()">+ Add New KPI</button>
     </div>
-    <div class="table-container">
+    
+    
+    <div class="table-container kpi-table">
       <table>
         <thead>
           <tr>
-            <th>SL NO</th>
-            <th>KPI</th>
-            <th>KPI VALUE</th>
-            <th>REMARKS</th>
+            <th class="SlNo-col">Sl No</th>
+            <th class="kpi-col">KPI</th>
+            <th class="kpi-value-col">KPI Value</th>
+            <th class="remarks-col">Remarks</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let kpi of kpis; let i = index" [@scaleIn]>
-            <td>{{ i + 1 }}</td>
-            <td><input [(ngModel)]="kpi.kpiDescription" placeholder="KPI name"></td>
-            <td><input [(ngModel)]="kpi.kpiValue" placeholder="Value"></td>
-            <td><input [(ngModel)]="kpi.remarks" placeholder="Remarks"></td>
+          <tr *ngFor="let kpi of kpis; let i = index">
+            <td class="SlNo-col">{{ i + 1 }}</td>
+
+            <!-- KPI Name (read-only) -->
+            <td class="kpi-col">{{ kpi.kpiDescription }}</td>
+
+            <!-- KPI Value Dropdown -->
+            <td class="kpi-value-col">
+              <select [(ngModel)]="kpi.kpiValue">
+                <option value="0">Rate out of 5</option>
+                <option value="1">1 - Poor</option>
+                <option value="2">2 - Below Average</option>
+                <option value="3">3 - Average</option>
+                <option value="4">4 - Good</option>
+                <option value="5">5 - Excellent</option>
+              </select>
+            </td>
+
+            <!-- Remarks -->
+            <td class="remarks-col">
+              <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks"></textarea>
+            </td>
           </tr>
         </tbody>
       </table>
+
     </div>
+
+
+
   </div>
 
  
@@ -266,32 +303,31 @@
 
     <!-- Body -->
     <div class="modal-body">
+      
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th>Select</th>
-              <th>SL NO</th>
-              <th>TASK NAME</th>
-              <th>TASK DESCRIPTION</th>
-              <th>START DATE</th>
-              <th>DUE DATE</th>
-              <th>ESTIMATED HOURS</th>
-              <th>LOGGED HOURS</th>
+              <th class="SlNo-col">SL No</th>
+              <th class="task-col">Task Name</th>
+              <th class="desc-col">Task Description</th>
+              <th class="date-col">Start Date</th>
+              <th class="date-col">Due Date</th>
+              <th class="hours-col">Estimated Hours</th>
+              <th class="hours-col">Logged Hours</th>
+              <th class="select-col">Select</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let task of Proofhubtasks; let i = index">
-              <td>
-                <input type="checkbox" [(ngModel)]="task.selected" />
-              </td>
               <td>{{ i + 1 }}</td>
-              <td><input [(ngModel)]="task.TASK_TITLE" placeholder="Task name"></td>
-              <td><input [(ngModel)]="task.TASK_DESCRIPTION" placeholder="Description and status"></td>
-              <td><input type="date" [(ngModel)]="task.START_DATE" placeholder="0"></td>
-              <td><input type="date" [(ngModel)]="task.DUE_DATE" placeholder="0"></td>
-              <td><input type="number" [(ngModel)]="task.ESTIMATED_HOURS" placeholder="0"></td>
-              <td><input type="number" [(ngModel)]="task.LOGGED_HOURS" placeholder="0"></td>
+              <td class="task-col">{{ task.TASK_TITLE }}</td>
+              <td class="desc-col">{{ task.TASK_DESCRIPTION }}</td>
+              <td class="date-col">{{ task.START_DATE }}</td>
+              <td class="date-col">{{ task.DUE_DATE }}</td>
+              <td class="hours-col">{{ task.ESTIMATED_HOURS }}</td>
+              <td class="hours-col">{{ task.LOGGED_HOURS }}</td>
+              <td><input type="checkbox" [(ngModel)]="task.selected" /></td>
             </tr>
           </tbody>
         </table>
