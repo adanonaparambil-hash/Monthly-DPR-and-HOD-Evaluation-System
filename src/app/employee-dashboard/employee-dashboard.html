@@ -1,0 +1,124 @@
+<div class="dashboard-container">
+    <!-- Top Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card" [@slideInUp]="animationState">
+            <div class="stat-header">
+                <span class="stat-title">Tasks Completed</span>
+                <i class="fas fa-check-circle stat-icon"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">24</div>
+                <div class="stat-subtitle">This month</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card" [@slideInUp]="animationState" style="animation-delay: 0.1s">
+            <div class="stat-header">
+                <span class="stat-title">Productivity Score</span>
+                <i class="fas fa-chart-line stat-icon"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">92%</div>
+                <div class="stat-subtitle">Above target</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card" [@slideInUp]="animationState" style="animation-delay: 0.2s">
+            <div class="stat-header">
+                <span class="stat-title">Hours This Month</span>
+                <i class="fas fa-clock stat-icon"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">185</div>
+                <div class="stat-subtitle">of 160 expected</div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>3%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card" [@slideInUp]="animationState" style="animation-delay: 0.3s">
+            <div class="stat-header">
+                <span class="stat-title">HOD Rating</span>
+                <i class="fas fa-star stat-icon"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">4.6</div>
+                <div class="stat-subtitle">out of 5.0</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>5%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+        <!-- Hours Logged Chart -->
+        <div class="chart-card" [@fadeInUp]="animationState" style="animation-delay: 0.4s">
+            <div class="chart-header">
+                <h3>Hours Logged (Estimated vs Actual)</h3>
+            </div>
+            <div class="chart-container">
+                <canvas #hoursChart></canvas>
+            </div>
+        </div>
+
+        <!-- Monthly Performance Trend -->
+        <div class="chart-card" [@fadeInUp]="animationState" style="animation-delay: 0.5s">
+            <div class="chart-header">
+                <h3>Monthly Performance Trend</h3>
+            </div>
+            <div class="chart-container">
+                <canvas #performanceChart></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Charts Section -->
+    <div class="bottom-charts-grid">
+        <!-- Skills Assessment -->
+        <div class="chart-card" [@fadeInUp]="animationState" style="animation-delay: 0.6s">
+            <div class="chart-header">
+                <h3>Skills Assessment</h3>
+            </div>
+            <div class="chart-container">
+                <canvas #skillsChart></canvas>
+            </div>
+        </div>
+
+        <!-- Task Status Distribution -->
+        <div class="chart-card" [@fadeInUp]="animationState" style="animation-delay: 0.7s">
+            <div class="chart-header">
+                <h3>Task Status Distribution</h3>
+            </div>
+            <div class="chart-container">
+                <canvas #taskStatusChart></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color completed"></div>
+                        <span>Completed: 65%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color in-progress"></div>
+                        <span>In Progress: 25%</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pending"></div>
+                        <span>Pending: 10%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

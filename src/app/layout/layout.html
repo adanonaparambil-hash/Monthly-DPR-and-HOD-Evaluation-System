@@ -1,4 +1,4 @@
-<div class="layout-container">
+<div class="layout-container" [class.dark-theme]="isDarkMode">
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
@@ -9,6 +9,12 @@
     <nav class="menu">
       <a routerLink="/dashboard" routerLinkActive="active">
         <i class="fas fa-tachometer-alt"></i> Dashboard
+      </a>
+      <a routerLink="/employee-dashboard" routerLinkActive="active">
+        <i class="fas fa-chart-pie"></i> Employee Analytics
+      </a>
+      <a routerLink="/hod-dashboard" routerLinkActive="active">
+        <i class="fas fa-users-cog"></i> HOD Dashboard
       </a>
       <a routerLink="/monthly-dpr" routerLinkActive="active">
         <i class="fas fa-file-alt"></i> DPR Report
@@ -21,17 +27,89 @@
       </a>
     </nav>
 
-
     <div class="logout">
-      
       <b><a (click)="logout()">
         <i class="fas fa-sign-out-alt"></i>Logout
       </a></b>
     </div>
   </aside>
 
-  
-  <main class="content" [@fadeIn]>
-    <router-outlet></router-outlet>
-  </main>
+  <!-- Main Content Area -->
+  <div class="main-area">
+    <!-- Header -->
+    <header class="header" [@slideDown]>
+      <div class="header-left">
+        <button class="menu-toggle" (click)="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="company-logo">
+          <img src="assets/images/company-logo.svg" alt="Company Logo" class="logo-image">
+          <span class="company-name">TechCorp</span>
+        </div>
+        <h1 class="page-title">{{ getPageTitle() }}</h1>
+      </div>
+      
+      <div class="header-right">
+        <!-- Dark/Light Mode Toggle -->
+        <button class="theme-toggle" (click)="toggleTheme()" [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <i class="fas" [class.fa-sun]="isDarkMode" [class.fa-moon]="!isDarkMode"></i>
+        </button>
+        
+        <!-- Notifications -->
+        <div class="notification-wrapper">
+          <button class="notification-btn" (click)="toggleNotifications()">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+          </button>
+          
+          <div class="notification-dropdown" *ngIf="showNotifications" [@slideDown]>
+            <div class="notification-header">
+              <h3>Notifications</h3>
+              <button (click)="markAllAsRead()">Mark all as read</button>
+            </div>
+            <div class="notification-list">
+              <div class="notification-item" *ngFor="let notification of notifications">
+                <div class="notification-icon">
+                  <i [class]="notification.icon"></i>
+                </div>
+                <div class="notification-content">
+                  <p>{{ notification.message }}</p>
+                  <span class="notification-time">{{ notification.time }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Profile -->
+        <div class="profile-wrapper">
+          <button class="profile-btn" (click)="toggleProfile()">
+            <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar">
+            <span class="profile-name">{{ userProfile.name }}</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          
+          <div class="profile-dropdown" *ngIf="showProfile" [@slideDown]>
+            <div class="profile-info">
+              <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar-large">
+              <div>
+                <h4>{{ userProfile.name }}</h4>
+                <p>{{ userProfile.role }}</p>
+              </div>
+            </div>
+            <div class="profile-menu">
+              <a routerLink="/profile"><i class="fas fa-user"></i> My Profile</a>
+              <a href="#"><i class="fas fa-cog"></i> Settings</a>
+              <a (click)="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="content" [@fadeIn]>
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </div>

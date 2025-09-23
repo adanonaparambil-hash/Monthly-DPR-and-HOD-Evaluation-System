@@ -1,0 +1,343 @@
+<div class="hod-dashboard-container">
+  <!-- Header Section -->
+  <div class="dashboard-header" [@slideInDown]>
+    <div class="header-content">
+      <div class="header-left">
+        <h1><i class="fas fa-trophy"></i> Top Performers | Leaderboard</h1>
+      </div>
+      <div class="header-right">
+        <button class="filter-btn">
+          <i class="fas fa-filter"></i> Filter
+        </button>
+        <button class="export-btn">
+          <i class="fas fa-download"></i> Export
+        </button>
+        <div class="user-info">
+          <div class="notification-icon">
+            <i class="fas fa-bell"></i>
+            <span class="badge">3</span>
+          </div>
+          <div class="user-profile">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format" alt="John Doe">
+            <span>John Doe<br><small>HOD - IT</small></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid" [@staggerIn]>
+    <div class="stat-card blue" [@slideInUp]>
+      <div class="stat-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">45</div>
+        <div class="stat-label">My Department Employees</div>
+        <div class="stat-department">IT Department</div>
+      </div>
+      <div class="stat-badge">My Dept</div>
+    </div>
+
+    <div class="stat-card orange" [@slideInUp] style="animation-delay: 0.1s">
+      <div class="stat-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">8</div>
+        <div class="stat-label">My Pending DPRs</div>
+        <div class="stat-department">Require my approval</div>
+      </div>
+      <div class="stat-badge">My Dept</div>
+    </div>
+
+    <div class="stat-card green" [@slideInUp] style="animation-delay: 0.2s">
+      <div class="stat-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">37</div>
+        <div class="stat-label">My Evaluated DPRs</div>
+        <div class="stat-department">Completed this month</div>
+      </div>
+      <div class="stat-badge">My Dept</div>
+    </div>
+
+    <div class="stat-card purple" [@slideInUp] style="animation-delay: 0.3s">
+      <div class="stat-icon">
+        <i class="fas fa-star"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">4.2</div>
+        <div class="stat-label">Company Avg Score</div>
+        <div class="stat-department">All departments</div>
+      </div>
+      <div class="stat-badge">Company</div>
+    </div>
+
+    <div class="stat-card gold" [@slideInUp] style="animation-delay: 0.4s">
+      <div class="stat-icon">
+        <i class="fas fa-trophy"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">Sarah Chen</div>
+        <div class="stat-label">My Top Performer</div>
+        <div class="stat-department">IT Department</div>
+      </div>
+      <div class="stat-badge">My Dept</div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="main-content-grid">
+    <!-- Top Performers Section -->
+    <div class="leaderboard-section" [@fadeInUp] style="animation-delay: 0.5s">
+      <div class="section-header">
+        <h2><i class="fas fa-medal"></i> IT Department Rankings</h2>
+        <div class="tabs">
+          <button class="tab active">My Department (3)</button>
+          <button class="tab">Company-wide (Top 5)</button>
+        </div>
+      </div>
+      
+      <div class="leaderboard">
+        <div class="leaderboard-item rank-1" [@slideInLeft]>
+          <div class="rank-badge gold">
+            <i class="fas fa-crown"></i>
+            <span>#1</span>
+          </div>
+          <div class="employee-info">
+            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face&auto=format" alt="Sarah Chen">
+            <div class="employee-details">
+              <h4>Sarah Chen</h4>
+              <p>My Team</p>
+            </div>
+          </div>
+          <div class="performance-tags">
+            <span class="tag innovation">Innovation</span>
+            <span class="tag leadership">Leadership</span>
+          </div>
+          <div class="rating">
+            <span class="rating-number">4.8</span>
+            <div class="stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="leaderboard-item rank-2" [@slideInLeft] style="animation-delay: 0.1s">
+          <div class="rank-badge silver">
+            <span>#2</span>
+          </div>
+          <div class="employee-info">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face&auto=format" alt="Alex Thompson">
+            <div class="employee-details">
+              <h4>Alex Thompson</h4>
+              <p>My Team</p>
+            </div>
+          </div>
+          <div class="performance-tags">
+            <span class="tag technical">Technical Skills</span>
+            <span class="tag mentoring">Mentoring</span>
+          </div>
+          <div class="rating">
+            <span class="rating-number">4.3</span>
+            <div class="stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="far fa-star"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="leaderboard-item rank-3" [@slideInLeft] style="animation-delay: 0.2s">
+          <div class="rank-badge bronze">
+            <span>#3</span>
+          </div>
+          <div class="employee-info">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face&auto=format" alt="Mike Davis">
+            <div class="employee-details">
+              <h4>Mike Davis</h4>
+              <p>My Team</p>
+            </div>
+          </div>
+          <div class="performance-tags">
+            <span class="tag problem-solving">Problem Solving</span>
+            <span class="tag team-player">Team Player</span>
+          </div>
+          <div class="rating">
+            <span class="rating-number">4.2</span>
+            <div class="stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="far fa-star"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Evaluations -->
+    <div class="evaluations-section" [@fadeInUp] style="animation-delay: 0.6s">
+      <div class="section-header">
+        <h2><i class="fas fa-clock"></i> Pending Evaluations</h2>
+        <div class="search-bar">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search employees or departments...">
+        </div>
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs">
+          <button class="tab active">My Department (3)</button>
+          <button class="tab">All Departments (4)</button>
+        </div>
+        <p class="approval-note">You can approve these evaluations</p>
+      </div>
+
+      <div class="evaluations-table">
+        <div class="table-header">
+          <span>Employee Name</span>
+          <span>Department</span>
+          <span>Submission Date</span>
+          <span>Priority</span>
+          <span>Action</span>
+        </div>
+        
+        <div class="table-row" [@slideInRight]>
+          <div class="employee-cell">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face&auto=format" alt="Alex Thompson">
+            <span>Alex Thompson</span>
+          </div>
+          <div class="department-cell">
+            <span class="department-badge">IT</span>
+            <span>My Dept</span>
+          </div>
+          <div class="date-cell">2024-12-20</div>
+          <div class="priority-cell">
+            <span class="priority high">High</span>
+          </div>
+          <div class="action-cell">
+            <button class="evaluate-btn">Evaluate Now</button>
+          </div>
+        </div>
+
+        <div class="table-row" [@slideInRight] style="animation-delay: 0.1s">
+          <div class="employee-cell">
+            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face&auto=format" alt="Sarah Chen">
+            <span>Sarah Chen</span>
+          </div>
+          <div class="department-cell">
+            <span class="department-badge">IT</span>
+            <span>My Dept</span>
+          </div>
+          <div class="date-cell">2024-12-21</div>
+          <div class="priority-cell">
+            <span class="priority normal">Normal</span>
+          </div>
+          <div class="action-cell">
+            <button class="evaluate-btn">Evaluate Now</button>
+          </div>
+        </div>
+
+        <div class="table-row" [@slideInRight] style="animation-delay: 0.2s">
+          <div class="employee-cell">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format" alt="Mike Davis">
+            <span>Mike Davis</span>
+          </div>
+          <div class="department-cell">
+            <span class="department-badge">IT</span>
+            <span>My Dept</span>
+          </div>
+          <div class="date-cell">2024-12-22</div>
+          <div class="priority-cell">
+            <span class="priority normal">Normal</span>
+          </div>
+          <div class="action-cell">
+            <button class="evaluate-btn">Evaluate Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evaluation Summary -->
+    <div class="summary-section" [@fadeInUp] style="animation-delay: 0.7s">
+      <div class="section-header">
+        <h2>Evaluation Summary</h2>
+        <div class="summary-tabs">
+          <button class="tab active">My Department</button>
+          <button class="tab">Company-wide</button>
+        </div>
+      </div>
+
+      <div class="department-info">
+        <h3>IT Department</h3>
+      </div>
+
+      <div class="summary-chart">
+        <canvas #summaryChart></canvas>
+      </div>
+
+      <div class="summary-legend">
+        <div class="legend-item">
+          <div class="legend-color excellent"></div>
+          <span>Excellent (5)</span>
+          <span class="percentage">23 (52%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color good"></div>
+          <span>Good (4)</span>
+          <span class="percentage">13 (30%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color average"></div>
+          <span>Average (3)</span>
+          <span class="percentage">6 (14%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color below-average"></div>
+          <span>Below Average (2)</span>
+          <span class="percentage">1 (3%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color poor"></div>
+          <span>Poor (1)</span>
+          <span class="percentage">0 (0%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Charts -->
+    <div class="charts-section" [@fadeInUp] style="animation-delay: 0.8s">
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Employee Performance Trends</h3>
+          <span class="chart-subtitle">Last 6 Months</span>
+        </div>
+        <canvas #performanceTrendChart></canvas>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Department-Wise Performance</h3>
+          <span class="chart-subtitle">Cross-department view</span>
+        </div>
+        <canvas #departmentChart></canvas>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-color initiative"></div><span>Initiative</span></div>
+          <div class="legend-item"><div class="legend-color quality"></div><span>Quality</span></div>
+          <div class="legend-item"><div class="legend-color timeliness"></div><span>Timeliness</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
