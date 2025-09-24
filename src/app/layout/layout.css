@@ -136,10 +136,15 @@
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+}
+
+.company-logo img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .company-logo:hover {
@@ -148,12 +153,10 @@
 }
 
 .logo-image {
-  width: 32px;
+  width: 80px;
   height: 32px;
   object-fit: contain;
   border-radius: 6px;
-  background: white;
-  padding: 4px;
 }
 
 .company-name {

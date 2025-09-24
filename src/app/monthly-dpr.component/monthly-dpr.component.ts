@@ -339,7 +339,7 @@ export class MonthlyDprComponent {
 
       },
       error: (err) => {
-      console.log('Full error response:', err);
+     
       Swal.fire({
         icon: 'error',
         title: 'Validation Failed',
@@ -362,6 +362,9 @@ export class MonthlyDprComponent {
   getUserProofhubTasks() {
 
     const user = JSON.parse(localStorage.getItem('current_user') || '{}');
+
+    console.log("response of user" + user);
+
     if (user) {
       this.empId = user.empId || '';
       this.empName = user.employeeName || '';
@@ -458,21 +461,29 @@ export class MonthlyDprComponent {
 
     if (selectedTasks.length === 0) {
 
-      alert('Please select at least one task!');
+      Swal.fire({
+        icon: 'error',
+        title: 'Operation Failed',
+        text: 'Please select at least one task!' 
+      });
+
       return;
 
     }
 
     
-    const summary = selectedTasks
-      .map((t, i) => `${i + 1}. ${t.TASK_TITLE} - ${t.TASK_DESCRIPTION} (Hours: ${t.LOGGED_HOURS}/${t.ESTIMATED_HOURS}%)`)
-      .join('\n');
-
+    this.api.summarizeTasks(selectedTasks).subscribe({
+      next: (res) => {
+        this.summaryText = res.summary;
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Error generating summary');
+      }
+    });
    
-    this.summaryText = 
-      "AI Summary of selected tasks:\n\n" + 
-      summary + "\n\n" + 
-      "👉 Key highlights: Efficient work distribution, good productivity, and timely delivery.";
+    
+
   }
 
 

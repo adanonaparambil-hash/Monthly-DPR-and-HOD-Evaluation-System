@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient,HttpParams  } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { DPRReview, DPRKPI } from '../models/task.model';
+import { DPRReview, DPRKPI,ProofhubTaskDto } from '../models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -30,8 +30,6 @@ export class Api {
 
 
   insertDpr(review: DPRReview): Observable<any> {
-
-    console.log('Inserting DPR Review:', review); // Debugging line
 
     return this.http.post(`${this.apiUrl}/DPRReview/InsertDPREmployeeReviewDetails`, review);
   }
@@ -64,6 +62,12 @@ export class Api {
     return this.http.get(`${this.apiUrl}/DPRReview/GetActiveKPIs${params}`);
   }
 
+
+  
+  summarizeTasks(tasks: ProofhubTaskDto[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/ProofhubTask/SummarizeTasks`, tasks);
+
+  }
 
 
 }

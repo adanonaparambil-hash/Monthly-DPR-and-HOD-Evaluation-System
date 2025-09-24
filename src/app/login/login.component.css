@@ -24,7 +24,7 @@
 .background-image {
   width: 100%;
   height: 100%;
-  background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+  background-image: url('/assets/images/AlAdrakBgImage.jpg');;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -33,12 +33,13 @@
 }
 
 .dark-overlay {
-  position: absolute;
+  position: absolute; 
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(72, 94, 43, 0.7) 0%, rgba(191, 169, 70, 0.5) 100%);
+  background: linear-gradient(135deg, rgba(200, 220, 180, 0.2) 0%, rgba(240, 240, 240, 0.1) 100%);
+  
   animation: overlayPulse 15s ease-in-out infinite;
 }
 

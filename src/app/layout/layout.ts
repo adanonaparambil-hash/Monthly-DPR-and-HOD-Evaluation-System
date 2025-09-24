@@ -55,9 +55,14 @@ export class layout implements OnInit {
     }
   ];
 
+
+  
+ userSession = JSON.parse(localStorage.getItem('current_user') || '{}');
+ 
+
   userProfile = {
-    name: 'John Doe',
-    role: 'Senior Developer',
+    name: this.userSession.employeeName || '',
+    role: this.userSession.designation || '',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
   };
 
@@ -120,4 +125,7 @@ export class layout implements OnInit {
     localStorage.clear();
     sessionStorage.clear();
   }
+
+  
+
 }
