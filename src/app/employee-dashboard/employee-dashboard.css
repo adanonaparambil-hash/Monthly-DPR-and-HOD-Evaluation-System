@@ -28,8 +28,11 @@
   backdrop-filter: blur(20px);
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
-  overflow: hidden;
-  transform: translateY(0);
+  overflow: visible; /* ensure content is not cut */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 160px;
 }
 
 :host-context(.dark-theme) .stat-card {
@@ -89,14 +92,17 @@
 }
 
 .stat-content {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .stat-number {
   font-size: 36px;
+  line-height: 1.2;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -195,17 +201,19 @@
 
 .chart-container {
   position: relative;
-  height: 300px;
   width: 100%;
+  min-height: 280px;
+  height: auto;
 }
 
 /* Legend for Task Status Chart */
 .legend {
   display: flex;
   justify-content: center;
-  gap: 24px;
-  margin-top: 16px;
   flex-wrap: wrap;
+  row-gap: 12px;
+  column-gap: 24px;
+  margin-top: 20px;
 }
 
 .legend-item {
@@ -236,34 +244,40 @@
 }
 
 /* Responsive Design */
+@media (max-width: 992px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .bottom-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-container {
     padding: 16px;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
-  .charts-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
+
+  .charts-grid,
   .bottom-charts-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
-  .stat-card, .chart-card {
+
+  .stat-card,
+  .chart-card {
     padding: 20px;
   }
-  
+
   .chart-container {
-    height: 250px;
+    min-height: 250px;
   }
-  
+
   .legend {
     gap: 16px;
   }
@@ -273,19 +287,20 @@
   .dashboard-container {
     padding: 12px;
   }
-  
+
   .stat-number {
     font-size: 28px;
   }
-  
+
   .chart-container {
-    height: 200px;
+    min-height: 220px;
   }
-  
+
   .legend {
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    text-align: center;
   }
 }
 

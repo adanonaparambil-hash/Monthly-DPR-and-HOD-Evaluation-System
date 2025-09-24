@@ -1,0 +1,75 @@
+<div class="past-reports-container p-6 bg-white rounded-lg shadow-lg">
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-xl font-bold text-gray-900">Past Reports</h2>
+      <p class="text-sm text-gray-500">View your previous DPR reports</p>
+    </div>
+  
+    <!-- Filters -->
+    <div class="filter-container mb-6">
+      <div class="filter-item">
+        <label for="month" class="form-label text-gray-700">Month</label>
+        <select id="month" [(ngModel)]="selectedMonth" class="form-select">
+          <option *ngFor="let month of months" [value]="month">{{ month }}</option>
+        </select>
+      </div>
+  
+      <div class="filter-item">
+        <label for="year" class="form-label text-gray-700">Year</label>
+        <select id="year" [(ngModel)]="selectedYear" class="form-select">
+          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+  
+      <button (click)="filterReports()" class="btn-filter text-white bg-yellow-500 hover:bg-yellow-600">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+    </div>
+  
+    <!-- Table -->
+    <div class="table-responsive mb-6">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Report Name</th>
+            <th>Submission Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let report of paginatedReports">
+            <td>{{ report.name }}</td>
+            <td>{{ report.submissionDate | date: 'yyyy-MM-dd' }}</td>
+            <td>
+              <span [ngClass]="getStatusClass(report.status)" class="status-label">
+                {{ report.status }}
+              </span>
+            </td>
+            <td>
+              <button (click)="viewReport(report)" class="btn btn-link">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-link">
+                <i class="fas fa-download"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+    <!-- Pagination -->
+    <div class="pagination-container flex justify-between items-center">
+      <span>Showing {{ currentPageStart }} - {{ currentPageEnd }} of {{ reports.length }}</span>
+      <div class="pagination-buttons">
+        <button (click)="prevPage()" [disabled]="currentPage === 1" class="btn-pagination">
+          Previous
+        </button>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="btn-pagination">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+  

@@ -1,30 +1,5 @@
 <div class="hod-dashboard-container">
   <!-- Header Section -->
-  <div class="dashboard-header" [@slideInDown]>
-    <div class="header-content">
-      <div class="header-left">
-        <h1><i class="fas fa-trophy"></i> Top Performers | Leaderboard</h1>
-      </div>
-      <div class="header-right">
-        <button class="filter-btn">
-          <i class="fas fa-filter"></i> Filter
-        </button>
-        <button class="export-btn">
-          <i class="fas fa-download"></i> Export
-        </button>
-        <div class="user-info">
-          <div class="notification-icon">
-            <i class="fas fa-bell"></i>
-            <span class="badge">3</span>
-          </div>
-          <div class="user-profile">
-            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format" alt="John Doe">
-            <span>John Doe<br><small>HOD - IT</small></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Stats Cards -->
   <div class="stats-grid" [@staggerIn]>
@@ -64,18 +39,6 @@
       <div class="stat-badge">My Dept</div>
     </div>
 
-    <div class="stat-card purple" [@slideInUp] style="animation-delay: 0.3s">
-      <div class="stat-icon">
-        <i class="fas fa-star"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-number">4.2</div>
-        <div class="stat-label">Company Avg Score</div>
-        <div class="stat-department">All departments</div>
-      </div>
-      <div class="stat-badge">Company</div>
-    </div>
-
     <div class="stat-card gold" [@slideInUp] style="animation-delay: 0.4s">
       <div class="stat-icon">
         <i class="fas fa-trophy"></i>
@@ -91,6 +54,81 @@
 
   <!-- Main Content Grid -->
   <div class="main-content-grid">
+    
+
+    <!-- Performance Charts -->
+    <div class="charts-section" [@fadeInUp] style="animation-delay: 0.8s">
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Employee Performance Trends</h3>
+          <span class="chart-subtitle">Last 6 Months</span>
+        </div>
+        <canvas #performanceTrendChart></canvas>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Department-Wise Performance</h3>
+          <span class="chart-subtitle">Cross-department view</span>
+        </div>
+        <canvas #departmentChart></canvas>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-color initiative"></div><span>Initiative</span></div>
+          <div class="legend-item"><div class="legend-color quality"></div><span>Quality</span></div>
+          <div class="legend-item"><div class="legend-color timeliness"></div><span>Timeliness</span></div>
+        </div>
+      </div>
+    </div>
+
+
+     <!-- Evaluation Summary -->
+     <div class="summary-section" [@fadeInUp] style="animation-delay: 0.7s">
+      <div class="section-header">
+        <h2>Evaluation Summary</h2>
+        <div class="summary-tabs">
+          <button class="tab active">My Department</button>
+          <button class="tab">Company-wide</button>
+        </div>
+      </div>
+
+      <div class="department-info">
+        <h3>IT Department</h3>
+      </div>
+
+      <div class="summary-chart">
+        <canvas #summaryChart></canvas>
+      </div>
+
+      <div class="summary-legend">
+        <div class="legend-item">
+          <div class="legend-color excellent"></div>
+          <span>Excellent (5)</span>
+          <span class="percentage">23 (52%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color good"></div>
+          <span>Good (4)</span>
+          <span class="percentage">13 (30%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color average"></div>
+          <span>Average (3)</span>
+          <span class="percentage">6 (14%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color below-average"></div>
+          <span>Below Average (2)</span>
+          <span class="percentage">1 (3%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color poor"></div>
+          <span>Poor (1)</span>
+          <span class="percentage">0 (0%)</span>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Top Performers Section -->
     <div class="leaderboard-section" [@fadeInUp] style="animation-delay: 0.5s">
       <div class="section-header">
@@ -184,7 +222,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>  
 
     <!-- Pending Evaluations -->
     <div class="evaluations-section" [@fadeInUp] style="animation-delay: 0.6s">
@@ -269,75 +307,5 @@
       </div>
     </div>
 
-    <!-- Evaluation Summary -->
-    <div class="summary-section" [@fadeInUp] style="animation-delay: 0.7s">
-      <div class="section-header">
-        <h2>Evaluation Summary</h2>
-        <div class="summary-tabs">
-          <button class="tab active">My Department</button>
-          <button class="tab">Company-wide</button>
-        </div>
-      </div>
-
-      <div class="department-info">
-        <h3>IT Department</h3>
-      </div>
-
-      <div class="summary-chart">
-        <canvas #summaryChart></canvas>
-      </div>
-
-      <div class="summary-legend">
-        <div class="legend-item">
-          <div class="legend-color excellent"></div>
-          <span>Excellent (5)</span>
-          <span class="percentage">23 (52%)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color good"></div>
-          <span>Good (4)</span>
-          <span class="percentage">13 (30%)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color average"></div>
-          <span>Average (3)</span>
-          <span class="percentage">6 (14%)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color below-average"></div>
-          <span>Below Average (2)</span>
-          <span class="percentage">1 (3%)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color poor"></div>
-          <span>Poor (1)</span>
-          <span class="percentage">0 (0%)</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Performance Charts -->
-    <div class="charts-section" [@fadeInUp] style="animation-delay: 0.8s">
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3>Employee Performance Trends</h3>
-          <span class="chart-subtitle">Last 6 Months</span>
-        </div>
-        <canvas #performanceTrendChart></canvas>
-      </div>
-
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3>Department-Wise Performance</h3>
-          <span class="chart-subtitle">Cross-department view</span>
-        </div>
-        <canvas #departmentChart></canvas>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-color initiative"></div><span>Initiative</span></div>
-          <div class="legend-item"><div class="legend-color quality"></div><span>Quality</span></div>
-          <div class="legend-item"><div class="legend-color timeliness"></div><span>Timeliness</span></div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>

@@ -1,0 +1,145 @@
+.past-reports-container {
+    font-family: 'Arial', sans-serif;
+    border-radius: 16px;
+    background-color: #ffffff;
+  }
+  
+  .filter-container {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .filter-item {
+    flex: 1;
+    max-width: 200px;
+  }
+  
+  .form-select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    width: 100%;
+  }
+  
+  .btn-filter {
+    padding: 10px 20px;
+    border-radius: 8px;
+    background-color: #fbbf24;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-filter:hover {
+    background-color: #f59e0b;
+  }
+  
+  .table-responsive {
+    overflow-x: auto;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    font-weight: bold;
+    color: #2d3748;
+  }
+  
+  .status-label {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  
+  .status-label.bg-green-200 {
+    background-color: #c6f6d5;
+    color: #2f855a;
+  }
+  
+  .status-label.bg-yellow-200 {
+    background-color: #faf089;
+    color: #9a9e2f;
+  }
+  
+  .status-label.bg-red-200 {
+    background-color: #fed7d7;
+    color: #e53e3e;
+  }
+  
+  .pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+  }
+  
+  .pagination-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .pagination-buttons button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    background-color: #ddd;
+    border: none;
+  }
+  
+  .pagination-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination-buttons button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* Button Styles for Table */
+  .btn-link {
+    color: #3182ce;
+    border: none;
+    background: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .btn-link i {
+    font-size: 18px;
+    margin-right: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    .filter-container {
+      flex-direction: column;
+      gap: 15px;
+    }
+  
+    .filter-item {
+      max-width: none;
+    }
+  
+    .table th, .table td {
+      padding: 8px 10px;
+    }
+  
+    .pagination-container {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+  
