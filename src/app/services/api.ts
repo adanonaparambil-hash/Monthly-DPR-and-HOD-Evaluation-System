@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient,HttpParams  } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { DPRReview, DPRKPI,ProofhubTaskDto } from '../models/task.model';
+import { DPRReview, DPRKPI,ProofhubTaskDto , DPRMonthlyReviewListingRequest } from '../models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -65,9 +65,14 @@ export class Api {
 
   
   summarizeTasks(tasks: ProofhubTaskDto[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/ProofhubTask/SummarizeTasks`, tasks);
+    return this.http.post(`${this.apiUrl}/ProofhubTask/SummarizeTasks`, tasks);
 
   }
 
+
+  GetMonthlyReviewListing(listingRequest: DPRMonthlyReviewListingRequest []): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DPRReview/GetMonthlyReviewListing`, listingRequest);
+
+  }
 
 }

@@ -23,11 +23,11 @@ export interface DPRReview  {
 
 
 export interface DPRTask {
-  taskName: string;
-  description: string;
-  estimatedHours: number;
-  actualHours: number;
-  productivity: number;
+  taskName?: string;
+  description?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+  productivity?: number;
   selected?: boolean;
   dprid?: number;
 }
@@ -37,8 +37,8 @@ export interface DPRComment {
   commentId?: number;
   dprId?: number;
   hodId?: string;
-  commentText: string;
-  commentType: string;
+  commentText?: string;
+  commentType?: string;
   dprid?: number;
   CREATEDAT? : Date;
 }
@@ -47,11 +47,11 @@ export interface DPRComment {
 export interface DPRKPI {
   kpiId?: number;
   dprId?: number;
-  employeeId: string;
+  employeeId?: string;
   kpiMasterId?: number;
-  kpiValue: number | null; 
-  remarks: string;
-  kpiDescription: string;
+  kpiValue?: number | null; 
+  remarks?: string;
+  kpiDescription?: string;
 }
 
 
@@ -78,8 +78,43 @@ export interface ProofhubTaskDto {
 
 
 export interface KPI {
-  kpiId: number;      
-  kpiName: string;   
-  kpiValue: number;   
-  remarks: string;   
+  kpiId?: number;      
+  kpiName?: string;   
+  kpiValue?: number;   
+  remarks?: string;   
+}
+
+
+
+export interface DPRMonthlyReviewListing {
+  dprId?: number;
+  employeeName?: string;
+  month?: number;
+  year?: number;
+  workedHours?: number;
+  achievements?: string;
+  challenges?: string;
+  supportNeeded?: string;
+  status?: string;
+  hodId?: string;
+  scoreQuality?: number;
+  scoreTimeliness?: number;
+  scoreInitiative?: number;
+  scoreOverall?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+
+
+export interface DPRMonthlyReviewListingRequest {
+  dprId?: number;
+  employeeName?: string;
+  month?: number;
+  year?: number;
+  status?: string;
+  hodName?: string;
+  employeeId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

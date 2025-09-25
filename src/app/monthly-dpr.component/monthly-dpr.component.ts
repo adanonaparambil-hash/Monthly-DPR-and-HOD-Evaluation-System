@@ -53,6 +53,8 @@ export class MonthlyDprComponent {
 
   monthYear =  "";
 
+  EmailID = "";
+
   showTaskDetails = true;
   showKpiDetails = true;
   showHodEvaluation = true;
@@ -145,7 +147,11 @@ export class MonthlyDprComponent {
       this.empName = user.employeeName || '';
       this.designation = user.designation || '';
       this.department = user.department || '';
+      this.EmailID = user.email || '';
     }
+
+    //this.GetDPREmployeeReviewDetails(4);
+
   }
 
   toggleTaskDetails() {
@@ -197,36 +203,7 @@ export class MonthlyDprComponent {
     this.showModal = false;
     this.summaryText = '';
   }
- 
-
-  loadDpr(dprId: number) {
-    
-    this.api.GetDPREmployeeReviewDetails(dprId).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          const dpr = res.data as DPRReview;
-
-          this.WorkedHours = dpr.workedHours ?? 0;  
-          this.achievements = dpr.achievements ?? '';  
-          this.challenges = dpr.challenges ?? '';  
-          this.supportNeeded = dpr.supportNeeded ?? '';  
-          this.quality = dpr.scoreQuality ?? 0;  
-          this.timeliness = dpr.scoreTimeliness ?? 0;  
-          this.initiative = dpr.scoreInitiative ?? 0;  
-          this.overallScore = dpr.scoreOverall ?? 0;  
-          this.tasks = dpr.tasksList ?? [];  
-          this.kpis = dpr.kpiList ?? [];
-          this.remarksHistory = dpr.commentsList ?? [];
-
-        } 
-      },
-      error: (err) => {
-        console.error(err);
-        alert('Error loading DPR');
-      }
-    });
-
-  }
+  
 
   SubmitReview() {
 
@@ -250,6 +227,9 @@ export class MonthlyDprComponent {
   }
 
   private HODReviewUpdate() {
+
+    console.log(this.kpis);
+
     this.dprid = 4; 
     const review: DPRReview = {
       employeeId: this.empId,
@@ -266,7 +246,7 @@ export class MonthlyDprComponent {
           kpiId: Number(t.kpiId),
           dprId: Number(this.dprid),
           employeeId: t.employeeId,
-          kpiMasterId: Number(t.kpiMasterId),
+          kpiMasterId: t.kpiMasterId,
           kpiValue: Number(t.kpiValue),
           remarks: t.remarks,
           kpiDescription: t.kpiDescription
@@ -328,6 +308,8 @@ export class MonthlyDprComponent {
       
     };
 
+    console.log("review"+review);
+
     this.api.insertDpr(review).subscribe({
       next: (res) => {
         
@@ -357,23 +339,17 @@ export class MonthlyDprComponent {
 
     this.getUserProofhubTasks();
 
+    this.Proofhubtasks.forEach(task => {
+      task.selected = false;
+    });
+
   }
 
   getUserProofhubTasks() {
 
-    const user = JSON.parse(localStorage.getItem('current_user') || '{}');
+   
 
-    console.log("response of user" + user);
-
-    if (user) {
-      this.empId = user.empId || '';
-      this.empName = user.employeeName || '';
-      this.designation = user.designation || '';
-      this.department = user.department || '';
-      this.reportingTo = user.reportingTo || '';
-    }
-
-  const email = user.email || '';
+  const email = this.EmailID || '';
   const today = new Date();
 
 
@@ -487,6 +463,41 @@ export class MonthlyDprComponent {
   }
 
 
+
+  GetDPREmployeeReviewDetails(dprId: number) {
+    this.api.GetDPREmployeeReviewDetails(dprId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          const dpr = res.data as DPRReview;
+  
+          this.WorkedHours = dpr.workedHours ?? 0;
+          this.achievements = dpr.achievements ?? '';
+          this.challenges = dpr.challenges ?? '';
+          this.supportNeeded = dpr.supportNeeded ?? '';
+          this.quality = dpr.scoreQuality ?? 0;
+          this.timeliness = dpr.scoreTimeliness ?? 0;
+          this.initiative = dpr.scoreInitiative ?? 0;
+          this.overallScore = dpr.scoreOverall ?? 0;
+  
+          this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
+          this.kpis = dpr.kpiList?.length ? dpr.kpiList : [];
+          this.remarksHistory = dpr.commentsList?.length ?  dpr.commentsList : []; 
+
+        } else {
+          console.warn('No DPR data found');
+          this.tasks = [];
+          this.kpis = [];
+          this.remarksHistory = [];
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Error loading DPR');
+      }
+    });
+  }
+  
+  
 
 
 }
