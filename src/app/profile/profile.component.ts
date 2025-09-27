@@ -2,6 +2,7 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { Api } from '../services/api';
 
 @Component({
   selector: 'app-profile',
@@ -31,22 +32,25 @@ export class ProfileComponent {
   animationState = 'in';
   isEditing = false;
 
+  user = JSON.parse(localStorage.getItem('current_user') || '{}');
+  
+
   userProfile = {
-    name: 'John Smith',
-    email: 'john.smith@company.com',
-    department: 'Executive',
-    position: 'Chief Executive Director',
+    name: this.user.employeeName || '',
+    email: this.user.email || '',
+    department: this.user.department || '',
+    position: this.user.designation || '',
+    employeeId: this.user.empId || '',
     phone: '+1 (555) 123-4567',
     bio: 'Experienced executive leader with over 15 years in strategic management and organizational development.',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format',
     joinDate: '2020-01-15',
-    employeeId: 'EMP001',
     location: 'New York, NY'
   };
 
   originalProfile = { ...this.userProfile };
 
-  constructor() {}
+   constructor(private api: Api) {}
 
   toggleEdit() {
     this.isEditing = !this.isEditing;
@@ -59,15 +63,46 @@ export class ProfileComponent {
     this.fileInput.nativeElement.click();
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.userProfile.avatar = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+  // onFileSelected(event: any) {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onload = (e: any) => {
+  //       this.userProfile.avatar = e.target.result;
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // }
+
+
+  onFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const uploadRequest = {
+      empId: this.user.empId || '',
+      docName: file.name,
+      docType: file.type,
+      docCategory: 'PROFILE_PICTURE',
+      uploadedBy: this.userProfile.name,
+      fileData: file
+    };
+
+    this.api.uploadDocument(uploadRequest).subscribe({
+      next: (res) => {
+        console.log(res.message || 'Upload successful!');
+        // Update the avatar preview immediately
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.userProfile.avatar = reader.result as string;
+        };
+        reader.readAsDataURL(file);
+      },
+      error: (err) => {
+        console.error(err);
+        console.log('Upload failed!');
+      }
+    });
   }
 
   saveProfile() {

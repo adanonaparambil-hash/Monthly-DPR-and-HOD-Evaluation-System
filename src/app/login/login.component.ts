@@ -90,7 +90,7 @@ export class LoginComponent {
             localStorage.setItem('current_user', JSON.stringify(res.user));
 
           }
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/employee-dashboard']);
 
         } else if (res?.message === "FIRST_LOGIN") {
           // 🔄 First login – redirect to set new password UI
