@@ -1,0 +1,413 @@
+<div class="ced-dashboard-container">
+  <!-- Top Bar -->
+  <div class="top-bar" [@slideInUp]="animationState">
+    <div class="dashboard-header">
+      <h1>CED Performance Dashboard</h1>
+      <p>Comprehensive Executive Dashboard</p>
+    </div>
+    <div class="dashboard-controls">
+      <select [(ngModel)]="selectedMonth" class="control-select">
+        <option value="October">October 2024</option>
+        <option value="September">September 2024</option>
+        <option value="August">August 2024</option>
+      </select>
+      <select [(ngModel)]="selectedDepartment" class="control-select">
+        <option value="All Departments">All Departments</option>
+        <option value="Engineering">Engineering</option>
+        <option value="Marketing">Marketing</option>
+        <option value="Sales">Sales</option>
+        <option value="HR">HR</option>
+        <option value="Finance">Finance</option>
+      </select>
+      <button class="export-btn">
+        <i class="fas fa-download"></i>
+        Export
+      </button>
+      <button class="profile-btn" (click)="toggleProfile()">
+        <div class="profile-avatar">
+          <img [src]="userProfile.avatar" [alt]="userProfile.name">
+        </div>
+        <span class="profile-name">{{ userProfile.name }}</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 1: KPI Performance Overview -->
+  <div class="kpi-section" [@fadeInUp]="animationState">
+    <div class="kpi-card main-kpi" [@scaleIn]>
+      <div class="kpi-header">
+        <h3>Overall Productivity</h3>
+        <div class="kpi-value">{{ kpiData.productivity }}%</div>
+      </div>
+      <div class="gauge-container">
+        <canvas #productivityGauge></canvas>
+        <div class="gauge-center">
+          <span class="gauge-percentage">{{ kpiData.productivity }}%</span>
+          <span class="gauge-label">Productivity</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card" [@scaleIn] style="animation-delay: 0.2s">
+      <div class="kpi-header">
+        <h3>Quality Score</h3>
+        <div class="kpi-value">{{ kpiData.quality }}%</div>
+      </div>
+      <div class="donut-container">
+        <canvas #qualityDonut></canvas>
+        <div class="donut-center">
+          <span class="donut-percentage">{{ kpiData.quality }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card" [@scaleIn] style="animation-delay: 0.4s">
+      <div class="kpi-header">
+        <h3>Timeliness</h3>
+        <div class="kpi-value">{{ kpiData.timeliness }}%</div>
+      </div>
+      <div class="donut-container">
+        <canvas #timelinessDonut></canvas>
+        <div class="donut-center">
+          <span class="donut-percentage">{{ kpiData.timeliness }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Department Overview -->
+  <div class="department-section" [@fadeInUp]="animationState" style="animation-delay: 0.6s">
+    <div class="chart-card large-chart">
+      <div class="chart-header">
+        <h3>Department Performance Overview</h3>
+        <p>Productivity and Quality metrics by department</p>
+      </div>
+      <div class="chart-container">
+        <canvas #departmentSunburst></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>HOD Evaluation Radar</h3>
+        <p>Average ratings across all metrics</p>
+      </div>
+      <div class="chart-container">
+        <canvas #hodRadar></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: HOD Evaluations -->
+  <div class="evaluation-section" [@fadeInUp]="animationState" style="animation-delay: 0.8s">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Employee Ratings Distribution</h3>
+        <p>Stacked view of performance ratings</p>
+      </div>
+      <div class="chart-container">
+        <canvas #evaluationStacked></canvas>
+      </div>
+    </div>
+
+    <div class="heatmap-card">
+      <div class="chart-header">
+        <h3>Performance Heatmap</h3>
+        <p>Employee vs Metrics matrix</p>
+      </div>
+      <div class="heatmap-grid">
+        <div class="heatmap-row" *ngFor="let dept of departments">
+          <div class="dept-name">{{ dept.name }}</div>
+          <div class="metric-cell" [class]="'level-' + (dept.productivity > 85 ? 'high' : dept.productivity > 70 ? 'medium' : 'low')">
+            {{ dept.productivity }}%
+          </div>
+          <div class="metric-cell" [class]="'level-' + (dept.quality > 85 ? 'high' : dept.quality > 70 ? 'medium' : 'low')">
+            {{ dept.quality }}%
+          </div>
+          <div class="metric-cell" [class]="'level-' + (dept.timeliness > 85 ? 'high' : dept.timeliness > 70 ? 'medium' : 'low')">
+            {{ dept.timeliness }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Tasks & Productivity -->
+  <div class="productivity-section" [@fadeInUp]="animationState" style="animation-delay: 1s">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Task Timeline Analysis</h3>
+        <p>Estimated vs Actual hours over time</p>
+      </div>
+      <div class="chart-container">
+        <canvas #taskTimeline></canvas>
+      </div>
+    </div>
+
+    <div class="progress-grid">
+      <div class="chart-header">
+        <h3>Department Progress Rings</h3>
+        <p>Individual department productivity</p>
+      </div>
+      <div class="progress-rings">
+        <div class="progress-ring" *ngFor="let dept of departments; let i = index" [@scaleIn] [style.animation-delay]="(i * 0.1) + 's'">
+          <div class="ring-chart">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="35" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+              <circle 
+                cx="40" 
+                cy="40" 
+                r="35" 
+                fill="none" 
+                stroke="#cc9933" 
+                stroke-width="6"
+                [attr.stroke-dasharray]="2 * 3.14159 * 35"
+                [attr.stroke-dashoffset]="2 * 3.14159 * 35 * (1 - dept.productivity / 100)"
+                stroke-linecap="round"
+                transform="rotate(-90 40 40)"/>
+            </svg>
+            <div class="ring-center">
+              <span class="ring-percentage">{{ dept.productivity }}%</span>
+            </div>
+          </div>
+          <div class="ring-label">{{ dept.name }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Achievements & Challenges -->
+  <div class="achievements-section" [@fadeInUp]="animationState" style="animation-delay: 1.2s">
+    <div class="word-cloud-card">
+      <div class="chart-header">
+        <h3>Key Achievements</h3>
+        <p>Most mentioned achievements this month</p>
+      </div>
+      <div class="word-cloud">
+        <span 
+          *ngFor="let achievement of achievements; let i = index" 
+          class="word-item"
+          [style.font-size]="(20 - i * 2) + 'px'"
+          [style.animation-delay]="(i * 0.2) + 's'">
+          {{ achievement }}
+        </span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Department Achievements</h3>
+        <p>Performance vs Quality bubble chart</p>
+      </div>
+      <div class="chart-container">
+        <canvas #achievementsBubble></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6: Top Performers -->
+  <div class="performers-section" [@fadeInUp]="animationState" style="animation-delay: 1.4s">
+    <div class="performers-carousel">
+      <div class="chart-header">
+        <h3>Top Performers This Month</h3>
+        <p>Outstanding employees across all departments</p>
+      </div>
+      <div class="performer-cards">
+        <div class="performer-card" *ngFor="let performer of topPerformers; let i = index" [@slideInLeft] [style.animation-delay]="(i * 0.1) + 's'">
+          <div class="performer-avatar">
+            <img [src]="performer.avatar" [alt]="performer.name">
+            <div class="performer-rank">{{ i + 1 }}</div>
+          </div>
+          <div class="performer-info">
+            <h4>{{ performer.name }}</h4>
+            <p>{{ performer.department }}</p>
+            <div class="performer-score">
+              <div class="score-bar">
+                <div class="score-fill" [style.width]="performer.score + '%'"></div>
+              </div>
+              <span class="score-value">{{ performer.score }}%</span>
+            </div>
+          </div>
+          <div class="performer-medal">
+            <i class="fas" [class]="i === 0 ? 'fa-trophy' : i === 1 ? 'fa-medal' : 'fa-award'"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Performance Rankings</h3>
+        <p>Top 5 performers horizontal bar chart</p>
+      </div>
+      <div class="chart-container">
+        <canvas #topPerformersBar></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 7: CED Quick Insights -->
+  <div class="insights-section" [@fadeInUp]="animationState" style="animation-delay: 1.6s">
+    <div class="insight-card">
+      <div class="chart-header">
+        <h3>AI-Powered Insights</h3>
+        <p>Real-time analysis and recommendations</p>
+      </div>
+      <div class="insight-content">
+        <div class="insight-item" [class]="getInsightClass(getCurrentInsight().type)">
+          <div class="insight-icon">
+            <i [class]="getInsightIcon(getCurrentInsight().type)"></i>
+          </div>
+          <div class="insight-text">
+            <p>{{ getCurrentInsight().message }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="funnel-card">
+      <div class="chart-header">
+        <h3>Action Funnel</h3>
+        <p>Suggestions to implementation pipeline</p>
+      </div>
+      <div class="funnel-chart">
+        <div class="funnel-stage">
+          <div class="stage-bar" style="width: 100%">
+            <span>Suggestions Submitted</span>
+            <span class="stage-count">45</span>
+          </div>
+        </div>
+        <div class="funnel-stage">
+          <div class="stage-bar" style="width: 75%">
+            <span>Under Review</span>
+            <span class="stage-count">34</span>
+          </div>
+        </div>
+        <div class="funnel-stage">
+          <div class="stage-bar" style="width: 50%">
+            <span>Approved</span>
+            <span class="stage-count">23</span>
+          </div>
+        </div>
+        <div class="funnel-stage">
+          <div class="stage-bar" style="width: 30%">
+            <span>Implemented</span>
+            <span class="stage-count">14</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal/Panel -->
+  <div class="profile-overlay" [class.active]="showProfile" (click)="toggleProfile()">
+    <div class="profile-modal" (click)="$event.stopPropagation()" [@slideInRight]="showProfile ? 'in' : 'out'">
+      <div class="profile-header">
+        <h2>My Profile</h2>
+        <button class="close-btn" (click)="toggleProfile()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="profile-content">
+        <!-- Profile Picture Section -->
+        <div class="profile-picture-section">
+          <div class="current-avatar">
+            <img [src]="userProfile.avatar" [alt]="userProfile.name">
+            <div class="avatar-overlay" (click)="triggerFileUpload()">
+              <i class="fas fa-camera"></i>
+              <span>Change Photo</span>
+            </div>
+          </div>
+          <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+        </div>
+
+        <!-- Profile Form -->
+        <form class="profile-form" (ngSubmit)="saveProfile()">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input 
+              type="text" 
+              id="name" 
+              [(ngModel)]="userProfile.name" 
+              name="name"
+              class="form-input"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+              type="email" 
+              id="email" 
+              [(ngModel)]="userProfile.email" 
+              name="email"
+              class="form-input"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="department">Department</label>
+            <select 
+              id="department" 
+              [(ngModel)]="userProfile.department" 
+              name="department"
+              class="form-select"
+              required>
+              <option value="">Select Department</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="position">Position</label>
+            <input 
+              type="text" 
+              id="position" 
+              [(ngModel)]="userProfile.position" 
+              name="position"
+              class="form-input"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              [(ngModel)]="userProfile.phone" 
+              name="phone"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea 
+              id="bio" 
+              [(ngModel)]="userProfile.bio" 
+              name="bio"
+              class="form-textarea"
+              rows="4"
+              placeholder="Tell us about yourself..."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="resetProfile()">
+              <i class="fas fa-undo"></i>
+              Reset
+            </button>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-save"></i>
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

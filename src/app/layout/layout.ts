@@ -89,6 +89,7 @@ export class layout implements OnInit {
       '/dashboard': 'Dashboard',
       '/employee-dashboard': 'Employee Analytics',
       '/hod-dashboard': 'HOD Dashboard',
+      '/ced-dashboard': 'CED Dashboard',
       '/monthly-dpr': 'DPR Report',
       '/past-reports': 'Past Reports',
       '/profile': 'My Profile'

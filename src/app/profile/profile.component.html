@@ -1,0 +1,213 @@
+<div class="profile-page" [@fadeInUp]="animationState">
+  <!-- Header Section -->
+  <div class="profile-header" [@scaleIn]>
+    <div class="header-content">
+      <h1>My Profile</h1>
+      <p>Manage your personal information and preferences</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        class="edit-btn" 
+        [class.active]="isEditing"
+        (click)="toggleEdit()">
+        <i [class]="isEditing ? 'fas fa-times' : 'fas fa-edit'"></i>
+        {{ isEditing ? 'Cancel' : 'Edit Profile' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile Content -->
+  <div class="profile-content">
+    <!-- Profile Picture Section -->
+    <div class="profile-picture-card" [@scaleIn] style="animation-delay: 0.2s">
+      <div class="picture-section">
+        <div class="avatar-container" [class.editable]="isEditing">
+          <img [src]="userProfile.avatar" [alt]="userProfile.name">
+          <div class="avatar-overlay" *ngIf="isEditing" (click)="triggerFileUpload()">
+            <i class="fas fa-camera"></i>
+            <span>Change Photo</span>
+          </div>
+        </div>
+        <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+      </div>
+      <div class="picture-info">
+        <h2>{{ userProfile.name }}</h2>
+        <p class="position">{{ userProfile.position }}</p>
+        <p class="department">{{ userProfile.department }} Department</p>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Joined {{ userProfile.joinDate | date:'MMM yyyy' }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-id-badge"></i>
+            <span>ID: {{ userProfile.employeeId }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ userProfile.location }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Form -->
+    <div class="profile-form-card" [@scaleIn] style="animation-delay: 0.4s">
+      <div class="card-header">
+        <h3>Personal Information</h3>
+        <p>Update your personal details and contact information</p>
+      </div>
+
+      <form class="profile-form" (ngSubmit)="saveProfile()" *ngIf="isEditing; else viewMode">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input 
+              type="text" 
+              id="name" 
+              [(ngModel)]="userProfile.name" 
+              name="name"
+              class="form-input"
+              required>
+          </div>
+          <div class="form-group">
+            <label for="employeeId">Employee ID</label>
+            <input 
+              type="text" 
+              id="employeeId" 
+              [(ngModel)]="userProfile.employeeId" 
+              name="employeeId"
+              class="form-input"
+              readonly>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+              type="email" 
+              id="email" 
+              [(ngModel)]="userProfile.email" 
+              name="email"
+              class="form-input"
+              required>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              [(ngModel)]="userProfile.phone" 
+              name="phone"
+              class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="department">Department</label>
+            <select 
+              id="department" 
+              [(ngModel)]="userProfile.department" 
+              name="department"
+              class="form-select"
+              required>
+              <option value="">Select Department</option>
+              <option value="Executive">Executive</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="position">Position</label>
+            <input 
+              type="text" 
+              id="position" 
+              [(ngModel)]="userProfile.position" 
+              name="position"
+              class="form-input"
+              required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="location">Location</label>
+            <input 
+              type="text" 
+              id="location" 
+              [(ngModel)]="userProfile.location" 
+              name="location"
+              class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bio">Bio</label>
+          <textarea 
+            id="bio" 
+            [(ngModel)]="userProfile.bio" 
+            name="bio"
+            class="form-textarea"
+            rows="4"
+            placeholder="Tell us about yourself..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="resetProfile()">
+            <i class="fas fa-undo"></i>
+            Reset Changes
+          </button>
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i>
+            Save Changes
+          </button>
+        </div>
+      </form>
+
+      <!-- View Mode -->
+      <ng-template #viewMode>
+        <div class="profile-view">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Full Name</label>
+              <span>{{ userProfile.name }}</span>
+            </div>
+            <div class="info-item">
+              <label>Employee ID</label>
+              <span>{{ userProfile.employeeId }}</span>
+            </div>
+            <div class="info-item">
+              <label>Email Address</label>
+              <span>{{ userProfile.email }}</span>
+            </div>
+            <div class="info-item">
+              <label>Phone Number</label>
+              <span>{{ userProfile.phone || 'Not provided' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Department</label>
+              <span>{{ userProfile.department }}</span>
+            </div>
+            <div class="info-item">
+              <label>Position</label>
+              <span>{{ userProfile.position }}</span>
+            </div>
+            <div class="info-item full-width">
+              <label>Location</label>
+              <span>{{ userProfile.location || 'Not provided' }}</span>
+            </div>
+            <div class="info-item full-width">
+              <label>Bio</label>
+              <span>{{ userProfile.bio || 'No bio provided' }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

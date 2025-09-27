@@ -1,75 +1,162 @@
-<div class="past-reports-container p-6 bg-white rounded-lg shadow-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h2 class="text-xl font-bold text-gray-900">Past Reports</h2>
-      <p class="text-sm text-gray-500">View your previous DPR reports</p>
+<div class="past-reports-container" [@fadeInUp]="animationState">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1>Past Reports</h1>
+    <p>View and manage your previous DPR reports</p>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-section" [@slideIn]>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Employee Name</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filters.employeeName"
+          (input)="applyFilters()"
+          placeholder="Search employee..."
+          class="filter-input">
+      </div>
+
+      <div class="filter-group">
+        <label>Month</label>
+        <select 
+          [(ngModel)]="filters.month"
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let month of months" [value]="month.value">
+            {{ month.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Year</label>
+        <select 
+          [(ngModel)]="filters.year"
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let year of years" [value]="year.value">
+            {{ year.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select 
+          [(ngModel)]="filters.status"
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let status of statuses" [value]="status.value">
+            {{ status.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>HOD Name</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filters.hodName"
+          (input)="applyFilters()"
+          placeholder="Search HOD..."
+          class="filter-input">
+      </div>
     </div>
-  
-    <!-- Filters -->
-    <div class="filter-container mb-6">
-      <div class="filter-item">
-        <label for="month" class="form-label text-gray-700">Month</label>
-        <select id="month" [(ngModel)]="selectedMonth" class="form-select">
-          <option *ngFor="let month of months" [value]="month">{{ month }}</option>
-        </select>
-      </div>
-  
-      <div class="filter-item">
-        <label for="year" class="form-label text-gray-700">Year</label>
-        <select id="year" [(ngModel)]="selectedYear" class="form-select">
-          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-        </select>
-      </div>
-  
-      <button (click)="filterReports()" class="btn-filter text-white bg-yellow-500 hover:bg-yellow-600">
-        <i class="fas fa-filter"></i> Filter
+
+    <div class="filter-actions">
+      <button class="btn-filter" (click)="applyFilters()">
+        <i class="fas fa-search"></i>
+        Filter
+      </button>
+      <button class="btn-clear" (click)="clearFilters()">
+        <i class="fas fa-times"></i>
+        Clear
       </button>
     </div>
-  
-    <!-- Table -->
-    <div class="table-responsive mb-6">
-      <table class="table table-striped">
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading reports...</p>
+  </div>
+
+  <!-- Table Section -->
+  <div class="table-section" *ngIf="!loading">
+    <div class="table-container">
+      <table class="reports-table">
         <thead>
           <tr>
-            <th>Report Name</th>
-            <th>Submission Date</th>
+            <th>Employee Name</th>
+            <th>Month</th>
+            <th>Year</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th>HOD Name</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let report of paginatedReports">
-            <td>{{ report.name }}</td>
-            <td>{{ report.submissionDate | date: 'yyyy-MM-dd' }}</td>
+          <tr *ngFor="let report of getPaginatedReports(); let i = index" 
+              class="table-row"
+              [style.animation-delay]="(i * 0.1) + 's'">
+            <td class="employee-name">{{ report.employeeName }}</td>
+            <td>{{ report.month }}</td>
+            <td>{{ report.year }}</td>
             <td>
-              <span [ngClass]="getStatusClass(report.status)" class="status-label">
+              <span class="status-badge" [ngClass]="getStatusClass(report.status)">
                 {{ report.status }}
               </span>
             </td>
-            <td>
-              <button (click)="viewReport(report)" class="btn btn-link">
+            <td>{{ report.hodName }}</td>
+            <td class="action-cell">
+              <button class="btn-view" (click)="viewReport(report)" title="View Report">
                 <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn btn-link">
-                <i class="fas fa-download"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredReports.length === 0" class="empty-state">
+        <i class="fas fa-file-alt empty-icon"></i>
+        <h3>No Reports Found</h3>
+        <p>No reports match your current filter criteria.</p>
+        <button class="btn-clear" (click)="clearFilters()">Clear Filters</button>
+      </div>
     </div>
-  
-    <!-- Pagination -->
-    <div class="pagination-container flex justify-between items-center">
-      <span>Showing {{ currentPageStart }} - {{ currentPageEnd }} of {{ reports.length }}</span>
-      <div class="pagination-buttons">
-        <button (click)="prevPage()" [disabled]="currentPage === 1" class="btn-pagination">
+
+    <!-- Pagination Section -->
+    <div class="pagination-section" *ngIf="filteredReports.length > 0">
+      <div class="pagination-info">
+        <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalRecords) }} of {{ totalRecords }} results</span>
+      </div>
+
+      <div class="pagination-controls">
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)">
           Previous
         </button>
-        <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="btn-pagination">
+
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="pagination-btn"
+          [class.active]="page === currentPage"
+          (click)="onPageChange(page)">
+          {{ page }}
+        </button>
+
+        <button 
+          class="pagination-btn" 
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)">
           Next
         </button>
       </div>
     </div>
   </div>
-  
+</div>
