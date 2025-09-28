@@ -7,10 +7,31 @@ export interface ServiceResponse<T> {
 }
 
 export interface EmployeeDocumentUpload {
-  empId: number;
+  empId: string;
   docName: string;
   docType: string;
   docCategory: string;
   uploadedBy: string;
-  fileData: File;   
+  fileData: number[];  
 }
+
+
+export interface EmployeeProfileUpdateDto {
+  empId?: string;
+  employeeName?: string;
+  department?: string;
+  designation?: string;
+  phone?: string;
+  email?: string;
+  careerSummary?: string;
+  experienceInd?: number;
+  experienceAbroad?: number;
+  qualification?: string;
+  skillset?: string;
+  dobDate?: string;
+  doj?: string;        
+  dob?: string;
+  location?: string;
+  ProfileImageBase64?: string; 
+}
+

@@ -32,7 +32,7 @@
       </div>
       <div class="picture-info">
         <h2>{{ userProfile.name }}</h2>
-        <p class="position">{{ userProfile.position }}</p>
+        <p class="position">{{ userProfile.designation }}</p>
         <p class="department">{{ userProfile.department }} Department</p>
         <div class="profile-stats">
           <div class="stat-item">
@@ -41,7 +41,7 @@
           </div>
           <div class="stat-item">
             <i class="fas fa-id-badge"></i>
-            <span>ID: {{ userProfile.employeeId }}</span>
+            <span>ID: {{ userProfile.empId }}</span>
           </div>
           <div class="stat-item">
             <i class="fas fa-map-marker-alt"></i>
@@ -75,7 +75,7 @@
             <input 
               type="text" 
               id="employeeId" 
-              [(ngModel)]="userProfile.employeeId" 
+              [(ngModel)]="userProfile.empId" 
               name="employeeId"
               class="form-input"
               readonly>
@@ -107,7 +107,16 @@
         <div class="form-row">
           <div class="form-group">
             <label for="department">Department</label>
-            <select 
+
+             <input 
+              type="text" 
+              id="position" 
+              [(ngModel)]="userProfile.department" 
+              name="position"
+              class="form-input"
+              disabled>
+              
+            <!-- <select 
               id="department" 
               [(ngModel)]="userProfile.department" 
               name="department"
@@ -120,21 +129,21 @@
               <option value="Sales">Sales</option>
               <option value="HR">HR</option>
               <option value="Finance">Finance</option>
-            </select>
+            </select> -->
           </div>
           <div class="form-group">
             <label for="position">Position</label>
             <input 
               type="text" 
               id="position" 
-              [(ngModel)]="userProfile.position" 
+              [(ngModel)]="userProfile.designation" 
               name="position"
               class="form-input"
               required>
           </div>
         </div>
 
-        <div class="form-row">
+        <!-- <div class="form-row">
           <div class="form-group full-width">
             <label for="location">Location</label>
             <input 
@@ -144,13 +153,64 @@
               name="location"
               class="form-input">
           </div>
+        </div> -->
+
+    
+        <div class="form-row">
+          <div class="form-group">
+            <label for="experienceInd">Experience in India (Years)</label>
+            <input 
+              type="number" 
+              id="experienceInd" 
+              [(ngModel)]="userProfile.experienceInd" 
+              name="experienceInd"
+              class="form-input"
+              min="0"
+              step="0.1">
+          </div>
+
+          <div class="form-group">
+            <label for="experienceAbroad">Experience Abroad (Years)</label>
+            <input 
+              type="number" 
+              id="experienceAbroad" 
+              [(ngModel)]="userProfile.experienceAbroad" 
+              name="experienceAbroad"
+              class="form-input"
+              min="0"
+              step="0.1">
+          </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label for="qualification">Qualification</label>
+            <input 
+              type="text" 
+              id="qualification" 
+              [(ngModel)]="userProfile.qualification" 
+              name="qualification"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label for="skillset">Skills</label>
+            <input 
+              type="text" 
+              id="skillset" 
+              [(ngModel)]="userProfile.skillset" 
+              name="skillset"
+              class="form-input"
+              placeholder="Comma-separated skills">
+          </div>
+        </div>
+
+
         <div class="form-group">
-          <label for="bio">Bio</label>
+          <label for="bio">Career Summary</label>
           <textarea 
             id="bio" 
-            [(ngModel)]="userProfile.bio" 
+            [(ngModel)]="userProfile.careerSummary" 
             name="bio"
             class="form-textarea"
             rows="4"
@@ -179,7 +239,7 @@
             </div>
             <div class="info-item">
               <label>Employee ID</label>
-              <span>{{ userProfile.employeeId }}</span>
+              <span>{{ userProfile.empId }}</span>
             </div>
             <div class="info-item">
               <label>Email Address</label>
@@ -195,15 +255,36 @@
             </div>
             <div class="info-item">
               <label>Position</label>
-              <span>{{ userProfile.position }}</span>
+              <span>{{ userProfile.designation }}</span>
             </div>
-            <div class="info-item full-width">
+            <!-- <div class="info-item full-width">
               <label>Location</label>
               <span>{{ userProfile.location || 'Not provided' }}</span>
+            </div> -->
+
+            <div class="info-item">
+              <label>Experience in India</label>
+              <span>{{ userProfile.experienceInd || 'Not provided' }} Years</span>
             </div>
+
+            <div class="info-item">
+              <label>Experience Abroad</label>
+              <span>{{ userProfile.experienceAbroad || 'Not provided' }} Years</span>
+            </div>
+
+            <div class="info-item">
+              <label>Qualification</label>
+              <span>{{ userProfile.qualification || 'Not provided' }}</span>
+            </div>
+
             <div class="info-item full-width">
-              <label>Bio</label>
-              <span>{{ userProfile.bio || 'No bio provided' }}</span>
+              <label>Skills</label>
+              <span>{{ userProfile.skillset || 'Not provided' }}</span>
+            </div>
+
+            <div class="info-item full-width">
+              <label>Career Summary</label>
+              <span>{{ userProfile.careerSummary || 'No bio provided' }}</span>
             </div>
           </div>
         </div>

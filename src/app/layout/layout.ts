@@ -63,7 +63,8 @@ export class layout implements OnInit {
   userProfile = {
     name: this.userSession.employeeName || '',
     role: this.userSession.designation || '',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
+    avatar: this.userSession.profileImageBase64 || 
+            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
   };
 
   constructor(private router: Router, private themeService: Theme) {
@@ -90,7 +91,7 @@ export class layout implements OnInit {
       '/employee-dashboard': 'Employee Analytics',
       '/hod-dashboard': 'HOD Dashboard',
       '/ced-dashboard': 'CED Dashboard',
-      '/monthly-dpr': 'DPR Report',
+      '/monthly-dpr': 'DPR Entry',
       '/past-reports': 'Past Reports',
       '/profile': 'My Profile'
     };

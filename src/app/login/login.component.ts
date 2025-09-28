@@ -81,13 +81,13 @@ export class LoginComponent {
 
         console.log('Login response:', res);
 
-        if (res?.status === "Y") {
-          // ✅ Normal Login
+        if (res?.success === true && res?.data) {
+          
           const token = res?.token || res?.access_token;
           if (token) {
             localStorage.setItem('access_token', token);
 
-            localStorage.setItem('current_user', JSON.stringify(res.user));
+            localStorage.setItem('current_user', JSON.stringify(res.data));
 
           }
           this.router.navigate(['/employee-dashboard']);

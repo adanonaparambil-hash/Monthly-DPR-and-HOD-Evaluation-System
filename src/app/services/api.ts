@@ -3,7 +3,7 @@ import { HttpClient,HttpParams  } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { DPRReview, DPRKPI,ProofhubTaskDto , DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload } from '../models/common.model';
+import { EmployeeDocumentUpload,EmployeeProfileUpdateDto } from '../models/common.model';
 
 @Injectable({
   providedIn: 'root'
@@ -76,20 +76,20 @@ export class Api {
 
   }
 
-
-  uploadDocument(request: EmployeeDocumentUpload): Observable<any> {
-    const formData = new FormData();
-    formData.append('empId', request.empId.toString());
-    formData.append('docName', request.docName);
-    formData.append('docType', request.docType);
-    formData.append('docCategory', request.docCategory);
-    formData.append('uploadedBy', request.uploadedBy);
-    formData.append('fileData', request.fileData);  
-
-    return this.http.post(`${this.apiUrl}/Login/InsertOrUpdateDocument`, formData);
-
+  uploadDocument(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Login/UploadDocument`, formData); 
   }
 
+  updateProfile(profile: EmployeeProfileUpdateDto): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Login/UpdateProfile`, profile);
+  }
+
+
   
+  GetEmployeeProfile(empId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/Login/GetEmployeeProfile/${empId}`);
+  }
+
+
 
 }
