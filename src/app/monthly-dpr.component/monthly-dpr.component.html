@@ -26,24 +26,83 @@
         <label><b>Designation</b></label>
         <input [(ngModel)]="designation" placeholder="Enter your designation" disabled>
       </div>
+      
+
+    </div>
+    <div class="info-row">
+      
+      
       <div class="info-item">
         <label><b>Department</b></label>
           <input [(ngModel)]="department"  placeholder="Enter your department" disabled>
       </div>
-    </div>
-    <div class="info-row">
-      <div class="info-item">
-        <label><b>Reporting To</b></label>
-        <input [(ngModel)]="reportingTo" placeholder="Enter reporting manager" disabled>
-      </div>
-
+      
       <div class="info-item">
         <label><b>Worked Hours</b></label>
-        <input type="number" [(ngModel)]="WorkedHours" placeholder="Enter Worked Hours: e.g., 160">
+        <input type="number" [(ngModel)]="WorkedHours" placeholder="Enter Worked Hours: e.g., 160" disabled>
       </div>
+
+
+      <div class="info-item">
+        <label><b>Reporting To</b></label>
+        <select [(ngModel)]="reportingTo">
+          <option value="">Select HOD</option>
+          <option *ngFor="let hod of hodList" [value]="hod.idValue">
+            {{ hod.description  }}
+          </option>
+        </select>
+      </div>
+
 
     </div>
     
+  </div>
+
+
+  <!-- Task Details Section -->
+  <div class="task-card" [@scaleIn]>
+    <div class="section-header">
+    <h2><i class="fas fa-hourglass-half"></i> Task Details</h2>
+      <div class="button-container">
+      <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
+      <button class="add-btn" (click)="addNewTask()">+ Add New Task</button> 
+    </div>
+    </div>
+    
+    <div class="table-container my-task-table">
+      <table>
+        <thead>
+          <tr>
+            <th class="SlNo-col">SL No</th>
+            <th class="task-col">Task Name</th>
+            <th class="desc-col">Task Description</th>
+            <th class="hours-col">Actual Hours</th>
+            <!-- <th class="hours-col">Actual Hours</th>
+            <th class="productivity-col">Productivity %</th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let task of tasks; let i = index">
+            <td class="SlNo-col">{{ i + 1 }}</td>
+            <td class="task-col">
+              <textarea [(ngModel)]="task.taskName" placeholder="Task name"></textarea>
+            </td>
+            <td class="desc-col">
+              <textarea [(ngModel)]="task.description" placeholder="Description and status"></textarea>
+            </td>
+            
+            <td class="hours-col">
+              <input 
+                type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()">
+            </td>
+            
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+
   </div>
 
   <!-- Support Needed Section -->
@@ -68,54 +127,7 @@
     </div>
   </div>
 
-  <!-- Task Details Section -->
-  <div class="task-card" [@scaleIn]>
-    <div class="section-header">
-    <h2><i class="fas fa-hourglass-half"></i> Task Details</h2>
-      <div class="button-container">
-      <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
-      <button class="add-btn" (click)="addNewTask()">+ Add New Task</button> 
-    </div>
-    </div>
-    
-    <div class="table-container my-task-table">
-      <table>
-        <thead>
-          <tr>
-            <th class="SlNo-col">SL No</th>
-            <th class="task-col">Task Name</th>
-            <th class="desc-col">Task Description and Status</th>
-            <th class="hours-col">Estimated Hours</th>
-            <th class="hours-col">Actual Hours</th>
-            <th class="productivity-col">Productivity %</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let task of tasks; let i = index">
-            <td class="SlNo-col">{{ i + 1 }}</td>
-            <td class="task-col">
-              <textarea [(ngModel)]="task.taskName" placeholder="Task name"></textarea>
-            </td>
-            <td class="desc-col">
-              <textarea [(ngModel)]="task.description" placeholder="Description and status"></textarea>
-            </td>
-            <td class="hours-col">
-              <input type="number" [(ngModel)]="task.estimatedHours" placeholder="0" (input)="calculateProductivity(task)">
-            </td>
-            <td class="hours-col">
-              <input type="number" [(ngModel)]="task.actualHours" placeholder="0" (input)="calculateProductivity(task)">
-            </td>
-            <td class="productivity-col">
-              <input type="number" [value]="task.productivity" placeholder="0" disabled>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-
-
-  </div>
+  
 
   <!-- KPI Performance Section -->
   <div class="kpi-card" [@scaleIn]>
@@ -152,6 +164,7 @@
                 <option value="4">4 - Good</option>
                 <option value="5">5 - Excellent</option>
               </select>
+              <!-- <input [(ngModel)]="kpi.kpiValue" placeholder="Enter the KPI value" type="number" min="1" max="100" class="rating-input"> -->
             </td>
 
             <!-- Remarks -->
@@ -184,47 +197,19 @@
       <div class="evaluation-grid">
         <div class="eval-item">
           <label>Quality</label>
-          <select [(ngModel)]="quality" class="rating-dropdown">
-            <option value="0">Rate out of 5</option>
-            <option value="1">1 - Poor</option>
-            <option value="2">2 - Below Average</option>
-            <option value="3">3 - Average</option>
-            <option value="4">4 - Good</option>
-            <option value="5">5 - Excellent</option>
-          </select>
+          <input [(ngModel)]="quality" placeholder="Enter quality score (0-100)" type="number" min="1" max="100" class="rating-input">
         </div>
         <div class="eval-item">
           <label>Timeliness</label>
-          <select [(ngModel)]="timeliness" class="rating-dropdown">
-            <option value="0">Rate out of 5</option>
-            <option value="1">1 - Poor</option>
-            <option value="2">2 - Below Average</option>
-            <option value="3">3 - Average</option>
-            <option value="4">4 - Good</option>
-            <option value="5">5 - Excellent</option>
-          </select>
+          <input [(ngModel)]="timeliness" placeholder="Enter timeliness score (0-100)" type="number" min="1" max="100" class="rating-input">
         </div>
         <div class="eval-item">
           <label>Initiative</label>
-          <select [(ngModel)]="initiative" class="rating-dropdown">
-            <option value="0">Rate out of 5</option>
-            <option value="1">1 - Poor</option>
-            <option value="2">2 - Below Average</option>
-            <option value="3">3 - Average</option>
-            <option value="4">4 - Good</option>
-            <option value="5">5 - Excellent</option>
-          </select>
+          <input [(ngModel)]="initiative" placeholder="Enter initiative score (0-100)" type="number" min="1" max="100" class="rating-input">
         </div>
         <div class="eval-item">
           <label>Overall Score</label>
-          <select [(ngModel)]="overallScore" class="rating-dropdown">
-            <option value="0">Rate out of 5</option>
-            <option value="1">1 - Poor</option>
-            <option value="2">2 - Below Average</option>
-            <option value="3">3 - Average</option>
-            <option value="4">4 - Good</option>
-            <option value="5">5 - Excellent</option>
-          </select>
+          <input [(ngModel)]="overallScore" placeholder="Enter overall score (0-100)" type="number" min="1" max="100" class="rating-input">
         </div>
       </div>
     </div>

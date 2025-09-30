@@ -91,5 +91,10 @@ export class Api {
   }
 
 
+  
+  GetHodMasterList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/Login/GetHodMasterList`);
+  }
+
 
 }

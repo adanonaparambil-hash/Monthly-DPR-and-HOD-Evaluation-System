@@ -7,6 +7,8 @@ import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
+import { DropdownOption  } from '../models/common.model';
+import { ToastrModule } from 'ngx-toastr';
 
 @Component({
   selector: 'app-monthly-dpr',
@@ -76,6 +78,9 @@ export class MonthlyDprComponent {
   initiative = 0;
   overallScore = 0;
   dprid = 0;
+  hoursExceeded: boolean = false;
+
+  hodList: DropdownOption[] = [];
 
   tasks: DPRTask[] = [
     {
@@ -122,9 +127,9 @@ export class MonthlyDprComponent {
     },
   ];
 
-  constructor(private api: Api) {}
+ constructor(private api: Api) {}
 
-  // constructor(private api: Api,private toastr: ToastrService) {}
+  //  constructor(private api: Api,private toastr: ToastrService) {}
 
   ngOnInit() {
     this.setPreviousMonthYear();
@@ -140,7 +145,10 @@ export class MonthlyDprComponent {
       this.EmailID = user.email || '';
     }
 
-    //this.GetDPREmployeeReviewDetails(4);
+    this.loadHodMasterList();
+
+    this.getUserProofhubTasks();
+
   }
 
   toggleTaskDetails() {
@@ -164,6 +172,14 @@ export class MonthlyDprComponent {
   }
 
   addNewTask() {
+
+    this.validateActualHours();
+
+    if (this.hoursExceeded) {
+      alert('Cannot add more tasks: Actual Hours exceed Worked Hours');
+      return;
+    }
+
     this.tasks.push({
       taskName: '',
       description: '',
@@ -172,6 +188,8 @@ export class MonthlyDprComponent {
       productivity: 0,
       selected: false,
     });
+
+
   }
 
   addNewKPI() {
@@ -304,8 +322,6 @@ export class MonthlyDprComponent {
   GetProofHubTask() {
     this.showModal = true;
 
-    this.getUserProofhubTasks();
-
     this.Proofhubtasks.forEach((task) => {
       task.selected = false;
     });
@@ -335,6 +351,10 @@ export class MonthlyDprComponent {
           LOGGED_HOURS: task.loggeD_HOURS,
           selected: false,
         }));
+
+        this.WorkedHours = this.Proofhubtasks.reduce(
+        (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0);
+
       },
       error: (err) => {
         console.error('Error fetching tasks:', err);
@@ -438,4 +458,52 @@ export class MonthlyDprComponent {
       },
     });
   }
+
+
+  getRatingLabel(score: number): { text: string; color: string } {
+    if (score >= 90) {
+      return { text: "Excellent", color: "green" };
+    } else if (score >= 75) {
+      return { text: "Good", color: "blue" };
+    } else if (score >= 50) {
+      return { text: "Average", color: "orange" };
+    } else if (score >= 25) {
+      return { text: "Below Average", color: "darkorange" };
+    } else {
+      return { text: "Poor", color: "red" };
+    }
+  }
+
+
+    loadHodMasterList(): void {
+    this.api.GetHodMasterList().subscribe(
+      (response: any) => {
+        if (response && response.success && response.data) {
+          this.hodList = response.data;
+        } else {
+          console.warn('No HOD records found or API call failed');
+        }
+      },
+      (error) => {
+        console.error('Error fetching HOD master list:', error);
+      }
+    );
+  }
+
+
+  validateActualHours() {
+    const totalActualHours = this.tasks.reduce(
+      (sum, task) => sum + (Number(task.actualHours) || 0),
+      0
+    );
+
+    this.hoursExceeded = totalActualHours > this.WorkedHours;
+
+    if (this.hoursExceeded) {
+      console.warn('Actual hours exceed Worked Hours');
+    }
+  }
+
 }
+
+
