@@ -8,7 +8,9 @@ import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { DropdownOption  } from '../models/common.model';
-import { ToastrModule } from 'ngx-toastr';
+import { ActivatedRoute } from '@angular/router';
+
+
 
 @Component({
   selector: 'app-monthly-dpr',
@@ -61,6 +63,8 @@ export class MonthlyDprComponent {
   managementRemarks = '';
 
   ApprovalStatus = '';
+
+  ConfirmationMessage = '';
 
   empId = '';
   empName = '';
@@ -123,15 +127,16 @@ export class MonthlyDprComponent {
       commentText:
         'Employee has shown excellent performance this month with high quality deliverables.',
       commentType: 'APPROVE',
-      CREATEDAT: new Date('2025-06-15 14:32'),
+      createdat: new Date('2025-06-15 14:32'),
     },
   ];
 
- constructor(private api: Api) {}
-
-  //  constructor(private api: Api,private toastr: ToastrService) {}
+    constructor(private api: Api,private toastr: ToastrService, private route: ActivatedRoute) {}
 
   ngOnInit() {
+
+    this.dprid = Number(this.route.snapshot.paramMap.get('id'));
+
     this.setPreviousMonthYear();
 
     this.loadKPIs();
@@ -149,7 +154,11 @@ export class MonthlyDprComponent {
 
     this.getUserProofhubTasks();
 
+    this.GetDPREmployeeReviewDetails(this.dprid);
+      
   }
+
+  
 
   toggleTaskDetails() {
     this.showTaskDetails = !this.showTaskDetails;
@@ -176,7 +185,6 @@ export class MonthlyDprComponent {
     this.validateActualHours();
 
     if (this.hoursExceeded) {
-      alert('Cannot add more tasks: Actual Hours exceed Worked Hours');
       return;
     }
 
@@ -229,21 +237,109 @@ export class MonthlyDprComponent {
     this.HODReviewUpdate();
   }
 
-  private HODReviewUpdate() {
-    console.log(this.kpis);
+  HODReviewUpdate() {
+    
+    if (this.ApprovalStatus =="R"){
+        this.ConfirmationMessage =   'Do you want to rework the review details?';
+    }
+    else{
+      this.ConfirmationMessage =   'Do you want to approve the review details?';
+    } 
 
-    this.dprid = 4;
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: this.ConfirmationMessage,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, submit it!',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+       
+        const review: DPRReview = {
+          employeeId: this.empId,
+          status: this.ApprovalStatus,
+          hodId: this.reportingTo,
+          scoreQuality: Number(this.quality),
+          scoreTimeliness: Number(this.timeliness),
+          scoreInitiative: Number(this.initiative),
+          scoreOverall: Number(this.overallScore),
+          remarks: this.managementRemarks,
+          dprid: 4
+        };
+
+        this.api.updateDPRReview(review).subscribe({
+          next: (res: any) => {
+            if (res.success) {
+              this.toastr.success(res.message, 'Success');
+            } else {
+              this.toastr.error(res.message, 'Error');
+            }
+            console.log(res);
+          },
+          error: (err) => {
+            this.toastr.error('Something went wrong while updating the review.', 'Error');
+            console.error(err);
+          },
+        });
+      }
+    });
+}
+
+  saveEmployeeDetails() {
+
+
+    if (this.ApprovalStatus =="S"){
+   
+        this.ConfirmationMessage =   'Do you want to submit the review details?';
+
+        if (!this.reportingTo) {
+          this.toastr.warning('Please specify the Reporting To field.', 'Validation Failed');
+          return;
+        }
+
+        const hasIncompleteTasks = this.tasks.some(
+          (task) => !task.taskName || !task.description || task.actualHours <= 0
+        );
+
+        if (hasIncompleteTasks) {
+          this.toastr.warning('Please complete all task details. Each task must have a name, description, and actual hours.', 'Validation Failed');
+          return;
+        }
+
+        const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+
+        if (totalActualHours > this.WorkedHours) {
+          this.toastr.warning('The sum of actual hours exceeds the Worked Hours. Please adjust your task hours.', 'Validation Failed');
+          return;
+        }
+
+        if (this.tasks.length === 0) {
+          this.toastr.warning('Please add at least one task with valid details.', 'Validation Failed');
+          return;
+        }
+    }
+    else{
+      this.ConfirmationMessage =   'Do you want to save the review details?';
+    } 
+    
+
     const review: DPRReview = {
       employeeId: this.empId,
-      status: this.ApprovalStatus,
-      hodId: 'Vinod',
-      scoreQuality: Number(+this.quality),
-      scoreTimeliness: Number(+this.timeliness),
-      scoreInitiative: Number(+this.initiative),
-      scoreOverall: Number(+this.overallScore),
-      remarks: this.managementRemarks,
-      dprid: this.dprid,
-
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      workedHours: Number(this.WorkedHours),
+      achievements: this.achievements || '',
+      challenges: this.challenges || '',
+      supportNeeded: this.supportNeeded || '',
+      status: this.ApprovalStatus || '',
+      hodId: this.reportingTo || '',
+      tasksList: this.tasks.map((t) => ({
+        taskName: t.taskName,
+        description: t.description,
+        actualHours: Number(t.actualHours),
+      })),
       kpiList: this.kpis.map((t) => ({
         kpiId: Number(t.kpiId),
         dprId: Number(this.dprid),
@@ -255,67 +351,26 @@ export class MonthlyDprComponent {
       })),
     };
 
-    this.api.updateDPRReview(review).subscribe({
-      next: (res: any) => {
-        if (res.success) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Operation successful',
-            text: res.message,
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Failed to update DPR: ' + res.message,
-          });
-        }
+    Swal.fire({
+      title: 'Are you sure?',
+      text: this.ConfirmationMessage,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, save it!',
+      cancelButtonText: 'No, cancel!',
+    }).then((result) => {
+      
+      if (result.isConfirmed) {
 
-        console.log(res);
-      },
-      error: (err) => {
-        alert(JSON.stringify(err.error));
-      },
-    });
-  }
-
-  saveEmployeeDetails() {
-    const review: DPRReview = {
-      employeeId: this.empId,
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-      workedHours: Number(this.WorkedHours),
-      achievements: this.achievements || '',
-      challenges: this.challenges || '',
-      supportNeeded: this.supportNeeded || '',
-      status: this.ApprovalStatus || '',
-      hodId: this.reportingTo || 'Vinod',
-      tasksList: this.tasks.map((t) => ({
-        taskName: t.taskName,
-        description: t.description,
-        actualHours: Number(t.actualHours),
-        estimatedHours: Number(t.estimatedHours),
-        productivity: Number(t.productivity),
-      })),
-    };
-
-    console.log('review' + review);
-
-    this.api.insertDpr(review).subscribe({
-      next: (res) => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Operation successful',
-          text: res.message,
+        this.api.insertDpr(review).subscribe({
+          next: (res) => {
+            this.toastr.success(res.message, 'Success');
+          },
+          error: (err) => {
+            this.toastr.error('Failed to save employee details.', 'Error');    
+          },
         });
-      },
-      error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Validation Failed',
-          text: JSON.stringify(err.error),
-        });
-      },
+      }
     });
   }
 
@@ -334,8 +389,8 @@ export class MonthlyDprComponent {
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const startDateString = startDate.toISOString().split('T')[0]; // '2025-08-01'
-    const endDateString = endDate.toISOString().split('T')[0]; // '2025-08-31'
+    const startDateString = startDate.toISOString().split('T')[0]; 
+    const endDateString = endDate.toISOString().split('T')[0]; 
 
     this.api.GetUserProofhubTasks(email, startDateString, endDateString).subscribe({
       next: (res) => {
@@ -370,13 +425,7 @@ export class MonthlyDprComponent {
     this.monthYear = currentDate.toLocaleDateString('en-US', options);
   }
 
-  calculateProductivity(task: any) {
-    if (task.estimatedHours && task.actualHours) {
-      task.productivity = ((task.actualHours / task.estimatedHours) * 100).toFixed(2);
-    } else {
-      task.productivity = 0;
-    }
-  }
+  
 
   loadKPIs(): void {
     this.api.GetActiveKPIs(this.department).subscribe(
@@ -441,10 +490,12 @@ export class MonthlyDprComponent {
           this.timeliness = dpr.scoreTimeliness ?? 0;
           this.initiative = dpr.scoreInitiative ?? 0;
           this.overallScore = dpr.scoreOverall ?? 0;
-
+          this.reportingTo = dpr.hodId ?? '';
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
           this.kpis = dpr.kpiList?.length ? dpr.kpiList : [];
           this.remarksHistory = dpr.commentsList?.length ? dpr.commentsList : [];
+
+          console.log('Loaded DPR details:', dpr);
         } else {
           console.warn('No DPR data found');
           this.tasks = [];
@@ -461,6 +512,7 @@ export class MonthlyDprComponent {
 
 
   getRatingLabel(score: number): { text: string; color: string } {
+    
     if (score >= 90) {
       return { text: "Excellent", color: "green" };
     } else if (score >= 75) {
@@ -472,6 +524,7 @@ export class MonthlyDprComponent {
     } else {
       return { text: "Poor", color: "red" };
     }
+
   }
 
 
@@ -497,10 +550,10 @@ export class MonthlyDprComponent {
       0
     );
 
-    this.hoursExceeded = totalActualHours > this.WorkedHours;
+    this.hoursExceeded = totalActualHours >= this.WorkedHours;
 
     if (this.hoursExceeded) {
-      console.warn('Actual hours exceed Worked Hours');
+      this.toastr.warning('Actual hours exceed Worked Hours.', 'error');
     }
   }
 

@@ -9,7 +9,7 @@
   <div class="filter-section" [@slideIn]>
     <div class="filter-row">
       <div class="filter-group">
-        <label>Employee Name</label>
+        <label>Employee ID</label>
         <input 
           type="text" 
           [(ngModel)]="filters.employeeName"
@@ -55,13 +55,15 @@
       </div>
 
       <div class="filter-group">
-        <label>HOD Name</label>
-        <input 
-          type="text" 
-          [(ngModel)]="filters.hodName"
-          (input)="applyFilters()"
-          placeholder="Search HOD..."
-          class="filter-input">
+        
+        <label><b>HOD Name</b></label>
+        <select [(ngModel)]="filters.hodName" (change)="applyFilters()" class="filter-input">
+          <option value="">Select HOD</option>
+          <option *ngFor="let hod of hodList" [value]="hod.idValue">
+            {{ hod.description }}
+          </option>
+        </select>
+
       </div>
     </div>
 

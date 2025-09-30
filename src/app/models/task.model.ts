@@ -26,7 +26,7 @@ export interface DPRTask {
   taskName?: string;
   description?: string;
   estimatedHours?: number;
-  actualHours?: number;
+  actualHours: number;
   productivity?: number;
   selected?: boolean;
   dprid?: number;
@@ -40,7 +40,7 @@ export interface DPRComment {
   commentText?: string;
   commentType?: string;
   dprid?: number;
-  CREATEDAT? : Date;
+  createdat? : Date;
 }
 
 

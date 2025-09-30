@@ -328,12 +328,12 @@
   text-transform: uppercase;
 }
 
-.status-approve {
+.status-APPROVED {
   background: #e8f5e8;
   color: #3d532d;
 }
 
-.status-rework {
+.status-REWORK {
   background: #fdeaea;
   color: #e74c3c;
 }

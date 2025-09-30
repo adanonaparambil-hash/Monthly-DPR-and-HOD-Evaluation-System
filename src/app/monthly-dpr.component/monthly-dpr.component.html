@@ -77,8 +77,6 @@
             <th class="task-col">Task Name</th>
             <th class="desc-col">Task Description</th>
             <th class="hours-col">Actual Hours</th>
-            <!-- <th class="hours-col">Actual Hours</th>
-            <th class="productivity-col">Productivity %</th> -->
           </tr>
         </thead>
         <tbody>
@@ -249,7 +247,7 @@
             <span class="user-name">{{ remark.hodId }}</span>
             <span class="status-badge" [class]="'status-' + remark.commentType">{{ remark.commentType }}</span>
           </div>
-          <span class="history-date">{{ remark.CREATEDAT }}</span>
+          <span class="history-date">{{ remark.createdat }}</span>
         </div>
         <p class="history-comment">{{ remark.commentText }}</p>
       </div>
