@@ -1086,6 +1086,11 @@ th {
   width: 10%;  /* smaller for number inputs */
 }
 
+.my-task-table .delete-col {
+  width: 8%;
+  text-align: center;
+}
+
 .my-task-table .productivity-col {
   width: 10%;
 }
@@ -1128,8 +1133,13 @@ th {
 }
 
 .kpi-table .remarks-col {
-  width: 50%; /* wider textarea */
+  width: 42%; /* wider textarea */
   text-align: left;
+}
+
+.kpi-table .delete-col {
+  width: 8%;
+  text-align: center;
 }
 
 /* Inputs and selects inside table */
@@ -1169,4 +1179,218 @@ th {
  border: none;
  color: white;
  background: #5A6330;
+}
+/* Delete Button Styles */
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+.delete-btn:active {
+  transform: translateY(0);
+}
+
+.delete-btn i {
+  font-size: 14px;
+}
+
+/* Fixed Height Tables with Scrolling */
+.my-task-table .table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  position: relative;
+}
+
+.kpi-table .table-container {
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Sticky Table Headers */
+.my-task-table thead th,
+.kpi-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #3d532d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Table Fixed Height */
+.modal-body .table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.modal-body thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #3d532d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Scrollbar for Tables */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #3d532d;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #2c3e2c;
+}
+
+/* Table Row Hover Effects */
+.my-task-table tbody tr:hover,
+.kpi-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Responsive Table Adjustments */
+@media (max-width: 768px) {
+  .my-task-table .table-container {
+    max-height: 300px;
+  }
+  
+  .kpi-table .table-container {
+    max-height: 250px;
+  }
+  
+  .modal-body .table-container {
+    max-height: 200px;
+  }
+  
+  .delete-btn {
+    padding: 6px 8px;
+    min-width: 32px;
+    height: 32px;
+  }
+  
+  .delete-btn i {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-task-table .table-container {
+    max-height: 250px;
+  }
+  
+  .kpi-table .table-container {
+    max-height: 200px;
+  }
+  
+  .modal-body .table-container {
+    max-height: 180px;
+  }
+  
+  .delete-col {
+    width: 10%;
+  }
+  
+  .delete-btn {
+    padding: 4px 6px;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .delete-btn i {
+    font-size: 10px;
+  }
+}
+
+/* Table Loading State */
+.table-loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Empty Table State */
+.table-empty {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.table-empty i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #ddd;
+}
+
+/* Better Table Cell Alignment */
+.my-task-table .delete-col,
+.kpi-table .delete-col {
+  vertical-align: middle;
+}
+
+.my-task-table .SlNo-col,
+.kpi-table .SlNo-col {
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* Improved Table Spacing */
+.my-task-table td,
+.kpi-table td {
+  vertical-align: top;
+  padding: 12px 8px;
+}
+
+.my-task-table textarea,
+.kpi-table textarea {
+  min-height: 60px;
+  max-height: 120px;
+  resize: vertical;
+}
+
+/* Table Border Improvements */
+.my-task-table table,
+.kpi-table table {
+  border: none;
+}
+
+.my-task-table .table-container,
+.kpi-table .table-container {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

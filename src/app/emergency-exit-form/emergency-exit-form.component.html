@@ -1,0 +1,562 @@
+<div class="emergency-exit-container" [@slideInUp]="'in'">
+  <!-- Header -->
+  <div class="form-header">
+    <div class="header-content">
+      <div class="company-branding">
+        <div class="company-logo-section">
+          <img src="assets/images/logo.jpg" alt="Al Adrak" class="company-logo-img">
+        </div>
+        <div class="form-title-section">
+          <h1>Emergency Exit Form</h1>
+          <p>Digital approval workflow system</p>
+        </div>
+      </div>
+      <div class="form-status" *ngIf="!formSubmitted">
+        <div class="status-badge" [ngClass]="'status-' + getAllApprovalStatus()">
+          {{ getAllApprovalStatus() | titlecase }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Stepper -->
+  <div class="stepper-container" *ngIf="!formSubmitted">
+    <div class="stepper">
+      <div class="step" 
+           *ngFor="let step of [1,2,3,4]; let i = index"
+           [ngClass]="{
+             'active': currentStep === step,
+             'completed': currentStep > step,
+             'disabled': currentStep < step
+           }"
+           (click)="goToStep(step)">
+        <div class="step-circle">
+          <i class="fas fa-check" *ngIf="currentStep > step"></i>
+          <span *ngIf="currentStep <= step">{{ step }}</span>
+        </div>
+        <div class="step-label">
+          <span class="step-title">Step {{ step }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="step-description">
+      <p>{{ getStepDescription() }}</p>
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <div class="form-content" *ngIf="!formSubmitted">
+    <form [formGroup]="exitForm" [@stepTransition]>
+      
+      <!-- Step 1: Employee Information -->
+      <div class="step-content" *ngIf="currentStep === 1" [@fadeInUp]="'in'">
+        <div class="form-section">
+          <h3><i class="fas fa-user"></i> Personal Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="employeeName">Name *</label>
+              <input type="text" 
+                     id="employeeName" 
+                     formControlName="employeeName"
+                     [class.error]="isFieldInvalid('employeeName')"
+                     placeholder="Enter full name">
+              <span class="error-message" *ngIf="isFieldInvalid('employeeName')">
+                {{ getFieldError('employeeName') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="employeeId">ID No. *</label>
+              <input type="text" 
+                     id="employeeId" 
+                     formControlName="employeeId"
+                     [class.error]="isFieldInvalid('employeeId')"
+                     placeholder="Employee ID">
+              <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
+                {{ getFieldError('employeeId') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="department">Department/Site *</label>
+              <select id="department" 
+                      formControlName="department"
+                      [class.error]="isFieldInvalid('department')">
+                <option value="">Select Department</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Sales">Sales</option>
+                <option value="HR">HR</option>
+                <option value="Finance">Finance</option>
+                <option value="Admin">Admin</option>
+              </select>
+              <span class="error-message" *ngIf="isFieldInvalid('department')">
+                {{ getFieldError('department') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3><i class="fas fa-plane"></i> Travel Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="dateOfDeparture">Date of Departure *</label>
+              <input type="date" 
+                     id="dateOfDeparture" 
+                     formControlName="dateOfDeparture"
+                     [class.error]="isFieldInvalid('dateOfDeparture')">
+              <span class="error-message" *ngIf="isFieldInvalid('dateOfDeparture')">
+                {{ getFieldError('dateOfDeparture') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="flightTime">Flight Time</label>
+              <input type="time" 
+                     id="flightTime" 
+                     formControlName="flightTime">
+            </div>
+            
+            <div class="form-group">
+              <label for="dateOfArrival">Date of Arrival</label>
+              <input type="date" 
+                     id="dateOfArrival" 
+                     formControlName="dateOfArrival">
+            </div>
+            
+            <div class="form-group">
+              <label for="noOfDaysApproved">No. of Days Approved *</label>
+              <input type="number" 
+                     id="noOfDaysApproved" 
+                     formControlName="noOfDaysApproved"
+                     [class.error]="isFieldInvalid('noOfDaysApproved')"
+                     min="1"
+                     placeholder="Number of days">
+              <span class="error-message" *ngIf="isFieldInvalid('noOfDaysApproved')">
+                {{ getFieldError('noOfDaysApproved') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3><i class="fas fa-address-card"></i> Contact Details</h3>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="address">Address *</label>
+              <textarea id="address" 
+                        formControlName="address"
+                        [class.error]="isFieldInvalid('address')"
+                        rows="3"
+                        placeholder="Full address"></textarea>
+              <span class="error-message" *ngIf="isFieldInvalid('address')">
+                {{ getFieldError('address') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="district">District</label>
+              <input type="text" 
+                     id="district" 
+                     formControlName="district"
+                     placeholder="District">
+            </div>
+            
+            <div class="form-group">
+              <label for="telephoneMobile">Telephone No (Mobile) *</label>
+              <input type="tel" 
+                     id="telephoneMobile" 
+                     formControlName="telephoneMobile"
+                     [class.error]="isFieldInvalid('telephoneMobile')"
+                     placeholder="Mobile number">
+              <span class="error-message" *ngIf="isFieldInvalid('telephoneMobile')">
+                {{ getFieldError('telephoneMobile') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="place">Place</label>
+              <input type="text" 
+                     id="place" 
+                     formControlName="place"
+                     placeholder="Place">
+            </div>
+            
+            <div class="form-group">
+              <label for="state">State</label>
+              <input type="text" 
+                     id="state" 
+                     formControlName="state"
+                     placeholder="State">
+            </div>
+            
+            <div class="form-group">
+              <label for="telephoneLandline">Telephone No (Landline)</label>
+              <input type="tel" 
+                     id="telephoneLandline" 
+                     formControlName="telephoneLandline"
+                     placeholder="Landline number">
+            </div>
+            
+            <div class="form-group">
+              <label for="postOffice">Post Office</label>
+              <input type="text" 
+                     id="postOffice" 
+                     formControlName="postOffice"
+                     placeholder="Post office">
+            </div>
+            
+            <div class="form-group">
+              <label for="nation">Nation</label>
+              <input type="text" 
+                     id="nation" 
+                     formControlName="nation"
+                     placeholder="Country">
+            </div>
+            
+            <div class="form-group">
+              <label for="emailId">Email ID *</label>
+              <input type="email" 
+                     id="emailId" 
+                     formControlName="emailId"
+                     [class.error]="isFieldInvalid('emailId')"
+                     placeholder="Email address">
+              <span class="error-message" *ngIf="isFieldInvalid('emailId')">
+                {{ getFieldError('emailId') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3><i class="fas fa-exclamation-triangle"></i> Emergency Details</h3>
+          <div class="form-group full-width">
+            <label for="reasonForEmergency">Reason for the Emergency *</label>
+            <textarea id="reasonForEmergency" 
+                      formControlName="reasonForEmergency"
+                      [class.error]="isFieldInvalid('reasonForEmergency')"
+                      rows="4"
+                      placeholder="Please provide detailed reason for emergency leave"></textarea>
+            <span class="error-message" *ngIf="isFieldInvalid('reasonForEmergency')">
+              {{ getFieldError('reasonForEmergency') }}
+            </span>
+          </div>
+          
+          <div class="form-group">
+            <label for="hodName">HOD Name *</label>
+            <input type="text" 
+                   id="hodName" 
+                   formControlName="hodName"
+                   [class.error]="isFieldInvalid('hodName')"
+                   placeholder="Head of Department name">
+            <span class="error-message" *ngIf="isFieldInvalid('hodName')">
+              {{ getFieldError('hodName') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Responsibility Handover -->
+      <div class="step-content" *ngIf="currentStep === 2" [@fadeInUp]="'in'">
+        <div class="form-section">
+          <div class="section-header">
+            <h3><i class="fas fa-handshake"></i> Responsibilities Handed Over To</h3>
+            <button type="button" 
+                    class="btn-add" 
+                    (click)="addResponsibility()">
+              <i class="fas fa-plus"></i> Add Responsibility
+            </button>
+          </div>
+          
+          <div class="responsibilities-container" formArrayName="responsibilities">
+            <div class="responsibility-card" 
+                 *ngFor="let responsibility of responsibilitiesFormArray.controls; let i = index"
+                 [formGroupName]="i">
+              
+              <div class="card-header">
+                <h4>Responsibility {{ i + 1 }}</h4>
+                <button type="button" 
+                        class="btn-remove" 
+                        (click)="removeResponsibility(i)"
+                        *ngIf="responsibilitiesFormArray.length > 1">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+              
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Project *</label>
+                  <input type="text" 
+                         formControlName="project"
+                         placeholder="Project name">
+                </div>
+                
+                <div class="form-group">
+                  <label>Activities *</label>
+                  <textarea formControlName="activities"
+                            rows="3"
+                            placeholder="List of activities"></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>Responsible Person Name *</label>
+                  <input type="text" 
+                         formControlName="responsiblePersonName"
+                         placeholder="Name of person taking over">
+                </div>
+                
+                <div class="form-group">
+                  <label>Phone No & Email ID *</label>
+                  <input type="tel" 
+                         formControlName="responsiblePersonPhone"
+                         placeholder="Phone number">
+                </div>
+                
+                <div class="form-group">
+                  <label>Email ID *</label>
+                  <input type="email" 
+                         formControlName="responsiblePersonEmail"
+                         placeholder="Email address">
+                </div>
+                
+                <div class="form-group">
+                  <label>Remarks</label>
+                  <textarea formControlName="remarks"
+                            rows="2"
+                            placeholder="Additional remarks"></textarea>
+                </div>
+              </div>
+              
+              <div class="signature-section">
+                <label>Signature</label>
+                <div class="signature-pad">
+                  <canvas #signatureCanvas 
+                          width="300" 
+                          height="100"
+                          (mousedown)="startDrawing($event)"
+                          (mousemove)="draw($event)"
+                          (mouseup)="stopDrawing()"></canvas>
+                  <button type="button" 
+                          class="btn-clear-signature" 
+                          (click)="clearSignature()">
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Department Approvals -->
+      <div class="step-content" *ngIf="currentStep === 3" [@fadeInUp]="'in'">
+        <div class="form-section">
+          <h3><i class="fas fa-clipboard-check"></i> Approval From Concerned Departments</h3>
+          
+          <div class="approval-progress">
+            <div class="progress-header">
+              <span>Overall Progress</span>
+              <span>{{ getProgressPercentage() | number:'1.0-0' }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="getProgressPercentage()"></div>
+            </div>
+          </div>
+          
+          <div class="departments-grid">
+            <div class="department-card" 
+                 *ngFor="let dept of departments"
+                 [ngClass]="'status-' + dept.status">
+              
+              <div class="dept-header">
+                <h4>{{ dept.name }}</h4>
+                <div class="status-indicator" [ngClass]="'status-' + dept.status">
+                  <i class="fas fa-clock" *ngIf="dept.status === 'pending'"></i>
+                  <i class="fas fa-check" *ngIf="dept.status === 'approved'"></i>
+                  <i class="fas fa-times" *ngIf="dept.status === 'rejected'"></i>
+                  {{ dept.status | titlecase }}
+                </div>
+              </div>
+              
+              <div class="dept-items">
+                <div class="item-row" *ngFor="let item of dept.items">
+                  <label>{{ item.label }}</label>
+                  <div class="item-input">
+                    <input *ngIf="item.type === 'text'" 
+                           type="text"
+                           [value]="getDepartmentItemValue(dept.id, item.label)"
+                           (input)="updateDepartmentItem(dept.id, item.label, $event)"
+                           placeholder="Enter value">
+                    
+                    <input *ngIf="item.type === 'number'" 
+                           type="number"
+                           [value]="getDepartmentItemValue(dept.id, item.label)"
+                           (input)="updateDepartmentItem(dept.id, item.label, $event)"
+                           placeholder="0">
+                    
+                    <label *ngIf="item.type === 'checkbox'" class="checkbox-label">
+                      <input type="checkbox"
+                             [checked]="getDepartmentItemValue(dept.id, item.label)"
+                             (change)="updateDepartmentItem(dept.id, item.label, $event)">
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="dept-approval" *ngIf="dept.status !== 'pending'">
+                <div class="approval-info">
+                  <p><strong>HOD:</strong> {{ dept.hodName || 'System Admin' }}</p>
+                  <p><strong>Date:</strong> {{ dept.approvedDate | date:'short' }}</p>
+                  <p *ngIf="dept.comments"><strong>Comments:</strong> {{ dept.comments }}</p>
+                </div>
+              </div>
+              
+              <!-- Demo approval buttons (in real app, only HODs would see these) -->
+              <div class="demo-approval-actions" *ngIf="dept.status === 'pending'">
+                <button type="button" 
+                        class="btn-approve" 
+                        (click)="approveDepartment(dept.id, true, 'Approved by HOD')">
+                  <i class="fas fa-check"></i> Approve
+                </button>
+                <button type="button" 
+                        class="btn-reject" 
+                        (click)="approveDepartment(dept.id, false, 'Rejected by HOD')">
+                  <i class="fas fa-times"></i> Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Final Review -->
+      <div class="step-content" *ngIf="currentStep === 4" [@fadeInUp]="'in'">
+        <div class="form-section">
+          <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
+          
+          <div class="review-summary">
+            <div class="summary-card">
+              <h4>Employee Information</h4>
+              <div class="summary-grid">
+                <div><strong>Name:</strong> {{ exitForm.get('employeeName')?.value }}</div>
+                <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
+                <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
+                <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
+                <div><strong>Days Approved:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
+                <div><strong>Email:</strong> {{ exitForm.get('emailId')?.value }}</div>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <h4>Responsibilities</h4>
+              <div class="responsibilities-summary">
+                <div *ngFor="let resp of responsibilitiesFormArray.controls; let i = index" 
+                     class="responsibility-summary">
+                  <strong>{{ i + 1 }}. {{ resp.get('project')?.value }}</strong>
+                  <p>Handed over to: {{ resp.get('responsiblePersonName')?.value }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <h4>Approval Status</h4>
+              <div class="approval-summary">
+                <div class="approval-status-grid">
+                  <div *ngFor="let dept of departments" 
+                       class="dept-status"
+                       [ngClass]="'status-' + dept.status">
+                    <span>{{ dept.name }}</span>
+                    <span class="status-badge">{{ dept.status | titlecase }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="final-signatures">
+            <div class="signature-row">
+              <div class="signature-block">
+                <h5>Employee Signature</h5>
+                <div class="signature-area">
+                  <canvas width="200" height="80"></canvas>
+                </div>
+                <input type="date" formControlName="employeeSignatureDate">
+              </div>
+              
+              <div class="signature-block">
+                <h5>HR Signature</h5>
+                <div class="signature-area">
+                  <canvas width="200" height="80"></canvas>
+                </div>
+                <input type="date" formControlName="hrSignatureDate">
+              </div>
+            </div>
+          </div>
+          
+          <div class="travel-documents">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="travelDocumentsHandedOver">
+              <span class="checkmark"></span>
+              Travel Documents Handed Over to the Employee
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Form Navigation -->
+  <div class="form-navigation" *ngIf="!formSubmitted">
+    <button type="button" 
+            class="btn-secondary" 
+            (click)="previousStep()"
+            [disabled]="currentStep === 1">
+      <i class="fas fa-arrow-left"></i> Previous
+    </button>
+    
+    <div class="step-indicator">
+      Step {{ currentStep }} of {{ totalSteps }}
+    </div>
+    
+    <button type="button" 
+            class="btn-primary" 
+            (click)="nextStep()"
+            *ngIf="currentStep < totalSteps">
+      Next <i class="fas fa-arrow-right"></i>
+    </button>
+    
+    <button type="button" 
+            class="btn-submit" 
+            (click)="submitForm()"
+            [disabled]="getAllApprovalStatus() !== 'approved' || isSubmitting"
+            *ngIf="currentStep === totalSteps">
+      <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+      <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+      {{ isSubmitting ? 'Submitting...' : 'Submit Form' }}
+    </button>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-container" *ngIf="formSubmitted" [@fadeInUp]="'in'">
+    <div class="success-card">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2>Form Submitted Successfully!</h2>
+      <p>Your emergency exit form has been submitted and is now being processed.</p>
+      <p><strong>Reference ID:</strong> EEF-{{ getCurrentTimestamp() }}</p>
+      
+      <div class="success-actions">
+        <button type="button" class="btn-primary" (click)="downloadPDF()">
+          <i class="fas fa-download"></i> Download PDF
+        </button>
+        <button type="button" class="btn-secondary" (click)="resetForm()">
+          <i class="fas fa-plus"></i> New Form
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -197,7 +197,27 @@ export class MonthlyDprComponent {
       selected: false,
     });
 
+  }
 
+  deleteTask(index: number) {
+    if (this.tasks.length > 1) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to delete this task?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.tasks.splice(index, 1);
+          this.validateActualHours(); // Recalculate hours after deletion
+          this.toastr.success('Task deleted successfully', 'Success');
+        }
+      });
+    } else {
+      this.toastr.warning('At least one task is required', 'Warning');
+    }
   }
 
   addNewKPI() {
@@ -210,6 +230,26 @@ export class MonthlyDprComponent {
       employeeId: '',
       kpiMasterId: 0,
     });
+  }
+
+  deleteKPI(index: number) {
+    if (this.kpis.length > 1) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to delete this KPI?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.kpis.splice(index, 1);
+          this.toastr.success('KPI deleted successfully', 'Success');
+        }
+      });
+    } else {
+      this.toastr.warning('At least one KPI is required', 'Warning');
+    }
   }
 
   closeModal() {

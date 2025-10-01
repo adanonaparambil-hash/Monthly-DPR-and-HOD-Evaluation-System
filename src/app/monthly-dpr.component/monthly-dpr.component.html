@@ -77,6 +77,7 @@
             <th class="task-col">Task Name</th>
             <th class="desc-col">Task Description</th>
             <th class="hours-col">Actual Hours</th>
+            <th class="delete-col">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -94,6 +95,11 @@
                 type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()">
             </td>
             
+            <td class="delete-col">
+              <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -143,6 +149,7 @@
             <th class="kpi-col">KPI</th>
             <th class="kpi-value-col">KPI Value</th>
             <th class="remarks-col">Remarks</th>
+            <th class="delete-col">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -168,6 +175,12 @@
             <!-- Remarks -->
             <td class="remarks-col">
               <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks"></textarea>
+            </td>
+            
+            <td class="delete-col">
+              <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI">
+                <i class="fas fa-trash"></i>
+              </button>
             </td>
           </tr>
         </tbody>

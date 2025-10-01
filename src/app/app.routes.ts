@@ -7,6 +7,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { EmployeeDashboard } from './employee-dashboard/employee-dashboard';
 import { HodDashboard } from './hod-dashboard/hod-dashboard';
 import { CedDashboard } from './ced-dashboard/ced-dashboard';
+import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
 import { layout } from './layout/layout';
 
 export const routes: Routes = [
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'monthly-dpr', component: MonthlyDprComponent },
       { path: 'past-reports', component: PastReportsComponent },
       { path: 'profile', component: ProfileComponent },
+      { path: 'emergency-exit-form', component: EmergencyExitFormComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

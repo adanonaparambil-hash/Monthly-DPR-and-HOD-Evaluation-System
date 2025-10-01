@@ -93,7 +93,8 @@ export class layout implements OnInit {
       '/ced-dashboard': 'CED Dashboard',
       '/monthly-dpr': 'MPR Entry',
       '/past-reports': 'Past Reports',
-      '/profile': 'My Profile'
+      '/profile': 'My Profile',
+      '/emergency-exit-form': 'Emergency Exit Form'
     };
     return routeTitles[this.currentRoute] || 'Dashboard';
   }
