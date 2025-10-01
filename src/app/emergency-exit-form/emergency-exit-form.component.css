@@ -364,11 +364,21 @@
   background: var(--error-color);
   color: white;
   padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .btn-remove:hover {
   background: #dc2626;
   transform: translateY(-2px);
+}
+
+.btn-remove i {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .btn-primary {
@@ -457,6 +467,7 @@
   margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
+  gap: 16px;
 }
 
 .card-header h4 {
