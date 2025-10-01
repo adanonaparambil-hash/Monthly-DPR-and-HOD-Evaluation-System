@@ -154,7 +154,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #3d532d;
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
   color: white;
   padding: 12px 20px;
   cursor: pointer;
@@ -162,7 +162,8 @@
 }
 
 .section-header:hover {
-  background: #4e673b;
+  background: #5A6330;
+  color: white;
 }
 
 .header-left {
@@ -188,7 +189,15 @@
 .eval-item {
   display: flex;
   flex-direction: column;
+  align-items: center; 
 }
+
+.rating-input {
+  text-align: center;        
+  justify-self: center;     
+  width: 100%;               
+}
+
 
 .eval-item label {
   font-size: 13px;
@@ -319,12 +328,12 @@
   text-transform: uppercase;
 }
 
-.status-approve {
+.status-APPROVED {
   background: #e8f5e8;
   color: #3d532d;
 }
 
-.status-rework {
+.status-REWORK {
   background: #fdeaea;
   color: #e74c3c;
 }
@@ -854,7 +863,7 @@ h2:hover i {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2f4f2f;
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
   color: #fff;
   padding: 12px 20px;
   font-size: 18px;
@@ -1064,12 +1073,12 @@ th {
 }
 
 .my-task-table .task-col {
-  width: 30%;  /* bigger for task name */
+  width: 25%;  /* bigger for task name */
   text-align: left;
 }
 
 .my-task-table .desc-col {
-  width: 35%;  /* bigger for description */
+  width: 40%;  /* bigger for description */
   text-align: left;
 }
 
@@ -1086,7 +1095,6 @@ th {
 .my-task-table .productivity-col input {
   text-align: center;
 }
-
 
 
 /* Only affect KPI table */
@@ -1138,18 +1146,27 @@ th {
 .kpi-table .kpi-value-col {
   width: 18%; /* slightly bigger to fit text */
   min-width: 150px; /* ensures label is readable */
+  text-align: center;
 }
-
+/* 
 .kpi-table .kpi-value-col select {
   width: 100%;
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 6px;
-}
+} */
 
 
 .kpi-table textarea , .my-task-table textarea {
     height: 60px;        
     resize: none;         
     overflow-y: auto;    
+}
+
+
+
+.my-task-table th ,.kpi-table th , th{
+ border: none;
+ color: white;
+ background: #5A6330;
 }

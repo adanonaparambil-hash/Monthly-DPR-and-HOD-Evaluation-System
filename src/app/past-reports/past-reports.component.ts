@@ -2,6 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { DropdownOption  } from '../models/common.model';
+import { Api } from '../services/api';
+import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-past-reports',
@@ -29,6 +33,8 @@ export class PastReportsComponent implements OnInit {
   // Math reference for template
   Math = Math;
   
+  hodList: DropdownOption[] = [];
+
   // Filter properties
   filters = {
     employeeName: '',
@@ -77,16 +83,20 @@ export class PastReportsComponent implements OnInit {
 
   statuses = [
     { value: '', label: 'Select status' },
-    { value: 'Approved', label: 'Approved' },
-    { value: 'Pending', label: 'Pending' },
-    { value: 'Rejected', label: 'Rejected' }
+    { value: 'A', label: 'Approved' },
+    { value: 'D', label: 'Draft' },
+    { value: 'R', label: 'Rework' },
+    { value: 'S', label: 'Submit' }
   ];
 
-  constructor() {}
+  constructor(private api: Api,private toastr: ToastrService, private router: Router) {}
 
   ngOnInit() {
     this.loadMockData();
     this.applyFilters();
+
+    this.loadHodMasterList();
+
   }
 
   loadMockData() {
@@ -233,10 +243,11 @@ export class PastReportsComponent implements OnInit {
         return '';
     }
   }
-
+  
   viewReport(report: any) {
-    console.log('View report:', report);
-    // Implement view functionality - could open a modal or navigate to detail page
+    report.id = 4;
+    this.router.navigate(['/monthly-dpr', report.id]);
+
   }
 
   getPageNumbers(): number[] {
@@ -255,4 +266,22 @@ export class PastReportsComponent implements OnInit {
 
     return pages;
   }
+
+
+  
+    loadHodMasterList(): void {
+    this.api.GetHodMasterList().subscribe(
+      (response: any) => {
+        if (response && response.success && response.data) {
+          this.hodList = response.data;
+        } else {
+          console.warn('No HOD records found or API call failed');
+        }
+      },
+      (error) => {
+        console.error('Error fetching HOD master list:', error);
+      }
+    );
+  }
+
 }

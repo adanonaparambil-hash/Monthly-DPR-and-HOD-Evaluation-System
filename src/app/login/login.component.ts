@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
 import { environment } from '../../environments/environment';
-import { map} from 'rxjs/operators';    
+import { map} from 'rxjs/operators';  
+import { ToastrService } from 'ngx-toastr';  
 
 
 @Component({
@@ -45,22 +46,23 @@ export class LoginComponent {
 
   private base = environment.apiBaseUrl;
 
-  constructor(private router: Router, private api: Api) {}
+  constructor(private router: Router, private api: Api,private toastr: ToastrService) {}
 
 
   togglePasswordVisibility() {
     this.showPassword.update(show => !show);
   }
 
-    isPasswordValid(): boolean {
+  isPasswordValid(): boolean {
     const passwordPattern = /^(?=.*\d).{6,}$/; 
     return passwordPattern.test(this.password());
   }
 
-  isEmailValid(): boolean {
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; 
-    return emailPattern.test(this.username());  
+  isUserIdValid(): boolean {
+    const userIdPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,}$/;
+    return userIdPattern.test(this.username());
   }
+
 
 
   
@@ -68,11 +70,16 @@ export class LoginComponent {
     
     this.loginErrorMessage = '';
 
-    if (!this.isEmailValid() || !this.isPasswordValid()) {
-
-      this.loginErrorMessage = 'Please enter a valid username and password (at least 6 characters including a number).';
-      return;
+    if (!this.isUserIdValid()) {
+        this.toastr.error('Please enter a valid username (at least 4 characters, including both letters and numbers).', 'Invalid User ID');
+        return;
     }
+
+    if (!this.isPasswordValid()) {
+        this.toastr.error('Please enter a valid password (at least 6 characters, including a number).', 'Invalid Password');
+        return;
+    }
+
 
     this.isLoggingIn.set(true);
 
@@ -93,7 +100,7 @@ export class LoginComponent {
           this.router.navigate(['/employee-dashboard']);
 
         } else if (res?.message === "FIRST_LOGIN") {
-          // 🔄 First login – redirect to set new password UI
+          
 
           this.forgotPasswordVisible = true; 
 
@@ -111,13 +118,13 @@ export class LoginComponent {
          this.email = this.username();
 
         } else {
-          // ❌ Failed login
-          this.loginErrorMessage = (res?.message || 'Login failed');
+        
+          this.toastr.error(res?.message || 'Login failed', 'Error');
+
         }
       },
       error: (err) => {
-        console.error('Login failed', err);
-        this.loginErrorMessage = ('Unexpected error occurred during login');
+        this.toastr.error('Unexpected error occurred during login', 'Error');
         this.isLoggingIn.set(false);
       },
       complete: () => this.isLoggingIn.set(false)
@@ -165,21 +172,28 @@ export class LoginComponent {
       this.api.setpassword(this.email, this.newPassword).subscribe({
         next: (res) => {
           if (res?.status === "Y") {
-            this.PasswordsetsuccessMessage = 'Password reset successful. Please log in with your new password.';
-            this.forgotPasswordVisible = true; // Hide the reset email form
+
+             this.toastr.success('Password reset successful. Please log in with your new password.', 'Success');
+
+            this.forgotPasswordVisible = true;
           } else {
-            this.PasswordseterrorMessage = res?.message || 'Password reset failed';
+
+            this.toastr.error(res?.message || 'Password reset failed', 'Error');
+
           }
         },
         error: (err) => {
-          console.error('Password reset failed', err);
-           this.PasswordseterrorMessage = 'Unexpected error occurred during password reset';
+
+          this.toastr.error('Unexpected error occurred during password reset', 'Error');
+
         }
       });
 
       
     } else {
-      alert("Passwords do not match.");
+
+      this.toastr.error('Passwords do not match.', 'Error');
+
     }
   }
 

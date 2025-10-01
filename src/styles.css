@@ -96,3 +96,27 @@ body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+.toast-error {
+  background-color: red !important;
+  color: white !important;
+}
+
+
+.toast-success {
+  background-color: green !important;
+  color: white !important;
+}
+
+
+.toast-warning {
+  background-color: orange !important;
+  color: white !important;
+}
+
+
+.toast-info {
+  background-color: blue !important;
+  color: white !important;
+}

@@ -35,3 +35,7 @@ export interface EmployeeProfileUpdateDto {
   ProfileImageBase64?: string; 
 }
 
+export interface DropdownOption {
+  idValue: string;
+  description : string;
+}
