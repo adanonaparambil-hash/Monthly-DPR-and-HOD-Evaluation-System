@@ -245,7 +245,7 @@ export class PastReportsComponent implements OnInit {
   }
   
   viewReport(report: any) {
-    
+    report.id = 4;
     this.router.navigate(['/monthly-dpr', report.id]);
 
   }

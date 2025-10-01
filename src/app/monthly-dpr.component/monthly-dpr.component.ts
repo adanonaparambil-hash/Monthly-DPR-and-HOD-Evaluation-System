@@ -505,7 +505,7 @@ export class MonthlyDprComponent {
       },
       error: (err) => {
         console.error(err);
-        alert('Error loading DPR');
+        // alert('Error loading DPR');
       },
     });
   }
