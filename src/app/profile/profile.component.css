@@ -42,31 +42,31 @@
    - Supports Angular/Web Components via :host-context
    - Also supports body.dark-theme or any parent with .dark-theme
    ========================================= */
-:host-context(.dark-theme),
-.dark-theme {
-  --color-bg: #0f172a;            /* slate-900 */
-  --color-text: #e2e8f0;          /* slate-200 */
-  --color-muted: #cbd5e1;         /* slate-300 */
-  --color-subtle: #94a3b8;        /* slate-400 */
-  --color-border: #334155;        /* slate-700 */
-  --color-surface: #111827;       /* gray-900 */
-  --color-surface-2: #0b1220;     /* deep surface */
-  --color-surface-hover: #0f1a2a; /* hover */
+:host-context(.dark-theme) .profile-page,
+.dark-theme .profile-page {
+  --color-bg: #111827;            /* gray-900 */
+  --color-text: #f9fafb;          /* gray-50 */
+  --color-muted: #d1d5db;         /* gray-300 */
+  --color-subtle: #9ca3af;        /* gray-400 */
+  --color-border: #374151;        /* gray-700 */
+  --color-surface: #1f2937;       /* gray-800 */
+  --color-surface-2: #111827;     /* gray-900 */
+  --color-surface-hover: #374151; /* gray-700 */
   
   /* Keep brand but lift luminance a bit for contrast */
-  --color-primary: #93a46a;
-  --color-primary-700: #7e915a;
-  --color-primary-shadow: 0 2px 6px rgba(147, 164, 106, 0.2);
-  --color-ring: rgba(147, 164, 106, 0.25);
+  --color-primary: #cc9933;
+  --color-primary-700: #b8860b;
+  --color-primary-shadow: 0 2px 6px rgba(204, 153, 51, 0.3);
+  --color-ring: rgba(204, 153, 51, 0.25);
 
-  /* Dark header gradient (subtle green tint) */
-  --header-grad-1: #1d2417;
-  --header-grad-2: #28341f;
+  /* Dark header gradient */
+  --header-grad-1: #1f2937;
+  --header-grad-2: #374151;
 
   /* Elevation tuned for dark */
-  --elev-1: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --elev-1: 0 4px 12px rgba(0, 0, 0, 0.5);
 
-  --color-stat: #cbd5e1; /* per your example for labels */
+  --color-stat: #d1d5db;
 }
 
 /* Optional: respect OS preference as a fallback */

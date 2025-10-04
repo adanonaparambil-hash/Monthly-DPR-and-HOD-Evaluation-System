@@ -1,5 +1,15 @@
 /* Global Styles for TimeSheet UI */
 
+/* Global Font Family */
+* {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 /* CSS Custom Properties for Theme System */
 :root {
   /* Light Theme - Company Colors */

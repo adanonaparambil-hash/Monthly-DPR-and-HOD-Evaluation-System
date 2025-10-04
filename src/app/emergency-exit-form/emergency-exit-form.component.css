@@ -272,6 +272,13 @@
   gap: 20px;
 }
 
+.responsibility-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -477,41 +484,51 @@
   color: var(--primary-color);
 }
 
-/* Signature Pad */
+/* Digital Signature */
 .signature-section {
   margin-top: 20px;
 }
 
-.signature-pad {
+.signature-input-container {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signature-input {
   padding: 16px;
-  background: var(--background-primary);
-  border: 2px dashed var(--border-color);
+  border: 2px solid var(--primary-color);
   border-radius: 12px;
-}
-
-.signature-pad canvas {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: white;
-  cursor: crosshair;
-}
-
-.btn-clear-signature {
-  padding: 8px 16px;
-  background: var(--error-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  text-align: center;
   transition: all 0.3s ease;
 }
 
-.btn-clear-signature:hover {
-  background: #dc2626;
+.signature-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(204, 153, 51, 0.2);
+  background: var(--background-secondary);
+}
+
+.signature-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(204, 153, 51, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(204, 153, 51, 0.2);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.signature-note i {
+  color: var(--primary-color);
+  font-size: 14px;
 }
 
 /* Department Approvals */
@@ -810,34 +827,54 @@
 }
 
 .signature-block {
-  text-align: center;
+  text-align: left;
 }
 
 .signature-block h5 {
   margin: 0 0 12px 0;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--primary-color);
 }
 
-.signature-area {
-  border: 2px dashed var(--border-color);
+.final-signature-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.final-signature-input {
+  padding: 12px 16px;
+  border: 2px solid var(--primary-color);
   border-radius: 8px;
-  margin-bottom: 12px;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  transition: all 0.3s ease;
+}
+
+.final-signature-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(204, 153, 51, 0.2);
   background: var(--background-secondary);
 }
 
-.signature-area canvas {
-  display: block;
-  margin: 0 auto;
-  background: white;
+.signature-block input[type="date"] {
+  padding: 10px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
 }
 
-.signature-block input[type="date"] {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 12px;
+.signature-block input[type="date"]:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(204, 153, 51, 0.1);
 }
 
 .travel-documents {

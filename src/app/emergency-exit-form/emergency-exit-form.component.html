@@ -284,64 +284,61 @@
                 </button>
               </div>
               
-              <div class="form-grid">
-                <div class="form-group">
+              <div class="responsibility-form-grid">
+                <div class="form-group full-width">
                   <label>Project *</label>
                   <input type="text" 
                          formControlName="project"
-                         placeholder="Project name">
+                         placeholder="Enter project name">
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group full-width">
                   <label>Activities *</label>
                   <textarea formControlName="activities"
-                            rows="3"
-                            placeholder="List of activities"></textarea>
+                            rows="4"
+                            placeholder="Describe the activities and responsibilities being handed over"></textarea>
                 </div>
                 
                 <div class="form-group">
                   <label>Responsible Person Name *</label>
                   <input type="text" 
                          formControlName="responsiblePersonName"
-                         placeholder="Name of person taking over">
+                         placeholder="Full name of person taking over">
                 </div>
                 
                 <div class="form-group">
-                  <label>Phone No & Email ID *</label>
+                  <label>Phone Number *</label>
                   <input type="tel" 
                          formControlName="responsiblePersonPhone"
-                         placeholder="Phone number">
+                         placeholder="Contact phone number">
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group full-width">
                   <label>Email ID *</label>
                   <input type="email" 
                          formControlName="responsiblePersonEmail"
                          placeholder="Email address">
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group full-width">
                   <label>Remarks</label>
                   <textarea formControlName="remarks"
-                            rows="2"
-                            placeholder="Additional remarks"></textarea>
+                            rows="3"
+                            placeholder="Any additional remarks or special instructions"></textarea>
                 </div>
               </div>
               
               <div class="signature-section">
-                <label>Signature</label>
-                <div class="signature-pad">
-                  <canvas #signatureCanvas 
-                          width="300" 
-                          height="100"
-                          (mousedown)="startDrawing($event)"
-                          (mousemove)="draw($event)"
-                          (mouseup)="stopDrawing()"></canvas>
-                  <button type="button" 
-                          class="btn-clear-signature" 
-                          (click)="clearSignature()">
-                    Clear
-                  </button>
+                <label>Digital Signature</label>
+                <div class="signature-input-container">
+                  <input type="text" 
+                         formControlName="digitalSignature"
+                         placeholder="Type your full name as digital signature"
+                         class="signature-input">
+                  <div class="signature-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>By typing your name, you agree this serves as your digital signature</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -479,19 +476,33 @@
           <div class="final-signatures">
             <div class="signature-row">
               <div class="signature-block">
-                <h5>Employee Signature</h5>
-                <div class="signature-area">
-                  <canvas width="200" height="80"></canvas>
+                <h5>Employee Digital Signature</h5>
+                <div class="final-signature-input-container">
+                  <input type="text" 
+                         formControlName="employeeSignature"
+                         placeholder="Type your full name as digital signature"
+                         class="final-signature-input">
+                  <div class="signature-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>By typing your name, you agree this serves as your digital signature</span>
+                  </div>
                 </div>
-                <input type="date" formControlName="employeeSignatureDate">
+                <input type="date" formControlName="employeeSignatureDate" placeholder="Signature Date">
               </div>
               
               <div class="signature-block">
-                <h5>HR Signature</h5>
-                <div class="signature-area">
-                  <canvas width="200" height="80"></canvas>
+                <h5>HR Digital Signature</h5>
+                <div class="final-signature-input-container">
+                  <input type="text" 
+                         formControlName="hrSignature"
+                         placeholder="HR representative name"
+                         class="final-signature-input">
+                  <div class="signature-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>HR digital signature confirmation</span>
+                  </div>
                 </div>
-                <input type="date" formControlName="hrSignatureDate">
+                <input type="date" formControlName="hrSignatureDate" placeholder="Signature Date">
               </div>
             </div>
           </div>

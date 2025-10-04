@@ -53,7 +53,7 @@ export class MonthlyDprComponent {
   EmailID = '';
 
   showTaskDetails = true;
-  showKpiDetails = true;
+  showKpiPerformance = true;
   showHodEvaluation = true;
   showManagementRemarks = true;
   showRemarksHistory = true;
@@ -164,8 +164,8 @@ export class MonthlyDprComponent {
     this.showTaskDetails = !this.showTaskDetails;
   }
 
-  toggleKpiDetails() {
-    this.showKpiDetails = !this.showKpiDetails;
+  toggleKpiPerformance() {
+    this.showKpiPerformance = !this.showKpiPerformance;
   }
 
   toggleHodEvaluation() {

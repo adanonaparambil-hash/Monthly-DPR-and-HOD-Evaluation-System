@@ -198,6 +198,7 @@ export class EmergencyExitFormComponent implements OnInit {
       hrSignature: [''],
       employeeSignatureDate: [''],
       hrSignatureDate: [''],
+      digitalSignature: [''],
       
       // Travel documents
       travelDocumentsHandedOver: [false]
@@ -215,7 +216,7 @@ export class EmergencyExitFormComponent implements OnInit {
       responsiblePersonName: ['', Validators.required],
       responsiblePersonPhone: ['', Validators.required],
       responsiblePersonEmail: ['', [Validators.required, Validators.email]],
-      signature: [''],
+      digitalSignature: [''],
       remarks: ['']
     });
     

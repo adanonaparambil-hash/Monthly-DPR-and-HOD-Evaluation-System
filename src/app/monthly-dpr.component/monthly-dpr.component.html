@@ -61,48 +61,56 @@
 
   <!-- Task Details Section -->
   <div class="task-card" [@scaleIn]>
-    <div class="section-header">
-    <h2><i class="fas fa-hourglass-half"></i> Task Details</h2>
-      <div class="button-container">
-      <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
-      <button class="add-btn" (click)="addNewTask()">+ Add New Task</button> 
-    </div>
+    <div class="section-header" (click)="toggleTaskDetails()">
+      <div class="header-left">
+        <i class="fas fa-hourglass-half"></i>
+        <span>Task Details</span>
+      </div>
+      <div class="header-right">
+        <div class="button-container" (click)="$event.stopPropagation()">
+          <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
+          <button class="add-btn" (click)="addNewTask()">+ Add New Task</button> 
+        </div>
+        <i class="fas" [class.fa-chevron-down]="showTaskDetails" [class.fa-chevron-right]="!showTaskDetails"></i>
+      </div>
     </div>
     
-    <div class="table-container my-task-table">
-      <table>
-        <thead>
-          <tr>
-            <th class="SlNo-col">SL No</th>
-            <th class="task-col">Task Name</th>
-            <th class="desc-col">Task Description</th>
-            <th class="hours-col">Actual Hours</th>
-            <th class="delete-col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let task of tasks; let i = index">
-            <td class="SlNo-col">{{ i + 1 }}</td>
-            <td class="task-col">
-              <textarea [(ngModel)]="task.taskName" placeholder="Task name"></textarea>
-            </td>
-            <td class="desc-col">
-              <textarea [(ngModel)]="task.description" placeholder="Description and status"></textarea>
-            </td>
-            
-            <td class="hours-col">
-              <input 
-                type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()">
-            </td>
-            
-            <td class="delete-col">
-              <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="task-content" *ngIf="showTaskDetails" [@fadeInUp]>
+      <div class="table-container my-task-table">
+        <table>
+          <thead>
+            <tr>
+              <th class="SlNo-col">SL No</th>
+              <th class="task-col">Task Name</th>
+              <th class="desc-col">Task Description</th>
+              <th class="hours-col">Actual Hours</th>
+              <th class="delete-col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let task of tasks; let i = index">
+              <td class="SlNo-col">{{ i + 1 }}</td>
+              <td class="task-col">
+                <textarea [(ngModel)]="task.taskName" placeholder="Task name"></textarea>
+              </td>
+              <td class="desc-col">
+                <textarea [(ngModel)]="task.description" placeholder="Description and status"></textarea>
+              </td>
+              
+              <td class="hours-col">
+                <input 
+                  type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()">
+              </td>
+              
+              <td class="delete-col">
+                <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
 
@@ -135,57 +143,62 @@
 
   <!-- KPI Performance Section -->
   <div class="kpi-card" [@scaleIn]>
-    <div class="section-header">
-      <h2><i class="fas fa-chart-line"></i> KPI Performance</h2>
-      <!-- <button class="add-btn" (click)="addNewKPI()">+ Add New KPI</button> -->
+    <div class="section-header" (click)="toggleKpiPerformance()">
+      <div class="header-left">
+        <i class="fas fa-chart-line"></i>
+        <span>KPI Performance</span>
+      </div>
+      <i class="fas" [class.fa-chevron-down]="showKpiPerformance" [class.fa-chevron-right]="!showKpiPerformance"></i>
     </div>
     
     
-    <div class="table-container kpi-table">
-      <table>
-        <thead>
-          <tr>
-            <th class="SlNo-col">Sl No</th>
-            <th class="kpi-col">KPI</th>
-            <th class="kpi-value-col">KPI Value</th>
-            <th class="remarks-col">Remarks</th>
-            <th class="delete-col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let kpi of kpis; let i = index">
-            <td class="SlNo-col">{{ i + 1 }}</td>
+    <div class="kpi-content" *ngIf="showKpiPerformance" [@fadeInUp]>
+      <div class="table-container kpi-table">
+        <table>
+          <thead>
+            <tr>
+              <th class="SlNo-col">Sl No</th>
+              <th class="kpi-col">KPI</th>
+              <th class="kpi-value-col">KPI Value</th>
+              <th class="remarks-col">Remarks</th>
+              <th class="delete-col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let kpi of kpis; let i = index">
+              <td class="SlNo-col">{{ i + 1 }}</td>
 
-            <!-- KPI Name (read-only) -->
-            <td class="kpi-col">{{ kpi.kpiDescription }}</td>
+              <!-- KPI Name (read-only) -->
+              <td class="kpi-col">{{ kpi.kpiDescription }}</td>
 
-            <!-- KPI Value Dropdown -->
-            <td class="kpi-value-col">
-              <select [(ngModel)]="kpi.kpiValue">
-                <option value="0">Rate out of 5</option>
-                <option value="1">1 - Poor</option>
-                <option value="2">2 - Below Average</option>
-                <option value="3">3 - Average</option>
-                <option value="4">4 - Good</option>
-                <option value="5">5 - Excellent</option>
-              </select>
-              <!-- <input [(ngModel)]="kpi.kpiValue" placeholder="Enter the KPI value" type="number" min="1" max="100" class="rating-input"> -->
-            </td>
+              <!-- KPI Value Dropdown -->
+              <td class="kpi-value-col">
+                <select [(ngModel)]="kpi.kpiValue">
+                  <option value="0">Rate out of 5</option>
+                  <option value="1">1 - Poor</option>
+                  <option value="2">2 - Below Average</option>
+                  <option value="3">3 - Average</option>
+                  <option value="4">4 - Good</option>
+                  <option value="5">5 - Excellent</option>
+                </select>
+                <!-- <input [(ngModel)]="kpi.kpiValue" placeholder="Enter the KPI value" type="number" min="1" max="100" class="rating-input"> -->
+              </td>
 
-            <!-- Remarks -->
-            <td class="remarks-col">
-              <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks"></textarea>
-            </td>
-            
-            <td class="delete-col">
-              <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <!-- Remarks -->
+              <td class="remarks-col">
+                <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks"></textarea>
+              </td>
+              
+              <td class="delete-col">
+                <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
+      </div>
     </div>
 
 
