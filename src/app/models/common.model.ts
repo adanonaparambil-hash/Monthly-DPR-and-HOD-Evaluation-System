@@ -39,3 +39,23 @@ export interface DropdownOption {
   idValue: string;
   description : string;
 }
+
+export interface DropDownMasterDto {
+  dropMasterId: number;
+  dropMasterName: string;
+  description: string;
+}
+
+export interface DropDownChildDto {
+  dropChildId: number;
+  dropMasterId: number;
+  dropValue: string;
+  sortOrder?: number | null;
+  isActive: string;
+}
+
+export interface DropDownValue {
+  dropChildId: number;
+  dropValue: string;
+  sortOrder?: number | null;
+}

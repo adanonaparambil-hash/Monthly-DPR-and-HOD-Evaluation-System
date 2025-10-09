@@ -60,18 +60,6 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     
-    this.api.getEmployees().subscribe({
-      next: (data) => {
-        this.employees = Array.isArray(data) ? data : (data?.employees || []);
-        console.log('Employees', data);
-      },
-      error: (err) => {
-        console.error('Failed to load employees', err);
-      }
-    });
-
-    console.log("access_token" + localStorage.getItem('access_token'));
-
   }
 
 }

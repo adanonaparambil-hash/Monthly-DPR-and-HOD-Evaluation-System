@@ -143,13 +143,16 @@ export class LoginComponent implements OnDestroy {
           }
           this.router.navigate(['/employee-dashboard']);
 
-        } else if (res?.message === "FIRST_LOGIN") {
-          // Switch to forgot password flow for first login
-          this.currentView = 'forgot-password';
-          this.currentStep = 'password';
-          this.email = this.username();
-          this.newPassword = '';
-          this.confirmPassword = '';
+        } else if (res?.message === "F") {
+          
+
+          this.toastr.info('Please set your password using Sign Up, then log in.', 'Password Setup Required');
+
+          // this.currentView = 'forgot-password';
+          // this.currentStep = 'password';
+          // this.email = this.username();
+          // this.newPassword = '';
+          // this.confirmPassword = '';
 
         } else {
           this.toastr.error(res?.message || 'Login failed', 'Error');
@@ -163,90 +166,131 @@ export class LoginComponent implements OnDestroy {
     });
   }
 
-  
-
-
-  // Email submission for forgot password or signup
+    
   onSubmitEmail() {
     if (!this.isValidEmail(this.email)) {
-      this.errorMessage = 'Please enter a valid email address';
+      this.toastr.error('Please enter a valid email address');
       return;
     }
 
     this.isProcessing = true;
-    this.errorMessage = '';
 
-    // Simulate API call for sending OTP
-    setTimeout(() => {
-      this.isProcessing = false;
-      this.otpSent = true;
-      this.currentStep = 'otp';
-      this.startOtpTimer();
-      this.successMessage = 'OTP sent to your email address';
-    }, 2000);
+    this.api.sendOtp(this.email).subscribe(
+      (response: any) => {
+        this.isProcessing = false;
+        if (response.success) {
+          this.otpSent = true;
+          this.currentStep = 'otp';
+          this.toastr.success('OTP sent to your email address');
+        } else {
+          this.toastr.error(response.Message); 
+        }
+      },
+      (error) => {
+        this.isProcessing = false;
+        this.toastr.error('There was an error sending the OTP. Please try again.');
+      }
+    );
   }
 
-  // OTP verification
+
   onVerifyOtp() {
-    if (!this.otp || this.otp.length !== 6) {
-      this.errorMessage = 'Please enter a valid 6-digit OTP';
+    if (this.otp.length !== 6) {
+      this.toastr.error('OTP should be 6 digits long');
       return;
     }
 
     this.isProcessing = true;
-    this.errorMessage = '';
 
-    // Simulate API call for OTP verification
-    setTimeout(() => {
-      this.isProcessing = false;
-      if (this.otp === '123456') { // Mock OTP for demo
-        this.currentStep = 'password';
-        this.successMessage = 'OTP verified successfully';
-      } else {
-        this.errorMessage = 'Invalid OTP. Please try again.';
+    this.api.verifyOtp(this.email, this.otp).subscribe(
+      (response: any) => {
+        this.isProcessing = false;
+        if (response.isValid) {
+          this.toastr.success('OTP verified successfully!');
+          this.currentStep = 'password';
+        } else {
+          this.toastr.error('Invalid OTP. Please try again.');
+        }
+      },
+      (error) => {
+        this.isProcessing = false;
+        this.toastr.error('There was an error verifying the OTP. Please try again.');
       }
-    }, 1500);
+    );
   }
 
-  // Resend OTP
+ 
   onResendOtp() {
-    this.isProcessing = true;
-    
-    setTimeout(() => {
-      this.isProcessing = false;
-      this.startOtpTimer();
-      this.successMessage = 'OTP resent to your email address';
-    }, 1000);
-  }
+    this.isProcessing = true;  
 
-  // Password setup/reset
-  onSetPassword() {
-    if (!this.isValidPassword(this.newPassword)) {
-      this.errorMessage = 'Password must be at least 6 characters long and contain at least one number';
-      return;
-    }
+    this.api.ResendOtp(this.email).subscribe(
+      (response: any) => {
+        this.isProcessing = false;  
 
-    if (this.newPassword !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match';
-      return;
-    }
-
-    this.isProcessing = true;
-    this.errorMessage = '';
-
-    // Simulate API call
-    setTimeout(() => {
-      this.isProcessing = false;
-      
-      if (this.currentView === 'forgot-password') {
-        this.toastr.success('Password reset successful. Please log in with your new password.', 'Success');
-        this.backToLogin();
-      } else if (this.currentView === 'signup') {
-        this.toastr.success('Account created successfully. Please log in with your credentials.', 'Success');
-        this.backToLogin();
+        if (response.success) {
+          
+          this.startOtpTimer();
+          this.toastr.success('OTP resent to your email address');  
+        } else {
+          
+          this.toastr.error(response.Message || 'There was an error resending the OTP. Please try again.');
+        }
+      },
+      (error) => {
+        this.isProcessing = false; 
+        this.toastr.error('There was an error resending the OTP. Please try again.');
       }
-    }, 2000);
+    );
   }
+
+
+  onSetPassword() {
+  // Step 1: Validate password
+  if (!this.isValidPassword(this.newPassword)) {
+    this.errorMessage = 'Password must be at least 6 characters long and contain at least one number';
+    return;
+  }
+
+  // Step 2: Confirm passwords match
+  if (this.newPassword !== this.confirmPassword) {
+    this.errorMessage = 'Passwords do not match';
+    return;
+  }
+
+  // Step 3: Call the backend API
+  this.isProcessing = true;
+  this.errorMessage = '';
+
+  this.api.setpassword(this.username(), this.newPassword).subscribe({
+    next: (response) => {
+      this.isProcessing = false;
+
+      if (response && response.success) {
+       
+        if (this.currentView === 'forgot-password') {
+          this.toastr.success(response.message || 'Password reset successful. Please log in with your new password.', 'Success');
+          this.backToLogin();
+        } else if (this.currentView === 'signup') {
+          this.toastr.success(response.message || 'Account created successfully. Please log in with your credentials.', 'Success');
+          this.backToLogin();
+        } else {
+          this.toastr.success(response.message || 'Password set successfully.', 'Success');
+          this.backToLogin();
+        }
+      } else {
+  
+        this.errorMessage = response?.message || 'Unable to set password. Please try again.';
+      }
+    },
+    error: (error) => {
+      this.isProcessing = false;
+      console.error('Password set failed:', error);
+      this.errorMessage = error.error?.message || 'An error occurred while setting the password.';
+    }
+  });
+}
+
+
 
   // Signup completion
   onCompleteSignup() {
