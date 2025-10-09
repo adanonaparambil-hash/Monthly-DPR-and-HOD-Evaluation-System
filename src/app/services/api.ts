@@ -94,16 +94,16 @@ export class Api {
 
 
   sendOtp(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Login/SendEmailOTP`, { email });
+    return this.http.post(`${this.apiUrl}/Login/SendEmailOTP`, { email }, { withCredentials: true });
   }
 
   
   verifyOtp(email: string, otp: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Login/VerifyEmailOTP`, { email, otp },{ withCredentials: true });
+    return this.http.post(`${this.apiUrl}/Login/VerifyEmailOTP`, { email, otp }, { withCredentials: true });
   }
   
   ResendOtp(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Login/ResendEmailOTP`, { email });
+    return this.http.post(`${this.apiUrl}/Login/ResendEmailOTP`, { email }, { withCredentials: true });
   }
 
   getDropDownValues(dropMasterId: number): Observable<any> {

@@ -182,8 +182,9 @@ export class LoginComponent implements OnDestroy {
           this.otpSent = true;
           this.currentStep = 'otp';
           this.toastr.success('OTP sent to your email address');
+          this.startOtpTimer(120);
         } else {
-          this.toastr.error(response.Message); 
+          this.toastr.error(response.message); 
         }
       },
       (error) => {
@@ -229,11 +230,11 @@ export class LoginComponent implements OnDestroy {
 
         if (response.success) {
           
-          this.startOtpTimer();
+          this.startOtpTimer(120);
           this.toastr.success('OTP resent to your email address');  
         } else {
           
-          this.toastr.error(response.Message || 'There was an error resending the OTP. Please try again.');
+          this.toastr.error(response.message || 'There was an error resending the OTP. Please try again.');
         }
       },
       (error) => {
@@ -261,7 +262,8 @@ export class LoginComponent implements OnDestroy {
   this.isProcessing = true;
   this.errorMessage = '';
 
-  this.api.setpassword(this.username(), this.newPassword).subscribe({
+  const userIdForPassword = this.employeeId?.trim() || this.username();
+  this.api.setpassword(userIdForPassword, this.newPassword).subscribe({
     next: (response) => {
       this.isProcessing = false;
 
@@ -313,8 +315,9 @@ export class LoginComponent implements OnDestroy {
     return passwordPattern.test(password);
   }
 
-  startOtpTimer() {
-    this.otpTimer = 60;
+  startOtpTimer(seconds: number = 120) {
+    this.clearOtpTimer();
+    this.otpTimer = seconds;
     this.otpInterval = setInterval(() => {
       this.otpTimer--;
       if (this.otpTimer <= 0) {
