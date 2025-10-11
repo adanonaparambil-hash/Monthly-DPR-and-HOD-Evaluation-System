@@ -141,7 +141,14 @@ export class LoginComponent implements OnDestroy {
             localStorage.setItem('access_token', token);
             localStorage.setItem('current_user', JSON.stringify(res.data));
           }
-          this.router.navigate(['/employee-dashboard']);
+          const code = (res?.data?.isHOD || '').toString().toUpperCase();
+          if (code === 'H') {
+            this.router.navigate(['/hod-dashboard']);
+          } else if (code === 'C') {
+            this.router.navigate(['/ced-dashboard']);
+          } else {
+            this.router.navigate(['/employee-dashboard']);
+          }
 
         } else if (res?.message === "F") {
           

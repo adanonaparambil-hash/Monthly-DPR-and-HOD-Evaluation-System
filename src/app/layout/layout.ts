@@ -56,8 +56,24 @@ export class layout implements OnInit {
   ];
 
 
-  
+ 
  userSession = JSON.parse(localStorage.getItem('current_user') || '{}');
+ 
+ // Role flags derived from session (isHOD: 'E' employee, 'C' CED, 'H' HOD)
+ get isEmployee(): boolean {
+   const code = (this.userSession?.isHOD || '').toString().toUpperCase();
+   return code === 'E';
+ }
+ 
+ get isHod(): boolean {
+   const code = (this.userSession?.isHOD || '').toString().toUpperCase();
+   return code === 'H';
+ }
+ 
+ get isCed(): boolean {
+   const code = (this.userSession?.isHOD || '').toString().toUpperCase();
+   return code === 'C';
+ }
  
 
   userProfile = {

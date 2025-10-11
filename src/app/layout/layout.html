@@ -10,13 +10,13 @@
       <!-- <a routerLink="/dashboard" routerLinkActive="active">
         <i class="fas fa-tachometer-alt"></i> Dashboard
       </a> -->
-      <a routerLink="/employee-dashboard" routerLinkActive="active">
+      <a *ngIf="isEmployee" routerLink="/employee-dashboard" routerLinkActive="active">
         <i class="fas fa-chart-pie"></i> Employee Analytics
       </a>
-      <a routerLink="/hod-dashboard" routerLinkActive="active">
+      <a *ngIf="isHod" routerLink="/hod-dashboard" routerLinkActive="active">
         <i class="fas fa-users-cog"></i> HOD Dashboard
       </a>
-      <a routerLink="/ced-dashboard" routerLinkActive="active">
+      <a *ngIf="isCed" routerLink="/ced-dashboard" routerLinkActive="active">
         <i class="fas fa-chart-line"></i> CED Dashboard
       </a>
       <a routerLink="/monthly-dpr" routerLinkActive="active">
