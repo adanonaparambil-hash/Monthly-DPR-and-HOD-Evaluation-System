@@ -514,6 +514,43 @@
               Travel Documents Handed Over to the Employee
             </label>
           </div>
+
+          <div class="declarations">
+            <h4>Declarations</h4>
+            <div class="declaration-list">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decInfoAccurate">
+                <span class="checkmark"></span>
+                I confirm that all information provided is accurate and complete
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decHandoverComplete">
+                <span class="checkmark"></span>
+                I have handed over all my responsibilities to the designated personnel
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decReturnAssets">
+                <span class="checkmark"></span>
+                I will return all company assets (laptop, phone, keys, etc.) before departure
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decUnderstandReturn">
+                <span class="checkmark"></span>
+                I understand this is an emergency exit and I will return as per the approved dates
+              </label>
+            </div>
+
+            <div class="declaration-notes">
+              <div class="note info">
+                <i class="fas fa-info-circle"></i>
+                <span>Once submitted, your request will be sent to all approving departments. You will receive email notifications as each department approves your request.</span>
+              </div>
+              <div class="note success">
+                <i class="fas fa-clock"></i>
+                <span>Emergency exit requests are typically processed within 2-3 business days. You will be notified of the final decision via email.</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </form>
@@ -542,7 +579,7 @@
     <button type="button" 
             class="btn-submit" 
             (click)="submitForm()"
-            [disabled]="getAllApprovalStatus() !== 'approved' || isSubmitting"
+            [disabled]="getAllApprovalStatus() !== 'approved' || !allDeclarationsChecked() || isSubmitting"
             *ngIf="currentStep === totalSteps">
       <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
       <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>

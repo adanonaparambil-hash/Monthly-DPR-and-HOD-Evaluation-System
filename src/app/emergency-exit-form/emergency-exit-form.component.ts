@@ -35,7 +35,7 @@ interface ResponsibilityHandover {
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './emergency-exit-form.component.html',
-  styleUrl: './emergency-exit-form.component.css',
+  styleUrls: ['./emergency-exit-form.component.css'],
   animations: [
     trigger('slideInUp', [
       state('in', style({ transform: 'translateY(0)', opacity: 1 })),
@@ -201,7 +201,13 @@ export class EmergencyExitFormComponent implements OnInit {
       digitalSignature: [''],
       
       // Travel documents
-      travelDocumentsHandedOver: [false]
+      travelDocumentsHandedOver: [false],
+
+      // Declarations (must all be checked to submit)
+      decInfoAccurate: [false, Validators.requiredTrue],
+      decHandoverComplete: [false, Validators.requiredTrue],
+      decReturnAssets: [false, Validators.requiredTrue],
+      decUnderstandReturn: [false, Validators.requiredTrue]
     });
   }
 
@@ -352,6 +358,15 @@ export class EmergencyExitFormComponent implements OnInit {
   getProgressPercentage(): number {
     const approved = this.departments.filter(d => d.status === 'approved').length;
     return (approved / this.departments.length) * 100;
+  }
+
+  allDeclarationsChecked(): boolean {
+    return (
+      !!this.exitForm.get('decInfoAccurate')?.value &&
+      !!this.exitForm.get('decHandoverComplete')?.value &&
+      !!this.exitForm.get('decReturnAssets')?.value &&
+      !!this.exitForm.get('decUnderstandReturn')?.value
+    );
   }
 
   submitForm() {
