@@ -14,7 +14,7 @@ import { ToastrService } from 'ngx-toastr';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
+  styleUrls: ['./login.component.css'],
   animations: [
     trigger('fadeIn', [
       state('void', style({ opacity: 0, transform: 'translateY(30px)' })),
@@ -213,9 +213,10 @@ export class LoginComponent implements OnDestroy {
     this.api.verifyOtp(this.email, this.otp).subscribe(
       (response: any) => {
         this.isProcessing = false;
-        if (response.isValid) {
+        if (response.success) {
           this.toastr.success('OTP verified successfully!');
           this.currentStep = 'password';
+          this.employeeId = this.email;
         } else {
           this.toastr.error('Invalid OTP. Please try again.');
         }
@@ -352,9 +353,9 @@ export class LoginComponent implements OnDestroy {
         'password': 'Set New Password'
       },
       'signup': {
-        'email': 'Create Account',
+        'email': 'Setup Account',
         'otp': 'Verify Email',
-        'password': 'Complete Registration'
+        'password': 'Complete Account Setup'
       }
     };
     

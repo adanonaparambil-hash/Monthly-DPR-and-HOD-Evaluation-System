@@ -84,6 +84,20 @@ export class MonthlyDprComponent {
   dprid = 0;
   hoursExceeded: boolean = false;
 
+  // Role and mode flags
+  userType: 'E' | 'H' | 'C' = 'E';
+  isReadOnlyMode: boolean = false;
+
+  get isEmployee(): boolean { return this.userType === 'E'; }
+  get isHod(): boolean { return this.userType === 'H'; }
+  get isCed(): boolean { return this.userType === 'C'; }
+
+  get canEditEmployeeFields(): boolean { return !this.isReadOnlyMode && this.isEmployee; }
+  get canEditHodEvaluation(): boolean { return !this.isReadOnlyMode && this.isHod; }
+  get canViewHodEvaluation(): boolean { return this.isHod || this.isCed; }
+  get canViewManagementRemarks(): boolean { return this.isHod || this.isCed; }
+  get canViewRemarksHistory(): boolean { return this.isHod || this.isCed; }
+
   hodList: DropdownOption[] = [];
 
   tasks: DPRTask[] = [
@@ -136,6 +150,7 @@ export class MonthlyDprComponent {
   ngOnInit() {
 
     this.dprid = Number(this.route.snapshot.paramMap.get('id'));
+    this.isReadOnlyMode = (this.route.snapshot.queryParamMap.get('readonly') || '') === '1';
 
     this.setPreviousMonthYear();
 
@@ -148,6 +163,16 @@ export class MonthlyDprComponent {
       this.designation = user.designation || '';
       this.department = user.department || '';
       this.EmailID = user.email || '';
+
+      // Determine userType from session (default Employee)
+      const code = ((user.isHOD || user.role || user.userType || '') as string).toString().toUpperCase();
+      if (code === 'H') {
+        this.userType = 'H';
+      } else if (code === 'C') {
+        this.userType = 'C';
+      } else {
+        this.userType = 'E';
+      }
     }
 
     this.loadHodMasterList();

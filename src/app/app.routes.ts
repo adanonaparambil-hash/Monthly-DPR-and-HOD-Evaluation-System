@@ -25,6 +25,7 @@ export const routes: Routes = [
       { path: 'hod-dashboard', component: HodDashboard },
       { path: 'ced-dashboard', component: CedDashboard },
       { path: 'monthly-dpr', component: MonthlyDprComponent },
+      { path: 'monthly-dpr/:id', component: MonthlyDprComponent },
       { path: 'past-reports', component: PastReportsComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'emergency-exit-form', component: EmergencyExitFormComponent },

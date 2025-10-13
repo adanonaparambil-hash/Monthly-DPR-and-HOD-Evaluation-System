@@ -245,9 +245,8 @@ export class PastReportsComponent implements OnInit {
   }
   
   viewReport(report: any) {
-    report.id = 4;
-    this.router.navigate(['/monthly-dpr', report.id]);
-
+    // Navigate to Monthly DPR in read-only mode with the selected record ID
+    this.router.navigate(['/monthly-dpr', report.id], { queryParams: { readonly: '1' } });
   }
 
   getPageNumbers(): number[] {
