@@ -10,6 +10,7 @@
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 /* Header Section */
 .header-section {
   display: flex;
@@ -26,33 +27,39 @@
 /* Header Section */
 .header-section {
   display: flex;
-  justify-content: center; /* Center the content horizontally */
+  justify-content: center;
+  /* Center the content horizontally */
   align-items: center;
   background: white;
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%; /* Make sure the header takes up full width */
+  width: 100%;
+  /* Make sure the header takes up full width */
 }
 
 /* Header content styling */
 .header-content {
-  text-align: center; /* Ensure text is centered inside */
+  text-align: center;
+  /* Ensure text is centered inside */
 }
 
 /* Styling for the <h1> and <p> */
 .header-content h1 {
   margin: 0;
   font-size: 30px;
-  color: #3d532d; /* Color change */
-  font-weight: bold; /* Bold text */
+  color: #3d532d;
+  /* Color change */
+  font-weight: bold;
+  /* Bold text */
 }
 
 .header-content p {
   margin: 5px 0 0;
   font-size: 20px;
-  color: #3d532d; /* Color change */
+  color: #3d532d;
+  /* Color change */
 }
 
 /* Icon styling */
@@ -69,7 +76,8 @@
 
 
 
-.btn-switch, .btn-hod {
+.btn-switch,
+.btn-hod {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
@@ -88,9 +96,10 @@
   color: white;
 }
 
-.btn-switch:hover, .btn-hod:hover {
+.btn-switch:hover,
+.btn-hod:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Info Card */
@@ -99,7 +108,7 @@
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .info-row {
@@ -127,7 +136,7 @@
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .support-card h3 {
@@ -148,7 +157,7 @@
   background: white;
   border-radius: 12px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -227,9 +236,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
+
   100% {
     transform: scale(1);
   }
@@ -254,13 +265,13 @@
 .eval-item {
   display: flex;
   flex-direction: column;
-  align-items: center; 
+  align-items: center;
 }
 
 .rating-input {
-  text-align: center;        
-  justify-self: center;     
-  width: 100%;               
+  text-align: center;
+  justify-self: center;
+  width: 100%;
 }
 
 
@@ -276,7 +287,7 @@
   background: white;
   border-radius: 12px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -298,7 +309,9 @@
   margin-bottom: 20px;
 }
 
-.btn-draft, .btn-available, .btn-approve {
+.btn-draft,
+.btn-available,
+.btn-approve {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -326,9 +339,11 @@
   color: white;
 }
 
-.btn-draft:hover, .btn-available:hover, .btn-approve:hover {
+.btn-draft:hover,
+.btn-available:hover,
+.btn-approve:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* New Pushback Button */
@@ -339,7 +354,7 @@
 
 .btn-pushback:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* History Card */
@@ -347,7 +362,7 @@
   background: white;
   border-radius: 12px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -364,7 +379,7 @@
 }
 
 .history-item:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .history-header {
@@ -416,15 +431,17 @@
 }
 
 /* Task and KPI Cards */
-.task-card, .kpi-card {
+.task-card,
+.kpi-card {
   background: white;
   border-radius: 12px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-.task-card .section-header, .kpi-card .section-header {
+.task-card .section-header,
+.kpi-card .section-header {
   background: white;
   color: black;
   padding: 15px 20px;
@@ -514,20 +531,23 @@ td:first-child {
   margin-bottom: 20px;
 }
 
-.achievement-card, .challenge-card {
+.achievement-card,
+.challenge-card {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.achievement-card h3, .challenge-card h3 {
+.achievement-card h3,
+.challenge-card h3 {
   margin: 0 0 10px 0;
   font-size: 16px;
   color: #2c3e50;
 }
 
-.achievement-card p, .challenge-card p {
+.achievement-card p,
+.challenge-card p {
   margin: 0 0 15px 0;
   font-size: 13px;
   color: #7f8c8d;
@@ -535,7 +555,9 @@ td:first-child {
 }
 
 /* Form Elements */
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -545,7 +567,9 @@ input, select, textarea {
   box-sizing: border-box;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
@@ -602,8 +626,8 @@ td input {
   left: 0;
   bottom: 0;
   width: 100%;
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
   padding: 16px 0;
   display: flex;
   justify-content: center;
@@ -620,7 +644,7 @@ td input {
   font-size: 16px;
   cursor: pointer;
   transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .btn-draft.colorful-btn {
@@ -645,7 +669,7 @@ td input {
 
 .colorful-btn:hover {
   transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   opacity: 0.95;
 }
 
@@ -660,37 +684,37 @@ td input {
   .monthly-dpr-page {
     padding: 10px;
   }
-  
+
   .header-section {
     flex-direction: column;
     gap: 15px;
     text-align: center;
   }
-  
+
   .info-row {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .achievements-challenges {
     grid-template-columns: 1fr;
   }
-  
+
   .evaluation-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   table {
     min-width: 600px;
   }
@@ -700,15 +724,15 @@ td input {
   .monthly-dpr-page {
     padding: 8px;
   }
-  
+
   .header-content h1 {
     font-size: 20px;
   }
-  
+
   .evaluation-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .info-row {
     gap: 10px;
   }
@@ -724,6 +748,7 @@ td input {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -736,25 +761,29 @@ iendly improvements */
   .section-header {
     padding: 18px 20px;
   }
-  
+
   .rating-dropdown {
     padding: 15px;
     font-size: 16px;
     min-height: 48px;
   }
-  
-  input, select, textarea {
+
+  input,
+  select,
+  textarea {
     padding: 15px;
     font-size: 16px;
     min-height: 48px;
   }
-  
-  .btn-draft, .btn-available, .btn-approve {
+
+  .btn-draft,
+  .btn-available,
+  .btn-approve {
     padding: 15px 25px;
     font-size: 16px;
     min-height: 48px;
   }
-  
+
   .add-btn {
     padding: 12px 20px;
     font-size: 14px;
@@ -791,15 +820,16 @@ textarea:focus {
     border-radius: 8px;
     overflow: hidden;
   }
-  
+
   table {
     font-size: 12px;
   }
-  
-  th, td {
+
+  th,
+  td {
     padding: 8px 6px;
   }
-  
+
   td input {
     padding: 6px;
     font-size: 12px;
@@ -808,59 +838,87 @@ textarea:focus {
 
 
 h3 i {
-  margin-right: 8px;  /* Space between icon and text */
-  font-size: 1.5rem;  /* Adjust icon size */
-  transition: transform 0.3s, color 0.3s; /* Smooth color and transform transition */
+  margin-right: 8px;
+  /* Space between icon and text */
+  font-size: 1.5rem;
+  /* Adjust icon size */
+  transition: transform 0.3s, color 0.3s;
+  /* Smooth color and transform transition */
 }
 
 /* Colorful icon for Achievements */
 h3 .colorful-icon {
-  color: #f39c12; /* Golden yellow */
+  color: #f39c12;
+  /* Golden yellow */
 }
 
 /* Color for Challenges */
 h3 .colorful-icon.fa-question-circle {
-  color: #e74c3c; /* Red */
+  color: #e74c3c;
+  /* Red */
 }
 
 /* Color for Support Needed / Suggestions */
 h3 .colorful-icon.fa-handshake {
-  color: #2ecc71; /* Green */
+  color: #2ecc71;
+  /* Green */
 }
 
 /* Hover effect for all icons */
 h3 .colorful-icon:hover {
-  transform: scale(1.2); /* Slightly enlarge the icon on hover */
-  color: #3498db; /* Change color to blue on hover */
+  transform: scale(1.2);
+  /* Slightly enlarge the icon on hover */
+  color: #3498db;
+  /* Change color to blue on hover */
 }
 
-input:hover, select:hover {
-  border: 2px solid #cc9933;  /* Blue border on hover */
-  background-color: #f0f8ff;  /* Light background color on hover */
-  outline: none; /* Removes default outline */
-  transition: all 0.3s ease;  /* Smooth transition for the hover effect */
+input:hover,
+select:hover {
+  border: 2px solid #cc9933;
+  /* Blue border on hover */
+  background-color: #f0f8ff;
+  /* Light background color on hover */
+  outline: none;
+  /* Removes default outline */
+  transition: all 0.3s ease;
+  /* Smooth transition for the hover effect */
 }
 
 /* Additional focus effect (in case of clicking) */
-input:focus, select:focus {
-  border: 2px solid #cc9933;  /* Same blue border on focus */
-  background-color: #f0f8ff;  /* Same light background color */
-  outline: none; /* Removes default outline */
+input:focus,
+select:focus {
+  border: 2px solid #cc9933;
+  /* Same blue border on focus */
+  background-color: #f0f8ff;
+  /* Same light background color */
+  outline: none;
+  /* Removes default outline */
 }
 
 /* Apply a border highlight effect when hovering over input fields, select (dropdowns), and textarea */
-input:hover, select:hover, textarea:hover {
-  border: 2px solid #cc9933;  /* Blue border on hover */
-  background-color: #f0f8ff;  /* Light background color on hover */
-  outline: none; /* Removes default outline */
-  transition: all 0.3s ease;  /* Smooth transition for the hover effect */
+input:hover,
+select:hover,
+textarea:hover {
+  border: 2px solid #cc9933;
+  /* Blue border on hover */
+  background-color: #f0f8ff;
+  /* Light background color on hover */
+  outline: none;
+  /* Removes default outline */
+  transition: all 0.3s ease;
+  /* Smooth transition for the hover effect */
 }
 
 /* Additional focus effect (in case of clicking) */
-input:focus, select:focus, textarea:focus {
-  border: 2px solid #cc9933;  /* Same blue border on focus */
-  background-color: #f0f8ff;  /* Same light background color */
-  outline: none; /* Removes default outline */
+input:focus,
+select:focus,
+textarea:focus {
+  border: 2px solid #cc9933;
+  /* Same blue border on focus */
+  background-color: #f0f8ff;
+  /* Same light background color */
+  outline: none;
+  /* Removes default outline */
 }
 
 
@@ -873,15 +931,18 @@ h2 i {
 
 /* Hover effect: Change the icon on hover */
 h2:hover i {
-  content: "\f058"; /* Unicode for fa-check-circle */
-  font-family: "Font Awesome 5 Free"; /* Ensure Font Awesome is used */
-  color: #2ecc71; /* Green color on hover */
+  content: "\f058";
+  /* Unicode for fa-check-circle */
+  font-family: "Font Awesome 5 Free";
+  /* Ensure Font Awesome is used */
+  color: #2ecc71;
+  /* Green color on hover */
 }
 
 .button-container {
   display: flex;
   justify-content: flex-end;
-  gap: 10px; 
+  gap: 10px;
 }
 
 /* Overlay */
@@ -891,24 +952,40 @@ h2:hover i {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 10px; /* adds spacing on small screens */
+  padding: 10px;
+  /* adds spacing on small screens */
+  overflow-y: auto;
+  /* Allow scrolling if needed */
+}
+
+/* Ensure modal is properly centered and scrollable */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-start;
+    justify-content: center;
+  }
 }
 
 /* Modal box */
 .modal-box {
   background: #fff;
-  width: 95%;           /* increased max width for large screens */
-  max-width: 1400px;    /* bigger than before */
-  height: 95%;          /* taller modal */
-  max-height: 95vh;     /* don't exceed viewport height */
+  width: 98%;
+  /* increased max width for large screens */
+  max-width: 1600px;
+  /* even bigger than before */
+  height: 98%;
+  /* taller modal */
+  max-height: 98vh;
+  /* don't exceed viewport height */
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -922,7 +999,10 @@ h2:hover i {
   height: 100%;
   justify-content: flex-start;
   gap: 20px;
-  overflow-y: auto;     /* allow scrolling if content is too long */
+  overflow-y: auto;
+  /* allow scrolling if content is too long */
+  flex: 1;
+  /* take remaining space */
 }
 
 /* Header */
@@ -958,23 +1038,136 @@ h2:hover i {
 /* Responsive for Mobile */
 @media (max-width: 768px) {
   .modal-box {
-    width: 100%;          /* full width on mobile */
-    height: 100%;         /* full height on mobile */
-    border-radius: 0;     /* remove rounded corners for small screens */
+    width: 100%;
+    /* full width on mobile */
+    height: 100%;
+    /* full height on mobile */
+    border-radius: 0;
+    /* remove rounded corners for small screens */
+    max-width: none;
+    max-height: none;
   }
 
+  .modal-body {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .modal-header {
+    font-size: 16px;
+    padding: 12px 15px;
+  }
+
+  /* Mobile table adjustments */
+  .modal-body .table-container {
+    max-height: 300px;
+    /* Smaller height on mobile */
+    min-height: 250px;
+  }
+
+  /* Mobile summary box */
+  .summary-box {
+    min-height: 200px;
+  }
+
+  .summary-header {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .summary-box h3 {
+    font-size: 16px;
+  }
+
+  .copy-btn {
+    padding: 10px;
+    min-width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .summary-box textarea {
+    min-height: 150px;
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  /* Mobile buttons */
+  .summary-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .generate-summary-btn,
+  .close-modal-btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 16px;
+    /* Larger for touch */
+    min-width: auto;
+  }
+
+  /* Mobile table styling */
+  .modal-body table {
+    font-size: 12px;
+  }
+
+  .modal-body th,
+  .modal-body td {
+    padding: 8px 4px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
   .modal-body {
     padding: 10px;
     gap: 10px;
   }
 
   .modal-header {
-    font-size: 16px;
+    font-size: 14px;
     padding: 10px;
+  }
+
+  .modal-body .table-container {
+    max-height: 250px;
+    min-height: 200px;
+  }
+
+  .summary-box textarea {
+    min-height: 120px;
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .modal-body table {
+    font-size: 11px;
+  }
+
+  .modal-body th,
+  .modal-body td {
+    padding: 6px 3px;
   }
 }
 
 
+/* Modal Table Container - Increased Height */
+.modal-body .table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  max-height: 500px;
+  /* Increased height for modal table */
+  min-height: 400px;
+  /* Minimum height to ensure visibility */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  flex: 1;
+  /* Take available space */
+}
+
+/* General table container for other tables */
 .table-container {
   overflow-x: auto;
   margin-bottom: 20px;
@@ -983,69 +1176,140 @@ h2:hover i {
 table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* ensures width respect */
+  table-layout: fixed;
+  /* ensures width respect */
 }
 
-th, td {
-  padding: 8px;
+th,
+td {
+  padding: 10px 8px;
+  /* Increased padding for better readability */
   border: 1px solid #ddd;
   text-align: center;
   word-wrap: break-word;
 }
 
-/* Column width customizations */
-.task-col {
-  width: 25%; /* more space */
+/* Column width customizations for modal table */
+.modal-body .task-col {
+  width: 22%;
+  /* more space */
   text-align: left;
+  min-width: 150px;
 }
 
-.desc-col {
-  width: 35%; /* more space for description */
+.modal-body .desc-col {
+  width: 30%;
+  /* more space for description */
   text-align: left;
+  min-width: 200px;
 }
 
-.date-col {
-  width: 10%; /* less space for date */
+.modal-body .date-col {
+  width: 12%;
+  /* adequate space for date */
+  min-width: 100px;
 }
 
-.hours-col {
-  width: 7%; /* very small width */
+.modal-body .hours-col {
+  width: 10%;
+  /* adequate width for hours */
+  min-width: 80px;
 }
 
-/* Header styling */
-th {
+/* Header styling for modal */
+.modal-body th {
   background-color: #2f4f2f;
   color: white;
   text-align: center;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-/* Target only this table's SL No and Select columns */
-.SlNo-col {
-  width: 5%;           /* slightly wider */
-  white-space: nowrap; /* keep in one line */
+/* Target only modal table's SL No and Select columns */
+.modal-body .SlNo-col {
+  width: 6%;
+  /* slightly wider */
+  white-space: nowrap;
+  /* keep in one line */
+  min-width: 50px;
 }
 
-.select-col {
-  width: 4%;           /* slightly wider */
-  white-space: nowrap; /* keep in one line */
+.modal-body .select-col {
+  width: 6%;
+  /* slightly wider */
+  white-space: nowrap;
+  /* keep in one line */
+  min-width: 60px;
+}
+
+/* Improve checkbox styling in modal */
+.modal-body input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Better text wrapping for long content */
+.modal-body .task-col,
+.modal-body .desc-col {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 
 
 
-/* Responsive design for mobile */
+/* Responsive design for mobile modal table */
 @media (max-width: 768px) {
-  .task-col, .desc-col {
-    width: auto; /* allow more flexibility */
+
+  .modal-body .task-col,
+  .modal-body .desc-col {
+    width: auto;
+    /* allow more flexibility */
+    min-width: 120px;
   }
 
-  .date-col, .hours-col {
-    width: 10%; /* small but readable */
+  .modal-body .date-col,
+  .modal-body .hours-col {
+    width: 15%;
+    /* small but readable */
+    min-width: 80px;
   }
 
-  table, th, td {
-    font-size: 8px;
-    padding: 6px;
+  .modal-body table,
+  .modal-body th,
+  .modal-body td {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+
+  .modal-body .SlNo-col,
+  .modal-body .select-col {
+    width: 8%;
+    min-width: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .modal-body table,
+  .modal-body th,
+  .modal-body td {
+    font-size: 11px;
+    padding: 6px 3px;
+  }
+
+  .modal-body .task-col,
+  .modal-body .desc-col {
+    min-width: 100px;
+  }
+
+  .modal-body .date-col,
+  .modal-body .hours-col {
+    min-width: 70px;
   }
 }
 
@@ -1054,65 +1318,300 @@ th {
 /* Summary box (textarea visible by default) */
 .summary-box {
   margin-top: 20px;
+  flex-shrink: 0;
+  /* Don't shrink this section */
+  min-height: 250px;
+  /* Ensure minimum height */
+}
+
+/* Summary header with copy button */
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .summary-box h3 {
-  margin-bottom: 8px;
+  margin: 0;
   color: #2f4f2f;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Copy button styling */
+.copy-btn {
+  background: #cc9933;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 40px;
+  height: 36px;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus state for accessibility */
+.copy-btn:focus {
+  outline: 2px solid #4e673b;
+  outline-offset: 2px;
+}
+
+.copy-btn:hover {
+  background: #4e673b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.copy-btn:active {
+  transform: translateY(0);
+  background: #3d532d;
+}
+
+.copy-btn i {
+  font-size: 16px;
+}
+
+/* Textarea container for better positioning */
+.textarea-container {
+  position: relative;
+  width: 100%;
 }
 
 .summary-box textarea {
   width: 100%;
   min-height: 200px;
-  padding: 10px;
-  border: 1px solid #ccc;
+  max-height: 300px;
+  /* Allow expansion but limit */
+  padding: 15px;
+  /* Increased padding */
+  border: 2px solid #ddd;
   border-radius: 8px;
   resize: vertical;
   font-size: 14px;
-  line-height: 1.5;
-  text-align: right; /* Right-align text */
+  line-height: 1.6;
+  text-align: left;
+  /* Left-align text for better readability */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.summary-box textarea:focus {
+  border-color: #cc9933;
+  outline: none;
+  background-color: #fff;
+}
+
+/* Copy success animation */
+.copy-btn.copied {
+  background: #28a745 !important;
+  animation: copySuccess 0.6s ease;
+}
+
+.copy-btn.copied i:before {
+  content: "\f00c";
+  /* Font Awesome check icon */
+}
+
+@keyframes copySuccess {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Tooltip for copy button */
+.copy-btn {
+  position: relative;
+}
+
+.copy-btn:hover::after {
+  content: 'Copy to clipboard';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+.copy-btn:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+}
+
+/* Hide tooltip on mobile */
+@media (max-width: 768px) {
+
+  .copy-btn:hover::after,
+  .copy-btn:hover::before {
+    display: none;
+  }
 }
 
 /* Summary actions (aligned to the right) */
 .summary-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 15px;
   margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
+  /* Don't shrink this section */
 }
 
 /* Base styles for buttons */
-.generate-summary-btn, .close-modal-btn {
-  background: #cc9933;  /* Green background */
+.generate-summary-btn,
+.close-modal-btn {
+  background: #cc9933;
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
+  /* Increased padding */
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.3s ease;  /* Smooth transition */
+  font-size: 14px;
+  /* Slightly larger font */
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  /* Minimum width for consistency */
 }
-.close-modal-btn{
-  background: #4e673b;  /* Red background */
+
+.close-modal-btn {
+  background: #4e673b;
 }
 
 /* Hover effect for Generate Summary button */
 .generate-summary-btn:hover {
-  background: #4e673b;  /* Hover color for Generate Summary button */
-  transform: translateY(-3px);  /* Slight lift effect */
+  background: #4e673b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Hover effect for Close button */
 .close-modal-btn:hover {
-  background: #e74c3c;  /* Hover color for Close button (red) */
-  transform: translateY(-3px);  /* Slight lift effect */
+  background: #e74c3c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 
 /* Animation */
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Loading and Empty States for Modal */
+.modal-table-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.modal-table-loading i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #cc9933;
+  animation: spin 1s linear infinite;
+}
+
+.modal-table-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.modal-table-empty i {
+  font-size: 64px;
+  margin-bottom: 16px;
+  color: #ddd;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Improved table row hover for modal */
+.modal-body tbody tr:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.modal-body tbody tr:hover td {
+  background-color: #f8f9fa;
+}
+
+/* Better checkbox styling */
+.modal-body input[type="checkbox"]:checked {
+  accent-color: #cc9933;
+}
+
+/* Scrollbar styling for modal table */
+.modal-body .table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.modal-body .table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body .table-container::-webkit-scrollbar-thumb {
+  background: #cc9933;
+  border-radius: 4px;
+}
+
+.modal-body .table-container::-webkit-scrollbar-thumb:hover {
+  background: #4e673b;
 }
 
 
@@ -1140,17 +1639,20 @@ th {
 }
 
 .my-task-table .task-col {
-  width: 25%;  /* bigger for task name */
+  width: 25%;
+  /* bigger for task name */
   text-align: left;
 }
 
 .my-task-table .desc-col {
-  width: 40%;  /* bigger for description */
+  width: 40%;
+  /* bigger for description */
   text-align: left;
 }
 
 .my-task-table .hours-col {
-  width: 10%;  /* smaller for number inputs */
+  width: 10%;
+  /* smaller for number inputs */
 }
 
 .my-task-table .delete-col {
@@ -1196,11 +1698,13 @@ th {
 }
 
 .kpi-table .kpi-value-col {
-  width: 12%; /* reduced width for dropdown */
+  width: 12%;
+  /* reduced width for dropdown */
 }
 
 .kpi-table .remarks-col {
-  width: 42%; /* wider textarea */
+  width: 42%;
+  /* wider textarea */
   text-align: left;
 }
 
@@ -1221,10 +1725,13 @@ th {
 }
 
 .kpi-table .kpi-value-col {
-  width: 18%; /* slightly bigger to fit text */
-  min-width: 150px; /* ensures label is readable */
+  width: 18%;
+  /* slightly bigger to fit text */
+  min-width: 150px;
+  /* ensures label is readable */
   text-align: center;
 }
+
 /* 
 .kpi-table .kpi-value-col select {
   width: 100%;
@@ -1234,19 +1741,23 @@ th {
 } */
 
 
-.kpi-table textarea , .my-task-table textarea {
-    height: 60px;        
-    resize: none;         
-    overflow-y: auto;    
+.kpi-table textarea,
+.my-task-table textarea {
+  height: 60px;
+  resize: none;
+  overflow-y: auto;
 }
 
 
 
-.my-task-table th ,.kpi-table th , th{
- border: none;
- color: white;
- background: #5A6330;
+.my-task-table th,
+.kpi-table th,
+th {
+  border: none;
+  color: white;
+  background: #5A6330;
 }
+
 /* Delete Button Styles */
 .delete-btn {
   background: #e74c3c;
@@ -1309,24 +1820,31 @@ th {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Modal Table Fixed Height */
+/* Modal Table Fixed Height - Updated */
 .modal-body .table-container {
-  max-height: 300px;
+  max-height: 500px;
+  /* Increased from 300px */
+  min-height: 400px;
+  /* Ensure minimum height */
   overflow-y: auto;
   overflow-x: auto;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
   border-radius: 8px;
   margin-bottom: 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-body thead th {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #f8f9fa;
-  color: #495057;
+  background: #E2E6D1;
+  /* Match the theme */
+  color: black;
   border: 1px solid #dee2e6;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
 }
 
 /* Custom Scrollbar for Tables */
@@ -1360,21 +1878,21 @@ th {
   .my-task-table .table-container {
     max-height: 300px;
   }
-  
+
   .kpi-table .table-container {
     max-height: 250px;
   }
-  
+
   .modal-body .table-container {
     max-height: 200px;
   }
-  
+
   .delete-btn {
     padding: 6px 8px;
     min-width: 32px;
     height: 32px;
   }
-  
+
   .delete-btn i {
     font-size: 12px;
   }
@@ -1384,25 +1902,25 @@ th {
   .my-task-table .table-container {
     max-height: 250px;
   }
-  
+
   .kpi-table .table-container {
     max-height: 200px;
   }
-  
+
   .modal-body .table-container {
     max-height: 180px;
   }
-  
+
   .delete-col {
     width: 10%;
   }
-  
+
   .delete-btn {
     padding: 4px 6px;
     min-width: 28px;
     height: 28px;
   }
-  
+
   .delete-btn i {
     font-size: 10px;
   }

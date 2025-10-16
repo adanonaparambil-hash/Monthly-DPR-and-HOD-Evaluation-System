@@ -25,9 +25,25 @@
       <a routerLink="/past-reports" routerLinkActive="active">
         <i class="fas fa-history"></i> Past Reports
       </a>
-      <a routerLink="/emergency-exit-form" routerLinkActive="active">
-        <i class="fas fa-plane-departure"></i> Emergency Exit Form
-      </a>
+      <div class="menu-item-with-submenu">
+        <a class="parent-menu" (click)="toggleExitFormMenu()" [class.active]="isExitFormRouteActive()">
+          <div class="menu-content">
+            <i class="fas fa-plane-departure"></i>
+            <span>Exit Form</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isExitFormMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isExitFormMenuOpen" [@slideDown]>
+          <a routerLink="/emergency-exit-form" routerLinkActive="active">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Emergency Exit Form</span>
+          </a>
+          <a routerLink="/employee-exit-form" routerLinkActive="active">
+            <i class="fas fa-calendar-check"></i>
+            <span>Employee Exit Form (Planned Leave)</span>
+          </a>
+        </div>
+      </div>
       <a routerLink="/profile" routerLinkActive="active">
         <i class="fas fa-user"></i> My Profile
       </a>
@@ -63,9 +79,15 @@
         
         <!-- Notifications -->
         <div class="notification-wrapper">
-          <button class="notification-btn" (click)="toggleNotifications()">
+          <button class="notification-btn" 
+                  [class.has-notifications]="notificationCount > 0"
+                  [class.urgent-notifications]="notificationCount > 5"
+                  (click)="toggleNotifications()">
             <i class="fas fa-bell"></i>
-            <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+            <span class="notification-badge" 
+                  [class.urgent]="notificationCount > 5"
+                  [class.new-notification]="hasNewNotifications"
+                  *ngIf="notificationCount > 0">{{ notificationCount }}</span>
           </button>
           
           <div class="notification-dropdown" *ngIf="showNotifications" [@slideDown]>

@@ -243,13 +243,19 @@
             </span>
           </div>
           
-          <div class="form-group">
+          <div class="form-group hod-name-group">
             <label for="hodName">HOD Name *</label>
-            <input type="text" 
-                   id="hodName" 
-                   formControlName="hodName"
-                   [class.error]="isFieldInvalid('hodName')"
-                   placeholder="Head of Department name">
+            <select id="hodName" 
+                    formControlName="hodName"
+                    [class.error]="isFieldInvalid('hodName')">
+              <option value="">Select HOD</option>
+              <option value="John Smith">John Smith</option>
+              <option value="Sarah Johnson">Sarah Johnson</option>
+              <option value="Michael Brown">Michael Brown</option>
+              <option value="Emily Davis">Emily Davis</option>
+              <option value="David Wilson">David Wilson</option>
+              <option value="Lisa Anderson">Lisa Anderson</option>
+            </select>
             <span class="error-message" *ngIf="isFieldInvalid('hodName')">
               {{ getFieldError('hodName') }}
             </span>
@@ -363,9 +369,10 @@
           </div>
           
           <div class="departments-grid">
-            <div class="department-card" 
-                 *ngFor="let dept of departments"
-                 [ngClass]="'status-' + dept.status">
+            <div class="department-card hod-approval-card" 
+                 *ngFor="let dept of departments; let first = first"
+                 [ngClass]="'status-' + dept.status"
+                 [class.hod-approval]="first">
               
               <div class="dept-header">
                 <h4>{{ dept.name }}</h4>
@@ -411,8 +418,43 @@
                 </div>
               </div>
               
-              <!-- Demo approval buttons (in real app, only HODs would see these) -->
-              <div class="demo-approval-actions" *ngIf="dept.status === 'pending'">
+              <!-- HOD Approval Actions -->
+              <div class="hod-approval-actions" *ngIf="dept.id === 0 && dept.status === 'pending'">
+                <div class="hod-approval-form">
+                  <div class="approval-inputs">
+                    <div class="form-group">
+                      <label>Number of Days Allowed *</label>
+                      <input type="number" 
+                             [(ngModel)]="hodDaysAllowed"
+                             placeholder="Enter number of days allowed"
+                             min="1"
+                             required>
+                    </div>
+                    <div class="form-group">
+                      <label>Remarks *</label>
+                      <textarea [(ngModel)]="hodRemarks"
+                                placeholder="Enter your remarks or comments"
+                                rows="4"
+                                required></textarea>
+                    </div>
+                  </div>
+                  <div class="approval-buttons">
+                    <button type="button" 
+                            class="btn-approve" 
+                            (click)="approveHOD(true)">
+                      <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button type="button" 
+                            class="btn-reject" 
+                            (click)="approveHOD(false)">
+                      <i class="fas fa-times"></i> Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Demo approval buttons for other departments -->
+              <div class="demo-approval-actions" *ngIf="dept.id !== 0 && dept.status === 'pending'">
                 <button type="button" 
                         class="btn-approve" 
                         (click)="approveDepartment(dept.id, true, 'Approved by HOD')">

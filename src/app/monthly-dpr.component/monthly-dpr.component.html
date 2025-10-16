@@ -334,10 +334,22 @@
         </table>
       </div>
 
-      <!-- Summary Text Area (Visible by default) -->
-      <div *ngIf="summaryText" class="summary-box">
-        <h3>AI Generated Summary</h3>
-        <textarea readonly>{{ summaryText }}</textarea>
+      <!-- Summary Text Area (Always visible) -->
+      <div class="summary-box">
+        <div class="summary-header">
+          <h3>AI Generated Summary</h3>
+          <button *ngIf="summaryText" 
+                  class="copy-btn" 
+                  (click)="copySummaryToClipboard()" 
+                  title="Copy to clipboard">
+            <i class="fas fa-clipboard"></i>
+          </button>
+        </div>
+        <div class="textarea-container">
+          <textarea readonly 
+                    #summaryTextarea
+                    placeholder="Click 'Generate Summary' to create an AI-powered summary of selected tasks...">{{ summaryText }}</textarea>
+        </div>
       </div>
 
       <!-- Generate Summary Button and Close Button -->

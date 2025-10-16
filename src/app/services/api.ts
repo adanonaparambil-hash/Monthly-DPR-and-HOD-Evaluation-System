@@ -3,7 +3,7 @@ import { HttpClient,HttpParams  } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { DPRReview, DPRKPI,ProofhubTaskDto , DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload,EmployeeProfileUpdateDto,DropDownMasterDto,DropDownChildDto } from '../models/common.model';
+import { EmployeeDocumentUpload,EmployeeProfileUpdateDto,DropDownMasterDto,DropDownChildDto,Notification } from '../models/common.model';
 
 @Injectable({
   providedIn: 'root'
@@ -116,6 +116,19 @@ export class Api {
 
   upsertDropChildValue(childDto: DropDownChildDto): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/UpsertDropChildValue`, childDto);
+  }
+
+
+  getUserNotifications(userId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetUserNotifications/${userId}`);
+  }
+
+  upsertNotification(notification: Notification): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/UpsertNotification`, notification);
+  }
+  
+  markAsRead(notificationId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/MarkAsRead/${notificationId}`);
   }
 
 }

@@ -8,6 +8,7 @@ import { EmployeeDashboard } from './employee-dashboard/employee-dashboard';
 import { HodDashboard } from './hod-dashboard/hod-dashboard';
 import { CedDashboard } from './ced-dashboard/ced-dashboard';
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
+import { EmployeeExitFormComponent } from './employee-exit-form/employee-exit-form.component';
 import { layout } from './layout/layout';
 
 export const routes: Routes = [
@@ -29,6 +30,7 @@ export const routes: Routes = [
       { path: 'past-reports', component: PastReportsComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'emergency-exit-form', component: EmergencyExitFormComponent },
+      { path: 'employee-exit-form', component: EmployeeExitFormComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

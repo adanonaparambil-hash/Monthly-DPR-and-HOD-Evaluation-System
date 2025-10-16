@@ -35,8 +35,10 @@ export class layout implements OnInit {
   showProfile = false;
   sidebarCollapsed = false;
   currentRoute = '';
+  isExitFormMenuOpen = false;
   
   notificationCount = 3;
+  hasNewNotifications = true; // Set to true when new notifications arrive
   notifications = [
     {
       icon: 'fas fa-check-circle text-success',
@@ -110,7 +112,8 @@ export class layout implements OnInit {
       '/monthly-dpr': 'MPR Entry',
       '/past-reports': 'Past Reports',
       '/profile': 'My Profile',
-      '/emergency-exit-form': 'Emergency Exit Form'
+      '/emergency-exit-form': 'Emergency Exit Form',
+      '/employee-exit-form': 'Employee Exit Form'
     };
     return routeTitles[this.currentRoute] || 'Dashboard';
   }
@@ -122,6 +125,11 @@ export class layout implements OnInit {
   toggleNotifications() {
     this.showNotifications = !this.showNotifications;
     this.showProfile = false;
+    
+    // Reset new notifications flag when user opens notifications
+    if (this.showNotifications) {
+      this.hasNewNotifications = false;
+    }
   }
 
   toggleProfile() {
@@ -135,7 +143,36 @@ export class layout implements OnInit {
 
   markAllAsRead() {
     this.notificationCount = 0;
+    this.hasNewNotifications = false;
     this.showNotifications = false;
+  }
+
+
+//   markAllAsRead() {
+//   const unreadNotifications = this.notifications.filter(n => !n.isRead);
+
+//   unreadNotifications.forEach(notification => {
+//     this.api.markAsRead(notification.id).subscribe(res => {
+//       if (res.success) {
+//         notification.isRead = true;
+//         this.notificationCount = this.notifications.filter(n => !n.isRead).length;
+//         this.hasNewNotifications = this.notificationCount > 0;
+//       }
+//     });
+//   });
+
+//   if (this.notifications.every(n => n.isRead)) {
+//     this.showNotifications = false;
+//   }
+// }
+
+
+  toggleExitFormMenu() {
+    this.isExitFormMenuOpen = !this.isExitFormMenuOpen;
+  }
+
+  isExitFormRouteActive(): boolean {
+    return this.currentRoute === '/emergency-exit-form' || this.currentRoute === '/employee-exit-form';
   }
 
   logout() {
@@ -143,6 +180,24 @@ export class layout implements OnInit {
     localStorage.removeItem('access_token');
     localStorage.clear();
     sessionStorage.clear();
+  }
+
+  // Method to add new notifications (for testing or real-time updates)
+  addNewNotification(notification: any) {
+    this.notifications.unshift(notification);
+    this.notificationCount++;
+    this.hasNewNotifications = true;
+    
+    // Auto-reset new notification flag after 5 seconds
+    setTimeout(() => {
+      this.hasNewNotifications = false;
+    }, 5000);
+  }
+
+  // Method to simulate urgent notifications (for testing)
+  simulateUrgentNotifications() {
+    this.notificationCount = 8; // More than 5 triggers urgent animations
+    this.hasNewNotifications = true;
   }
 
   

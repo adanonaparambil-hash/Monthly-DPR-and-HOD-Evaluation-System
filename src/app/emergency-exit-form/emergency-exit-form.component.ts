@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -70,9 +70,17 @@ export class EmergencyExitFormComponent implements OnInit {
   exitForm!: FormGroup;
   isSubmitting = false;
   formSubmitted = false;
+  hodRemarks: string = '';
+  hodDaysAllowed: number = 0;
   
   // Form data
   departments: Department[] = [
+    {
+      id: 0,
+      name: 'HOD Approval',
+      status: 'pending',
+      items: []
+    },
     {
       id: 1,
       name: 'CWH',
@@ -146,13 +154,20 @@ export class EmergencyExitFormComponent implements OnInit {
 
   responsibilities: ResponsibilityHandover[] = [];
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private cdr: ChangeDetectorRef) {
     this.initializeForm();
   }
 
   ngOnInit() {
     try {
       this.addResponsibility(); // Add one default responsibility row
+      // Ensure all departments are visible by default
+      this.departments.forEach(dept => {
+        if (!dept.status) {
+          dept.status = 'pending';
+        }
+      });
+      console.log('Departments initialized:', this.departments.length); // Debug log
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
     }
@@ -239,6 +254,13 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.currentStep < this.totalSteps) {
       if (this.validateCurrentStep()) {
         this.currentStep++;
+        // Ensure all department cards are visible when reaching step 3
+        if (this.currentStep === 3) {
+          this.cdr.detectChanges(); // Force change detection
+          setTimeout(() => {
+            this.ensureAllCardsVisible();
+          }, 100);
+        }
       }
     }
   }
@@ -252,7 +274,31 @@ export class EmergencyExitFormComponent implements OnInit {
   goToStep(step: number) {
     if (step >= 1 && step <= this.totalSteps) {
       this.currentStep = step;
+      // Ensure all department cards are visible when going to step 3
+      if (step === 3) {
+        this.cdr.detectChanges(); // Force change detection
+        setTimeout(() => {
+          this.ensureAllCardsVisible();
+        }, 100);
+      }
     }
+  }
+
+  ensureAllCardsVisible() {
+    // Force all department cards to be visible
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.department-card');
+      console.log('Found cards:', cards.length); // Debug log
+      cards.forEach((card, index) => {
+        const element = card as HTMLElement;
+        element.style.display = 'block';
+        element.style.opacity = '1';
+        element.style.visibility = 'visible';
+        element.style.position = 'relative';
+        element.style.zIndex = '1';
+        console.log(`Card ${index} made visible`); // Debug log
+      });
+    }, 200);
   }
 
   validateCurrentStep(): boolean {
@@ -341,6 +387,19 @@ export class EmergencyExitFormComponent implements OnInit {
       dept.status = approved ? 'approved' : 'rejected';
       dept.approvedDate = new Date();
       dept.comments = comments;
+    }
+  }
+
+  approveHOD(approved: boolean) {
+    const hodDept = this.departments.find(d => d.id === 0);
+    if (hodDept) {
+      hodDept.status = approved ? 'approved' : 'rejected';
+      hodDept.approvedDate = new Date();
+      if (approved) {
+        hodDept.comments = `${this.hodDaysAllowed} days allowed. Remarks: ${this.hodRemarks}`;
+      } else {
+        hodDept.comments = `Rejected by HOD. Remarks: ${this.hodRemarks}`;
+      }
     }
   }
 

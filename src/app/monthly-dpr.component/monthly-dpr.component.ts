@@ -521,11 +521,13 @@ export class MonthlyDprComponent {
     const selectedTasks = this.Proofhubtasks.filter((t) => t.selected);
 
     if (selectedTasks.length === 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Operation Failed',
-        text: 'Please select at least one task!',
-      });
+      // Swal.fire({
+      //   icon: 'error',
+      //   title: 'Operation Failed',
+      //   text: 'Please select at least one task!',
+      // });
+
+      this.toastr.error('Please select at least one task!.', 'error');
 
       return;
     }
@@ -539,6 +541,56 @@ export class MonthlyDprComponent {
         alert('Error generating summary');
       },
     });
+  }
+
+  copySummaryToClipboard() {
+    if (this.summaryText) {
+      navigator.clipboard.writeText(this.summaryText).then(() => {
+        // Show success message
+        this.toastr.success('Summary copied to clipboard!', 'Success');
+        
+        // Add visual feedback to button
+        const copyBtn = document.querySelector('.copy-btn');
+        if (copyBtn) {
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.classList.remove('copied');
+          }, 1000);
+        }
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        // Fallback for older browsers
+        this.fallbackCopyTextToClipboard(this.summaryText);
+      });
+    }
+  }
+
+  // Fallback method for older browsers
+  private fallbackCopyTextToClipboard(text: string) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        this.toastr.success('Summary copied to clipboard!', 'Success');
+      } else {
+        this.toastr.error('Failed to copy summary', 'Error');
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      this.toastr.error('Failed to copy summary', 'Error');
+    }
+    
+    document.body.removeChild(textArea);
   }
 
   GetDPREmployeeReviewDetails(dprId: number) {

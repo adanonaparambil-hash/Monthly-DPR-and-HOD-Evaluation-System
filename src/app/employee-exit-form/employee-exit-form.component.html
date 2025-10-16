@@ -1,0 +1,84 @@
+<div class="employee-exit-container">
+  <div class="form-header">
+    <h1>Employee Exit Form (Planned Leave)</h1>
+    <p>Planned leave application form</p>
+  </div>
+
+  <div class="form-content">
+    <form [formGroup]="exitForm">
+      <div class="form-section">
+        <h3>Employee Information</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="employeeName">Name *</label>
+            <input type="text" 
+                   id="employeeName" 
+                   formControlName="employeeName"
+                   placeholder="Enter full name">
+          </div>
+          
+          <div class="form-group">
+            <label for="employeeId">ID No. *</label>
+            <input type="text" 
+                   id="employeeId" 
+                   formControlName="employeeId"
+                   placeholder="Employee ID">
+          </div>
+          
+          <div class="form-group">
+            <label for="department">Department *</label>
+            <select id="department" formControlName="department">
+              <option value="">Select Department</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="plannedLeaveDate">Planned Leave Date *</label>
+            <input type="date" 
+                   id="plannedLeaveDate" 
+                   formControlName="plannedLeaveDate">
+          </div>
+          
+          <div class="form-group">
+            <label for="returnDate">Return Date *</label>
+            <input type="date" 
+                   id="returnDate" 
+                   formControlName="returnDate">
+          </div>
+          
+          <div class="form-group">
+            <label for="reason">Reason for Leave *</label>
+            <textarea id="reason" 
+                      formControlName="reason"
+                      rows="4"
+                      placeholder="Please provide reason for planned leave"></textarea>
+          </div>
+          
+          <div class="form-group hod-dropdown-group">
+            <label for="hodName">HOD Name *</label>
+            <select id="hodName" formControlName="hodName">
+              <option value="">Select HOD</option>
+              <option value="John Smith">John Smith</option>
+              <option value="Sarah Johnson">Sarah Johnson</option>
+              <option value="Michael Brown">Michael Brown</option>
+              <option value="Emily Davis">Emily Davis</option>
+              <option value="David Wilson">David Wilson</option>
+              <option value="Lisa Anderson">Lisa Anderson</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn-secondary">Cancel</button>
+        <button type="button" class="btn-primary" (click)="submitForm()">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
