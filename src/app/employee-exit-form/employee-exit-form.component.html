@@ -64,12 +64,9 @@
             <label for="hodName">HOD Name *</label>
             <select id="hodName" formControlName="hodName">
               <option value="">Select HOD</option>
-              <option value="John Smith">John Smith</option>
-              <option value="Sarah Johnson">Sarah Johnson</option>
-              <option value="Michael Brown">Michael Brown</option>
-              <option value="Emily Davis">Emily Davis</option>
-              <option value="David Wilson">David Wilson</option>
-              <option value="Lisa Anderson">Lisa Anderson</option>
+              <option *ngFor="let hod of hodList" [value]="hod.idValue">
+                {{ hod.description }}
+              </option>
             </select>
           </div>
         </div>

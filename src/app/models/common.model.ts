@@ -68,4 +68,5 @@ export interface Notification {
   link: string;
   isRead: boolean;
   createdAt: string;
+  unreadCount: number;
 }

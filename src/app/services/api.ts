@@ -3,7 +3,7 @@ import { HttpClient,HttpParams  } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { DPRReview, DPRKPI,ProofhubTaskDto , DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload,EmployeeProfileUpdateDto,DropDownMasterDto,DropDownChildDto,Notification } from '../models/common.model';
+import { EmployeeDocumentUpload,EmployeeProfileUpdateDto,DropDownMasterDto,DropDownChildDto, Notification } from '../models/common.model';
 
 @Injectable({
   providedIn: 'root'
@@ -118,18 +118,27 @@ export class Api {
     return this.http.post(`${this.apiUrl}/General/UpsertDropChildValue`, childDto);
   }
 
-
-  getUserNotifications(userId: number): Observable<any> {
+  // Notification API Methods
+  getUserNotifications(userId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetUserNotifications/${userId}`);
   }
 
-  upsertNotification(notification: Notification): Observable<any> {
+  markNotificationAsRead(notificationId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/MarkAsRead/${notificationId}`, {});
+  }
+
+  markAllNotificationsAsRead(userId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/MarkAllAsRead/${userId}`, {});
+  }
+
+  deleteNotification(notificationId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/General/DeleteNotification/${notificationId}`);
+  }
+
+  createNotification(notification: Partial<Notification>): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/UpsertNotification`, notification);
   }
-  
-  markAsRead(notificationId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/General/MarkAsRead/${notificationId}`);
-  }
+
 
 }
 

@@ -2,6 +2,8 @@ import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@an
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { Api } from '../services/api';
+import { DropdownOption } from '../models/common.model';
 
 interface Department {
   id: number;
@@ -72,6 +74,7 @@ export class EmergencyExitFormComponent implements OnInit {
   formSubmitted = false;
   hodRemarks: string = '';
   hodDaysAllowed: number = 0;
+  hodList: DropdownOption[] = [];
   
   // Form data
   departments: Department[] = [
@@ -154,7 +157,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   responsibilities: ResponsibilityHandover[] = [];
 
-  constructor(private fb: FormBuilder, private cdr: ChangeDetectorRef) {
+  constructor(private fb: FormBuilder, private cdr: ChangeDetectorRef, private api: Api) {
     this.initializeForm();
   }
 
@@ -167,6 +170,8 @@ export class EmergencyExitFormComponent implements OnInit {
           dept.status = 'pending';
         }
       });
+      // Load HOD master list
+      this.loadHodMasterList();
       console.log('Departments initialized:', this.departments.length); // Debug log
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
@@ -497,5 +502,21 @@ export class EmergencyExitFormComponent implements OnInit {
 
   getCurrentTimestamp(): number {
     return Date.now();
+  }
+
+  // Load HOD Master List from API
+  loadHodMasterList(): void {
+    this.api.GetHodMasterList().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.hodList = response.data;
+        } else {
+          console.warn('No HOD records found or API call failed');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching HOD master list:', error);
+      }
+    });
   }
 }
