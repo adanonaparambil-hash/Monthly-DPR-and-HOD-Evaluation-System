@@ -105,8 +105,7 @@ export class layout implements OnInit {
       '/monthly-dpr': 'MPR Entry',
       '/past-reports': 'Past Reports',
       '/profile': 'My Profile',
-      '/emergency-exit-form': 'Emergency Exit Form',
-      '/employee-exit-form': 'Employee Exit Form'
+      '/emergency-exit-form': 'Exit Form'
     };
     return routeTitles[this.currentRoute] || 'Dashboard';
   }
@@ -176,7 +175,7 @@ export class layout implements OnInit {
   }
 
   isExitFormRouteActive(): boolean {
-    return this.currentRoute === '/emergency-exit-form' || this.currentRoute === '/employee-exit-form';
+    return this.currentRoute.includes('/emergency-exit-form');
   }
 
   logout() {

@@ -92,6 +92,10 @@ export class Api {
     return this.http.get(`${this.apiUrl}/Login/GetHodMasterList`);
   }
 
+  GetProjectManagerList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/Login/GetProjectManagerList`);
+  }
+
 
   sendOtp(email: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/Login/SendEmailOTP`, { email }, { withCredentials: true });

@@ -8,6 +8,8 @@
   box-sizing: border-box;
 }
 
+
+
 /* Header */
 .form-header {
   background: var(--gradient-primary);
@@ -55,17 +57,78 @@
   min-width: 0;
 }
 
-.form-title-section h1 {
+.title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.animated-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  animation: pulse 2s infinite;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.emergency-icon {
+  background: linear-gradient(135deg, #ff6b6b, #ffa500);
+  color: white;
+  animation: emergencyPulse 1.5s infinite;
+}
+
+.planned-icon {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
+  animation: plannedGlow 2s infinite;
+}
+
+.title-text h1 {
   margin: 0 0 4px 0;
   font-size: 24px;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.form-title-section p {
+.title-text p {
   margin: 0;
   font-size: 14px;
   opacity: 0.9;
+}
+
+@keyframes emergencyPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+  }
+}
+
+@keyframes plannedGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .form-status {
@@ -272,6 +335,62 @@
   gap: 20px;
 }
 
+/* Planned Leave Form Grid - 4 columns layout (md-4 equivalent) */
+.form-grid-planned {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Planned Leave specific field styling */
+.form-grid-planned .form-group {
+  min-width: 220px;
+  width: 100%;
+}
+
+.form-grid-planned .hod-name-group {
+  max-width: none;
+  width: 100%;
+}
+
+/* Ensure proper alignment for planned leave fields */
+.form-grid-planned .form-group input,
+.form-grid-planned .form-group select,
+.form-grid-planned .form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Radio group alignment in planned grid */
+.form-grid-planned .radio-group {
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+/* Responsive adjustments for planned leave grid */
+@media (max-width: 1400px) {
+  .form-grid-planned {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .form-grid-planned {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .form-grid-planned {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-grid-planned .form-group {
+    min-width: auto;
+  }
+}
+
 .responsibility-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -296,12 +415,34 @@
   position: relative;
 }
 
+/* Project Manager Approval Card Styles */
+.pm-approval-card {
+  border: 2px solid #28a745;
+  background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+  position: relative;
+}
+
 .hod-approval-actions {
   margin-top: 20px;
   padding: 20px;
   background: rgba(0, 123, 255, 0.05);
   border-radius: 8px;
   border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.pm-approval-actions {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(40, 167, 69, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.pm-approval-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
 }
 
 .hod-approval-form {
@@ -807,6 +948,63 @@
   font-size: 12px;
 }
 
+/* Radio Button Styling */
+.radio-group {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.radio-label:hover {
+  background: rgba(204, 153, 51, 0.05);
+}
+
+.radio-label input[type="radio"] {
+  display: none;
+}
+
+.radio-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background: var(--background-primary);
+  position: relative;
+}
+
+.radio-label input[type="radio"]:checked + .radio-mark {
+  border-color: var(--primary-color);
+  background: var(--background-primary);
+}
+
+.radio-label input[type="radio"]:checked + .radio-mark::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  position: absolute;
+}
+
 /* Checkbox Styling */
 .checkbox-label {
   display: flex;
@@ -1192,6 +1390,24 @@
     flex-direction: column;
     gap: 12px;
     width: 100%;
+  }
+  
+  .title-with-icon {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .animated-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .radio-group {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
   }
   
   .form-title-section h1 {
