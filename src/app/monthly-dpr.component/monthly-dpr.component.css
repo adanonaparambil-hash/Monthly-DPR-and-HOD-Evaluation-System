@@ -2128,3 +2128,60 @@ th {
   border-color: var(--border-color);
   color: var(--text-primary);
 }
+/*
+ Completion Status Column Styling */
+.modal-body .status-col {
+  width: 12%;
+  min-width: 100px;
+  text-align: center;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  border: 1px solid #c3e6cb;
+}
+
+.status-incomplete {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  border: 1px solid #f5c6cb;
+}
+
+/* Responsive adjustments for completion status */
+@media (max-width: 768px) {
+  .modal-body .status-col {
+    width: 15%;
+    min-width: 80px;
+  }
+  
+  .status-completed,
+  .status-incomplete {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-body .status-col {
+    min-width: 70px;
+  }
+  
+  .status-completed,
+  .status-incomplete {
+    font-size: 9px;
+    padding: 2px 4px;
+  }
+}

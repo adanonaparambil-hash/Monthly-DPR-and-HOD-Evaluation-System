@@ -1,14 +1,14 @@
 <div class="monthly-dpr-page" [@slideIn]>
   <!-- Header -->
   <div class="header-section" [@scaleIn]>
-  <div class="header-content">
-    <h1>Monthly Performance Review</h1>
-    <p><i class="fas fa-calendar-alt"></i> <b> {{ monthYear }} </b></p>
-  </div>
-  <div class="header-actions">
+    <div class="header-content">
+      <h1>Monthly Performance Review</h1>
+      <p><i class="fas fa-calendar-alt"></i> <b> {{ monthYear }} </b></p>
+    </div>
+    <div class="header-actions">
 
+    </div>
   </div>
-</div>
 
 
   <!-- Employee Info Card -->
@@ -26,17 +26,17 @@
         <label><b>Designation</b></label>
         <input [(ngModel)]="designation" placeholder="Enter your designation" disabled>
       </div>
-      
+
 
     </div>
     <div class="info-row">
-      
-      
+
+
       <div class="info-item">
         <label><b>Department</b></label>
-          <input [(ngModel)]="department"  placeholder="Enter your department" disabled>
+        <input [(ngModel)]="department" placeholder="Enter your department" disabled>
       </div>
-      
+
       <div class="info-item">
         <label><b>Worked Hours</b></label>
         <input type="number" [(ngModel)]="WorkedHours" placeholder="Enter Worked Hours: e.g., 160" disabled>
@@ -48,14 +48,14 @@
         <select [(ngModel)]="reportingTo" [disabled]="isReadOnlyMode || !isEmployee">
           <option value="">Select HOD</option>
           <option *ngFor="let hod of hodList" [value]="hod.idValue">
-            {{ hod.description  }}
+            {{ hod.description }}
           </option>
         </select>
       </div>
 
 
     </div>
-    
+
   </div>
 
 
@@ -69,12 +69,12 @@
       <div class="header-right">
         <div class="button-container" (click)="$event.stopPropagation()">
           <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
-          <button class="add-btn" (click)="addNewTask()">+ Add New Task</button> 
+          <button class="add-btn" (click)="addNewTask()">+ Add New Task</button>
         </div>
         <i class="fas" [class.fa-chevron-down]="showTaskDetails" [class.fa-chevron-right]="!showTaskDetails"></i>
       </div>
     </div>
-    
+
     <div class="task-content" *ngIf="showTaskDetails" [@fadeInUp]>
       <div class="table-container my-task-table">
         <table>
@@ -91,19 +91,22 @@
             <tr *ngFor="let task of tasks; let i = index">
               <td class="SlNo-col">{{ i + 1 }}</td>
               <td class="task-col">
-                <textarea [(ngModel)]="task.taskName" placeholder="Task name" [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+                <textarea [(ngModel)]="task.taskName" placeholder="Task name"
+                  [disabled]="isReadOnlyMode || !isEmployee"></textarea>
               </td>
               <td class="desc-col">
-                <textarea [(ngModel)]="task.description" placeholder="Description and status" [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+                <textarea [(ngModel)]="task.description" placeholder="Description and status"
+                  [disabled]="isReadOnlyMode || !isEmployee"></textarea>
               </td>
-              
+
               <td class="hours-col">
-                <input 
-                  type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()" [disabled]="isReadOnlyMode || !isEmployee">
+                <input type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()"
+                  [disabled]="isReadOnlyMode || !isEmployee">
               </td>
-              
+
               <td class="delete-col">
-                <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task" *ngIf="!isReadOnlyMode && isEmployee">
+                <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task"
+                  *ngIf="!isReadOnlyMode && isEmployee">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
@@ -120,26 +123,30 @@
   <!-- Support Needed Section -->
   <div class="support-card" [@scaleIn]>
     <h3><i class="fas fa-handshake colorful-icon"></i> Support Needed / Suggestions</h3>
-    <p>Specify the support you need from management, team or resources. Include any suggestions for process improvement...</p>
-    <textarea [(ngModel)]="supportNeeded" placeholder="Enter your support requirements..." [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+    <p>Specify the support you need from management, team or resources. Include any suggestions for process
+      improvement...</p>
+    <textarea [(ngModel)]="supportNeeded" placeholder="Enter your support requirements..."
+      [disabled]="isReadOnlyMode || !isEmployee"></textarea>
   </div>
 
 
-   <!-- Achievements and Challenges -->
+  <!-- Achievements and Challenges -->
   <div class="achievements-challenges" [@scaleIn]>
     <div class="achievement-card">
-       <h3><i class="fas fa-trophy colorful-icon"></i> Achievements</h3>
+      <h3><i class="fas fa-trophy colorful-icon"></i> Achievements</h3>
       <p>Describe your major accomplishments, achievements, deliverables and quality deliverables...</p>
-      <textarea [(ngModel)]="achievements" placeholder="Enter your achievements..." [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+      <textarea [(ngModel)]="achievements" placeholder="Enter your achievements..."
+        [disabled]="isReadOnlyMode || !isEmployee"></textarea>
     </div>
     <div class="challenge-card">
-       <h3><i class="fas fa-question-circle colorful-icon"></i> Challenges</h3>
+      <h3><i class="fas fa-question-circle colorful-icon"></i> Challenges</h3>
       <p>Detail the challenges you encountered, the steps taken to address them...</p>
-      <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..." [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+      <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..."
+        [disabled]="isReadOnlyMode || !isEmployee"></textarea>
     </div>
   </div>
 
-  
+
 
   <!-- KPI Performance Section -->
   <div class="kpi-card" [@scaleIn]>
@@ -150,8 +157,8 @@
       </div>
       <i class="fas" [class.fa-chevron-down]="showKpiPerformance" [class.fa-chevron-right]="!showKpiPerformance"></i>
     </div>
-    
-    
+
+
     <div class="kpi-content" *ngIf="showKpiPerformance" [@fadeInUp]>
       <div class="table-container kpi-table">
         <table>
@@ -173,16 +180,19 @@
 
               <!-- KPI Value Dropdown -->
               <td class="kpi-value-col">
-                <input [(ngModel)]="kpi.kpiValue" placeholder="Enter the KPI value" type="number" min="1" max="100" class="rating-input" [disabled]="isReadOnlyMode || !isEmployee">
+                <input [(ngModel)]="kpi.kpiValue" placeholder="Enter the KPI value" type="number" min="1" max="100"
+                  class="rating-input" [disabled]="isReadOnlyMode || !isEmployee">
               </td>
 
               <!-- Remarks -->
               <td class="remarks-col">
-                <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks" [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+                <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks"
+                  [disabled]="isReadOnlyMode || !isEmployee"></textarea>
               </td>
-              
+
               <td class="delete-col">
-                <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI" *ngIf="!isReadOnlyMode && isEmployee">
+                <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI"
+                  *ngIf="!isReadOnlyMode && isEmployee">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
@@ -197,7 +207,7 @@
 
   </div>
 
- 
+
 
   <!-- HOD Evaluation Section -->
   <div class="evaluation-card" [@scaleIn] *ngIf="!isEmployee">
@@ -208,24 +218,28 @@
       </div>
       <i class="fas" [class.fa-chevron-down]="showHodEvaluation" [class.fa-chevron-right]="!showHodEvaluation"></i>
     </div>
-    
+
     <div class="evaluation-content" *ngIf="showHodEvaluation" [@fadeInUp]>
       <div class="evaluation-grid">
         <div class="eval-item">
           <label>Quality</label>
-          <input [(ngModel)]="quality" placeholder="Enter quality score (0-100)" type="number" min="1" max="100" class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+          <input [(ngModel)]="quality" placeholder="Enter quality score (0-100)" type="number" min="1" max="100"
+            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Timeliness</label>
-          <input [(ngModel)]="timeliness" placeholder="Enter timeliness score (0-100)" type="number" min="1" max="100" class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+          <input [(ngModel)]="timeliness" placeholder="Enter timeliness score (0-100)" type="number" min="1" max="100"
+            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Initiative</label>
-          <input [(ngModel)]="initiative" placeholder="Enter initiative score (0-100)" type="number" min="1" max="100" class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+          <input [(ngModel)]="initiative" placeholder="Enter initiative score (0-100)" type="number" min="1" max="100"
+            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Overall Score</label>
-          <input [(ngModel)]="overallScore" placeholder="Enter overall score (0-100)" type="number" min="1" max="100" class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+          <input [(ngModel)]="overallScore" placeholder="Enter overall score (0-100)" type="number" min="1" max="100"
+            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
         </div>
       </div>
     </div>
@@ -238,12 +252,14 @@
         <i class="fas fa-comment"></i>
         <span>Management Remarks</span>
       </div>
-      <i class="fas" [class.fa-chevron-down]="showManagementRemarks" [class.fa-chevron-right]="!showManagementRemarks"></i>
+      <i class="fas" [class.fa-chevron-down]="showManagementRemarks"
+        [class.fa-chevron-right]="!showManagementRemarks"></i>
     </div>
-    
+
     <div class="remarks-content" *ngIf="showManagementRemarks" [@fadeInUp]>
       <p>Add your remarks about the employee's performance...</p>
-      <textarea [(ngModel)]="managementRemarks" placeholder="Enter management remarks..." [disabled]="isReadOnlyMode || !isHod"></textarea>
+      <textarea [(ngModel)]="managementRemarks" placeholder="Enter management remarks..."
+        [disabled]="isReadOnlyMode || !isHod"></textarea>
     </div>
   </div>
 
@@ -256,7 +272,7 @@
       </div>
       <i class="fas" [class.fa-chevron-down]="showRemarksHistory" [class.fa-chevron-right]="!showRemarksHistory"></i>
     </div>
-    
+
     <div class="history-content" *ngIf="showRemarksHistory" [@fadeInUp]>
       <div class="history-item" *ngFor="let remark of remarksHistory" [@scaleIn]>
         <div class="history-header">
@@ -272,7 +288,7 @@
     </div>
   </div>
 
-  
+
   <!-- Action Buttons (Now under Achievements/Challenges, right aligned) -->
   <div class="action-buttons right-action-buttons" [@scaleIn]>
     <button class="btn-draft colorful-btn" (click)="saveDraft()" *ngIf="!isReadOnlyMode && isEmployee">
@@ -304,7 +320,7 @@
 
     <!-- Body -->
     <div class="modal-body">
-      
+
       <div class="table-container">
         <table>
           <thead>
@@ -316,6 +332,7 @@
               <th class="date-col">Due Date</th>
               <th class="hours-col">Estimated Hours</th>
               <th class="hours-col">Logged Hours</th>
+              <th class="status-col">Completion Status</th>
               <th class="select-col">Select</th>
             </tr>
           </thead>
@@ -328,6 +345,11 @@
               <td class="date-col">{{ task.DUE_DATE }}</td>
               <td class="hours-col">{{ task.ESTIMATED_HOURS }}</td>
               <td class="hours-col">{{ task.LOGGED_HOURS }}</td>
+              <td class="status-col">
+                <span [class]="task.COMPLETED ? 'status-completed' : 'status-incomplete'">
+                  {{ task.COMPLETED ? 'Completed' : 'Incomplete' }}
+                </span>
+              </td>
               <td><input type="checkbox" [(ngModel)]="task.selected" /></td>
             </tr>
           </tbody>
@@ -338,17 +360,13 @@
       <div class="summary-box">
         <div class="summary-header">
           <h3>AI Generated Summary</h3>
-          <button *ngIf="summaryText" 
-                  class="copy-btn" 
-                  (click)="copySummaryToClipboard()" 
-                  title="Copy to clipboard">
+          <button *ngIf="summaryText" class="copy-btn" (click)="copySummaryToClipboard()" title="Copy to clipboard">
             <i class="fas fa-clipboard"></i>
           </button>
         </div>
         <div class="textarea-container">
-          <textarea readonly 
-                    #summaryTextarea
-                    placeholder="Click 'Generate Summary' to create an AI-powered summary of selected tasks...">{{ summaryText }}</textarea>
+          <textarea readonly #summaryTextarea
+            placeholder="Click 'Generate Summary' to create an AI-powered summary of selected tasks...">{{ summaryText }}</textarea>
         </div>
       </div>
 

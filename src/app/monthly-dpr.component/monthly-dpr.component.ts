@@ -7,7 +7,7 @@ import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
-import { DropdownOption  } from '../models/common.model';
+import { DropdownOption } from '../models/common.model';
 import { ActivatedRoute } from '@angular/router';
 
 
@@ -145,7 +145,7 @@ export class MonthlyDprComponent {
     },
   ];
 
-    constructor(private api: Api,private toastr: ToastrService, private route: ActivatedRoute) {}
+  constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute) { }
 
   ngOnInit() {
 
@@ -180,10 +180,10 @@ export class MonthlyDprComponent {
     this.getUserProofhubTasks();
 
     this.GetDPREmployeeReviewDetails(this.dprid);
-      
+
   }
 
-  
+
 
   toggleTaskDetails() {
     this.showTaskDetails = !this.showTaskDetails;
@@ -303,13 +303,13 @@ export class MonthlyDprComponent {
   }
 
   HODReviewUpdate() {
-    
-    if (this.ApprovalStatus =="R"){
-        this.ConfirmationMessage =   'Do you want to rework the review details?';
+
+    if (this.ApprovalStatus == "R") {
+      this.ConfirmationMessage = 'Do you want to rework the review details?';
     }
-    else{
-      this.ConfirmationMessage =   'Do you want to approve the review details?';
-    } 
+    else {
+      this.ConfirmationMessage = 'Do you want to approve the review details?';
+    }
 
 
     Swal.fire({
@@ -321,7 +321,7 @@ export class MonthlyDprComponent {
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
-       
+
         const review: DPRReview = {
           employeeId: this.empId,
           status: this.ApprovalStatus,
@@ -350,45 +350,45 @@ export class MonthlyDprComponent {
         });
       }
     });
-}
+  }
 
   saveEmployeeDetails() {
 
 
-    if (this.ApprovalStatus =="S"){
-   
-        this.ConfirmationMessage =   'Do you want to submit the review details?';
+    if (this.ApprovalStatus == "S") {
 
-        if (!this.reportingTo) {
-          this.toastr.warning('Please specify the Reporting To field.', 'Validation Failed');
-          return;
-        }
+      this.ConfirmationMessage = 'Do you want to submit the review details?';
 
-        const hasIncompleteTasks = this.tasks.some(
-          (task) => !task.taskName || !task.description || task.actualHours <= 0
-        );
+      if (!this.reportingTo) {
+        this.toastr.warning('Please specify the Reporting To field.', 'Validation Failed');
+        return;
+      }
 
-        if (hasIncompleteTasks) {
-          this.toastr.warning('Please complete all task details. Each task must have a name, description, and actual hours.', 'Validation Failed');
-          return;
-        }
+      const hasIncompleteTasks = this.tasks.some(
+        (task) => !task.taskName || !task.description || task.actualHours <= 0
+      );
 
-        const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+      if (hasIncompleteTasks) {
+        this.toastr.warning('Please complete all task details. Each task must have a name, description, and actual hours.', 'Validation Failed');
+        return;
+      }
 
-        if (totalActualHours > this.WorkedHours) {
-          this.toastr.warning('The sum of actual hours exceeds the Worked Hours. Please adjust your task hours.', 'Validation Failed');
-          return;
-        }
+      const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
 
-        if (this.tasks.length === 0) {
-          this.toastr.warning('Please add at least one task with valid details.', 'Validation Failed');
-          return;
-        }
+      if (totalActualHours > this.WorkedHours) {
+        this.toastr.warning('The sum of actual hours exceeds the Worked Hours. Please adjust your task hours.', 'Validation Failed');
+        return;
+      }
+
+      if (this.tasks.length === 0) {
+        this.toastr.warning('Please add at least one task with valid details.', 'Validation Failed');
+        return;
+      }
     }
-    else{
-      this.ConfirmationMessage =   'Do you want to save the review details?';
-    } 
-    
+    else {
+      this.ConfirmationMessage = 'Do you want to save the review details?';
+    }
+
 
     const review: DPRReview = {
       employeeId: this.empId,
@@ -424,7 +424,7 @@ export class MonthlyDprComponent {
       confirmButtonText: 'Yes, save it!',
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
-      
+
       if (result.isConfirmed) {
 
         this.api.insertDpr(review).subscribe({
@@ -432,7 +432,7 @@ export class MonthlyDprComponent {
             this.toastr.success(res.message, 'Success');
           },
           error: (err) => {
-            this.toastr.error('Failed to save employee details.', 'Error');    
+            this.toastr.error('Failed to save employee details.', 'Error');
           },
         });
       }
@@ -454,8 +454,8 @@ export class MonthlyDprComponent {
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const startDateString = startDate.toISOString().split('T')[0]; 
-    const endDateString = endDate.toISOString().split('T')[0]; 
+    const startDateString = startDate.toISOString().split('T')[0];
+    const endDateString = endDate.toISOString().split('T')[0];
 
     this.api.GetUserProofhubTasks(email, startDateString, endDateString).subscribe({
       next: (res) => {
@@ -470,10 +470,11 @@ export class MonthlyDprComponent {
           ESTIMATED_HOURS: task.estimateD_HOURS,
           LOGGED_HOURS: task.loggeD_HOURS,
           selected: false,
+          COMPLETED: task.completed,
         }));
 
         this.WorkedHours = this.Proofhubtasks.reduce(
-        (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0);
+          (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0);
 
       },
       error: (err) => {
@@ -490,7 +491,7 @@ export class MonthlyDprComponent {
     this.monthYear = currentDate.toLocaleDateString('en-US', options);
   }
 
-  
+
 
   loadKPIs(): void {
     this.api.GetActiveKPIs(this.department).subscribe(
@@ -548,7 +549,7 @@ export class MonthlyDprComponent {
       navigator.clipboard.writeText(this.summaryText).then(() => {
         // Show success message
         this.toastr.success('Summary copied to clipboard!', 'Success');
-        
+
         // Add visual feedback to button
         const copyBtn = document.querySelector('.copy-btn');
         if (copyBtn) {
@@ -573,11 +574,11 @@ export class MonthlyDprComponent {
     textArea.style.left = '0';
     textArea.style.position = 'fixed';
     textArea.style.opacity = '0';
-    
+
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     try {
       const successful = document.execCommand('copy');
       if (successful) {
@@ -589,7 +590,7 @@ export class MonthlyDprComponent {
       console.error('Fallback: Oops, unable to copy', err);
       this.toastr.error('Failed to copy summary', 'Error');
     }
-    
+
     document.body.removeChild(textArea);
   }
 
@@ -629,7 +630,7 @@ export class MonthlyDprComponent {
 
 
   getRatingLabel(score: number): { text: string; color: string } {
-    
+
     if (score >= 90) {
       return { text: "Excellent", color: "green" };
     } else if (score >= 75) {
@@ -645,7 +646,7 @@ export class MonthlyDprComponent {
   }
 
 
-    loadHodMasterList(): void {
+  loadHodMasterList(): void {
     this.api.GetHodMasterList().subscribe(
       (response: any) => {
         if (response && response.success && response.data) {
@@ -673,6 +674,8 @@ export class MonthlyDprComponent {
       this.toastr.warning('Actual hours exceed Worked Hours.', 'error');
     }
   }
+
+
 
 }
 
