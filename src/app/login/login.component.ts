@@ -1,4 +1,4 @@
-import { Component, signal, OnDestroy } from '@angular/core';
+import { Component, signal, OnDestroy, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +8,12 @@ import { environment } from '../../environments/environment';
 import { map} from 'rxjs/operators';  
 import { ToastrService } from 'ngx-toastr';  
 
+interface Particle {
+  x: number;
+  y: number;
+  delay: number;
+  duration: number;
+}
 
 @Component({
   selector: 'app-login',
@@ -24,7 +30,8 @@ import { ToastrService } from 'ngx-toastr';
     ])
   ]
 })
-export class LoginComponent implements OnDestroy {
+export class LoginComponent implements OnInit, OnDestroy {
+  @ViewChild('loginContainer', { static: false }) loginContainer!: ElementRef;
   username = signal('');
   password = signal('');
   showPassword = signal(false);
@@ -61,6 +68,12 @@ export class LoginComponent implements OnDestroy {
   // Legacy properties for compatibility
   forgotPasswordVisible: boolean = false;
 
+  // Parallax and animation properties
+  particles: Particle[] = [];
+  mouseX: number = 0;
+  mouseY: number = 0;
+  scrollY: number = 0;
+
   toggleForgotPassword(): void {
     this.currentView = 'forgot-password';
     this.currentStep = 'email';
@@ -96,6 +109,76 @@ export class LoginComponent implements OnDestroy {
   private base = environment.apiBaseUrl;
 
   constructor(private router: Router, private api: Api, private toastr: ToastrService) {}
+
+  ngOnInit() {
+    this.initializeParticles();
+    this.startParallaxAnimations();
+  }
+
+  @HostListener('mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    this.mouseX = (event.clientX / window.innerWidth) * 100;
+    this.mouseY = (event.clientY / window.innerHeight) * 100;
+    this.updateParallaxLayers();
+  }
+
+  @HostListener('window:scroll')
+  onScroll() {
+    this.scrollY = window.scrollY;
+    this.updateParallaxLayers();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.initializeParticles();
+  }
+
+  private initializeParticles() {
+    this.particles = [];
+    const particleCount = window.innerWidth < 768 ? 15 : 25;
+    
+    for (let i = 0; i < particleCount; i++) {
+      this.particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        delay: Math.random() * 5,
+        duration: 10 + Math.random() * 20
+      });
+    }
+  }
+
+  private startParallaxAnimations() {
+    // Continuous animation loop for smooth parallax effects
+    const animate = () => {
+      this.updateParallaxLayers();
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }
+
+  private updateParallaxLayers() {
+    const layers = document.querySelectorAll('.parallax-layer');
+    const shapes = document.querySelectorAll('.shape');
+    
+    layers.forEach((layer, index) => {
+      const speed = (index + 1) * 0.5;
+      const xOffset = (this.mouseX - 50) * speed * 0.02;
+      const yOffset = (this.mouseY - 50) * speed * 0.02;
+      
+      (layer as HTMLElement).style.transform = 
+        `translate3d(${xOffset}px, ${yOffset}px, 0) scale(${1 + speed * 0.01})`;
+    });
+
+    shapes.forEach((shape, index) => {
+      const speed = (index + 1) * 0.3;
+      const xOffset = (this.mouseX - 50) * speed * 0.01;
+      const yOffset = (this.mouseY - 50) * speed * 0.01;
+      const rotation = (this.mouseX + this.mouseY) * speed * 0.1;
+      
+      (shape as HTMLElement).style.transform = 
+        `translate3d(${xOffset}px, ${yOffset}px, 0) rotate(${rotation}deg)`;
+    });
+  }
 
 
   togglePasswordVisibility() {

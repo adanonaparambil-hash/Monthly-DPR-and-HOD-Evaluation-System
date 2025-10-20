@@ -1,8 +1,38 @@
-<div class="login-container">
-  <!-- Background Image with Overlay -->
-  <div class="background-overlay">
-    <div class="background-image"></div>
-    <div class="dark-overlay"></div>
+<div class="login-container" #loginContainer>
+  <!-- Parallax Background Layers -->
+  <div class="parallax-container">
+    <!-- Animated Background Layers -->
+    <div class="parallax-layer layer-1"></div>
+    <div class="parallax-layer layer-2"></div>
+    <div class="parallax-layer layer-3"></div>
+    <div class="parallax-layer layer-4"></div>
+    <div class="parallax-layer layer-5"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles-container">
+      <div class="particle" *ngFor="let particle of particles; let i = index" 
+           [style.left.px]="particle.x" 
+           [style.top.px]="particle.y"
+           [style.animation-delay.s]="particle.delay"
+           [style.animation-duration.s]="particle.duration">
+      </div>
+    </div>
+    
+    <!-- Geometric Shapes -->
+    <div class="geometric-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+      <div class="shape shape-5"></div>
+      <div class="shape shape-6"></div>
+    </div>
+    
+    <!-- Background Image with Overlay -->
+    <div class="background-overlay">
+      <div class="background-image"></div>
+      <div class="dark-overlay"></div>
+    </div>
   </div>
 
   <!-- Header with Logo -->
