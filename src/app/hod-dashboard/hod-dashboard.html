@@ -1,45 +1,92 @@
 <div class="hod-dashboard-container">
-  <!-- Header Section -->
+  <!-- Parallax Background -->
+  <div class="parallax-bg">
+    <div class="parallax-layer bg-layer-1"></div>
+    <div class="parallax-layer bg-layer-2"></div>
+    <div class="parallax-layer bg-layer-3"></div>
+    
+    <!-- Floating Elements -->
+    <div class="floating-elements">
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
+      <div class="floating-shape shape-4"></div>
+      <div class="floating-shape shape-5"></div>
+      <div class="floating-shape shape-6"></div>
+    </div>
+    
+    <!-- Animated Particles -->
+    <div class="particles-bg">
+      @for (particle of particles; track particle.x) {
+        <div class="particle" 
+             [style.left.px]="particle.x" 
+             [style.top.px]="particle.y"
+             [style.width.px]="particle.size"
+             [style.height.px]="particle.size"
+             [style.animation-delay.s]="particle.delay">
+        </div>
+      }
+    </div>
+  </div>
 
   <!-- Stats Cards -->
-  <div class="stats-grid" [@staggerIn]>
-    <div class="stat-card blue" [@slideInUp]>
+  <div class="stats-grid">
+    <div class="stat-card blue gsap-stat-card">
+      <div class="card-glow"></div>
       <div class="stat-icon">
         <i class="fas fa-users"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number">45</div>
+        <div class="stat-number counter-number">45</div>
         <div class="stat-label">My Department Employees</div>
         <div class="stat-department">IT Department</div>
       </div>
       <div class="stat-badge">My Dept</div>
+      <div class="stat-sparkline">
+        <div class="sparkline-bar" style="height: 60%"></div>
+        <div class="sparkline-bar" style="height: 80%"></div>
+        <div class="sparkline-bar" style="height: 100%"></div>
+        <div class="sparkline-bar" style="height: 70%"></div>
+        <div class="sparkline-bar" style="height: 90%"></div>
+      </div>
     </div>
 
-    <div class="stat-card orange" [@slideInUp] style="animation-delay: 0.1s">
+    <div class="stat-card orange gsap-stat-card">
+      <div class="card-glow"></div>
       <div class="stat-icon">
         <i class="fas fa-clock"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number">8</div>
+        <div class="stat-number counter-number">8</div>
         <div class="stat-label">My Pending MPRs</div>
         <div class="stat-department">Require my approval</div>
       </div>
       <div class="stat-badge">My Dept</div>
+      <div class="pulse-indicator urgent"></div>
     </div>
 
-    <div class="stat-card green" [@slideInUp] style="animation-delay: 0.2s">
+    <div class="stat-card green gsap-stat-card">
+      <div class="card-glow"></div>
       <div class="stat-icon">
         <i class="fas fa-check-circle"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number">37</div>
+        <div class="stat-number counter-number">37</div>
         <div class="stat-label">My Evaluated MPRs</div>
         <div class="stat-department">Completed this month</div>
       </div>
       <div class="stat-badge">My Dept</div>
+      <div class="progress-arc">
+        <svg width="60" height="30" viewBox="0 0 60 30">
+          <path d="M 5 25 Q 30 5 55 25" stroke="rgba(34, 197, 94, 0.3)" stroke-width="3" fill="none"/>
+          <path d="M 5 25 Q 30 5 55 25" stroke="#22c55e" stroke-width="3" fill="none" 
+                stroke-dasharray="70" stroke-dashoffset="20" class="progress-path"/>
+        </svg>
+      </div>
     </div>
 
-    <div class="stat-card gold" [@slideInUp] style="animation-delay: 0.4s">
+    <div class="stat-card gold gsap-stat-card">
+      <div class="card-glow"></div>
       <div class="stat-icon">
         <i class="fas fa-trophy"></i>
       </div>
@@ -49,6 +96,13 @@
         <div class="stat-department">IT Department</div>
       </div>
       <div class="stat-badge">My Dept</div>
+      <div class="achievement-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+      </div>
     </div>
   </div>
 
@@ -57,19 +111,27 @@
     
 
     <!-- Performance Charts -->
-    <div class="charts-section" [@fadeInUp] style="animation-delay: 0.8s">
-      <div class="chart-container">
+    <div class="charts-section">
+      <div class="chart-container gsap-chart-card">
+        <div class="chart-glow"></div>
         <div class="chart-header">
           <h3>Employee Performance Trends</h3>
           <span class="chart-subtitle">Last 6 Months</span>
+          <div class="chart-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
         </div>
         <canvas #performanceTrendChart></canvas>
       </div>
 
-      <div class="chart-container">
+      <div class="chart-container gsap-chart-card">
+        <div class="chart-glow"></div>
         <div class="chart-header">
           <h3>Department-Wise Performance</h3>
           <span class="chart-subtitle">Cross-department view</span>
+          <div class="chart-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
         </div>
         <canvas #departmentChart></canvas>
         <div class="chart-legend">
@@ -130,7 +192,7 @@
 
 
     <!-- Top Performers Section -->
-    <div class="leaderboard-section" [@fadeInUp] style="animation-delay: 0.5s">
+    <div class="leaderboard-section">
       <div class="section-header">
         <h2><i class="fas fa-medal"></i> IT Department Rankings</h2>
         <div class="tabs">
@@ -140,7 +202,7 @@
       </div>
       
       <div class="leaderboard">
-        <div class="leaderboard-item rank-1" [@slideInLeft]>
+        <div class="leaderboard-item rank-1">
           <div class="rank-badge gold">
             <i class="fas fa-crown"></i>
             <span>#1</span>
@@ -168,7 +230,7 @@
           </div>
         </div>
 
-        <div class="leaderboard-item rank-2" [@slideInLeft] style="animation-delay: 0.1s">
+        <div class="leaderboard-item rank-2">
           <div class="rank-badge silver">
             <span>#2</span>
           </div>
@@ -195,7 +257,7 @@
           </div>
         </div>
 
-        <div class="leaderboard-item rank-3" [@slideInLeft] style="animation-delay: 0.2s">
+        <div class="leaderboard-item rank-3">
           <div class="rank-badge bronze">
             <span>#3</span>
           </div>

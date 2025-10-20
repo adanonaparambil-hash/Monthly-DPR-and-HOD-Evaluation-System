@@ -1,10 +1,20 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Chart, registerables } from 'chart.js';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 Chart.register(...registerables);
+gsap.registerPlugin(ScrollTrigger);
+
+interface Particle {
+  x: number;
+  y: number;
+  delay: number;
+  size: number;
+}
 
 @Component({
   selector: 'app-ced-dashboard',
@@ -49,7 +59,7 @@ Chart.register(...registerables);
     ]),
   ],
 })
-export class CedDashboard implements OnInit, AfterViewInit {
+export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('productivityGauge') productivityGauge!: ElementRef<HTMLCanvasElement>;
   @ViewChild('qualityDonut') qualityDonut!: ElementRef<HTMLCanvasElement>;
   @ViewChild('timelinessDonut') timelinessDonut!: ElementRef<HTMLCanvasElement>;
@@ -156,10 +166,72 @@ export class CedDashboard implements OnInit, AfterViewInit {
 
   currentInsightIndex = 0;
 
+  // Parallax and animation properties
+  particles: Particle[] = [];
+  mouseX: number = 0;
+  mouseY: number = 0;
+
   constructor() {}
 
+  ngOnDestroy() {
+    ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill());
+  }
+
+  @HostListener('mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    this.mouseX = (event.clientX / window.innerWidth) * 100;
+    this.mouseY = (event.clientY / window.innerHeight) * 100;
+    this.updateParallaxLayers();
+  }
+
+  private initializeParticles() {
+    this.particles = [];
+    const particleCount = window.innerWidth < 768 ? 20 : 30;
+    
+    for (let i = 0; i < particleCount; i++) {
+      this.particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        delay: Math.random() * 5,
+        size: Math.random() * 8 + 3
+      });
+    }
+  }
+
+  private setupParallaxEffects() {
+    const animate = () => {
+      this.updateParallaxLayers();
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }
+
+  private updateParallaxLayers() {
+    const layers = document.querySelectorAll('.parallax-layer');
+    const shapes = document.querySelectorAll('.floating-shape');
+    
+    layers.forEach((layer, index) => {
+      const speed = (index + 1) * 0.4;
+      const xOffset = (this.mouseX - 50) * speed * 0.02;
+      const yOffset = (this.mouseY - 50) * speed * 0.02;
+      
+      (layer as HTMLElement).style.transform = 
+        `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+    });
+
+    shapes.forEach((shape, index) => {
+      const speed = (index + 1) * 0.25;
+      const xOffset = (this.mouseX - 50) * speed * 0.01;
+      const yOffset = (this.mouseY - 50) * speed * 0.01;
+      
+      (shape as HTMLElement).style.transform = 
+        `translate3d(${xOffset}px, ${yOffset}px, 0) rotate(${this.mouseX * 0.1}deg)`;
+    });
+  }
+
   ngOnInit() {
-    // Start insight rotation
+    this.initializeParticles();
+    this.setupParallaxEffects();
     this.rotateInsights();
   }
 
@@ -174,7 +246,134 @@ export class CedDashboard implements OnInit, AfterViewInit {
       this.createTaskTimeline();
       this.createAchievementsBubble();
       this.createTopPerformersBar();
+      this.initializeGSAPAnimations();
+      this.setupScrollTriggers();
     }, 100);
+  }
+
+  private initializeGSAPAnimations() {
+    // Initial setup for elements
+    gsap.set(['.gsap-kpi-card', '.gsap-chart-card', '.gsap-performer-card'], { 
+      y: 80, 
+      opacity: 0, 
+      scale: 0.9 
+    });
+
+    // Floating shapes animation
+    gsap.to('.floating-shape', {
+      y: '+=25',
+      rotation: '+=360',
+      duration: 20,
+      ease: 'none',
+      repeat: -1,
+      yoyo: true,
+      stagger: 0.4
+    });
+
+    // Particles animation
+    gsap.to('.particle', {
+      y: '-=120vh',
+      opacity: 0,
+      duration: 25,
+      ease: 'none',
+      repeat: -1,
+      stagger: 0.2
+    });
+
+    // Card glow effects
+    gsap.to('.card-glow', {
+      opacity: 0.5,
+      scale: 1.02,
+      duration: 4,
+      ease: 'power2.inOut',
+      repeat: -1,
+      yoyo: true,
+      stagger: 0.3
+    });
+  }
+
+  private setupScrollTriggers() {
+    // KPI cards animation
+    gsap.to('.gsap-kpi-card', {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 1,
+      ease: 'back.out(1.7)',
+      stagger: 0.2,
+      scrollTrigger: {
+        trigger: '.kpi-section',
+        start: 'top 80%',
+        end: 'bottom 20%',
+        toggleActions: 'play none none reverse'
+      }
+    });
+
+    // Chart cards animation
+    gsap.to('.gsap-chart-card', {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 1.2,
+      ease: 'power3.out',
+      stagger: 0.15,
+      scrollTrigger: {
+        trigger: '.department-section',
+        start: 'top 80%',
+        end: 'bottom 20%',
+        toggleActions: 'play none none reverse'
+      }
+    });
+
+    // Performer cards animation
+    gsap.to('.gsap-performer-card', {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 0.8,
+      ease: 'elastic.out(1, 0.5)',
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: '.performers-section',
+        start: 'top 80%',
+        end: 'bottom 20%',
+        toggleActions: 'play none none reverse'
+      }
+    });
+
+    // Parallax scrolling for background layers
+    gsap.to('.bg-layer-1', {
+      yPercent: -40,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.ced-dashboard-container',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+
+    gsap.to('.bg-layer-2', {
+      yPercent: -25,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.ced-dashboard-container',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+
+    gsap.to('.bg-layer-3', {
+      yPercent: -15,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.ced-dashboard-container',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
   }
 
   private createProductivityGauge() {
