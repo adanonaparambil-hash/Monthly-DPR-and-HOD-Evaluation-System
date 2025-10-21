@@ -59,6 +59,7 @@ export class MonthlyDprComponent {
   showRemarksHistory = true;
   summaryText = '';
   showModal = false;
+  isGeneratingSummary = false;
 
   managementRemarks = '';
 
@@ -124,15 +125,18 @@ export class MonthlyDprComponent {
 
   kpis: DPRKPI[] = [
     {
-      kpiDescription: '',
+      description: '',
       kpiValue: 0,
       remarks: '',
       kpiId: 0,
       dprId: 0,
       employeeId: '',
       kpiMasterId: 0,
+      placeholdervalue: ''
     },
   ];
+
+  availableKPIs: any[] = []; // Store all available KPIs from API
 
   remarksHistory: DPRComment[] = [
     {
@@ -246,15 +250,78 @@ export class MonthlyDprComponent {
   }
 
   addNewKPI() {
-    this.kpis.push({
-      kpiDescription: 'KPI name',
-      kpiValue: 0,
-      remarks: 'Remarks',
-      kpiId: 0,
-      dprId: 0,
-      employeeId: '',
-      kpiMasterId: 0,
-    });
+    // Check if we can add more KPIs
+    if (this.canAddMoreKPIs()) {
+      this.kpis.push({
+        kpiMasterId: 0,
+        description: '',
+        kpiValue: '',
+        remarks: '',
+        kpiId: 0,
+        dprId: 0,
+        employeeId: this.empId,
+        placeholdervalue: '',
+      });
+    } else {
+      this.toastr.info('All available KPIs have been added. No more KPIs can be added.', 'Maximum Reached');
+    }
+  }
+
+  canAddMoreKPIs(): boolean {
+    // Get count of selected KPIs (excluding unselected ones with kpiMasterId = 0)
+    const selectedKPICount = this.kpis.filter(kpi => kpi.kpiMasterId && kpi.kpiMasterId !== 0).length;
+    
+    // Check if there are unselected rows that can still be used
+    const unselectedRows = this.kpis.filter(kpi => !kpi.kpiMasterId || kpi.kpiMasterId === 0).length;
+    
+    // Can add more if: (selected KPIs + unselected rows) < total available KPIs
+    return (selectedKPICount + unselectedRows) < this.availableKPIs.length;
+  }
+
+  get maxKPIsReached(): boolean {
+    return !this.canAddMoreKPIs();
+  }
+
+  getRemainingKPICount(): number {
+    const selectedKPICount = this.kpis.filter(kpi => kpi.kpiMasterId && kpi.kpiMasterId !== 0).length;
+    return this.availableKPIs.length - selectedKPICount;
+  }
+
+
+
+  onKPISelectionChange(index: number, selectedKpiId: number) {
+    if (selectedKpiId === 0) {
+      // User selected "Select KPI" - reset the row
+      this.kpis[index].kpiMasterId = 0;
+      this.kpis[index].description = '';
+      this.kpis[index].placeholdervalue = '';
+      this.kpis[index].kpiValue = '';
+      return;
+    }
+
+    const selectedKPI = this.availableKPIs.find(kpi => kpi.kpiid == selectedKpiId);
+    
+    if (selectedKPI) {
+      this.kpis[index].kpiMasterId = selectedKPI.kpiid;
+      this.kpis[index].description = selectedKPI.description; // Use description field from backend
+      this.kpis[index].placeholdervalue = selectedKPI.placeholdervalue; // Set placeholder value
+      // Clear the current value when KPI changes
+      this.kpis[index].kpiValue = '';
+    }
+  }
+
+  getPlaceholderForKPI(index: number): string {
+    return this.kpis[index].placeholdervalue || 'Enter KPI value';
+  }
+
+  getAvailableKPIsForRow(currentIndex: number): any[] {
+    // Get all selected KPI IDs from other rows (excluding current row)
+    const selectedKpiIds = this.kpis
+      .map((kpi, index) => index !== currentIndex ? kpi.kpiMasterId : null)
+      .filter(id => id !== null && id !== 0 && id !== undefined);
+    
+    // Filter out already selected KPIs
+    return this.availableKPIs.filter(kpi => !selectedKpiIds.includes(kpi.kpiid));
   }
 
   deleteKPI(index: number) {
@@ -270,16 +337,34 @@ export class MonthlyDprComponent {
         if (result.isConfirmed) {
           this.kpis.splice(index, 1);
           this.toastr.success('KPI deleted successfully', 'Success');
+          
+          // Show info about remaining KPIs if applicable
+          const remaining = this.getRemainingKPICount();
+          if (remaining > 0) {
+            this.toastr.info(`You can now add ${remaining} more KPI(s)`, 'KPIs Available');
+          }
         }
       });
     } else {
-      this.toastr.warning('At least one KPI is required', 'Warning');
+      // If it's the last row, just reset it instead of deleting
+      this.kpis[0] = {
+        kpiMasterId: 0,
+        description: '',
+        kpiValue: '',
+        remarks: '',
+        kpiId: 0,
+        dprId: 0,
+        employeeId: this.empId,
+        placeholdervalue: '',
+      };
+      this.toastr.info('KPI row has been reset', 'Info');
     }
   }
 
   closeModal() {
     this.showModal = false;
     this.summaryText = '';
+    this.isGeneratingSummary = false;
   }
 
   SubmitReview() {
@@ -384,6 +469,21 @@ export class MonthlyDprComponent {
         this.toastr.warning('Please add at least one task with valid details.', 'Validation Failed');
         return;
       }
+
+      const hasIncompleteKPIs = this.kpis.some(
+        (kpi) => {
+          if (!kpi.kpiMasterId || kpi.kpiMasterId === 0) return true;
+          if (!kpi.kpiValue) return true;
+          if (typeof kpi.kpiValue === 'string' && kpi.kpiValue.trim() === '') return true;
+          if (typeof kpi.kpiValue === 'number' && kpi.kpiValue <= 0) return true;
+          return false;
+        }
+      );
+
+      if (hasIncompleteKPIs) {
+        this.toastr.warning('Please complete all KPI details. Each KPI must have a selection and value.', 'Validation Failed');
+        return;
+      }
     }
     else {
       this.ConfirmationMessage = 'Do you want to save the review details?';
@@ -412,7 +512,7 @@ export class MonthlyDprComponent {
         kpiMasterId: t.kpiMasterId,
         kpiValue: Number(t.kpiValue),
         remarks: t.remarks,
-        kpiDescription: t.kpiDescription,
+        description: t.description,
       })),
     };
 
@@ -499,17 +599,34 @@ export class MonthlyDprComponent {
         if (response && response.success && response.data) {
           console.log('Loaded KPIs:', response.data);
 
-          this.kpis = response.data.map((item: any) => ({
-            kpiMasterId: item.kpiid,
-            kpiDescription: item.kpiname,
-            kpiValue: 0,
-            remarks: '',
-            kpiId: 0,
-            dprId: 0,
-            employeeId: this.empId,
-          }));
+          this.availableKPIs = response.data;
+
+          this.kpis = [
+            {
+              kpiMasterId: 0,
+              description: '',
+              kpiValue: '',
+              remarks: '',
+              kpiId: 0,
+              dprId: 0,
+              employeeId: this.empId,
+              placeholdervalue: '',
+            }
+          ];
         } else {
-          this.kpis = [];
+          this.availableKPIs = [];
+          this.kpis = [
+            {
+              kpiMasterId: 0,
+              description: '',
+              kpiValue: '',
+              remarks: '',
+              kpiId: 0,
+              dprId: 0,
+              employeeId: this.empId,
+              placeholdervalue: '',
+            }
+          ];
         }
       },
       (error) => {
@@ -522,46 +639,97 @@ export class MonthlyDprComponent {
     const selectedTasks = this.Proofhubtasks.filter((t) => t.selected);
 
     if (selectedTasks.length === 0) {
-      // Swal.fire({
-      //   icon: 'error',
-      //   title: 'Operation Failed',
-      //   text: 'Please select at least one task!',
-      // });
-
       this.toastr.error('Please select at least one task!.', 'error');
-
       return;
     }
+
+    // Clear existing summary text before generating new one
+    this.summaryText = '';
+    this.isGeneratingSummary = true;
 
     this.api.summarizeTasks(selectedTasks).subscribe({
       next: (res) => {
         this.summaryText = res.summary;
+        this.isGeneratingSummary = false;
       },
       error: (err) => {
         console.error(err);
-        alert('Error generating summary');
+        this.toastr.error('Error generating summary', 'Error');
+        this.isGeneratingSummary = false;
       },
     });
   }
 
-  copySummaryToClipboard() {
+  cleanSummaryText(text: string): string {
+    if (!text) return '';
+    
+    // Remove common prefixes and formatting
+    let cleanedText = text
+      // Remove checkmark emojis and similar symbols
+      .replace(/✅\s*/g, '')
+      .replace(/☑️\s*/g, '')
+      .replace(/✔️\s*/g, '')
+      .replace(/🔸\s*/g, '')
+      .replace(/•\s*/g, '')
+      .replace(/▪\s*/g, '')
+      .replace(/▫\s*/g, '')
+      .replace(/◦\s*/g, '')
+      // Remove "Summary:" prefix (case insensitive)
+      .replace(/^summary:\s*/i, '')
+      // Remove "AI Summary:" prefix (case insensitive)
+      .replace(/^ai\s+summary:\s*/i, '')
+      // Remove "Generated Summary:" prefix (case insensitive)
+      .replace(/^generated\s+summary:\s*/i, '')
+      // Remove "Task Summary:" prefix (case insensitive)
+      .replace(/^task\s+summary:\s*/i, '')
+      // Remove "Completed tasks include" prefix (case insensitive)
+      .replace(/^completed\s+tasks\s+include\s*/i, '')
+      // Remove any leading dashes or asterisks
+      .replace(/^[-*]\s*/, '')
+      // Remove multiple spaces and normalize whitespace
+      .replace(/\s+/g, ' ')
+      // Trim leading and trailing whitespace
+      .trim();
+
+    return cleanedText;
+  }
+
+  get cleanedSummaryText(): string {
+    return this.cleanSummaryText(this.summaryText);
+  }
+
+  copySummaryToClipboard(event?: Event) {
+    // Prevent default behavior and stop propagation to avoid modal jerking
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      // Prevent focus changes that might cause layout shifts
+      (event.target as HTMLElement)?.blur();
+    }
+
     if (this.summaryText) {
-      navigator.clipboard.writeText(this.summaryText).then(() => {
+      // Clean the summary text before copying
+      const cleanedText = this.cleanSummaryText(this.summaryText);
+      
+      navigator.clipboard.writeText(cleanedText).then(() => {
         // Show success message
         this.toastr.success('Summary copied to clipboard!', 'Success');
 
-        // Add visual feedback to button
-        const copyBtn = document.querySelector('.copy-btn');
+        // Add visual feedback to button without causing layout shifts
+        const copyBtn = event?.target as HTMLElement;
         if (copyBtn) {
-          copyBtn.classList.add('copied');
+          const originalBg = copyBtn.style.backgroundColor;
+          copyBtn.style.backgroundColor = '#d4edda';
+          copyBtn.style.color = '#155724';
           setTimeout(() => {
-            copyBtn.classList.remove('copied');
+            copyBtn.style.backgroundColor = originalBg;
+            copyBtn.style.color = '#666';
           }, 1000);
         }
       }).catch(err => {
         console.error('Failed to copy text: ', err);
         // Fallback for older browsers
-        this.fallbackCopyTextToClipboard(this.summaryText);
+        this.fallbackCopyTextToClipboard(cleanedText);
       });
     }
   }
@@ -610,14 +778,43 @@ export class MonthlyDprComponent {
           this.overallScore = dpr.scoreOverall ?? 0;
           this.reportingTo = dpr.hodId ?? '';
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
-          this.kpis = dpr.kpiList?.length ? dpr.kpiList : [];
+
+          // Handle KPI data - if no existing data, initialize with one empty row
+          if (dpr.kpiList?.length) {
+            this.kpis = dpr.kpiList;
+          } else {
+            this.kpis = [
+              {
+                kpiMasterId: 0,
+                description: '',
+                kpiValue: '',
+                remarks: '',
+                kpiId: 0,
+                dprId: 0,
+                employeeId: this.empId,
+                placeholdervalue: '',
+              }
+            ];
+          }
+
           this.remarksHistory = dpr.commentsList?.length ? dpr.commentsList : [];
 
           console.log('Loaded DPR details:', dpr);
         } else {
           console.warn('No DPR data found');
           this.tasks = [];
-          this.kpis = [];
+          this.kpis = [
+            {
+              kpiMasterId: 0,
+              description: '',
+              kpiValue: '',
+              remarks: '',
+              kpiId: 0,
+              dprId: 0,
+              employeeId: this.empId,
+              placeholdervalue: '',
+            }
+          ];
           this.remarksHistory = [];
         }
       },
@@ -671,8 +868,10 @@ export class MonthlyDprComponent {
     this.hoursExceeded = totalActualHours >= this.WorkedHours;
 
     if (this.hoursExceeded) {
-      this.toastr.warning('Actual hours exceed Worked Hours.', 'error');
+      this.toastr.warning('Actual hours exceed Worked Hours.', 'warning');
     }
+
+
   }
 
 

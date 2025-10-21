@@ -91,9 +91,9 @@ export class layout implements OnInit {
     //this.loadNotificationCount();
 
     // Set up periodic refresh for notifications (every 30 seconds)
-    setInterval(() => {
-      this.loadNotificationCount();
-    }, 30000);
+    // setInterval(() => {
+    //   this.loadNotificationCount();
+    // }, 30000);
   }
 
   getPageTitle(): string {

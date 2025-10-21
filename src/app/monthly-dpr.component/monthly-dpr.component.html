@@ -84,7 +84,7 @@
               <th class="task-col">Task Name</th>
               <th class="desc-col">Task Description</th>
               <th class="hours-col">Actual Hours</th>
-              <th class="delete-col">Action</th>
+              <th class="delete-col" style="text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -104,7 +104,7 @@
                   [disabled]="isReadOnlyMode || !isEmployee">
               </td>
 
-              <td class="delete-col">
+              <td class="delete-col" style="text-align: center;">
                 <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task"
                   *ngIf="!isReadOnlyMode && isEmployee">
                   <i class="fas fa-trash"></i>
@@ -155,9 +155,17 @@
         <i class="fas fa-chart-line"></i>
         <span>KPI Performance</span>
       </div>
-      <i class="fas" [class.fa-chevron-down]="showKpiPerformance" [class.fa-chevron-right]="!showKpiPerformance"></i>
+      <div class="header-right">
+        <div class="button-container" (click)="$event.stopPropagation()">
+          <button class="add-btn" (click)="addNewKPI()" *ngIf="!isReadOnlyMode && isEmployee && !maxKPIsReached">+ Add
+            KPI</button>
+          <span class="max-kpi-message" *ngIf="!isReadOnlyMode && isEmployee && maxKPIsReached">
+            All KPIs Added ({{ availableKPIs.length }}/{{ availableKPIs.length }})
+          </span>
+        </div>
+        <i class="fas" [class.fa-chevron-down]="showKpiPerformance" [class.fa-chevron-right]="!showKpiPerformance"></i>
+      </div>
     </div>
-
 
     <div class="kpi-content" *ngIf="showKpiPerformance" [@fadeInUp]>
       <div class="table-container kpi-table">
@@ -166,31 +174,36 @@
             <tr>
               <th class="SlNo-col">Sl No</th>
               <th class="kpi-col">KPI</th>
+              <th class="desc-col">Description</th>
               <th class="kpi-value-col">KPI Value</th>
-              <th class="remarks-col">Remarks</th>
-              <th class="delete-col">Action</th>
+              <th class="delete-col" style="text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let kpi of kpis; let i = index">
               <td class="SlNo-col">{{ i + 1 }}</td>
 
-              <!-- KPI Name (read-only) -->
-              <td class="kpi-col">{{ kpi.kpiDescription }}</td>
+              <!-- KPI Dropdown -->
+              <td class="kpi-col">
+                <select [(ngModel)]="kpi.kpiMasterId" (ngModelChange)="onKPISelectionChange(i, $event)"
+                  [disabled]="isReadOnlyMode || !isEmployee">
+                  <option [value]="0">Select KPI</option>
+                  <option *ngFor="let availableKpi of getAvailableKPIsForRow(i)" [value]="availableKpi.kpiid">
+                    {{ availableKpi.kpiname }}
+                  </option>
+                </select>
+              </td>
 
-              <!-- KPI Value Dropdown -->
+              <!-- KPI Description (read-only) -->
+              <td class="desc-col">{{ kpi.description }}</td>
+
+              <!-- KPI Value Input -->
               <td class="kpi-value-col">
-                <input [(ngModel)]="kpi.kpiValue" placeholder="Enter the KPI value" type="number" min="1" max="100"
+                <input [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)" type="text"
                   class="rating-input" [disabled]="isReadOnlyMode || !isEmployee">
               </td>
 
-              <!-- Remarks -->
-              <td class="remarks-col">
-                <textarea [(ngModel)]="kpi.remarks" placeholder="Remarks"
-                  [disabled]="isReadOnlyMode || !isEmployee"></textarea>
-              </td>
-
-              <td class="delete-col">
+              <td class="delete-col" style="text-align: center;">
                 <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI"
                   *ngIf="!isReadOnlyMode && isEmployee">
                   <i class="fas fa-trash"></i>
@@ -199,12 +212,21 @@
             </tr>
           </tbody>
         </table>
+      </div>
 
+      <!-- KPI Status Information -->
+      <div class="kpi-status-info" *ngIf="!isReadOnlyMode && isEmployee && availableKPIs.length > 0">
+        <small class="text-muted">
+          <i class="fas fa-info-circle"></i>
+          <span *ngIf="!maxKPIsReached">
+            {{ getRemainingKPICount() }} KPI(s) remaining out of {{ availableKPIs.length }} available
+          </span>
+          <span *ngIf="maxKPIsReached">
+            All {{ availableKPIs.length }} available KPIs have been added
+          </span>
+        </small>
       </div>
     </div>
-
-
-
   </div>
 
 
@@ -319,7 +341,7 @@
     </div>
 
     <!-- Body -->
-    <div class="modal-body">
+    <div class="modal-body" style="overflow-x: hidden; max-width: 100%;">
 
       <div class="table-container">
         <table>
@@ -357,23 +379,33 @@
       </div>
 
       <!-- Summary Text Area (Always visible) -->
-      <div class="summary-box">
-        <div class="summary-header">
-          <h3>AI Generated Summary</h3>
-          <button *ngIf="summaryText" class="copy-btn" (click)="copySummaryToClipboard()" title="Copy to clipboard">
+      <div class="summary-box" style="overflow: hidden;">
+        <div class="summary-header"
+          style="display: flex; justify-content: space-between; align-items: center; position: relative; min-height: 40px; padding-right: 50px;">
+          <h3 style="margin: 0; flex-grow: 1;">AI Generated Summary</h3>
+          <button *ngIf="summaryText" class="copy-btn" (click)="copySummaryToClipboard($event)"
+            [title]="'Copy clean summary to clipboard: ' + (cleanedSummaryText.length > 50 ? cleanedSummaryText.substring(0, 50) + '...' : cleanedSummaryText)"
+            type="button"
+            style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 8px; border-radius: 4px; transition: background-color 0.2s; color: #666; font-size: 16px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+            onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
             <i class="fas fa-clipboard"></i>
           </button>
         </div>
         <div class="textarea-container">
           <textarea readonly #summaryTextarea
-            placeholder="Click 'Generate Summary' to create an AI-powered summary of selected tasks...">{{ summaryText }}</textarea>
+            [placeholder]="isGeneratingSummary ? 'Generating summary...' : 'Click \'Generate Summary\' to create an AI-powered summary of selected tasks...'">{{ summaryText }}</textarea>
         </div>
       </div>
 
       <!-- Generate Summary Button and Close Button -->
       <div class="summary-actions">
-        <button class="generate-summary-btn" (click)="generateSummary()">Generate Summary</button>
-        <button class="close-modal-btn" (click)="closeModal()">Close</button>
+        <button class="generate-summary-btn" (click)="generateSummary()" [disabled]="isGeneratingSummary" type="button">
+          <span *ngIf="isGeneratingSummary">
+            <i class="fas fa-spinner fa-spin"></i> Generating...
+          </span>
+          <span *ngIf="!isGeneratingSummary">Generate Summary</span>
+        </button>
+        <button class="close-modal-btn" (click)="closeModal()" type="button">Close</button>
       </div>
     </div>
   </div>

@@ -49,9 +49,10 @@ export interface DPRKPI {
   dprId?: number;
   employeeId?: string;
   kpiMasterId?: number;
-  kpiValue?: number | null; 
+  kpiValue?: number | string | null; 
   remarks?: string;
-  kpiDescription?: string;
+  description?: string;
+  placeholdervalue?: string;
 }
 
 
