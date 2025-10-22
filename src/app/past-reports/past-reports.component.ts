@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
-import { DropdownOption  } from '../models/common.model';
+import { DropdownOption } from '../models/common.model';
 import { Api } from '../services/api';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
+import { DPRMonthlyReviewListingRequest } from '../models/task.model';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-past-reports',
@@ -29,11 +32,23 @@ import { Router } from '@angular/router';
     ])
   ]
 })
-export class PastReportsComponent implements OnInit {
+export class PastReportsComponent implements OnInit, OnDestroy {
   // Math reference for template
   Math = Math;
-  
+
   hodList: DropdownOption[] = [];
+
+  // User session and role properties
+  userSession = JSON.parse(localStorage.getItem('current_user') || '{}');
+  userType: 'E' | 'H' | 'C' = 'E';
+  empId = '';
+  
+  
+
+  // Role-based getters
+  get isEmployee(): boolean { return this.userType === 'E'; }
+  get isHod(): boolean { return this.userType === 'H'; }
+  get isCed(): boolean { return this.userType === 'C'; }
 
   // Filter properties
   filters = {
@@ -56,21 +71,24 @@ export class PastReportsComponent implements OnInit {
   loading = false;
   animationState = 'in';
 
+  // Search debouncing
+  private searchSubject = new Subject<string>();
+
   // Dropdown options
   months = [
     { value: '', label: 'Select month' },
-    { value: 'January', label: 'January' },
-    { value: 'February', label: 'February' },
-    { value: 'March', label: 'March' },
-    { value: 'April', label: 'April' },
-    { value: 'May', label: 'May' },
-    { value: 'June', label: 'June' },
-    { value: 'July', label: 'July' },
-    { value: 'August', label: 'August' },
-    { value: 'September', label: 'September' },
-    { value: 'October', label: 'October' },
-    { value: 'November', label: 'November' },
-    { value: 'December', label: 'December' }
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
   ];
 
   years = [
@@ -89,123 +107,104 @@ export class PastReportsComponent implements OnInit {
     { value: 'S', label: 'Submit' }
   ];
 
-  constructor(private api: Api,private toastr: ToastrService, private router: Router) {}
+  constructor(private api: Api, private toastr: ToastrService, private router: Router) { }
 
   ngOnInit() {
-    this.loadMockData();
-    this.applyFilters();
-
+    this.initializeUserSession();
     this.loadHodMasterList();
+    this.loadReports();
 
+    // Setup search debouncing
+    this.searchSubject.pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.loadReports();
+    });
   }
 
-  loadMockData() {
-    // Mock data matching your design
-    this.reports = [
-      {
-        id: 1,
-        employeeName: 'John Smith',
-        month: 'January',
-        year: '2024',
-        status: 'Approved',
-        hodName: 'Sarah Johnson'
-      },
-      {
-        id: 2,
-        employeeName: 'Emma Davis',
-        month: 'January',
-        year: '2024',
-        status: 'Pending',
-        hodName: 'Michael Brown'
-      },
-      {
-        id: 3,
-        employeeName: 'David Wilson',
-        month: 'February',
-        year: '2024',
-        status: 'Rejected',
-        hodName: 'Sarah Johnson'
-      },
-      {
-        id: 4,
-        employeeName: 'Lisa Anderson',
-        month: 'February',
-        year: '2024',
-        status: 'Approved',
-        hodName: 'Robert Taylor'
-      },
-      {
-        id: 5,
-        employeeName: 'Mark Thompson',
-        month: 'March',
-        year: '2024',
-        status: 'Approved',
-        hodName: 'Sarah Johnson'
-      },
-      {
-        id: 6,
-        employeeName: 'Jennifer Lee',
-        month: 'March',
-        year: '2024',
-        status: 'Pending',
-        hodName: 'Michael Brown'
-      },
-      {
-        id: 7,
-        employeeName: 'Robert Garcia',
-        month: 'April',
-        year: '2024',
-        status: 'Approved',
-        hodName: 'Sarah Johnson'
-      },
-      {
-        id: 8,
-        employeeName: 'Maria Rodriguez',
-        month: 'April',
-        year: '2024',
-        status: 'Rejected',
-        hodName: 'Robert Taylor'
-      },
-      {
-        id: 9,
-        employeeName: 'James Wilson',
-        month: 'May',
-        year: '2024',
-        status: 'Approved',
-        hodName: 'Michael Brown'
-      },
-      {
-        id: 10,
-        employeeName: 'Patricia Moore',
-        month: 'May',
-        year: '2024',
-        status: 'Pending',
-        hodName: 'Sarah Johnson'
+  initializeUserSession() {
+    if (this.userSession) {
+      this.empId = this.userSession.empId || '';
+      
+      // Determine userType from session
+      const code = ((this.userSession.isHOD || this.userSession.role || this.userSession.userType || '') as string).toString().toUpperCase();
+      if (code === 'H') {
+        this.userType = 'H';
+      } else if (code === 'C') {
+        this.userType = 'C';
+      } else {
+        this.userType = 'E';
       }
-    ];
-
-    this.totalRecords = this.reports.length;
+    }
   }
 
-  applyFilters() {
-    this.loading = true;
-    
-    setTimeout(() => {
-      this.filteredReports = this.reports.filter(report => {
-        return (
-          (!this.filters.employeeName || report.employeeName.toLowerCase().includes(this.filters.employeeName.toLowerCase())) &&
-          (!this.filters.month || report.month === this.filters.month) &&
-          (!this.filters.year || report.year === this.filters.year) &&
-          (!this.filters.status || report.status === this.filters.status) &&
-          (!this.filters.hodName || report.hodName.toLowerCase().includes(this.filters.hodName.toLowerCase()))
-        );
-      });
+  ngOnDestroy() {
+    this.searchSubject.complete();
+  }
 
-      this.totalRecords = this.filteredReports.length;
-      this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
-      this.currentPage = 1;
-      this.loading = false;
-    }, 300);
+  onSearchChange() {
+    this.searchSubject.next(this.filters.employeeName);
+  }
+
+  loadReports() {
+    this.loading = true;
+
+    // Create request object based on user role
+    const request: DPRMonthlyReviewListingRequest = {
+      month: this.filters.month ? Number(this.filters.month) : undefined,
+      year: this.filters.year ? Number(this.filters.year) : undefined,
+      status: this.filters.status || undefined
+    };
+
+    // Role-based filtering logic
+    if (this.isEmployee) {
+      // Employee (E): Pass employeeId from session, filter by their own records
+      request.employeeId = this.empId;
+      request.employeeName = this.filters.employeeName || '';
+      request.hodName = '';
+    } else if (this.isHod) {
+      // HOD (H): Pass empId in hodName field, show reports under this HOD
+      request.hodName = this.empId;
+      request.employeeName = this.filters.employeeName || '';
+      request.employeeId = '';
+    } else if (this.isCed) {
+      // CED (C): Show all records, allow filtering by all fields
+      request.employeeName = this.filters.employeeName || '';
+      request.hodName = this.filters.hodName || '';
+      request.employeeId = '';
+    }
+
+    this.api.GetMonthlyReviewListing(request).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        if (response && response.success && response.data) {
+
+          console.log(response);
+
+          this.reports = response.data;
+          this.filteredReports = this.reports;
+          this.totalRecords = this.reports.length;
+          this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+          this.currentPage = 1;
+        } else {
+          this.reports = [];
+          this.filteredReports = [];
+          this.totalRecords = 0;
+          this.totalPages = 0;
+          this.toastr.warning('No reports found', 'No Data');
+        }
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error loading reports:', error);
+        this.toastr.error('Failed to load reports', 'Error');
+        this.reports = [];
+        this.filteredReports = [];
+        this.totalRecords = 0;
+        this.totalPages = 0;
+      }
+    });
   }
 
   clearFilters() {
@@ -216,7 +215,18 @@ export class PastReportsComponent implements OnInit {
       status: '',
       hodName: ''
     };
-    this.applyFilters();
+    
+    // Reset filters based on user role
+    if (this.isEmployee) {
+      // Employee can't filter by employee name or HOD
+      this.filters.employeeName = '';
+      this.filters.hodName = '';
+    } else if (this.isHod) {
+      // HOD can filter by employee name but not HOD name
+      this.filters.hodName = '';
+    }
+    
+    this.loadReports();
   }
 
   onPageChange(page: number) {
@@ -234,19 +244,66 @@ export class PastReportsComponent implements OnInit {
   getStatusClass(status: string): string {
     switch (status.toLowerCase()) {
       case 'approved':
+      case 'a':
         return 'status-approved';
       case 'pending':
+      case 's':
         return 'status-pending';
       case 'rejected':
+      case 'r':
         return 'status-rejected';
+      case 'draft':
+      case 'd':
+        return 'status-draft';
       default:
         return '';
     }
   }
-  
+
+  getMonthName(monthNumber: number): string {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return monthNames[monthNumber - 1] || '';
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'a': return 'Approved';
+      case 'd': return 'Draft';
+      case 'r': return 'Rework';
+      case 's': return 'Submitted';
+      default: return status;
+    }
+  }
+
+  getRoleBasedTitle(): string {
+    switch (this.userType) {
+      case 'E': return 'My Reports';
+      case 'H': return 'Team Reports';
+      case 'C': return 'All Reports';
+      default: return 'Past Reports';
+    }
+  }
+
+  getEmployeeNameLabel(): string {
+    return this.isHod ? 'Employee Name' : 'Employee Name';
+  }
+
   viewReport(report: any) {
+
     // Navigate to Monthly DPR in read-only mode with the selected record ID
-    this.router.navigate(['/monthly-dpr', report.id], { queryParams: { readonly: '1' } });
+    if (report) {
+      this.router.navigate(['/monthly-dpr', report], { 
+        queryParams: { 
+          readonly: '1',
+          from: 'past-reports' 
+        } 
+      });
+    } else {
+      this.toastr.error('Invalid report ID', 'Error');
+    }
   }
 
   getPageNumbers(): number[] {
@@ -267,8 +324,8 @@ export class PastReportsComponent implements OnInit {
   }
 
 
-  
-    loadHodMasterList(): void {
+
+  loadHodMasterList(): void {
     this.api.GetHodMasterList().subscribe(
       (response: any) => {
         if (response && response.success && response.data) {
@@ -282,5 +339,14 @@ export class PastReportsComponent implements OnInit {
       }
     );
   }
+
+
+
+
+  applyFilters() {
+    // Call the API with current filter values
+    this.loadReports();
+  }
+
 
 }

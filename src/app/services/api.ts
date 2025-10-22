@@ -67,9 +67,8 @@ export class Api {
   }
 
 
-  GetMonthlyReviewListing(listingRequest: DPRMonthlyReviewListingRequest []): Observable<any> {
+  GetMonthlyReviewListing(listingRequest: DPRMonthlyReviewListingRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/DPRReview/GetMonthlyReviewListing`, listingRequest);
-
   }
 
   uploadDocument(formData: FormData): Observable<any> {

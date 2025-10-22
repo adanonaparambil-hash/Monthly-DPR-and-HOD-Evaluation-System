@@ -1,15 +1,23 @@
 <div class="past-reports-container" [@fadeInUp]="animationState">
 
+  <!-- Page Header -->
+  <div class="header-section">
+    <h1>{{ getRoleBasedTitle() }}</h1>
+    <p *ngIf="isEmployee">View your monthly performance reports</p>
+    <p *ngIf="isHod">View and manage your team's performance reports</p>
+    <p *ngIf="isCed">View all employee performance reports across the organization</p>
+  </div>
+
   <!-- Filter Section -->
   <div class="filter-section" [@slideIn]>
     <div class="filter-row">
-      <div class="filter-group">
-        <label>Employee ID</label>
+      <div class="filter-group" *ngIf="!isEmployee">
+        <label>{{ getEmployeeNameLabel() }}</label>
         <input 
           type="text" 
           [(ngModel)]="filters.employeeName"
-          (input)="applyFilters()"
-          placeholder="Search employee..."
+          (input)="onSearchChange()"
+          [placeholder]="'Search ' + getEmployeeNameLabel().toLowerCase() + '...'"
           class="filter-input">
       </div>
 
@@ -49,8 +57,7 @@
         </select>
       </div>
 
-      <div class="filter-group">
-        
+      <div class="filter-group" *ngIf="isCed">
         <label><b>HOD Name</b></label>
         <select [(ngModel)]="filters.hodName" (change)="applyFilters()" class="filter-input">
           <option value="">Select HOD</option>
@@ -58,7 +65,6 @@
             {{ hod.description }}
           </option>
         </select>
-
       </div>
     </div>
 
@@ -86,11 +92,11 @@
       <table class="reports-table">
         <thead>
           <tr>
-            <th>Employee Name</th>
+            <th>{{ getEmployeeNameLabel() }}</th>
             <th>Month</th>
             <th>Year</th>
-            <th>Status</th>
             <th>HOD Name</th>
+            <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -99,16 +105,16 @@
               class="table-row"
               [style.animation-delay]="(i * 0.1) + 's'">
             <td class="employee-name">{{ report.employeeName }}</td>
-            <td>{{ report.month }}</td>
+            <td>{{ getMonthName(report.month) }}</td>
             <td>{{ report.year }}</td>
+            <td>{{ report.hodName }}</td>
             <td>
               <span class="status-badge" [ngClass]="getStatusClass(report.status)">
-                {{ report.status }}
+                {{ getStatusLabel(report.status) }}
               </span>
             </td>
-            <td>{{ report.hodName }}</td>
             <td class="action-cell">
-              <button class="btn-view" (click)="viewReport(report)" title="View Report">
+              <button class="btn-view" (click)="viewReport(report.dprid)" title="View Report">
                 <i class="fas fa-eye"></i>
               </button>
             </td>
