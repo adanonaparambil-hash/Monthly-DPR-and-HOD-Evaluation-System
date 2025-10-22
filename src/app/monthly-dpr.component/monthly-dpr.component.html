@@ -45,7 +45,7 @@
 
       <div class="info-item">
         <label><b>Reporting To</b></label>
-        <select [(ngModel)]="reportingTo" [disabled]="isReadOnlyMode || !isEmployee">
+        <select [(ngModel)]="reportingTo" [disabled]="!canEditFields">
           <option value="">Select HOD</option>
           <option *ngFor="let hod of hodList" [value]="hod.idValue">
             {{ hod.description }}
@@ -67,7 +67,7 @@
         <span>Task Details</span>
       </div>
       <div class="header-right">
-        <div class="button-container" (click)="$event.stopPropagation()">
+        <div class="button-container" (click)="$event.stopPropagation()" *ngIf="showTableActions">
           <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
           <button class="add-btn" (click)="addNewTask()">+ Add New Task</button>
         </div>
@@ -84,7 +84,7 @@
               <th class="task-col">Task Name</th>
               <th class="desc-col">Task Description</th>
               <th class="hours-col">Actual Hours</th>
-              <th class="delete-col" style="text-align: center;">Action</th>
+              <th class="delete-col" style="text-align: center;" *ngIf="showTableActions">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -92,21 +92,20 @@
               <td class="SlNo-col">{{ i + 1 }}</td>
               <td class="task-col">
                 <textarea [(ngModel)]="task.taskName" placeholder="Task name"
-                  [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+                  [disabled]="!canEditFields"></textarea>
               </td>
               <td class="desc-col">
                 <textarea [(ngModel)]="task.description" placeholder="Description and status"
-                  [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+                  [disabled]="!canEditFields"></textarea>
               </td>
 
               <td class="hours-col">
                 <input type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()"
-                  [disabled]="isReadOnlyMode || !isEmployee">
+                  [disabled]="!canEditFields">
               </td>
 
-              <td class="delete-col" style="text-align: center;">
-                <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task"
-                  *ngIf="!isReadOnlyMode && isEmployee">
+              <td class="delete-col" style="text-align: center;" *ngIf="showTableActions">
+                <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
@@ -126,7 +125,7 @@
     <p>Specify the support you need from management, team or resources. Include any suggestions for process
       improvement...</p>
     <textarea [(ngModel)]="supportNeeded" placeholder="Enter your support requirements..."
-      [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+      [disabled]="!canEditFields"></textarea>
   </div>
 
 
@@ -136,13 +135,13 @@
       <h3><i class="fas fa-trophy colorful-icon"></i> Achievements</h3>
       <p>Describe your major accomplishments, achievements, deliverables and quality deliverables...</p>
       <textarea [(ngModel)]="achievements" placeholder="Enter your achievements..."
-        [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+        [disabled]="!canEditFields"></textarea>
     </div>
     <div class="challenge-card">
       <h3><i class="fas fa-question-circle colorful-icon"></i> Challenges</h3>
       <p>Detail the challenges you encountered, the steps taken to address them...</p>
       <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..."
-        [disabled]="isReadOnlyMode || !isEmployee"></textarea>
+        [disabled]="!canEditFields"></textarea>
     </div>
   </div>
 
@@ -156,10 +155,9 @@
         <span>KPI Performance</span>
       </div>
       <div class="header-right">
-        <div class="button-container" (click)="$event.stopPropagation()">
-          <button class="add-btn" (click)="addNewKPI()" *ngIf="!isReadOnlyMode && isEmployee && !maxKPIsReached">+ Add
-            KPI</button>
-          <span class="max-kpi-message" *ngIf="!isReadOnlyMode && isEmployee && maxKPIsReached">
+        <div class="button-container" (click)="$event.stopPropagation()" *ngIf="showTableActions">
+          <button class="add-btn" (click)="addNewKPI()" *ngIf="!maxKPIsReached">+ Add KPI</button>
+          <span class="max-kpi-message" *ngIf="maxKPIsReached">
             All KPIs Added ({{ availableKPIs.length }}/{{ availableKPIs.length }})
           </span>
         </div>
@@ -176,7 +174,7 @@
               <th class="kpi-col">KPI</th>
               <th class="desc-col">Description</th>
               <th class="kpi-value-col">KPI Value</th>
-              <th class="delete-col" style="text-align: center;">Action</th>
+              <th class="delete-col" style="text-align: center;" *ngIf="showTableActions">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -186,7 +184,7 @@
               <!-- KPI Dropdown -->
               <td class="kpi-col">
                 <select [(ngModel)]="kpi.kpiMasterId" (ngModelChange)="onKPISelectionChange(i, $event)"
-                  [disabled]="isReadOnlyMode || !isEmployee">
+                  [disabled]="!canEditFields">
                   <option [value]="0">Select KPI</option>
                   <option *ngFor="let availableKpi of getAvailableKPIsForRow(i)" [value]="availableKpi.kpiid">
                     {{ availableKpi.kpiname }}
@@ -200,12 +198,11 @@
               <!-- KPI Value Input -->
               <td class="kpi-value-col">
                 <input [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)" type="text"
-                  class="rating-input" [disabled]="isReadOnlyMode || !isEmployee">
+                  class="rating-input" [disabled]="!canEditFields">
               </td>
 
-              <td class="delete-col" style="text-align: center;">
-                <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI"
-                  *ngIf="!isReadOnlyMode && isEmployee">
+              <td class="delete-col" style="text-align: center;" *ngIf="showTableActions">
+                <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
@@ -215,7 +212,7 @@
       </div>
 
       <!-- KPI Status Information -->
-      <div class="kpi-status-info" *ngIf="!isReadOnlyMode && isEmployee && availableKPIs.length > 0">
+      <div class="kpi-status-info" *ngIf="showTableActions && availableKPIs.length > 0">
         <small class="text-muted">
           <i class="fas fa-info-circle"></i>
           <span *ngIf="!maxKPIsReached">
@@ -232,7 +229,7 @@
 
 
   <!-- HOD Evaluation Section -->
-  <div class="evaluation-card" [@scaleIn] *ngIf="!isEmployee">
+  <div class="evaluation-card" [@scaleIn] *ngIf="showHodEvaluationSection">
     <div class="section-header" (click)="toggleHodEvaluation()">
       <div class="header-left">
         <i class="fas fa-star"></i>
@@ -246,29 +243,29 @@
         <div class="eval-item">
           <label>Quality</label>
           <input [(ngModel)]="quality" placeholder="Enter quality score (0-100)" type="number" min="1" max="100"
-            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+            class="rating-input" [disabled]="!canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Timeliness</label>
           <input [(ngModel)]="timeliness" placeholder="Enter timeliness score (0-100)" type="number" min="1" max="100"
-            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+            class="rating-input" [disabled]="!canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Initiative</label>
           <input [(ngModel)]="initiative" placeholder="Enter initiative score (0-100)" type="number" min="1" max="100"
-            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+            class="rating-input" [disabled]="!canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Overall Score</label>
           <input [(ngModel)]="overallScore" placeholder="Enter overall score (0-100)" type="number" min="1" max="100"
-            class="rating-input" [disabled]="isReadOnlyMode || !canEditHodEvaluation">
+            class="rating-input" [disabled]="!canEditHodEvaluation">
         </div>
       </div>
     </div>
   </div>
 
   <!-- Management Remarks Section -->
-  <div class="remarks-card" [@scaleIn] *ngIf="!isEmployee">
+  <div class="remarks-card" [@scaleIn] *ngIf="showManagementRemarksSection">
     <div class="section-header" (click)="toggleManagementRemarks()">
       <div class="header-left">
         <i class="fas fa-comment"></i>
@@ -281,12 +278,12 @@
     <div class="remarks-content" *ngIf="showManagementRemarks" [@fadeInUp]>
       <p>Add your remarks about the employee's performance...</p>
       <textarea [(ngModel)]="managementRemarks" placeholder="Enter management remarks..."
-        [disabled]="isReadOnlyMode || !isHod"></textarea>
+        [disabled]="!canEditManagementRemarks"></textarea>
     </div>
   </div>
 
   <!-- Remarks History Section -->
-  <div class="history-card" [@scaleIn] *ngIf="!isEmployee">
+  <div class="history-card" [@scaleIn] *ngIf="showRemarksHistorySection">
     <div class="section-header" (click)="toggleRemarksHistory()">
       <div class="header-left">
         <i class="fas fa-history"></i>
@@ -313,16 +310,19 @@
 
   <!-- Action Buttons (Now under Achievements/Challenges, right aligned) -->
   <div class="action-buttons right-action-buttons" [@scaleIn]>
-    <button class="btn-draft colorful-btn" (click)="saveDraft()" *ngIf="!isReadOnlyMode && isEmployee">
+    <!-- Employee Buttons: Save Draft and Submit (only when status is D or R) -->
+    <button class="btn-draft colorful-btn" (click)="saveDraft()" *ngIf="showEmployeeButtons">
       <i class="fas fa-save"></i> Save as Draft
     </button>
-    <button class="btn-available colorful-btn" (click)="SubmitReview()" *ngIf="!isReadOnlyMode && isEmployee">
+    <button class="btn-available colorful-btn" (click)="SubmitReview()" *ngIf="showEmployeeButtons">
       <i class="fas fa-check"></i> Submit for Review
     </button>
-    <button class="btn-approve colorful-btn" (click)="ApproveReview()" *ngIf="!isReadOnlyMode && isHod">
+    
+    <!-- HOD Buttons: Approve and Rework (only when status is S) -->
+    <button class="btn-approve colorful-btn" (click)="ApproveReview()" *ngIf="showHodButtons">
       <i class="fas fa-thumbs-up"></i> Approve
     </button>
-    <button class="btn-pushback colorful-btn" (click)="ReWorkReview()" *ngIf="!isReadOnlyMode && isHod">
+    <button class="btn-pushback colorful-btn" (click)="ReWorkReview()" *ngIf="showHodButtons">
       <i class="fas fa-undo"></i> Rework
     </button>
   </div>

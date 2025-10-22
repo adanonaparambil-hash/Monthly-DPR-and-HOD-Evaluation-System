@@ -143,5 +143,9 @@ export class Api {
   }
 
 
+  GetUnreadNotificationCount(userId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetUnreadNotificationCount/${userId}`, {});
+  }
+
 }
 

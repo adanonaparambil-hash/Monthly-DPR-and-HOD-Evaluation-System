@@ -1,6 +1,6 @@
 // src/app/models/task.model.ts
 
-export interface DPRReview  {
+export interface DPRReview {
   employeeId: string;
   month?: number;
   year?: number;
@@ -19,6 +19,10 @@ export interface DPRReview  {
   kpiList?: DPRKPI[];
   dprid?: number;
   remarks?: string;
+  employeename?: string;
+  designation?: string;
+  department?: string;
+  emailid?: string;
 }
 
 
@@ -40,7 +44,7 @@ export interface DPRComment {
   commentText?: string;
   commentType?: string;
   dprid?: number;
-  createdat? : Date;
+  createdat?: Date;
 }
 
 
@@ -49,7 +53,7 @@ export interface DPRKPI {
   dprId?: number;
   employeeId?: string;
   kpiMasterId?: number;
-  kpiValue?: number | string | null; 
+  kpiValue?: number | string | null;
   remarks?: string;
   description?: string;
   placeholdervalue?: string;
@@ -63,14 +67,14 @@ export interface ProofhubTaskDto {
   TASK_TITLE?: string;
   ASSIGNED_TO?: string;
   TASK_DESCRIPTION?: string;
-  START_DATE?: string;  
-  DUE_DATE?: string;    
+  START_DATE?: string;
+  DUE_DATE?: string;
   ESTIMATED_HOURS?: string;
   ESTIMATED_MINUTES?: string;
   LOGGED_HOURS?: string;
   LOGGED_MINUTES?: string;
-  COMPLETED?: string;  
-  PROGRESS?: string;   
+  COMPLETED?: string;
+  PROGRESS?: string;
   PROJECT_DESCRIPTION?: string;
   TODO_DESCRIPTION?: string;
   selected?: boolean;
@@ -79,10 +83,10 @@ export interface ProofhubTaskDto {
 
 
 export interface KPI {
-  kpiId?: number;      
-  kpiName?: string;   
-  kpiValue?: number;   
-  remarks?: string;   
+  kpiId?: number;
+  kpiName?: string;
+  kpiValue?: number;
+  remarks?: string;
 }
 
 

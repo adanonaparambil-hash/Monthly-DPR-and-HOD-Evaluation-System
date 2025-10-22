@@ -88,16 +88,92 @@ export class MonthlyDprComponent {
   // Role and mode flags
   userType: 'E' | 'H' | 'C' = 'E';
   isReadOnlyMode: boolean = false;
+  currentStatus: string = 'D'; // D, R, S, A
 
   get isEmployee(): boolean { return this.userType === 'E'; }
   get isHod(): boolean { return this.userType === 'H'; }
   get isCed(): boolean { return this.userType === 'C'; }
 
-  get canEditEmployeeFields(): boolean { return !this.isReadOnlyMode && this.isEmployee; }
-  get canEditHodEvaluation(): boolean { return !this.isReadOnlyMode && this.isHod; }
-  get canViewHodEvaluation(): boolean { return this.isHod || this.isCed; }
-  get canViewManagementRemarks(): boolean { return this.isHod || this.isCed; }
-  get canViewRemarksHistory(): boolean { return this.isHod || this.isCed; }
+  // Status-based access control for Employees
+  get canEditEmployeeFields(): boolean { 
+    if (!this.isEmployee) return false;
+    return this.currentStatus === 'D' || this.currentStatus === 'R';
+  }
+  
+  get canViewEmployeeFields(): boolean {
+    return this.isEmployee && (this.currentStatus === 'S' || this.currentStatus === 'A');
+  }
+
+  // Status-based access control for HOD
+  get canEditHodEvaluation(): boolean { 
+    if (!this.isHod) return false;
+    return this.currentStatus === 'S';
+  }
+  
+  get canViewHodEvaluation(): boolean { 
+    return (this.isHod || this.isCed) && (this.currentStatus === 'A' || this.currentStatus === 'R' || this.currentStatus === 'S');
+  }
+
+  // Management Remarks visibility - CED should NOT see this
+  get canViewManagementRemarks(): boolean { 
+    return this.isHod && !this.isCed; // Only HOD can see, not CED
+  }
+  
+  get canEditManagementRemarks(): boolean {
+    return this.isHod && this.currentStatus === 'S';
+  }
+
+  // Remarks History visibility
+  get canViewRemarksHistory(): boolean { 
+    if (this.isCed) return true; // CED can always see remarks history
+    if (this.isHod) return true; // HOD can always see remarks history
+    if (this.isEmployee) return this.currentStatus === 'R'; // Employee only when rework
+    return false;
+  }
+
+  // Button visibility for Employee (Save Draft, Submit)
+  get showEmployeeButtons(): boolean {
+    return this.isEmployee && (this.currentStatus === 'D' || this.currentStatus === 'R');
+  }
+  
+  // Button visibility for HOD (Approve, Rework)
+  get showHodButtons(): boolean {
+    return this.isHod && this.currentStatus === 'S';
+  }
+  
+  // Table action buttons (Add/Delete for tasks and KPIs)
+  get showTableActions(): boolean {
+    if (this.isCed) return false; // CED never sees action buttons
+    if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
+    if (this.isHod) return false; // HOD doesn't edit tables
+    return false;
+  }
+
+  // Field editability for different roles and statuses
+  get canEditFields(): boolean {
+    if (this.isCed) return false; // CED can never edit anything
+    if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
+    if (this.isHod) return false; // HOD can only edit evaluation fields, not employee fields
+    return false;
+  }
+
+  // HOD Evaluation section visibility
+  get showHodEvaluationSection(): boolean {
+    if (this.isEmployee) return false; // Employee never sees HOD evaluation
+    return this.isHod || this.isCed; // HOD and CED can see it
+  }
+
+  // Management Remarks section visibility
+  get showManagementRemarksSection(): boolean {
+    if (this.isEmployee) return false; // Employee never sees management remarks
+    if (this.isCed) return false; // CED should not see management remarks
+    return this.isHod; // Only HOD can see management remarks
+  }
+
+  // Remarks History section visibility
+  get showRemarksHistorySection(): boolean {
+    return this.canViewRemarksHistory;
+  }
 
   hodList: DropdownOption[] = [];
 
@@ -767,7 +843,13 @@ export class MonthlyDprComponent {
       next: (res) => {
         if (res.success && res.data) {
           const dpr = res.data as DPRReview;
-alert("responsedata"+res.data.status);
+
+          this.empId = dpr.employeeId || '';
+          this.empName = dpr.employeename || '';
+          this.designation = dpr.designation || '';
+          this.department = dpr.department || '';
+          this.EmailID = dpr.emailid || '';
+
           this.WorkedHours = dpr.workedHours ?? 0;
           this.achievements = dpr.achievements ?? '';
           this.challenges = dpr.challenges ?? '';
@@ -777,6 +859,7 @@ alert("responsedata"+res.data.status);
           this.initiative = dpr.scoreInitiative ?? 0;
           this.overallScore = dpr.scoreOverall ?? 0;
           this.reportingTo = dpr.hodId ?? '';
+          this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
 
           // Handle KPI data - if no existing data, initialize with one empty row
