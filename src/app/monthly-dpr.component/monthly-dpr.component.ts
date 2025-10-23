@@ -7,7 +7,7 @@ import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
-import { DropdownOption } from '../models/common.model';
+import { DropdownOption, Notification } from '../models/common.model';
 import { ActivatedRoute } from '@angular/router';
 
 
@@ -95,36 +95,36 @@ export class MonthlyDprComponent {
   get isCed(): boolean { return this.userType === 'C'; }
 
   // Status-based access control for Employees
-  get canEditEmployeeFields(): boolean { 
+  get canEditEmployeeFields(): boolean {
     if (!this.isEmployee) return false;
     return this.currentStatus === 'D' || this.currentStatus === 'R';
   }
-  
+
   get canViewEmployeeFields(): boolean {
     return this.isEmployee && (this.currentStatus === 'S' || this.currentStatus === 'A');
   }
 
   // Status-based access control for HOD
-  get canEditHodEvaluation(): boolean { 
+  get canEditHodEvaluation(): boolean {
     if (!this.isHod) return false;
     return this.currentStatus === 'S';
   }
-  
-  get canViewHodEvaluation(): boolean { 
+
+  get canViewHodEvaluation(): boolean {
     return (this.isHod || this.isCed) && (this.currentStatus === 'A' || this.currentStatus === 'R' || this.currentStatus === 'S');
   }
 
   // Management Remarks visibility - CED should NOT see this
-  get canViewManagementRemarks(): boolean { 
+  get canViewManagementRemarks(): boolean {
     return this.isHod && !this.isCed; // Only HOD can see, not CED
   }
-  
+
   get canEditManagementRemarks(): boolean {
     return this.isHod && this.currentStatus === 'S';
   }
 
   // Remarks History visibility
-  get canViewRemarksHistory(): boolean { 
+  get canViewRemarksHistory(): boolean {
     if (this.isCed) return true; // CED can always see remarks history
     if (this.isHod) return true; // HOD can always see remarks history
     if (this.isEmployee) return this.currentStatus === 'R'; // Employee only when rework
@@ -135,12 +135,12 @@ export class MonthlyDprComponent {
   get showEmployeeButtons(): boolean {
     return this.isEmployee && (this.currentStatus === 'D' || this.currentStatus === 'R');
   }
-  
+
   // Button visibility for HOD (Approve, Rework)
   get showHodButtons(): boolean {
     return this.isHod && this.currentStatus === 'S';
   }
-  
+
   // Table action buttons (Add/Delete for tasks and KPIs)
   get showTableActions(): boolean {
     if (this.isCed) return false; // CED never sees action buttons
@@ -346,10 +346,10 @@ export class MonthlyDprComponent {
   canAddMoreKPIs(): boolean {
     // Get count of selected KPIs (excluding unselected ones with kpiMasterId = 0)
     const selectedKPICount = this.kpis.filter(kpi => kpi.kpiMasterId && kpi.kpiMasterId !== 0).length;
-    
+
     // Check if there are unselected rows that can still be used
     const unselectedRows = this.kpis.filter(kpi => !kpi.kpiMasterId || kpi.kpiMasterId === 0).length;
-    
+
     // Can add more if: (selected KPIs + unselected rows) < total available KPIs
     return (selectedKPICount + unselectedRows) < this.availableKPIs.length;
   }
@@ -376,7 +376,7 @@ export class MonthlyDprComponent {
     }
 
     const selectedKPI = this.availableKPIs.find(kpi => kpi.kpiid == selectedKpiId);
-    
+
     if (selectedKPI) {
       this.kpis[index].kpiMasterId = selectedKPI.kpiid;
       this.kpis[index].description = selectedKPI.description; // Use description field from backend
@@ -395,7 +395,7 @@ export class MonthlyDprComponent {
     const selectedKpiIds = this.kpis
       .map((kpi, index) => index !== currentIndex ? kpi.kpiMasterId : null)
       .filter(id => id !== null && id !== 0 && id !== undefined);
-    
+
     // Filter out already selected KPIs
     return this.availableKPIs.filter(kpi => !selectedKpiIds.includes(kpi.kpiid));
   }
@@ -413,7 +413,7 @@ export class MonthlyDprComponent {
         if (result.isConfirmed) {
           this.kpis.splice(index, 1);
           this.toastr.success('KPI deleted successfully', 'Success');
-          
+
           // Show info about remaining KPIs if applicable
           const remaining = this.getRemainingKPICount();
           if (remaining > 0) {
@@ -492,13 +492,18 @@ export class MonthlyDprComponent {
           scoreInitiative: Number(this.initiative),
           scoreOverall: Number(this.overallScore),
           remarks: this.managementRemarks,
-          dprid: 4
+          dprid: this.dprid
         };
 
         this.api.updateDPRReview(review).subscribe({
           next: (res: any) => {
             if (res.success) {
               this.toastr.success(res.message, 'Success');
+
+              // Send notification to employee after successful HOD review
+              const dprId = this.dprid;
+              this.sendNotificationToEmployee(dprId, false);
+
             } else {
               this.toastr.error(res.message, 'Error');
             }
@@ -546,18 +551,19 @@ export class MonthlyDprComponent {
         return;
       }
 
-      const hasIncompleteKPIs = this.kpis.some(
+      // Check if at least one KPI is properly filled
+      const validKPIs = this.kpis.filter(
         (kpi) => {
-          if (!kpi.kpiMasterId || kpi.kpiMasterId === 0) return true;
-          if (!kpi.kpiValue) return true;
-          if (typeof kpi.kpiValue === 'string' && kpi.kpiValue.trim() === '') return true;
-          if (typeof kpi.kpiValue === 'number' && kpi.kpiValue <= 0) return true;
-          return false;
+          if (!kpi.kpiMasterId || kpi.kpiMasterId === 0) return false;
+          if (!kpi.kpiValue) return false;
+          if (typeof kpi.kpiValue === 'string' && kpi.kpiValue.trim() === '') return false;
+          if (typeof kpi.kpiValue === 'number' && kpi.kpiValue <= 0) return false;
+          return true;
         }
       );
 
-      if (hasIncompleteKPIs) {
-        this.toastr.warning('Please complete all KPI details. Each KPI must have a selection and value.', 'Validation Failed');
+      if (validKPIs.length === 0) {
+        this.toastr.warning('Please complete at least one KPI with selection and value.', 'Validation Failed');
         return;
       }
     }
@@ -576,6 +582,7 @@ export class MonthlyDprComponent {
       supportNeeded: this.supportNeeded || '',
       status: this.ApprovalStatus || '',
       hodId: this.reportingTo || '',
+      dprid: this.dprid || 0,
       tasksList: this.tasks.map((t) => ({
         taskName: t.taskName,
         description: t.description,
@@ -606,6 +613,17 @@ export class MonthlyDprComponent {
         this.api.insertDpr(review).subscribe({
           next: (res) => {
             this.toastr.success(res.message, 'Success');
+
+            // Send notifications only after successful submission (not draft)
+            if (this.ApprovalStatus === 'S' && res.success) {
+              const dprId = res.data || this.dprid;
+
+              // Send notification to HOD
+              this.sendNotificationToHOD(dprId);
+
+              // Send notification to Employee (submission confirmation)
+              this.sendNotificationToEmployee(dprId, true);
+            }
           },
           error: (err) => {
             this.toastr.error('Failed to save employee details.', 'Error');
@@ -738,7 +756,7 @@ export class MonthlyDprComponent {
 
   cleanSummaryText(text: string): string {
     if (!text) return '';
-    
+
     // Remove common prefixes and formatting
     let cleanedText = text
       // Remove checkmark emojis and similar symbols
@@ -786,7 +804,7 @@ export class MonthlyDprComponent {
     if (this.summaryText) {
       // Clean the summary text before copying
       const cleanedText = this.cleanSummaryText(this.summaryText);
-      
+
       navigator.clipboard.writeText(cleanedText).then(() => {
         // Show success message
         this.toastr.success('Summary copied to clipboard!', 'Success');
@@ -953,8 +971,71 @@ export class MonthlyDprComponent {
     if (this.hoursExceeded) {
       this.toastr.warning('Actual hours exceed Worked Hours.', 'warning');
     }
+  }
 
 
+
+  private sendNotificationToHOD(dprId: number) {
+    if (!this.reportingTo) return;
+
+    const hodNotification: Partial<Notification> = {
+      id: 0,
+      userId: this.reportingTo,
+      title: `New DPR Submitted by ${this.empName}`,
+      message: `${this.empName} (${this.empId}) has submitted the Monthly DPR for ${this.monthYear}. Click to review.`,
+      link: `/monthly-dpr/${dprId}?readonly=1`,
+   
+    };
+
+    this.api.createNotification(hodNotification).subscribe({
+      next: (response) => {
+        if (response.success) {
+          console.log('HOD notification sent successfully');
+        }
+      },
+      error: (error) => {
+        console.error('Error sending HOD notification:', error);
+      }
+    });
+  }
+
+  private sendNotificationToEmployee(dprId: number, isSubmission: boolean = false) {
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const targetUserId = this.empId;
+
+    let title = '';
+    let message = '';
+
+    if (isSubmission) {
+      title = 'DPR Submitted Successfully';
+      message = `Your Monthly DPR for ${this.monthYear} has been submitted successfully. Click to view.`;
+    } else if (this.ApprovalStatus === 'A') {
+      title = 'DPR Approved';
+      message = `Your Monthly DPR for ${this.monthYear} has been approved by ${currentUser.employeeName || 'HOD'}.`;
+    } else if (this.ApprovalStatus === 'R') {
+      title = 'DPR Requires Revision';
+      message = `Your DPR for ${this.monthYear} has been pushed back by ${currentUser.employeeName || 'HOD'} for revision.`;
+    }
+
+    const employeeNotification: Partial<Notification> = {
+      id: 0,
+      userId: targetUserId,
+      title: title,
+      message: message,
+      link: `/monthly-dpr/${dprId}?readonly=1`,
+      
+    };
+
+    this.api.createNotification(employeeNotification).subscribe({
+      next: (response) => {
+        if (response.success) {
+          console.log('Employee notification sent successfully');
+        }
+      },
+      error: (error) => {
+        console.error('Error sending employee notification:', error);
+      }
+    });
   }
 
 

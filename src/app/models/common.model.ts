@@ -76,3 +76,10 @@ export interface ClearNotificationRequest {
   userId: string;           
   actionType: string;       
 }
+
+
+export interface SendEmailRequest {
+  templateKey: string;                   
+  toEmail: string;                       
+  placeholders: { [key: string]: string }; 
+}

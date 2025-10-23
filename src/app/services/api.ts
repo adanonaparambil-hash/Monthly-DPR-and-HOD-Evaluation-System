@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { DPRReview, DPRKPI, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification ,ClearNotificationRequest } from '../models/common.model';
+import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification ,ClearNotificationRequest,SendEmailRequest } from '../models/common.model';
 
 @Injectable({
   providedIn: 'root'
@@ -142,7 +142,11 @@ export class Api {
   deleteNotification(request: ClearNotificationRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/ClearNotification`, request);
   }
+  
 
+  SendEmail(notification: Partial<SendEmailRequest>): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/SendEmail`, notification);
+  }
 
 
 }
