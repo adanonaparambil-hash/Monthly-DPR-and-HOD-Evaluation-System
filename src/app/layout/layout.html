@@ -92,13 +92,16 @@
           
           <div class="notification-dropdown" *ngIf="showNotifications" [@slideDown]>
             <div class="notification-header">
-              <h3>Notifications</h3>
+              <h3>Notifications ({{ notificationCount }})</h3>
               <div class="notification-actions">
-                <button class="refresh-btn" (click)="loadNotifications()" title="Refresh notifications">
+                <button class="refresh-btn" (click)="refreshNotifications()" title="Refresh notifications">
                   <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingNotifications"></i>
                 </button>
-                <button (click)="markAllAsRead()" [disabled]="notificationCount === 0">
-                  Mark all as read
+                <button class="mark-all-btn" (click)="markAllAsRead()" [disabled]="notificationCount === 0" title="Mark all as read">
+                  <i class="fas fa-check-double"></i>
+                </button>
+                <button class="clear-all-btn" (click)="clearAllNotifications()" [disabled]="notifications.length === 0" title="Clear all notifications">
+                  <i class="fas fa-trash"></i>
                 </button>
               </div>
             </div>
@@ -111,15 +114,28 @@
               
               <!-- Notifications -->
               <div class="notification-item" 
-                   *ngFor="let notification of notifications"
+                   *ngFor="let notification of notifications; trackBy: trackNotificationById"
                    [class.unread]="!notification.isRead"
-                   (click)="markNotificationAsRead(notification.id)">
+                   [@slideDown]>
                 <div class="notification-icon">
                   <i [class]="notification.icon"></i>
                 </div>
-                <div class="notification-content">
+                <div class="notification-content" (click)="navigateToNotification(notification, $event)">
                   <p>{{ notification.message }}</p>
                   <span class="notification-time">{{ notification.time }}</span>
+                </div>
+                <div class="notification-actions-item">
+                  <button *ngIf="!notification.isRead" 
+                          class="mark-read-btn" 
+                          (click)="markNotificationAsRead(notification.id, $event)" 
+                          title="Mark as read">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button class="delete-btn" 
+                          (click)="clearNotification(notification.id, $event)" 
+                          title="Delete notification">
+                    <i class="fas fa-times"></i>
+                  </button>
                 </div>
                 <div class="notification-status" *ngIf="!notification.isRead">
                   <div class="unread-dot"></div>

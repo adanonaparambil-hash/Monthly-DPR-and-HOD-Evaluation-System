@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { trigger, transition, style, animate, state } from '@angular/animations';
@@ -30,7 +30,7 @@ import { Api } from '../services/api';
     ])
   ]
 })
-export class layout implements OnInit {
+export class layout implements OnInit, OnDestroy {
   isDarkMode = false;
   showNotifications = false;
   showProfile = false;
@@ -42,6 +42,10 @@ export class layout implements OnInit {
   hasNewNotifications = false;
   notifications: any[] = [];
   isLoadingNotifications = false;
+  notificationsLoaded = false; // Track if notifications have been loaded
+
+  // Polling interval reference
+  private notificationCountInterval: any;
 
   userSession = JSON.parse(localStorage.getItem('current_user') || '{}');
 
@@ -86,14 +90,15 @@ export class layout implements OnInit {
 
     // Theme is automatically applied by the service
 
-    // Load notifications on component init
-    this.loadNotifications();
-    //this.loadNotificationCount();
+    // Start polling for notification count every 10 seconds (lightweight)
+    this.startNotificationCountPolling();
+  }
 
-    // Set up periodic refresh for notifications (every 30 seconds)
-    // setInterval(() => {
-    //   this.loadNotificationCount();
-    // }, 30000);
+  ngOnDestroy() {
+    // Clean up the polling interval
+    if (this.notificationCountInterval) {
+      clearInterval(this.notificationCountInterval);
+    }
   }
 
   getPageTitle(): string {
@@ -118,9 +123,13 @@ export class layout implements OnInit {
     this.showNotifications = !this.showNotifications;
     this.showProfile = false;
 
-    // Load notifications when dropdown is opened
+    // Load full notifications only when dropdown is opened and not already loaded
+    if (this.showNotifications && !this.notificationsLoaded) {
+      this.loadFullNotifications();
+    }
+
+    // Reset new notification flag when opening
     if (this.showNotifications) {
-      this.loadNotifications();
       this.hasNewNotifications = false;
     }
   }
@@ -148,19 +157,27 @@ export class layout implements OnInit {
       return;
     }
 
-    this.api.markAllNotificationsAsRead(userId).subscribe({
+    const request: any = {
+      notificationId: 0, // 0 for all notifications
+      userId: userId.toString(),
+      actionType: 'A' // 'A' flag for All mark as read
+    };
+
+    this.api.markNotificationAsRead(request).subscribe({
       next: (response) => {
         if (response.success) {
           this.notificationCount = 0;
           this.hasNewNotifications = false;
-          this.showNotifications = false;
 
           // Update all notifications to read status
-          this.notifications.forEach(notification => {
+          this.notifications.forEach((notification: any) => {
             notification.isRead = true;
           });
 
           console.log('All notifications marked as read');
+
+          // Optionally close the dropdown after marking all as read
+          // this.showNotifications = false;
         }
       },
       error: (error) => {
@@ -219,8 +236,52 @@ export class layout implements OnInit {
     }
   }
 
-  // Load notifications from API
-  loadNotifications() {
+  // Start polling for notification count every 3 seconds (lightweight API call)
+  startNotificationCountPolling() {
+    // Initial load
+    this.loadNotificationCount();
+
+    // Set up polling every 3 seconds
+    this.notificationCountInterval = setInterval(() => {
+      this.loadNotificationCount();
+    }, 3000); // 3 seconds
+  }
+
+  // Load only notification count (lightweight API call)
+  loadNotificationCount() {
+    const userId = this.userSession?.empId || this.userSession?.employeeId;
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+
+    this.api.GetUnreadNotificationCount(userId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          const newCount = response.data || 0;
+
+          // Check if there are new notifications
+          if (newCount > this.notificationCount) {
+            this.hasNewNotifications = true;
+            this.notificationsLoaded = false; // Reset to reload notifications when opened
+
+            // Auto-reset new notification flag after 5 seconds
+            setTimeout(() => {
+              this.hasNewNotifications = false;
+            }, 5000);
+          }
+
+          this.notificationCount = newCount;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading notification count:', error);
+      }
+    });
+  }
+
+  // Load full notifications (called only when user clicks notification icon)
+  loadFullNotifications() {
     const userId = this.userSession?.empId || this.userSession?.employeeId;
     if (!userId) {
       console.error('User ID not found');
@@ -230,11 +291,13 @@ export class layout implements OnInit {
     this.isLoadingNotifications = true;
     this.api.getUserNotifications(userId).subscribe({
       next: (response) => {
-
         this.isLoadingNotifications = false;
         if (response.success && response.data && Array.isArray(response.data)) {
-          // Map notifications - response.data is directly the array of notifications
-          this.notifications = response.data.map((notification: any) => ({
+          // Clear existing notifications first
+          this.notifications = [];
+
+          // Map notifications with animation delay
+          const newNotifications = response.data.map((notification: any) => ({
             id: notification.id,
             icon: this.getNotificationIcon(notification.title),
             message: notification.message,
@@ -243,22 +306,13 @@ export class layout implements OnInit {
             link: notification.link
           }));
 
-          // Calculate unread count from the notifications array
-          const newCount = this.notifications.filter(n => !n.isRead).length;
+          // Add notifications one by one with animation delay for better UX
+          this.addNotificationsWithAnimation(newNotifications);
 
+          this.notificationsLoaded = true;
 
-
-          // Check if there are new notifications
-          if (newCount > this.notificationCount) {
-            this.hasNewNotifications = true;
-
-            // Auto-reset new notification flag after 5 seconds
-            setTimeout(() => {
-              this.hasNewNotifications = false;
-            }, 5000);
-          }
-
-          this.notificationCount = newCount;
+          // Update count from actual notifications
+          this.notificationCount = newNotifications.filter((n: any) => !n.isRead).length;
         } else {
           console.error('Unexpected API response structure:', response);
           this.notifications = [];
@@ -272,30 +326,160 @@ export class layout implements OnInit {
     });
   }
 
-  // Load notification count (now handled by loadNotifications)
-  loadNotificationCount() {
-    // We get the unread count from getUserNotifications API response
-    // So we just call loadNotifications which handles both notifications and count
-    this.loadNotifications();
+  // Add notifications with animation delay for better user experience
+  private addNotificationsWithAnimation(notifications: any[]) {
+    notifications.forEach((notification, index) => {
+      setTimeout(() => {
+        this.notifications.push(notification);
+      }, index * 100); // 100ms delay between each notification
+    });
+  }
+
+  // Refresh notifications manually
+  refreshNotifications() {
+    this.notificationsLoaded = false;
+    this.notifications = [];
+    this.loadFullNotifications();
+
+    // Also refresh the count
+    this.loadNotificationCount();
+
+    console.log('Notifications refreshed');
+  }
+
+  // Navigate to notification link if available
+  navigateToNotification(notification: any, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // Mark as read first
+    if (!notification.isRead) {
+      this.markNotificationAsRead(notification.id);
+    }
+
+    // Navigate to link if available
+    if (notification.link && notification.link !== '#') {
+      this.router.navigate([notification.link]);
+      this.showNotifications = false; // Close dropdown after navigation
+    }
+  }
+
+  // TrackBy function for better performance with ngFor
+  trackNotificationById(index: number, notification: any): number {
+    return notification.id;
   }
 
   // Mark single notification as read
-  markNotificationAsRead(notificationId: number) {
-    this.api.markNotificationAsRead(notificationId).subscribe({
+  markNotificationAsRead(notificationId: number, event?: Event) {
+    // Prevent event bubbling if called from click event
+    if (event) {
+      event.stopPropagation();
+    }
+
+    const userId = this.userSession?.empId || this.userSession?.employeeId;
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+
+    const request: any = {
+      notificationId: notificationId,
+      userId: userId.toString(),
+      actionType: 'S' // 'S' flag for Single notification mark as read
+    };
+
+    this.api.markNotificationAsRead(request).subscribe({
       next: (response) => {
         if (response.success) {
           // Update the notification in the local array
-          const notification = this.notifications.find(n => n.id === notificationId);
+          const notification = this.notifications.find((n: any) => n.id === notificationId);
           if (notification) {
             notification.isRead = true;
+
+            // Update the count locally
+            this.notificationCount = this.notifications.filter((n: any) => !n.isRead).length;
           }
 
-          // Update the count by reloading notifications
-          this.loadNotifications();
+          console.log('Notification marked as read');
         }
       },
       error: (error) => {
         console.error('Error marking notification as read:', error);
+      }
+    });
+  }
+
+  // Clear/Delete single notification
+  clearNotification(notificationId: number, event?: Event) {
+    // Prevent event bubbling if called from click event
+    if (event) {
+      event.stopPropagation();
+    }
+
+    const userId = this.userSession?.empId || this.userSession?.employeeId;
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+
+    const request: any = {
+      notificationId: notificationId,
+      userId: userId.toString(),
+      actionType: 'S' // 'S' flag for Single notification delete
+    };
+
+    this.api.deleteNotification(request).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Remove notification from local array
+          const index = this.notifications.findIndex((n: any) => n.id === notificationId);
+          if (index > -1) {
+            const wasUnread = !this.notifications[index].isRead;
+            this.notifications.splice(index, 1);
+
+            // Update count if it was unread
+            if (wasUnread) {
+              this.notificationCount = Math.max(0, this.notificationCount - 1);
+            }
+          }
+
+          console.log('Notification deleted');
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting notification:', error);
+      }
+    });
+  }
+
+  // Clear all notifications
+  clearAllNotifications() {
+    const userId = this.userSession?.empId || this.userSession?.employeeId;
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+
+    const request: any = {
+      notificationId: 0, // 0 for all notifications
+      userId: userId.toString(),
+      actionType: 'A' // 'A' flag for All notifications delete
+    };
+
+    this.api.deleteNotification(request).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notifications = [];
+          this.notificationCount = 0;
+          this.hasNewNotifications = false;
+          this.notificationsLoaded = false;
+
+          console.log('All notifications cleared');
+        }
+      },
+      error: (error) => {
+        console.error('Error clearing all notifications:', error);
       }
     });
   }

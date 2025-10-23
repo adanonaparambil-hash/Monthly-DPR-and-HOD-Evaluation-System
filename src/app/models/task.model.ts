@@ -123,3 +123,10 @@ export interface DPRMonthlyReviewListingRequest {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+
+export interface ClearNotificationRequest {
+  notificationId?: number;  
+  userId: string;           
+  actionType: string;       
+}

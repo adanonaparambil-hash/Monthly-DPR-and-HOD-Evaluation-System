@@ -70,3 +70,9 @@ export interface Notification {
   createdAt: string;
   unreadCount: number;
 }
+
+export interface ClearNotificationRequest {
+  notificationId?: number;  
+  userId: string;           
+  actionType: string;       
+}

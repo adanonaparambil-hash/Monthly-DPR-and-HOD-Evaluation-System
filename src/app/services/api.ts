@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient,HttpParams  } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { DPRReview, DPRKPI,ProofhubTaskDto , DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload,EmployeeProfileUpdateDto,DropDownMasterDto,DropDownChildDto, Notification } from '../models/common.model';
+import { DPRReview, DPRKPI, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
+import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification ,ClearNotificationRequest } from '../models/common.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ import { EmployeeDocumentUpload,EmployeeProfileUpdateDto,DropDownMasterDto,DropD
 export class Api {
   private readonly apiUrl = `${environment.apiBaseUrl}/api`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
 
 
@@ -41,15 +41,15 @@ export class Api {
   }
 
 
- GetUserProofhubTasks(email: string, startDate: string, endDate: string): Observable<any> {
+  GetUserProofhubTasks(email: string, startDate: string, endDate: string): Observable<any> {
 
-  const params = new HttpParams()
-    .set('email', email)
-    .set('startDate', startDate) 
-    .set('endDate', endDate);    
+    const params = new HttpParams()
+      .set('email', email)
+      .set('startDate', startDate)
+      .set('endDate', endDate);
 
-  return this.http.get(`${this.apiUrl}/proofhubtask/GetUserProofhubTasks`, { params });
-}
+    return this.http.get(`${this.apiUrl}/proofhubtask/GetUserProofhubTasks`, { params });
+  }
 
   GetActiveKPIs(department?: string): Observable<any> {
     let params = '';
@@ -60,7 +60,7 @@ export class Api {
   }
 
 
-  
+
   summarizeTasks(tasks: ProofhubTaskDto[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/ProofhubTask/SummarizeTasks`, tasks);
 
@@ -72,7 +72,7 @@ export class Api {
   }
 
   uploadDocument(formData: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Login/UploadDocument`, formData); 
+    return this.http.post(`${this.apiUrl}/Login/UploadDocument`, formData);
   }
 
   updateProfile(profile: EmployeeProfileUpdateDto): Observable<any> {
@@ -80,13 +80,13 @@ export class Api {
   }
 
 
-  
+
   GetEmployeeProfile(empId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/Login/GetEmployeeProfile/${empId}`);
   }
 
 
-  
+
   GetHodMasterList(): Observable<any> {
     return this.http.get(`${this.apiUrl}/Login/GetHodMasterList`);
   }
@@ -100,11 +100,11 @@ export class Api {
     return this.http.post(`${this.apiUrl}/Login/SendEmailOTP`, { email }, { withCredentials: true });
   }
 
-  
+
   verifyOtp(email: string, otp: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/Login/VerifyEmailOTP`, { email, otp }, { withCredentials: true });
   }
-  
+
   ResendOtp(email: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/Login/ResendEmailOTP`, { email }, { withCredentials: true });
   }
@@ -126,26 +126,24 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetUserNotifications/${userId}`);
   }
 
-  markNotificationAsRead(notificationId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/General/MarkAsRead/${notificationId}`, {});
+  GetUnreadNotificationCount(userId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetUnreadNotificationCount/${userId}`, {});
   }
-
-  markAllNotificationsAsRead(userId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/General/MarkAllAsRead/${userId}`, {});
-  }
-
-  deleteNotification(notificationId: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/General/DeleteNotification/${notificationId}`);
-  }
-
+  
   createNotification(notification: Partial<Notification>): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/UpsertNotification`, notification);
   }
 
 
-  GetUnreadNotificationCount(userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/General/GetUnreadNotificationCount/${userId}`, {});
+  markNotificationAsRead(request: ClearNotificationRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/MarkAsReadNotification`, request);
   }
+
+  deleteNotification(request: ClearNotificationRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/ClearNotification`, request);
+  }
+
+
 
 }
 
