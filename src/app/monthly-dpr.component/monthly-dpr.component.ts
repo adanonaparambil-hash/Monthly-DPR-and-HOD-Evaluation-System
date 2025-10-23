@@ -7,7 +7,7 @@ import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
-import { DropdownOption, Notification } from '../models/common.model';
+import { DropdownOption, Notification, SendEmailRequest } from '../models/common.model';
 import { ActivatedRoute } from '@angular/router';
 
 
@@ -975,6 +975,10 @@ export class MonthlyDprComponent {
 
 
 
+  private getBaseUrl(): string {
+    return window.location.origin;
+  }
+
   private sendNotificationToHOD(dprId: number) {
     if (!this.reportingTo) return;
 
@@ -984,13 +988,15 @@ export class MonthlyDprComponent {
       title: `New DPR Submitted by ${this.empName}`,
       message: `${this.empName} (${this.empId}) has submitted the Monthly DPR for ${this.monthYear}. Click to review.`,
       link: `/monthly-dpr/${dprId}?readonly=1`,
-   
+
     };
 
     this.api.createNotification(hodNotification).subscribe({
       next: (response) => {
         if (response.success) {
           console.log('HOD notification sent successfully');
+          // Send email to HOD
+          this.sendEmailToHOD(dprId);
         }
       },
       error: (error) => {
@@ -1023,13 +1029,15 @@ export class MonthlyDprComponent {
       title: title,
       message: message,
       link: `/monthly-dpr/${dprId}?readonly=1`,
-      
+
     };
 
     this.api.createNotification(employeeNotification).subscribe({
       next: (response) => {
         if (response.success) {
           console.log('Employee notification sent successfully');
+          // Send email to employee
+          this.sendEmailToEmployee(dprId, isSubmission);
         }
       },
       error: (error) => {
@@ -1038,7 +1046,104 @@ export class MonthlyDprComponent {
     });
   }
 
+  private sendEmailToHOD(dprId: number) {
+    // Get HOD info from hodList
+    const hodInfo = this.hodList.find(hod => hod.idValue === this.reportingTo);
+    if (!hodInfo) {
+      console.error('HOD information not found');
+      return;
+    }
 
+    const baseUrl = this.getBaseUrl();
+    const evaluationFormLink = `${baseUrl}/monthly-dpr/${dprId}?readonly=1`;
+
+    // Note: You may need to modify this based on your HOD data structure
+    // If HOD email is not available in hodList, you might need to:
+    // 1. Add email field to DropdownOption interface
+    // 2. Create a separate API call to get HOD email
+    // 3. Use a different approach to get HOD email
+
+    const hodEmail = hodInfo.description; // Placeholder - replace with actual email field
+    const hodName = hodInfo.description; // Placeholder - replace with actual name field
+
+    const emailRequest: SendEmailRequest = {
+      templateKey: 'DPR_SUBMISSION_HOD',
+      toEmail: hodEmail,
+      placeholders: {
+        '[EmployeeName]': this.empName,
+        '[EmployeeID]': this.empId,
+        '[HODName]': hodName,
+        '[MonthYear]': this.monthYear,
+        '[EvaluationFormLink]': evaluationFormLink,
+        '[HODRemarks]': this.managementRemarks || '',
+        '[EmployeeDprEditLink]': evaluationFormLink
+      }
+    };
+
+    this.api.SendEmail(emailRequest).subscribe({
+      next: (response) => {
+        if (response.success) {
+          console.log('Email sent to HOD successfully');
+        } else {
+          console.error('Failed to send email to HOD:', response.message);
+        }
+      },
+      error: (error) => {
+        console.error('Error sending email to HOD:', error);
+      }
+    });
+  }
+
+  private sendEmailToEmployee(dprId: number, isSubmission: boolean = false) {
+    const baseUrl = this.getBaseUrl();
+    const evaluationFormLink = `${baseUrl}/monthly-dpr/${dprId}?readonly=1`;
+    const employeeDprEditLink = `${baseUrl}/monthly-dpr/${dprId}`;
+
+    let templateKey = '';
+    if (isSubmission) {
+      templateKey = 'DPR_SUBMISSION_EMPLOYEE';
+    } else if (this.ApprovalStatus === 'A') {
+      templateKey = 'DPR_APPROVED';
+    } else if (this.ApprovalStatus === 'R') {
+      templateKey = 'DPR_PUSHBACK';
+    }
+
+    if (!templateKey) {
+      console.error('No template key determined for email');
+      return;
+    }
+
+    // Get HOD name from hodList
+    const hodInfo = this.hodList.find(hod => hod.idValue === this.reportingTo);
+    const hodName = hodInfo ? hodInfo.description : 'HOD';
+
+    const emailRequest: SendEmailRequest = {
+      templateKey: templateKey,
+      toEmail: this.EmailID,
+      placeholders: {
+        '[EmployeeName]': this.empName,
+        '[EmployeeID]': this.empId,
+        '[HODName]': hodName,
+        '[MonthYear]': this.monthYear,
+        '[EvaluationFormLink]': evaluationFormLink,
+        '[HODRemarks]': this.managementRemarks || '',
+        '[EmployeeDprEditLink]': this.ApprovalStatus === 'R' ? employeeDprEditLink : evaluationFormLink
+      }
+    };
+
+    this.api.SendEmail(emailRequest).subscribe({
+      next: (response) => {
+        if (response.success) {
+          console.log('Email sent to employee successfully');
+        } else {
+          console.error('Failed to send email to employee:', response.message);
+        }
+      },
+      error: (error) => {
+        console.error('Error sending email to employee:', error);
+      }
+    });
+  }
 
 }
 
