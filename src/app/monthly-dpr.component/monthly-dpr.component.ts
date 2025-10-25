@@ -89,6 +89,7 @@ export class MonthlyDprComponent {
   userType: 'E' | 'H' | 'C' = 'E';
   isReadOnlyMode: boolean = false;
   currentStatus: string = 'D'; // D, R, S, A
+  isHodViewingOwnDpr: boolean = false; // Track if HOD is viewing their own DPR
 
   get isEmployee(): boolean { return this.userType === 'E'; }
   get isHod(): boolean { return this.userType === 'H'; }
@@ -106,8 +107,11 @@ export class MonthlyDprComponent {
 
   // Status-based access control for HOD
   get canEditHodEvaluation(): boolean {
-    if (!this.isHod) return false;
-    return this.currentStatus === 'S';
+    if (this.isEmployee) return false; // Employee can never edit HOD evaluation fields
+    if (this.isCed) return false; // CED can never edit HOD evaluation fields
+    if (this.isHod && this.isHodViewingOwnDpr) return false; // HOD can't edit their own evaluation
+    if (this.isHod && !this.isHodViewingOwnDpr) return this.currentStatus === 'S'; // HOD can edit when reviewing others' DPRs
+    return false;
   }
 
   get canViewHodEvaluation(): boolean {
@@ -133,19 +137,24 @@ export class MonthlyDprComponent {
 
   // Button visibility for Employee (Save Draft, Submit)
   get showEmployeeButtons(): boolean {
-    return this.isEmployee && (this.currentStatus === 'D' || this.currentStatus === 'R');
+    // Show for employees OR HOD viewing their own DPR
+    if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
+    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R';
+    return false;
   }
 
   // Button visibility for HOD (Approve, Rework)
   get showHodButtons(): boolean {
-    return this.isHod && this.currentStatus === 'S';
+    // Only show when HOD is reviewing someone else's DPR
+    return this.isHod && !this.isHodViewingOwnDpr && this.currentStatus === 'S';
   }
 
   // Table action buttons (Add/Delete for tasks and KPIs)
   get showTableActions(): boolean {
     if (this.isCed) return false; // CED never sees action buttons
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
-    if (this.isHod) return false; // HOD doesn't edit tables
+    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R'; // HOD can edit their own DPR
+    if (this.isHod && !this.isHodViewingOwnDpr) return false; // HOD can't edit others' tables
     return false;
   }
 
@@ -153,14 +162,16 @@ export class MonthlyDprComponent {
   get canEditFields(): boolean {
     if (this.isCed) return false; // CED can never edit anything
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
-    if (this.isHod) return false; // HOD can only edit evaluation fields, not employee fields
+    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R'; // HOD can edit their own DPR
+    if (this.isHod && !this.isHodViewingOwnDpr) return false; // HOD can't edit others' employee fields
     return false;
   }
 
   // HOD Evaluation section visibility
   get showHodEvaluationSection(): boolean {
-    if (this.isEmployee) return false; // Employee never sees HOD evaluation
-    return this.isHod || this.isCed; // HOD and CED can see it
+    if (this.isEmployee) return this.currentStatus === 'A'; // Employee can see HOD evaluation only when approved
+    if (this.isHod && this.isHodViewingOwnDpr) return false; // HOD doesn't evaluate their own DPR
+    return this.isHod || this.isCed; // HOD and CED can see it for others' DPRs
   }
 
   // Management Remarks section visibility
@@ -169,6 +180,8 @@ export class MonthlyDprComponent {
     if (this.isCed) return false; // CED should not see management remarks
     return this.isHod; // Only HOD can see management remarks
   }
+
+
 
   // Remarks History section visibility
   get showRemarksHistorySection(): boolean {
@@ -232,7 +245,7 @@ export class MonthlyDprComponent {
     this.dprid = Number(this.route.snapshot.paramMap.get('id'));
     this.isReadOnlyMode = (this.route.snapshot.queryParamMap.get('readonly') || '') === '1';
 
-    this.setPreviousMonthYear();
+    // Don't set monthYear here - it will be set from DPR data or when creating new DPR
 
     this.loadKPIs();
 
@@ -588,10 +601,13 @@ export class MonthlyDprComponent {
     }
 
 
+    // Get month and year from header instead of current date
+    const { month, year } = this.parseMonthYear();
+
     const review: DPRReview = {
       employeeId: this.empId,
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
+      month: month,
+      year: year,
       workedHours: Number(this.WorkedHours),
       achievements: this.achievements || '',
       challenges: this.challenges || '',
@@ -886,6 +902,7 @@ export class MonthlyDprComponent {
     this.api.GetDPREmployeeReviewDetails(dprId).subscribe({
       next: (res) => {
         if (res.success && res.data) {
+
           const dpr = res.data as DPRReview;
 
           this.empId = dpr.employeeId || '';
@@ -905,6 +922,20 @@ export class MonthlyDprComponent {
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
+
+          // Set monthYear from DPR data if available
+          if (dpr.month && dpr.year) {
+            const monthNames = [
+              'January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            this.monthYear = `${monthNames[dpr.month - 1]} ${dpr.year}`;
+          }
+
+          // Check if HOD is viewing their own DPR
+          const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+          const currentUserId = currentUser.empId || '';
+          this.isHodViewingOwnDpr = this.isHod && (currentUserId === this.empId);
 
           // Handle KPI data - if no existing data, initialize with one empty row
           if (dpr.kpiList?.length) {
@@ -944,6 +975,14 @@ export class MonthlyDprComponent {
           ];
           this.remarksHistory = [];
 
+          // For new DPR, set monthYear to previous month
+          this.setPreviousMonthYear();
+
+          // For new DPR, if HOD is accessing directly, they're creating their own DPR
+          const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+          const currentUserId = currentUser.empId || '';
+          this.isHodViewingOwnDpr = this.isHod && (currentUserId === this.empId);
+
           // Only load ProofHub tasks when creating a new DPR (no existing data)
           this.getUserProofhubTasks();
         }
@@ -951,6 +990,14 @@ export class MonthlyDprComponent {
       error: (err) => {
         console.error('Error loading DPR details:', err);
         console.warn('Could not load existing DPR - treating as new DPR and loading ProofHub tasks');
+
+        // For error case (new DPR), set monthYear to previous month
+        this.setPreviousMonthYear();
+
+        // For error case (new DPR), if HOD is accessing directly, they're creating their own DPR
+        const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+        const currentUserId = currentUser.empId || '';
+        this.isHodViewingOwnDpr = this.isHod && (currentUserId === this.empId);
 
         // If we can't load existing DPR data, treat as new DPR and load ProofHub tasks
         this.getUserProofhubTasks();
@@ -1009,6 +1056,39 @@ export class MonthlyDprComponent {
 
   private getBaseUrl(): string {
     return window.location.origin;
+  }
+
+  private parseMonthYear(): { month: number, year: number } {
+    // Parse monthYear string (e.g., "October 2024") to extract month and year
+    if (!this.monthYear) {
+      // Fallback to current date if monthYear is not set
+      return {
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear()
+      };
+    }
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const parts = this.monthYear.split(' ');
+    if (parts.length === 2) {
+      const monthName = parts[0];
+      const year = parseInt(parts[1]);
+      const month = monthNames.indexOf(monthName) + 1;
+
+      if (month > 0 && year > 0) {
+        return { month, year };
+      }
+    }
+
+    // Fallback to current date if parsing fails
+    return {
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear()
+    };
   }
 
   private sendNotificationToHOD(dprId: number) {
