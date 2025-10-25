@@ -360,7 +360,25 @@ export class layout implements OnInit, OnDestroy {
 
     // Navigate to link if available
     if (notification.link && notification.link !== '#') {
-      this.router.navigate([notification.link]);
+      // Parse the link to separate route from query parameters
+      const link = notification.link;
+      const [routePath, queryString] = link.split('?');
+
+      if (queryString) {
+        // Parse query parameters
+        const queryParams: any = {};
+        queryString.split('&').forEach((param: string) => {
+          const [key, value] = param.split('=');
+          queryParams[key] = value;
+        });
+
+        // Navigate with proper query parameters
+        this.router.navigate([routePath], { queryParams });
+      } else {
+        // Navigate without query parameters
+        this.router.navigate([routePath]);
+      }
+
       this.showNotifications = false; // Close dropdown after navigation
     }
   }

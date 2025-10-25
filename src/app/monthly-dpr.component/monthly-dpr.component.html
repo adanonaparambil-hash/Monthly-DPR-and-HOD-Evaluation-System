@@ -183,13 +183,15 @@
 
               <!-- KPI Dropdown -->
               <td class="kpi-col">
-                <select [(ngModel)]="kpi.kpiMasterId" (ngModelChange)="onKPISelectionChange(i, $event)"
-                  [disabled]="!canEditFields">
+                <select *ngIf="canEditFields" [(ngModel)]="kpi.kpiMasterId" (ngModelChange)="onKPISelectionChange(i, $event)">
                   <option [value]="0">Select KPI</option>
                   <option *ngFor="let availableKpi of getAvailableKPIsForRow(i)" [value]="availableKpi.kpiid">
                     {{ availableKpi.kpiname }}
                   </option>
                 </select>
+                <span *ngIf="!canEditFields" class="readonly-value">
+                  {{ getKPINameById(kpi.kpiMasterId) || 'No KPI Selected' }}
+                </span>
               </td>
 
               <!-- KPI Description (read-only) -->
@@ -197,8 +199,9 @@
 
               <!-- KPI Value Input -->
               <td class="kpi-value-col">
-                <input [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)" type="text"
-                  class="rating-input" [disabled]="!canEditFields">
+                <input *ngIf="canEditFields" [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)" type="text"
+                  class="rating-input">
+                <span *ngIf="!canEditFields" class="readonly-value">{{ kpi.kpiValue || '-' }}</span>
               </td>
 
               <td class="delete-col" style="text-align: center;" *ngIf="showTableActions">
@@ -323,7 +326,7 @@
       <i class="fas fa-thumbs-up"></i> Approve
     </button>
     <button class="btn-pushback colorful-btn" (click)="ReWorkReview()" *ngIf="showHodButtons">
-      <i class="fas fa-undo"></i> Rework
+      <i class="fas fa-undo"></i> ReWork
     </button>
   </div>
 </div>

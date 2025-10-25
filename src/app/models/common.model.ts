@@ -36,50 +36,50 @@ export interface EmployeeProfileUpdateDto {
 }
 
 export interface DropdownOption {
-  idValue: string;
-  description : string;
+  idValue?: string;
+  description?: string;
 }
 
 export interface DropDownMasterDto {
-  dropMasterId: number;
-  dropMasterName: string;
-  description: string;
+  dropMasterId?: number;
+  dropMasterName?: string;
+  description?: string;
 }
 
 export interface DropDownChildDto {
-  dropChildId: number;
-  dropMasterId: number;
-  dropValue: string;
+  dropChildId?: number;
+  dropMasterId?: number;
+  dropValue?: string;
   sortOrder?: number | null;
   isActive: string;
 }
 
 export interface DropDownValue {
-  dropChildId: number;
-  dropValue: string;
+  dropChildId?: number;
+  dropValue?: string;
   sortOrder?: number | null;
 }
 
 export interface Notification {
-  id: number;
-  userId: string;
-  title: string;
-  message: string;
-  link: string;
-  isRead: boolean;
-  createdAt: string;
-  unreadCount: number;
+  id?: number;
+  userId?: string;
+  title?: string;
+  message?: string;
+  link?: string;
+  isRead?: boolean;
+  createdAt?: string;
+  unreadCount?: number;
 }
 
 export interface ClearNotificationRequest {
   notificationId?: number;  
-  userId: string;           
-  actionType: string;       
+  userId?: string;           
+  actionType?: string;       
 }
 
 
 export interface SendEmailRequest {
-  templateKey: string;                   
-  toEmail: string;                       
-  placeholders: { [key: string]: string }; 
+  templateKey?: string;                   
+  toEmail?: string;                       
+  placeholders?: { [key: string]: string }; 
 }

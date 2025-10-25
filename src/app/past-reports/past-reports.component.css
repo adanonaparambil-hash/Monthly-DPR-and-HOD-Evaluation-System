@@ -256,39 +256,120 @@
   display: inline-block;
   min-width: 80px;
   text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.status-badge:hover::before {
+  left: 100%;
+}
+
+.status-badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .status-approved {
   background: rgba(34, 197, 94, 0.1);
   color: #059669;
   border: 1px solid rgba(34, 197, 94, 0.3);
+  animation: statusEntrance 0.6s ease-out, approvedGlow 2s ease-in-out infinite alternate 0.6s;
 }
 
 .status-pending {
   background: rgba(249, 115, 22, 0.1);
   color: #ea580c;
   border: 1px solid rgba(249, 115, 22, 0.3);
+  animation: statusEntrance 0.6s ease-out, pendingPulse 1.5s ease-in-out infinite 0.6s;
 }
 
 .status-rejected {
   background: rgba(239, 68, 68, 0.1);
   color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.3);
+  animation: statusEntrance 0.6s ease-out, rejectedShake 3s ease-in-out infinite 0.6s;
 }
 
+.status-draft {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  animation: statusEntrance 0.6s ease-out, draftBreathe 2.5s ease-in-out infinite 0.6s;
+}
+
+/* Status Animations */
+@keyframes approvedGlow {
+  0% { 
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
+  }
+  100% { 
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+  }
+}
+
+@keyframes pendingPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 5px rgba(249, 115, 22, 0.3);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  }
+}
+
+@keyframes rejectedShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-1px); }
+  20%, 40%, 60%, 80% { transform: translateX(1px); }
+}
+
+@keyframes draftBreathe {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+/* Dark Theme Status Badges */
 :host-context(.dark-theme) .status-approved {
   background: rgba(52, 211, 153, 0.2);
   color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
 }
 
 :host-context(.dark-theme) .status-pending {
   background: rgba(251, 191, 36, 0.2);
   color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
 }
 
 :host-context(.dark-theme) .status-rejected {
   background: rgba(248, 113, 113, 0.2);
   color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+:host-context(.dark-theme) .status-draft {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+  border: 1px solid rgba(156, 163, 175, 0.4);
 }
 
 /* Action Cell */
@@ -485,6 +566,22 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* Status Badge Entrance Animation */
+
+@keyframes statusEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  50% {
+    transform: scale(1.1) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 

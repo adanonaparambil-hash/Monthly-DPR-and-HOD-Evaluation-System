@@ -8,7 +8,7 @@ import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { DropdownOption, Notification, SendEmailRequest } from '../models/common.model';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 
 
@@ -127,7 +127,7 @@ export class MonthlyDprComponent {
   get canViewRemarksHistory(): boolean {
     if (this.isCed) return true; // CED can always see remarks history
     if (this.isHod) return true; // HOD can always see remarks history
-    if (this.isEmployee) return this.currentStatus === 'R'; // Employee only when rework
+    if (this.isEmployee) return this.currentStatus === 'R' || this.currentStatus === 'A'; // Employee when rework or approved
     return false;
   }
 
@@ -225,7 +225,7 @@ export class MonthlyDprComponent {
     },
   ];
 
-  constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute) { }
+  constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
 
@@ -257,8 +257,7 @@ export class MonthlyDprComponent {
 
     this.loadHodMasterList();
 
-    this.getUserProofhubTasks();
-
+    // Load DPR details first, then decide if we need ProofHub tasks
     this.GetDPREmployeeReviewDetails(this.dprid);
 
   }
@@ -390,6 +389,12 @@ export class MonthlyDprComponent {
     return this.kpis[index].placeholdervalue || 'Enter KPI value';
   }
 
+  getKPINameById(kpiMasterId: number | undefined): string {
+    if (!kpiMasterId || kpiMasterId === 0) return '';
+    const kpi = this.availableKPIs.find(k => k.kpiid === kpiMasterId);
+    return kpi ? (kpi.kpiname || '') : '';
+  }
+
   getAvailableKPIsForRow(currentIndex: number): any[] {
     // Get all selected KPI IDs from other rows (excluding current row)
     const selectedKpiIds = this.kpis
@@ -466,7 +471,7 @@ export class MonthlyDprComponent {
   HODReviewUpdate() {
 
     if (this.ApprovalStatus == "R") {
-      this.ConfirmationMessage = 'Do you want to rework the review details?';
+      this.ConfirmationMessage = 'Do you want to ReWork the review details?';
     }
     else {
       this.ConfirmationMessage = 'Do you want to approve the review details?';
@@ -495,14 +500,25 @@ export class MonthlyDprComponent {
           dprid: this.dprid
         };
 
+        console.log("DPR Log" + review.dprid);
+
         this.api.updateDPRReview(review).subscribe({
           next: (res: any) => {
             if (res.success) {
               this.toastr.success(res.message, 'Success');
 
-              // Send notification to employee after successful HOD review
+              // Try to send notification to employee after successful HOD review (non-blocking)
               const dprId = this.dprid;
-              this.sendNotificationToEmployee(dprId, false);
+              try {
+                this.sendNotificationToEmployee(dprId, false);
+              } catch (error) {
+                console.error('Error sending employee notification:', error);
+              }
+
+              // Navigate to past reports page after successful approval/pushback
+              setTimeout(() => {
+                this.router.navigate(['/past-reports']);
+              }, 1500); // Small delay to show success message
 
             } else {
               this.toastr.error(res.message, 'Error');
@@ -618,11 +634,21 @@ export class MonthlyDprComponent {
             if (this.ApprovalStatus === 'S' && res.success) {
               const dprId = res.data || this.dprid;
 
-              // Send notification to HOD
-              this.sendNotificationToHOD(dprId);
+              // Try to send notifications (non-blocking)
+              try {
+                this.sendNotificationToHOD(dprId);
+                this.sendNotificationToEmployee(dprId, true);
+              } catch (error) {
+                console.error('Error sending notifications:', error);
+              }
 
-              // Send notification to Employee (submission confirmation)
-              this.sendNotificationToEmployee(dprId, true);
+              // Navigate to past reports page after successful submission
+              setTimeout(() => {
+                this.router.navigate(['/past-reports']);
+              }, 1500); // Small delay to show success message
+            } else if (this.ApprovalStatus === 'D' && res.success) {
+              // For draft saves, show success but don't navigate
+              console.log('Draft saved successfully');
             }
           },
           error: (err) => {
@@ -902,7 +928,7 @@ export class MonthlyDprComponent {
 
           console.log('Loaded DPR details:', dpr);
         } else {
-          console.warn('No DPR data found');
+          console.warn('No DPR data found - loading ProofHub tasks for new DPR');
           this.tasks = [];
           this.kpis = [
             {
@@ -917,11 +943,17 @@ export class MonthlyDprComponent {
             }
           ];
           this.remarksHistory = [];
+
+          // Only load ProofHub tasks when creating a new DPR (no existing data)
+          this.getUserProofhubTasks();
         }
       },
       error: (err) => {
-        console.error(err);
-        // alert('Error loading DPR');
+        console.error('Error loading DPR details:', err);
+        console.warn('Could not load existing DPR - treating as new DPR and loading ProofHub tasks');
+
+        // If we can't load existing DPR data, treat as new DPR and load ProofHub tasks
+        this.getUserProofhubTasks();
       },
     });
   }
@@ -983,13 +1015,14 @@ export class MonthlyDprComponent {
     if (!this.reportingTo) return;
 
     const hodNotification: Partial<Notification> = {
-      id: 0,
       userId: this.reportingTo,
       title: `New DPR Submitted by ${this.empName}`,
       message: `${this.empName} (${this.empId}) has submitted the Monthly DPR for ${this.monthYear}. Click to review.`,
       link: `/monthly-dpr/${dprId}?readonly=1`,
-
+      isRead: false
     };
+
+    console.log('Sending HOD notification:', hodNotification);
 
     this.api.createNotification(hodNotification).subscribe({
       next: (response) => {
@@ -997,15 +1030,20 @@ export class MonthlyDprComponent {
           console.log('HOD notification sent successfully');
           // Send email to HOD
           this.sendEmailToHOD(dprId);
+        } else {
+          console.error('HOD notification failed:', response);
         }
       },
       error: (error) => {
         console.error('Error sending HOD notification:', error);
+        console.error('Error details:', error.error);
       }
     });
   }
 
   private sendNotificationToEmployee(dprId: number, isSubmission: boolean = false) {
+    console.log('sendNotificationToEmployee called with:', { dprId, isSubmission, ApprovalStatus: this.ApprovalStatus, empId: this.empId });
+
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const targetUserId = this.empId;
 
@@ -1023,25 +1061,33 @@ export class MonthlyDprComponent {
       message = `Your DPR for ${this.monthYear} has been pushed back by ${currentUser.employeeName || 'HOD'} for revision.`;
     }
 
+    console.log('Employee notification details:', { targetUserId, title, message });
+
     const employeeNotification: Partial<Notification> = {
-      id: 0,
       userId: targetUserId,
       title: title,
       message: message,
       link: `/monthly-dpr/${dprId}?readonly=1`,
-
+      isRead: false
     };
+
+    console.log('Sending employee notification:', employeeNotification);
 
     this.api.createNotification(employeeNotification).subscribe({
       next: (response) => {
         if (response.success) {
           console.log('Employee notification sent successfully');
-          // Send email to employee
-          this.sendEmailToEmployee(dprId, isSubmission);
+        } else {
+          console.error('Employee notification failed:', response);
         }
+        // Send email regardless of notification success/failure
+        this.sendEmailToEmployee(dprId, isSubmission);
       },
       error: (error) => {
         console.error('Error sending employee notification:', error);
+        console.error('Error details:', error.error);
+        // Send email even if notification fails
+        this.sendEmailToEmployee(dprId, isSubmission);
       }
     });
   }
@@ -1057,14 +1103,14 @@ export class MonthlyDprComponent {
     const baseUrl = this.getBaseUrl();
     const evaluationFormLink = `${baseUrl}/monthly-dpr/${dprId}?readonly=1`;
 
-    // Note: You may need to modify this based on your HOD data structure
-    // If HOD email is not available in hodList, you might need to:
-    // 1. Add email field to DropdownOption interface
-    // 2. Create a separate API call to get HOD email
-    // 3. Use a different approach to get HOD email
+    // Get HOD email from idValue and name from description
+    const hodEmail = hodInfo.idValue || ''; // idValue contains the email address
+    const hodName = hodInfo.description || 'HOD'; // description contains the display name
 
-    const hodEmail = hodInfo.description; // Placeholder - replace with actual email field
-    const hodName = hodInfo.description; // Placeholder - replace with actual name field
+    if (!hodEmail) {
+      console.error('HOD email not available, skipping email send');
+      return;
+    }
 
     const emailRequest: SendEmailRequest = {
       templateKey: 'DPR_SUBMISSION_HOD',
@@ -1080,21 +1126,26 @@ export class MonthlyDprComponent {
       }
     };
 
+    console.log('Sending email to HOD:', emailRequest);
+
     this.api.SendEmail(emailRequest).subscribe({
       next: (response) => {
         if (response.success) {
           console.log('Email sent to HOD successfully');
         } else {
-          console.error('Failed to send email to HOD:', response.message);
+          console.error('Failed to send email to HOD:', response);
         }
       },
       error: (error) => {
         console.error('Error sending email to HOD:', error);
+        console.error('Error details:', error.error);
       }
     });
   }
 
   private sendEmailToEmployee(dprId: number, isSubmission: boolean = false) {
+    console.log('sendEmailToEmployee called with:', { dprId, isSubmission, ApprovalStatus: this.ApprovalStatus, EmailID: this.EmailID });
+
     const baseUrl = this.getBaseUrl();
     const evaluationFormLink = `${baseUrl}/monthly-dpr/${dprId}?readonly=1`;
     const employeeDprEditLink = `${baseUrl}/monthly-dpr/${dprId}`;
@@ -1108,18 +1159,25 @@ export class MonthlyDprComponent {
       templateKey = 'DPR_PUSHBACK';
     }
 
+    console.log('Template key determined:', templateKey);
+
     if (!templateKey) {
       console.error('No template key determined for email');
       return;
     }
 
+    if (!this.EmailID) {
+      console.error('Employee email not available, skipping email send. EmailID:', this.EmailID);
+      return;
+    }
+
     // Get HOD name from hodList
     const hodInfo = this.hodList.find(hod => hod.idValue === this.reportingTo);
-    const hodName = hodInfo ? hodInfo.description : 'HOD';
+    const hodName = hodInfo ? (hodInfo.description || 'HOD') : 'HOD';
 
     const emailRequest: SendEmailRequest = {
       templateKey: templateKey,
-      toEmail: this.EmailID,
+      toEmail: this.empId,
       placeholders: {
         '[EmployeeName]': this.empName,
         '[EmployeeID]': this.empId,
@@ -1131,16 +1189,19 @@ export class MonthlyDprComponent {
       }
     };
 
+    console.log('Sending email to employee:', emailRequest);
+
     this.api.SendEmail(emailRequest).subscribe({
       next: (response) => {
         if (response.success) {
           console.log('Email sent to employee successfully');
         } else {
-          console.error('Failed to send email to employee:', response.message);
+          console.error('Failed to send email to employee:', response);
         }
       },
       error: (error) => {
         console.error('Error sending email to employee:', error);
+        console.error('Error details:', error.error);
       }
     });
   }
