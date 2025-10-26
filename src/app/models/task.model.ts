@@ -130,3 +130,21 @@ export interface ClearNotificationRequest {
   userId: string;           
   actionType: string;       
 }
+
+
+export interface ExitEmpProfileDetails {
+  empId?: string;
+  employeeName?: string;
+  empDept?: string;
+  actProfession?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  depHodId?: string;
+  district?: string;
+  place?: string;
+  state?: string;
+  postOffice?: string;
+  nationality?: string;
+  telephoneNo?: string;
+}

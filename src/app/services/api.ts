@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DPRReview, DPRKPI, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification ,ClearNotificationRequest,SendEmailRequest } from '../models/common.model';
+import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,10 +15,20 @@ export class Api {
 
   constructor(private http: HttpClient) { }
 
+  // Handle HTTP errors, especially session expiry
+  private handleError = (error: HttpErrorResponse): Observable<never> => {
+    if (error.status === 401) {
+      // Session expired - will be handled by AuthInterceptor
+      console.log('API call failed due to session expiry');
+    }
+    return throwError(() => error);
+  }
+
 
 
   login(username: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Login/UserLogin`, { username, password });
+    return this.http.post(`${this.apiUrl}/Login/UserLogin`, { username, password })
+      .pipe(catchError(this.handleError));
   }
 
 
@@ -129,7 +140,7 @@ export class Api {
   GetUnreadNotificationCount(userId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetUnreadNotificationCount/${userId}`, {});
   }
-  
+
   createNotification(notification: Partial<Notification>): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/UpsertNotification`, notification);
   }
@@ -142,11 +153,17 @@ export class Api {
   deleteNotification(request: ClearNotificationRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/ClearNotification`, request);
   }
-  
+
 
   SendEmail(notification: Partial<SendEmailRequest>): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/SendEmail`, notification);
   }
+
+
+  GetExitEmployeeDetails(empId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetExitEmployeeDetails/${empId}`);
+  }
+
 
 
 }

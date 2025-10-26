@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, F
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { ActivatedRoute } from '@angular/router';
 import { Api } from '../services/api';
-import { DropdownOption } from '../models/common.model';
+import { DropdownOption, ExitEmpProfileDetails } from '../models/common.model';
 
 interface Department {
   id: number;
@@ -67,7 +67,7 @@ interface ResponsibilityHandover {
 })
 export class EmergencyExitFormComponent implements OnInit {
   @ViewChild('signatureCanvas') signatureCanvas!: ElementRef<HTMLCanvasElement>;
-  
+
   currentStep = 1;
   totalSteps = 4;
   exitForm!: FormGroup;
@@ -77,14 +77,17 @@ export class EmergencyExitFormComponent implements OnInit {
   hodDaysAllowed: number = 0;
   hodList: DropdownOption[] = [];
   projectManagerList: DropdownOption[] = [];
-  
+
   // Form type flag: 'E' for Emergency, 'P' for Planned Leave
   @Input() formType: 'E' | 'P' = 'E';
-  
+
+  // Employee profile data
+  employeeProfileData: ExitEmpProfileDetails = {};
+
   // Project Manager / Site Incharge approval
   pmRemarks: string = '';
   pmDaysAllowed: number = 0;
-  
+
   // Form data
   departments: Department[] = [
     {
@@ -167,8 +170,8 @@ export class EmergencyExitFormComponent implements OnInit {
   responsibilities: ResponsibilityHandover[] = [];
 
   constructor(
-    private fb: FormBuilder, 
-    private cdr: ChangeDetectorRef, 
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
     private api: Api,
     private route: ActivatedRoute
   ) {
@@ -179,10 +182,10 @@ export class EmergencyExitFormComponent implements OnInit {
     try {
       // Set form type based on URL parameter or input
       this.setFormType();
-      
+
       // Adjust total steps based on form type
       this.totalSteps = this.formType === 'P' ? 2 : 4; // Planned leave: Step 1 (all info) -> Step 2 (approvals)
-      
+
       this.addResponsibility(); // Add one default responsibility row
       // Ensure all departments are visible by default
       this.departments.forEach(dept => {
@@ -193,15 +196,23 @@ export class EmergencyExitFormComponent implements OnInit {
       // Load master lists
       this.loadHodMasterList();
       this.loadProjectManagerList();
-      
+
+      // Load employee details for Emergency form
+      if (this.formType === 'E') {
+        this.loadEmployeeDetails();
+      }
+
       // Update form validations based on form type
       this.updateFormValidations();
-      
+
+      // Disable employee information fields (always disabled)
+      this.disableEmployeeInfoFields();
+
       // Ensure all cards are visible from the start
       setTimeout(() => {
         this.ensureAllCardsVisible();
       }, 100);
-      
+
       console.log('Departments initialized:', this.departments.length); // Debug log
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
@@ -220,10 +231,10 @@ export class EmergencyExitFormComponent implements OnInit {
         this.formType = 'E';
         console.log('Form type defaulted to Emergency'); // Debug log
       }
-      
+
       // Clear form and reset to step 1 when form type changes
       this.clearFormAndReset();
-      
+
       // Update form validations and steps when form type changes
       this.totalSteps = this.formType === 'P' ? 2 : 4;
       this.updateFormValidations();
@@ -234,7 +245,7 @@ export class EmergencyExitFormComponent implements OnInit {
   clearFormAndReset() {
     this.currentStep = 1;
     this.exitForm.reset();
-    
+
     // Clear all validation errors
     Object.keys(this.exitForm.controls).forEach(key => {
       const control = this.exitForm.get(key);
@@ -242,20 +253,20 @@ export class EmergencyExitFormComponent implements OnInit {
       control?.markAsUntouched();
       control?.markAsPristine();
     });
-    
+
     // Reset department statuses
     this.departments.forEach(dept => {
       dept.status = 'pending';
       dept.approvedDate = undefined;
       dept.comments = undefined;
     });
-    
+
     // Clear approval remarks
     this.hodRemarks = '';
     this.hodDaysAllowed = 0;
     this.pmRemarks = '';
     this.pmDaysAllowed = 0;
-    
+
     // Reset responsibilities array
     this.responsibilitiesFormArray.clear();
     this.addResponsibility();
@@ -271,7 +282,7 @@ export class EmergencyExitFormComponent implements OnInit {
       flightTime: [''],
       dateOfArrival: [''],
       noOfDaysApproved: ['', [Validators.required, Validators.min(1)]],
-      
+
       // Contact Details
       address: ['', Validators.required],
       district: [''],
@@ -282,34 +293,34 @@ export class EmergencyExitFormComponent implements OnInit {
       postOffice: [''],
       nation: [''],
       emailId: ['', [Validators.required, Validators.email]],
-      
+
       // Reason (Emergency or Planned Leave specific)
       reasonForEmergency: ['', Validators.required],
-      
+
       // Planned Leave specific fields
       category: [''], // Staff or Worker
       responsibilitiesHandedOverTo: [''], // Text input for planned leave
-      
+
       // HOD Information
       hodName: ['', Validators.required],
       hodSignature: [''],
-      
+
       // Project Manager / Site Incharge (for Planned Leave)
       projectManagerName: [''],
-      
+
       // Responsibilities (FormArray)
       responsibilities: this.fb.array([]),
-      
+
       // Department approvals will be handled separately
       departmentApprovals: this.fb.group({}),
-      
+
       // Final signatures
       employeeSignature: [''],
       hrSignature: [''],
       employeeSignatureDate: [''],
       hrSignatureDate: [''],
       digitalSignature: [''],
-      
+
       // Travel documents
       travelDocumentsHandedOver: [false],
 
@@ -335,7 +346,7 @@ export class EmergencyExitFormComponent implements OnInit {
       digitalSignature: [''],
       remarks: ['']
     });
-    
+
     this.responsibilitiesFormArray.push(responsibilityGroup);
   }
 
@@ -349,7 +360,7 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('NextStep called - Current step:', this.currentStep, 'Form type:', this.formType);
     const isValid = this.validateCurrentStep();
     console.log('Validation result:', isValid);
-    
+
     if (isValid) {
       // For Planned Leave, go directly from Step 1 to Step 3 (approvals)
       if (this.formType === 'P' && this.currentStep === 1) {
@@ -362,7 +373,7 @@ export class EmergencyExitFormComponent implements OnInit {
         this.currentStep = 4; // Go to final step for planned leave
         console.log('Planned Leave: Moving from Step 3 to Step 4');
       }
-      
+
       // Ensure all department cards are visible when reaching step 3
       if (this.currentStep === 3) {
         this.cdr.detectChanges(); // Force change detection
@@ -435,21 +446,31 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   validateEmployeeInfo(): boolean {
-    let requiredFields = ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 
-                         'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
-    
+    // Disabled fields (employee info) - check if they have values
+    const disabledFields = ['employeeName', 'employeeId', 'department'];
+    for (const field of disabledFields) {
+      const control = this.exitForm.get(field);
+      if (!control || !control.value) {
+        console.log('Validation failed for disabled field:', field, 'Value:', control?.value);
+        return false;
+      }
+    }
+
+    // Regular required fields that are editable
+    let requiredFields = ['dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
+
     // Add contact details validation only for Emergency form
     if (this.formType === 'E') {
       requiredFields.push('address', 'telephoneMobile', 'emailId');
     }
-    
+
     // Add planned leave specific validations
     if (this.formType === 'P') {
       requiredFields.push('category', 'responsibilitiesHandedOverTo', 'projectManagerName');
     }
-    
-    console.log('Validating fields:', requiredFields);
-    
+
+    console.log('Validating editable fields:', requiredFields);
+
     for (const field of requiredFields) {
       const control = this.exitForm.get(field);
       if (!control || !control.value || control.invalid) {
@@ -467,7 +488,7 @@ export class EmergencyExitFormComponent implements OnInit {
     if (responsibilities.length === 0) {
       return false;
     }
-    
+
     for (let i = 0; i < responsibilities.length; i++) {
       const group = responsibilities.at(i) as FormGroup;
       if (group.invalid) {
@@ -556,7 +577,7 @@ export class EmergencyExitFormComponent implements OnInit {
     const approved = this.departments.filter(d => d.status === 'approved').length;
     const rejected = this.departments.filter(d => d.status === 'rejected').length;
     const total = this.departments.length;
-    
+
     if (rejected > 0) return 'rejected';
     if (approved === total) return 'approved';
     if (approved > 0) return 'partial';
@@ -580,7 +601,7 @@ export class EmergencyExitFormComponent implements OnInit {
   submitForm() {
     if (this.exitForm.valid && this.getAllApprovalStatus() === 'approved') {
       this.isSubmitting = true;
-      
+
       // Simulate API call
       setTimeout(() => {
         this.isSubmitting = false;
@@ -706,7 +727,7 @@ export class EmergencyExitFormComponent implements OnInit {
       };
       this.departments.unshift(pmDept); // Add at the beginning
     }
-    
+
     pmDept.status = approved ? 'approved' : 'rejected';
     pmDept.approvedDate = new Date();
     if (approved) {
@@ -777,7 +798,7 @@ export class EmergencyExitFormComponent implements OnInit {
       categoryControl?.setValidators([Validators.required]);
       responsibilitiesHandedOverToControl?.setValidators([Validators.required]);
       projectManagerNameControl?.setValidators([Validators.required]);
-      
+
       // Remove contact details requirements for planned leave
       addressControl?.clearValidators();
       telephoneMobileControl?.clearValidators();
@@ -787,7 +808,7 @@ export class EmergencyExitFormComponent implements OnInit {
       categoryControl?.clearValidators();
       responsibilitiesHandedOverToControl?.clearValidators();
       projectManagerNameControl?.clearValidators();
-      
+
       // Add contact details requirements for emergency
       addressControl?.setValidators([Validators.required]);
       telephoneMobileControl?.setValidators([Validators.required]);
@@ -802,4 +823,82 @@ export class EmergencyExitFormComponent implements OnInit {
     telephoneMobileControl?.updateValueAndValidity();
     emailIdControl?.updateValueAndValidity();
   }
+
+  // Load employee details from API for Emergency form
+  loadEmployeeDetails(): void {
+    // Get employee ID from session storage or local storage
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const empId = currentUser.empId || currentUser.employeeId;
+
+    if (!empId) {
+      console.error('Employee ID not found in session');
+      return;
+    }
+
+    this.api.GetExitEmployeeDetails(empId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.employeeProfileData = response.data as ExitEmpProfileDetails;
+          this.bindEmployeeDataToForm();
+          console.log('Employee details loaded successfully:', this.employeeProfileData);
+        } else {
+          console.warn('No employee details found or API call failed');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching employee details:', error);
+      }
+    });
+  }
+
+  // Bind employee profile data to form fields
+  bindEmployeeDataToForm(): void {
+    if (this.employeeProfileData) {
+      console.log('Binding employee data to form:', this.employeeProfileData);
+      
+      // Patch form values with employee data
+      const formData = {
+        employeeName: this.employeeProfileData.employeeName || '',
+        employeeId: this.employeeProfileData.empId || '',
+        department: this.employeeProfileData.empDept || '',
+        address: this.employeeProfileData.address || '',
+        district: this.employeeProfileData.district || '',
+        place: this.employeeProfileData.place || '',
+        state: this.employeeProfileData.state || '',
+        postOffice: this.employeeProfileData.postOffice || '',
+        nation: this.employeeProfileData.nationality || '',
+        telephoneMobile: this.employeeProfileData.phone || '',
+        telephoneLandline: this.employeeProfileData.telephoneNo || '',
+        emailId: this.employeeProfileData.email || '',
+        hodName: this.employeeProfileData.depHodId || ''
+      };
+
+      console.log('Form data to be patched:', formData);
+      this.exitForm.patchValue(formData);
+
+      // Disable employee information fields (they should not be editable)
+      this.exitForm.get('employeeName')?.disable();
+      this.exitForm.get('employeeId')?.disable();
+      this.exitForm.get('department')?.disable();
+
+      // Verify the form values after patching
+      console.log('Form values after patching:', this.exitForm.value);
+      console.log('Department form control value:', this.exitForm.get('department')?.value);
+      console.log('Disabled employee info fields: name, id, department');
+    } else {
+      console.warn('No employee profile data available for binding');
+    }
+  }
+
+  // Disable employee information fields (name, ID, department)
+  disableEmployeeInfoFields(): void {
+    // These fields should always be disabled as they come from the system
+    this.exitForm.get('employeeName')?.disable();
+    this.exitForm.get('employeeId')?.disable();
+    this.exitForm.get('department')?.disable();
+    
+    console.log('Employee info fields (name, ID, department) have been disabled');
+  }
 }
+
+

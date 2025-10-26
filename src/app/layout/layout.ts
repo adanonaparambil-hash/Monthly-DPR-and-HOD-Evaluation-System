@@ -5,6 +5,7 @@ import { trigger, transition, style, animate, state } from '@angular/animations'
 import { filter } from 'rxjs/operators';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
+import { SessionService } from '../services/session.service';
 
 @Component({
   selector: 'app-layout',
@@ -73,19 +74,39 @@ export class layout implements OnInit, OnDestroy {
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
   };
 
-  constructor(private router: Router, private themeService: Theme, private api: Api) {
+  constructor(
+    private router: Router, 
+    private themeService: Theme, 
+    private api: Api,
+    private sessionService: SessionService
+  ) {
     // Subscribe to theme changes
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
     });
+
+    // Subscribe to session validity changes
+    this.sessionService.sessionValid$.subscribe(isValid => {
+      if (!isValid) {
+        console.log('Session invalid detected in layout - user will be redirected');
+      }
+    });
   }
 
   ngOnInit() {
+    // Validate session on layout initialization
+    if (!this.sessionService.validateSession()) {
+      return; // Session service will handle redirect
+    }
+
     // Track route changes for page title
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
+      
+      // Validate session on each route change
+      this.sessionService.validateSession();
     });
 
     // Theme is automatically applied by the service
@@ -196,10 +217,9 @@ export class layout implements OnInit, OnDestroy {
   }
 
   logout() {
+    // Use session service for proper logout
+    this.sessionService.clearSession();
     this.router.navigate(['/login']);
-    localStorage.removeItem('access_token');
-    localStorage.clear();
-    sessionStorage.clear();
   }
 
   // Method to add new notifications (for testing or real-time updates)

@@ -1,7 +1,7 @@
 import { Component, signal, OnDestroy, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
 import { environment } from '../../environments/environment';
@@ -108,11 +108,24 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   private base = environment.apiBaseUrl;
 
-  constructor(private router: Router, private api: Api, private toastr: ToastrService) {}
+  constructor(
+    private router: Router, 
+    private api: Api, 
+    private toastr: ToastrService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit() {
     this.initializeParticles();
     this.startParallaxAnimations();
+    
+    // Check for session expiry message
+    this.route.queryParams.subscribe(params => {
+      if (params['sessionExpired'] === 'true') {
+        this.toastr.warning('Your session has expired. Please login again.', 'Session Expired');
+        this.loginErrorMessage = 'Your session has expired. Please login again.';
+      }
+    });
   }
 
   @HostListener('mousemove', ['$event'])

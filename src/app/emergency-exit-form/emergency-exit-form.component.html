@@ -64,7 +64,7 @@
             <div class="form-group">
               <label for="employeeName">Name *</label>
               <input type="text" id="employeeName" formControlName="employeeName"
-                [class.error]="isFieldInvalid('employeeName')" placeholder="Enter full name">
+                [class.error]="isFieldInvalid('employeeName')" placeholder="Enter full name" [disabled]="true">
               <span class="error-message" *ngIf="isFieldInvalid('employeeName')">
                 {{ getFieldError('employeeName') }}
               </span>
@@ -73,7 +73,7 @@
             <div class="form-group">
               <label for="employeeId">ID No. *</label>
               <input type="text" id="employeeId" formControlName="employeeId"
-                [class.error]="isFieldInvalid('employeeId')" placeholder="Employee ID">
+                [class.error]="isFieldInvalid('employeeId')" placeholder="Employee ID" [disabled]="true">
               <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
                 {{ getFieldError('employeeId') }}
               </span>
@@ -81,15 +81,8 @@
 
             <div class="form-group">
               <label for="department">Department/Site *</label>
-              <select id="department" formControlName="department" [class.error]="isFieldInvalid('department')">
-                <option value="">Select Department</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Sales">Sales</option>
-                <option value="HR">HR</option>
-                <option value="Finance">Finance</option>
-                <option value="Admin">Admin</option>
-              </select>
+              <input type="text" id="department" formControlName="department" placeholder="Department/Site"
+                [disabled]="true">
               <span class="error-message" *ngIf="isFieldInvalid('department')">
                 {{ getFieldError('department') }}
               </span>
