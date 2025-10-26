@@ -197,10 +197,8 @@ export class EmergencyExitFormComponent implements OnInit {
       this.loadHodMasterList();
       this.loadProjectManagerList();
 
-      // Load employee details for Emergency form
-      if (this.formType === 'E') {
-        this.loadEmployeeDetails();
-      }
+      // Load employee details for both Emergency and Planned Leave forms
+      this.loadEmployeeDetails();
 
       // Update form validations based on form type
       this.updateFormValidations();
@@ -238,13 +236,37 @@ export class EmergencyExitFormComponent implements OnInit {
       // Update form validations and steps when form type changes
       this.totalSteps = this.formType === 'P' ? 2 : 4;
       this.updateFormValidations();
+
+      // Load employee details for the new form type
+      this.loadEmployeeDetails();
     });
   }
 
   // Clear form data and validation errors when switching form types
   clearFormAndReset() {
     this.currentStep = 1;
+    
+    // Store employee data before reset
+    const employeeData = {
+      employeeName: this.exitForm.get('employeeName')?.value,
+      employeeId: this.exitForm.get('employeeId')?.value,
+      department: this.exitForm.get('department')?.value,
+      address: this.exitForm.get('address')?.value,
+      district: this.exitForm.get('district')?.value,
+      place: this.exitForm.get('place')?.value,
+      state: this.exitForm.get('state')?.value,
+      postOffice: this.exitForm.get('postOffice')?.value,
+      nation: this.exitForm.get('nation')?.value,
+      telephoneMobile: this.exitForm.get('telephoneMobile')?.value,
+      telephoneLandline: this.exitForm.get('telephoneLandline')?.value,
+      emailId: this.exitForm.get('emailId')?.value,
+      hodName: this.exitForm.get('hodName')?.value
+    };
+
     this.exitForm.reset();
+
+    // Restore employee data
+    this.exitForm.patchValue(employeeData);
 
     // Clear all validation errors
     Object.keys(this.exitForm.controls).forEach(key => {
@@ -253,6 +275,9 @@ export class EmergencyExitFormComponent implements OnInit {
       control?.markAsUntouched();
       control?.markAsPristine();
     });
+
+    // Always disable employee information fields
+    this.disableEmployeeInfoFields();
 
     // Reset department statuses
     this.departments.forEach(dept => {
@@ -764,6 +789,19 @@ export class EmergencyExitFormComponent implements OnInit {
     return this.formType === 'P' ? 2 : 4;
   }
 
+  // Disable employee information fields (they should always be read-only)
+  disableEmployeeInfoFields(): void {
+    console.log('Disabling employee information fields');
+    this.exitForm.get('employeeName')?.disable();
+    this.exitForm.get('employeeId')?.disable();
+    this.exitForm.get('department')?.disable();
+    
+    // Mark these fields as valid even when disabled
+    this.exitForm.get('employeeName')?.setErrors(null);
+    this.exitForm.get('employeeId')?.setErrors(null);
+    this.exitForm.get('department')?.setErrors(null);
+  }
+
   // Check if current step is the last step
   isLastStep(): boolean {
     if (this.formType === 'P') {
@@ -824,7 +862,7 @@ export class EmergencyExitFormComponent implements OnInit {
     emailIdControl?.updateValueAndValidity();
   }
 
-  // Load employee details from API for Emergency form
+  // Load employee details from API for both Emergency and Planned Leave forms
   loadEmployeeDetails(): void {
     // Get employee ID from session storage or local storage
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
@@ -832,23 +870,60 @@ export class EmergencyExitFormComponent implements OnInit {
 
     if (!empId) {
       console.error('Employee ID not found in session');
+      // Fallback: try to get from session data directly
+      this.loadEmployeeDetailsFromSession();
       return;
     }
 
+    console.log('Loading employee details for empId:', empId);
     this.api.GetExitEmployeeDetails(empId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           this.employeeProfileData = response.data as ExitEmpProfileDetails;
           this.bindEmployeeDataToForm();
-          console.log('Employee details loaded successfully:', this.employeeProfileData);
+          console.log('Employee details loaded successfully from API:', this.employeeProfileData);
         } else {
-          console.warn('No employee details found or API call failed');
+          console.warn('No employee details found from API, trying session data');
+          this.loadEmployeeDetailsFromSession();
         }
       },
       error: (error) => {
-        console.error('Error fetching employee details:', error);
+        console.error('Error fetching employee details from API:', error);
+        // Fallback to session data
+        this.loadEmployeeDetailsFromSession();
       }
     });
+  }
+
+  // Fallback method to load employee details from session storage
+  loadEmployeeDetailsFromSession(): void {
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    
+    if (currentUser && (currentUser.empId || currentUser.employeeId)) {
+      console.log('Loading employee details from session:', currentUser);
+      
+      // Map session data to employee profile format
+      this.employeeProfileData = {
+        empId: currentUser.empId || currentUser.employeeId || '',
+        employeeName: currentUser.employeeName || currentUser.name || '',
+        empDept: currentUser.department || currentUser.empDept || '',
+        email: currentUser.email || currentUser.emailId || '',
+        phone: currentUser.phone || currentUser.mobile || '',
+        address: currentUser.address || '',
+        district: currentUser.district || '',
+        place: currentUser.place || '',
+        state: currentUser.state || '',
+        postOffice: currentUser.postOffice || '',
+        nationality: currentUser.nationality || currentUser.nation || '',
+        telephoneNo: currentUser.telephoneNo || currentUser.landline || '',
+        depHodId: currentUser.hodId || currentUser.depHodId || ''
+      };
+
+      this.bindEmployeeDataToForm();
+      console.log('Employee details loaded from session:', this.employeeProfileData);
+    } else {
+      console.error('No employee data found in session storage');
+    }
   }
 
   // Bind employee profile data to form fields
@@ -876,29 +951,23 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('Form data to be patched:', formData);
       this.exitForm.patchValue(formData);
 
-      // Disable employee information fields (they should not be editable)
-      this.exitForm.get('employeeName')?.disable();
-      this.exitForm.get('employeeId')?.disable();
-      this.exitForm.get('department')?.disable();
+      // Always disable employee information fields (they should not be editable)
+      this.disableEmployeeInfoFields();
 
       // Verify the form values after patching
-      console.log('Form values after patching:', this.exitForm.value);
-      console.log('Department form control value:', this.exitForm.get('department')?.value);
-      console.log('Disabled employee info fields: name, id, department');
+      console.log('Form values after patching:', {
+        employeeName: this.exitForm.get('employeeName')?.value,
+        employeeId: this.exitForm.get('employeeId')?.value,
+        department: this.exitForm.get('department')?.value
+      });
+
+      // Force change detection to update the UI
+      this.cdr.detectChanges();
     } else {
-      console.warn('No employee profile data available for binding');
+      console.warn('No employee profile data available to bind');
     }
   }
 
-  // Disable employee information fields (name, ID, department)
-  disableEmployeeInfoFields(): void {
-    // These fields should always be disabled as they come from the system
-    this.exitForm.get('employeeName')?.disable();
-    this.exitForm.get('employeeId')?.disable();
-    this.exitForm.get('department')?.disable();
-    
-    console.log('Employee info fields (name, ID, department) have been disabled');
-  }
 }
 
 

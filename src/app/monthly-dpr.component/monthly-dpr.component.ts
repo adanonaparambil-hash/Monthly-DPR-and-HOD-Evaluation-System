@@ -709,8 +709,8 @@ export class MonthlyDprComponent {
           COMPLETED: task.completed,
         }));
 
-        this.WorkedHours = this.Proofhubtasks.reduce(
-          (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0);
+        this.WorkedHours = Math.round(this.Proofhubtasks.reduce(
+          (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0));
 
       },
       error: (err) => {

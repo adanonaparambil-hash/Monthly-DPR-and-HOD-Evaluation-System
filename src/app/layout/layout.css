@@ -21,6 +21,71 @@
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   z-index: 1000;
+  overflow: visible;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Ensure all sidebar text is fully visible */
+.sidebar * {
+  box-sizing: border-box;
+}
+
+/* Force text to be fully visible */
+.sidebar .menu a,
+.sidebar .parent-menu,
+.sidebar .submenu a {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+.sidebar .menu a span,
+.sidebar .parent-menu span,
+.sidebar .menu-content span {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  line-height: 1.6 !important;
+  padding: 4px 0 !important;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  font-size: inherit;
+}
+
+/* Special handling for submenu text - allow wrapping */
+.sidebar .submenu a span {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  display: block !important;
+  vertical-align: top !important;
+  line-height: 1.4 !important;
+  padding: 2px 0 !important;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  font-size: inherit;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 180px !important;
+}
+
+.sidebar a,
+.sidebar span {
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 2px 0;
+  font-size: 16px;
 }
 
 .dark-theme .sidebar {
@@ -46,18 +111,23 @@
 .menu {
   flex: 1;
   padding: 24px 0;
+  overflow: visible;
 }
 
 .menu a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 24px;
+  padding: 22px 24px;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   transition: all 0.3s ease;
   border-left: 4px solid transparent;
   font-weight: 500;
+  line-height: 1.6;
+  min-height: 60px;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 
 .menu-item-with-submenu {
@@ -69,18 +139,34 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  padding: 16px 24px;
+  padding: 22px 24px;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   transition: all 0.3s ease;
   border-left: 4px solid transparent;
   font-weight: 500;
+  line-height: 1.6;
+  min-height: 60px;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 
 .menu-content {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-content span {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.6;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 2px 0;
 }
 
 .parent-menu:hover {
@@ -103,21 +189,42 @@
   background: rgba(0, 0, 0, 0.1);
   margin-left: 0;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
+  width: 100%;
 }
 
 .submenu a {
-  padding: 12px 24px 12px 48px;
+  padding: 16px 16px 16px 44px;
   font-size: 14px;
   border-left: none;
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.4;
+  min-height: 60px;
+  box-sizing: border-box;
+  vertical-align: top;
+  width: 100%;
+}
+
+.submenu a i {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .submenu a span {
   flex: 1;
+  line-height: 1.4;
+  display: block;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  padding: 2px 0;
+  max-width: 180px;
+  hyphens: auto;
 }
 
 .submenu a:hover {
@@ -141,6 +248,18 @@
 .menu a i {
   width: 20px;
   text-align: center;
+  flex-shrink: 0;
+}
+
+.menu a span,
+.parent-menu span {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.6;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 2px 0;
 }
 
 .logout {
@@ -181,6 +300,9 @@
   border-bottom: 1px solid #e2e8f0;
   z-index: 100;
   transition: all 0.3s ease;
+  min-height: 70px;
+  flex-wrap: nowrap;
+  overflow: visible;
 }
 
 .dark-theme .header {
@@ -193,6 +315,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
 }
 
 /* Company Logo */
@@ -204,6 +329,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .company-logo img {
@@ -265,20 +391,46 @@
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--primary-color);
   margin: 0;
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not (-webkit-background-clip: text) {
+  .page-title {
+    color: var(--primary-color) !important;
+    -webkit-text-fill-color: var(--primary-color) !important;
+  }
 }
 
 .dark-theme .page-title {
-  color: #f1f5f9;
+  color: var(--accent-color);
   background: linear-gradient(135deg, var(--accent-color), #60a5fa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
+/* Fallback for dark theme browsers that don't support background-clip */
+@supports not (-webkit-background-clip: text) {
+  .dark-theme .page-title {
+    color: var(--accent-color) !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+  }
 }
 
 .header-right {
@@ -767,6 +919,16 @@
     width: 240px;
   }
   
+  .menu a {
+    padding: 20px 20px;
+    min-height: 56px;
+  }
+  
+  .parent-menu {
+    padding: 20px 20px;
+    min-height: 56px;
+  }
+  
   .header {
     padding: 12px 20px;
   }
@@ -789,10 +951,34 @@
     left: -100%;
     z-index: 1000;
     transition: left 0.3s ease;
+    overflow: visible;
   }
   
   .sidebar.open {
     left: 0;
+  }
+  
+  .menu a {
+    padding: 20px 20px;
+    min-height: 56px;
+    font-size: 16px;
+  }
+  
+  .parent-menu {
+    padding: 20px 20px;
+    min-height: 56px;
+    font-size: 16px;
+  }
+  
+  .submenu a {
+    padding: 16px 16px 16px 40px;
+    min-height: 52px;
+    font-size: 14px;
+    align-items: flex-start;
+  }
+  
+  .submenu a span {
+    max-width: 160px !important;
   }
   
   .main-area {
@@ -805,10 +991,20 @@
   
   .header {
     padding: 12px 16px;
+    flex-wrap: nowrap;
+  }
+  
+  .header-left {
+    flex: 1;
+    min-width: 0;
+    overflow: visible;
   }
   
   .page-title {
     font-size: 18px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
   
   .profile-name {
@@ -824,10 +1020,25 @@
 @media (max-width: 480px) {
   .header {
     padding: 8px 12px;
+    flex-wrap: nowrap;
+  }
+  
+  .header-left {
+    flex: 1;
+    min-width: 0;
+    overflow: visible;
+  }
+  
+  .page-title {
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
   
   .header-right {
     gap: 8px;
+    flex-shrink: 0;
   }
   
   .theme-toggle,

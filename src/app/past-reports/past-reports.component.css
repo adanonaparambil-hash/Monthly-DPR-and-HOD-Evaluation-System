@@ -21,6 +21,8 @@
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
   background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-secondary) 100%);
+  overflow: visible;
+  min-height: fit-content;
 }
 
 .header-section h1 {
@@ -32,6 +34,20 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.2;
+  display: block;
+  width: 100%;
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not (-webkit-background-clip: text) {
+  .header-section h1 {
+    color: var(--primary-color) !important;
+    -webkit-text-fill-color: var(--primary-color) !important;
+  }
 }
 
 .header-section p {
@@ -489,7 +505,18 @@
     padding: 16px;
   }
   
-  .header-section,
+  .header-section {
+    padding: 20px;
+    overflow: visible;
+  }
+  
+  .header-section h1 {
+    font-size: 24px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  
   .filter-section {
     padding: 20px;
   }
@@ -532,6 +559,13 @@
 }
 
 @media (max-width: 480px) {
+  .header-section h1 {
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  
   .reports-table th,
   .reports-table td {
     padding: 8px 4px;

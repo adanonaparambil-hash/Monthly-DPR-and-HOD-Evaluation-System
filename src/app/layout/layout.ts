@@ -133,6 +133,12 @@ export class layout implements OnInit, OnDestroy {
       '/profile': 'My Profile',
       '/emergency-exit-form': 'Exit Form'
     };
+
+    // Handle emergency exit form with query parameters
+    if (this.currentRoute.includes('/emergency-exit-form')) {
+      return 'Exit Form';
+    }
+
     return routeTitles[this.currentRoute] || 'Dashboard';
   }
 
