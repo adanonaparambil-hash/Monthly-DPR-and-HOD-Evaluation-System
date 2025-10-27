@@ -17,6 +17,8 @@ export interface DPRReview {
   scoreTeamWork?: number;
   scoreCommunication?: number;
   scoreOverall?: number;
+  hodrating?:number; // Legacy field - keep for backward compatibility
+  hodRating?: number; // HOD's manual rating (1-5)
   tasksList?: DPRTask[];
   commentsList?: DPRComment[];
   kpiList?: DPRKPI[];

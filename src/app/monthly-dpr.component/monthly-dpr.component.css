@@ -2211,3 +2211,309 @@ th {
   color: #6c757d;
   font-style: italic;
 }
+
+/* Overall Rating Section Styles */
+.overall-rating-section {
+  margin-top: 20px;
+}
+
+.overall-rating-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #007bff;
+}
+
+.overall-rating-card h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.4em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.overall-rating-card h3 i {
+  color: #ffd700;
+  font-size: 1.2em;
+}
+
+/* Rating Breakdown */
+.rating-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.breakdown-item .label {
+  font-weight: 500;
+  color: #555;
+}
+
+.breakdown-item .value {
+  font-weight: bold;
+  color: #007bff;
+  font-size: 1.1em;
+}
+
+/* Final Rating Container */
+.final-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+}
+
+/* Rating Circle */
+.rating-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.rating-circle:hover {
+  transform: scale(1.05);
+}
+
+.rating-score {
+  font-size: 2.2em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.rating-text {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Rating Classes with Colors */
+.rating-excellent {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: 3px solid #1e7e34;
+}
+
+.rating-good {
+  background: linear-gradient(135deg, #17a2b8, #20c997);
+  border: 3px solid #117a8b;
+}
+
+.rating-average {
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
+  border: 3px solid #e0a800;
+}
+
+.rating-below-average {
+  background: linear-gradient(135deg, #fd7e14, #dc3545);
+  border: 3px solid #d39e00;
+}
+
+.rating-poor {
+  background: linear-gradient(135deg, #dc3545, #6f42c1);
+  border: 3px solid #bd2130;
+}
+
+/* Rating Description */
+.rating-description {
+  flex: 1;
+}
+
+.rating-description h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.5em;
+  color: #333;
+}
+
+.rating-description p {
+  margin: 0;
+  color: #666;
+  font-size: 1.1em;
+  line-height: 1.5;
+}
+
+/* Rating Legend */
+.rating-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-item.excellent .legend-color {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.legend-item.good .legend-color {
+  background: linear-gradient(135deg, #17a2b8, #20c997);
+}
+
+.legend-item.average .legend-color {
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
+}
+
+.legend-item.below-average .legend-color {
+  background: linear-gradient(135deg, #fd7e14, #dc3545);
+}
+
+.legend-item.poor .legend-color {
+  background: linear-gradient(135deg, #dc3545, #6f42c1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .final-rating-container {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .rating-breakdown {
+    grid-template-columns: 1fr;
+  }
+  
+  .rating-legend {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .rating-circle {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .rating-score {
+    font-size: 1.8em;
+  }
+  
+  .rating-text {
+    font-size: 0.8em;
+  }
+}
+
+/* Animation for rating updates */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.rating-circle.animate {
+  animation: pulse 0.6s ease-in-out;
+}/*
+ Rating Scale Indicator Styles */
+.eval-item label small {
+  color: #666;
+  font-weight: normal;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
+/* Input validation styles for 5-point scale */
+.rating-input:invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.rating-input:valid {
+  border-color: #28a745;
+}
+
+/* Tooltip for rating scale */
+.eval-item {
+  position: relative;
+}
+
+/* Removed tooltip that was interfering with input *//* Enha
+nced validation styles for rating inputs */
+.rating-input {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.rating-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.rating-input.ng-invalid.ng-touched {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.rating-input.ng-valid.ng-touched {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Warning animation for invalid input */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.rating-input.invalid-input {
+  animation: shake 0.5s ease-in-out;
+  border-color: #dc3545 !important;
+  background-color: #fff5f5;
+}
+
+/* Success animation for valid input */
+@keyframes pulse-success {
+  0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+.rating-input.valid-input {
+  animation: pulse-success 0.6s ease-out;
+  border-color: #28a745;
+}

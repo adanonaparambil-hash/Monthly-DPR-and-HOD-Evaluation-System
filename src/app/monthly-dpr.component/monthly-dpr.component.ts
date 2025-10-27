@@ -45,6 +45,12 @@ import { ActivatedRoute, Router } from '@angular/router';
         animate('0.3s ease-out', style({ opacity: 1, transform: 'scale(1)' })),
       ]),
     ]),
+    trigger('pulseAnimation', [
+      transition('* => *', [
+        animate('0.6s ease-in-out', style({ transform: 'scale(1.05)' })),
+        animate('0.6s ease-in-out', style({ transform: 'scale(1)' })),
+      ]),
+    ]),
   ],
 })
 export class MonthlyDprComponent {
@@ -84,9 +90,15 @@ export class MonthlyDprComponent {
   problemSolving = 0;
   teamWork = 0;
   communication = 0;
-  overallScore = 0;
+  hodRating = 0; // HOD's manual rating (1-5)
+  overallScore = 0; // System-generated final rating (20-100 scale for display)
   dprid = 0;
   hoursExceeded: boolean = false;
+
+  // Overall Rating System Properties
+  hodEvaluationAverage = 0;
+  productivityScore = 0;
+  showOverallRating = false;
 
   // Role and mode flags
   userType: 'E' | 'H' | 'C' = 'E';
@@ -241,6 +253,189 @@ export class MonthlyDprComponent {
     },
   ];
 
+
+
+
+  calculateOverallRating(): void {
+    // Calculate HOD Evaluation Average (all values are out of 5)
+    const hodScores = [
+      this.quality || 0,
+      this.timeliness || 0,
+      this.initiative || 0,
+      this.problemSolving || 0,
+      this.teamWork || 0,
+      this.communication || 0
+    ].filter(score => score > 0);
+
+    // Keep the average out of 5, but round to 2 decimal places for display
+    this.hodEvaluationAverage = hodScores.length > 0
+      ? Math.round((hodScores.reduce((sum, score) => sum + score, 0) / hodScores.length) * 100) / 100
+      : 0;
+
+    // Calculate Productivity Score (out of 5)
+    this.calculateProductivityScore();
+
+    const hodRatingValue = this.hodRating || 0;
+
+    // Calculate Final Overall Rating using weighted formula
+    const hodEvalWeight = 0.4;
+    const productivityWeight = 0.3;
+    const hodRatingWeight = 0.3;
+
+    const weightedAverage =
+      (this.hodEvaluationAverage * hodEvalWeight) +
+      (this.productivityScore * productivityWeight) +
+      (hodRatingValue * hodRatingWeight);
+
+    // Convert to 100-point scale for display purposes (multiply by 20) and store in overallScore
+    this.overallScore = Math.round(weightedAverage * 20);
+
+    // Show overall rating section if we have any meaningful data
+    this.showOverallRating =
+      this.hodEvaluationAverage > 0 || this.productivityScore > 0 || this.hodRating > 0;
+  }
+
+  calculateProductivityScore(): void {
+    const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+    const workedHours = this.WorkedHours || 0;
+
+    if (workedHours === 0 || totalActualHours === 0) {
+      this.productivityScore = 0;
+      return;
+    }
+
+    // Calculate productivity as a percentage
+    const productivityPercentage = Math.min((totalActualHours / workedHours) * 100, 100);
+
+    console.log("totalActualHours" + totalActualHours);
+    console.log("workedHours" + workedHours);
+    console.log("productivityPercentage" + productivityPercentage);
+
+    // Convert to 5-point scale
+    if (productivityPercentage >= 90) this.productivityScore = 5;       // Excellent (4.5-5.0)
+    else if (productivityPercentage >= 80) this.productivityScore = 4;  // Good (3.5-4.4)
+    else if (productivityPercentage >= 70) this.productivityScore = 3;  // Average (2.5-3.4)
+    else if (productivityPercentage >= 50) this.productivityScore = 2;  // Below Average (1.5-2.4)
+    else this.productivityScore = 1;                                    // Poor (1.0-1.4)
+  }
+
+
+  getRatingClass(rating: number): string {
+    if (rating >= 90) return 'rating-excellent';  // 4.5-5.0 range (90-100 on display scale)
+    if (rating >= 70) return 'rating-good';       // 3.5-4.4 range (70-89 on display scale)
+    if (rating >= 50) return 'rating-average';    // 2.5-3.4 range (50-69 on display scale)
+    if (rating >= 30) return 'rating-below-average'; // 1.5-2.4 range (30-49 on display scale)
+    return 'rating-poor';                          // 1.0-1.4 range (20-29 on display scale)
+  }
+
+
+  getRatingText(rating: number): string {
+    if (rating >= 90) return 'Excellent';
+    if (rating >= 70) return 'Good';
+    if (rating >= 50) return 'Average';
+    if (rating >= 30) return 'Below Average';
+    return 'Poor';
+  }
+
+
+  getRatingDescription(rating: number): string {
+    if (rating >= 90) return 'Outstanding performance with exceptional quality and productivity.';
+    if (rating >= 70) return 'Strong performance meeting and exceeding expectations.';
+    if (rating >= 50) return 'Satisfactory performance meeting basic requirements.';
+    if (rating >= 30) return 'Performance needs improvement to meet expectations.';
+    return 'Significant improvement required in multiple areas.';
+  }
+
+  // Validation method for rating inputs
+  validateRatingInput(fieldName: string, event: any): void {
+    const inputValue = event.target.value;
+    const inputElement = event.target;
+
+    // Remove any existing validation classes
+    inputElement.classList.remove('invalid-input', 'valid-input');
+
+    // Skip validation if field is empty (allow user to clear field)
+    if (inputValue === '' || inputValue === null || inputValue === undefined) {
+      (this as any)[fieldName] = null;
+      this.calculateOverallRating();
+      return;
+    }
+
+    // Allow partial input while typing (e.g., "4.", "0.5", etc.)
+    // Only validate when input looks complete
+    if (inputValue.endsWith('.') || inputValue === '0' || inputValue === '0.') {
+      // User is still typing, don't validate yet
+      return;
+    }
+
+    const value = parseFloat(inputValue);
+
+    // Check if value is not a number (but allow partial decimal input)
+    if (isNaN(value)) {
+      // Don't clear immediately, just mark as invalid visually
+      inputElement.classList.add('invalid-input');
+      return;
+    }
+
+    // Only clear values that are clearly out of range
+    if (value > 5) {
+      // Clear the field only for values clearly above 5
+      (this as any)[fieldName] = null;
+      event.target.value = '';
+      inputElement.classList.add('invalid-input');
+      this.toastr.warning('Rating cannot exceed 5. Please enter a value between 1 and 5.', 'Invalid Rating');
+      this.calculateOverallRating();
+      return;
+    }
+
+    if (value < 1 && inputValue.length > 2) {
+      // Only clear if user has typed enough and value is clearly below 1
+      (this as any)[fieldName] = null;
+      event.target.value = '';
+      inputElement.classList.add('invalid-input');
+      this.toastr.warning('Rating cannot be less than 1. Please enter a value between 1 and 5.', 'Invalid Rating');
+      this.calculateOverallRating();
+      return;
+    }
+
+    // If value is valid, accept it (don't auto-round while typing)
+    if (value >= 1 && value <= 5) {
+      (this as any)[fieldName] = value;
+      inputElement.classList.add('valid-input');
+      this.calculateOverallRating();
+    }
+  }
+
+  // Final validation when user finishes typing (on blur)
+  finalizeRatingInput(fieldName: string, event: any): void {
+    const inputValue = event.target.value;
+    const inputElement = event.target;
+
+    if (inputValue === '' || inputValue === null || inputValue === undefined) {
+      return;
+    }
+
+    const value = parseFloat(inputValue);
+
+    if (!isNaN(value) && value >= 1 && value <= 5) {
+      // Round to 1 decimal place for final value
+      const roundedValue = Math.round(value * 10) / 10;
+      (this as any)[fieldName] = roundedValue;
+
+      // Update the input field to show the rounded value if different
+      if (roundedValue !== value) {
+        event.target.value = roundedValue.toString();
+        this.toastr.info(`Value rounded to ${roundedValue}`, 'Value Adjusted');
+      }
+
+      inputElement.classList.remove('invalid-input');
+      inputElement.classList.add('valid-input');
+      this.calculateOverallRating();
+    }
+  }
+
+
+
   constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
@@ -275,6 +470,11 @@ export class MonthlyDprComponent {
 
     // Load DPR details first, then decide if we need ProofHub tasks
     this.GetDPREmployeeReviewDetails(this.dprid);
+
+    // Initial calculation of overall rating
+    setTimeout(() => {
+      this.calculateOverallRating();
+    }, 1000);
 
   }
 
@@ -317,6 +517,9 @@ export class MonthlyDprComponent {
       selected: false,
     });
 
+    // Recalculate overall rating when task is added
+    this.calculateOverallRating();
+
   }
 
   deleteTask(index: number) {
@@ -332,6 +535,7 @@ export class MonthlyDprComponent {
         if (result.isConfirmed) {
           this.tasks.splice(index, 1);
           this.validateActualHours(); // Recalculate hours after deletion
+          this.calculateOverallRating(); // Recalculate overall rating after deletion
           this.toastr.success('Task deleted successfully', 'Success');
         }
       });
@@ -514,7 +718,8 @@ export class MonthlyDprComponent {
           scoreProblemSolving: Number(this.problemSolving),
           scoreTeamWork: Number(this.teamWork),
           scoreCommunication: Number(this.communication),
-          scoreOverall: Number(this.overallScore),
+          hodRating: Number(this.hodRating), // HOD's manual rating (1-5)
+          scoreOverall: Number(this.overallScore), // System-generated final score (20-100)
           remarks: this.managementRemarks,
           dprid: this.dprid
         };
@@ -927,7 +1132,8 @@ export class MonthlyDprComponent {
           this.problemSolving = dpr.scoreProblemSolving ?? 0;
           this.teamWork = dpr.scoreTeamWork ?? 0;
           this.communication = dpr.scoreCommunication ?? 0;
-          this.overallScore = dpr.scoreOverall ?? 0;
+          this.hodRating = dpr.hodRating ?? 0; // HOD's manual rating (1-5)
+          this.overallScore = dpr.scoreOverall ?? 0; // System-generated final score (20-100)
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
@@ -965,6 +1171,9 @@ export class MonthlyDprComponent {
           }
 
           this.remarksHistory = dpr.commentsList?.length ? dpr.commentsList : [];
+
+          // Calculate overall rating after loading all data
+          this.calculateOverallRating();
 
           console.log('Loaded DPR details:', dpr);
         } else {
@@ -1059,6 +1268,9 @@ export class MonthlyDprComponent {
     if (this.hoursExceeded) {
       this.toastr.warning('Actual hours exceed Worked Hours.', 'warning');
     }
+
+    // Recalculate overall rating when hours change
+    this.calculateOverallRating();
   }
 
 
