@@ -1113,7 +1113,7 @@ export class MonthlyDprComponent {
     this.api.GetDPREmployeeReviewDetails(dprId).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-console.log("getresponse"+res.data.hodrating);
+
           const dpr = res.data as DPRReview;
 
           this.empId = dpr.employeeId || '';
