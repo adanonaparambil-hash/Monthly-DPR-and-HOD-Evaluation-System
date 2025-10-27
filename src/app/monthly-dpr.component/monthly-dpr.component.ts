@@ -81,6 +81,9 @@ export class MonthlyDprComponent {
   quality = 0;
   timeliness = 0;
   initiative = 0;
+  problemSolving = 0;
+  teamWork = 0;
+  communication = 0;
   overallScore = 0;
   dprid = 0;
   hoursExceeded: boolean = false;
@@ -508,6 +511,9 @@ export class MonthlyDprComponent {
           scoreQuality: Number(this.quality),
           scoreTimeliness: Number(this.timeliness),
           scoreInitiative: Number(this.initiative),
+          scoreProblemSolving: Number(this.problemSolving),
+          scoreTeamWork: Number(this.teamWork),
+          scoreCommunication: Number(this.communication),
           scoreOverall: Number(this.overallScore),
           remarks: this.managementRemarks,
           dprid: this.dprid
@@ -918,6 +924,9 @@ export class MonthlyDprComponent {
           this.quality = dpr.scoreQuality ?? 0;
           this.timeliness = dpr.scoreTimeliness ?? 0;
           this.initiative = dpr.scoreInitiative ?? 0;
+          this.problemSolving = dpr.scoreProblemSolving ?? 0;
+          this.teamWork = dpr.scoreTeamWork ?? 0;
+          this.communication = dpr.scoreCommunication ?? 0;
           this.overallScore = dpr.scoreOverall ?? 0;
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response

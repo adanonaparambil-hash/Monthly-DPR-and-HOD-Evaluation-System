@@ -13,6 +13,9 @@ export interface DPRReview {
   scoreQuality?: number;
   scoreTimeliness?: number;
   scoreInitiative?: number;
+  scoreProblemSolving?: number;
+  scoreTeamWork?: number;
+  scoreCommunication?: number;
   scoreOverall?: number;
   tasksList?: DPRTask[];
   commentsList?: DPRComment[];

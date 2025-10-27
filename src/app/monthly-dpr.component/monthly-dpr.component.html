@@ -91,8 +91,7 @@
             <tr *ngFor="let task of tasks; let i = index">
               <td class="SlNo-col">{{ i + 1 }}</td>
               <td class="task-col">
-                <textarea [(ngModel)]="task.taskName" placeholder="Task name"
-                  [disabled]="!canEditFields"></textarea>
+                <textarea [(ngModel)]="task.taskName" placeholder="Task name" [disabled]="!canEditFields"></textarea>
               </td>
               <td class="desc-col">
                 <textarea [(ngModel)]="task.description" placeholder="Description and status"
@@ -140,8 +139,7 @@
     <div class="challenge-card">
       <h3><i class="fas fa-question-circle colorful-icon"></i> Challenges</h3>
       <p>Detail the challenges you encountered, the steps taken to address them...</p>
-      <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..."
-        [disabled]="!canEditFields"></textarea>
+      <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..." [disabled]="!canEditFields"></textarea>
     </div>
   </div>
 
@@ -183,7 +181,8 @@
 
               <!-- KPI Dropdown -->
               <td class="kpi-col">
-                <select *ngIf="canEditFields" [(ngModel)]="kpi.kpiMasterId" (ngModelChange)="onKPISelectionChange(i, $event)">
+                <select *ngIf="canEditFields" [(ngModel)]="kpi.kpiMasterId"
+                  (ngModelChange)="onKPISelectionChange(i, $event)">
                   <option [value]="0">Select KPI</option>
                   <option *ngFor="let availableKpi of getAvailableKPIsForRow(i)" [value]="availableKpi.kpiid">
                     {{ availableKpi.kpiname }}
@@ -199,8 +198,8 @@
 
               <!-- KPI Value Input -->
               <td class="kpi-value-col">
-                <input *ngIf="canEditFields" [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)" type="text"
-                  class="rating-input">
+                <input *ngIf="canEditFields" [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)"
+                  type="text" class="rating-input">
                 <span *ngIf="!canEditFields" class="readonly-value">{{ kpi.kpiValue || '-' }}</span>
               </td>
 
@@ -257,6 +256,21 @@
           <label>Initiative</label>
           <input [(ngModel)]="initiative" placeholder="Enter initiative score (0-100)" type="number" min="1" max="100"
             class="rating-input" [disabled]="!canEditHodEvaluation">
+        </div>
+        <div class="eval-item">
+          <label>Problem Solving</label>
+          <input [(ngModel)]="problemSolving" placeholder="Enter problem solving score (0-100)" type="number" min="1"
+            max="100" class="rating-input" [disabled]="!canEditHodEvaluation">
+        </div>
+        <div class="eval-item">
+          <label>Team Work</label>
+          <input [(ngModel)]="teamWork" placeholder="Enter team work score (0-100)" type="number" min="1" max="100"
+            class="rating-input" [disabled]="!canEditHodEvaluation">
+        </div>
+        <div class="eval-item">
+          <label>Communication</label>
+          <input [(ngModel)]="communication" placeholder="Enter communication score (0-100)" type="number" min="1"
+            max="100" class="rating-input" [disabled]="!canEditHodEvaluation">
         </div>
         <div class="eval-item">
           <label>Overall Score</label>
@@ -320,7 +334,7 @@
     <button class="btn-available colorful-btn" (click)="SubmitReview()" *ngIf="showEmployeeButtons">
       <i class="fas fa-check"></i> Submit for Review
     </button>
-    
+
     <!-- HOD Buttons: Approve and Rework (only when status is S) -->
     <button class="btn-approve colorful-btn" (click)="ApproveReview()" *ngIf="showHodButtons">
       <i class="fas fa-thumbs-up"></i> Approve
