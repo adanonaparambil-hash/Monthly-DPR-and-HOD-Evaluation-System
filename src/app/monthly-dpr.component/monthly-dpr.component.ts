@@ -724,7 +724,7 @@ export class MonthlyDprComponent {
           dprid: this.dprid
         };
 
-        console.log("DPR Log" + review.dprid);
+        console.log("DPR Log" + review);
 
         this.api.updateDPRReview(review).subscribe({
           next: (res: any) => {
@@ -1113,7 +1113,7 @@ export class MonthlyDprComponent {
     this.api.GetDPREmployeeReviewDetails(dprId).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-
+console.log("getresponse"+res.data.hodrating);
           const dpr = res.data as DPRReview;
 
           this.empId = dpr.employeeId || '';
@@ -1132,7 +1132,7 @@ export class MonthlyDprComponent {
           this.problemSolving = dpr.scoreProblemSolving ?? 0;
           this.teamWork = dpr.scoreTeamWork ?? 0;
           this.communication = dpr.scoreCommunication ?? 0;
-          this.hodRating = dpr.hodRating ?? 0; // HOD's manual rating (1-5)
+          this.hodRating = dpr.hodrating ?? 0; // HOD's manual rating (1-5)
           this.overallScore = dpr.scoreOverall ?? 0; // System-generated final score (20-100)
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
