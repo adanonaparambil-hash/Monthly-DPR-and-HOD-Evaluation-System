@@ -79,7 +79,8 @@ export class MonthlyDprComponent {
   department = '';
   reportingTo = '';
   WorkedHours = 0;
-
+  TotalEstimatedhours = 0;
+  
   achievements = '';
   challenges = '';
   supportNeeded = '';
@@ -257,17 +258,25 @@ export class MonthlyDprComponent {
 
 
   calculateOverallRating(): void {
-    // Calculate HOD Evaluation Average (all values are out of 5)
+    // Calculate individual evaluation scores (all values are out of 100)
+    const qualityScore = this.quality || 0;
+    const timelinessScore = this.timeliness || 0;
+    const initiativeScore = this.initiative || 0;
+    const problemSolvingScore = this.problemSolving || 0;
+    const teamWorkScore = this.teamWork || 0;
+    const communicationScore = this.communication || 0;
+    const hodRatingValue = this.hodRating || 0;
+
+    // Calculate HOD Evaluation Average for display purposes only
     const hodScores = [
-      this.quality || 0,
-      this.timeliness || 0,
-      this.initiative || 0,
-      this.problemSolving || 0,
-      this.teamWork || 0,
-      this.communication || 0
+      qualityScore,
+      timelinessScore,
+      initiativeScore,
+      problemSolvingScore,
+      teamWorkScore,
+      communicationScore
     ].filter(score => score > 0);
 
-    // Keep the average out of 5, but round to 2 decimal places for display
     this.hodEvaluationAverage = hodScores.length > 0
       ? Math.round((hodScores.reduce((sum, score) => sum + score, 0) / hodScores.length) * 100) / 100
       : 0;
@@ -275,20 +284,22 @@ export class MonthlyDprComponent {
     // Calculate Productivity Score (out of 5)
     this.calculateProductivityScore();
 
-    const hodRatingValue = this.hodRating || 0;
-
-    // Calculate Final Overall Rating using weighted formula
-    const hodEvalWeight = 0.4;
-    const productivityWeight = 0.3;
-    const hodRatingWeight = 0.3;
+    // Calculate Final Overall Rating using new weighted formula
+    // HOD Rating: 70%, Individual criteria: 5% each (30% total)
+    const hodRatingWeight = 0.7;
+    const individualCriteriaWeight = 0.05; // 5% each
 
     const weightedAverage =
-      (this.hodEvaluationAverage * hodEvalWeight) +
-      (this.productivityScore * productivityWeight) +
-      (hodRatingValue * hodRatingWeight);
+      (hodRatingValue * hodRatingWeight) +
+      (qualityScore * individualCriteriaWeight) +
+      (timelinessScore * individualCriteriaWeight) +
+      (initiativeScore * individualCriteriaWeight) +
+      (problemSolvingScore * individualCriteriaWeight) +
+      (teamWorkScore * individualCriteriaWeight) +
+      (communicationScore * individualCriteriaWeight);
 
-    // Convert to 100-point scale for display purposes (multiply by 20) and store in overallScore
-    this.overallScore = Math.round(weightedAverage * 20);
+    // Since all values are already out of 100, no need to multiply by 20
+    this.overallScore = Math.round(weightedAverage);
 
     // Show overall rating section if we have any meaningful data
     this.showOverallRating =
@@ -296,7 +307,8 @@ export class MonthlyDprComponent {
   }
 
   calculateProductivityScore(): void {
-    const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+    //const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+    const totalActualHours = this.TotalEstimatedhours;
     const workedHours = this.WorkedHours || 0;
 
     if (workedHours === 0 || totalActualHours === 0) {
@@ -378,12 +390,12 @@ export class MonthlyDprComponent {
     }
 
     // Only clear values that are clearly out of range
-    if (value > 5) {
-      // Clear the field only for values clearly above 5
+    if (value > 100) {
+      // Clear the field only for values clearly above 100
       (this as any)[fieldName] = null;
       event.target.value = '';
       inputElement.classList.add('invalid-input');
-      this.toastr.warning('Rating cannot exceed 5. Please enter a value between 1 and 5.', 'Invalid Rating');
+      this.toastr.warning('Rating cannot exceed 100. Please enter a value between 1 and 100.', 'Invalid Rating');
       this.calculateOverallRating();
       return;
     }
@@ -393,13 +405,13 @@ export class MonthlyDprComponent {
       (this as any)[fieldName] = null;
       event.target.value = '';
       inputElement.classList.add('invalid-input');
-      this.toastr.warning('Rating cannot be less than 1. Please enter a value between 1 and 5.', 'Invalid Rating');
+      this.toastr.warning('Rating cannot be less than 1. Please enter a value between 1 and 100.', 'Invalid Rating');
       this.calculateOverallRating();
       return;
     }
 
     // If value is valid, accept it (don't auto-round while typing)
-    if (value >= 1 && value <= 5) {
+    if (value >= 1 && value <= 100) {
       (this as any)[fieldName] = value;
       inputElement.classList.add('valid-input');
       this.calculateOverallRating();
@@ -417,9 +429,9 @@ export class MonthlyDprComponent {
 
     const value = parseFloat(inputValue);
 
-    if (!isNaN(value) && value >= 1 && value <= 5) {
-      // Round to 1 decimal place for final value
-      const roundedValue = Math.round(value * 10) / 10;
+    if (!isNaN(value) && value >= 1 && value <= 100) {
+      // Round to whole number for final value (since we're using 1-100 scale)
+      const roundedValue = Math.round(value);
       (this as any)[fieldName] = roundedValue;
 
       // Update the input field to show the rounded value if different
@@ -826,6 +838,7 @@ export class MonthlyDprComponent {
       status: this.ApprovalStatus || '',
       hodId: this.reportingTo || '',
       dprid: this.dprid || 0,
+      totalEstimatedhours: Number(this.TotalEstimatedhours),
       tasksList: this.tasks.map((t) => ({
         taskName: t.taskName,
         description: t.description,
@@ -922,6 +935,10 @@ export class MonthlyDprComponent {
 
         this.WorkedHours = Math.round(this.Proofhubtasks.reduce(
           (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0));
+
+        this.TotalEstimatedhours = Math.round(this.Proofhubtasks.reduce(
+        (sum, task) => sum + (Number(task.ESTIMATED_HOURS) || 0), 0));
+
 
       },
       error: (err) => {
@@ -1137,6 +1154,7 @@ export class MonthlyDprComponent {
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
+          this.TotalEstimatedhours = dpr.totalEstimatedhours ?? 0;
 
           // Set monthYear from DPR data if available
           if (dpr.month && dpr.year) {

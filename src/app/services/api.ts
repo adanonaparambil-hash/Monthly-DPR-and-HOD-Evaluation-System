@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { DPRReview, DPRKPI, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
+import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 
 @Injectable({
@@ -164,6 +164,15 @@ export class Api {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetExitEmployeeDetails/${empId}`);
   }
 
+
+  GetEmployeeDashBoardDetails(empId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDashBoardDetails/${empId}`);
+  }
+
+  
+  GetHODDashBoardDetails(empId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetHODDashBoardDetails/${empId}`);
+  }
 
 
 }

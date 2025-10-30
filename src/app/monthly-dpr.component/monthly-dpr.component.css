@@ -2271,6 +2271,21 @@ th {
   font-size: 1.1em;
 }
 
+.breakdown-item.final-score {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: 2px solid #0056b3;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.breakdown-item.final-score .label,
+.breakdown-item.final-score .value {
+  color: white;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
 /* Final Rating Container */
 .final-rating-container {
   display: flex;

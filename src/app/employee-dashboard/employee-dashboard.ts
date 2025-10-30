@@ -4,6 +4,7 @@ import { trigger, state, style, transition, animate, query, stagger } from '@ang
 import { Chart, registerables } from 'chart.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Api } from '../services/api';
 
 Chart.register(...registerables);
 gsap.registerPlugin(ScrollTrigger);
@@ -55,6 +56,12 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chartCard3') chartCard3!: ElementRef;
   @ViewChild('chartCard4') chartCard4!: ElementRef;
 
+   currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+
+   EmployeeID = this.currentUser.empId || this.currentUser.employeeId
+  
+  constructor(private api: Api) {
+  }
 
   animationState = 'in';
   particles: Particle[] = [];
@@ -64,6 +71,9 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.initializeParticles();
     this.setupParallaxEffects();
+
+    this.loadEmployeeDashBoard();
+    
   }
 
   ngAfterViewInit() {
@@ -398,7 +408,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           labels: ['Quality', 'Timeliness', 'Initiative', 'Communication', 'Teamwork', 'Problem Solving'],
           datasets: [{
             label: 'Skills',
-            data: [85, 90, 75, 80, 88, 82],
+            data: [4.25, 4.5, 3.75, 4, 4.4, 4.1],
             borderColor: 'rgba(47, 79, 47, 1)',
             backgroundColor: 'rgba(47, 79, 47, 0.2)',
             borderWidth: 2,
@@ -418,7 +428,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           scales: {
             r: {
               beginAtZero: true,
-              max: 100,
+              max: 5,
               grid: {
                 color: 'rgba(0, 0, 0, 0.1)'
               },
@@ -462,4 +472,21 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
       });
     }
   }
+
+
+  loadEmployeeDashBoard(): void {
+    this.api.GetEmployeeDashBoardDetails(this.EmployeeID).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+         console.log("loadEmployeeDashBoard: " + JSON.stringify(response, null, 2));
+        } else {
+          console.warn('No dashboard records found or API call failed');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching dashboard list:', error);
+      }
+    });
+  }
+
 }

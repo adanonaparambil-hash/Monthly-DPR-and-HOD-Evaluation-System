@@ -20,7 +20,7 @@ Restructured the rating system to separate HOD's manual rating from the system-g
 - **`calculateOverallRating()` method**:
   - Uses `hodRating` instead of `overallScore` in the weighted formula
   - Stores the final calculated result in `overallScore`
-  - Formula: `((HOD Eval Avg × 0.4) + (Productivity × 0.3) + (HOD Rating × 0.3)) × 20`
+  - Formula: `(HOD Rating × 0.7) + (Quality × 0.05) + (Timeliness × 0.05) + (Initiative × 0.05) + (Communication × 0.05) + (Teamwork × 0.05) + (Problem Solving × 0.05)`
 
 ### 4. **Data Persistence Updates**
 - **`HODReviewUpdate()` method**:

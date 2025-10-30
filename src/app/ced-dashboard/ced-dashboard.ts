@@ -74,7 +74,7 @@ export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
 
   animationState = 'in';
   selectedMonth = 'October';
-  selectedDepartment = 'All Departments';
+  selectedDepartment = 'Engineering';
   showProfile = false;
 
   // User Profile Data
@@ -520,17 +520,12 @@ export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
         type: 'radar',
         data: {
           labels: [
-            'Quality',
-            'Timeliness',
-            'Initiative',
-            'Communication',
-            'Leadership',
-            'Innovation',
+            'Quality', 'Timeliness', 'Initiative', 'Communication', 'Teamwork', 'Problem Solving',
           ],
           datasets: [
             {
               label: 'Average HOD Ratings',
-              data: [88, 82, 85, 90, 87, 83],
+              data: [4.25, 4.5, 3.75, 4, 4.4, 4.1],
               borderColor: 'rgba(204, 153, 51, 1)',
               backgroundColor: 'rgba(204, 153, 51, 0.2)',
               borderWidth: 2,
@@ -549,7 +544,7 @@ export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
           scales: {
             r: {
               beginAtZero: true,
-              max: 100,
+              max: 5,
               grid: { color: 'rgba(0, 0, 0, 0.1)' },
               angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
             },

@@ -71,7 +71,7 @@ Implemented an automated overall rating system that calculates and displays perf
 
 ## Formula Used
 ```
-Final Overall Rating = ((HOD Evaluation Average × 0.4) + (Productivity Score × 0.3) + (HOD Rating × 0.3)) × 20
+Final Overall Rating = (HOD Rating × 0.7) + (Quality × 0.05) + (Timeliness × 0.05) + (Initiative × 0.05) + (Communication × 0.05) + (Teamwork × 0.05) + (Problem Solving × 0.05)
 ```
 *Note: All input values are on a 5-point scale, then multiplied by 20 for 100-point display scale*
 

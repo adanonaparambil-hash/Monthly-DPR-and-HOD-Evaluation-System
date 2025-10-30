@@ -4,6 +4,7 @@ import { trigger, state, style, transition, animate, query, stagger } from '@ang
 import { Chart, registerables } from 'chart.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Api } from '../services/api';
 
 Chart.register(...registerables);
 gsap.registerPlugin(ScrollTrigger);
@@ -70,6 +71,15 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   particles: Particle[] = [];
   mouseX: number = 0;
   mouseY: number = 0;
+
+   currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+
+   EmployeeID = this.currentUser.empId || this.currentUser.employeeId
+
+    constructor(private api: Api) {
+    
+    }
+    
 
   ngOnInit() {
     this.initializeParticles();
@@ -480,4 +490,21 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
       });
     }
   }
+
+
+   loadHODDashBoard(): void {
+    this.api.GetHODDashBoardDetails(this.EmployeeID).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+         console.log("loadHODDashBoard: " + JSON.stringify(response, null, 2));
+        } else {
+          console.warn('No HOD dashboard records found or API call failed');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching dashboard list:', error);
+      }
+    });
+  }
+
 }

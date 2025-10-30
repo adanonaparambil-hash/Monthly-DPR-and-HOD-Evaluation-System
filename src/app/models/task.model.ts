@@ -28,6 +28,7 @@ export interface DPRReview {
   designation?: string;
   department?: string;
   emailid?: string;
+  totalEstimatedhours? : number
 }
 
 
@@ -152,4 +153,41 @@ export interface ExitEmpProfileDetails {
   postOffice?: string;
   nationality?: string;
   telephoneNo?: string;
+}
+
+
+
+export interface EmpDashBoard {
+  TaskCompleted?: number;
+  ProductivityScore?: number;
+  HoursThisMonth?: number;
+  HODRating?: number;
+  QualityScore?: number;
+  TimelinessScore?: number;
+  InitiativeScore?: number;
+  CommunicationScore?: number;
+  TeamWorkScore?: number;
+  ProblemSolvingScore?: number;
+  CompletedTasks?: number;
+  ProgressTasks?: number;
+  PendingTasks?: number;
+
+  ProductivityScorePercentage?: number;
+  HoursThisMonthPercentage?: number;
+  HODRatingPercentage?: number;
+  TaskCompletedPercentage?: number;
+
+  hoursLoggedEstimateGraphs?: HoursLoggedEstimateGraph[];
+  MonthlyPerformanceTrend?: MonthlyPerformanceTrend[];
+}
+
+export interface HoursLoggedEstimateGraph {
+  ActualHours?: number;
+  EstimatedHours?: number;
+  Month?: number;
+  Year?: number;
+}
+
+export interface MonthlyPerformanceTrend {
+  Performance?: number;
 }

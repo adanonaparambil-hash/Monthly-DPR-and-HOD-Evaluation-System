@@ -110,26 +110,7 @@
     }
   </div>
 
-  <!-- Support Needed Section -->
-  <div class="support-card" [@scaleIn]>
-    <h3><i class="fas fa-handshake colorful-icon"></i> Support Needed / Suggestions</h3>
-    <p>Specify the support you need from management, team or resources. Include any suggestions for process improvement...</p>
-    <textarea [(ngModel)]="supportNeeded" placeholder="Enter your support requirements..." [disabled]="!canEditFields"></textarea>
-  </div>
 
-  <!-- Achievements and Challenges -->
-  <div class="achievements-challenges" [@scaleIn]>
-    <div class="achievement-card">
-      <h3><i class="fas fa-trophy colorful-icon"></i> Achievements</h3>
-      <p>Describe your major accomplishments, achievements, deliverables and quality deliverables...</p>
-      <textarea [(ngModel)]="achievements" placeholder="Enter your achievements..." [disabled]="!canEditFields"></textarea>
-    </div>
-    <div class="challenge-card">
-      <h3><i class="fas fa-question-circle colorful-icon"></i> Challenges</h3>
-      <p>Detail the challenges you encountered, the steps taken to address them...</p>
-      <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..." [disabled]="!canEditFields"></textarea>
-    </div>
-  </div>
 
   <!-- KPI Performance Section -->
   <div class="kpi-card" [@scaleIn]>
@@ -232,6 +213,28 @@
     }
   </div>
 
+
+  <!-- Achievements and Challenges -->
+  <div class="achievements-challenges" [@scaleIn]>
+    <div class="achievement-card">
+      <h3><i class="fas fa-trophy colorful-icon"></i> Achievements</h3>
+      <p>Describe your major accomplishments, achievements, deliverables and quality deliverables...</p>
+      <textarea [(ngModel)]="achievements" placeholder="Enter your achievements..." [disabled]="!canEditFields"></textarea>
+    </div>
+    <div class="challenge-card">
+      <h3><i class="fas fa-question-circle colorful-icon"></i> Challenges</h3>
+      <p>Detail the challenges you encountered, the steps taken to address them...</p>
+      <textarea [(ngModel)]="challenges" placeholder="Enter challenges faced..." [disabled]="!canEditFields"></textarea>
+    </div>
+  </div>
+
+   <!-- Support Needed Section -->
+  <div class="support-card" [@scaleIn]>
+    <h3><i class="fas fa-handshake colorful-icon"></i> Support Needed / Suggestions</h3>
+    <p>Specify the support you need from management, team or resources. Include any suggestions for process improvement...</p>
+    <textarea [(ngModel)]="supportNeeded" placeholder="Enter your support requirements..." [disabled]="!canEditFields"></textarea>
+  </div>
+
   <!-- HOD Evaluation Section -->
   @if (showHodEvaluationSection) {
     <div class="evaluation-card" [@scaleIn]>
@@ -247,44 +250,44 @@
         <div class="evaluation-content" [@fadeInUp]>
           <div class="evaluation-grid">
             <div class="eval-item">
-              <label>Quality <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="quality" placeholder="Enter score (1.0-5.0, e.g., 4.5)" type="number" min="1" max="5" step="0.1"
+              <label>Quality <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="quality" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100" step="1"
                 class="rating-input" [disabled]="!canEditHodEvaluation" (ngModelChange)="calculateOverallRating()"
                 (keyup)="validateRatingInput('quality', $event)" (blur)="finalizeRatingInput('quality', $event)">
             </div>
             <div class="eval-item">
-              <label>Timeliness <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="timeliness" placeholder="Enter score (1.0-5.0, e.g., 4.5)" type="number" min="1" max="5"
-                step="0.1" class="rating-input" [disabled]="!canEditHodEvaluation"
+              <label>Timeliness <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="timeliness" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('timeliness', $event)" (blur)="finalizeRatingInput('timeliness', $event)">
             </div>
             <div class="eval-item">
-              <label>Initiative <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="initiative" placeholder="Enter score (1.0-5.0, e.g., 4.5)" type="number" min="1" max="5"
-                step="0.1" class="rating-input" [disabled]="!canEditHodEvaluation"
+              <label>Initiative <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="initiative" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('initiative', $event)" (blur)="finalizeRatingInput('initiative', $event)">
             </div>
             <div class="eval-item">
-              <label>Problem Solving <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="problemSolving" placeholder="Enter score (1.0-5.0, e.g., 4.5)" type="number" min="1"
-                max="5" step="0.1" class="rating-input" [disabled]="!canEditHodEvaluation"
+              <label>Problem Solving <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="problemSolving" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1"
+                max="100" step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('problemSolving', $event)" (blur)="finalizeRatingInput('problemSolving', $event)">
             </div>
             <div class="eval-item">
-              <label>Team Work <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="teamWork" placeholder="Enter score (1.0-5.0, e.g., 4.5)" type="number" min="1" max="5"
-                step="0.1" class="rating-input" [disabled]="!canEditHodEvaluation"
+              <label>Team Work <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="teamWork" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('teamWork', $event)" (blur)="finalizeRatingInput('teamWork', $event)">
             </div>
             <div class="eval-item">
-              <label>Communication <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="communication" placeholder="Enter score (1.0-5.0, e.g., 4.5)" type="number" min="1" max="5"
-                step="0.1" class="rating-input" [disabled]="!canEditHodEvaluation"
+              <label>Communication <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="communication" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('communication', $event)" (blur)="finalizeRatingInput('communication', $event)">
             </div>
             <div class="eval-item">
-              <label>HOD Rating <small>(Rate 1-5)</small></label>
-              <input [(ngModel)]="hodRating" placeholder="Enter rating (1.0-5.0, e.g., 4.5)" type="number" min="1" max="5" step="0.1"
+              <label>HOD Rating <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="hodRating" placeholder="Enter rating (1-100, e.g., 85)" type="number" min="1" max="100" step="1"
                 class="rating-input" [disabled]="!canEditHodEvaluation" (ngModelChange)="calculateOverallRating()"
                 (keyup)="validateRatingInput('hodRating', $event)" (blur)="finalizeRatingInput('hodRating', $event)">
             </div>
@@ -297,18 +300,34 @@
 
                 <div class="rating-breakdown">
                   <div class="breakdown-item">
-                    <span class="label">HOD Evaluation Average:</span>
-                    <span class="value">{{ hodEvaluationAverage }}/5</span>
+                    <span class="label">HOD Rating (70%):</span>
+                    <span class="value">{{ hodRating }}/100</span>
                   </div>
                   <div class="breakdown-item">
-                    <span class="label">Productivity Score:</span>
-                    <span class="value">{{ productivityScore }}/5</span>
+                    <span class="label">Quality (5%):</span>
+                    <span class="value">{{ quality }}/100</span>
                   </div>
                   <div class="breakdown-item">
-                    <span class="label">HOD Rating:</span>
-                    <span class="value">{{ hodRating }}/5</span>
+                    <span class="label">Timeliness (5%):</span>
+                    <span class="value">{{ timeliness }}/100</span>
                   </div>
                   <div class="breakdown-item">
+                    <span class="label">Initiative (5%):</span>
+                    <span class="value">{{ initiative }}/100</span>
+                  </div>
+                  <div class="breakdown-item">
+                    <span class="label">Communication (5%):</span>
+                    <span class="value">{{ communication }}/100</span>
+                  </div>
+                  <div class="breakdown-item">
+                    <span class="label">Teamwork (5%):</span>
+                    <span class="value">{{ teamWork }}/100</span>
+                  </div>
+                  <div class="breakdown-item">
+                    <span class="label">Problem Solving (5%):</span>
+                    <span class="value">{{ problemSolving }}/100</span>
+                  </div>
+                  <div class="breakdown-item final-score">
                     <span class="label">Final Overall Score:</span>
                     <span class="value">{{ overallScore }}/100</span>
                   </div>
