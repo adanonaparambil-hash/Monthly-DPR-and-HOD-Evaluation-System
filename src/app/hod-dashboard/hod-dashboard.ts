@@ -65,7 +65,6 @@ interface Particle {
 export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('summaryChart') summaryChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('performanceTrendChart') performanceTrendChart!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('departmentChart') departmentChart!: ElementRef<HTMLCanvasElement>;
 
   // Parallax and animation properties
   particles: Particle[] = [];
@@ -146,7 +145,6 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.createSummaryChart();
       this.createPerformanceTrendChart();
-      this.createDepartmentChart();
       this.initializeGSAPAnimations();
       this.setupScrollTriggers();
     }, 100);
@@ -324,17 +322,38 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               '#ef4444',
               '#6b7280'
             ],
-            borderWidth: 0
+            borderWidth: 0,
+            hoverBorderWidth: 2,
+            hoverBorderColor: '#fff'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '70%',
+          cutout: '65%',
           plugins: {
             legend: {
               display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
             }
+          },
+          animation: {
+            animateRotate: true,
+            duration: 1500,
+            easing: 'easeOutQuart'
+          },
+          layout: {
+            padding: 10
           }
         }
       });
@@ -351,7 +370,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
           datasets: [
             {
               label: 'Initiative',
-              data: [4.0, 4.1, 4.2, 4.0, 4.3, 4.2],
+              data: [80, 82, 84, 80, 86, 84],
               borderColor: '#f59e0b',
               backgroundColor: 'rgba(245, 158, 11, 0.1)',
               borderWidth: 3,
@@ -364,7 +383,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
             },
             {
               label: 'Overall Performance',
-              data: [4.1, 4.2, 4.0, 4.3, 4.2, 4.1],
+              data: [82, 84, 80, 86, 84, 82],
               borderColor: '#3b82f6',
               backgroundColor: 'rgba(59, 130, 246, 0.1)',
               borderWidth: 3,
@@ -377,7 +396,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
             },
             {
               label: 'Quality',
-              data: [4.2, 4.0, 4.1, 4.2, 4.4, 4.3],
+              data: [84, 80, 82, 84, 88, 86],
               borderColor: '#8b5cf6',
               backgroundColor: 'rgba(139, 92, 246, 0.1)',
               borderWidth: 3,
@@ -390,7 +409,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
             },
             {
               label: 'Timeliness',
-              data: [3.9, 4.1, 3.8, 4.0, 4.1, 3.9],
+              data: [78, 82, 76, 80, 82, 78],
               borderColor: '#22c55e',
               backgroundColor: 'rgba(34, 197, 94, 0.1)',
               borderWidth: 3,
@@ -418,8 +437,8 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
           scales: {
             y: {
               beginAtZero: false,
-              min: 2.5,
-              max: 5,
+              min: 20,
+              max: 100,
               grid: {
                 color: 'rgba(0, 0, 0, 0.1)'
               }
@@ -435,61 +454,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private createDepartmentChart() {
-    const ctx = this.departmentChart.nativeElement.getContext('2d');
-    if (ctx) {
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['HR', 'Sales', 'IT', 'Marketing', 'Finance', 'Operations'],
-          datasets: [
-            {
-              label: 'Initiative',
-              data: [220, 240, 200, 230, 210, 220],
-              backgroundColor: '#3b82f6',
-              borderRadius: 4
-            },
-            {
-              label: 'Quality',
-              data: [180, 200, 160, 190, 170, 180],
-              backgroundColor: '#22c55e',
-              borderRadius: 4
-            },
-            {
-              label: 'Timeliness',
-              data: [80, 90, 70, 85, 75, 80],
-              backgroundColor: '#f59e0b',
-              borderRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          scales: {
-            x: {
-              stacked: true,
-              grid: {
-                display: false
-              }
-            },
-            y: {
-              stacked: true,
-              beginAtZero: true,
-              grid: {
-                color: 'rgba(0, 0, 0, 0.1)'
-              }
-            }
-          }
-        }
-      });
-    }
-  }
+
 
 
    loadHODDashBoard(): void {

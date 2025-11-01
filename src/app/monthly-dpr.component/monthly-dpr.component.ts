@@ -954,7 +954,7 @@ export class MonthlyDprComponent {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
     this.monthYear = currentDate.toLocaleDateString('en-US', options);
   }
-
+  
 
 
   loadKPIs(): void {

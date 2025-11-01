@@ -958,18 +958,40 @@
   color: #cbd5e1;
 }
 
-.summary-chart {
-  height: 200px;
-  margin: 20px 0;
+/* Evaluation Summary Specific Styles */
+.evaluation-summary-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.evaluation-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+}
+
+.summary-chart-wrapper {
+  height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.summary-chart-wrapper canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  height: auto !important;
+  width: auto !important;
 }
 
 .summary-legend {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
 }
 
 .legend-item {
@@ -977,7 +999,32 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
+  padding: 4px 0;
 }
+
+.legend-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.percentage {
+  font-weight: bold;
+  color: #666;
+}
+
+/* Legend Colors for Evaluation Summary */
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-color.excellent { background: #22c55e; }
+.legend-color.good { background: #3b82f6; }
+.legend-color.average { background: #f59e0b; }
+.legend-color.below-average { background: #ef4444; }
+.legend-color.poor { background: #6b7280; }
 
 .legend-color {
   width: 12px;
@@ -1144,6 +1191,60 @@
   
   .charts-section {
     grid-template-columns: 1fr;
+  }
+  
+  /* Evaluation Summary Mobile Styles */
+  .evaluation-summary-container {
+    min-height: auto;
+  }
+  
+  .summary-chart-wrapper {
+    height: 200px;
+  }
+  
+  .summary-legend {
+    gap: 6px;
+  }
+  
+  .legend-item {
+    font-size: 11px;
+    padding: 3px 0;
+  }
+  
+  .legend-label {
+    font-size: 11px;
+  }
+  
+  .percentage {
+    font-size: 11px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .evaluation-summary-container {
+    padding: 16px;
+  }
+  
+  .summary-chart-wrapper {
+    height: 180px;
+  }
+  
+  .chart-header h3 {
+    font-size: 16px;
+  }
+  
+  .chart-subtitle {
+    font-size: 12px;
+  }
+  
+  .legend-item {
+    font-size: 10px;
+  }
+  
+  .legend-label,
+  .percentage {
+    font-size: 10px;
   }
   
   .summary-section {
