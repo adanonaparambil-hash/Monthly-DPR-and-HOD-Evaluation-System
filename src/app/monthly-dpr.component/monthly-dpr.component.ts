@@ -733,7 +733,8 @@ export class MonthlyDprComponent {
           hodRating: Number(this.hodRating), // HOD's manual rating (1-5)
           scoreOverall: Number(this.overallScore), // System-generated final score (20-100)
           remarks: this.managementRemarks,
-          dprid: this.dprid
+          dprid: this.dprid,
+          overallValue: this.getRatingText(this.overallScore),
         };
 
         console.log("DPR Log" + review);

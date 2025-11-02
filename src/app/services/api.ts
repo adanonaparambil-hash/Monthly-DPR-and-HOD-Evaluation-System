@@ -5,6 +5,8 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
+import { HODDepartmentDashboard } from '../models/dashBoard.model';
+
 
 @Injectable({
   providedIn: 'root'

@@ -83,6 +83,8 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.initializeParticles();
     this.setupParallaxEffects();
+    this.loadHODDashBoard();
+
   }
 
   ngOnDestroy() {
@@ -461,7 +463,8 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     this.api.GetHODDashBoardDetails(this.EmployeeID).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
-         console.log("loadHODDashBoard: " + JSON.stringify(response, null, 2));
+        console.log("PerformanceTrends: ", response.data);
+
         } else {
           console.warn('No HOD dashboard records found or API call failed');
         }

@@ -28,7 +28,8 @@ export interface DPRReview {
   designation?: string;
   department?: string;
   emailid?: string;
-  totalEstimatedhours? : number
+  totalEstimatedhours? : number;
+  overallValue ?: string;
 }
 
 
