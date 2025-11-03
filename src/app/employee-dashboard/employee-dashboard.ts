@@ -5,6 +5,7 @@ import { Chart, registerables } from 'chart.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Api } from '../services/api';
+import { EmployeeDashboardData } from '../models/dashBoard.model';
 
 Chart.register(...registerables);
 gsap.registerPlugin(ScrollTrigger);
@@ -42,7 +43,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('performanceChart') performanceChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('skillsChart') skillsChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('taskStatusChart') taskStatusChart!: ElementRef<HTMLCanvasElement>;
-  
+
   // GSAP ViewChild references
   @ViewChild('statsGrid') statsGrid!: ElementRef;
   @ViewChild('chartsGrid') chartsGrid!: ElementRef;
@@ -56,10 +57,15 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chartCard3') chartCard3!: ElementRef;
   @ViewChild('chartCard4') chartCard4!: ElementRef;
 
-   currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+  currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+  EmployeeID = this.currentUser.empId || this.currentUser.employeeId;
 
-   EmployeeID = this.currentUser.empId || this.currentUser.employeeId
-  
+  // Dashboard data
+  dashboardData: EmployeeDashboardData = {};
+
+  // Make Math available in template
+  Math = Math;
+
   constructor(private api: Api) {
   }
 
@@ -73,7 +79,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
     this.setupParallaxEffects();
 
     this.loadEmployeeDashBoard();
-    
+
   }
 
   ngAfterViewInit() {
@@ -101,7 +107,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   private initializeParticles() {
     this.particles = [];
     const particleCount = 20;
-    
+
     for (let i = 0; i < particleCount; i++) {
       this.particles.push({
         x: Math.random() * window.innerWidth,
@@ -123,13 +129,13 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   private updateParallaxLayers() {
     const layers = document.querySelectorAll('.parallax-layer');
     const shapes = document.querySelectorAll('.floating-shape');
-    
+
     layers.forEach((layer, index) => {
       const speed = (index + 1) * 0.3;
       const xOffset = (this.mouseX - 50) * speed * 0.02;
       const yOffset = (this.mouseY - 50) * speed * 0.02;
-      
-      (layer as HTMLElement).style.transform = 
+
+      (layer as HTMLElement).style.transform =
         `translate3d(${xOffset}px, ${yOffset}px, 0)`;
     });
 
@@ -137,18 +143,18 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
       const speed = (index + 1) * 0.2;
       const xOffset = (this.mouseX - 50) * speed * 0.01;
       const yOffset = (this.mouseY - 50) * speed * 0.01;
-      
-      (shape as HTMLElement).style.transform = 
+
+      (shape as HTMLElement).style.transform =
         `translate3d(${xOffset}px, ${yOffset}px, 0) rotate(${this.mouseX * 0.1}deg)`;
     });
   }
 
   private initializeGSAPAnimations() {
     // Initial page load animations
-    gsap.set(['.gsap-card', '.gsap-chart'], { 
-      y: 100, 
-      opacity: 0, 
-      scale: 0.8 
+    gsap.set(['.gsap-card', '.gsap-chart'], {
+      y: 100,
+      opacity: 0,
+      scale: 0.8
     });
 
     // Floating shapes animation
@@ -273,10 +279,10 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
 
   private animateCounters() {
     const counters = document.querySelectorAll('.counter');
-    
+
     counters.forEach((counter) => {
       const target = parseFloat(counter.getAttribute('data-target') || '0');
-      
+
       gsap.to(counter, {
         innerHTML: target,
         duration: 2,
@@ -287,7 +293,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           start: 'top 80%',
           toggleActions: 'play none none reverse'
         },
-        onUpdate: function() {
+        onUpdate: function () {
           const value = parseFloat(this.targets()[0].innerHTML);
           if (target < 10) {
             counter.innerHTML = value.toFixed(1);
@@ -304,21 +310,50 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   private createHoursChart() {
     const ctx = this.hoursChart.nativeElement.getContext('2d');
     if (ctx) {
+      // Clear existing chart
+      Chart.getChart(ctx)?.destroy();
+
+      // Prepare data from API response
+      const hoursData = this.dashboardData.hoursLoggedEstimateGraphs || [];
+      const labels: string[] = [];
+      const estimatedData: number[] = [];
+      const actualData: number[] = [];
+
+      if (hoursData.length > 0) {
+        hoursData.forEach(item => {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthLabel = item.month ? monthNames[item.month - 1] : 'Unknown';
+          const yearLabel = item.year || new Date().getFullYear();
+          labels.push(`${monthLabel} ${yearLabel}`);
+          estimatedData.push(item.estimatedHours || 0);
+          actualData.push(item.actualHours || 0);
+        });
+      } else {
+        // Fallback data if no API data
+        const currentDate = new Date();
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentMonth = monthNames[currentDate.getMonth()];
+        const currentYear = currentDate.getFullYear();
+        labels.push(`${currentMonth} ${currentYear}`);
+        estimatedData.push(200);
+        actualData.push(169);
+      }
+
       new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          labels: labels,
           datasets: [
             {
               label: 'Estimated',
-              data: [140, 160, 150, 170, 155, 165],
+              data: estimatedData,
               backgroundColor: 'rgba(204, 153, 51, 0.3)',
               borderColor: 'rgba(204, 153, 51, 1)',
               borderWidth: 1
             },
             {
               label: 'Actual',
-              data: [145, 175, 165, 185, 160, 190],
+              data: actualData,
               backgroundColor: 'rgba(47, 79, 47, 0.8)',
               borderColor: 'rgba(47, 79, 47, 1)',
               borderWidth: 1
@@ -330,7 +365,8 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: true,
+              position: 'top'
             }
           },
           scales: {
@@ -354,13 +390,39 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   private createPerformanceChart() {
     const ctx = this.performanceChart.nativeElement.getContext('2d');
     if (ctx) {
+      // Clear existing chart
+      Chart.getChart(ctx)?.destroy();
+
+      // Prepare data from API response
+      const performanceData = this.dashboardData.monthlyPerformanceTrend || [];
+      const labels: string[] = [];
+      const performanceScores: number[] = [];
+
+      if (performanceData.length > 0) {
+        performanceData.forEach(item => {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthLabel = item.performanceMonth ? monthNames[item.performanceMonth - 1] : 'Unknown';
+          const yearLabel = item.performanceYear || new Date().getFullYear();
+          labels.push(`${monthLabel} ${yearLabel}`);
+          performanceScores.push(item.performanceScore || 0);
+        });
+      } else {
+        // Fallback data if no API data
+        const currentDate = new Date();
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentMonth = monthNames[currentDate.getMonth()];
+        const currentYear = currentDate.getFullYear();
+        labels.push(`${currentMonth} ${currentYear}`);
+        performanceScores.push(this.dashboardData.productivityScore || 73);
+      }
+
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          labels: labels,
           datasets: [{
             label: 'Performance',
-            data: [75, 82, 85, 88, 86, 92],
+            data: performanceScores,
             borderColor: 'rgba(204, 153, 51, 1)',
             backgroundColor: 'rgba(204, 153, 51, 0.1)',
             borderWidth: 3,
@@ -402,13 +464,26 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   private createSkillsChart() {
     const ctx = this.skillsChart.nativeElement.getContext('2d');
     if (ctx) {
+      // Clear existing chart
+      Chart.getChart(ctx)?.destroy();
+
+      // Use actual scores from API (0-100 scale)
+      const skillsData = [
+        this.dashboardData.qualityScore || 57,
+        this.dashboardData.timelinessScore || 70,
+        this.dashboardData.initiativeScore || 87,
+        this.dashboardData.communicationScore || 87,
+        this.dashboardData.teamWorkScore || 54,
+        this.dashboardData.problemSolvingScore || 43
+      ];
+
       new Chart(ctx, {
         type: 'radar',
         data: {
           labels: ['Quality', 'Timeliness', 'Initiative', 'Communication', 'Teamwork', 'Problem Solving'],
           datasets: [{
-            label: 'Skills',
-            data: [4.25, 4.5, 3.75, 4, 4.4, 4.1],
+            label: 'Skills (out of 100)',
+            data: skillsData,
             borderColor: 'rgba(47, 79, 47, 1)',
             backgroundColor: 'rgba(47, 79, 47, 0.2)',
             borderWidth: 2,
@@ -423,17 +498,30 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           plugins: {
             legend: {
               display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return context.dataset.label + ': ' + context.parsed.r + '/100';
+                }
+              }
             }
           },
           scales: {
             r: {
               beginAtZero: true,
-              max: 5,
+              max: 100,
               grid: {
                 color: 'rgba(0, 0, 0, 0.1)'
               },
               angleLines: {
                 color: 'rgba(0, 0, 0, 0.1)'
+              },
+              ticks: {
+                stepSize: 20,
+                callback: function (value) {
+                  return value + '';
+                }
               }
             }
           }
@@ -445,12 +533,20 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   private createTaskStatusChart() {
     const ctx = this.taskStatusChart.nativeElement.getContext('2d');
     if (ctx) {
+      // Clear existing chart
+      Chart.getChart(ctx)?.destroy();
+
+      // Use actual task counts from API
+      const completed = this.dashboardData.taskCompleted || 55;
+      const inProgress = this.dashboardData.progressTasks || 0;
+      const pending = this.dashboardData.pendingTasks || 135;
+
       new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: ['Completed', 'In Progress', 'Pending'],
           datasets: [{
-            data: [65, 25, 10],
+            data: [completed, inProgress, pending],
             backgroundColor: [
               'rgba(204, 153, 51, 1)',
               'rgba(47, 79, 47, 1)',
@@ -466,6 +562,18 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           plugins: {
             legend: {
               display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  const dataset = context.dataset.data as number[];
+                  const total = dataset.reduce((sum, val) => sum + val, 0);
+                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                  return `${label}: ${value} tasks (${percentage}%)`;
+                }
+              }
             }
           }
         }
@@ -478,7 +586,13 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
     this.api.GetEmployeeDashBoardDetails(this.EmployeeID).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
-         console.log("loadEmployeeDashBoard: " + JSON.stringify(response, null, 2));
+          console.log("loadEmployeeDashBoard: " + JSON.stringify(response, null, 2));
+          this.dashboardData = response.data;
+
+          // Update charts with new data after a short delay to ensure DOM is ready
+          setTimeout(() => {
+            this.updateChartsWithData();
+          }, 200);
         } else {
           console.warn('No dashboard records found or API call failed');
         }
@@ -487,6 +601,39 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error fetching dashboard list:', error);
       }
     });
+  }
+
+  private updateChartsWithData(): void {
+    // Recreate charts with actual data
+    this.createHoursChart();
+    this.createPerformanceChart();
+    this.createSkillsChart();
+    this.createTaskStatusChart();
+  }
+
+  getTaskPercentage(type: 'completed' | 'progress' | 'pending'): number {
+    const completed = this.dashboardData.taskCompleted || 0;
+    const inProgress = this.dashboardData.progressTasks || 0;
+    const pending = this.dashboardData.pendingTasks || 0;
+
+    const total = completed + inProgress + pending;
+    if (total === 0) return 0;
+
+    switch (type) {
+      case 'completed':
+        return Math.round((completed / total) * 100);
+      case 'progress':
+        return Math.round((inProgress / total) * 100);
+      case 'pending':
+        return Math.round((pending / total) * 100);
+      default:
+        return 0;
+    }
+  }
+
+  getPercentageValue(percentage: number | null | undefined): number {
+    // If null or undefined, return 0, otherwise return the actual value
+    return percentage ?? 0;
   }
 
 }

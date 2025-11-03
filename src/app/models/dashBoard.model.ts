@@ -60,3 +60,38 @@ export interface HODDepartmentDashboard {
   hodDepartmentRankings: HODDepartmentRanking[];
   hodPendingEvaluations: PendingEvaluation[];
 }
+
+export interface HoursLoggedEstimateGraph {
+  actualHours?: number;
+  estimatedHours?: number;
+  month?: number;
+  year?: number;
+}
+
+export interface MonthlyPerformanceTrend {
+  performanceScore?: number;
+  performanceMonth?: number;
+  performanceYear?: number;
+}
+
+export interface EmployeeDashboardData {
+  taskCompleted?: number;
+  productivityScore?: number;
+  hoursThisMonth?: number;
+  hodRating?: number;
+  qualityScore?: number;
+  timelinessScore?: number;
+  initiativeScore?: number;
+  communicationScore?: number;
+  teamWorkScore?: number;
+  problemSolvingScore?: number;
+  completedTasks?: number | null;
+  progressTasks?: number;
+  pendingTasks?: number;
+  productivityScorePercentage?: number | null;
+  hoursThisMonthPercentage?: number | null;
+  hodRatingPercentage?: number | null;
+  taskCompletedPercentage?: number | null;
+  hoursLoggedEstimateGraphs?: HoursLoggedEstimateGraph[];
+  monthlyPerformanceTrend?: MonthlyPerformanceTrend[];
+}

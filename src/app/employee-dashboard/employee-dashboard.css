@@ -313,6 +313,23 @@
   gap: 24px;
 }
 
+/* Specific styling for task status chart to make the content smaller */
+.task-status-chart .chart-container {
+  min-height: 280px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.task-status-chart .legend {
+  margin-top: 16px;
+  gap: 16px;
+  justify-content: center;
+}
+
+.task-status-chart .legend-item {
+  font-size: 12px;
+}
+
 .chart-card {
   background: var(--background-primary);
   border-radius: 16px;
@@ -460,6 +477,11 @@
   }
   .bottom-charts-grid {
     grid-template-columns: 1fr;
+  }
+  
+  /* Reset specific styling for mobile */
+  .task-status-chart .chart-container {
+    max-width: none;
   }
   
   .parallax-layer {

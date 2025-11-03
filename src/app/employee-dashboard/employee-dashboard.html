@@ -35,12 +35,8 @@
         <i class="fas fa-check-circle stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" data-target="24">0</div>
-        <div class="stat-subtitle">Last month</div>
-        <div class="stat-change positive">
-          <i class="fas fa-arrow-up"></i>
-          <span>12%</span>
-        </div>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.taskCompleted || 0">{{ dashboardData.taskCompleted || 0 }}</div>
+        <div class="stat-subtitle">This month</div>
       </div>
     </div>
 
@@ -51,11 +47,11 @@
         <i class="fas fa-chart-line stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" data-target="92">0</div>
-        <div class="stat-subtitle">Above target</div>
-        <div class="stat-change positive">
-          <i class="fas fa-arrow-up"></i>
-          <span>8%</span>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.productivityScore || 0">{{ dashboardData.productivityScore || 0 }}</div>
+        <div class="stat-subtitle">Out of 100</div>
+        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.productivityScorePercentage) >= 0" [class.negative]="getPercentageValue(dashboardData.productivityScorePercentage) < 0">
+          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.productivityScorePercentage) >= 0" [class.fa-arrow-down]="getPercentageValue(dashboardData.productivityScorePercentage) < 0"></i>
+          <span>{{ Math.abs(getPercentageValue(dashboardData.productivityScorePercentage)) }}%</span>
         </div>
       </div>
     </div>
@@ -67,11 +63,11 @@
         <i class="fas fa-clock stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" data-target="185">0</div>
-        <div class="stat-subtitle">of 180 expected</div>
-        <div class="stat-change negative">
-          <i class="fas fa-arrow-down"></i>
-          <span>3%</span>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.hoursThisMonth || 0">{{ dashboardData.hoursThisMonth || 0 }}</div>
+        <div class="stat-subtitle">Hours logged</div>
+        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.hoursThisMonthPercentage) >= 0" [class.negative]="getPercentageValue(dashboardData.hoursThisMonthPercentage) < 0">
+          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.hoursThisMonthPercentage) >= 0" [class.fa-arrow-down]="getPercentageValue(dashboardData.hoursThisMonthPercentage) < 0"></i>
+          <span>{{ Math.abs(getPercentageValue(dashboardData.hoursThisMonthPercentage)) }}%</span>
         </div>
       </div>
     </div>
@@ -83,11 +79,11 @@
         <i class="fas fa-star stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" data-target="4.6">0</div>
-        <div class="stat-subtitle">out of 5.0</div>
-        <div class="stat-change positive">
-          <i class="fas fa-arrow-up"></i>
-          <span>5%</span>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.hodRating || 0">{{ dashboardData.hodRating || 0 }}</div>
+        <div class="stat-subtitle">out of 100</div>
+        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.hodRatingPercentage) >= 0" [class.negative]="getPercentageValue(dashboardData.hodRatingPercentage) < 0">
+          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.hodRatingPercentage) >= 0" [class.fa-arrow-down]="getPercentageValue(dashboardData.hodRatingPercentage) < 0"></i>
+          <span>{{ Math.abs(getPercentageValue(dashboardData.hodRatingPercentage)) }}%</span>
         </div>
       </div>
     </div>
@@ -141,7 +137,7 @@
     </div>
 
     <!-- Task Status Distribution -->
-    <div class="chart-card gsap-chart" #chartCard4>
+    <div class="chart-card gsap-chart task-status-chart" #chartCard4>
       <div class="chart-glow"></div>
       <div class="chart-header">
         <h3>Task Status Distribution</h3>
@@ -155,15 +151,15 @@
       <div class="legend">
         <div class="legend-item">
           <div class="legend-color completed"></div>
-          <span>Completed: 65%</span>
+          <span>Completed: {{ getTaskPercentage('completed') }}% ({{ dashboardData.taskCompleted || 0 }})</span>
         </div>
         <div class="legend-item">
           <div class="legend-color in-progress"></div>
-          <span>In Progress: 25%</span>
+          <span>In Progress: {{ getTaskPercentage('progress') }}% ({{ dashboardData.progressTasks || 0 }})</span>
         </div>
         <div class="legend-item">
           <div class="legend-color pending"></div>
-          <span>Pending: 10%</span>
+          <span>Pending: {{ getTaskPercentage('pending') }}% ({{ dashboardData.pendingTasks || 0 }})</span>
         </div>
       </div>
     </div>
