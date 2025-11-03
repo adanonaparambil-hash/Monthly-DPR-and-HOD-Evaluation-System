@@ -29,6 +29,7 @@ export interface HODDepartmentRanking {
   department?: string;
   rating?: number;
   profileImage?: string; // base64 string from backend
+  profileImageBase64?: string; // alternative property name
 }
 
 export interface PendingEvaluation {
