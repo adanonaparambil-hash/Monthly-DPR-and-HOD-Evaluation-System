@@ -1,5 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { trigger, state, style, transition, animate, query, stagger } from '@angular/animations';
 import { Chart, registerables } from 'chart.js';
 import { gsap } from 'gsap';
@@ -79,11 +80,17 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   dashboardData: HODDepartmentDashboard | null = null;
   isLoading = true;
 
+  // Pending evaluations properties
+  pendingEvaluations: any[] = [];
+  filteredPendingEvaluations: any[] = [];
+  searchTerm: string = '';
+  totalCount: number = 0;
+
   // Chart instances
   summaryChartInstance: Chart | null = null;
   performanceTrendChartInstance: Chart | null = null;
 
-  constructor(private api: Api) {
+  constructor(private api: Api, private router: Router) {
 
   }
 
@@ -98,7 +105,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   private checkCanvasElements(): boolean {
     const summaryCanvas = this.summaryChart?.nativeElement;
     const trendCanvas = this.performanceTrendChart?.nativeElement;
-    
+
     console.log('Canvas elements check:', {
       summaryCanvas: !!summaryCanvas,
       trendCanvas: !!trendCanvas,
@@ -123,6 +130,64 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     return this.dashboardData?.hodDepartmentRankings || [];
   }
 
+  // Format date to show only date part
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  }
+
+  // Get profile image with fallback
+  getProfileImage(employee: any): string {
+    return employee?.profileImageBase64 || employee?.profileImage || this.getDefaultProfileImage();
+  }
+
+  // Search functionality for pending evaluations
+  onSearchChange(event: any): void {
+    this.searchTerm = event.target.value.toLowerCase();
+    this.filterPendingEvaluations();
+  }
+
+  private filterPendingEvaluations(): void {
+    if (!this.searchTerm) {
+      this.filteredPendingEvaluations = [...this.pendingEvaluations];
+    } else {
+      this.filteredPendingEvaluations = this.pendingEvaluations.filter(evaluation =>
+        evaluation.employeeName?.toLowerCase().includes(this.searchTerm) ||
+        evaluation.department?.toLowerCase().includes(this.searchTerm) ||
+        evaluation.employeeId?.toLowerCase().includes(this.searchTerm)
+      );
+    }
+  }
+
+  // Navigate to monthly DPR entry listing
+  evaluateEmployee(dprid: number): void {
+    if (dprid) {
+      console.log('Navigating to evaluate employee with DPRID:', dprid);
+
+      // Navigate to monthly DPR entry listing with the dprid
+      // Adjust the route path based on your actual routing structure
+      try {
+
+        this.router.navigate(['/monthly-dpr', dprid], { 
+        queryParams: { 
+          readonly: '1',
+          from: 'past-reports' 
+        } 
+      });
+
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback to window.location if router navigation fails
+        window.location.href = `/monthly-dpr-listing?dprid=${dprid}`;
+      }
+    }
+  }
+
   // Public method for debugging - can be called from browser console
   public debugCharts(): void {
     console.log('=== Chart Debug Info ===');
@@ -130,7 +195,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     console.log('Summary Chart Instance:', this.summaryChartInstance);
     console.log('Performance Chart Instance:', this.performanceTrendChartInstance);
     console.log('Canvas Elements Check:', this.checkCanvasElements());
-    
+
     // Force recreation
     this.recreateCharts();
   }
@@ -583,6 +648,12 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
         if (response && response.success && response.data) {
           console.log("Dashboard Data: ", JSON.stringify(response.data.hodPendingEvaluations, null, 2));
           this.dashboardData = response.data;
+
+          // Set pending evaluations data
+          this.pendingEvaluations = response.data.hodPendingEvaluations || [];
+          this.filteredPendingEvaluations = [...this.pendingEvaluations];
+          this.totalCount = this.pendingEvaluations.length > 0 ? (this.pendingEvaluations[0]?.totalCount || this.pendingEvaluations.length) : 0;
+
           this.isLoading = false;
 
           // Update charts with new data after a short delay to ensure DOM is ready
@@ -591,13 +662,13 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
           }, 500);
         } else {
           console.warn('No HOD dashboard records found or API call failed');
-          this.setFallbackData();
+          //this.setFallbackData();
           this.isLoading = false;
         }
       },
       error: (error) => {
         console.error('Error fetching dashboard list:', error);
-        this.setFallbackData();
+        //this.setFallbackData();
         this.isLoading = false;
       }
     });
@@ -609,7 +680,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
       topPerformedMonth: 10,
       topPerformedYear: 2025,
       departmentEmployeeCount: 20,
-      pendingMPRs: 19,
+      pendingMPRs: 1,
       evaluatedMPRs: 1,
       topPerformerEmpid: "ITS44",
       topPerformerEmployeeName: "HARIHARASUDHAN SAKTHIVEL",
@@ -661,8 +732,25 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
           profileImageBase64: undefined
         }
       ],
-      hodPendingEvaluations: []
+      hodPendingEvaluations: [
+        {
+          dprid: 142,
+          employeeId: "ITS48",
+          employeeName: "ADAN ONAPARAMBIL",
+          department: "IT",
+          submissionDate: "2025-10-30T14:42:17.289",
+          actionStatus: "Submitted",
+          profileImage: undefined,
+          profileImageBase64: undefined,
+          totalCount: 1
+        }
+      ]
     };
+
+    // Set pending evaluations data for fallback
+    this.pendingEvaluations = this.dashboardData.hodPendingEvaluations || [];
+    this.filteredPendingEvaluations = [...this.pendingEvaluations];
+    this.totalCount = this.pendingEvaluations.length > 0 ? (this.pendingEvaluations[0]?.totalCount || this.pendingEvaluations.length) : 0;
 
     setTimeout(() => {
       this.updateCharts();
@@ -675,7 +763,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
       if (!this.summaryChartInstance || !this.performanceTrendChartInstance) {
         console.log('Charts not initialized, creating them...');
         this.initializeCharts();
-        
+
         // Wait a bit for charts to be created before updating
         setTimeout(() => {
           this.updateSummaryChart();
@@ -698,13 +786,13 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   // Method to force chart recreation
   private recreateCharts(): void {
     console.log('Recreating charts...');
-    
+
     // Destroy existing charts
     if (this.summaryChartInstance) {
       this.summaryChartInstance.destroy();
       this.summaryChartInstance = null;
     }
-    
+
     if (this.performanceTrendChartInstance) {
       this.performanceTrendChartInstance.destroy();
       this.performanceTrendChartInstance = null;

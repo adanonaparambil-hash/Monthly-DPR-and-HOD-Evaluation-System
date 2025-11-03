@@ -40,6 +40,7 @@ export interface PendingEvaluation {
   submissionDate: string; // ISO string
   actionStatus?: string;
   profileImage?: string; // base64 string
+  profileImageBase64?: string; // alternative property name for base64 image
   totalCount?: number;
 }
 

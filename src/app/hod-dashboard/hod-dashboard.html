@@ -238,14 +238,14 @@
         <h2><i class="fas fa-clock"></i> Pending Evaluations</h2>
         <div class="search-bar">
           <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search employees or departments...">
+          <input type="text" placeholder="Search employees or departments..." (input)="onSearchChange($event)" [value]="searchTerm">
         </div>
       </div>
 
       <div class="tabs-container">
         <div class="tabs">
-          <button class="tab active">My Department (3)</button>
-          <!-- <button class="tab">All Departments (4)</button>s -->
+          <button class="tab active">My Department ({{ totalCount || filteredPendingEvaluations.length }})</button>
+          <!-- <button class="tab">All Departments (4)</button> -->
         </div>
         <p class="approval-note">You can approve these evaluations</p>
       </div>
@@ -259,65 +259,39 @@
           <span>Action</span>
         </div>
 
-        <div class="table-row" [@slideInRight]>
-          <div class="employee-cell">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face&auto=format"
-              alt="Alex Thompson">
-            <span>Alex Thompson</span>
+        @if (filteredPendingEvaluations.length > 0) {
+          @for (evaluation of filteredPendingEvaluations; track evaluation.dprid; let i = $index) {
+            <div class="table-row" [@slideInRight] [style.animation-delay]="(i * 0.1) + 's'">
+              <div class="employee-cell">
+                <img [src]="getProfileImage(evaluation)" [alt]="evaluation.employeeName || 'Employee'">
+                <span>{{ evaluation.employeeName || 'Unknown Employee' }}</span>
+              </div>
+              <div class="department-cell">
+                <span class="department-badge">{{ evaluation.department || 'N/A' }}</span>
+                <span>My Dept</span>
+              </div>
+              <div class="date-cell">{{ formatDate(evaluation.submissionDate) }}</div>
+              <div class="priority-cell">
+                <span class="priority" [class]="evaluation.actionStatus === 'Submitted' ? 'high' : 'normal'">
+                  {{ evaluation.actionStatus || 'Pending' }}
+                </span>
+              </div>
+              <div class="action-cell">
+                <button class="evaluate-btn" (click)="evaluateEmployee(evaluation.dprid)">Evaluate Now</button>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="no-data-row">
+            <div class="no-data-message">
+              @if (searchTerm) {
+                <p>No evaluations found matching "{{ searchTerm }}"</p>
+              } @else {
+                <p>No pending evaluations available</p>
+              }
+            </div>
           </div>
-          <div class="department-cell">
-            <span class="department-badge">IT</span>
-            <span>My Dept</span>
-          </div>
-          <div class="date-cell">2024-12-20</div>
-          <div class="priority-cell">
-            <span class="priority high">High</span>
-          </div>
-          <div class="action-cell">
-            <button class="evaluate-btn">Evaluate Now</button>
-          </div>
-        </div>
-
-        <div class="table-row" [@slideInRight] style="animation-delay: 0.1s">
-          <div class="employee-cell">
-            <img
-              src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face&auto=format"
-              alt="Sarah Chen">
-            <span>Sarah Chen</span>
-          </div>
-          <div class="department-cell">
-            <span class="department-badge">IT</span>
-            <span>My Dept</span>
-          </div>
-          <div class="date-cell">2024-12-21</div>
-          <div class="priority-cell">
-            <span class="priority normal">Normal</span>
-          </div>
-          <div class="action-cell">
-            <button class="evaluate-btn">Evaluate Now</button>
-          </div>
-        </div>
-
-        <div class="table-row" [@slideInRight] style="animation-delay: 0.2s">
-          <div class="employee-cell">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format"
-              alt="Mike Davis">
-            <span>Mike Davis</span>
-          </div>
-          <div class="department-cell">
-            <span class="department-badge">IT</span>
-            <span>My Dept</span>
-          </div>
-          <div class="date-cell">2024-12-22</div>
-          <div class="priority-cell">
-            <span class="priority normal">Normal</span>
-          </div>
-          <div class="action-cell">
-            <button class="evaluate-btn">Evaluate Now</button>
-          </div>
-        </div>
+        }
       </div>
     </div>
 
