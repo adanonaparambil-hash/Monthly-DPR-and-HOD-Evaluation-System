@@ -484,6 +484,12 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         console.log('CED Dashboard initialized');
         this.initializeDefaultMonthYear();
         this.loadDashboardData();
+        
+        // Debug: Log initial values
+        console.log('Initial selectedMonth:', this.selectedMonth);
+        console.log('Initial selectedYear:', this.selectedYear);
+        console.log('Months array:', this.months);
+        console.log('Years array:', this.years);
     }
 
     private initializeDefaultMonthYear() {
@@ -542,6 +548,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
 
     onMonthYearChange() {
         console.log(`Month/Year changed to: ${this.selectedMonth}/${this.selectedYear}`);
+        console.log('Month/Year change triggered - loading new data...');
         this.loadDashboardData();
 
         // Reset current view to departments when filter changes

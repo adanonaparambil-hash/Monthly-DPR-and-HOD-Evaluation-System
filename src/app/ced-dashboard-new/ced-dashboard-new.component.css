@@ -1,24 +1,37 @@
 /* CED Dashboard New - Modern Al Adrak Design */
 
-/* CSS Variables */
+/* CSS Variables - Use global theme variables */
 :host {
-  --primary-color: #cc9933;
-  --secondary-color: #2f4f2f;
-  --accent-color: #cc9933;
-  --background-primary: #ffffff;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
+  --primary-color: var(--accent-color, #cc9933);
+  --secondary-color: var(--secondary-color, #2f4f2f);
+  --background-primary: var(--background-primary, #ffffff);
+  --background-secondary: var(--background-secondary, #f8fafc);
+  --text-primary: var(--text-primary, #1f2937);
+  --text-secondary: var(--text-secondary, #6b7280);
+  --border-color: var(--border-color, #e5e7eb);
+  --shadow-sm: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+  --shadow-md: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  --shadow-lg: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
 }
 
-/* Container */
+/* Container - Dark Mode Support */
 .ced-dashboard-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--background-primary);
   font-family: 'Roboto', sans-serif !important;
   position: relative;
   overflow-x: hidden;
   width: 100%;
   line-height: 1.5;
+  transition: background-color 0.3s ease;
+  padding: 0 1rem;
+}
+
+/* Mobile Responsive Container */
+@media (max-width: 768px) {
+  .ced-dashboard-container {
+    padding: 0 0.5rem;
+  }
 }
 
 /* Ensure all elements are visible */
@@ -2336,5 +2349,959 @@ ct Performance Metrics Design */
     border-radius: 0;
     border-left: none;
     border-right: none;
+  }
+}
+
+/* Dark Mode Support for Dashboard Header */
+.dashboard-header {
+  background: var(--background-primary);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.section-info h2,
+.employee-view-header h2 {
+  color: var(--text-primary) !important;
+}
+
+.section-info p,
+.employee-view-header p {
+  color: var(--text-secondary) !important;
+}
+
+/* Mobile Responsive Header */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 1rem 0;
+  }
+  
+  .section-info {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .date-selector {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .selector-group {
+    width: 100%;
+  }
+  
+  .modern-select {
+    width: 100%;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .employee-view-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .back-section {
+    order: 1;
+  }
+  
+  .department-info {
+    order: 2;
+    text-align: center;
+  }
+  
+  .filters-section {
+    order: 3;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title h2 {
+    font-size: 1.5rem;
+  }
+  
+  .section-title p {
+    font-size: 0.9rem;
+  }
+  
+  .dept-details h2 {
+    font-size: 1.25rem;
+  }
+  
+  .dept-details p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Dark Mode for Department Cards */
+.department-card {
+  background: var(--background-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.3s ease;
+}
+
+.department-card:hover {
+  background: var(--background-primary) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.card-content h3 {
+  color: var(--text-primary) !important;
+}
+
+.stat-label {
+  color: var(--text-secondary) !important;
+}
+
+.stat-number {
+  color: var(--text-primary) !important;
+}
+
+/* Mobile Responsive Department Grid */
+@media (max-width: 1200px) {
+  .departments-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .departments-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .department-card {
+    margin: 0;
+  }
+}
+
+/* Dark Mode for Employee Cards */
+.employee-card {
+  background: var(--background-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.3s ease;
+}
+
+.employee-card:hover {
+  background: var(--background-primary) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.employee-name {
+  color: var(--text-primary) !important;
+}
+
+.employee-meta span {
+  color: var(--text-secondary) !important;
+}
+
+.score-number {
+  color: var(--text-primary) !important;
+}
+
+.score-label {
+  color: var(--text-secondary) !important;
+}
+
+/* Mobile Responsive Employee Cards */
+@media (max-width: 768px) {
+  .employee-main-row {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .employee-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .employee-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .score-section {
+    align-self: center;
+  }
+  
+  .expand-icon {
+    align-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .employee-card {
+    margin: 0 -0.5rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .employee-name {
+    font-size: 1rem;
+  }
+  
+  .score-number {
+    font-size: 1.5rem;
+  }
+}
+
+/* Dark Mode for Modern Filter Bar */
+.modern-filter-bar {
+  background: var(--background-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.status-pill {
+  background: var(--background-primary) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+.status-pill:hover {
+  border-color: var(--primary-color) !important;
+  background: rgba(204, 153, 51, 0.1) !important;
+}
+
+.status-pill.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #b8862e 100%) !important;
+  color: white !important;
+}
+
+.search-field {
+  background: var(--background-primary) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.search-field::placeholder {
+  color: var(--text-secondary) !important;
+}
+
+.search-field:focus {
+  border-color: var(--primary-color) !important;
+}
+
+/* Mobile Responsive Filter Bar */
+@media (max-width: 768px) {
+  .modern-filter-bar {
+    margin: 0 -0.5rem 1rem -0.5rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .status-pills {
+    justify-content: center;
+    gap: 0.25rem;
+  }
+  
+  .status-pill {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .search-field {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Dark Mode for Compact Metrics */
+.compact-metrics {
+  background: var(--background-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.metrics-title {
+  color: var(--text-primary) !important;
+}
+
+.metric-compact {
+  background: var(--background-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.metric-compact:hover {
+  border-color: rgba(204, 153, 51, 0.3) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.metric-label {
+  color: var(--text-secondary) !important;
+}
+
+.metric-value {
+  color: var(--text-primary) !important;
+}
+
+.metric-mini-bar {
+  background: var(--border-color) !important;
+}
+
+/* Mobile Responsive Compact Metrics */
+@media (max-width: 768px) {
+  .compact-metrics {
+    margin: 1rem -0.5rem 0 -0.5rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .metrics-compact-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-compact-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric-compact {
+    padding: 0.5rem;
+  }
+}
+
+/* Dark Mode for Profile Modal */
+.profile-modal {
+  background: var(--background-primary) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.profile-modal-header {
+  background: linear-gradient(135deg, rgba(204, 153, 51, 0.1) 0%, transparent 100%) !important;
+  border-bottom: 2px solid var(--border-color) !important;
+}
+
+.profile-modal-header h2 {
+  color: var(--text-primary) !important;
+}
+
+.department-name {
+  color: var(--primary-color) !important;
+}
+
+.profile-stats .stat-label {
+  color: var(--text-secondary) !important;
+}
+
+.profile-stats .stat-value {
+  color: var(--text-primary) !important;
+}
+
+.performance-item {
+  background: var(--background-secondary) !important;
+  border: 2px solid var(--border-color) !important;
+}
+
+.performance-header span {
+  color: var(--text-primary) !important;
+}
+
+.performance-score {
+  color: var(--text-primary) !important;
+}
+
+.performance-bar {
+  background: var(--border-color) !important;
+}
+
+/* Mobile Responsive Profile Modal */
+@media (max-width: 768px) {
+  .profile-modal-overlay {
+    padding: 1rem;
+  }
+  
+  .profile-modal {
+    max-height: 95vh;
+  }
+  
+  .profile-basic-info {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+  
+  .profile-photo {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .performance-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .profile-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .profile-modal-content {
+    padding: 1rem;
+  }
+  
+  .profile-modal-header {
+    padding: 1rem;
+  }
+  
+  .profile-modal-header h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Loading and Empty States - Dark Mode */
+.loading-state,
+.no-data-state,
+.empty-state {
+  background: var(--background-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.loading-state p,
+.no-data-state p,
+.empty-state p {
+  color: var(--text-secondary) !important;
+}
+
+.no-data-state h3,
+.empty-state h3 {
+  color: var(--text-primary) !important;
+}
+
+/* Status Badges - Dark Mode */
+.status-approved {
+  background: rgba(34, 197, 94, 0.1) !important;
+  color: #22c55e !important;
+  border: 1px solid rgba(34, 197, 94, 0.2) !important;
+}
+
+.status-submitted {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #3b82f6 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.status-pending {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Buttons - Dark Mode */
+.back-button,
+.view-mpr-btn,
+.view-full-btn,
+.action-btn {
+  transition: all 0.3s ease;
+}
+
+.back-button {
+  background: var(--background-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.back-button:hover {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+/* Ensure proper contrast in dark mode */
+:host-context(.dark-theme) .card-content,
+:host-context(.dark-theme) .employee-details,
+:host-context(.dark-theme) .metric-compact {
+  background: var(--background-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .department-card,
+  .employee-card,
+  .modern-filter-bar,
+  .compact-metrics {
+    border-width: 2px !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Month/Year Selector Styles */
+.date-selector {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 120px;
+}
+
+.selector-group label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-family: 'Roboto', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+
+.modern-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--background-primary);
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cc9933' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1em 1em;
+  padding-right: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  height: 36px;
+}
+
+.modern-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(204, 153, 51, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.modern-select:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode for Month/Year Selectors */
+.modern-select {
+  background-color: var(--background-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.modern-select option {
+  background-color: var(--background-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Section Info Layout - Compact */
+.section-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 2rem;
+  padding: 0;
+  margin: 0;
+}
+
+.section-title {
+  flex: 1;
+  margin: 0;
+}
+
+.section-title h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.2;
+}
+
+.section-title p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.3;
+}
+
+/* Header Content Styling - Reduced Height */
+.header-content {
+  padding: 1rem 0 0.5rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dashboard-header {
+  background: var(--background-primary);
+  border-bottom: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+/* Mobile Responsive Month/Year Selector */
+@media (max-width: 768px) {
+  .section-info {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+  
+  .date-selector {
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0;
+  }
+  
+  .selector-group {
+    min-width: unset;
+    width: 100%;
+  }
+  
+  .modern-select {
+    width: 100%;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .section-title h2 {
+    font-size: 1.5rem;
+  }
+  
+  .section-title p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 1rem 0;
+  }
+  
+  .section-title h2 {
+    font-size: 1.25rem;
+  }
+  
+  .section-title p {
+    font-size: 0.85rem;
+  }
+  
+  .selector-group label {
+    font-size: 0.8rem;
+  }
+  
+  .modern-select {
+    padding: 0.6rem 0.8rem;
+    padding-right: 2.2rem;
+    font-size: 16px;
+  }
+}
+
+/* Ensure visibility in all themes */
+.section-info {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.date-selector {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex-direction: row !important;
+}
+
+.selector-group {
+  display: flex !important;
+  flex-direction: column !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.modern-select {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: 100% !important;
+}
+
+.selector-group label {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* High contrast for better visibility */
+.modern-select {
+  border-width: 2px !important;
+  font-weight: 500 !important;
+}
+
+.selector-group label {
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+/* Ensure proper z-index */
+.date-selector {
+  z-index: 10;
+  position: relative;
+}
+
+.modern-select {
+  z-index: 5;
+  position: relative;
+}
+
+/* Clean Layout for Month/Year Dropdowns */
+.section-info {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+}
+
+.date-selector {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.selector-group {
+  background: transparent !important;
+}
+
+.selector-group label {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.modern-select {
+  background-color: var(--background-primary) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--primary-color) !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px rgba(204, 153, 51, 0.2) !important;
+}
+
+.modern-select:hover,
+.modern-select:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(204, 153, 51, 0.2) !important;
+}
+
+/* Override any conflicting styles */
+.ced-dashboard-container .section-info,
+.ced-dashboard-container .date-selector,
+.ced-dashboard-container .selector-group,
+.ced-dashboard-container .modern-select {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.ced-dashboard-container .selector-group {
+  flex-direction: column !important;
+}
+
+.ced-dashboard-container .modern-select {
+  display: block !important;
+}
+
+/* Force visibility even in dark mode */
+:host-context(.dark-theme) .section-info,
+:host-context(.dark-theme) .date-selector,
+:host-context(.dark-theme) .selector-group,
+:host-context(.dark-theme) .modern-select {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+:host-context(.dark-theme) .selector-group {
+  flex-direction: column !important;
+}
+
+:host-context(.dark-theme) .modern-select {
+  display: block !important;
+}
+
+/* Remove debug content */
+
+/* Ensure proper stacking order */
+.section-info {
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+.date-selector {
+  z-index: 99 !important;
+  position: relative !important;
+}
+
+.modern-select {
+  z-index: 98 !important;
+  position: relative !important;
+}/* Ensur
+e Mobile Navigation Compatibility */
+/* Don't interfere with layout's mobile navigation */
+:host {
+  position: relative;
+  z-index: 1; /* Lower than layout header */
+}
+
+/* Ensure CED dashboard doesn't override layout mobile styles */
+.ced-dashboard-container {
+  position: relative;
+  z-index: 1;
+  /* Don't use position: fixed or absolute that might interfere */
+}
+
+/* Ensure header elements don't interfere with layout header */
+.dashboard-header {
+  position: relative;
+  z-index: 2; /* Lower than layout header (which should be higher) */
+}
+
+/* Mobile specific - ensure no interference with layout */
+@media (max-width: 768px) {
+  /* Ensure CED dashboard doesn't interfere with mobile layout */
+  :host {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .ced-dashboard-container {
+    width: 100%;
+    min-height: calc(100vh - 60px); /* Account for layout header */
+    padding-top: 0; /* Don't add extra padding that might push content */
+  }
+  
+  /* Ensure dashboard header doesn't conflict with layout header */
+  .dashboard-header {
+    margin-top: 0;
+    position: relative;
+  }
+  
+  /* Make sure content is properly contained */
+  .header-content,
+  .main-content {
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* Ensure proper stacking order */
+.ced-dashboard-container,
+.dashboard-header,
+.section-info,
+.date-selector {
+  /* Don't use z-index values higher than layout components */
+  z-index: auto;
+}
+
+/* Force visibility of layout elements (if they're being hidden) */
+:host-context(.layout-container) .menu-toggle {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure layout header is always visible */
+:host-context(.layout-container) .header {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+}
+
+/* Mobile menu toggle specific fixes */
+@media (max-width: 768px) {
+  :host-context(.layout-container) .menu-toggle {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1001 !important;
+  }
+  
+  :host-context(.layout-container) .header-left {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Ensure sidebar can be toggled */
+  :host-context(.layout-container) .sidebar {
+    transition: transform 0.3s ease !important;
+  }
+  
+  /* When sidebar is collapsed on mobile */
+  :host-context(.layout-container.sidebar-collapsed) .sidebar {
+    transform: translateX(-100%) !important;
+  }
+}
+
+/* Additional mobile navigation support */
+@media (max-width: 480px) {
+  .ced-dashboard-container {
+    padding: 0 0.25rem;
+  }
+  
+  /* Ensure mobile header elements are accessible */
+  :host-context(.layout-container) .header {
+    padding: 8px 12px !important;
+    min-height: 50px !important;
+  }
+  
+  :host-context(.layout-container) .menu-toggle {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* Debug styles to ensure visibility (remove after testing) */
+@media (max-width: 768px) {
+  :host-context(.layout-container) .menu-toggle {
+    background: rgba(204, 153, 51, 0.1) !important;
+    border: 1px solid var(--primary-color) !important;
+    border-radius: 4px !important;
+  }
+  
+  :host-context(.layout-container) .menu-toggle:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
   }
 }

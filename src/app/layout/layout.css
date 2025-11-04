@@ -1486,4 +1486,146 @@ nced Notification Actions */
 .notification-empty i {
   font-size: 28px;
   opacity: 0.5;
+}/* Mobi
+le Sidebar Toggle Functionality */
+@media (max-width: 768px) {
+  .layout-container {
+    position: relative;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    z-index: 1000;
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .layout-container.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .main-area {
+    width: 100%;
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+  }
+  
+  /* Overlay when sidebar is open */
+  .layout-container:not(.sidebar-collapsed)::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  
+  .layout-container.sidebar-collapsed::before {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  /* Ensure menu toggle is always visible */
+  .menu-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-toggle:hover {
+    background: rgba(204, 153, 51, 0.1);
+    color: var(--primary-color);
+  }
+  
+  .menu-toggle i {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 280px;
+  }
+  
+  .menu-toggle {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .menu-toggle i {
+    font-size: 1.1rem;
+  }
+}
+
+/* Dark mode mobile menu */
+.dark-theme .menu-toggle {
+  color: var(--text-primary);
+}
+
+.dark-theme .menu-toggle:hover {
+  background: rgba(204, 153, 51, 0.2);
+  color: var(--primary-color);
+}
+
+/* Ensure proper stacking order */
+.header {
+  z-index: 1001;
+  position: relative;
+}
+
+.sidebar {
+  z-index: 1000;
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 768px) {
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .company-logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-image {
+    height: 32px;
+    width: auto;
+  }
+  
+  .page-title-section {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .page-title {
+    font-size: 1.1rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .page-subtitle {
+    display: none; /* Hide subtitle on mobile to save space */
+  }
 }

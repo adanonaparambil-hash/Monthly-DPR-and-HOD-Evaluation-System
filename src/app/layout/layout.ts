@@ -102,6 +102,9 @@ export class layout implements OnInit, OnDestroy {
       return; // Session service will handle redirect
     }
 
+    // Initialize sidebar state based on screen size
+    this.initializeSidebarState();
+
     // Track route changes for page title
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -116,6 +119,23 @@ export class layout implements OnInit, OnDestroy {
 
     // Start polling for notification count every 10 seconds (lightweight)
     this.startNotificationCountPolling();
+  }
+
+  private initializeSidebarState() {
+    // Collapse sidebar on mobile by default
+    if (window.innerWidth <= 768) {
+      this.sidebarCollapsed = true;
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    // Auto-collapse sidebar on mobile
+    if (event.target.innerWidth <= 768) {
+      this.sidebarCollapsed = true;
+    } else {
+      this.sidebarCollapsed = false;
+    }
   }
 
   ngOnDestroy() {
