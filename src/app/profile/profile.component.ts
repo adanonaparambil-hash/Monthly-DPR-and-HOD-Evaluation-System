@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
-import { EmployeeProfileUpdateDto,EmployeeDocumentUpload } from '../models/common.model';
+import { EmployeeProfileUpdateDto, EmployeeDocumentUpload } from '../models/common.model';
 
 @Component({
   selector: 'app-profile',
@@ -37,7 +37,7 @@ export class ProfileComponent implements OnInit {
   userProfile: any = {};
   originalProfile: any = {};
 
-  constructor(private api: Api) {}
+  constructor(private api: Api) { }
 
   ngOnInit(): void {
     const empId = this.user?.empId;
@@ -102,30 +102,30 @@ export class ProfileComponent implements OnInit {
     this.fileInput.nativeElement.click();
   }
 
- 
+
   onFileSelected(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
 
-  const formData = new FormData();
-  formData.append('empId', this.user.empId.toString());
-  formData.append('docName', file.name);
-  formData.append('docType', file.type);
-  formData.append('docCategory', "PROFILE_PICTURE");
-  formData.append('uploadedBy', this.userProfile.name);
-  formData.append('fileData', file, file.name); // ✅ send actual File
+    const formData = new FormData();
+    formData.append('empId', this.user.empId.toString());
+    formData.append('docName', file.name);
+    formData.append('docType', file.type);
+    formData.append('docCategory', "PROFILE_PICTURE");
+    formData.append('uploadedBy', this.userProfile.name);
+    formData.append('fileData', file, file.name); // ✅ send actual File
 
-  this.api.uploadDocument(formData).subscribe({
-    next: (res: any) => {
-      console.log(res.message || 'Upload successful!');
-      this.userProfile.avatar = URL.createObjectURL(file); // show preview
-    },
-    error: (err) => {
-      console.error(err);
-      alert('Upload failed!');
-    }
-  });
-}
+    this.api.uploadDocument(formData).subscribe({
+      next: (res: any) => {
+        console.log(res.message || 'Upload successful!');
+        this.userProfile.avatar = URL.createObjectURL(file); // show preview
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Upload failed!');
+      }
+    });
+  }
 
 
 
@@ -144,13 +144,13 @@ export class ProfileComponent implements OnInit {
       location: this.userProfile.location,
       skillset: this.userProfile.skillset,
       dobDate: this.userProfile.dobDate,
-      address : this.userProfile.address,
-      telephone : this.userProfile.telephone,
-      nation : this.userProfile.nation,
-      postOffice : this.userProfile.postOffice,
-      state : this.userProfile.state,
-      district : this.userProfile.district,
-      place : this.userProfile.place,
+      address: this.userProfile.address,
+      telephone: this.userProfile.telephone,
+      nation: this.userProfile.nation,
+      postOffice: this.userProfile.postOffice,
+      state: this.userProfile.state,
+      district: this.userProfile.district,
+      place: this.userProfile.place,
     };
 
     this.api.updateProfile(profile).subscribe({

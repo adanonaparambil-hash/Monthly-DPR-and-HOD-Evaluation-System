@@ -49,19 +49,34 @@
           </div>
         </div>
 
-        <!-- Search Box -->
-        <div class="search-section">
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input 
-              type="text" 
-              [(ngModel)]="searchQuery" 
-              (input)="onSearchChange()"
-              placeholder="Search employee name..."
-              class="search-input">
-            <button *ngIf="searchQuery" (click)="searchQuery = ''; onSearchChange()" class="clear-search">
-              <i class="fas fa-times"></i>
-            </button>
+        <!-- Modern Filter Bar -->
+        <div class="modern-filter-bar">
+          <div class="filter-container">
+            <!-- Status Pills -->
+            <div class="status-pills">
+              <button 
+                *ngFor="let filter of statusFilters" 
+                [class]="'status-pill ' + (selectedStatusFilter === filter.value ? 'active' : '')"
+                (click)="selectedStatusFilter = filter.value; onStatusFilterChange()">
+                <i [class]="filter.icon"></i>
+                <span>{{ filter.label }}</span>
+                <span class="count">{{ getEmployeeCountByStatus(filter.value) }}</span>
+              </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="modern-search">
+              <i class="fas fa-search"></i>
+              <input 
+                type="text" 
+                [(ngModel)]="searchQuery" 
+                (input)="onSearchChange()"
+                placeholder="Search employees..."
+                class="search-field">
+              <button *ngIf="searchQuery" (click)="searchQuery = ''; onSearchChange()" class="clear-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -201,7 +216,10 @@
           [class.expanded]="isEmployeeExpanded(employee.id)">
           
           <!-- Main Employee Row -->
-          <div class="employee-main-row" (click)="toggleEmployeeDetails(employee.id)">
+          <div class="employee-main-row" 
+               [class.expandable]="canExpandEmployee(employee)"
+               [class.non-expandable]="!canExpandEmployee(employee)"
+               (click)="toggleEmployeeDetails(employee.id, employee)">
             <!-- Rank Badge -->
             <div class="rank-badge" [class]="getRankIconClass(employee.rank)">
               <i *ngIf="employee.rank === 1" class="fas fa-crown rank-icon-gold"></i>
@@ -235,127 +253,112 @@
             <!-- Overall Score Section -->
             <div class="score-section">
               <div class="score-display">
-                <div class="score-number">{{ employee.score }}</div>
+                <div class="score-number">{{ getDisplayScore(employee) }}</div>
                 <div class="score-label">Overall Score</div>
               </div>
             </div>
             
-            <!-- Expand/Collapse Icon -->
-            <div class="expand-icon">
+            <!-- Expand/Collapse Icon (only for approved employees) -->
+            <div class="expand-icon" *ngIf="canExpandEmployee(employee)">
               <i class="fas" [class.fa-chevron-down]="!isEmployeeExpanded(employee.id)" 
                  [class.fa-chevron-up]="isEmployeeExpanded(employee.id)"></i>
             </div>
+            
+            <!-- Status indicator for non-approved employees -->
+            <div class="status-indicator" *ngIf="!canExpandEmployee(employee)">
+              <span class="status-badge" [ngClass]="getStatusClass(employee.status)">
+                {{ getStatusText(employee.status) }}
+              </span>
+            </div>
           </div>
 
-          <!-- Expanded Performance Metrics -->
-          <div class="performance-metrics" *ngIf="isEmployeeExpanded(employee.id) && employee.performanceMetrics">
-            <h4 class="metrics-title">Performance Metrics</h4>
-            <div class="metrics-grid">
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('quality')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.quality)"></i>
-                  <span class="metric-name">Quality</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.quality }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.quality"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.quality)"></div>
-                </div>
-              </div>
-
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('timeliness')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.timeliness)"></i>
-                  <span class="metric-name">Timeliness</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.timeliness }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.timeliness"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.timeliness)"></div>
-                </div>
-              </div>
-
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('initiative')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.initiative)"></i>
-                  <span class="metric-name">Initiative</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.initiative }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.initiative"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.initiative)"></div>
-                </div>
-              </div>
-
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('communication')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.communication)"></i>
-                  <span class="metric-name">Communication</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.communication }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.communication"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.communication)"></div>
-                </div>
-              </div>
-
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('teamwork')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.teamwork)"></i>
-                  <span class="metric-name">Teamwork</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.teamwork }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.teamwork"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.teamwork)"></div>
-                </div>
-              </div>
-
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('problemSolving')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.problemSolving)"></i>
-                  <span class="metric-name">Problem Solving</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.problemSolving }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.problemSolving"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.problemSolving)"></div>
-                </div>
-              </div>
-
-              <div class="metric-item">
-                <div class="metric-header">
-                  <i [class]="getPerformanceMetricIcon('hodRating')" 
-                     [style.color]="getPerformanceMetricColor(employee.performanceMetrics.hodRating)"></i>
-                  <span class="metric-name">HOD Rating</span>
-                </div>
-                <div class="metric-score">{{ employee.performanceMetrics.hodRating }}/100</div>
-                <div class="metric-bar">
-                  <div class="metric-progress" 
-                       [style.width.%]="employee.performanceMetrics.hodRating"
-                       [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.hodRating)"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Button in Expanded View -->
-            <div class="expanded-actions">
-              <button class="view-mpr-btn" (click)="viewMPRDetails(employee); $event.stopPropagation()">
-                <i class="fas fa-eye"></i>
-                <span>View Full MPR</span>
+          <!-- Compact Performance Metrics (only for approved employees) -->
+          <div class="compact-metrics" *ngIf="isEmployeeExpanded(employee.id) && employee.performanceMetrics && canExpandEmployee(employee)">
+            <div class="metrics-header">
+              <span class="metrics-title">Performance Breakdown</span>
+              <button class="view-full-btn" (click)="viewMPRDetails(employee); $event.stopPropagation()">
+                <i class="fas fa-external-link-alt"></i>
+                View Details
               </button>
+            </div>
+            
+            <div class="metrics-compact-grid">
+              <div class="metric-compact">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('quality')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.quality)"></i>
+                  <span class="metric-label">Quality</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.quality }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.quality" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.quality)"></div>
+                </div>
+              </div>
+
+              <div class="metric-compact">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('timeliness')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.timeliness)"></i>
+                  <span class="metric-label">Timeliness</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.timeliness }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.timeliness" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.timeliness)"></div>
+                </div>
+              </div>
+
+              <div class="metric-compact">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('initiative')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.initiative)"></i>
+                  <span class="metric-label">Initiative</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.initiative }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.initiative" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.initiative)"></div>
+                </div>
+              </div>
+
+              <div class="metric-compact">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('communication')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.communication)"></i>
+                  <span class="metric-label">Communication</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.communication }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.communication" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.communication)"></div>
+                </div>
+              </div>
+
+              <div class="metric-compact">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('teamwork')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.teamwork)"></i>
+                  <span class="metric-label">Teamwork</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.teamwork }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.teamwork" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.teamwork)"></div>
+                </div>
+              </div>
+
+              <div class="metric-compact">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('problemSolving')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.problemSolving)"></i>
+                  <span class="metric-label">Problem Solving</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.problemSolving }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.problemSolving" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.problemSolving)"></div>
+                </div>
+              </div>
+
+              <div class="metric-compact hod-rating">
+                <div class="metric-info">
+                  <i [class]="getPerformanceMetricIcon('hodRating')" [style.color]="getPerformanceMetricColor(employee.performanceMetrics.hodRating)"></i>
+                  <span class="metric-label">HOD Rating</span>
+                </div>
+                <div class="metric-value">{{ employee.performanceMetrics.hodRating }}</div>
+                <div class="metric-mini-bar">
+                  <div class="metric-fill" [style.width.%]="employee.performanceMetrics.hodRating" [style.background-color]="getPerformanceMetricColor(employee.performanceMetrics.hodRating)"></div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -365,4 +368,158 @@
       </div>
     </div>
   </main>
+
+  <!-- Employee Profile Modal -->
+  <div class="profile-modal-overlay" *ngIf="showProfileModal" (click)="closeProfileModal()">
+    <div class="profile-modal" (click)="$event.stopPropagation()" *ngIf="selectedEmployeeProfile">
+      <!-- Modal Header -->
+      <div class="profile-modal-header">
+        <h2>Employee Profile</h2>
+        <button class="close-modal-btn" (click)="closeProfileModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="profile-modal-content">
+        <!-- Profile Photo and Basic Info -->
+        <div class="profile-basic-info">
+          <div class="profile-photo-section">
+            <img [src]="selectedEmployeeProfile.profileImage" [alt]="selectedEmployeeProfile.name" class="profile-photo">
+            <div class="profile-status-badge" [ngClass]="getStatusClass(selectedEmployeeProfile.status)">
+              {{ getStatusText(selectedEmployeeProfile.status) }}
+            </div>
+          </div>
+          
+          <div class="profile-details">
+            <h3>{{ selectedEmployeeProfile.name }}</h3>
+            <p class="department-name">{{ selectedEmployeeProfile.department }}</p>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-label">Overall Score</span>
+                <span class="stat-value">{{ getDisplayScore(selectedEmployeeProfile) }}/100</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Department Rank</span>
+                <span class="stat-value">#{{ selectedEmployeeProfile.rank }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Review Period</span>
+                <span class="stat-value">{{ selectedEmployeeProfile.month }} {{ selectedEmployeeProfile.year }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics (if available and approved) -->
+        <div class="profile-performance-section" *ngIf="selectedEmployeeProfile.performanceMetrics && selectedEmployeeProfile.status === 'approved'">
+          <h4>Performance Breakdown</h4>
+          <div class="performance-grid">
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-star" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.quality)"></i>
+                <span>Quality</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.quality }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.quality"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.quality)"></div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-clock" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.timeliness)"></i>
+                <span>Timeliness</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.timeliness }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.timeliness"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.timeliness)"></div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-lightbulb" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.initiative)"></i>
+                <span>Initiative</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.initiative }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.initiative"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.initiative)"></div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-comments" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.communication)"></i>
+                <span>Communication</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.communication }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.communication"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.communication)"></div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-users" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.teamwork)"></i>
+                <span>Teamwork</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.teamwork }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.teamwork"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.teamwork)"></div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-puzzle-piece" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.problemSolving)"></i>
+                <span>Problem Solving</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.problemSolving }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.problemSolving"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.problemSolving)"></div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="performance-header">
+                <i class="fas fa-award" [style.color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.hodRating)"></i>
+                <span>HOD Rating</span>
+              </div>
+              <div class="performance-score">{{ selectedEmployeeProfile.performanceMetrics.hodRating }}/100</div>
+              <div class="performance-bar">
+                <div class="performance-fill" 
+                     [style.width.%]="selectedEmployeeProfile.performanceMetrics.hodRating"
+                     [style.background-color]="getPerformanceMetricColor(selectedEmployeeProfile.performanceMetrics.hodRating)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="profile-actions">
+          <button class="action-btn primary" (click)="viewMPRDetails(selectedEmployeeProfile); closeProfileModal()">
+            <i class="fas fa-file-alt"></i>
+            View Full MPR
+          </button>
+          <button class="action-btn secondary" (click)="closeProfileModal()">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

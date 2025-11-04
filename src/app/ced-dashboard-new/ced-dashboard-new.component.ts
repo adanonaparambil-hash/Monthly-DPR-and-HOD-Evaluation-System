@@ -58,6 +58,9 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     filteredEmployees: Employee[] = [];
     expandedEmployeeId: string | null = null;
     isLoading: boolean = false;
+    selectedStatusFilter: string = 'approved';
+    showProfileModal: boolean = false;
+    selectedEmployeeProfile: Employee | null = null;
 
     months = [
         { value: 1, name: 'January' },
@@ -75,6 +78,14 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     ];
 
     years = [2025, 2024, 2023, 2022];
+
+    // Status filter options
+    statusFilters = [
+        { value: 'all', label: 'Total Employees', icon: 'fas fa-users' },
+        { value: 'approved', label: 'Approved', icon: 'fas fa-check-circle' },
+        { value: 'submitted', label: 'Submitted', icon: 'fas fa-upload' },
+        { value: 'pending', label: 'Pending', icon: 'fas fa-clock' }
+    ];
 
     departments: Department[] = [];
 
@@ -545,6 +556,8 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         this.currentView = 'employees';
         this.searchQuery = ''; // Reset search when switching departments
         this.filteredEmployees = []; // Clear filtered results
+        this.selectedStatusFilter = 'approved'; // Default to approved
+        this.expandedEmployeeId = null; // Reset expanded state
 
         // Log available employees for this department
         const deptEmployees = this.employees.filter(emp => emp.department === department.department);
@@ -556,6 +569,8 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         this.selectedDepartment = null;
         this.searchQuery = '';
         this.filteredEmployees = [];
+        this.selectedStatusFilter = 'approved';
+        this.expandedEmployeeId = null;
     }
 
     getRankIcon(rank: number): string {
@@ -587,7 +602,13 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
 
     viewEmployeeProfile(employee: Employee) {
         console.log('Viewing profile for:', employee.name);
-        // Implement profile view navigation
+        this.selectedEmployeeProfile = employee;
+        this.showProfileModal = true;
+    }
+
+    closeProfileModal() {
+        this.showProfileModal = false;
+        this.selectedEmployeeProfile = null;
     }
 
     viewMPRDetails(employee: Employee) {
@@ -619,13 +640,54 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             return [];
         }
 
-        // If we have a search query, return filtered results (even if empty)
-        if (this.searchQuery.trim()) {
-            return this.filteredEmployees;
+        let employees = this.employees.filter(emp => emp.department === this.selectedDepartment?.department);
+
+        // Apply status filter
+        if (this.selectedStatusFilter !== 'all') {
+            employees = employees.filter(emp => emp.status === this.selectedStatusFilter);
         }
 
-        // Otherwise return all employees from the selected department
-        return this.employees.filter(emp => emp.department === this.selectedDepartment?.department);
+        // Apply search filter if exists
+        if (this.searchQuery.trim()) {
+            employees = employees.filter(emp => 
+                emp.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+            );
+        }
+
+        // Sort by rank for approved employees, by score for others
+        return employees.sort((a, b) => {
+            if (this.selectedStatusFilter === 'approved') {
+                return a.rank - b.rank;
+            }
+            return b.score - a.score;
+        });
+    }
+
+    onStatusFilterChange() {
+        console.log('Status filter changed to:', this.selectedStatusFilter);
+        this.searchQuery = ''; // Reset search when changing status
+        this.expandedEmployeeId = null; // Reset expanded state
+    }
+
+    canExpandEmployee(employee: Employee): boolean {
+        return employee.status === 'approved';
+    }
+
+    getEmployeeCountByStatus(status: string): number {
+        if (!this.selectedDepartment) return 0;
+        
+        const deptEmployees = this.employees.filter(emp => emp.department === this.selectedDepartment?.department);
+        
+        if (status === 'all') {
+            return deptEmployees.length;
+        }
+        
+        return deptEmployees.filter(emp => emp.status === status).length;
+    }
+
+    getDisplayScore(employee: Employee): number {
+        // Only approved employees show their actual score, others show 0
+        return employee.status === 'approved' ? employee.score : 0;
     }
 
     getStatIcon(statType: string): string {
@@ -654,8 +716,11 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         return employee.id;
     }
 
-    // Toggle employee details expansion
-    toggleEmployeeDetails(employeeId: string) {
+    // Toggle employee details expansion (only for approved employees)
+    toggleEmployeeDetails(employeeId: string, employee: Employee) {
+        if (!this.canExpandEmployee(employee)) {
+            return; // Don't expand if not approved
+        }
         this.expandedEmployeeId = this.expandedEmployeeId === employeeId ? null : employeeId;
     }
 
