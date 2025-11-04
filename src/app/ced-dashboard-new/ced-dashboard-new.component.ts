@@ -1,16 +1,22 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Api } from '../services/api';
 
 interface Department {
-    id: string;
-    name: string;
+    department: string;
     totalEmployees: number;
     submittedMPR: number;
     pendingMPR: number;
     approvedMPR: number;
-    color: string;
-    icon: string;
+    color?: string;
+    icon?: string;
+}
+
+interface ApiResponse {
+    success: boolean;
+    message: string;
+    data: Department[];
 }
 
 interface PerformanceMetrics {
@@ -44,83 +50,89 @@ interface Employee {
     styleUrls: ['./ced-dashboard-new.component.css']
 })
 export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestroy {
-    selectedMonth: string = 'October';
-    selectedYear: string = '2024';
+    selectedMonth: number = 0;
+    selectedYear: number = 0;
     currentView: 'departments' | 'employees' = 'departments';
     selectedDepartment: Department | null = null;
     searchQuery: string = '';
     filteredEmployees: Employee[] = [];
     expandedEmployeeId: string | null = null;
+    isLoading: boolean = false;
 
     months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
+        { value: 1, name: 'January' },
+        { value: 2, name: 'February' },
+        { value: 3, name: 'March' },
+        { value: 4, name: 'April' },
+        { value: 5, name: 'May' },
+        { value: 6, name: 'June' },
+        { value: 7, name: 'July' },
+        { value: 8, name: 'August' },
+        { value: 9, name: 'September' },
+        { value: 10, name: 'October' },
+        { value: 11, name: 'November' },
+        { value: 12, name: 'December' }
     ];
 
-    years = ['2024', '2023', '2022'];
+    years = [2025, 2024, 2023, 2022];
 
-    departments: Department[] = [
-        {
-            id: '1',
-            name: 'Engineering',
-            totalEmployees: 45,
-            submittedMPR: 38,
-            pendingMPR: 5,
-            approvedMPR: 33,
-            color: 'dept-engineering',
-            icon: 'fas fa-code'
-        },
-        {
-            id: '2',
-            name: 'Marketing',
-            totalEmployees: 23,
-            submittedMPR: 20,
-            pendingMPR: 2,
-            approvedMPR: 18,
-            color: 'dept-marketing',
-            icon: 'fas fa-bullhorn'
-        },
-        {
-            id: '3',
-            name: 'Sales',
-            totalEmployees: 32,
-            submittedMPR: 28,
-            pendingMPR: 3,
-            approvedMPR: 25,
-            color: 'dept-sales',
-            icon: 'fas fa-chart-line'
-        },
-        {
-            id: '4',
-            name: 'HR',
-            totalEmployees: 12,
-            submittedMPR: 11,
-            pendingMPR: 1,
-            approvedMPR: 10,
-            color: 'dept-hr',
-            icon: 'fas fa-users'
-        },
-        {
-            id: '5',
-            name: 'Finance',
-            totalEmployees: 18,
-            submittedMPR: 16,
-            pendingMPR: 1,
-            approvedMPR: 15,
-            color: 'dept-finance',
-            icon: 'fas fa-calculator'
-        },
-        {
-            id: '6',
-            name: 'Operations',
-            totalEmployees: 28,
-            submittedMPR: 24,
-            pendingMPR: 3,
-            approvedMPR: 21,
-            color: 'dept-operations',
-            icon: 'fas fa-cogs'
-        }
-    ];
+    departments: Department[] = [];
+
+    // Department icons mapping
+    departmentIcons: { [key: string]: string } = {
+        'QS PRE TENDER': 'fas fa-clipboard-list',
+        'FINANCE': 'fas fa-calculator',
+        'CONTRACTS': 'fas fa-file-contract',
+        'PLANNING': 'fas fa-project-diagram',
+        'ADMINISTRATION': 'fas fa-building',
+        'CWS': 'fas fa-water',
+        'FMT': 'fas fa-tools',
+        'AFW': 'fas fa-shield-alt',
+        'POST TENSION': 'fas fa-compress-arrows-alt',
+        'ADMINISTRATION & GENERAL': 'fas fa-cogs',
+        'PROJECTS': 'fas fa-tasks',
+        'PURCHASE': 'fas fa-shopping-cart',
+        'HUMAN RESOURCES': 'fas fa-users',
+        'DESIGN & BUILD': 'fas fa-drafting-compass',
+        'HSE': 'fas fa-hard-hat',
+        'QS POST TENDER': 'fas fa-clipboard-check',
+        'PMV': 'fas fa-car',
+        'OPERATIONS': 'fas fa-cogs',
+        'IT': 'fas fa-laptop-code',
+        'QUALITY ASSURANCE & QUALITY CONTROL': 'fas fa-check-double',
+        'CAD': 'fas fa-draw-polygon',
+        'STORES': 'fas fa-warehouse',
+        'TRAINING, WELFARE & DEVELOPMENT': 'fas fa-graduation-cap',
+        'AUDIT': 'fas fa-search'
+    };
+
+    // Department colors mapping
+    departmentColors: { [key: string]: string } = {
+        'QS PRE TENDER': 'dept-qs-pre',
+        'FINANCE': 'dept-finance',
+        'CONTRACTS': 'dept-contracts',
+        'PLANNING': 'dept-planning',
+        'ADMINISTRATION': 'dept-admin',
+        'CWS': 'dept-cws',
+        'FMT': 'dept-fmt',
+        'AFW': 'dept-afw',
+        'POST TENSION': 'dept-post-tension',
+        'ADMINISTRATION & GENERAL': 'dept-admin-general',
+        'PROJECTS': 'dept-projects',
+        'PURCHASE': 'dept-purchase',
+        'HUMAN RESOURCES': 'dept-hr',
+        'DESIGN & BUILD': 'dept-design',
+        'HSE': 'dept-hse',
+        'QS POST TENDER': 'dept-qs-post',
+        'PMV': 'dept-pmv',
+        'OPERATIONS': 'dept-operations',
+        'IT': 'dept-it',
+        'QUALITY ASSURANCE & QUALITY CONTROL': 'dept-qa-qc',
+        'CAD': 'dept-cad',
+        'STORES': 'dept-stores',
+        'TRAINING, WELFARE & DEVELOPMENT': 'dept-training',
+        'AUDIT': 'dept-audit'
+    };
 
     // Icons for different stats
     statIcons = {
@@ -131,7 +143,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     };
 
     employees: Employee[] = [
-        // Engineering Department
+        // IT Department (matches API)
         {
             id: '1',
             name: 'Sarah Johnson',
@@ -141,7 +153,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 96,
             rank: 1,
-            department: 'Engineering',
+            department: 'IT',
             performanceMetrics: {
                 quality: 96,
                 timeliness: 94,
@@ -161,7 +173,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 94,
             rank: 2,
-            department: 'Engineering',
+            department: 'IT',
             performanceMetrics: {
                 quality: 92,
                 timeliness: 96,
@@ -181,7 +193,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 92,
             rank: 3,
-            department: 'Engineering',
+            department: 'IT',
             performanceMetrics: {
                 quality: 90,
                 timeliness: 92,
@@ -192,50 +204,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
                 hodRating: 92
             }
         },
+
+        // FINANCE Department (matches API)
         {
             id: '4',
-            name: 'Robert Taylor',
-            profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face&auto=format',
-            month: 'October',
-            year: '2024',
-            status: 'pending',
-            score: 91,
-            rank: 4,
-            department: 'Engineering',
-            performanceMetrics: {
-                quality: 88,
-                timeliness: 90,
-                initiative: 92,
-                communication: 89,
-                teamwork: 93,
-                problemSolving: 91,
-                hodRating: 91
-            }
-        },
-        {
-            id: '5',
-            name: 'Lisa Anderson',
-            profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=face&auto=format',
-            month: 'October',
-            year: '2024',
-            status: 'approved',
-            score: 89,
-            rank: 5,
-            department: 'Engineering',
-            performanceMetrics: {
-                quality: 87,
-                timeliness: 88,
-                initiative: 90,
-                communication: 92,
-                teamwork: 86,
-                problemSolving: 89,
-                hodRating: 89
-            }
-        },
-
-        // Marketing Department
-        {
-            id: '6',
             name: 'Jessica Martinez',
             profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&h=60&fit=crop&crop=face&auto=format',
             month: 'October',
@@ -243,7 +215,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 95,
             rank: 1,
-            department: 'Marketing',
+            department: 'FINANCE',
             performanceMetrics: {
                 quality: 94,
                 timeliness: 96,
@@ -255,7 +227,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             }
         },
         {
-            id: '7',
+            id: '5',
             name: 'David Wilson',
             profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face&auto=format',
             month: 'October',
@@ -263,7 +235,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 88,
             rank: 2,
-            department: 'Marketing',
+            department: 'FINANCE',
             performanceMetrics: {
                 quality: 86,
                 timeliness: 90,
@@ -275,7 +247,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             }
         },
         {
-            id: '8',
+            id: '6',
             name: 'Amanda Brown',
             profileImage: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=60&h=60&fit=crop&crop=face&auto=format',
             month: 'October',
@@ -283,7 +255,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'pending',
             score: 85,
             rank: 3,
-            department: 'Marketing',
+            department: 'FINANCE',
             performanceMetrics: {
                 quality: 83,
                 timeliness: 87,
@@ -295,9 +267,9 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             }
         },
 
-        // Sales Department
+        // PROJECTS Department (matches API)
         {
-            id: '9',
+            id: '7',
             name: 'James Rodriguez',
             profileImage: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=60&h=60&fit=crop&crop=face&auto=format',
             month: 'October',
@@ -305,10 +277,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 93,
             rank: 1,
-            department: 'Sales'
+            department: 'PROJECTS'
         },
         {
-            id: '10',
+            id: '8',
             name: 'Maria Garcia',
             profileImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=60&h=60&fit=crop&crop=face&auto=format',
             month: 'October',
@@ -316,10 +288,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 90,
             rank: 2,
-            department: 'Sales'
+            department: 'PROJECTS'
         },
         {
-            id: '11',
+            id: '9',
             name: 'Kevin Lee',
             profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=60&h=60&fit=crop&crop=face&auto=format',
             month: 'October',
@@ -327,10 +299,32 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 87,
             rank: 3,
-            department: 'Sales'
+            department: 'PROJECTS'
+        },
+        {
+            id: '10',
+            name: 'Lisa Chen',
+            profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: 'October',
+            year: '2024',
+            status: 'pending',
+            score: 84,
+            rank: 4,
+            department: 'PROJECTS'
+        },
+        {
+            id: '11',
+            name: 'Robert Kim',
+            profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: 'October',
+            year: '2024',
+            status: 'submitted',
+            score: 82,
+            rank: 5,
+            department: 'PROJECTS'
         },
 
-        // HR Department
+        // HUMAN RESOURCES Department (matches API)
         {
             id: '12',
             name: 'Rachel Thompson',
@@ -340,7 +334,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 92,
             rank: 1,
-            department: 'HR'
+            department: 'HUMAN RESOURCES'
         },
         {
             id: '13',
@@ -351,10 +345,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'pending',
             score: 86,
             rank: 2,
-            department: 'HR'
+            department: 'HUMAN RESOURCES'
         },
 
-        // Finance Department
+        // OPERATIONS Department (matches API)
         {
             id: '14',
             name: 'Jennifer White',
@@ -364,7 +358,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 94,
             rank: 1,
-            department: 'Finance'
+            department: 'OPERATIONS'
         },
         {
             id: '15',
@@ -375,7 +369,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 89,
             rank: 2,
-            department: 'Finance'
+            department: 'OPERATIONS'
         },
         {
             id: '16',
@@ -386,10 +380,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 87,
             rank: 3,
-            department: 'Finance'
+            department: 'OPERATIONS'
         },
 
-        // Operations Department
+        // ADMINISTRATION Department (matches API)
         {
             id: '17',
             name: 'Christopher Moore',
@@ -399,7 +393,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 91,
             rank: 1,
-            department: 'Operations'
+            department: 'ADMINISTRATION'
         },
         {
             id: '18',
@@ -410,7 +404,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 88,
             rank: 2,
-            department: 'Operations'
+            department: 'ADMINISTRATION'
         },
         {
             id: '19',
@@ -421,22 +415,109 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'pending',
             score: 85,
             rank: 3,
-            department: 'Operations'
+            department: 'ADMINISTRATION'
+        },
+
+        // PLANNING Department (matches API)
+        {
+            id: '20',
+            name: 'Sarah Williams',
+            profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: 'October',
+            year: '2024',
+            status: 'approved',
+            score: 89,
+            rank: 1,
+            department: 'PLANNING'
+        },
+        {
+            id: '21',
+            name: 'John Martinez',
+            profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: 'October',
+            year: '2024',
+            status: 'submitted',
+            score: 86,
+            rank: 2,
+            department: 'PLANNING'
+        },
+
+        // HSE Department (matches API)
+        {
+            id: '22',
+            name: 'Emma Thompson',
+            profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: 'October',
+            year: '2024',
+            status: 'approved',
+            score: 92,
+            rank: 1,
+            department: 'HSE'
+        },
+        {
+            id: '23',
+            name: 'Alex Brown',
+            profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: 'October',
+            year: '2024',
+            status: 'pending',
+            score: 88,
+            rank: 2,
+            department: 'HSE'
         }
     ];
 
-    constructor() { }
+    constructor(private apiService: Api) { }
 
     ngOnInit() {
         console.log('CED Dashboard initialized');
-        console.log('Current view:', this.currentView);
-        console.log('Departments:', this.departments);
-        console.log('Departments length:', this.departments.length);
+        this.initializeDefaultMonthYear();
+        this.loadDashboardData();
+    }
 
-        // Ensure we have data
-        if (this.departments.length === 0) {
-            console.warn('No departments data found!');
+    private initializeDefaultMonthYear() {
+        const currentDate = new Date();
+        // Set to previous month by default
+        const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+
+        this.selectedMonth = previousMonth.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+        this.selectedYear = previousMonth.getFullYear();
+
+        console.log(`Default selection: Month ${this.selectedMonth}, Year ${this.selectedYear}`);
+    }
+
+    private loadDashboardData() {
+        if (this.selectedMonth === 0 || this.selectedYear === 0) {
+            console.warn('Month or Year not selected');
+            return;
         }
+
+        this.isLoading = true;
+        console.log(`Loading dashboard data for month: ${this.selectedMonth}, year: ${this.selectedYear}`);
+
+        this.apiService.GetCEDDepartmentWiseDashBoardDetails(this.selectedMonth, this.selectedYear)
+            .subscribe({
+                next: (response: ApiResponse) => {
+                    console.log('API Response:', response);
+                    if (response.success && response.data) {
+                        this.departments = response.data.map(dept => ({
+                            ...dept,
+                            icon: this.departmentIcons[dept.department] || 'fas fa-building',
+                            color: this.departmentColors[dept.department] || 'dept-default'
+                        }));
+                        console.log('Departments loaded:', this.departments);
+                    } else {
+                        console.error('Failed to load dashboard data:', response.message);
+                        this.departments = [];
+                    }
+                    this.isLoading = false;
+                },
+                error: (error) => {
+                    console.error('Error loading dashboard data:', error);
+                    this.departments = [];
+                    this.isLoading = false;
+                }
+            });
     }
 
     ngAfterViewInit() {
@@ -449,21 +530,25 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     onMonthYearChange() {
-        // Filter data based on selected month and year
-        console.log(`Filtering data for ${this.selectedMonth} ${this.selectedYear}`);
-        // Implement filtering logic here
+        console.log(`Month/Year changed to: ${this.selectedMonth}/${this.selectedYear}`);
+        this.loadDashboardData();
+
+        // Reset current view to departments when filter changes
+        if (this.currentView === 'employees') {
+            this.backToDepartments();
+        }
     }
 
     selectDepartment(department: Department) {
-        console.log('Selecting department:', department.name);
+        console.log('Selecting department:', department.department);
         this.selectedDepartment = department;
         this.currentView = 'employees';
         this.searchQuery = ''; // Reset search when switching departments
         this.filteredEmployees = []; // Clear filtered results
 
         // Log available employees for this department
-        const deptEmployees = this.employees.filter(emp => emp.department === department.name);
-        console.log(`Found ${deptEmployees.length} employees in ${department.name}:`, deptEmployees);
+        const deptEmployees = this.employees.filter(emp => emp.department === department.department);
+        console.log(`Found ${deptEmployees.length} employees in ${department.department}:`, deptEmployees);
     }
 
     backToDepartments() {
@@ -518,12 +603,12 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         if (!this.searchQuery.trim()) {
             // If search is empty, show all employees from selected department
             this.filteredEmployees = this.employees.filter(emp =>
-                emp.department === this.selectedDepartment?.name
+                emp.department === this.selectedDepartment?.department
             );
         } else {
             // Filter by search query within the selected department
             this.filteredEmployees = this.employees.filter(emp =>
-                emp.department === this.selectedDepartment?.name &&
+                emp.department === this.selectedDepartment?.department &&
                 emp.name.toLowerCase().includes(this.searchQuery.toLowerCase())
             );
         }
@@ -540,7 +625,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         }
 
         // Otherwise return all employees from the selected department
-        return this.employees.filter(emp => emp.department === this.selectedDepartment?.name);
+        return this.employees.filter(emp => emp.department === this.selectedDepartment?.department);
     }
 
     getStatIcon(statType: string): string {
@@ -556,7 +641,13 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
 
     // TrackBy functions for performance optimization
     trackByDepartmentId(_index: number, department: Department): string {
-        return department.id;
+        return department.department;
+    }
+
+    // Get month name from number
+    getMonthName(monthNumber: number): string {
+        const month = this.months.find(m => m.value === monthNumber);
+        return month ? month.name : '';
     }
 
     trackByEmployeeId(_index: number, employee: Employee): string {

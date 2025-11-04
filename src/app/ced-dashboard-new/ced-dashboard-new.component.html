@@ -18,7 +18,7 @@
           <div class="selector-group">
             <label>Month</label>
             <select [(ngModel)]="selectedMonth" (change)="onMonthYearChange()" class="modern-select">
-              <option *ngFor="let month of months" [value]="month">{{ month }}</option>
+              <option *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
             </select>
           </div>
           <div class="selector-group">
@@ -44,8 +44,8 @@
             <i [class]="selectedDepartment.icon"></i>
           </div>
           <div class="dept-details">
-            <h2>{{ selectedDepartment.name }} Department</h2>
-            <p>Performance Rankings - {{ selectedMonth }} {{ selectedYear }}</p>
+            <h2>{{ selectedDepartment.department }} Department</h2>
+            <p>Performance Rankings - {{ getMonthName(selectedMonth) }} {{ selectedYear }}</p>
           </div>
         </div>
 
@@ -73,13 +73,25 @@
     
     <!-- Department Cards View -->
     <div *ngIf="currentView === 'departments'" class="departments-view">
-      <!-- Debug: Show if no departments -->
-      <div *ngIf="departments.length === 0" style="padding: 2rem; text-align: center; background: white; border-radius: 12px; margin: 1rem;">
-        <h3>No departments found</h3>
-        <p>Departments array length: {{ departments.length }}</p>
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <p>Loading department data...</p>
+      </div>
+
+      <!-- No Data State -->
+      <div *ngIf="!isLoading && departments.length === 0" class="no-data-state">
+        <div class="no-data-icon">
+          <i class="fas fa-building"></i>
+        </div>
+        <h3>No Department Data Available</h3>
+        <p>No data found for {{ getMonthName(selectedMonth) }} {{ selectedYear }}</p>
       </div>
       
-      <div class="departments-grid">
+      <!-- Departments Grid -->
+      <div *ngIf="!isLoading && departments.length > 0" class="departments-grid">
         <div 
           *ngFor="let department of departments; trackBy: trackByDepartmentId" 
           class="department-card glassmorphism"
@@ -94,7 +106,7 @@
               <div class="department-icon">
                 <i [class]="department.icon"></i>
               </div>
-              <h3>{{ department.name }}</h3>
+              <h3>{{ department.department }}</h3>
             </div>
             
             <div class="stats-grid">
@@ -172,8 +184,8 @@
             <i class="fas fa-users"></i>
           </div>
           <h3>No Employees Found</h3>
-          <p *ngIf="searchQuery">No employees match your search "<strong>{{ searchQuery }}</strong>" in {{ selectedDepartment?.name }} department.</p>
-          <p *ngIf="!searchQuery">No employees found in {{ selectedDepartment?.name }} department for {{ selectedMonth }} {{ selectedYear }}.</p>
+          <p *ngIf="searchQuery">No employees match your search "<strong>{{ searchQuery }}</strong>" in {{ selectedDepartment?.department }} department.</p>
+          <p *ngIf="!searchQuery">No employees found in {{ selectedDepartment?.department }} department for {{ getMonthName(selectedMonth) }} {{ selectedYear }}.</p>
           <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''; onSearchChange()">
             <i class="fas fa-times"></i>
             Clear Search

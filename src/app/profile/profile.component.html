@@ -217,6 +217,94 @@
             placeholder="Tell us about yourself..."></textarea>
         </div>
 
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="address">Address</label>
+            <input
+              type="text"
+              id="address"
+              [(ngModel)]="userProfile.address"
+              name="address"
+              class="form-input"
+              placeholder="Enter full address">
+          </div>
+
+          <div class="form-group">
+            <label for="telephone">Telephone</label>
+            <input
+              type="text"
+              id="telephone"
+              [(ngModel)]="userProfile.telephone"
+              name="telephone"
+              class="form-input"
+              placeholder="Enter telephone number">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nation">Nation</label>
+            <input
+              type="text"
+              id="nation"
+              [(ngModel)]="userProfile.nation"
+              name="nation"
+              class="form-input"
+              placeholder="Enter nation">
+          </div>
+
+          <div class="form-group">
+            <label for="postOffice">Post Office</label>
+            <input
+              type="text"
+              id="postOffice"
+              [(ngModel)]="userProfile.postOffice"
+              name="postOffice"
+              class="form-input"
+              placeholder="Enter post office">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="state">State</label>
+            <input
+              type="text"
+              id="state"
+              [(ngModel)]="userProfile.state"
+              name="state"
+              class="form-input"
+              placeholder="Enter state">
+          </div>
+
+          <div class="form-group">
+            <label for="district">District</label>
+            <input
+              type="text"
+              id="district"
+              [(ngModel)]="userProfile.district"
+              name="district"
+              class="form-input"
+              placeholder="Enter district">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="place">Place</label>
+            <input
+              type="text"
+              id="place"
+              [(ngModel)]="userProfile.place"
+              name="place"
+              class="form-input"
+              placeholder="Enter place">
+          </div>
+        </div>
+
+
+
         <div class="form-actions">
           <button type="button" class="btn-secondary" (click)="resetProfile()">
             <i class="fas fa-undo"></i>
@@ -286,6 +374,44 @@
               <label>Career Summary</label>
               <span>{{ userProfile.careerSummary || 'No bio provided' }}</span>
             </div>
+
+          <div class="info-item full-width">
+            <label>Address</label>
+            <span>{{ userProfile.address || 'Not provided' }}</span>
+          </div>
+
+          <div class="info-item full-width">
+            <label>Telephone</label>
+            <span>{{ userProfile.telephone || 'Not provided' }}</span>
+          </div>
+
+          <div class="info-item full-width">
+            <label>Nation</label>
+            <span>{{ userProfile.nation || 'Not provided' }}</span>
+          </div>
+
+          <div class="info-item full-width">
+            <label>Post Office</label>
+            <span>{{ userProfile.postOffice || 'Not provided' }}</span>
+          </div>
+
+          <div class="info-item full-width">
+            <label>State</label>
+            <span>{{ userProfile.state || 'Not provided' }}</span>
+          </div>
+
+          <div class="info-item full-width">
+            <label>District</label>
+            <span>{{ userProfile.district || 'Not provided' }}</span>
+          </div>
+
+          <div class="info-item full-width">
+            <label>Place</label>
+            <span>{{ userProfile.place || 'Not provided' }}</span>
+          </div>
+
+
+
           </div>
         </div>
       </ng-template>

@@ -33,6 +33,14 @@ export interface EmployeeProfileUpdateDto {
   dob?: string;
   location?: string;
   ProfileImageBase64?: string; 
+  address?: string; 
+  telephone?: string; 
+  nation?: string; 
+  postOffice?: string; 
+  state?: string; 
+  district?: string; 
+  place?: string; 
+
 }
 
 export interface DropdownOption {

@@ -67,6 +67,13 @@ export class ProfileComponent implements OnInit {
             skillset: data.skillset || this.user.skillset || '',
             joinDate: data.doj || this.user.doj || '',
             dobDate: data.dobDate || this.user.dobDate || '',
+            address: data.address || this.user.address || '',
+            telephone: data.telephone || this.user.telephone || '',
+            nation: data.nation || this.user.nation || '',
+            postOffice: data.postOffice || this.user.postOffice || '',
+            state: data.state || this.user.state || '',
+            district: data.district || this.user.district || '',
+            place: data.place || this.user.place || '',
             avatar: data.profileImageBase64
               ? `data:image/jpeg;base64,${data.profileImageBase64}`
               : this.user.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
@@ -136,7 +143,14 @@ export class ProfileComponent implements OnInit {
       qualification: this.userProfile.qualification,
       location: this.userProfile.location,
       skillset: this.userProfile.skillset,
-      dobDate: this.userProfile.dobDate
+      dobDate: this.userProfile.dobDate,
+      address : this.userProfile.address,
+      telephone : this.userProfile.telephone,
+      nation : this.userProfile.nation,
+      postOffice : this.userProfile.postOffice,
+      state : this.userProfile.state,
+      district : this.userProfile.district,
+      place : this.userProfile.place,
     };
 
     this.api.updateProfile(profile).subscribe({
