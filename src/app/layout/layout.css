@@ -388,6 +388,14 @@
   color: #f1f5f9;
 }
 
+.page-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
 .page-title {
   font-size: 24px;
   font-weight: 700;
@@ -402,6 +410,17 @@
   text-overflow: clip;
   min-width: fit-content;
   flex-shrink: 0;
+}
+
+.page-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* Fallback for browsers that don't support background-clip */

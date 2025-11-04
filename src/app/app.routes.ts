@@ -7,6 +7,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { EmployeeDashboard } from './employee-dashboard/employee-dashboard';
 import { HodDashboard } from './hod-dashboard/hod-dashboard';
 import { CedDashboard } from './ced-dashboard/ced-dashboard';
+import { CedDashboardNewComponent } from './ced-dashboard-new/ced-dashboard-new.component';
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
 import { EmployeeExitFormComponent } from './employee-exit-form/employee-exit-form.component';
 import { layout } from './layout/layout';
@@ -17,6 +18,7 @@ export const routes: Routes = [
   { path: 'employee-dashboard-demo', component: EmployeeDashboard },
   { path: 'hod-dashboard-demo', component: HodDashboard },
   { path: 'ced-dashboard-demo', component: CedDashboard },
+  { path: 'ced-dashboard-new-demo', component: CedDashboardNewComponent },
   {
     path: '',
     component: layout,
@@ -24,7 +26,9 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'employee-dashboard', component: EmployeeDashboard },
       { path: 'hod-dashboard', component: HodDashboard },
-      { path: 'ced-dashboard', component: CedDashboard },
+      { path: 'ced-dashboard', component: CedDashboardNewComponent },
+      { path: 'ced-dashboard-old', component: CedDashboard },
+      { path: 'ced-dashboard-new', component: CedDashboardNewComponent },
       { path: 'monthly-dpr', component: MonthlyDprComponent },
       { path: 'monthly-dpr/:id', component: MonthlyDprComponent },
       { path: 'past-reports', component: PastReportsComponent },

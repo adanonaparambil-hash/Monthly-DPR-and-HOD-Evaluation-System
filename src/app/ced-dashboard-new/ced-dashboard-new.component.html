@@ -1,0 +1,265 @@
+<!-- CED Dashboard Container -->
+<div class="ced-dashboard-container">
+  <!-- Simple Background -->
+  <div class="simple-background"></div>
+
+  <!-- Compact Header Section -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <!-- Department Overview Section -->
+      <div class="section-info" *ngIf="currentView === 'departments'">
+        <div class="section-title">
+          <h2>Department Overview</h2>
+          <p>Select a department to view employee performance rankings</p>
+        </div>
+        
+        <!-- Month/Year Selector -->
+        <div class="date-selector">
+          <div class="selector-group">
+            <label>Month</label>
+            <select [(ngModel)]="selectedMonth" (change)="onMonthYearChange()" class="modern-select">
+              <option *ngFor="let month of months" [value]="month">{{ month }}</option>
+            </select>
+          </div>
+          <div class="selector-group">
+            <label>Year</label>
+            <select [(ngModel)]="selectedYear" (change)="onMonthYearChange()" class="modern-select">
+              <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee View Header -->
+      <div class="employee-view-header" *ngIf="currentView === 'employees'">
+        <div class="back-section">
+          <button class="back-button" (click)="backToDepartments()">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Departments</span>
+          </button>
+        </div>
+        
+        <div class="department-info" *ngIf="selectedDepartment">
+          <div class="dept-icon">
+            <i [class]="selectedDepartment.icon"></i>
+          </div>
+          <div class="dept-details">
+            <h2>{{ selectedDepartment.name }} Department</h2>
+            <p>Performance Rankings - {{ selectedMonth }} {{ selectedYear }}</p>
+          </div>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-section">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery" 
+              (input)="onSearchChange()"
+              placeholder="Search employee name..."
+              class="search-input">
+            <button *ngIf="searchQuery" (click)="searchQuery = ''; onSearchChange()" class="clear-search">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    
+    <!-- Department Cards View -->
+    <div *ngIf="currentView === 'departments'" class="departments-view">
+      <!-- Debug: Show if no departments -->
+      <div *ngIf="departments.length === 0" style="padding: 2rem; text-align: center; background: white; border-radius: 12px; margin: 1rem;">
+        <h3>No departments found</h3>
+        <p>Departments array length: {{ departments.length }}</p>
+      </div>
+      
+      <div class="departments-grid">
+        <div 
+          *ngFor="let department of departments; trackBy: trackByDepartmentId" 
+          class="department-card glassmorphism"
+          (click)="selectDepartment(department)">
+          
+          <!-- Card Background Gradient -->
+          <div class="card-gradient" [ngClass]="department.color"></div>
+          
+          <!-- Card Content -->
+          <div class="card-content">
+            <div class="card-header">
+              <div class="department-icon">
+                <i [class]="department.icon"></i>
+              </div>
+              <h3>{{ department.name }}</h3>
+            </div>
+            
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-top-row">
+                  <div class="stat-icon">
+                    <i [class]="getStatIcon('totalEmployees')"></i>
+                  </div>
+                  <div class="stat-number">{{ department.totalEmployees }}</div>
+                </div>
+                <div class="stat-label">Total Employees</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-top-row">
+                  <div class="stat-icon submitted-icon">
+                    <i class="fas fa-file" style="color: white !important; font-size: 0.9rem !important; display: block !important;"></i>
+                  </div>
+                  <div class="stat-number">{{ department.submittedMPR }}</div>
+                </div>
+                <div class="stat-label">Submitted MPR</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-top-row">
+                  <div class="stat-icon">
+                    <i [class]="getStatIcon('pendingMPR')"></i>
+                  </div>
+                  <div class="stat-number">{{ department.pendingMPR }}</div>
+                </div>
+                <div class="stat-label">Pending MPR</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-top-row">
+                  <div class="stat-icon">
+                    <i [class]="getStatIcon('approvedMPR')"></i>
+                  </div>
+                  <div class="stat-number">{{ department.approvedMPR }}</div>
+                </div>
+                <div class="stat-label">Approved MPR</div>
+              </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-section">
+              <div class="progress-header">
+                <span>Completion Rate</span>
+                <span class="progress-percentage">{{ getCompletionPercentage(department) }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  [style.width.%]="getCompletionPercentage(department)">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hover Effect -->
+          <div class="card-hover-effect"></div>
+          
+          <!-- Click Indicator -->
+          <div class="click-indicator">
+            <i class="fas fa-arrow-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee Listing View -->
+    <div *ngIf="currentView === 'employees'" class="employees-view">
+      
+      <!-- Empty State -->
+      <div *ngIf="getDisplayedEmployees().length === 0" class="empty-state">
+        <div class="empty-state-content">
+          <div class="empty-state-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>No Employees Found</h3>
+          <p *ngIf="searchQuery">No employees match your search "<strong>{{ searchQuery }}</strong>" in {{ selectedDepartment?.name }} department.</p>
+          <p *ngIf="!searchQuery">No employees found in {{ selectedDepartment?.name }} department for {{ selectedMonth }} {{ selectedYear }}.</p>
+          <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''; onSearchChange()">
+            <i class="fas fa-times"></i>
+            Clear Search
+          </button>
+        </div>
+      </div>
+      
+      <!-- Employee List -->
+      <div class="employee-list" *ngIf="getDisplayedEmployees().length > 0">
+        <div 
+          *ngFor="let employee of getDisplayedEmployees(); trackBy: trackByEmployeeId" 
+          class="employee-card glassmorphism">
+          
+          <!-- Rank Badge -->
+          <div class="rank-badge" [class]="'rank-' + employee.rank">
+            <span class="rank-icon">{{ getRankIcon(employee.rank) }}</span>
+            <span class="rank-text">{{ getRankIcon(employee.rank) }}</span>
+          </div>
+          
+          <!-- Employee Info -->
+          <div class="employee-info">
+            <div class="employee-avatar" (click)="viewEmployeeProfile(employee)">
+              <img [src]="employee.profileImage" [alt]="employee.name" />
+              <div class="avatar-overlay">
+                <i class="fas fa-user"></i>
+              </div>
+            </div>
+            
+            <div class="employee-details">
+              <h3 class="employee-name" (click)="viewEmployeeProfile(employee)">
+                {{ employee.name }}
+              </h3>
+              <div class="employee-meta">
+                <span class="month-year">{{ employee.month }} {{ employee.year }}</span>
+                <span class="status-badge" [ngClass]="getStatusClass(employee.status)">
+                  {{ getStatusText(employee.status) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Score Section -->
+          <div class="score-section">
+            <div class="score-display">
+              <div class="score-number">{{ employee.score }}</div>
+              <div class="score-label">Score</div>
+            </div>
+            <div class="score-visualization">
+              <div class="score-ring">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                  <circle 
+                    cx="30" 
+                    cy="30" 
+                    r="25" 
+                    fill="none" 
+                    stroke="rgba(204, 153, 51, 0.2)" 
+                    stroke-width="4"/>
+                  <circle 
+                    cx="30" 
+                    cy="30" 
+                    r="25" 
+                    fill="none" 
+                    stroke="var(--accent-color)" 
+                    stroke-width="4"
+                    [attr.stroke-dasharray]="2 * 3.14159 * 25"
+                    [attr.stroke-dashoffset]="2 * 3.14159 * 25 * (1 - employee.score / 100)"
+                    stroke-linecap="round"
+                    transform="rotate(-90 30 30)"
+                    class="score-progress"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Button -->
+          <div class="action-section">
+            <button class="view-mpr-btn" (click)="viewMPRDetails(employee)">
+              <i class="fas fa-eye"></i>
+              <span>View MPR</span>
+            </button>
+          </div>
+          
+          <!-- Card Glow Effect -->
+          <div class="card-glow"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

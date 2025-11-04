@@ -127,7 +127,9 @@ export class layout implements OnInit, OnDestroy {
       '/dashboard': 'Dashboard',
       '/employee-dashboard': 'Employee Analytics',
       '/hod-dashboard': 'HOD Dashboard',
-      '/ced-dashboard': 'CED Dashboard',
+      '/ced-dashboard': 'CED Performance Dashboard',
+      '/ced-dashboard-old': 'CED Dashboard (Old)',
+      '/ced-dashboard-new': 'CED Performance Dashboard',
       '/monthly-dpr': 'MPR Entry',
       '/past-reports': 'Past Reports',
       '/profile': 'My Profile',
@@ -140,6 +142,13 @@ export class layout implements OnInit, OnDestroy {
     }
 
     return routeTitles[this.currentRoute] || 'Dashboard';
+  }
+
+  getPageSubtitle(): string {
+    if (this.currentRoute === '/ced-dashboard' || this.currentRoute === '/ced-dashboard-new') {
+      return 'Al Adrak Corporate Performance Management System';
+    }
+    return '';
   }
 
   toggleTheme() {
