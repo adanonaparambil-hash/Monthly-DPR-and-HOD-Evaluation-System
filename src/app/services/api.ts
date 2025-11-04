@@ -17,11 +17,14 @@ export class Api {
 
   constructor(private http: HttpClient) { }
 
-  // Handle HTTP errors, especially session expiry
+  // Handle HTTP errors, especially session expiry and 431 errors
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     if (error.status === 401) {
       // Session expired - will be handled by AuthInterceptor
       console.log('API call failed due to session expiry');
+    } else if (error.status === 431) {
+      // Request header fields too large - will be handled by AuthInterceptor
+      console.log('API call failed due to large headers (431)');
     }
     return throwError(() => error);
   }
@@ -174,6 +177,11 @@ export class Api {
   
   GetHODDashBoardDetails(empId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DashBoard/GetHODDashBoardDetails/${empId}`);
+  }
+
+
+  GetCEDDepartmentWiseDashBoardDetails(month: number, year: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetCEDDepartmentWiseDashBoardDetails/${month}/${year}`);
   }
 
 

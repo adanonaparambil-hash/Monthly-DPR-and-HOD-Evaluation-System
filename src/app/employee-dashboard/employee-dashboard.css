@@ -2,7 +2,7 @@
   padding: 24px;
   background: var(--background-primary);
   min-height: calc(100vh - 80px);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Roboto', sans-serif !important;
   transition: all 0.3s ease;
   position: relative;
   overflow-x: hidden;

@@ -95,7 +95,7 @@
    GLOBAL STYLES
    ============================== */
 .profile-page {
-  font-family: "Segoe UI", Roboto, sans-serif;
+  font-family: 'Roboto', sans-serif !important;
   color: var(--color-text);
   background: var(--color-bg);
   padding: 1rem;

@@ -13,6 +13,16 @@ interface Department {
     icon: string;
 }
 
+interface PerformanceMetrics {
+    quality: number;
+    timeliness: number;
+    initiative: number;
+    communication: number;
+    teamwork: number;
+    problemSolving: number;
+    hodRating: number;
+}
+
 interface Employee {
     id: string;
     name: string;
@@ -23,6 +33,7 @@ interface Employee {
     score: number;
     rank: number;
     department: string;
+    performanceMetrics?: PerformanceMetrics;
 }
 
 @Component({
@@ -39,6 +50,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     selectedDepartment: Department | null = null;
     searchQuery: string = '';
     filteredEmployees: Employee[] = [];
+    expandedEmployeeId: string | null = null;
 
     months = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -129,7 +141,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 96,
             rank: 1,
-            department: 'Engineering'
+            department: 'Engineering',
+            performanceMetrics: {
+                quality: 96,
+                timeliness: 94,
+                initiative: 98,
+                communication: 95,
+                teamwork: 93,
+                problemSolving: 97,
+                hodRating: 95
+            }
         },
         {
             id: '2',
@@ -140,7 +161,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 94,
             rank: 2,
-            department: 'Engineering'
+            department: 'Engineering',
+            performanceMetrics: {
+                quality: 92,
+                timeliness: 96,
+                initiative: 90,
+                communication: 94,
+                teamwork: 95,
+                problemSolving: 93,
+                hodRating: 94
+            }
         },
         {
             id: '3',
@@ -151,7 +181,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 92,
             rank: 3,
-            department: 'Engineering'
+            department: 'Engineering',
+            performanceMetrics: {
+                quality: 90,
+                timeliness: 92,
+                initiative: 94,
+                communication: 91,
+                teamwork: 89,
+                problemSolving: 95,
+                hodRating: 92
+            }
         },
         {
             id: '4',
@@ -162,7 +201,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'pending',
             score: 91,
             rank: 4,
-            department: 'Engineering'
+            department: 'Engineering',
+            performanceMetrics: {
+                quality: 88,
+                timeliness: 90,
+                initiative: 92,
+                communication: 89,
+                teamwork: 93,
+                problemSolving: 91,
+                hodRating: 91
+            }
         },
         {
             id: '5',
@@ -173,7 +221,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 89,
             rank: 5,
-            department: 'Engineering'
+            department: 'Engineering',
+            performanceMetrics: {
+                quality: 87,
+                timeliness: 88,
+                initiative: 90,
+                communication: 92,
+                teamwork: 86,
+                problemSolving: 89,
+                hodRating: 89
+            }
         },
 
         // Marketing Department
@@ -186,7 +243,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'approved',
             score: 95,
             rank: 1,
-            department: 'Marketing'
+            department: 'Marketing',
+            performanceMetrics: {
+                quality: 94,
+                timeliness: 96,
+                initiative: 95,
+                communication: 97,
+                teamwork: 93,
+                problemSolving: 94,
+                hodRating: 95
+            }
         },
         {
             id: '7',
@@ -197,7 +263,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'submitted',
             score: 88,
             rank: 2,
-            department: 'Marketing'
+            department: 'Marketing',
+            performanceMetrics: {
+                quality: 86,
+                timeliness: 90,
+                initiative: 88,
+                communication: 89,
+                teamwork: 87,
+                problemSolving: 88,
+                hodRating: 88
+            }
         },
         {
             id: '8',
@@ -208,7 +283,16 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             status: 'pending',
             score: 85,
             rank: 3,
-            department: 'Marketing'
+            department: 'Marketing',
+            performanceMetrics: {
+                quality: 83,
+                timeliness: 87,
+                initiative: 85,
+                communication: 86,
+                teamwork: 84,
+                problemSolving: 85,
+                hodRating: 85
+            }
         },
 
         // Sales Department
@@ -477,5 +561,47 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
 
     trackByEmployeeId(_index: number, employee: Employee): string {
         return employee.id;
+    }
+
+    // Toggle employee details expansion
+    toggleEmployeeDetails(employeeId: string) {
+        this.expandedEmployeeId = this.expandedEmployeeId === employeeId ? null : employeeId;
+    }
+
+    // Check if employee details are expanded
+    isEmployeeExpanded(employeeId: string): boolean {
+        return this.expandedEmployeeId === employeeId;
+    }
+
+    // Get performance metric icon
+    getPerformanceMetricIcon(metricType: string): string {
+        const iconMap: { [key: string]: string } = {
+            'quality': 'fas fa-star',
+            'timeliness': 'fas fa-clock',
+            'initiative': 'fas fa-lightbulb',
+            'communication': 'fas fa-comments',
+            'teamwork': 'fas fa-users',
+            'problemSolving': 'fas fa-puzzle-piece',
+            'hodRating': 'fas fa-award'
+        };
+        return iconMap[metricType] || 'fas fa-chart-bar';
+    }
+
+    // Get performance metric color based on score
+    getPerformanceMetricColor(score: number): string {
+        if (score >= 90) return '#10b981'; // Green
+        if (score >= 80) return '#f59e0b'; // Orange
+        if (score >= 70) return '#ef4444'; // Red
+        return '#6b7280'; // Gray
+    }
+
+    // Get rank icon for top performers
+    getRankIconClass(rank: number): string {
+        switch (rank) {
+            case 1: return 'rank-gold';
+            case 2: return 'rank-silver';
+            case 3: return 'rank-bronze';
+            default: return 'rank-default';
+        }
     }
 }

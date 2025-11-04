@@ -1,0 +1,156 @@
+/* Font Standardization - Roboto for Entire Application */
+
+/* IMPORTANT: Exclude icon fonts first */
+.fa, .fas, .far, .fal, .fab, .fad, .fat, .fass,
+[class^="fa-"], [class*=" fa-"],
+.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone,
+i[class^="fa"], i[class*=" fa"],
+i.material-icons {
+  font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "Material Icons", inherit !important;
+}
+
+/* Force Roboto on all elements EXCEPT icons */
+*:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not(.fad):not(.fat):not(.fass):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-icons-two-tone) {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Specific element targeting (excluding icons) */
+html, body, div:not([class^="fa"]):not([class*=" fa"]), 
+span:not([class^="fa"]):not([class*=" fa"]), 
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a:not([class^="fa"]):not([class*=" fa"]), 
+abbr, acronym, address, big, cite, code,
+del, dfn, em, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video, button, input, textarea, select {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Special handling for i tags that are NOT icons */
+i:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not(.fad):not(.fat):not(.fass):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons) {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Angular Material overrides */
+.mat-typography,
+.mat-body,
+.mat-body-1,
+.mat-body-2,
+.mat-caption,
+.mat-button,
+.mat-raised-button,
+.mat-flat-button,
+.mat-stroked-button,
+.mat-icon-button,
+.mat-fab,
+.mat-mini-fab,
+.mat-input-element,
+.mat-form-field,
+.mat-select,
+.mat-option,
+.mat-checkbox,
+.mat-radio-button,
+.mat-slide-toggle,
+.mat-slider,
+.mat-card,
+.mat-card-title,
+.mat-card-subtitle,
+.mat-card-content,
+.mat-toolbar,
+.mat-sidenav,
+.mat-menu-item,
+.mat-tab-label,
+.mat-dialog-title,
+.mat-dialog-content,
+.mat-snack-bar-container {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Bootstrap overrides */
+.btn,
+.form-control,
+.form-select,
+.form-check-label,
+.nav-link,
+.navbar-brand,
+.card,
+.card-title,
+.card-text,
+.modal-title,
+.modal-body,
+.alert,
+.badge,
+.breadcrumb,
+.dropdown-item {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Reinforce icon fonts (redundant but ensures they work) */
+.fa, .fas, .far, .fal, .fab, .fad, .fat, .fass,
+[class^="fa-"], [class*=" fa-"],
+.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone {
+  font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "Material Icons", inherit !important;
+}
+
+/* Ensure consistent font weights */
+.font-light { font-weight: 300 !important; }
+.font-normal { font-weight: 400 !important; }
+.font-medium { font-weight: 500 !important; }
+.font-semibold { font-weight: 600 !important; }
+.font-bold { font-weight: 700 !important; }
+.font-extrabold { font-weight: 800 !important; }
+.font-black { font-weight: 900 !important; }
+
+/* Component-specific overrides (excluding icons) */
+app-ced-dashboard-new *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons),
+app-hod-dashboard *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons),
+app-employee-dashboard *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons),
+app-login *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons),
+app-layout *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons),
+app-session-monitor *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons) {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Toast notifications */
+.toast,
+.toast-container,
+.ngx-toastr {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Ensure all text inputs use Roboto */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Placeholder text */
+::placeholder {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Print styles (excluding icons) */
+@media print {
+  *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons) {
+    font-family: 'Roboto', sans-serif !important;
+  }
+  
+  /* Ensure icons still work in print */
+  .fa, .fas, .far, .fal, .fab, [class^="fa-"], [class*=" fa-"], .material-icons {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "Material Icons", inherit !important;
+  }
+}

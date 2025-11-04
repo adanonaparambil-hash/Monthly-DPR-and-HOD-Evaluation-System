@@ -5,12 +5,15 @@ import { trigger, transition, style, animate, state } from '@angular/animations'
 import { filter } from 'rxjs/operators';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
+import { AuthService } from '../services/auth.service';
 import { SessionService } from '../services/session.service';
+import { SessionMonitorComponent } from '../components/session-monitor.component';
+import { UrlCleanupUtil } from '../utils/url-cleanup.util';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent],
   templateUrl: './layout.html',
   styleUrls: ['./layout.css'],
   animations: [

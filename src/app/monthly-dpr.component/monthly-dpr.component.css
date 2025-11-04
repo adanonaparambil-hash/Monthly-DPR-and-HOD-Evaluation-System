@@ -3,7 +3,7 @@
   margin: 0;
   padding: 0;
   background: var(--background-primary);
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Roboto', sans-serif !important;
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
@@ -1399,7 +1399,7 @@ td {
   line-height: 1.6;
   text-align: left;
   /* Left-align text for better readability */
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Roboto', sans-serif !important;
   background-color: #f9f9f9;
   transition: border-color 0.3s ease;
   box-sizing: border-box;

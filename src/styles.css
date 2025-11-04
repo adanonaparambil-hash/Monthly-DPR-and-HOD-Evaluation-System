@@ -1,13 +1,43 @@
 /* Global Styles for TimeSheet UI */
 
-/* Global Font Family */
-* {
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+/* Import font standardization */
+@import './app/styles/font-standardization.css';
+
+/* Global Font Family - Roboto for entire application (EXCLUDING ICONS) */
+
+/* First, preserve icon fonts */
+.fa, .fas, .far, .fal, .fab, .fad, .fat, .fass,
+[class^="fa-"], [class*=" fa-"],
+.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone,
+i[class^="fa"], i[class*=" fa"],
+i.material-icons {
+  font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "Material Icons", inherit !important;
 }
 
-body {
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+/* Apply Roboto to all elements EXCEPT icons */
+*:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not(.fad):not(.fat):not(.fass):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-icons-two-tone),
+*:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not(.fad):not(.fat):not(.fass):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons)::before,
+*:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not(.fad):not(.fat):not(.fass):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons)::after {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+body, html {
+  font-family: 'Roboto', sans-serif !important;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure all text elements use Roboto (excluding icons) */
+h1, h2, h3, h4, h5, h6, p, 
+span:not([class^="fa"]):not([class*=" fa"]):not(.material-icons), 
+div:not([class^="fa"]):not([class*=" fa"]), 
+a:not([class^="fa"]):not([class*=" fa"]), 
+button, input, textarea, select, label {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* Override any component-specific font families (excluding icons) */
+.mat-typography, .mat-body, .mat-body-1, .mat-body-2, .mat-caption, .mat-button, .mat-input-element {
+  font-family: 'Roboto', sans-serif !important;
 }
 
 /* CSS Custom Properties for Theme System */
@@ -73,7 +103,7 @@ body {
 
 html, body {
   height: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Roboto', sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-primary);
@@ -105,7 +135,7 @@ body {
 }
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; font-family: 'Roboto', sans-serif !important; }
 
 
 .toast-error {
@@ -129,4 +159,62 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .toast-info {
   background-color: blue !important;
   color: white !important;
+}
+
+/* CRITICAL: Ensure Font Awesome icons always work - HIGHEST PRIORITY */
+i.fa, i.fas, i.far, i.fal, i.fab, i.fad, i.fat, i.fass,
+i[class^="fa-"], i[class*=" fa-"],
+.fa, .fas, .far, .fal, .fab, .fad, .fat, .fass,
+[class^="fa-"], [class*=" fa-"],
+span.fa, span.fas, span.far, span.fal, span.fab,
+span[class^="fa-"], span[class*=" fa-"],
+.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  line-height: 1 !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  display: inline-block !important;
+}
+
+/* Specific Font Awesome styles with fallbacks */
+.fas, i.fas {
+  font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+  font-weight: 900 !important;
+}
+
+.far, i.far {
+  font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+  font-weight: 400 !important;
+}
+
+.fab, i.fab {
+  font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands", "FontAwesome" !important;
+  font-weight: 400 !important;
+}
+
+.fa, i.fa {
+  font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+  font-weight: 900 !important;
+}
+
+/* Material Icons */
+.material-icons {
+  font-family: 'Material Icons' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+  -webkit-font-feature-settings: 'liga' !important;
+  font-feature-settings: 'liga' !important;
+  -webkit-font-smoothing: antialiased !important;
 }

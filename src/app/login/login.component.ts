@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
+import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 import { map} from 'rxjs/operators';  
 import { ToastrService } from 'ngx-toastr';  
@@ -111,6 +112,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router, 
     private api: Api, 
+    private authService: AuthService,
     private toastr: ToastrService,
     private route: ActivatedRoute
   ) {}
@@ -119,12 +121,23 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.initializeParticles();
     this.startParallaxAnimations();
     
-    // Check for session expiry message
+    // Check for various logout reasons
     this.route.queryParams.subscribe(params => {
       if (params['sessionExpired'] === 'true') {
         this.toastr.warning('Your session has expired. Please login again.', 'Session Expired');
         this.loginErrorMessage = 'Your session has expired. Please login again.';
+      } else if (params['inactivity'] === 'true') {
+        this.toastr.info('You have been logged out due to inactivity.', 'Logged Out');
+        this.loginErrorMessage = 'You have been logged out due to inactivity.';
+      } else if (params['unauthorized'] === 'true') {
+        this.toastr.error('Access denied. Please login again.', 'Access Denied');
+        this.loginErrorMessage = 'Access denied. Please login again.';
       }
+      
+      // Clean up URL parameters after showing message
+      setTimeout(() => {
+        this.authService.cleanupUrlParameters();
+      }, 100);
     });
   }
 
@@ -234,9 +247,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         if (res?.success === true && res?.data) {
           const token = res?.token || res?.access_token;
           if (token) {
-            localStorage.setItem('access_token', token);
-            localStorage.setItem('current_user', JSON.stringify(res.data));
+            // Use AuthService for proper session management
+            this.authService.login(token, res.data);
           }
+          
           const code = (res?.data?.isHOD || '').toString().toUpperCase();
           if (code === 'H') {
             this.router.navigate(['/hod-dashboard']);
@@ -478,18 +492,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('current_user');
+    this.authService.logout('manual');
   }
 
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    return this.authService.getToken();
   }
 
   isLoggedIn(): boolean {
-    const t = this.getToken();
-    if (!t) return false;
-    return true;
+    return this.authService.isLoggedIn();
   }
 
   ngOnDestroy() {
