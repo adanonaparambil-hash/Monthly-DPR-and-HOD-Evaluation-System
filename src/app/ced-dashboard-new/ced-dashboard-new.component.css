@@ -1,30 +1,52 @@
 /* CED Dashboard New - Modern Al Adrak Design */
 
-/* CSS Variables - Use global theme variables */
+/* CSS Variables - Inherit from global theme system */
 :host {
-  --primary-color: var(--accent-color, #cc9933);
-  --secondary-color: var(--secondary-color, #2f4f2f);
-  --background-primary: var(--background-primary, #ffffff);
-  --background-secondary: var(--background-secondary, #f8fafc);
-  --text-primary: var(--text-primary, #1f2937);
-  --text-secondary: var(--text-secondary, #6b7280);
-  --border-color: var(--border-color, #e5e7eb);
-  --shadow-sm: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
-  --shadow-md: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
-  --shadow-lg: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
+  /* Use CSS custom properties that automatically inherit theme */
+  color: var(--text-primary);
+  background-color: var(--background-primary);
 }
 
-/* Container - Dark Mode Support */
+/* Ensure dark theme inheritance */
+:host-context(.dark-theme) {
+  color: var(--text-primary);
+  background-color: var(--background-primary);
+}
+
+/* Force dark theme styles */
+.dark-theme :host,
+:host-context(.dark-theme) {
+  --local-primary-color: var(--accent-color, #cc9933);
+  --local-background-primary: var(--background-primary, #111827);
+  --local-background-secondary: var(--background-secondary, #1f2937);
+  --local-text-primary: var(--text-primary, #f9fafb);
+  --local-text-secondary: var(--text-secondary, #d1d5db);
+  --local-border-color: var(--border-color, #374151);
+}
+
+/* Container - Enhanced Dark Mode Support */
 .ced-dashboard-container {
   min-height: 100vh;
-  background: var(--background-primary);
+  background: var(--background-primary, #ffffff);
+  color: var(--text-primary, #1f2937);
   font-family: 'Roboto', sans-serif !important;
   position: relative;
   overflow-x: hidden;
   width: 100%;
   line-height: 1.5;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
   padding: 0 1rem;
+}
+
+/* Force dark theme styles */
+:host-context(.dark-theme) .ced-dashboard-container {
+  background: var(--background-primary, #111827) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+.dark-theme .ced-dashboard-container {
+  background: var(--background-primary, #111827) !important;
+  color: var(--text-primary, #f9fafb) !important;
 }
 
 /* Mobile Responsive Container */
@@ -3304,4 +3326,278 @@ e Mobile Navigation Compatibility */
     background: var(--primary-color) !important;
     color: white !important;
   }
+}/* Co
+mprehensive Dark Mode Support */
+/* Force dark theme for all elements */
+:host-context(.dark-theme),
+.dark-theme :host {
+  background-color: var(--background-primary, #111827) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+/* Dashboard Container Dark Mode */
+:host-context(.dark-theme) .ced-dashboard-container,
+.dark-theme .ced-dashboard-container {
+  background: var(--background-primary, #111827) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+/* Header Dark Mode */
+:host-context(.dark-theme) .dashboard-header,
+.dark-theme .dashboard-header {
+  background: var(--background-primary, #111827) !important;
+  color: var(--text-primary, #f9fafb) !important;
+  border-bottom-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .section-title h2,
+.dark-theme .section-title h2 {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .section-title p,
+.dark-theme .section-title p {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+/* Department Cards Dark Mode */
+:host-context(.dark-theme) .department-card,
+.dark-theme .department-card {
+  background: var(--background-secondary, #1f2937) !important;
+  border-color: var(--border-color, #374151) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .card-content h3,
+.dark-theme .card-content h3 {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .stat-number,
+.dark-theme .stat-number {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .stat-label,
+.dark-theme .stat-label {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+/* Employee Cards Dark Mode */
+:host-context(.dark-theme) .employee-card,
+.dark-theme .employee-card {
+  background: var(--background-secondary, #1f2937) !important;
+  border-color: var(--border-color, #374151) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .employee-name,
+.dark-theme .employee-name {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .employee-meta span,
+.dark-theme .employee-meta span {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+:host-context(.dark-theme) .score-number,
+.dark-theme .score-number {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .score-label,
+.dark-theme .score-label {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+/* Filter Bar Dark Mode */
+:host-context(.dark-theme) .modern-filter-bar,
+.dark-theme .modern-filter-bar {
+  background: var(--background-secondary, #1f2937) !important;
+  border-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .status-pill,
+.dark-theme .status-pill {
+  background: var(--background-primary, #111827) !important;
+  border-color: var(--border-color, #374151) !important;
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+:host-context(.dark-theme) .status-pill.active,
+.dark-theme .status-pill.active {
+  background: linear-gradient(135deg, var(--accent-color, #cc9933) 0%, #b8862e 100%) !important;
+  color: white !important;
+}
+
+:host-context(.dark-theme) .search-field,
+.dark-theme .search-field {
+  background: var(--background-primary, #111827) !important;
+  border-color: var(--border-color, #374151) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .search-field::placeholder,
+.dark-theme .search-field::placeholder {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+/* Compact Metrics Dark Mode */
+:host-context(.dark-theme) .compact-metrics,
+.dark-theme .compact-metrics {
+  background: var(--background-secondary, #1f2937) !important;
+  border-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .metrics-title,
+.dark-theme .metrics-title {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .metric-compact,
+.dark-theme .metric-compact {
+  background: var(--background-primary, #111827) !important;
+  border-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .metric-label,
+.dark-theme .metric-label {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+:host-context(.dark-theme) .metric-value,
+.dark-theme .metric-value {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .metric-mini-bar,
+.dark-theme .metric-mini-bar {
+  background: var(--border-color, #374151) !important;
+}
+
+/* Profile Modal Dark Mode */
+:host-context(.dark-theme) .profile-modal,
+.dark-theme .profile-modal {
+  background: var(--background-primary, #111827) !important;
+  border-color: var(--border-color, #374151) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .profile-modal-header,
+.dark-theme .profile-modal-header {
+  background: linear-gradient(135deg, rgba(204, 153, 51, 0.1) 0%, transparent 100%) !important;
+  border-bottom-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .profile-modal-header h2,
+.dark-theme .profile-modal-header h2 {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+/* Month/Year Dropdowns Dark Mode */
+:host-context(.dark-theme) .modern-select,
+.dark-theme .modern-select {
+  background: var(--background-primary, #111827) !important;
+  border-color: var(--border-color, #374151) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .modern-select option,
+.dark-theme .modern-select option {
+  background: var(--background-primary, #111827) !important;
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) .selector-group label,
+.dark-theme .selector-group label {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+/* Loading and Empty States Dark Mode */
+:host-context(.dark-theme) .loading-state,
+:host-context(.dark-theme) .no-data-state,
+:host-context(.dark-theme) .empty-state,
+.dark-theme .loading-state,
+.dark-theme .no-data-state,
+.dark-theme .empty-state {
+  background: var(--background-secondary, #1f2937) !important;
+  color: var(--text-primary, #f9fafb) !important;
+  border-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .loading-state p,
+:host-context(.dark-theme) .no-data-state p,
+:host-context(.dark-theme) .empty-state p,
+.dark-theme .loading-state p,
+.dark-theme .no-data-state p,
+.dark-theme .empty-state p {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+/* Buttons Dark Mode */
+:host-context(.dark-theme) .back-button,
+.dark-theme .back-button {
+  background: var(--background-secondary, #1f2937) !important;
+  color: var(--text-primary, #f9fafb) !important;
+  border-color: var(--border-color, #374151) !important;
+}
+
+:host-context(.dark-theme) .view-full-btn,
+.dark-theme .view-full-btn {
+  background: linear-gradient(135deg, var(--accent-color, #cc9933) 0%, #b8862e 100%) !important;
+  color: white !important;
+}
+
+/* Ensure all text elements inherit dark theme */
+:host-context(.dark-theme) *,
+.dark-theme :host * {
+  border-color: var(--border-color, #374151);
+}
+
+:host-context(.dark-theme) h1,
+:host-context(.dark-theme) h2,
+:host-context(.dark-theme) h3,
+:host-context(.dark-theme) h4,
+:host-context(.dark-theme) h5,
+:host-context(.dark-theme) h6,
+.dark-theme h1,
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4,
+.dark-theme h5,
+.dark-theme h6 {
+  color: var(--text-primary, #f9fafb) !important;
+}
+
+:host-context(.dark-theme) p,
+:host-context(.dark-theme) span,
+:host-context(.dark-theme) div,
+.dark-theme p,
+.dark-theme span,
+.dark-theme div {
+  color: inherit;
+}
+
+/* Force background for main container */
+:host-context(.dark-theme),
+.dark-theme :host {
+  background: var(--background-primary, #111827) !important;
+}
+
+/* Override any white backgrounds */
+:host-context(.dark-theme) .ced-dashboard-container *,
+.dark-theme .ced-dashboard-container * {
+  background-color: inherit;
+}
+
+:host-context(.dark-theme) .ced-dashboard-container .department-card,
+:host-context(.dark-theme) .ced-dashboard-container .employee-card,
+:host-context(.dark-theme) .ced-dashboard-container .modern-filter-bar,
+:host-context(.dark-theme) .ced-dashboard-container .compact-metrics,
+.dark-theme .ced-dashboard-container .department-card,
+.dark-theme .ced-dashboard-container .employee-card,
+.dark-theme .ced-dashboard-container .modern-filter-bar,
+.dark-theme .ced-dashboard-container .compact-metrics {
+  background: var(--background-secondary, #1f2937) !important;
 }

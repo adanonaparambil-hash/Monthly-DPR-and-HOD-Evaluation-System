@@ -289,20 +289,22 @@
   overflow: hidden;
 }
 
-/* Header */
+/* Header - Mobile Responsive */
 .header {
-  background: white;
-  padding: 16px 24px;
+  background: var(--background-primary, white);
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid #e2e8f0;
-  z-index: 100;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  z-index: 1001;
   transition: all 0.3s ease;
-  min-height: 70px;
+  min-height: 60px;
   flex-wrap: nowrap;
   overflow: visible;
+  position: sticky;
+  top: 0;
 }
 
 .dark-theme .header {
@@ -314,7 +316,7 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
   overflow: visible;
@@ -1594,38 +1596,134 @@ le Sidebar Toggle Functionality */
   z-index: 1000;
 }
 
-/* Mobile navigation improvements */
+/* Enhanced Mobile Header Responsiveness */
 @media (max-width: 768px) {
+  .header {
+    padding: 8px 12px;
+    min-height: 56px;
+    gap: 8px;
+  }
+  
   .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
-  }
-  
-  .company-logo {
-    display: flex;
-    align-items: center;
-  }
-  
-  .logo-image {
-    height: 32px;
-    width: auto;
-  }
-  
-  .page-title-section {
+    gap: 8px;
     flex: 1;
     min-width: 0;
   }
   
+  .menu-toggle {
+    order: 1;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+  
+  .company-logo {
+    order: 2;
+    padding: 4px 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .logo-image {
+    height: 28px;
+    width: auto;
+    max-width: 60px;
+  }
+  
+  .page-title-section {
+    order: 3;
+    flex: 1;
+    min-width: 0;
+    margin-left: 8px;
+  }
+  
   .page-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 600;
   }
   
   .page-subtitle {
-    display: none; /* Hide subtitle on mobile to save space */
+    display: none;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+  }
+  
+  .notification-btn {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+  }
+  
+  .profile-btn {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  
+  .profile-name {
+    display: none;
+  }
+  
+  .profile-avatar {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 6px 8px;
+    min-height: 52px;
+  }
+  
+  .header-left {
+    gap: 6px;
+  }
+  
+  .company-logo {
+    padding: 2px 6px;
+  }
+  
+  .logo-image {
+    height: 24px;
+    max-width: 50px;
+  }
+  
+  .page-title {
+    font-size: 0.9rem;
+  }
+  
+  .header-right {
+    gap: 2px;
+  }
+  
+  .theme-toggle,
+  .notification-btn {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+  
+  .profile-btn {
+    padding: 2px 6px;
+  }
+  
+  .profile-avatar {
+    width: 24px;
+    height: 24px;
   }
 }
