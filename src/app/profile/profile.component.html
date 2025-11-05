@@ -1,420 +1,509 @@
 <div class="profile-page" [@fadeInUp]="animationState">
-  <!-- Header Section -->
-  <div class="profile-header" [@scaleIn]>
-    <div class="header-content">
-      <h1>My Profile</h1>
-      <p>Manage your personal information and preferences</p>
+
+  <!-- Profile Completion Progress -->
+  <div class="profile-completion" [@scaleIn]>
+    <div class="completion-content">
+      <span class="completion-label">Profile Completion</span>
+      <span class="completion-percentage">{{ getProfileCompletionPercentage() }}%</span>
     </div>
-    <div class="header-actions">
-      <button 
-        class="edit-btn" 
-        [class.active]="isEditing"
-        (click)="toggleEdit()">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="getProfileCompletionPercentage()"></div>
+    </div>
+  </div>
+
+  <!-- Profile Overview Card -->
+  <div class="profile-overview-card" [@scaleIn] style="animation-delay: 0.2s">
+    <div class="profile-photo-section">
+      <div class="avatar-container" [class.editable]="isEditing">
+        <img [src]="userProfile.avatar" [alt]="userProfile.name">
+        @if (isEditing) {
+        <div class="avatar-overlay" (click)="triggerFileUpload()">
+          <i class="fas fa-camera"></i>
+          <span>Change Photo</span>
+        </div>
+        }
+      </div>
+      <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+    </div>
+
+    <div class="profile-info-section">
+      <h1 class="profile-name">{{ userProfile.name || 'VINOD PACHUPILLAI VIJAYAN PILLAI' }}</h1>
+      <p class="profile-position">{{ userProfile.designation || 'IT MANAGER' }}</p>
+      <p class="profile-department">{{ userProfile.department || 'Internal Audits' }} - IT Department</p>
+
+      <div class="profile-badges">
+        <div class="badge-item">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Joined {{ getFormattedJoinDate() }}</span>
+        </div>
+        <div class="badge-item">
+          <i class="fas fa-id-badge"></i>
+          <span>{{ userProfile.empId || 'ITS41' }}</span>
+        </div>
+        <div class="badge-item">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>{{ userProfile.location || 'Oman' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <button class="edit-profile-btn" [class.cancel-mode]="isEditing" (click)="toggleEdit()">
         <i [class]="isEditing ? 'fas fa-times' : 'fas fa-edit'"></i>
         {{ isEditing ? 'Cancel' : 'Edit Profile' }}
       </button>
     </div>
   </div>
 
-  <!-- Profile Content -->
-  <div class="profile-content">
-    <!-- Profile Picture Section -->
-    <div class="profile-picture-card" [@scaleIn] style="animation-delay: 0.2s">
-      <div class="picture-section">
-        <div class="avatar-container" [class.editable]="isEditing">
-          <img [src]="userProfile.avatar" [alt]="userProfile.name">
-          <div class="avatar-overlay" *ngIf="isEditing" (click)="triggerFileUpload()">
-            <i class="fas fa-camera"></i>
-            <span>Change Photo</span>
-          </div>
-        </div>
-        <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
-      </div>
-      <div class="picture-info">
-        <h2>{{ userProfile.name }}</h2>
-        <p class="position">{{ userProfile.designation }}</p>
-        <p class="department">{{ userProfile.department }} Department</p>
-        <div class="profile-stats">
-          <div class="stat-item">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Joined {{ userProfile.joinDate | date:'MMM yyyy' }}</span>
-          </div>
-          <div class="stat-item">
-            <i class="fas fa-id-badge"></i>
-            <span>ID: {{ userProfile.empId }}</span>
-          </div>
-          <div class="stat-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>{{ userProfile.location }}</span>
-          </div>
-        </div>
+  <!-- Personal Information Section -->
+  <div class="personal-info-section" [@scaleIn] style="animation-delay: 0.4s">
+    <div class="section-header">
+      <div class="section-title">
+        <i class="fas fa-user"></i>
+        <h2>Personal Information</h2>
       </div>
     </div>
 
-    <!-- Profile Form -->
-    <div class="profile-form-card" [@scaleIn] style="animation-delay: 0.4s">
-      <div class="card-header">
-        <h3>Personal Information</h3>
-        <p>Update your personal details and contact information</p>
-      </div>
-
-      <form class="profile-form" (ngSubmit)="saveProfile()" *ngIf="isEditing; else viewMode">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input 
-              type="text" 
-              id="name" 
-              [(ngModel)]="userProfile.name" 
-              name="name"
-              class="form-input"
-              required>
+    @if (isEditing) {
+    <form class="modern-profile-form" (ngSubmit)="saveProfile()">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-user"></i>
           </div>
-          <div class="form-group">
+          <div class="card-content">
+            <label for="name">Full Name <i class="fas fa-lock"
+                style="font-size: 0.7em; opacity: 0.6; margin-left: 4px;"></i></label>
+            <input type="text" id="name" [(ngModel)]="userProfile.name" name="name" class="modern-input" disabled>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-id-badge"></i>
+          </div>
+          <div class="card-content">
             <label for="employeeId">Employee ID</label>
-            <input 
-              type="text" 
-              id="employeeId" 
-              [(ngModel)]="userProfile.empId" 
-              name="employeeId"
-              class="form-input"
+            <input type="text" id="employeeId" [(ngModel)]="userProfile.empId" name="employeeId" class="modern-input"
               readonly>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input 
-              type="email" 
-              id="email" 
-              [(ngModel)]="userProfile.email" 
-              name="email"
-              class="form-input"
-              required>
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-envelope"></i>
           </div>
-          <div class="form-group">
+          <div class="card-content">
+            <label for="email">Email Address <i class="fas fa-lock"
+                style="font-size: 0.7em; opacity: 0.6; margin-left: 4px;"></i></label>
+            <input type="email" id="email" [(ngModel)]="userProfile.email" name="email" class="modern-input" disabled>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <div class="card-content">
             <label for="phone">Phone Number</label>
-            <input 
-              type="tel" 
-              id="phone" 
-              [(ngModel)]="userProfile.phone" 
-              name="phone"
-              class="form-input">
+            <input type="tel" id="phone" [(ngModel)]="userProfile.phone" name="phone" class="modern-input">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="department">Department</label>
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-building"></i>
+          </div>
+          <div class="card-content">
+            <label for="department">Department <i class="fas fa-lock"
+                style="font-size: 0.7em; opacity: 0.6; margin-left: 4px;"></i></label>
+            <input type="text" id="department" [(ngModel)]="userProfile.department" name="department"
+              class="modern-input" disabled>
+          </div>
+        </div>
 
-             <input 
-              type="text" 
-              id="position" 
-              [(ngModel)]="userProfile.department" 
-              name="position"
-              class="form-input"
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-briefcase"></i>
+          </div>
+          <div class="card-content">
+            <label for="position">Position <i class="fas fa-lock"
+                style="font-size: 0.7em; opacity: 0.6; margin-left: 4px;"></i></label>
+            <input type="text" id="position" [(ngModel)]="userProfile.designation" name="position" class="modern-input"
               disabled>
-              
-            <!-- <select 
-              id="department" 
-              [(ngModel)]="userProfile.department" 
-              name="department"
-              class="form-select"
-              required>
-              <option value="">Select Department</option>
-              <option value="Executive">Executive</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Sales">Sales</option>
-              <option value="HR">HR</option>
-              <option value="Finance">Finance</option>
-            </select> -->
-          </div>
-          <div class="form-group">
-            <label for="position">Position</label>
-            <input 
-              type="text" 
-              id="position" 
-              [(ngModel)]="userProfile.designation" 
-              name="position"
-              class="form-input"
-              required>
           </div>
         </div>
 
-        <!-- <div class="form-row">
-          <div class="form-group full-width">
-            <label for="location">Location</label>
-            <input 
-              type="text" 
-              id="location" 
-              [(ngModel)]="userProfile.location" 
-              name="location"
-              class="form-input">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-globe-asia"></i>
           </div>
-        </div> -->
-
-    
-        <div class="form-row">
-          <div class="form-group">
+          <div class="card-content">
             <label for="experienceInd">Experience in India (Years)</label>
-            <input 
-              type="number" 
-              id="experienceInd" 
-              [(ngModel)]="userProfile.experienceInd" 
-              name="experienceInd"
-              class="form-input"
-              min="0"
-              step="0.1">
+            <input type="number" id="experienceInd" [(ngModel)]="userProfile.experienceInd" name="experienceInd"
+              class="modern-input" min="0" step="0.1">
           </div>
+        </div>
 
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-plane"></i>
+          </div>
+          <div class="card-content">
             <label for="experienceAbroad">Experience Abroad (Years)</label>
-            <input 
-              type="number" 
-              id="experienceAbroad" 
-              [(ngModel)]="userProfile.experienceAbroad" 
-              name="experienceAbroad"
-              class="form-input"
-              min="0"
-              step="0.1">
+            <input type="number" id="experienceAbroad" [(ngModel)]="userProfile.experienceAbroad"
+              name="experienceAbroad" class="modern-input" min="0" step="0.1">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <div class="card-content">
             <label for="qualification">Qualification</label>
-            <input 
-              type="text" 
-              id="qualification" 
-              [(ngModel)]="userProfile.qualification" 
-              name="qualification"
-              class="form-input">
-          </div>
-
-          <div class="form-group">
-            <label for="skillset">Skills</label>
-            <input 
-              type="text" 
-              id="skillset" 
-              [(ngModel)]="userProfile.skillset" 
-              name="skillset"
-              class="form-input"
-              placeholder="Comma-separated skills">
+            <input type="text" id="qualification" [(ngModel)]="userProfile.qualification" name="qualification"
+              class="modern-input">
           </div>
         </div>
 
-
-        <div class="form-group">
-          <label for="bio">Career Summary</label>
-          <textarea 
-            id="bio" 
-            [(ngModel)]="userProfile.careerSummary" 
-            name="bio"
-            class="form-textarea"
-            rows="4"
-            placeholder="Tell us about yourself..."></textarea>
-        </div>
-
-
-        <div class="form-row">
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-home"></i>
+          </div>
+          <div class="card-content">
             <label for="address">Address</label>
-            <input
-              type="text"
-              id="address"
-              [(ngModel)]="userProfile.address"
-              name="address"
-              class="form-input"
+            <input type="text" id="address" [(ngModel)]="userProfile.address" name="address" class="modern-input"
               placeholder="Enter full address">
           </div>
+        </div>
 
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-phone-alt"></i>
+          </div>
+          <div class="card-content">
             <label for="telephone">Telephone</label>
-            <input
-              type="text"
-              id="telephone"
-              [(ngModel)]="userProfile.telephone"
-              name="telephone"
-              class="form-input"
+            <input type="text" id="telephone" [(ngModel)]="userProfile.telephone" name="telephone" class="modern-input"
               placeholder="Enter telephone number">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="nation">Nation</label>
-            <input
-              type="text"
-              id="nation"
-              [(ngModel)]="userProfile.nation"
-              name="nation"
-              class="form-input"
-              placeholder="Enter nation">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-flag"></i>
           </div>
-
-          <div class="form-group">
-            <label for="postOffice">Post Office</label>
-            <input
-              type="text"
-              id="postOffice"
-              [(ngModel)]="userProfile.postOffice"
-              name="postOffice"
-              class="form-input"
-              placeholder="Enter post office">
+          <div class="card-content">
+            <label for="nation">Nation</label>
+            <input type="text" id="nation" [(ngModel)]="userProfile.nation" name="nation" class="modern-input"
+              placeholder="Enter nation">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-mail-bulk"></i>
+          </div>
+          <div class="card-content">
+            <label for="postOffice">Post Office</label>
+            <input type="text" id="postOffice" [(ngModel)]="userProfile.postOffice" name="postOffice"
+              class="modern-input" placeholder="Enter post office">
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-map"></i>
+          </div>
+          <div class="card-content">
             <label for="state">State</label>
-            <input
-              type="text"
-              id="state"
-              [(ngModel)]="userProfile.state"
-              name="state"
-              class="form-input"
+            <input type="text" id="state" [(ngModel)]="userProfile.state" name="state" class="modern-input"
               placeholder="Enter state">
           </div>
+        </div>
 
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-city"></i>
+          </div>
+          <div class="card-content">
             <label for="district">District</label>
-            <input
-              type="text"
-              id="district"
-              [(ngModel)]="userProfile.district"
-              name="district"
-              class="form-input"
+            <input type="text" id="district" [(ngModel)]="userProfile.district" name="district" class="modern-input"
               placeholder="Enter district">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
+        <div class="info-card">
+          <div class="card-icon">
+            <i class="fas fa-map-pin"></i>
+          </div>
+          <div class="card-content">
             <label for="place">Place</label>
-            <input
-              type="text"
-              id="place"
-              [(ngModel)]="userProfile.place"
-              name="place"
-              class="form-input"
+            <input type="text" id="place" [(ngModel)]="userProfile.place" name="place" class="modern-input"
               placeholder="Enter place">
           </div>
         </div>
+      </div>
 
-
-
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" (click)="resetProfile()">
-            <i class="fas fa-undo"></i>
-            Reset Changes
-          </button>
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-save"></i>
-            Save Changes
-          </button>
+      <!-- Skills & Expertise Section -->
+      <div class="skills-section">
+        <div class="section-title">
+          <i class="fas fa-cogs"></i>
+          <h3>Skills & Expertise</h3>
         </div>
-      </form>
-
-      <!-- View Mode -->
-      <ng-template #viewMode>
-        <div class="profile-view">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Full Name</label>
-              <span>{{ userProfile.name }}</span>
-            </div>
-            <div class="info-item">
-              <label>Employee ID</label>
-              <span>{{ userProfile.empId }}</span>
-            </div>
-            <div class="info-item">
-              <label>Email Address</label>
-              <span>{{ userProfile.email }}</span>
-            </div>
-            <div class="info-item">
-              <label>Phone Number</label>
-              <span>{{ userProfile.phone || 'Not provided' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Department</label>
-              <span>{{ userProfile.department }}</span>
-            </div>
-            <div class="info-item">
-              <label>Position</label>
-              <span>{{ userProfile.designation }}</span>
-            </div>
-            <!-- <div class="info-item full-width">
-              <label>Location</label>
-              <span>{{ userProfile.location || 'Not provided' }}</span>
-            </div> -->
-
-            <div class="info-item">
-              <label>Experience in India</label>
-              <span>{{ userProfile.experienceInd || 'Not provided' }} Years</span>
-            </div>
-
-            <div class="info-item">
-              <label>Experience Abroad</label>
-              <span>{{ userProfile.experienceAbroad || 'Not provided' }} Years</span>
-            </div>
-
-            <div class="info-item">
-              <label>Qualification</label>
-              <span>{{ userProfile.qualification || 'Not provided' }}</span>
-            </div>
-
-            <div class="info-item full-width">
-              <label>Skills</label>
-              <span>{{ userProfile.skillset || 'Not provided' }}</span>
-            </div>
-
-            <div class="info-item full-width">
-              <label>Career Summary</label>
-              <span>{{ userProfile.careerSummary || 'No bio provided' }}</span>
-            </div>
-
-          <div class="info-item full-width">
-            <label>Address</label>
-            <span>{{ userProfile.address || 'Not provided' }}</span>
+        <div class="skills-input-card">
+          <div class="card-icon">
+            <i class="fas fa-tools"></i>
           </div>
-
-          <div class="info-item full-width">
-            <label>Telephone</label>
-            <span>{{ userProfile.telephone || 'Not provided' }}</span>
-          </div>
-
-          <div class="info-item full-width">
-            <label>Nation</label>
-            <span>{{ userProfile.nation || 'Not provided' }}</span>
-          </div>
-
-          <div class="info-item full-width">
-            <label>Post Office</label>
-            <span>{{ userProfile.postOffice || 'Not provided' }}</span>
-          </div>
-
-          <div class="info-item full-width">
-            <label>State</label>
-            <span>{{ userProfile.state || 'Not provided' }}</span>
-          </div>
-
-          <div class="info-item full-width">
-            <label>District</label>
-            <span>{{ userProfile.district || 'Not provided' }}</span>
-          </div>
-
-          <div class="info-item full-width">
-            <label>Place</label>
-            <span>{{ userProfile.place || 'Not provided' }}</span>
-          </div>
-
-
-
+          <div class="card-content">
+            <label for="skillset">Skills</label>
+            <input type="text" id="skillset" [(ngModel)]="userProfile.skillset" name="skillset" class="modern-input"
+              placeholder="JavaScript, Leadership, Project Management, IT Audit">
           </div>
         </div>
-      </ng-template>
+      </div>
+
+      <!-- Career Summary Section -->
+      <div class="career-section">
+        <div class="section-title">
+          <i class="fas fa-briefcase"></i>
+          <h3>Career Summary</h3>
+        </div>
+        <div class="career-input-card">
+          <div class="card-icon">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="card-content">
+            <label for="bio">Professional Summary</label>
+            <textarea id="bio" [(ngModel)]="userProfile.careerSummary" name="bio" class="modern-textarea" rows="4"
+              placeholder="No bio provided yet. Click 'Edit Profile' to add your professional summary, achievements, and career highlights to showcase your expertise."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="resetProfile()">
+          <i class="fas fa-undo"></i>
+          Reset Changes
+        </button>
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-save"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+    } @else {
+    <!-- View Mode - Modern Card Layout -->
+    <div class="modern-info-grid">
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="card-content">
+          <label>Full Name</label>
+          <span>{{ userProfile.name || 'VINOD PACHUPILLAI VIJAYAN PILLAI' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-id-badge"></i>
+        </div>
+        <div class="card-content">
+          <label>Employee ID</label>
+          <span>{{ userProfile.empId || 'ITS41' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <div class="card-content">
+          <label>Email Address</label>
+          <span>{{ userProfile.email || 'vinod.pvpillai@adrak.com' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-phone"></i>
+        </div>
+        <div class="card-content">
+          <label>Phone Number</label>
+          <span>{{ userProfile.phone || '+968 96587545' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-building"></i>
+        </div>
+        <div class="card-content">
+          <label>Department</label>
+          <span>{{ userProfile.department || 'Internal Audits - IT' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-briefcase"></i>
+        </div>
+        <div class="card-content">
+          <label>Position</label>
+          <span>{{ userProfile.designation || 'IT MANAGER' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-globe-asia"></i>
+        </div>
+        <div class="card-content">
+          <label>Experience in India</label>
+          <span>{{ userProfile.experienceInd || 'Not provided' }} Years</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-plane"></i>
+        </div>
+        <div class="card-content">
+          <label>Experience Abroad</label>
+          <span>{{ userProfile.experienceAbroad || '13.06' }} Years</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="card-content">
+          <label>Qualification</label>
+          <span>{{ userProfile.qualification || 'MCA' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-home"></i>
+        </div>
+        <div class="card-content">
+          <label>Address</label>
+          <span>{{ userProfile.address || 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-phone-alt"></i>
+        </div>
+        <div class="card-content">
+          <label>Telephone</label>
+          <span>{{ userProfile.telephone || 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-flag"></i>
+        </div>
+        <div class="card-content">
+          <label>Nation</label>
+          <span>{{ userProfile.nation || 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-mail-bulk"></i>
+        </div>
+        <div class="card-content">
+          <label>Post Office</label>
+          <span>{{ userProfile.postOffice || 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-map"></i>
+        </div>
+        <div class="card-content">
+          <label>State</label>
+          <span>{{ userProfile.state || 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-city"></i>
+        </div>
+        <div class="card-content">
+          <label>District</label>
+          <span>{{ userProfile.district || 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <div class="modern-info-card">
+        <div class="card-icon">
+          <i class="fas fa-map-pin"></i>
+        </div>
+        <div class="card-content">
+          <label>Place</label>
+          <span>{{ userProfile.place || 'Not provided' }}</span>
+        </div>
+      </div>
     </div>
+
+    <!-- Skills & Expertise Section -->
+    <div class="skills-expertise-section">
+      <div class="section-title">
+        <i class="fas fa-cogs"></i>
+        <h3>Skills & Expertise</h3>
+      </div>
+      <div class="skills-display">
+        @if (userProfile.skillset) {
+        @for (skill of getSkillsArray(); track skill) {
+        <span class="skill-chip">{{ skill }}</span>
+        }
+        } @else {
+        <div class="skills-placeholder">
+          <span class="skill-chip">JavaScript</span>
+          <span class="skill-chip">Leadership</span>
+          <span class="skill-chip">Project Management</span>
+          <span class="skill-chip">IT Audit</span>
+          <span class="skill-chip">Risk Assessment</span>
+          <span class="skill-chip">Team Building</span>
+          <span class="skill-chip">Strategic Planning</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Career Summary Section -->
+    <div class="career-summary-section">
+      <div class="section-title">
+        <i class="fas fa-briefcase"></i>
+        <h3>Career Summary</h3>
+      </div>
+      <div class="career-summary-card">
+        <div class="summary-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="summary-content">
+          @if (userProfile.careerSummary) {
+          <p>{{ userProfile.careerSummary }}</p>
+          } @else {
+          <div class="summary-placeholder">
+            <i class="fas fa-info-circle"></i>
+            <p>No bio provided yet. Click "Edit Profile" to add your professional summary, achievements, and career
+              highlights to showcase your expertise.</p>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
   </div>
 </div>

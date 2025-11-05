@@ -1,0 +1,297 @@
+@if (isVisible) {
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop" [@backdropAnimation] (click)="onBackdropClick($event)">
+    <!-- Modal Container -->
+    <div class="modal-container" [@modalAnimation]>
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fas fa-user-circle"></i>
+          Employee Profile
+        </h2>
+        <button class="close-btn" (click)="onCloseModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="modal-content">
+        @if (isLoading) {
+          <!-- Loading State -->
+          <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading profile...</p>
+          </div>
+        } @else {
+          <!-- Profile Content -->
+          <div class="profile-modal-content">
+            
+            <!-- Profile Completion Progress -->
+            <div class="profile-completion">
+              <div class="completion-content">
+                <span class="completion-label">Profile Completion</span>
+                <span class="completion-percentage">{{ getProfileCompletionPercentage() }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="getProfileCompletionPercentage()"></div>
+              </div>
+            </div>
+
+            <!-- Profile Overview Card -->
+            <div class="profile-overview-card">
+              <div class="profile-photo-section">
+                <div class="avatar-container">
+                  <img [src]="userProfile.avatar" [alt]="userProfile.name">
+                </div>
+              </div>
+              
+              <div class="profile-info-section">
+                <h1 class="profile-name">{{ userProfile.name || 'Employee Name' }}</h1>
+                <p class="profile-position">{{ userProfile.designation || 'Position' }}</p>
+                <p class="profile-department">{{ userProfile.department || 'Department' }}</p>
+                
+                <div class="profile-badges">
+                  <div class="badge-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Joined {{ getFormattedJoinDate() }}</span>
+                  </div>
+                  <div class="badge-item">
+                    <i class="fas fa-id-badge"></i>
+                    <span>{{ userProfile.empId || 'N/A' }}</span>
+                  </div>
+                  <div class="badge-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ userProfile.location || 'Location' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Personal Information Grid -->
+            <div class="personal-info-section">
+              <div class="section-header">
+                <div class="section-title">
+                  <i class="fas fa-user"></i>
+                  <h3>Personal Information</h3>
+                </div>
+              </div>
+
+              <div class="modern-info-grid">
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Full Name</label>
+                    <span>{{ userProfile.name || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-id-badge"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Employee ID</label>
+                    <span>{{ userProfile.empId || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-envelope"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Email Address</label>
+                    <span>{{ userProfile.email || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Phone Number</label>
+                    <span>{{ userProfile.phone || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-building"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Department</label>
+                    <span>{{ userProfile.department || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-briefcase"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Position</label>
+                    <span>{{ userProfile.designation || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-globe-asia"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Experience in India</label>
+                    <span>{{ userProfile.experienceInd || 'Not provided' }} Years</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-plane"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Experience Abroad</label>
+                    <span>{{ userProfile.experienceAbroad || 'Not provided' }} Years</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Qualification</label>
+                    <span>{{ userProfile.qualification || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-home"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Address</label>
+                    <span>{{ userProfile.address || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-phone-alt"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Telephone</label>
+                    <span>{{ userProfile.telephone || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-flag"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Nation</label>
+                    <span>{{ userProfile.nation || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-mail-bulk"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Post Office</label>
+                    <span>{{ userProfile.postOffice || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-map"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>State</label>
+                    <span>{{ userProfile.state || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-city"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>District</label>
+                    <span>{{ userProfile.district || 'Not provided' }}</span>
+                  </div>
+                </div>
+
+                <div class="modern-info-card">
+                  <div class="card-icon">
+                    <i class="fas fa-map-pin"></i>
+                  </div>
+                  <div class="card-content">
+                    <label>Place</label>
+                    <span>{{ userProfile.place || 'Not provided' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Skills & Expertise Section -->
+              <div class="skills-expertise-section">
+                <div class="section-title">
+                  <i class="fas fa-cogs"></i>
+                  <h3>Skills & Expertise</h3>
+                </div>
+                <div class="skills-display">
+                  @if (userProfile.skillset) {
+                    @for (skill of getSkillsArray(); track skill) {
+                      <span class="skill-chip">{{ skill }}</span>
+                    }
+                  } @else {
+                    <div class="no-skills">
+                      <i class="fas fa-info-circle"></i>
+                      <span>No skills information available</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Career Summary Section -->
+              <div class="career-summary-section">
+                <div class="section-title">
+                  <i class="fas fa-briefcase"></i>
+                  <h3>Career Summary</h3>
+                </div>
+                <div class="career-summary-card">
+                  <div class="summary-icon">
+                    <i class="fas fa-file-alt"></i>
+                  </div>
+                  <div class="summary-content">
+                    @if (userProfile.careerSummary) {
+                      <p>{{ userProfile.careerSummary }}</p>
+                    } @else {
+                      <div class="summary-placeholder">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No career summary available</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="onCloseModal()">
+          <i class="fas fa-times"></i>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}

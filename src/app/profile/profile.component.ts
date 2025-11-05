@@ -34,7 +34,30 @@ export class ProfileComponent implements OnInit {
   isEditing = false;
 
   user: any = JSON.parse(localStorage.getItem('current_user') || '{}');
-  userProfile: any = {};
+  userProfile: any = {
+    name: '',
+    email: '',
+    department: '',
+    designation: '',
+    empId: '',
+    location: '',
+    phone: '',
+    careerSummary: '',
+    experienceInd: 0,
+    experienceAbroad: 0,
+    qualification: '',
+    skillset: '',
+    joinDate: '',
+    dobDate: '',
+    address: '',
+    telephone: '',
+    nation: '',
+    postOffice: '',
+    state: '',
+    district: '',
+    place: '',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+  };
   originalProfile: any = {};
 
   constructor(private api: Api) { }
@@ -43,6 +66,17 @@ export class ProfileComponent implements OnInit {
     const empId = this.user?.empId;
     if (empId) {
       this.loadEmployeeProfile(empId);
+    } else {
+      // Set some default values if no user data is available
+      this.userProfile = {
+        ...this.userProfile,
+        name: this.user?.employeeName || 'VINOD PACHUPILLAI VIJAYAN PILLAI',
+        email: this.user?.email || 'vinod.pvpillai@adrak.com',
+        department: this.user?.department || 'Internal Audits - IT',
+        designation: this.user?.designation || 'IT MANAGER',
+        empId: this.user?.empId || 'ITS41',
+        location: this.user?.location || 'Oman'
+      };
     }
   }
 
@@ -169,5 +203,35 @@ export class ProfileComponent implements OnInit {
 
   resetProfile() {
     this.userProfile = { ...this.originalProfile };
+  }
+
+  getProfileCompletionPercentage(): number {
+    const fields = [
+      'name', 'email', 'phone', 'department', 'designation', 
+      'experienceInd', 'experienceAbroad', 'qualification', 
+      'skillset', 'careerSummary', 'address', 'telephone', 
+      'nation', 'state', 'district', 'place'
+    ];
+    
+    const filledFields = fields.filter(field => 
+      this.userProfile[field] && 
+      this.userProfile[field].toString().trim() !== '' &&
+      this.userProfile[field] !== 0
+    ).length;
+    
+    return Math.round((filledFields / fields.length) * 100);
+  }
+
+  getSkillsArray(): string[] {
+    if (!this.userProfile.skillset) return [];
+    return this.userProfile.skillset.split(',').map((skill: string) => skill.trim()).filter((skill: string) => skill);
+  }
+
+  getFormattedJoinDate(): string {
+    if (this.userProfile.joinDate) {
+      const date = new Date(this.userProfile.joinDate);
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
+    return 'Feb 2025';
   }
 }

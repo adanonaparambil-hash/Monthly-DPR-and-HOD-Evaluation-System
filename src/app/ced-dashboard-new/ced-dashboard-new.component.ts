@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
+import { EmployeeProfileModalComponent } from '../employee-profile-modal/employee-profile-modal.component';
 
 interface Department {
     department: string;
@@ -62,7 +63,7 @@ interface ApiEmployee {
 @Component({
     selector: 'app-ced-dashboard-new',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, EmployeeProfileModalComponent],
     templateUrl: './ced-dashboard-new.component.html',
     styleUrls: ['./ced-dashboard-new.component.css']
 })
@@ -77,6 +78,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     isLoading: boolean = false;
     selectedStatusFilter: string = 'T';
     showProfileModal: boolean = false;
+    selectedEmployeeId: string = '';
     selectedEmployeeProfile: Employee | null = null;
     apiEmployees: ApiEmployee[] = []; // Store API response employees
 
@@ -625,13 +627,15 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     viewEmployeeProfile(employee: Employee) {
-        console.log('Viewing profile for:', employee.name);
+        console.log('Viewing profile for:', employee.name, 'ID:', employee.id);
+        this.selectedEmployeeId = employee.id;
         this.selectedEmployeeProfile = employee;
         this.showProfileModal = true;
     }
 
     closeProfileModal() {
         this.showProfileModal = false;
+        this.selectedEmployeeId = '';
         this.selectedEmployeeProfile = null;
     }
 
