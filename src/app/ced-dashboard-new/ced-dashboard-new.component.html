@@ -41,7 +41,7 @@
         
         <div class="department-info" *ngIf="selectedDepartment">
           <div class="dept-icon">
-            <i [class]="selectedDepartment.icon"></i>
+            <i [class]="selectedDepartment.icon" [style.color]="getDepartmentIconColor(selectedDepartment.department)"></i>
           </div>
           <div class="dept-details">
             <h2>{{ selectedDepartment.department }} Department</h2>
@@ -119,7 +119,7 @@
           <div class="card-content">
             <div class="card-header">
               <div class="department-icon">
-                <i [class]="department.icon"></i>
+                <i [class]="department.icon" [style.color]="getDepartmentIconColor(department.department)"></i>
               </div>
               <h3>{{ department.department }}</h3>
             </div>
@@ -272,11 +272,9 @@
                  [class.fa-chevron-up]="isEmployeeExpanded(employee.id)"></i>
             </div>
             
-            <!-- Status indicator for non-approved employees -->
+            <!-- Empty space for non-approved employees to maintain layout -->
             <div class="status-indicator" *ngIf="!canExpandEmployee(employee)">
-              <span class="status-badge" [ngClass]="getStatusClass(employee.status)">
-                {{ getStatusText(employee.status) }}
-              </span>
+              <!-- Status is already shown in employee-meta, no need to duplicate -->
             </div>
           </div>
 

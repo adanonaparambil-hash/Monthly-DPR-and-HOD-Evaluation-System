@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Api } from '../services/api';
 import { EmployeeProfileModalComponent } from '../employee-profile-modal/employee-profile-modal.component';
 
@@ -40,6 +41,7 @@ interface Employee {
     score: number;
     rank: number;
     department: string;
+    dprId?: number;
     performanceMetrics?: PerformanceMetrics;
 }
 
@@ -498,7 +500,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         }
     ];
 
-    constructor(private apiService: Api) { }
+    constructor(private apiService: Api, private router: Router) { }
 
     ngOnInit() {
         console.log('CED Dashboard initialized');
@@ -640,12 +642,41 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     viewMPRDetails(employee: Employee) {
-        console.log('Viewing MPR details for:', employee.name);
-        // Implement MPR details navigation
+        console.log('Viewing MPR details for:', employee.name, 'DPR ID:', employee.dprId);
+        
+        if (employee.dprId) {
+            this.router.navigate(['/monthly-dpr', employee.dprId], { 
+                queryParams: { 
+                    readonly: '1',
+                    from: 'ced-dashboard' 
+                }
+            });
+        } else {
+            console.warn('No DPR ID found for employee:', employee.name);
+        }
     }
 
     getCompletionPercentage(department: Department): number {
         return Math.round((department.approvedMPR / department.totalEmployees) * 100);
+    }
+
+    getDepartmentIconColor(departmentName: string): string {
+        const colorMap: { [key: string]: string } = {
+            'IT': '#3b82f6',           // Blue
+            'HR': '#10b981',           // Green  
+            'Finance': '#f59e0b',      // Amber
+            'Marketing': '#ef4444',    // Red
+            'Sales': '#8b5cf6',        // Purple
+            'Operations': '#06b6d4',   // Cyan
+            'Engineering': '#f97316',  // Orange
+            'Legal': '#6366f1',        // Indigo
+            'Admin': '#84cc16',        // Lime
+            'Support': '#ec4899',      // Pink
+            'Quality': '#14b8a6',      // Teal
+            'Research': '#a855f7'      // Violet
+        };
+        
+        return colorMap[departmentName] || '#6b7280'; // Default gray if department not found
     }
 
     onSearchChange() {
@@ -679,6 +710,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             score: apiEmp.overAllScore || 0,
             rank: index + 1, // Assign rank based on order from API
             department: this.selectedDepartment?.department || '',
+            dprId: apiEmp.dprId, // Include DPR ID for navigation
             performanceMetrics: {
                 quality: apiEmp.scoreQuality || 0,
                 timeliness: apiEmp.timeliness || 0,

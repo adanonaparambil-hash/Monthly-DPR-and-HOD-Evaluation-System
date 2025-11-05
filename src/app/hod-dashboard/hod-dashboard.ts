@@ -173,12 +173,12 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
       // Adjust the route path based on your actual routing structure
       try {
 
-        this.router.navigate(['/monthly-dpr', dprid], { 
-        queryParams: { 
-          readonly: '1',
-          from: 'past-reports' 
-        } 
-      });
+        this.router.navigate(['/monthly-dpr', dprid], {
+          queryParams: {
+            readonly: '1',
+            from: 'past-reports'
+          }
+        });
 
       } catch (error) {
         console.error('Navigation error:', error);
