@@ -42,6 +42,23 @@ interface Employee {
     performanceMetrics?: PerformanceMetrics;
 }
 
+interface ApiEmployee {
+    empID: string;
+    employeeName: string;
+    approvalStatus: string;
+    overAllScore: number;
+    scoreQuality: number;
+    timeliness: number;
+    initiative: number;
+    communication: number;
+    hOdRating: number;
+    problemSolving: number;
+    teamwork: number;
+    dprId: number;
+    profileImage: string | null;
+    profileImageBase64: string;
+}
+
 @Component({
     selector: 'app-ced-dashboard-new',
     standalone: true,
@@ -58,9 +75,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     filteredEmployees: Employee[] = [];
     expandedEmployeeId: string | null = null;
     isLoading: boolean = false;
-    selectedStatusFilter: string = 'approved';
+    selectedStatusFilter: string = 'T';
     showProfileModal: boolean = false;
     selectedEmployeeProfile: Employee | null = null;
+    apiEmployees: ApiEmployee[] = []; // Store API response employees
 
     months = [
         { value: 1, name: 'January' },
@@ -79,12 +97,12 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
 
     years = [2025, 2024, 2023, 2022];
 
-    // Status filter options
+    // Status filter options with API flags
     statusFilters = [
-        { value: 'all', label: 'Total Employees', icon: 'fas fa-users' },
-        { value: 'approved', label: 'Approved', icon: 'fas fa-check-circle' },
-        { value: 'submitted', label: 'Submitted', icon: 'fas fa-upload' },
-        { value: 'pending', label: 'Pending', icon: 'fas fa-clock' }
+        { value: 'T', label: 'Total Employees', icon: 'fas fa-users' },
+        { value: 'A', label: 'Approved', icon: 'fas fa-check-circle' },
+        { value: 'S', label: 'Submitted', icon: 'fas fa-upload' },
+        { value: 'P', label: 'Pending', icon: 'fas fa-clock' }
     ];
 
     departments: Department[] = [];
@@ -563,12 +581,11 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         this.currentView = 'employees';
         this.searchQuery = ''; // Reset search when switching departments
         this.filteredEmployees = []; // Clear filtered results
-        this.selectedStatusFilter = 'approved'; // Default to approved
+        this.selectedStatusFilter = 'T'; // Default to Total Employees
         this.expandedEmployeeId = null; // Reset expanded state
 
-        // Log available employees for this department
-        const deptEmployees = this.employees.filter(emp => emp.department === department.department);
-        console.log(`Found ${deptEmployees.length} employees in ${department.department}:`, deptEmployees);
+        // Load employees for this department with default status
+        this.loadEmployeesForDepartment();
     }
 
     backToDepartments() {
@@ -643,16 +660,31 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     getDisplayedEmployees(): Employee[] {
-        if (!this.selectedDepartment) {
+        if (!this.selectedDepartment || !this.apiEmployees) {
             return [];
         }
 
-        let employees = this.employees.filter(emp => emp.department === this.selectedDepartment?.department);
-
-        // Apply status filter
-        if (this.selectedStatusFilter !== 'all') {
-            employees = employees.filter(emp => emp.status === this.selectedStatusFilter);
-        }
+        // Convert API employees to display format
+        let employees = this.apiEmployees.map((apiEmp, index) => ({
+            id: apiEmp.empID,
+            name: apiEmp.employeeName,
+            profileImage: apiEmp.profileImageBase64 || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face&auto=format',
+            month: this.getMonthName(this.selectedMonth),
+            year: this.selectedYear.toString(),
+            status: this.mapApprovalStatusToDisplayStatus(apiEmp.approvalStatus),
+            score: apiEmp.overAllScore || 0,
+            rank: index + 1, // Assign rank based on order from API
+            department: this.selectedDepartment?.department || '',
+            performanceMetrics: {
+                quality: apiEmp.scoreQuality || 0,
+                timeliness: apiEmp.timeliness || 0,
+                initiative: apiEmp.initiative || 0,
+                communication: apiEmp.communication || 0,
+                teamwork: apiEmp.teamwork || 0,
+                problemSolving: apiEmp.problemSolving || 0,
+                hodRating: apiEmp.hOdRating || 0
+            }
+        }));
 
         // Apply search filter if exists
         if (this.searchQuery.trim()) {
@@ -661,19 +693,60 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             );
         }
 
-        // Sort by rank for approved employees, by score for others
-        return employees.sort((a, b) => {
-            if (this.selectedStatusFilter === 'approved') {
-                return a.rank - b.rank;
-            }
-            return b.score - a.score;
-        });
+        // Sort by overall score (highest first)
+        return employees.sort((a, b) => b.score - a.score);
+    }
+
+    private mapApprovalStatusToDisplayStatus(approvalStatus: string): 'submitted' | 'pending' | 'approved' {
+        switch (approvalStatus) {
+            case 'A': return 'approved';
+            case 'S': return 'submitted';
+            case 'P': return 'pending';
+            default: return 'pending';
+        }
     }
 
     onStatusFilterChange() {
         console.log('Status filter changed to:', this.selectedStatusFilter);
         this.searchQuery = ''; // Reset search when changing status
         this.expandedEmployeeId = null; // Reset expanded state
+        
+        // Load employees with new status filter
+        this.loadEmployeesForDepartment();
+    }
+
+    private loadEmployeesForDepartment() {
+        if (!this.selectedDepartment || this.selectedMonth === 0 || this.selectedYear === 0) {
+            console.warn('Department, month, or year not selected');
+            return;
+        }
+
+        this.isLoading = true;
+        console.log(`Loading employees for department: ${this.selectedDepartment.department}, status: ${this.selectedStatusFilter}, month: ${this.selectedMonth}, year: ${this.selectedYear}`);
+
+        this.apiService.GetEmployeeDetailsForcedDashboard(
+            this.selectedMonth, 
+            this.selectedYear, 
+            this.selectedStatusFilter, 
+            this.selectedDepartment.department
+        ).subscribe({
+            next: (response: { success: boolean; message: string; data: ApiEmployee[] }) => {
+                console.log('Employee API Response:', response);
+                if (response.success && response.data) {
+                    this.apiEmployees = response.data;
+                    console.log('Employees loaded:', this.apiEmployees);
+                } else {
+                    console.error('Failed to load employee data:', response.message);
+                    this.apiEmployees = [];
+                }
+                this.isLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading employee data:', error);
+                this.apiEmployees = [];
+                this.isLoading = false;
+            }
+        });
     }
 
     canExpandEmployee(employee: Employee): boolean {
@@ -683,13 +756,14 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     getEmployeeCountByStatus(status: string): number {
         if (!this.selectedDepartment) return 0;
         
-        const deptEmployees = this.employees.filter(emp => emp.department === this.selectedDepartment?.department);
-        
-        if (status === 'all') {
-            return deptEmployees.length;
+        // Use department data from the dashboard API for counts
+        switch (status) {
+            case 'T': return this.selectedDepartment.totalEmployees;
+            case 'A': return this.selectedDepartment.approvedMPR;
+            case 'S': return this.selectedDepartment.submittedMPR;
+            case 'P': return this.selectedDepartment.pendingMPR;
+            default: return 0;
         }
-        
-        return deptEmployees.filter(emp => emp.status === status).length;
     }
 
     getDisplayScore(employee: Employee): number {

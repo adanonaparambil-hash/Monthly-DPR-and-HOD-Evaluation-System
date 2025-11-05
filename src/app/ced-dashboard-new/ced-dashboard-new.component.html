@@ -192,8 +192,16 @@
     <!-- Employee Listing View -->
     <div *ngIf="currentView === 'employees'" class="employees-view">
       
+      <!-- Loading State for Employees -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <p>Loading employee data...</p>
+      </div>
+      
       <!-- Empty State -->
-      <div *ngIf="getDisplayedEmployees().length === 0" class="empty-state">
+      <div *ngIf="!isLoading && getDisplayedEmployees().length === 0" class="empty-state">
         <div class="empty-state-content">
           <div class="empty-state-icon">
             <i class="fas fa-users"></i>
@@ -209,7 +217,7 @@
       </div>
       
       <!-- Employee List -->
-      <div class="employee-list" *ngIf="getDisplayedEmployees().length > 0">
+      <div class="employee-list" *ngIf="!isLoading && getDisplayedEmployees().length > 0">
         <div 
           *ngFor="let employee of getDisplayedEmployees(); trackBy: trackByEmployeeId" 
           class="employee-card glassmorphism"

@@ -174,7 +174,7 @@ export class Api {
     return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDashBoardDetails/${empId}`);
   }
 
-  
+
   GetHODDashBoardDetails(empId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DashBoard/GetHODDashBoardDetails/${empId}`);
   }
@@ -183,6 +183,13 @@ export class Api {
   GetCEDDepartmentWiseDashBoardDetails(month: number, year: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/DashBoard/GetCEDDepartmentWiseDashBoardDetails/${month}/${year}`);
   }
+
+
+
+  GetEmployeeDetailsForcedDashboard(month: number, year: number, statusCondition: string, department: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDetailsForcedDashboard/${month}/${year}/${statusCondition}/${department}`);
+  }
+
 
 
 }
