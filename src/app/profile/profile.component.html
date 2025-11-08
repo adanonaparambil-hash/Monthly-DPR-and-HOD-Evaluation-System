@@ -1,4 +1,6 @@
 <div class="profile-page" [@fadeInUp]="animationState">
+  <!-- Toaster Component -->
+  <app-toaster></app-toaster>
 
   <!-- Profile Completion Progress -->
   <div class="profile-completion" [@scaleIn]>
@@ -468,14 +470,9 @@
         <span class="skill-chip">{{ skill }}</span>
         }
         } @else {
-        <div class="skills-placeholder">
-          <span class="skill-chip">JavaScript</span>
-          <span class="skill-chip">Leadership</span>
-          <span class="skill-chip">Project Management</span>
-          <span class="skill-chip">IT Audit</span>
-          <span class="skill-chip">Risk Assessment</span>
-          <span class="skill-chip">Team Building</span>
-          <span class="skill-chip">Strategic Planning</span>
+        <div class="no-skills-message">
+          <i class="fas fa-info-circle"></i>
+          <span>No skills added yet. Click "Edit Profile" to add your skills.</span>
         </div>
         }
       </div>

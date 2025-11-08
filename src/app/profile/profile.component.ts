@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
 import { EmployeeProfileUpdateDto, EmployeeDocumentUpload } from '../models/common.model';
+import { ToasterService } from '../services/toaster.service';
+import { ToasterComponent } from '../components/toaster/toaster.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ToasterComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'], // Fixed typo
   animations: [
@@ -60,7 +62,7 @@ export class ProfileComponent implements OnInit {
   };
   originalProfile: any = {};
 
-  constructor(private api: Api) { }
+  constructor(private api: Api, private toasterService: ToasterService) { }
 
   ngOnInit(): void {
     const empId = this.user?.empId;
@@ -81,6 +83,9 @@ export class ProfileComponent implements OnInit {
   }
 
   loadEmployeeProfile(empId: string) {
+    // First clear any existing data to prevent showing previous user's data
+    this.clearProfileData();
+    
     this.api.GetEmployeeProfile(empId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
@@ -93,21 +98,21 @@ export class ProfileComponent implements OnInit {
             designation: data.designation || this.user.designation || '',
             empId: data.empId || this.user.empId || '',
             location: data.location || this.user.location || '',
-            phone: data.phone || this.user.phone || '',
-            careerSummary: data.careerSummary || this.user.careerSummary || '',
-            experienceInd: data.experienceInd || this.user.experienceInd || 0,
-            experienceAbroad: data.experienceAbroad || this.user.experienceAbroad || 0,
-            qualification: data.qualification || this.user.qualification || '',
-            skillset: data.skillset || this.user.skillset || '',
+            phone: data.phone || '',  // Don't fallback to previous user data
+            careerSummary: data.careerSummary || '',  // Don't fallback to previous user data
+            experienceInd: data.experienceInd || 0,  // Don't fallback to previous user data
+            experienceAbroad: data.experienceAbroad || 0,  // Don't fallback to previous user data
+            qualification: data.qualification || '',  // Don't fallback to previous user data
+            skillset: data.skillset || '',  // Don't fallback to previous user data
             joinDate: data.doj || this.user.doj || '',
             dobDate: data.dobDate || this.user.dobDate || '',
-            address: data.address || this.user.address || '',
-            telephone: data.telephone || this.user.telephone || '',
-            nation: data.nation || this.user.nation || '',
-            postOffice: data.postOffice || this.user.postOffice || '',
-            state: data.state || this.user.state || '',
-            district: data.district || this.user.district || '',
-            place: data.place || this.user.place || '',
+            address: data.address || '',  // Don't fallback to previous user data
+            telephone: data.telephone || '',  // Don't fallback to previous user data
+            nation: data.nation || '',  // Don't fallback to previous user data
+            postOffice: data.postOffice || '',  // Don't fallback to previous user data
+            state: data.state || '',  // Don't fallback to previous user data
+            district: data.district || '',  // Don't fallback to previous user data
+            place: data.place || '',  // Don't fallback to previous user data
             avatar: data.profileImageBase64
               ? `data:image/jpeg;base64,${data.profileImageBase64}`
               : this.user.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
@@ -117,12 +122,60 @@ export class ProfileComponent implements OnInit {
           this.originalProfile = { ...this.userProfile };
         } else {
           console.warn('No profile data found:', response.message);
+          // Initialize with basic user data only
+          this.initializeBasicProfile();
         }
       },
       error: (err) => {
         console.error('Error loading profile:', err);
+        this.toasterService.showError('Error', 'Failed to load profile data. Please try again.');
+        // Initialize with basic user data only
+        this.initializeBasicProfile();
       }
     });
+  }
+
+  private clearProfileData() {
+    // Clear all profile data to prevent showing previous user's information
+    this.userProfile = {
+      name: '',
+      email: '',
+      department: '',
+      designation: '',
+      empId: '',
+      location: '',
+      phone: '',
+      careerSummary: '',
+      experienceInd: 0,
+      experienceAbroad: 0,
+      qualification: '',
+      skillset: '',
+      joinDate: '',
+      dobDate: '',
+      address: '',
+      telephone: '',
+      nation: '',
+      postOffice: '',
+      state: '',
+      district: '',
+      place: '',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+    };
+  }
+
+  private initializeBasicProfile() {
+    // Initialize only with current user's basic information
+    this.userProfile = {
+      ...this.userProfile,
+      name: this.user?.employeeName || '',
+      email: this.user?.email || '',
+      department: this.user?.department || '',
+      designation: this.user?.designation || '',
+      empId: this.user?.empId || '',
+      location: this.user?.location || '',
+      joinDate: this.user?.doj || ''
+    };
+    this.originalProfile = { ...this.userProfile };
   }
 
   toggleEdit() {
@@ -141,22 +194,37 @@ export class ProfileComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
+    // Validate file type and size
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!allowedTypes.includes(file.type)) {
+      this.toasterService.showError('Invalid File Type', 'Please select a valid image file (JPEG, PNG, or GIF).');
+      return;
+    }
+
+    if (file.size > maxSize) {
+      this.toasterService.showError('File Too Large', 'Please select an image smaller than 5MB.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('empId', this.user.empId.toString());
     formData.append('docName', file.name);
     formData.append('docType', file.type);
     formData.append('docCategory', "PROFILE_PICTURE");
     formData.append('uploadedBy', this.userProfile.name);
-    formData.append('fileData', file, file.name); // ✅ send actual File
+    formData.append('fileData', file, file.name);
 
     this.api.uploadDocument(formData).subscribe({
       next: (res: any) => {
         console.log(res.message || 'Upload successful!');
+        this.toasterService.showSuccess('Photo Updated!', 'Your profile photo has been updated successfully.');
         this.userProfile.avatar = URL.createObjectURL(file); // show preview
       },
       error: (err) => {
         console.error(err);
-        alert('Upload failed!');
+        this.toasterService.showError('Upload Failed', 'There was an error uploading your photo. Please try again.');
       }
     });
   }
@@ -190,13 +258,19 @@ export class ProfileComponent implements OnInit {
     this.api.updateProfile(profile).subscribe({
       next: (res) => {
         console.log(res.message || 'Profile updated successfully!');
-        alert(res.message || 'Profile updated successfully!');
+        this.toasterService.showSuccess(
+          'Profile Updated!', 
+          res.message || 'Your profile has been updated successfully.'
+        );
         this.originalProfile = { ...this.userProfile };
         this.isEditing = false;
       },
       error: (err) => {
         console.error(err);
-        alert('Error updating profile.');
+        this.toasterService.showError(
+          'Update Failed', 
+          'There was an error updating your profile. Please try again.'
+        );
       }
     });
   }
