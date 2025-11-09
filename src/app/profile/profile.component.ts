@@ -85,7 +85,7 @@ export class ProfileComponent implements OnInit {
   loadEmployeeProfile(empId: string) {
     // First clear any existing data to prevent showing previous user's data
     this.clearProfileData();
-    
+
     this.api.GetEmployeeProfile(empId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
@@ -259,7 +259,7 @@ export class ProfileComponent implements OnInit {
       next: (res) => {
         console.log(res.message || 'Profile updated successfully!');
         this.toasterService.showSuccess(
-          'Profile Updated!', 
+          'Profile Updated!',
           res.message || 'Your profile has been updated successfully.'
         );
         this.originalProfile = { ...this.userProfile };
@@ -268,7 +268,7 @@ export class ProfileComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.toasterService.showError(
-          'Update Failed', 
+          'Update Failed',
           'There was an error updating your profile. Please try again.'
         );
       }
@@ -281,18 +281,18 @@ export class ProfileComponent implements OnInit {
 
   getProfileCompletionPercentage(): number {
     const fields = [
-      'name', 'email', 'phone', 'department', 'designation', 
-      'experienceInd', 'experienceAbroad', 'qualification', 
-      'skillset', 'careerSummary', 'address', 'telephone', 
+      'name', 'email', 'phone', 'department', 'designation',
+      'experienceInd', 'experienceAbroad', 'qualification',
+      'skillset', 'careerSummary', 'address', 'telephone',
       'nation', 'state', 'district', 'place'
     ];
-    
-    const filledFields = fields.filter(field => 
-      this.userProfile[field] && 
+
+    const filledFields = fields.filter(field =>
+      this.userProfile[field] &&
       this.userProfile[field].toString().trim() !== '' &&
       this.userProfile[field] !== 0
     ).length;
-    
+
     return Math.round((filledFields / fields.length) * 100);
   }
 

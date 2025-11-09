@@ -80,7 +80,7 @@ export class MonthlyDprComponent {
   reportingTo = '';
   WorkedHours = 0;
   TotalEstimatedhours = 0;
-  
+
   achievements = '';
   challenges = '';
   supportNeeded = '';
@@ -356,6 +356,25 @@ export class MonthlyDprComponent {
     if (rating >= 50) return 'Satisfactory performance meeting basic requirements.';
     if (rating >= 30) return 'Performance needs improvement to meet expectations.';
     return 'Significant improvement required in multiple areas.';
+  }
+
+  // Calculate productivity percentage for individual task based on worked hours
+  calculateTaskProductivity(actualHours: number): number {
+    if (!this.WorkedHours || this.WorkedHours === 0 || !actualHours) {
+      return 0;
+    }
+    const productivity = (actualHours / this.WorkedHours) * 100;
+    return Math.round(productivity * 10) / 10; // Round to 1 decimal place
+  }
+
+  // Get CSS class for productivity badge based on percentage
+  getProductivityClass(actualHours: number): string {
+    const productivity = this.calculateTaskProductivity(actualHours);
+    if (productivity >= 80) return 'productivity-excellent';
+    if (productivity >= 60) return 'productivity-good';
+    if (productivity >= 40) return 'productivity-average';
+    if (productivity >= 20) return 'productivity-low';
+    return 'productivity-very-low';
   }
 
   // Validation method for rating inputs
@@ -912,8 +931,11 @@ export class MonthlyDprComponent {
     const email = this.EmailID || '';
     const today = new Date();
 
-    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const prevMonth = today.getMonth() - 1;
+    const prevYear = prevMonth < 0 ? today.getFullYear() - 1 : today.getFullYear();
+    const monthIndex = prevMonth < 0 ? 11 : prevMonth;
+    const startDate = new Date(prevYear, monthIndex, 1);
+    const endDate = new Date(prevYear, monthIndex + 1, 0);
 
     const startDateString = startDate.toISOString().split('T')[0];
     const endDateString = endDate.toISOString().split('T')[0];
@@ -938,7 +960,7 @@ export class MonthlyDprComponent {
           (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0));
 
         this.TotalEstimatedhours = Math.round(this.Proofhubtasks.reduce(
-        (sum, task) => sum + (Number(task.ESTIMATED_HOURS) || 0), 0));
+          (sum, task) => sum + (Number(task.ESTIMATED_HOURS) || 0), 0));
 
 
       },
@@ -955,7 +977,7 @@ export class MonthlyDprComponent {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
     this.monthYear = currentDate.toLocaleDateString('en-US', options);
   }
-  
+
 
 
   loadKPIs(): void {
