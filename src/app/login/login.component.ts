@@ -74,6 +74,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   mouseX: number = 0;
   mouseY: number = 0;
   scrollY: number = 0;
+  
+  // Background image path that works with baseHref
+  backgroundImageUrl: string = 'assets/images/AlAdrakBgImage.jpg';
 
   toggleForgotPassword(): void {
     this.currentView = 'forgot-password';
@@ -319,7 +322,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.isProcessing = true;
-
+    
     this.api.verifyOtp(this.email, this.otp).subscribe(
       (response: any) => {
         this.isProcessing = false;

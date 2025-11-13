@@ -254,10 +254,25 @@ export class layout implements OnInit, OnDestroy {
     return this.currentRoute.includes('/emergency-exit-form');
   }
 
+  isLoggingOut = false;
+
   logout() {
+    // Prevent multiple logout calls
+    if (this.isLoggingOut) {
+      return;
+    }
+    
+    this.isLoggingOut = true;
+    
     // Use session service for proper logout
     this.sessionService.clearSession();
-    this.router.navigate(['/login']);
+    
+    // Navigate to login without query parameters
+    this.router.navigate(['/login'], { 
+      replaceUrl: true // Replace current history entry
+    }).finally(() => {
+      this.isLoggingOut = false;
+    });
   }
 
   // Method to add new notifications (for testing or real-time updates)

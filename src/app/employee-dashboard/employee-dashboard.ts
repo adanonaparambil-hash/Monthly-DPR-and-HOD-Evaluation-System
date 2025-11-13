@@ -328,16 +328,8 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
           estimatedData.push(item.estimatedHours || 0);
           actualData.push(item.actualHours || 0);
         });
-      } else {
-        // Fallback data if no API data
-        const currentDate = new Date();
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const currentMonth = monthNames[currentDate.getMonth()];
-        const currentYear = currentDate.getFullYear();
-        labels.push(`${currentMonth} ${currentYear}`);
-        estimatedData.push(200);
-        actualData.push(169);
       }
+      // If no data, show empty chart (no fallback values)
 
       new Chart(ctx, {
         type: 'bar',
@@ -413,7 +405,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
         const currentMonth = monthNames[currentDate.getMonth()];
         const currentYear = currentDate.getFullYear();
         labels.push(`${currentMonth} ${currentYear}`);
-        performanceScores.push(this.dashboardData.productivityScore || 73);
+        performanceScores.push(this.dashboardData.productivityScore || 0);
       }
 
       new Chart(ctx, {
@@ -467,14 +459,14 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
       // Clear existing chart
       Chart.getChart(ctx)?.destroy();
 
-      // Use actual scores from API (0-100 scale)
+      // Use actual scores from API (0-100 scale) - no fallback values
       const skillsData = [
-        this.dashboardData.qualityScore || 57,
-        this.dashboardData.timelinessScore || 70,
-        this.dashboardData.initiativeScore || 87,
-        this.dashboardData.communicationScore || 87,
-        this.dashboardData.teamWorkScore || 54,
-        this.dashboardData.problemSolvingScore || 43
+        this.dashboardData.qualityScore || 0,
+        this.dashboardData.timelinessScore || 0,
+        this.dashboardData.initiativeScore || 0,
+        this.dashboardData.communicationScore || 0,
+        this.dashboardData.teamWorkScore || 0,
+        this.dashboardData.problemSolvingScore || 0
       ];
 
       new Chart(ctx, {
@@ -536,10 +528,10 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
       // Clear existing chart
       Chart.getChart(ctx)?.destroy();
 
-      // Use actual task counts from API
-      const completed = this.dashboardData.taskCompleted || 55;
+      // Use actual task counts from API - no fallback values
+      const completed = this.dashboardData.taskCompleted || 0;
       const inProgress = this.dashboardData.progressTasks || 0;
-      const pending = this.dashboardData.pendingTasks || 135;
+      const pending = this.dashboardData.pendingTasks || 0;
 
       new Chart(ctx, {
         type: 'doughnut',

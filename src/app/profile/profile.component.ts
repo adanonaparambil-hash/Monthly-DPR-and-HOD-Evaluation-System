@@ -69,15 +69,15 @@ export class ProfileComponent implements OnInit {
     if (empId) {
       this.loadEmployeeProfile(empId);
     } else {
-      // Set some default values if no user data is available
+      // Initialize with empty values if no user data is available
       this.userProfile = {
         ...this.userProfile,
-        name: this.user?.employeeName || 'VINOD PACHUPILLAI VIJAYAN PILLAI',
-        email: this.user?.email || 'vinod.pvpillai@adrak.com',
-        department: this.user?.department || 'Internal Audits - IT',
-        designation: this.user?.designation || 'IT MANAGER',
-        empId: this.user?.empId || 'ITS41',
-        location: this.user?.location || 'Oman'
+        name: this.user?.employeeName || '',
+        email: this.user?.email || '',
+        department: this.user?.department || '',
+        designation: this.user?.designation || '',
+        empId: this.user?.empId || '',
+        location: this.user?.location || ''
       };
     }
   }
@@ -306,6 +306,6 @@ export class ProfileComponent implements OnInit {
       const date = new Date(this.userProfile.joinDate);
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     }
-    return 'Feb 2025';
+    return 'N/A';
   }
 }

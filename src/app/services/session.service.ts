@@ -8,6 +8,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export class SessionService {
   private sessionValidSubject = new BehaviorSubject<boolean>(this.hasValidSession());
   public sessionValid$ = this.sessionValidSubject.asObservable();
+  private isRedirecting = false;
 
   constructor(private router: Router) {
     // Check session validity on service initialization
@@ -47,6 +48,12 @@ export class SessionService {
 
   // Handle session expiry
   handleSessionExpiry(): void {
+    // Prevent multiple redirects
+    if (this.isRedirecting) {
+      return;
+    }
+    
+    this.isRedirecting = true;
     console.log('Session expired or invalid - redirecting to login');
     
     // Clear all session data
@@ -55,13 +62,11 @@ export class SessionService {
     // Update session state
     this.sessionValidSubject.next(false);
     
-    // Redirect to login with current URL as return URL
-    const currentUrl = this.router.url;
+    // Redirect to login without query parameters to avoid URL bloat
     this.router.navigate(['/login'], { 
-      queryParams: { 
-        sessionExpired: 'true',
-        returnUrl: currentUrl !== '/login' ? currentUrl : '/'
-      } 
+      replaceUrl: true // Replace current history entry
+    }).finally(() => {
+      this.isRedirecting = false;
     });
   }
 

@@ -198,7 +198,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loading = false;
         console.error('Error loading reports:', error);
-        this.toastr.error('Failed to load reports', 'Error');
+        // this.toastr.error('Failed to load reports', 'Error');
         this.reports = [];
         this.filteredReports = [];
         this.totalRecords = 0;

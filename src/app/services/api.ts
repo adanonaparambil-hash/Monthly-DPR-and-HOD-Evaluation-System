@@ -118,7 +118,13 @@ export class Api {
 
 
   verifyOtp(email: string, otp: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Login/VerifyEmailOTP`, { email, otp }, { withCredentials: true });
+
+    const request = {
+      Email: email,
+      Otp: otp
+    };
+
+    return this.http.post(`${this.apiUrl}/Login/VerifyEmailOTP`, request, { withCredentials: true });
   }
 
   ResendOtp(email: string): Observable<any> {

@@ -409,7 +409,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
         data: {
           labels: ['Excellent', 'Good', 'Average', 'Below Average', 'Poor'],
           datasets: [{
-            data: [1, 1, 1, 1, 1], // Initial data with small values to show chart
+            data: [0, 0, 0, 0, 0], // Initial empty data - will be updated with actual data
             backgroundColor: [
               '#22c55e',
               '#3b82f6',
@@ -508,11 +508,11 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
       this.performanceTrendChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['Sep 2025', 'Oct 2025'], // Initial sample data
+          labels: [], // Empty initial data - will be updated with actual data
           datasets: [
             {
               label: 'Initiative',
-              data: [3, 3.7],
+              data: [],
               borderColor: '#f59e0b',
               backgroundColor: 'rgba(245, 158, 11, 0.1)',
               borderWidth: 3,
@@ -525,7 +525,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
             },
             {
               label: 'Overall Performance',
-              data: [4, 68],
+              data: [],
               borderColor: '#3b82f6',
               backgroundColor: 'rgba(59, 130, 246, 0.1)',
               borderWidth: 3,
@@ -538,7 +538,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
             },
             {
               label: 'Quality',
-              data: [2, 3.5],
+              data: [],
               borderColor: '#8b5cf6',
               backgroundColor: 'rgba(139, 92, 246, 0.1)',
               borderWidth: 3,
@@ -551,7 +551,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
             },
             {
               label: 'Timeliness',
-              data: [2, 4.6],
+              data: [],
               borderColor: '#22c55e',
               backgroundColor: 'rgba(34, 197, 94, 0.1)',
               borderWidth: 3,

@@ -1727,3 +1727,11 @@ le Sidebar Toggle Functionality */
     height: 24px;
   }
 }
+/* Lo
+gout button disabled state */
+.logout a.disabled,
+.profile-menu a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
