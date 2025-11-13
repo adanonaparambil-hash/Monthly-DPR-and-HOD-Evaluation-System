@@ -3613,3 +3613,449 @@ mprehensive Dark Mode Support */
 .dark-theme .ced-dashboard-container .compact-metrics {
   background: var(--background-secondary, #1f2937) !important;
 }
+
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+  
+  .departments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+  }
+}
+
+/* Mobile landscape and below */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 12px;
+  }
+  
+  /* Header adjustments */
+  .dashboard-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch !important;
+  }
+  
+  .header-title h1 {
+    font-size: 20px !important;
+  }
+  
+  .header-subtitle {
+    font-size: 12px !important;
+  }
+  
+  /* Filter controls */
+  .filter-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .filter-group {
+    width: 100% !important;
+  }
+  
+  .filter-select {
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+  
+  /* Department grid */
+  .departments-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Department cards */
+  .department-card {
+    padding: 16px !important;
+  }
+  
+  .department-header h3 {
+    font-size: 16px !important;
+  }
+  
+  .department-icon {
+    font-size: 28px !important;
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  /* Stats */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  
+  .stat-item {
+    padding: 10px !important;
+  }
+  
+  .stat-value {
+    font-size: 20px !important;
+  }
+  
+  .stat-label {
+    font-size: 10px !important;
+  }
+  
+  /* Employee view */
+  .employees-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .back-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Search and filters */
+  .search-filter-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-box,
+  .status-filters {
+    width: 100% !important;
+  }
+  
+  .search-input {
+    font-size: 14px !important;
+  }
+  
+  /* Status filter buttons */
+  .status-filters {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .filter-button {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    white-space: nowrap;
+  }
+  
+  /* Employee cards */
+  .employees-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .employee-card {
+    padding: 14px !important;
+  }
+  
+  .employee-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+  
+  .employee-info {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+  }
+  
+  .employee-avatar {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .employee-name {
+    font-size: 16px !important;
+  }
+  
+  .employee-id {
+    font-size: 12px !important;
+  }
+  
+  .employee-score {
+    font-size: 20px !important;
+  }
+  
+  /* Action buttons */
+  .employee-actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .action-button {
+    width: 100%;
+    justify-content: center;
+    font-size: 12px !important;
+    padding: 8px !important;
+  }
+  
+  /* Performance metrics */
+  .performance-metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  
+  .metric-item {
+    padding: 8px !important;
+  }
+  
+  .metric-label {
+    font-size: 10px !important;
+  }
+  
+  .metric-value {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 8px;
+  }
+  
+  /* Header */
+  .dashboard-header {
+    padding: 12px !important;
+  }
+  
+  .header-title h1 {
+    font-size: 18px !important;
+  }
+  
+  .header-subtitle {
+    font-size: 11px !important;
+  }
+  
+  /* Filter controls */
+  .filter-label {
+    font-size: 11px !important;
+  }
+  
+  .filter-select {
+    font-size: 13px !important;
+    padding: 8px !important;
+  }
+  
+  /* Department cards */
+  .department-card {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+  
+  .department-header h3 {
+    font-size: 14px !important;
+  }
+  
+  .department-icon {
+    font-size: 24px !important;
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  /* Stats grid - stack vertically on very small screens */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  
+  .stat-item {
+    padding: 8px !important;
+  }
+  
+  .stat-icon {
+    font-size: 16px !important;
+  }
+  
+  .stat-value {
+    font-size: 18px !important;
+  }
+  
+  .stat-label {
+    font-size: 9px !important;
+  }
+  
+  /* Progress bar */
+  .progress-bar {
+    height: 4px !important;
+  }
+  
+  /* Employee cards */
+  .employee-card {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+  
+  .employee-avatar {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .employee-name {
+    font-size: 14px !important;
+  }
+  
+  .employee-id,
+  .employee-department {
+    font-size: 11px !important;
+  }
+  
+  .rank-badge {
+    font-size: 16px !important;
+    width: 35px !important;
+    height: 35px !important;
+  }
+  
+  .employee-score {
+    font-size: 18px !important;
+  }
+  
+  .score-label {
+    font-size: 10px !important;
+  }
+  
+  /* Status badge */
+  .status-badge {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* Action buttons */
+  .action-button {
+    font-size: 11px !important;
+    padding: 6px !important;
+  }
+  
+  .action-button i {
+    font-size: 12px !important;
+  }
+  
+  /* Performance metrics */
+  .performance-metrics {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  
+  .metric-item {
+    padding: 6px !important;
+  }
+  
+  .metric-label {
+    font-size: 9px !important;
+  }
+  
+  .metric-value {
+    font-size: 14px !important;
+  }
+  
+  .metric-bar {
+    height: 3px !important;
+  }
+  
+  /* Search input */
+  .search-input {
+    font-size: 13px !important;
+    padding: 8px 10px 8px 35px !important;
+  }
+  
+  .search-icon {
+    font-size: 14px !important;
+  }
+  
+  /* Filter buttons */
+  .filter-button {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+  
+  .filter-button i {
+    font-size: 12px !important;
+  }
+  
+  /* Back button */
+  .back-button {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .dashboard-container {
+    padding: 6px;
+  }
+  
+  .dashboard-header {
+    padding: 10px !important;
+  }
+  
+  .header-title h1 {
+    font-size: 16px !important;
+  }
+  
+  .department-card,
+  .employee-card {
+    padding: 10px !important;
+  }
+  
+  .stat-value,
+  .employee-score {
+    font-size: 16px !important;
+  }
+}
+
+/* Landscape orientation */
+@media (max-height: 600px) and (orientation: landscape) {
+  .dashboard-container {
+    padding: 8px;
+  }
+  
+  .dashboard-header {
+    padding: 10px !important;
+  }
+  
+  .department-card,
+  .employee-card {
+    padding: 10px !important;
+  }
+  
+  .performance-metrics {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .filter-controls,
+  .search-filter-section,
+  .action-button,
+  .back-button {
+    display: none !important;
+  }
+  
+  .dashboard-container {
+    padding: 0;
+  }
+  
+  .department-card,
+  .employee-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

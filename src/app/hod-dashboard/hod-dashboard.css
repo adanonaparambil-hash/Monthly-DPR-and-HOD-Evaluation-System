@@ -2480,3 +2480,273 @@ dditional Top Performer Card Enhancements */
     font-size: 0.9rem;
   }
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  .hod-dashboard-container {
+    padding: 16px;
+  }
+  
+  .floating-shape {
+    opacity: 0.6;
+  }
+}
+
+/* Mobile landscape and below */
+@media (max-width: 768px) {
+  .hod-dashboard-container {
+    padding: 12px;
+    min-height: calc(100vh - 60px);
+  }
+  
+  /* Hide decorative elements on mobile */
+  .floating-elements {
+    display: none;
+  }
+  
+  .particles-bg .particle:nth-child(n+10) {
+    display: none;
+  }
+  
+  /* Adjust grid layouts */
+  .stats-grid,
+  .charts-grid,
+  .evaluations-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Adjust card padding */
+  .stat-card,
+  .chart-card,
+  .evaluation-card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  /* Adjust font sizes */
+  .stat-number,
+  .counter-number {
+    font-size: 28px !important;
+  }
+  
+  .stat-title,
+  .card-title {
+    font-size: 12px !important;
+  }
+  
+  .stat-subtitle {
+    font-size: 11px !important;
+  }
+  
+  /* Chart adjustments */
+  .chart-container {
+    min-height: 220px !important;
+  }
+  
+  .chart-header h3 {
+    font-size: 16px !important;
+  }
+  
+  /* Table responsiveness */
+  .evaluations-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .evaluations-table table {
+    min-width: 600px;
+  }
+  
+  /* Button adjustments */
+  .action-button,
+  .evaluate-button {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+  
+  /* Reduce hover effects on mobile */
+  .stat-card:hover,
+  .chart-card:hover {
+    transform: translateY(-4px) scale(1.01) !important;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .hod-dashboard-container {
+    padding: 8px;
+    min-height: calc(100vh - 50px);
+  }
+  
+  /* Further reduce card padding */
+  .stat-card,
+  .chart-card,
+  .evaluation-card {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+  
+  /* Smaller fonts */
+  .stat-number,
+  .counter-number {
+    font-size: 24px !important;
+  }
+  
+  .stat-title,
+  .card-title {
+    font-size: 11px !important;
+  }
+  
+  .stat-subtitle {
+    font-size: 10px !important;
+  }
+  
+  .stat-icon {
+    font-size: 16px !important;
+  }
+  
+  /* Chart adjustments */
+  .chart-container {
+    min-height: 200px !important;
+  }
+  
+  .chart-header {
+    margin-bottom: 12px !important;
+  }
+  
+  .chart-header h3 {
+    font-size: 14px !important;
+  }
+  
+  .chart-icon {
+    font-size: 16px !important;
+  }
+  
+  /* Hide parallax background on small screens */
+  .parallax-bg {
+    display: none;
+  }
+  
+  /* Hide glow effects */
+  .card-glow,
+  .chart-glow {
+    display: none;
+  }
+  
+  /* Minimal hover effects */
+  .stat-card:hover,
+  .chart-card:hover {
+    transform: translateY(-2px) !important;
+  }
+  
+  /* Table on mobile */
+  .evaluations-table {
+    font-size: 12px;
+  }
+  
+  .evaluations-table th,
+  .evaluations-table td {
+    padding: 8px 4px !important;
+  }
+  
+  /* Profile images */
+  .profile-image {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  /* Action buttons */
+  .action-button,
+  .evaluate-button {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+  
+  /* Search and filter inputs */
+  .search-input,
+  .filter-select {
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+  }
+  
+  /* Legend adjustments */
+  .legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .legend-item {
+    font-size: 10px;
+  }
+  
+  .legend-color {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .hod-dashboard-container {
+    padding: 6px;
+  }
+  
+  .stat-card,
+  .chart-card,
+  .evaluation-card {
+    padding: 10px !important;
+  }
+  
+  .stat-number,
+  .counter-number {
+    font-size: 20px !important;
+  }
+  
+  .chart-container {
+    min-height: 180px !important;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  .hod-dashboard-container {
+    padding: 8px;
+  }
+  
+  .stat-card {
+    min-height: 100px !important;
+  }
+  
+  .chart-container {
+    min-height: 180px !important;
+  }
+  
+  .particles-bg {
+    display: none;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .parallax-layer,
+  .floating-shape,
+  .particle {
+    animation: none !important;
+  }
+  
+  .stat-card,
+  .chart-card {
+    transition: transform 0.2s ease !important;
+  }
+  
+  .stat-card:hover,
+  .chart-card:hover {
+    transform: translateY(-2px) !important;
+  }
+}

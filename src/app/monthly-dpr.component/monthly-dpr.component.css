@@ -2827,3 +2827,384 @@ nced validation styles for rating inputs */
     min-width: 45px;
   }
 }
+
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  .dpr-container {
+    padding: 16px;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile landscape and below */
+@media (max-width: 768px) {
+  .dpr-container {
+    padding: 12px;
+  }
+  
+  /* Header */
+  .dpr-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px !important;
+  }
+  
+  .header-title h1 {
+    font-size: 20px !important;
+  }
+  
+  .header-subtitle {
+    font-size: 12px !important;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  /* Form sections */
+  .form-section {
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .section-title {
+    font-size: 16px !important;
+  }
+  
+  /* Form grid */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Form groups */
+  .form-group {
+    margin-bottom: 12px !important;
+  }
+  
+  .form-label {
+    font-size: 13px !important;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+  
+  /* Tables */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .dpr-table {
+    min-width: 600px;
+  }
+  
+  .dpr-table th,
+  .dpr-table td {
+    padding: 10px 8px !important;
+    font-size: 12px !important;
+  }
+  
+  /* Buttons */
+  .btn {
+    font-size: 13px !important;
+    padding: 10px 16px !important;
+  }
+  
+  .btn-icon {
+    font-size: 14px !important;
+  }
+  
+  /* Action buttons */
+  .action-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Rating stars */
+  .rating-stars {
+    gap: 6px !important;
+  }
+  
+  .star {
+    font-size: 20px !important;
+  }
+  
+  /* Progress bar */
+  .progress-bar {
+    height: 6px !important;
+  }
+  
+  /* Cards */
+  .info-card {
+    padding: 14px !important;
+  }
+  
+  .card-title {
+    font-size: 14px !important;
+  }
+  
+  .card-value {
+    font-size: 20px !important;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .dpr-container {
+    padding: 8px;
+  }
+  
+  /* Header */
+  .dpr-header {
+    padding: 12px !important;
+  }
+  
+  .header-title h1 {
+    font-size: 18px !important;
+  }
+  
+  .header-subtitle {
+    font-size: 11px !important;
+  }
+  
+  .header-icon {
+    font-size: 20px !important;
+  }
+  
+  /* Form sections */
+  .form-section {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+  
+  .section-title {
+    font-size: 14px !important;
+  }
+  
+  .section-icon {
+    font-size: 16px !important;
+  }
+  
+  /* Form elements */
+  .form-label {
+    font-size: 12px !important;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 13px !important;
+    padding: 8px !important;
+  }
+  
+  .form-textarea {
+    min-height: 80px !important;
+  }
+  
+  /* Tables */
+  .dpr-table {
+    font-size: 11px !important;
+  }
+  
+  .dpr-table th,
+  .dpr-table td {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+  }
+  
+  /* Buttons */
+  .btn {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .btn-icon {
+    font-size: 13px !important;
+  }
+  
+  .btn-sm {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+  
+  /* Rating stars */
+  .rating-stars {
+    gap: 4px !important;
+  }
+  
+  .star {
+    font-size: 18px !important;
+  }
+  
+  /* Info cards */
+  .info-card {
+    padding: 12px !important;
+  }
+  
+  .card-title {
+    font-size: 12px !important;
+  }
+  
+  .card-value {
+    font-size: 18px !important;
+  }
+  
+  .card-icon {
+    font-size: 20px !important;
+  }
+  
+  /* Status badges */
+  .status-badge {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* Date picker */
+  .date-picker {
+    font-size: 13px !important;
+  }
+  
+  /* File upload */
+  .file-upload-area {
+    padding: 16px !important;
+  }
+  
+  .upload-icon {
+    font-size: 30px !important;
+  }
+  
+  .upload-text {
+    font-size: 12px !important;
+  }
+  
+  /* Modal */
+  .modal-content {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 10px !important;
+  }
+  
+  .modal-header {
+    padding: 12px !important;
+  }
+  
+  .modal-title {
+    font-size: 16px !important;
+  }
+  
+  .modal-body {
+    padding: 12px !important;
+  }
+  
+  .modal-footer {
+    padding: 12px !important;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .dpr-container {
+    padding: 6px;
+  }
+  
+  .dpr-header,
+  .form-section {
+    padding: 10px !important;
+  }
+  
+  .header-title h1 {
+    font-size: 16px !important;
+  }
+  
+  .section-title {
+    font-size: 13px !important;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 12px !important;
+  }
+  
+  .btn {
+    font-size: 11px !important;
+    padding: 7px 10px !important;
+  }
+}
+
+/* Landscape orientation */
+@media (max-height: 600px) and (orientation: landscape) {
+  .dpr-container {
+    padding: 8px;
+  }
+  
+  .dpr-header {
+    padding: 10px !important;
+  }
+  
+  .form-section {
+    padding: 12px !important;
+  }
+  
+  .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .header-actions,
+  .action-buttons,
+  .btn,
+  .form-actions {
+    display: none !important;
+  }
+  
+  .dpr-container {
+    padding: 0;
+  }
+  
+  .form-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .dpr-table {
+    font-size: 10px !important;
+  }
+}

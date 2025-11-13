@@ -1735,3 +1735,464 @@ gout button disabled state */
   pointer-events: none;
   cursor: not-allowed;
 }
+
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES FOR HEADER & LAYOUT
+   ============================================ */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 260px;
+  }
+  
+  .header {
+    padding: 10px 14px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .company-logo {
+    padding: 6px 12px;
+  }
+  
+  .logo-image {
+    width: 70px;
+    height: 28px;
+  }
+}
+
+/* Mobile landscape and below */
+@media (max-width: 768px) {
+  /* Show hamburger menu */
+  .menu-toggle {
+    display: flex !important;
+    flex-shrink: 0;
+  }
+  
+  /* Hide sidebar by default on mobile */
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    height: 100vh;
+    z-index: 2000;
+    transition: left 0.3s ease;
+  }
+  
+  /* Show sidebar when not collapsed */
+  .layout-container:not(.sidebar-collapsed) .sidebar {
+    left: 0;
+  }
+  
+  /* Overlay when sidebar is open */
+  .layout-container:not(.sidebar-collapsed)::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1999;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  /* Header adjustments */
+  .header {
+    padding: 8px 12px;
+    min-height: 56px;
+    gap: 8px;
+  }
+  
+  .header-left {
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  
+  /* Company logo - smaller on mobile */
+  .company-logo {
+    padding: 4px 8px;
+    gap: 8px;
+  }
+  
+  .logo-image {
+    width: 60px;
+    height: 24px;
+  }
+  
+  .company-name {
+    display: none; /* Hide company name text on mobile */
+  }
+  
+  /* Page title - smaller on mobile */
+  .page-title-section {
+    gap: 0;
+  }
+  
+  .page-title {
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+  
+  .page-subtitle {
+    font-size: 10px;
+    display: none; /* Hide subtitle on mobile to save space */
+  }
+  
+  /* Header right - compact */
+  .header-right {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  
+  /* Smaller buttons */
+  .theme-toggle,
+  .notification-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    padding: 8px;
+  }
+  
+  /* Profile button - compact */
+  .profile-btn {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+  
+  .profile-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .profile-name {
+    display: none; /* Hide profile name on mobile */
+  }
+  
+  .profile-btn i {
+    display: none; /* Hide chevron on mobile */
+  }
+  
+  /* Notification dropdown - full width on mobile */
+  .notification-dropdown {
+    width: calc(100vw - 24px);
+    max-width: 320px;
+    right: -12px;
+  }
+  
+  /* Profile dropdown - adjust position */
+  .profile-dropdown {
+    right: 0;
+    width: 240px;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  /* Header - even more compact */
+  .header {
+    padding: 6px 8px;
+    min-height: 52px;
+  }
+  
+  .header-left {
+    gap: 4px;
+  }
+  
+  /* Menu toggle - slightly smaller */
+  .menu-toggle {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    padding: 6px;
+  }
+  
+  /* Company logo - minimal */
+  .company-logo {
+    padding: 3px 6px;
+    gap: 6px;
+  }
+  
+  .logo-image {
+    width: 50px;
+    height: 20px;
+  }
+  
+  /* Page title - very compact */
+  .page-title {
+    font-size: 14px;
+    max-width: 120px;
+  }
+  
+  /* Header right - minimal spacing */
+  .header-right {
+    gap: 4px;
+  }
+  
+  /* Buttons - smaller */
+  .theme-toggle,
+  .notification-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    padding: 6px;
+  }
+  
+  /* Profile button - minimal */
+  .profile-btn {
+    padding: 3px 6px !important;
+  }
+  
+  .profile-avatar {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  /* Notification badge - smaller */
+  .notification-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    min-width: 14px;
+    top: 4px;
+    right: 4px;
+  }
+  
+  /* Dropdowns - full width */
+  .notification-dropdown {
+    width: calc(100vw - 16px);
+    right: -8px;
+    max-width: none;
+  }
+  
+  .profile-dropdown {
+    width: calc(100vw - 16px);
+    right: -8px;
+    max-width: 280px;
+  }
+  
+  /* Notification items - compact */
+  .notification-item {
+    padding: 10px 12px !important;
+  }
+  
+  .notification-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+  }
+  
+  .notification-content p {
+    font-size: 13px !important;
+  }
+  
+  .notification-time {
+    font-size: 10px !important;
+  }
+  
+  /* Profile info - compact */
+  .profile-info {
+    padding: 12px !important;
+  }
+  
+  .profile-avatar-large {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .profile-info h4 {
+    font-size: 14px !important;
+  }
+  
+  .profile-info p {
+    font-size: 12px !important;
+  }
+  
+  /* Profile menu - compact */
+  .profile-menu a {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+  }
+  
+  /* Sidebar - full width on very small screens */
+  .sidebar {
+    width: 260px;
+    left: -260px;
+  }
+  
+  .layout-container:not(.sidebar-collapsed) .sidebar {
+    left: 0;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  /* Header - ultra compact */
+  .header {
+    padding: 4px 6px;
+    min-height: 48px;
+  }
+  
+  .menu-toggle {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  .company-logo {
+    padding: 2px 4px;
+  }
+  
+  .logo-image {
+    width: 45px;
+    height: 18px;
+  }
+  
+  .page-title {
+    font-size: 13px;
+    max-width: 100px;
+  }
+  
+  .theme-toggle,
+  .notification-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    padding: 4px;
+  }
+  
+  .profile-avatar {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  
+  /* Sidebar - slightly narrower */
+  .sidebar {
+    width: 240px;
+    left: -240px;
+  }
+  
+  .sidebar .logo {
+    padding: 16px;
+    font-size: 18px;
+  }
+  
+  .sidebar .menu a {
+    padding: 16px 18px;
+    font-size: 14px;
+  }
+}
+
+/* Landscape orientation - optimize for horizontal space */
+@media (max-height: 600px) and (orientation: landscape) {
+  .header {
+    min-height: 48px;
+    padding: 6px 12px;
+  }
+  
+  .page-title {
+    font-size: 14px;
+  }
+  
+  .theme-toggle,
+  .notification-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .sidebar {
+    width: 240px;
+  }
+  
+  .sidebar .logo {
+    padding: 16px;
+  }
+  
+  .sidebar .menu {
+    padding: 16px 0;
+  }
+  
+  .sidebar .menu a {
+    padding: 14px 18px;
+    min-height: 48px;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .notification-dropdown,
+  .profile-dropdown,
+  .menu-toggle,
+  .theme-toggle {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .header-right,
+  .menu-toggle {
+    display: none !important;
+  }
+  
+  .header {
+    border-bottom: 2px solid #000;
+    padding: 10px;
+  }
+  
+  .main-area {
+    margin: 0;
+  }
+  
+  .content {
+    padding: 0;
+  }
+}
+
+/* Animation for sidebar overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Ensure content doesn't overflow on mobile */
+@media (max-width: 768px) {
+  .main-area {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .content {
+    padding: 12px 8px;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 8px 6px;
+  }
+}
+
+/* Fix for iOS Safari bottom bar */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .layout-container {
+      height: -webkit-fill-available;
+    }
+  }
+}
