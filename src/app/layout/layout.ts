@@ -202,6 +202,13 @@ export class layout implements OnInit, OnDestroy {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
+  closeSidebarOnMobile() {
+    // Close sidebar on mobile when menu item is clicked
+    if (window.innerWidth <= 768) {
+      this.sidebarCollapsed = true;
+    }
+  }
+
   // markAllAsRead() {
   //   this.notificationCount = 0;
   //   this.hasNewNotifications = false;
@@ -306,6 +313,20 @@ export class layout implements OnInit, OnDestroy {
     // Check if click is outside profile dropdown
     if (this.showProfile && !target.closest('.profile-wrapper')) {
       this.showProfile = false;
+    }
+
+    // Close sidebar on mobile when clicking outside
+    if (window.innerWidth <= 768) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.querySelector('.menu-toggle');
+      
+      // Check if click is outside sidebar and not on menu toggle
+      if (sidebar && !sidebar.contains(target) && menuToggle && !menuToggle.contains(target)) {
+        // Close sidebar if it's open
+        if (!this.sidebarCollapsed) {
+          this.sidebarCollapsed = true;
+        }
+      }
     }
   }
 

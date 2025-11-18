@@ -194,13 +194,28 @@ export class MonthlyDprComponent {
   get showManagementRemarksSection(): boolean {
     if (this.isEmployee) return false; // Employee never sees management remarks
     if (this.isCed) return false; // CED should not see management remarks
-    return this.isHod; // Only HOD can see management remarks
+
+    // HOD should only see management remarks when coming from evaluation sources
+    // Hide when coming directly from MPR Entry menu (no 'from' param or from='direct')
+    if (this.isHod) {
+      const isDirectEntry = !this.navigationSource || this.navigationSource === 'direct';
+      return !isDirectEntry; // Show only when NOT direct entry
+    }
+
+    return false;
   }
 
 
 
   // Remarks History section visibility
   get showRemarksHistorySection(): boolean {
+    // HOD should only see remarks history when coming from evaluation sources
+    // Hide when coming directly from MPR Entry menu
+    if (this.isHod) {
+      const isDirectEntry = !this.navigationSource || this.navigationSource === 'direct';
+      return !isDirectEntry && this.canViewRemarksHistory; // Show only when NOT direct entry
+    }
+
     return this.canViewRemarksHistory;
   }
 
@@ -467,12 +482,16 @@ export class MonthlyDprComponent {
 
 
 
+  // Track navigation source
+  private navigationSource: string = '';
+
   constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
 
     this.dprid = Number(this.route.snapshot.paramMap.get('id'));
     this.isReadOnlyMode = (this.route.snapshot.queryParamMap.get('readonly') || '') === '1';
+    this.navigationSource = this.route.snapshot.queryParamMap.get('from') || '';
 
     // Don't set monthYear here - it will be set from DPR data or when creating new DPR
 
@@ -888,32 +907,45 @@ export class MonthlyDprComponent {
 
         this.api.insertDpr(review).subscribe({
           next: (res) => {
-            this.toastr.success(res.message, 'Success');
 
-            // Send notifications only after successful submission (not draft)
-            if (this.ApprovalStatus === 'S' && res.success) {
-              const dprId = res.data || this.dprid;
+            if (res.success) {
 
-              // Try to send notifications (non-blocking)
-              try {
-                this.sendNotificationToHOD(dprId);
-                this.sendNotificationToEmployee(dprId, true);
-              } catch (error) {
-                console.error('Error sending notifications:', error);
+              this.toastr.success(res.message, 'Success');
+
+
+              if (this.ApprovalStatus === 'S' && res.success) {
+                const dprId = res.data || this.dprid;
+
+                // Try to send notifications (non-blocking)
+                try {
+                  this.sendNotificationToHOD(dprId);
+                  this.sendNotificationToEmployee(dprId, true);
+                } catch (error) {
+                  console.error('Error sending notifications:', error);
+                }
+
+                // Navigate to past reports page after successful submission
+                setTimeout(() => {
+                  this.router.navigate(['/past-reports']);
+                }, 1500); // Small delay to show success message
+              } else if (this.ApprovalStatus === 'D' && res.success) {
+                // For draft saves, also navigate to past reports
+                console.log('Draft saved successfully');
+                setTimeout(() => {
+                  this.router.navigate(['/past-reports']);
+                }, 1500); // Small delay to show success message
               }
 
-              // Navigate to past reports page after successful submission
-              setTimeout(() => {
-                this.router.navigate(['/past-reports']);
-              }, 1500); // Small delay to show success message
-            } else if (this.ApprovalStatus === 'D' && res.success) {
-              // For draft saves, show success but don't navigate
-              console.log('Draft saved successfully');
+            }
+            else {
+              this.toastr.warning(res.message, 'Warning');
             }
           },
+
           error: (err) => {
             this.toastr.error('Failed to save employee details.', 'Error');
           },
+
         });
       }
     });

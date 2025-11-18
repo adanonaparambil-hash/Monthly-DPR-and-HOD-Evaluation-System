@@ -520,8 +520,9 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               tension: 0.4,
               pointBackgroundColor: '#f59e0b',
               pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 6
+              pointBorderWidth: 3,
+              pointRadius: 8,
+              pointHoverRadius: 10
             },
             {
               label: 'Overall Performance',
@@ -533,8 +534,9 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               tension: 0.4,
               pointBackgroundColor: '#3b82f6',
               pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 6
+              pointBorderWidth: 3,
+              pointRadius: 8,
+              pointHoverRadius: 10
             },
             {
               label: 'Quality',
@@ -546,8 +548,9 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               tension: 0.4,
               pointBackgroundColor: '#8b5cf6',
               pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 6
+              pointBorderWidth: 3,
+              pointRadius: 8,
+              pointHoverRadius: 10
             },
             {
               label: 'Timeliness',
@@ -559,8 +562,9 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               tension: 0.4,
               pointBackgroundColor: '#22c55e',
               pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 6
+              pointBorderWidth: 3,
+              pointRadius: 8,
+              pointHoverRadius: 10
             }
           ]
         },
@@ -572,7 +576,20 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               position: 'bottom',
               labels: {
                 usePointStyle: true,
-                padding: 20
+                padding: 20,
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const label = context.dataset.label || '';
+                  const value = context.parsed.y;
+                  return `${label}: ${value.toFixed(1)}`;
+                }
               }
             }
           },
@@ -583,6 +600,11 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
               max: 100,
               grid: {
                 color: 'rgba(0, 0, 0, 0.1)'
+              },
+              ticks: {
+                callback: function (value) {
+                  return value + '%';
+                }
               }
             },
             x: {
@@ -609,7 +631,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
 
       if (this.dashboardData?.performanceTrends && this.dashboardData.performanceTrends.length > 0) {
         const trends = this.dashboardData.performanceTrends;
-
+        console.log("trends" + trends);
         // Create labels from month/year data
         const labels = trends.map(trend => {
           const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -112,6 +112,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.initializeUserSession();
+    this.setDefaultPreviousMonth();
     this.loadHodMasterList();
     this.loadReports();
 
@@ -122,6 +123,18 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     ).subscribe(() => {
       this.loadReports();
     });
+  }
+
+  setDefaultPreviousMonth() {
+    const today = new Date();
+    // Get previous month
+    const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    
+    // Set month (1-12)
+    this.filters.month = (previousMonth.getMonth() + 1).toString();
+    
+    // Set year
+    this.filters.year = previousMonth.getFullYear().toString();
   }
 
   initializeUserSession() {
@@ -216,6 +229,9 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       status: '',
       hodName: ''
     };
+    
+    // Set default previous month and year
+    this.setDefaultPreviousMonth();
     
     // Reset filters based on user role
     if (this.isEmployee) {

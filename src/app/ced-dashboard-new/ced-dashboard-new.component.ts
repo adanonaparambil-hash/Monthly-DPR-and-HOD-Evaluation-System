@@ -771,6 +771,14 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
                 if (response.success && response.data) {
                     this.apiEmployees = response.data;
                     console.log('Employees loaded:', this.apiEmployees);
+                    
+                    // Scroll to top of the employee list after loading
+                    setTimeout(() => {
+                        const employeeListContainer = document.querySelector('.employees-container');
+                        if (employeeListContainer) {
+                            employeeListContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }, 100);
                 } else {
                     console.error('Failed to load employee data:', response.message);
                     this.apiEmployees = [];
