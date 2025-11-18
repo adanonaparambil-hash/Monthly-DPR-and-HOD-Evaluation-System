@@ -68,31 +68,31 @@ button, input, textarea, select, label {
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* Dark Theme Override */
+/* Dark Theme Override - Improved Contrast */
 .dark-theme {
-  --primary-color: #1f2937;
-  --secondary-color: #374151;
-  --accent-color: #cc9933;
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --background-primary: #111827;
-  --background-secondary: #1f2937;
-  --border-color: #374151;
-  --success-color: #34d399;
-  --warning-color: #fbbf24;
-  --error-color: #f87171;
-  --info-color: #60a5fa;
+  --primary-color: #2d3748;
+  --secondary-color: #4a5568;
+  --accent-color: #fbbf24;
+  --text-primary: #f7fafc;
+  --text-secondary: #e2e8f0;
+  --background-primary: #1a202c;
+  --background-secondary: #2d3748;
+  --border-color: #4a5568;
+  --success-color: #48bb78;
+  --warning-color: #ed8936;
+  --error-color: #fc8181;
+  --info-color: #4299e1;
   
   /* Dark Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  --gradient-secondary: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-  --gradient-accent: linear-gradient(135deg, var(--accent-color), #b8860b);
+  --gradient-primary: linear-gradient(135deg, #2d3748, #4a5568);
+  --gradient-secondary: linear-gradient(135deg, #4a5568, #2d3748);
+  --gradient-accent: linear-gradient(135deg, #fbbf24, #f59e0b);
   
   /* Dark Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
 }
 
 * {

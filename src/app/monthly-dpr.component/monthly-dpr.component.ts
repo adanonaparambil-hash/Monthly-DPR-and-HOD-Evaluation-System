@@ -922,9 +922,14 @@ export class MonthlyDprComponent {
   GetProofHubTask() {
     this.showModal = true;
 
+    this.getUserProofhubTasks();
+
+
     this.Proofhubtasks.forEach((task) => {
       task.selected = false;
     });
+
+
   }
 
   getUserProofhubTasks() {
@@ -1443,7 +1448,7 @@ export class MonthlyDprComponent {
     }
 
     const baseUrl = this.getBaseUrl();
-    const evaluationFormLink = `${baseUrl}/monthly-dpr/${dprId}?readonly=1`;
+    const evaluationFormLink = `${baseUrl}/AdrakMPRUI/monthly-dpr/${dprId}?readonly=1`;
 
     // Get HOD email from idValue and name from description
     const hodEmail = hodInfo.idValue || ''; // idValue contains the email address
@@ -1489,8 +1494,8 @@ export class MonthlyDprComponent {
     console.log('sendEmailToEmployee called with:', { dprId, isSubmission, ApprovalStatus: this.ApprovalStatus, EmailID: this.EmailID });
 
     const baseUrl = this.getBaseUrl();
-    const evaluationFormLink = `${baseUrl}/monthly-dpr/${dprId}?readonly=1`;
-    const employeeDprEditLink = `${baseUrl}/monthly-dpr/${dprId}`;
+    const evaluationFormLink = `${baseUrl}/AdrakMPRUI/monthly-dpr/${dprId}?readonly=1`;
+    const employeeDprEditLink = `${baseUrl}/AdrakMPRUI/monthly-dpr/${dprId}`;
 
     let templateKey = '';
     if (isSubmission) {

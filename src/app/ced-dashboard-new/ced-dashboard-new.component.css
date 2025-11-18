@@ -4059,3 +4059,238 @@ mprehensive Dark Mode Support */
     page-break-inside: avoid;
   }
 }
+
+
+/* ============================================
+   DARK MODE STYLES
+   ============================================ */
+
+/* Container */
+:host-context(.dark-theme) .dashboard-container {
+  background: var(--background-primary);
+  color: var(--text-primary);
+}
+
+/* Header */
+:host-context(.dark-theme) .dashboard-header {
+  background: var(--background-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .header-title h1 {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .header-subtitle {
+  color: var(--text-secondary);
+}
+
+/* Filter Controls */
+:host-context(.dark-theme) .filter-select {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .filter-select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+}
+
+:host-context(.dark-theme) .filter-label {
+  color: var(--text-secondary);
+}
+
+/* Department Cards */
+:host-context(.dark-theme) .department-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+:host-context(.dark-theme) .department-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .department-header h3 {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .department-icon {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--accent-color);
+}
+
+/* Stats */
+:host-context(.dark-theme) .stat-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .stat-value {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .stat-label {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .stat-icon {
+  color: var(--accent-color);
+}
+
+/* Progress Bar */
+:host-context(.dark-theme) .progress-bar {
+  background: #2d3748;
+}
+
+:host-context(.dark-theme) .progress-fill {
+  background: var(--accent-color);
+}
+
+/* Employee Cards */
+:host-context(.dark-theme) .employee-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+:host-context(.dark-theme) .employee-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+:host-context(.dark-theme) .employee-name {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .employee-id,
+:host-context(.dark-theme) .employee-department {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .employee-score {
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .score-label {
+  color: var(--text-secondary);
+}
+
+/* Status Badge */
+:host-context(.dark-theme) .status-badge {
+  background: rgba(251, 191, 36, 0.2);
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .status-badge.approved {
+  background: rgba(72, 187, 120, 0.2);
+  color: var(--success-color);
+}
+
+:host-context(.dark-theme) .status-badge.submitted {
+  background: rgba(66, 153, 225, 0.2);
+  color: var(--info-color);
+}
+
+:host-context(.dark-theme) .status-badge.pending {
+  background: rgba(237, 137, 54, 0.2);
+  color: var(--warning-color);
+}
+
+/* Search */
+:host-context(.dark-theme) .search-input {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .search-input::placeholder {
+  color: #718096;
+}
+
+:host-context(.dark-theme) .search-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+}
+
+:host-context(.dark-theme) .search-icon {
+  color: var(--text-secondary);
+}
+
+/* Filter Buttons */
+:host-context(.dark-theme) .filter-button {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .filter-button.active {
+  background: var(--accent-color);
+  color: #1a202c;
+  border-color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .filter-button:hover:not(.active) {
+  background: #2d3748;
+  color: var(--text-primary);
+}
+
+/* Action Buttons */
+:host-context(.dark-theme) .action-button {
+  background: var(--accent-color);
+  color: #1a202c;
+}
+
+:host-context(.dark-theme) .action-button:hover {
+  background: #f59e0b;
+}
+
+:host-context(.dark-theme) .back-button {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .back-button:hover {
+  background: #2d3748;
+}
+
+/* Performance Metrics */
+:host-context(.dark-theme) .metric-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .metric-label {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .metric-value {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .metric-bar {
+  background: #2d3748;
+}
+
+:host-context(.dark-theme) .metric-fill {
+  background: var(--accent-color);
+}
+
+/* Rank Badge */
+:host-context(.dark-theme) .rank-badge {
+  background: rgba(251, 191, 36, 0.2);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Loading State */
+:host-context(.dark-theme) .loading-spinner {
+  color: var(--accent-color);
+}
+
+/* Empty State */
+:host-context(.dark-theme) .empty-state {
+  color: var(--text-secondary);
+}

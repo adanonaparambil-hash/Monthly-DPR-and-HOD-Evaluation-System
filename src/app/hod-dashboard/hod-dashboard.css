@@ -2499,8 +2499,8 @@ dditional Top Performer Card Enhancements */
 /* Mobile landscape and below */
 @media (max-width: 768px) {
   .hod-dashboard-container {
-    padding: 12px;
-    min-height: calc(100vh - 60px);
+    padding: 10px;
+    min-height: calc(100vh - 56px);
   }
   
   /* Hide decorative elements on mobile */
@@ -2512,20 +2512,39 @@ dditional Top Performer Card Enhancements */
     display: none;
   }
   
-  /* Adjust grid layouts */
-  .stats-grid,
-  .charts-grid,
-  .evaluations-grid {
+  /* Stats Grid - Single column */
+  .stats-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
+    padding: 0 10px !important;
+  }
+  
+  /* Main Content Grid - Single column */
+  .main-content-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 0 10px !important;
+  }
+  
+  /* Charts Section - Stack vertically */
+  .charts-section {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
   }
   
   /* Adjust card padding */
-  .stat-card,
-  .chart-card,
-  .evaluation-card {
-    padding: 16px !important;
-    border-radius: 12px !important;
+  .stat-card {
+    padding: 18px !important;
+    border-radius: 14px !important;
+    gap: 16px !important;
+  }
+  
+  .chart-container,
+  .leaderboard-section,
+  .evaluations-section {
+    padding: 18px !important;
+    border-radius: 14px !important;
   }
   
   /* Adjust font sizes */
@@ -2534,22 +2553,60 @@ dditional Top Performer Card Enhancements */
     font-size: 28px !important;
   }
   
-  .stat-title,
-  .card-title {
-    font-size: 12px !important;
+  .stat-label {
+    font-size: 13px !important;
   }
   
-  .stat-subtitle {
+  .stat-department {
     font-size: 11px !important;
   }
   
+  .stat-icon {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 22px !important;
+  }
+  
   /* Chart adjustments */
-  .chart-container {
+  .chart-container canvas {
     min-height: 220px !important;
   }
   
   .chart-header h3 {
-    font-size: 16px !important;
+    font-size: 17px !important;
+  }
+  
+  .chart-subtitle {
+    font-size: 12px !important;
+  }
+  
+  /* Leaderboard adjustments */
+  .leaderboard-item {
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+  
+  .rank-badge {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 13px !important;
+  }
+  
+  .employee-info img {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  
+  .employee-details h4 {
+    font-size: 15px !important;
+  }
+  
+  .employee-details p {
+    font-size: 11px !important;
+  }
+  
+  .rating-number {
+    font-size: 18px !important;
   }
   
   /* Table responsiveness */
@@ -2558,21 +2615,73 @@ dditional Top Performer Card Enhancements */
     -webkit-overflow-scrolling: touch;
   }
   
-  .evaluations-table table {
-    min-width: 600px;
+  .table-header,
+  .table-row {
+    grid-template-columns: 2fr 1.2fr 1fr 0.8fr 1fr !important;
+    gap: 10px !important;
+    padding: 14px 12px !important;
+    font-size: 12px !important;
+  }
+  
+  .employee-cell img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .employee-cell span {
+    font-size: 13px !important;
   }
   
   /* Button adjustments */
-  .action-button,
-  .evaluate-button {
+  .evaluate-btn {
     padding: 8px 12px !important;
     font-size: 12px !important;
   }
   
+  .tab {
+    padding: 7px 12px !important;
+    font-size: 11px !important;
+  }
+  
+  /* Search bar */
+  .search-bar {
+    max-width: 100% !important;
+  }
+  
+  .search-bar input {
+    font-size: 13px !important;
+    padding: 9px 10px 9px 34px !important;
+  }
+  
+  /* Section headers */
+  .section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  
+  .section-header h2 {
+    font-size: 18px !important;
+  }
+  
   /* Reduce hover effects on mobile */
   .stat-card:hover,
-  .chart-card:hover {
-    transform: translateY(-4px) scale(1.01) !important;
+  .chart-container:hover,
+  .leaderboard-item:hover {
+    transform: translateY(-3px) scale(1.005) !important;
+  }
+  
+  /* Top performer card adjustments */
+  .top-performer-name {
+    font-size: 15px !important;
+  }
+  
+  .top-performer-score {
+    font-size: 13px !important;
+  }
+  
+  .score-value {
+    font-size: 16px !important;
   }
 }
 
@@ -2580,38 +2689,57 @@ dditional Top Performer Card Enhancements */
 @media (max-width: 480px) {
   .hod-dashboard-container {
     padding: 8px;
-    min-height: calc(100vh - 50px);
+    min-height: calc(100vh - 52px);
+  }
+  
+  /* Stats Grid */
+  .stats-grid {
+    padding: 0 8px !important;
+    gap: 10px !important;
+  }
+  
+  /* Main Content Grid */
+  .main-content-grid {
+    padding: 0 8px !important;
+    gap: 12px !important;
   }
   
   /* Further reduce card padding */
-  .stat-card,
-  .chart-card,
-  .evaluation-card {
-    padding: 12px !important;
-    border-radius: 10px !important;
+  .stat-card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+    gap: 14px !important;
+  }
+  
+  .chart-container,
+  .leaderboard-section,
+  .evaluations-section {
+    padding: 16px !important;
+    border-radius: 12px !important;
   }
   
   /* Smaller fonts */
   .stat-number,
   .counter-number {
-    font-size: 24px !important;
+    font-size: 26px !important;
   }
   
-  .stat-title,
-  .card-title {
-    font-size: 11px !important;
+  .stat-label {
+    font-size: 12px !important;
   }
   
-  .stat-subtitle {
+  .stat-department {
     font-size: 10px !important;
   }
   
   .stat-icon {
-    font-size: 16px !important;
+    width: 45px !important;
+    height: 45px !important;
+    font-size: 20px !important;
   }
   
   /* Chart adjustments */
-  .chart-container {
+  .chart-container canvas {
     min-height: 200px !important;
   }
   
@@ -2620,10 +2748,47 @@ dditional Top Performer Card Enhancements */
   }
   
   .chart-header h3 {
-    font-size: 14px !important;
+    font-size: 15px !important;
+  }
+  
+  .chart-subtitle {
+    font-size: 11px !important;
   }
   
   .chart-icon {
+    font-size: 16px !important;
+  }
+  
+  /* Leaderboard adjustments */
+  .leaderboard-item {
+    padding: 14px !important;
+    gap: 10px !important;
+  }
+  
+  .rank-badge {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 12px !important;
+  }
+  
+  .employee-info {
+    gap: 10px !important;
+  }
+  
+  .employee-info img {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  
+  .employee-details h4 {
+    font-size: 14px !important;
+  }
+  
+  .employee-details p {
+    font-size: 10px !important;
+  }
+  
+  .rating-number {
     font-size: 16px !important;
   }
   
@@ -2640,54 +2805,106 @@ dditional Top Performer Card Enhancements */
   
   /* Minimal hover effects */
   .stat-card:hover,
-  .chart-card:hover {
+  .chart-container:hover,
+  .leaderboard-item:hover {
     transform: translateY(-2px) !important;
   }
   
-  /* Table on mobile */
+  /* Table on mobile - make it scrollable */
   .evaluations-table {
-    font-size: 12px;
+    font-size: 11px;
+    overflow-x: auto;
   }
   
-  .evaluations-table th,
-  .evaluations-table td {
-    padding: 8px 4px !important;
-  }
-  
-  /* Profile images */
-  .profile-image {
-    width: 32px !important;
-    height: 32px !important;
-  }
-  
-  /* Action buttons */
-  .action-button,
-  .evaluate-button {
-    padding: 6px 10px !important;
+  .table-header,
+  .table-row {
+    grid-template-columns: 1.8fr 1fr 0.9fr 0.7fr 0.9fr !important;
+    gap: 8px !important;
+    padding: 12px 10px !important;
     font-size: 11px !important;
   }
   
+  .employee-cell img {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  
+  .employee-cell span {
+    font-size: 12px !important;
+  }
+  
+  /* Action buttons */
+  .evaluate-btn {
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+  }
+  
+  .tab {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+  }
+  
   /* Search and filter inputs */
-  .search-input,
-  .filter-select {
-    font-size: 14px !important;
-    padding: 8px 12px !important;
+  .search-bar input {
+    font-size: 12px !important;
+    padding: 8px 10px 8px 32px !important;
+  }
+  
+  .search-bar i {
+    font-size: 12px !important;
+  }
+  
+  /* Section headers */
+  .section-header h2 {
+    font-size: 16px !important;
   }
   
   /* Legend adjustments */
-  .legend {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .summary-legend {
+    gap: 8px !important;
   }
   
   .legend-item {
-    font-size: 10px;
+    font-size: 11px !important;
+    padding: 8px !important;
   }
   
   .legend-color {
-    width: 10px;
-    height: 10px;
+    width: 12px !important;
+    height: 12px !important;
+  }
+  
+  .percentage {
+    font-size: 11px !important;
+  }
+  
+  /* Top performer card */
+  .top-performer-name {
+    font-size: 14px !important;
+  }
+  
+  .top-performer-score {
+    font-size: 12px !important;
+  }
+  
+  .score-value {
+    font-size: 15px !important;
+  }
+  
+  .top-performer-crown {
+    font-size: 14px !important;
+  }
+  
+  /* Department badge */
+  .department-badge {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* Priority badge */
+  .priority {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
   }
 }
 
