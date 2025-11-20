@@ -17,7 +17,7 @@ export interface UserSession {
 export class AuthService {
   private readonly SESSION_KEY = 'user_session';
   private readonly SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
-  private readonly ACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
+  private readonly ACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes (1 hour) of inactivity
   
   private sessionSubject = new BehaviorSubject<UserSession | null>(null);
   public session$ = this.sessionSubject.asObservable();
