@@ -32,21 +32,26 @@
 
       <!-- Employee View Header -->
       <div class="employee-view-header" *ngIf="currentView === 'employees'">
-        <div class="back-section">
+        <!-- Top Row: Back Button (Left) + Department Name (Center) -->
+        <div class="header-top-row">
           <button class="back-button" (click)="backToDepartments()">
             <i class="fas fa-arrow-left"></i>
             <span>Back to Departments</span>
           </button>
+          
+          <div class="header-center" *ngIf="selectedDepartment">
+            <div class="dept-icon-inline">
+              <i [class]="selectedDepartment.icon" [style.color]="getDepartmentIconColor(selectedDepartment.department)"></i>
+            </div>
+            <h2 class="department-name">{{ selectedDepartment.department }} Department</h2>
+          </div>
+          
+          <div class="header-spacer"></div>
         </div>
         
-        <div class="department-info" *ngIf="selectedDepartment">
-          <div class="dept-icon">
-            <i [class]="selectedDepartment.icon" [style.color]="getDepartmentIconColor(selectedDepartment.department)"></i>
-          </div>
-          <div class="dept-details">
-            <h2>{{ selectedDepartment.department }} Department</h2>
-            <p>Performance Rankings - {{ getMonthName(selectedMonth) }} {{ selectedYear }}</p>
-          </div>
+        <!-- Subtitle Row -->
+        <div class="header-subtitle" *ngIf="selectedDepartment">
+          <p>Performance Rankings - {{ getMonthName(selectedMonth) }} {{ selectedYear }}</p>
         </div>
 
         <!-- Modern Filter Bar -->

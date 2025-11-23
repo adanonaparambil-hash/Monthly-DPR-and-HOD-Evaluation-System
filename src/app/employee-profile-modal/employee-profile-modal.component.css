@@ -29,6 +29,7 @@
   overflow: hidden;
   margin: auto;
   position: relative;
+  align-self: center;
 }
 
 .modal-header {
@@ -111,8 +112,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* =========================================
@@ -494,20 +500,20 @@
     justify-content: center;
     padding: 1.5rem;
   }
-  
+
   .modal-container {
     width: calc(100vw - 3rem);
     max-width: calc(100vw - 3rem);
     max-height: calc(100vh - 3rem);
     margin: auto;
   }
-  
+
   .profile-overview-card {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     text-align: center;
   }
-  
+
   .profile-badges {
     justify-content: center;
   }
@@ -519,53 +525,53 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .modal-container {
     width: calc(100vw - 2rem);
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 2rem);
     margin: auto;
   }
-  
+
   .modal-header {
     padding: 1rem 1.5rem;
   }
-  
+
   .modal-title {
     font-size: 1.25rem;
   }
-  
+
   .profile-modal-content {
     padding: 1.5rem;
   }
-  
+
   .modern-info-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .profile-overview-card {
     padding: 1.5rem;
   }
-  
+
   .avatar-container {
     width: 100px;
     height: 100px;
   }
-  
+
   .profile-name {
     font-size: 1.5rem;
   }
-  
+
   .profile-position {
     font-size: 1rem;
   }
-  
+
   .badge-item {
     font-size: 0.6875rem;
     padding: 0.25rem 0.5rem;
   }
-  
+
   .personal-info-section,
   .skills-expertise-section,
   .career-summary-section {
@@ -578,7 +584,7 @@
     padding: 0;
     align-items: flex-start;
   }
-  
+
   .modal-container {
     width: 100vw;
     height: 100vh;
@@ -587,7 +593,7 @@
     border-radius: 0;
     margin: 0;
   }
-  
+
   .modal-header {
     padding: 1rem;
     position: sticky;
@@ -595,40 +601,40 @@
     z-index: 10;
     background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   }
-  
+
   .modal-title {
     font-size: 1.125rem;
   }
-  
+
   .profile-modal-content {
     padding: 1rem;
   }
-  
+
   .avatar-container {
     width: 80px;
     height: 80px;
   }
-  
+
   .profile-name {
     font-size: 1.25rem;
   }
-  
+
   .modern-info-card,
   .career-summary-card {
     padding: 1rem;
   }
-  
+
   .card-icon,
   .summary-icon {
     width: 2rem;
     height: 2rem;
   }
-  
+
   .card-icon i,
   .summary-icon i {
     font-size: 1rem;
   }
-  
+
   .modal-footer {
     padding: 1rem;
     position: sticky;

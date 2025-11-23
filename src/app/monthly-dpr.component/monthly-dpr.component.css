@@ -3624,3 +3624,137 @@ nced validation styles for rating inputs */
   color: var(--text-primary);
   border-color: var(--border-color);
 }
+
+
+/* Hours Tracker Styles */
+.hours-tracker {
+  border-radius: 8px;
+  padding: 0;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.hours-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+}
+
+.hours-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+  border-radius: 6px;
+  transition: width 0.5s ease, background 0.3s ease;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.hours-tracker.hours-medium .hours-progress-fill {
+  background: linear-gradient(90deg, #17a2b8 0%, #20c997 100%);
+  box-shadow: 0 2px 4px rgba(23, 162, 184, 0.3);
+}
+
+.hours-tracker.hours-high .hours-progress-fill {
+  background: linear-gradient(90deg, #ffc107 0%, #ffca2c 100%);
+  box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+}
+
+.hours-tracker.hours-full .hours-progress-fill {
+  background: linear-gradient(90deg, #fd7e14 0%, #ff922b 100%);
+  box-shadow: 0 2px 4px rgba(253, 126, 20, 0.3);
+}
+
+.hours-tracker.hours-exceeded .hours-progress-fill {
+  background: linear-gradient(90deg, #dc3545 0%, #e4606d 100%);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.hours-remaining {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #28a745;
+  font-weight: 500;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-radius: 8px;
+  border: 1px solid #28a745;
+}
+
+.hours-remaining i {
+  font-size: 14px;
+}
+
+.hours-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #dc3545;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-radius: 8px;
+  border: 1px solid #dc3545;
+  animation: shake 0.5s ease-in-out, pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+  }
+}
+
+.hours-warning i {
+  font-size: 14px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Dark mode support for hours tracker */
+:host-context(.dark-theme) .hours-remaining {
+  background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+  border-color: #48bb78;
+  color: #9ae6b4;
+}
+
+:host-context(.dark-theme) .hours-warning {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+  border-color: #fc8181;
+  color: #feb2b2;
+}
+
+/* Responsive design for hours tracker */
+@media (max-width: 768px) {
+  .hours-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .hours-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .hours-percentage {
+    font-size: 16px;
+  }
+}

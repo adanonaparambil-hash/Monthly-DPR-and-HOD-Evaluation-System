@@ -190,10 +190,66 @@
 /* Employee View Header */
 .employee-view-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   width: 100%;
   gap: 1rem;
+}
+
+/* Top Row: Back Button + Centered Department Name */
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dept-icon-inline {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.department-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.header-spacer {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+/* Subtitle Row */
+.header-subtitle {
+  text-align: center;
+  margin-top: -0.5rem;
+}
+
+.header-subtitle p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .back-section {
@@ -1192,6 +1248,26 @@
     align-items: flex-start;
   }
   
+  .header-center {
+    position: static;
+    transform: none;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .header-top-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-spacer {
+    display: none;
+  }
+  
+  .back-button {
+    align-self: flex-start;
+  }
+  
   .search-box {
     min-width: 200px;
   }
@@ -1241,6 +1317,30 @@
   
   .employee-view-header {
     gap: 0.75rem;
+  }
+  
+  .header-top-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-center {
+    position: static;
+    transform: none;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .header-spacer {
+    display: none;
+  }
+  
+  .department-name {
+    font-size: 1.2rem;
+  }
+  
+  .back-button {
+    align-self: flex-start;
   }
   
   .department-info {
@@ -2019,12 +2119,12 @@
 }/*
  Modern Filter Bar Design */
 .modern-filter-bar {
-  margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 16px;
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(204, 153, 51, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .filter-container {

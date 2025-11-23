@@ -73,6 +73,8 @@ export class MonthlyDprComponent {
 
   ConfirmationMessage = '';
 
+  ConfirmationMessageOnSubmit = '';
+
   empId = '';
   empName = '';
   designation = '';
@@ -551,7 +553,29 @@ export class MonthlyDprComponent {
   }
 
   addNewTask() {
+    // Calculate current total actual hours
+    const totalActualHours = this.tasks.reduce(
+      (sum, task) => sum + (Number(task.actualHours) || 0),
+      0
+    );
 
+    // Check if worked hours is set
+    if (!this.WorkedHours || this.WorkedHours === 0) {
+      this.toastr.warning('Please set Worked Hours before adding tasks.', 'Validation Failed');
+      return;
+    }
+
+    // Check if total hours have reached or exceeded 100% of worked hours
+    if (totalActualHours >= this.WorkedHours) {
+      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
+      this.toastr.warning(
+        `You have already allocated ${percentage}% (${totalActualHours}/${this.WorkedHours} hours) of your worked hours. Cannot add more tasks.`,
+        'Hours Limit Reached'
+      );
+      return;
+    }
+
+    // Validate existing hours before adding new task
     this.validateActualHours();
 
     if (this.hoursExceeded) {
@@ -566,6 +590,13 @@ export class MonthlyDprComponent {
       productivity: 0,
       selected: false,
     });
+
+    // Show remaining hours info
+    const remainingHours = this.WorkedHours - totalActualHours;
+    this.toastr.info(
+      `You have ${remainingHours} hours remaining out of ${this.WorkedHours} worked hours.`,
+      'Task Added'
+    );
 
     // Recalculate overall rating when task is added
     this.calculateOverallRating();
@@ -724,6 +755,35 @@ export class MonthlyDprComponent {
   }
 
   saveDraft() {
+    // Validation for Save Draft
+    if (!this.reportingTo) {
+      this.toastr.warning('Please specify the Reporting To field before saving.', 'Validation Failed');
+      return;
+    }
+
+    // Check if at least one task exists with valid data
+    const validTasks = this.tasks.filter(
+      (task) => task.taskName && task.taskName.trim() !== ''
+    );
+
+    if (validTasks.length === 0) {
+      this.toastr.warning('Please add at least one task before saving.', 'Validation Failed');
+      return;
+    }
+
+    // Check if total actual hours exceed worked hours
+    const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+
+    if (totalActualHours > this.WorkedHours) {
+      const exceededBy = totalActualHours - this.WorkedHours;
+      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
+      this.toastr.warning(
+        `Cannot save: Total actual hours (${totalActualHours}) exceed worked hours (${this.WorkedHours}) by ${exceededBy} hours (${percentage}%). Please adjust task hours.`,
+        'Hours Exceeded'
+      );
+      return;
+    }
+
     this.ApprovalStatus = 'D';
     this.saveEmployeeDetails();
   }
@@ -742,9 +802,11 @@ export class MonthlyDprComponent {
 
     if (this.ApprovalStatus == "R") {
       this.ConfirmationMessage = 'Do you want to ReWork the review details?';
+      this.ConfirmationMessageOnSubmit = 'Yes, ReWork it!';
     }
     else {
       this.ConfirmationMessage = 'Do you want to approve the review details?';
+      this.ConfirmationMessageOnSubmit = 'Yes, Approve it!';
     }
 
 
@@ -753,7 +815,7 @@ export class MonthlyDprComponent {
       text: this.ConfirmationMessage,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Yes, submit it!',
+      confirmButtonText: this.ConfirmationMessageOnSubmit,
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -815,12 +877,21 @@ export class MonthlyDprComponent {
     if (this.ApprovalStatus == "S") {
 
       this.ConfirmationMessage = 'Do you want to submit the review details?';
+      this.ConfirmationMessageOnSubmit = 'Yes, Submit it!';
 
+      // Validation 1: Reporting To is required
       if (!this.reportingTo) {
-        this.toastr.warning('Please specify the Reporting To field.', 'Validation Failed');
+        this.toastr.warning('Please specify the Reporting To field before submitting.', 'Validation Failed');
         return;
       }
 
+      // Validation 2: At least one task must exist
+      if (this.tasks.length === 0) {
+        this.toastr.warning('Please add at least one task before submitting.', 'Validation Failed');
+        return;
+      }
+
+      // Validation 3: All tasks must be complete
       const hasIncompleteTasks = this.tasks.some(
         (task) => !task.taskName || !task.description || task.actualHours <= 0
       );
@@ -830,6 +901,7 @@ export class MonthlyDprComponent {
         return;
       }
 
+      // Validation 4: Total actual hours should not exceed worked hours
       const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
 
       if (totalActualHours > this.WorkedHours) {
@@ -837,12 +909,7 @@ export class MonthlyDprComponent {
         return;
       }
 
-      if (this.tasks.length === 0) {
-        this.toastr.warning('Please add at least one task with valid details.', 'Validation Failed');
-        return;
-      }
-
-      // Check if at least one KPI is properly filled
+      // Validation 5: At least one KPI must be properly filled
       const validKPIs = this.kpis.filter(
         (kpi) => {
           if (!kpi.kpiMasterId || kpi.kpiMasterId === 0) return false;
@@ -860,6 +927,7 @@ export class MonthlyDprComponent {
     }
     else {
       this.ConfirmationMessage = 'Do you want to save the review details?';
+      this.ConfirmationMessageOnSubmit = 'Yes, Save it!';
     }
 
 
@@ -899,7 +967,7 @@ export class MonthlyDprComponent {
       text: this.ConfirmationMessage,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Yes, save it!',
+      confirmButtonText: this.ConfirmationMessageOnSubmit,
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
 
@@ -1341,14 +1409,56 @@ export class MonthlyDprComponent {
       0
     );
 
-    this.hoursExceeded = totalActualHours >= this.WorkedHours;
+    this.hoursExceeded = totalActualHours > this.WorkedHours;
 
     if (this.hoursExceeded) {
-      this.toastr.warning('Actual hours exceed Worked Hours.', 'warning');
+      const exceededBy = totalActualHours - this.WorkedHours;
+      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
+      this.toastr.warning(
+        `Total actual hours (${totalActualHours}) exceed worked hours (${this.WorkedHours}) by ${exceededBy} hours (${percentage}%). Please adjust task hours.`,
+        'Hours Exceeded'
+      );
     }
 
     // Recalculate overall rating when hours change
     this.calculateOverallRating();
+  }
+
+  // Helper method to get total actual hours
+  getTotalActualHours(): number {
+    return this.tasks.reduce(
+      (sum, task) => sum + (Number(task.actualHours) || 0),
+      0
+    );
+  }
+
+  // Helper method to get remaining hours
+  getRemainingHours(): number {
+    const totalActualHours = this.getTotalActualHours();
+    return Math.max(0, this.WorkedHours - totalActualHours);
+  }
+
+  // Helper method to get hours utilization percentage
+  getHoursUtilizationPercentage(): number {
+    if (!this.WorkedHours || this.WorkedHours === 0) return 0;
+    const totalActualHours = this.getTotalActualHours();
+    return Math.round((totalActualHours / this.WorkedHours) * 100);
+  }
+
+  // Helper method to check if can add more tasks based on hours
+  canAddMoreTasksBasedOnHours(): boolean {
+    const totalActualHours = this.getTotalActualHours();
+    return totalActualHours < this.WorkedHours;
+  }
+
+  // Helper method to get hours status class for styling
+  getHoursStatusClass(): string {
+    const percentage = this.getHoursUtilizationPercentage();
+    if (percentage > 100) return 'hours-exceeded';
+    if (percentage === 100) return 'hours-full';
+    if (percentage >= 80) return 'hours-high';
+    if (percentage >= 50) return 'hours-medium';
+    return 'hours-low';
   }
 
 

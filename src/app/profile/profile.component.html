@@ -29,9 +29,9 @@
     </div>
 
     <div class="profile-info-section">
-      <h1 class="profile-name">{{ userProfile.name || 'VINOD PACHUPILLAI VIJAYAN PILLAI' }}</h1>
-      <p class="profile-position">{{ userProfile.designation || 'IT MANAGER' }}</p>
-      <p class="profile-department">{{ userProfile.department || 'Internal Audits' }} - IT Department</p>
+      <h1 class="profile-name">{{ userProfile.name || 'Not provided' }}</h1>
+      <p class="profile-position">{{ userProfile.designation || 'Not provided' }}</p>
+      <p class="profile-department">{{ userProfile.department || 'Not provided' }}</p>
 
       <div class="profile-badges">
         <div class="badge-item">
@@ -40,11 +40,11 @@
         </div>
         <div class="badge-item">
           <i class="fas fa-id-badge"></i>
-          <span>{{ userProfile.empId || 'ITS41' }}</span>
+          <span>{{ userProfile.empId || '' }}</span>
         </div>
         <div class="badge-item">
           <i class="fas fa-map-marker-alt"></i>
-          <span>{{ userProfile.location || 'Oman' }}</span>
+          <span>{{ userProfile.location || '' }}</span>
         </div>
       </div>
     </div>

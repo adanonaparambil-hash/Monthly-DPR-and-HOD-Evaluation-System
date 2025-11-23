@@ -85,6 +85,23 @@
 
     @if (showTaskDetails) {
       <div class="task-content" [@fadeInUp]>
+        <!-- Hours Tracking Indicator -->
+        @if (WorkedHours > 0) {
+          <div class="hours-tracker" [class]="getHoursStatusClass()">
+            @if (getRemainingHours() > 0) {
+              <div class="hours-remaining">
+                <i class="fas fa-info-circle"></i>
+                <span>{{ getRemainingHours() }} hours remaining out of {{ WorkedHours }} hours ({{ getTotalActualHours() }} hours used)</span>
+              </div>
+            }
+            @if (hoursExceeded) {
+              <div class="hours-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Hours exceeded by {{ getTotalActualHours() - WorkedHours }} hours. Total: {{ getTotalActualHours() }} / {{ WorkedHours }} hours. Please adjust task hours.</span>
+              </div>
+            }
+          </div>
+        }
         <div class="table-container my-task-table">
           <table>
             <thead>
