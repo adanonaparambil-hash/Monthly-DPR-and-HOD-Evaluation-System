@@ -629,6 +629,41 @@
   position: relative;
   z-index: 5;
   min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for leaderboard */
+.leaderboard::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leaderboard::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.leaderboard::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.leaderboard::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+:host-context(.dark-theme) .leaderboard::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+:host-context(.dark-theme) .leaderboard::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+:host-context(.dark-theme) .leaderboard::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 .leaderboard-item {
@@ -924,10 +959,45 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 :host-context(.dark-theme) .evaluations-table {
   border-color: #334155;
+}
+
+/* Custom scrollbar for evaluations table */
+.evaluations-table::-webkit-scrollbar {
+  width: 8px;
+}
+
+.evaluations-table::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 0 12px 12px 0;
+}
+
+.evaluations-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.evaluations-table::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+:host-context(.dark-theme) .evaluations-table::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+:host-context(.dark-theme) .evaluations-table::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+:host-context(.dark-theme) .evaluations-table::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 .table-header {
@@ -941,6 +1011,10 @@
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 :host-context(.dark-theme) .table-header {
@@ -956,6 +1030,7 @@
   border-top: 1px solid #f1f5f9;
   transition: all 0.3s ease;
   align-items: center;
+  flex-shrink: 0;
 }
 
 :host-context(.dark-theme) .table-row {
@@ -968,6 +1043,10 @@
 
 :host-context(.dark-theme) .table-row:hover {
   background: rgba(51, 65, 85, 0.3);
+}
+
+.table-row:first-of-type {
+  border-top: none;
 }
 
 .employee-cell {
@@ -2408,9 +2487,9 @@ dditional Top Performer Card Enhancements */
 
 /* No Data Styles for Pending Evaluations */
 .no-data-row {
-  grid-column: 1 / -1;
   padding: 2rem;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .no-data-message {
@@ -2425,6 +2504,12 @@ dditional Top Performer Card Enhancements */
   margin: 0;
   font-size: 1.1rem;
   font-weight: 500;
+}
+
+:host-context(.dark-theme) .no-data-message {
+  background: rgba(51, 65, 85, 0.3);
+  border-color: #475569;
+  color: #94a3b8;
 }
 
 /* Enhanced search bar styling */
@@ -2581,6 +2666,10 @@ dditional Top Performer Card Enhancements */
   }
   
   /* Leaderboard adjustments */
+  .leaderboard {
+    max-height: 400px;
+  }
+  
   .leaderboard-item {
     padding: 16px !important;
     gap: 12px !important;
@@ -2611,7 +2700,9 @@ dditional Top Performer Card Enhancements */
   
   /* Table responsiveness */
   .evaluations-table {
+    max-height: 400px;
     overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
   
@@ -2760,6 +2851,10 @@ dditional Top Performer Card Enhancements */
   }
   
   /* Leaderboard adjustments */
+  .leaderboard {
+    max-height: 350px;
+  }
+  
   .leaderboard-item {
     padding: 14px !important;
     gap: 10px !important;
@@ -2813,7 +2908,9 @@ dditional Top Performer Card Enhancements */
   /* Table on mobile - make it scrollable */
   .evaluations-table {
     font-size: 11px;
+    max-height: 350px;
     overflow-x: auto;
+    overflow-y: auto;
   }
   
   .table-header,

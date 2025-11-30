@@ -497,7 +497,7 @@ export class MonthlyDprComponent {
 
     // Don't set monthYear here - it will be set from DPR data or when creating new DPR
 
-    this.loadKPIs();
+    // this.loadKPIs();
 
     const user = JSON.parse(localStorage.getItem('current_user') || '{}');
     if (user) {
@@ -517,6 +517,8 @@ export class MonthlyDprComponent {
         this.userType = 'E';
       }
     }
+
+    this.loadKPIs();
 
     this.loadHodMasterList();
 
@@ -1284,6 +1286,8 @@ export class MonthlyDprComponent {
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
           this.TotalEstimatedhours = dpr.totalEstimatedhours ?? 0;
 
+          this.loadKPIs();
+          
           // Set monthYear from DPR data if available
           if (dpr.month && dpr.year) {
             const monthNames = [
