@@ -37,6 +37,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
   Math = Math;
 
   hodList: DropdownOption[] = [];
+  departmentList: DropdownOption[] = [];
 
   // User session and role properties
   userSession = JSON.parse(localStorage.getItem('current_user') || '{}');
@@ -56,7 +57,8 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     month: '',
     year: '',
     status: '',
-    hodName: ''
+    hodName: '',
+    department: ''
   };
 
   // Pagination properties
@@ -114,6 +116,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     this.initializeUserSession();
     this.setDefaultPreviousMonth();
     this.loadHodMasterList();
+    this.loadDepartmentList();
     this.loadReports();
 
     // Setup search debouncing
@@ -227,7 +230,8 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       month: '',
       year: '',
       status: '',
-      hodName: ''
+      hodName: '',
+      department: ''
     };
     
     // Set default previous month and year
@@ -238,9 +242,20 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       // Employee can't filter by employee name or HOD
       this.filters.employeeName = '';
       this.filters.hodName = '';
+      this.filters.department = '';
     } else if (this.isHod) {
       // HOD can filter by employee name but not HOD name
       this.filters.hodName = '';
+      this.filters.department = '';
+    } else if (this.isCed) {
+      // Set IT department as default for CED
+      const itDepartment = this.departmentList.find(dept => 
+        dept.description?.toUpperCase() === 'IT' || 
+        dept.idValue?.toUpperCase() === 'IT'
+      );
+      if (itDepartment && itDepartment.idValue) {
+        this.filters.department = itDepartment.idValue;
+      }
     }
     
     this.loadReports();
@@ -357,8 +372,31 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     );
   }
 
-
-
+  loadDepartmentList(): void {
+    this.api.GetDepartmentList().subscribe(
+      (response: any) => {
+        if (response && response.success && response.data) {
+          this.departmentList = response.data;
+          
+          // Set IT department as default if CED user
+          if (this.isCed) {
+            const itDepartment = this.departmentList.find(dept => 
+              dept.description?.toUpperCase() === 'IT' || 
+              dept.idValue?.toUpperCase() === 'IT'
+            );
+            if (itDepartment && itDepartment.idValue) {
+              this.filters.department = itDepartment.idValue;
+            }
+          }
+        } else {
+          console.warn('No Department records found or API call failed');
+        }
+      },
+      (error) => {
+        console.error('Error fetching Department list:', error);
+      }
+    );
+  }
 
   applyFilters() {
     // Call the API with current filter values

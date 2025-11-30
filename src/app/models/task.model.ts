@@ -129,6 +129,10 @@ export interface DPRMonthlyReviewListingRequest {
   employeeId?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  row_num?:number;
+  page_number?:number;
+  items_per_page?:number;
+  department?:number;
 }
 
 

@@ -7,7 +7,7 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 
-
+ 
 @Injectable({
   providedIn: 'root'
 })
@@ -196,6 +196,9 @@ export class Api {
     return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDetailsForcedDashboard/${month}/${year}/${statusCondition}/${department}`);
   }
 
+  GetDepartmentList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetDepartmentList`);
+  }
 
 
 }

@@ -58,11 +58,11 @@
       </div>
 
       <div class="filter-group" *ngIf="isCed">
-        <label><b>HOD Name</b></label>
-        <select [(ngModel)]="filters.hodName" (change)="applyFilters()" class="filter-input">
-          <option value="">Select HOD</option>
-          <option *ngFor="let hod of hodList" [value]="hod.idValue">
-            {{ hod.description }}
+        <label>Department</label>
+        <select [(ngModel)]="filters.department" (change)="applyFilters()" class="filter-select">
+          <option value="">Select Department</option>
+          <option *ngFor="let dept of departmentList" [value]="dept.idValue">
+            {{ dept.description }}
           </option>
         </select>
       </div>
@@ -95,7 +95,7 @@
             <th>{{ getEmployeeNameLabel() }}</th>
             <th>Month</th>
             <th>Year</th>
-            <th>HOD Name</th>
+            <th *ngIf="isCed">Department</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -107,7 +107,7 @@
             <td class="employee-name">{{ report.employeeName }}</td>
             <td>{{ getMonthName(report.month) }}</td>
             <td>{{ report.year }}</td>
-            <td>{{ report.hodName }}</td>
+            <td *ngIf="isCed">{{ report.department }}</td>
             <td>
               <span class="status-badge" [ngClass]="getStatusClass(report.status)">
                 {{ getStatusLabel(report.status) }}
