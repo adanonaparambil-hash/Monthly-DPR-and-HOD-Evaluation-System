@@ -203,6 +203,8 @@
 
 .table-container {
   overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .reports-table {
@@ -254,6 +256,13 @@
   padding: 16px 20px;
   color: var(--text-primary);
   vertical-align: middle;
+}
+
+.row-number {
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  width: 60px;
 }
 
 .employee-name {

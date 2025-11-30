@@ -61,11 +61,14 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     department: ''
   };
 
-  // Pagination properties
+  // Pagination properties - Server-side pagination
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 100; // Display 100 records per page
+  itemsPerPage = 500; // Fetch 500 records from API at a time
   totalRecords = 0;
   totalPages = 0;
+  cachedData: any[] = []; // Cache for all fetched data
+  currentBatch = 1; // Track which batch of 500 records we're on
 
   // Data properties
   reports: any[] = [];
@@ -116,8 +119,13 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     this.initializeUserSession();
     this.setDefaultPreviousMonth();
     this.loadHodMasterList();
-    this.loadDepartmentList();
-    this.loadReports();
+    
+    // Load department list first for CED users, then load reports
+    if (this.isCed) {
+      this.loadDepartmentList();
+    } else {
+      this.loadReports();
+    }
 
     // Setup search debouncing
     this.searchSubject.pipe(
@@ -161,18 +169,36 @@ export class PastReportsComponent implements OnInit, OnDestroy {
   }
 
   onSearchChange() {
+    this.currentPage = 1;
     this.searchSubject.next(this.filters.employeeName);
   }
 
-  loadReports() {
+  loadReports(resetCache: boolean = true) {
+    if (resetCache) {
+      this.cachedData = [];
+      this.currentBatch = 1;
+      this.currentPage = 1;
+    }
+
     this.loading = true;
 
     // Create request object based on user role
     const request: DPRMonthlyReviewListingRequest = {
       month: this.filters.month ? Number(this.filters.month) : undefined,
       year: this.filters.year ? Number(this.filters.year) : undefined,
-      status: this.filters.status || undefined
+      status: this.filters.status || undefined,
+      page_number: this.currentBatch,
+      items_per_page: this.itemsPerPage,
+      row_num: ((this.currentBatch - 1) * this.itemsPerPage) + 1
     };
+
+    // Add department filter for CED users
+    if (this.isCed && this.filters.department) {
+      request.department = this.filters.department;
+      console.log('Department filter applied:', this.filters.department);
+    } else if (this.isCed) {
+      console.log('CED user but no department selected:', this.filters.department);
+    }
 
     // Role-based filtering logic
     if (this.isEmployee) {
@@ -199,27 +225,46 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
           console.log(response);
 
-          this.reports = response.data;
-          this.filteredReports = this.reports;
-          this.totalRecords = this.reports.length;
+          // Add new data to cache
+          this.cachedData = [...this.cachedData, ...response.data];
+          
+          // Update total records from API response if available
+          if (response.totalRecords !== undefined) {
+            this.totalRecords = response.totalRecords;
+          } else {
+            // If API doesn't return total, estimate based on returned data
+            this.totalRecords = this.cachedData.length;
+            // If we got full batch, there might be more
+            if (response.data.length === this.itemsPerPage) {
+              this.totalRecords = this.cachedData.length + 1; // Indicate more data available
+            }
+          }
+
+          this.reports = this.cachedData;
+          this.filteredReports = this.cachedData;
           this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
-          this.currentPage = 1;
+          
         } else {
-          this.reports = [];
-          this.filteredReports = [];
-          this.totalRecords = 0;
-          this.totalPages = 0;
-          this.toastr.warning('No reports found', 'No Data');
+          if (resetCache) {
+            this.reports = [];
+            this.filteredReports = [];
+            this.cachedData = [];
+            this.totalRecords = 0;
+            this.totalPages = 0;
+            this.toastr.warning('No reports found', 'No Data');
+          }
         }
       },
       error: (error) => {
         this.loading = false;
         console.error('Error loading reports:', error);
-        // this.toastr.error('Failed to load reports', 'Error');
-        this.reports = [];
-        this.filteredReports = [];
-        this.totalRecords = 0;
-        this.totalPages = 0;
+        if (resetCache) {
+          this.reports = [];
+          this.filteredReports = [];
+          this.cachedData = [];
+          this.totalRecords = 0;
+          this.totalPages = 0;
+        }
       }
     });
   }
@@ -258,12 +303,24 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       }
     }
     
-    this.loadReports();
+    // Reset cache and reload
+    this.loadReports(true);
   }
 
   onPageChange(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      
+      // Check if we need to fetch more data from API
+      const requiredDataLength = page * this.pageSize;
+      const availableDataLength = this.cachedData.length;
+      
+      // If we need more data and haven't reached the end
+      if (requiredDataLength > availableDataLength && availableDataLength % this.itemsPerPage === 0) {
+        // Fetch next batch (next 500 records)
+        this.currentBatch++;
+        this.loadReports(false); // Don't reset cache
+      }
     }
   }
 
@@ -271,6 +328,10 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     return this.filteredReports.slice(startIndex, endIndex);
+  }
+
+  getRowNumber(index: number): number {
+    return ((this.currentPage - 1) * this.pageSize) + index + 1;
   }
 
   getStatusClass(status: string): string {
@@ -377,6 +438,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       (response: any) => {
         if (response && response.success && response.data) {
           this.departmentList = response.data;
+          console.log('Department list loaded:', this.departmentList);
           
           // Set IT department as default if CED user
           if (this.isCed) {
@@ -384,23 +446,34 @@ export class PastReportsComponent implements OnInit, OnDestroy {
               dept.description?.toUpperCase() === 'IT' || 
               dept.idValue?.toUpperCase() === 'IT'
             );
+            console.log('IT Department found:', itDepartment);
             if (itDepartment && itDepartment.idValue) {
               this.filters.department = itDepartment.idValue;
+              console.log('Department filter set to:', this.filters.department);
+            } else {
+              console.warn('IT department not found in list');
             }
           }
+          
+          // Load reports after department is set
+          this.loadReports();
         } else {
           console.warn('No Department records found or API call failed');
+          // Load reports anyway even if department list fails
+          this.loadReports();
         }
       },
       (error) => {
         console.error('Error fetching Department list:', error);
+        // Load reports anyway even if department list fails
+        this.loadReports();
       }
     );
   }
 
   applyFilters() {
-    // Call the API with current filter values
-    this.loadReports();
+    // Reset cache and call the API with current filter values
+    this.loadReports(true);
   }
 
 

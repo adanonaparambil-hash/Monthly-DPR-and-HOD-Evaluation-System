@@ -92,10 +92,11 @@
       <table class="reports-table">
         <thead>
           <tr>
+            <th>Sl No</th>
             <th>{{ getEmployeeNameLabel() }}</th>
             <th>Month</th>
             <th>Year</th>
-            <th *ngIf="isCed">Department</th>
+            <th>HOD Name</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -104,10 +105,11 @@
           <tr *ngFor="let report of getPaginatedReports(); let i = index" 
               class="table-row"
               [style.animation-delay]="(i * 0.1) + 's'">
+            <td class="row-number">{{ getRowNumber(i) }}</td>
             <td class="employee-name">{{ report.employeeName }}</td>
             <td>{{ getMonthName(report.month) }}</td>
             <td>{{ report.year }}</td>
-            <td *ngIf="isCed">{{ report.department }}</td>
+            <td>{{ report.hodName }}</td>
             <td>
               <span class="status-badge" [ngClass]="getStatusClass(report.status)">
                 {{ getStatusLabel(report.status) }}

@@ -132,7 +132,7 @@ export interface DPRMonthlyReviewListingRequest {
   row_num?:number;
   page_number?:number;
   items_per_page?:number;
-  department?:number;
+  department?:string;
 }
 
 
