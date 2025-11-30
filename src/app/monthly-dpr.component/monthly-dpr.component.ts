@@ -518,7 +518,11 @@ export class MonthlyDprComponent {
       }
     }
 
-    this.loadKPIs();
+    // Only load KPIs if not loading an existing DPR (dprid will be set when viewing past reports)
+    // When viewing past reports, KPIs will be loaded after DPR data is fetched with correct department
+    if (!this.dprid) {
+      this.loadKPIs();
+    }
 
     this.loadHodMasterList();
 
@@ -1087,7 +1091,8 @@ export class MonthlyDprComponent {
 
 
 
-  loadKPIs(): void {
+  loadKPIs(resetKpis: boolean = true): void {
+    console.log('Loading KPIs for department:', this.department, 'resetKpis:', resetKpis);
     this.api.GetActiveKPIs(this.department).subscribe(
       (response: any) => {
         if (response && response.success && response.data) {
@@ -1095,32 +1100,38 @@ export class MonthlyDprComponent {
 
           this.availableKPIs = response.data;
 
-          this.kpis = [
-            {
-              kpiMasterId: 0,
-              description: '',
-              kpiValue: '',
-              remarks: '',
-              kpiId: 0,
-              dprId: 0,
-              employeeId: this.empId,
-              placeholdervalue: '',
-            }
-          ];
+          // Only reset kpis array if explicitly requested (for new DPR creation)
+          // When loading existing DPR, we don't want to reset as DPR data will populate it
+          if (resetKpis) {
+            this.kpis = [
+              {
+                kpiMasterId: 0,
+                description: '',
+                kpiValue: '',
+                remarks: '',
+                kpiId: 0,
+                dprId: 0,
+                employeeId: this.empId,
+                placeholdervalue: '',
+              }
+            ];
+          }
         } else {
           this.availableKPIs = [];
-          this.kpis = [
-            {
-              kpiMasterId: 0,
-              description: '',
-              kpiValue: '',
-              remarks: '',
-              kpiId: 0,
-              dprId: 0,
-              employeeId: this.empId,
-              placeholdervalue: '',
-            }
-          ];
+          if (resetKpis) {
+            this.kpis = [
+              {
+                kpiMasterId: 0,
+                description: '',
+                kpiValue: '',
+                remarks: '',
+                kpiId: 0,
+                dprId: 0,
+                employeeId: this.empId,
+                placeholdervalue: '',
+              }
+            ];
+          }
         }
       },
       (error) => {
@@ -1269,6 +1280,7 @@ export class MonthlyDprComponent {
           this.department = dpr.department || '';
           this.EmailID = dpr.emailid || '';
 
+
           this.WorkedHours = dpr.workedHours ?? 0;
           this.achievements = dpr.achievements ?? '';
           this.challenges = dpr.challenges ?? '';
@@ -1286,7 +1298,9 @@ export class MonthlyDprComponent {
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
           this.TotalEstimatedhours = dpr.totalEstimatedhours ?? 0;
 
-          this.loadKPIs();
+          // Load KPIs with the correct department from DPR data
+          // Pass false to not reset kpis array - it will be populated from dpr.kpiList below
+          this.loadKPIs(false);
           
           // Set monthYear from DPR data if available
           if (dpr.month && dpr.year) {
@@ -1305,7 +1319,9 @@ export class MonthlyDprComponent {
           // Handle KPI data - if no existing data, initialize with one empty row
           if (dpr.kpiList?.length) {
             this.kpis = dpr.kpiList;
+            console.log('Loaded KPIs from DPR:', this.kpis);
           } else {
+            console.log('No KPIs in DPR, initializing empty row');
             this.kpis = [
               {
                 kpiMasterId: 0,
