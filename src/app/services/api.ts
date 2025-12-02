@@ -180,6 +180,14 @@ export class Api {
     return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDashBoardDetails/${empId}`);
   }
 
+  GetEmployeeDashBoardDetailsByMonthYear(empId: string, month: number, year: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDashBoardDetails/${empId}/${month}/${year}`);
+  }
+
+  GetHODDashBoardDetailsByMonthYear(empId: string, month: number, year: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetHODDashBoardDetails/${empId}/${month}/${year}`);
+  }
+
 
   GetHODDashBoardDetails(empId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DashBoard/GetHODDashBoardDetails/${empId}`);
@@ -198,6 +206,11 @@ export class Api {
 
   GetDepartmentList(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetDepartmentList`);
+  }
+
+  
+  GetTodaysBirthdaysAndQuotes(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetTodaysBirthdaysAndQuotes`);
   }
 
 

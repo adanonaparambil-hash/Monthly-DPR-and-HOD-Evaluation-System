@@ -1,5 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { trigger, state, style, transition, animate, query, stagger } from '@angular/animations';
 import { Chart, registerables } from 'chart.js';
@@ -20,7 +21,7 @@ interface Particle {
 
 @Component({
   selector: 'app-hod-dashboard',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './hod-dashboard.html',
   styleUrl: './hod-dashboard.css',
   animations: [
@@ -67,6 +68,7 @@ interface Particle {
 export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('summaryChart') summaryChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('performanceTrendChart') performanceTrendChart!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('dashboardHeader') dashboardHeader!: ElementRef;
 
   // Parallax and animation properties
   particles: Particle[] = [];
@@ -90,6 +92,49 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   summaryChartInstance: Chart | null = null;
   performanceTrendChartInstance: Chart | null = null;
 
+  // Month/Year selection
+  selectedMonth: number = 0;
+  selectedYear: number = 0;
+
+  months = [
+    { value: 1, name: 'January' },
+    { value: 2, name: 'February' },
+    { value: 3, name: 'March' },
+    { value: 4, name: 'April' },
+    { value: 5, name: 'May' },
+    { value: 6, name: 'June' },
+    { value: 7, name: 'July' },
+    { value: 8, name: 'August' },
+    { value: 9, name: 'September' },
+    { value: 10, name: 'October' },
+    { value: 11, name: 'November' },
+    { value: 12, name: 'December' }
+  ];
+
+  years = [2025, 2024, 2023, 2022];
+
+  // Quote of the Day
+  quoteOfTheDay = {
+    text: 'Leadership is not about being in charge. It is about taking care of those in your charge.',
+    author: 'Simon Sinek'
+  };
+
+  // All quotes from API
+  allQuotes: Array<{ text: string; author: string }> = [];
+  currentQuoteIndex: number = 0;
+  quoteInterval: any;
+
+  // Today's Birthdays
+  todaysBirthdays: Array<{
+    id: string;
+    name: string;
+    department: string;
+    profileImage: string;
+  }> = [];
+
+  currentBirthdayIndex: number = 0;
+  birthdayInterval: any;
+
   constructor(private api: Api, private router: Router) {
 
   }
@@ -98,6 +143,25 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.initializeParticles();
     this.setupParallaxEffects();
+    this.initializeDefaultMonthYear();
+    this.loadHODDashBoard();
+    this.loadQuoteOfTheDay();
+    this.loadTodaysBirthdays();
+  }
+
+  private initializeDefaultMonthYear() {
+    const currentDate = new Date();
+    // Set to previous month by default
+    const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+
+    this.selectedMonth = previousMonth.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+    this.selectedYear = previousMonth.getFullYear();
+
+    console.log(`Default selection: Month ${this.selectedMonth}, Year ${this.selectedYear}`);
+  }
+
+  onMonthYearChange() {
+    console.log(`Month/Year changed to: ${this.selectedMonth}/${this.selectedYear}`);
     this.loadHODDashBoard();
   }
 
@@ -202,6 +266,12 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill());
+    if (this.birthdayInterval) {
+      clearInterval(this.birthdayInterval);
+    }
+    if (this.quoteInterval) {
+      clearInterval(this.quoteInterval);
+    }
   }
 
   @HostListener('mousemove', ['$event'])
@@ -664,8 +734,13 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
 
 
   loadHODDashBoard(): void {
+    if (this.selectedMonth === 0 || this.selectedYear === 0) {
+      console.warn('Month or Year not selected');
+      return;
+    }
+
     this.isLoading = true;
-    this.api.GetHODDashBoardDetails(this.EmployeeID).subscribe({
+    this.api.GetHODDashBoardDetailsByMonthYear(this.EmployeeID, this.selectedMonth, this.selectedYear).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           console.log("Dashboard Data: ", JSON.stringify(response.data.hodPendingEvaluations, null, 2));
@@ -688,7 +763,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
           this.isLoading = false;
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error fetching dashboard list:', error);
         //this.setFallbackData();
         this.isLoading = false;
@@ -829,6 +904,127 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
         }, 300);
       }
     }, 100);
+  }
+
+  // Load Quote of the Day and Birthdays from API
+  private loadQuoteOfTheDay(): void {
+    this.api.GetTodaysBirthdaysAndQuotes().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          // Load all quotes
+          if (response.data.quotes && response.data.quotes.length > 0) {
+            this.allQuotes = response.data.quotes.map((q: any) => ({
+              text: q.quoteText,
+              author: q.author
+            }));
+            
+            // Display first quote
+            this.currentQuoteIndex = 0;
+            this.quoteOfTheDay = this.allQuotes[0];
+            
+            // Start rotating quotes if more than one
+            if (this.allQuotes.length > 1) {
+              this.startQuoteRotation();
+            }
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error fetching quotes:', error);
+        // Keep default quote on error
+      }
+    });
+  }
+
+  // Start Quote Rotation
+  private startQuoteRotation(): void {
+    this.quoteInterval = setInterval(() => {
+      this.nextQuote();
+    }, 10000); // Change quote every 10 seconds
+  }
+
+  // Navigate to next quote
+  private nextQuote(): void {
+    if (this.allQuotes.length > 0) {
+      this.currentQuoteIndex = (this.currentQuoteIndex + 1) % this.allQuotes.length;
+      this.quoteOfTheDay = this.allQuotes[this.currentQuoteIndex];
+    }
+  }
+
+  // Load Today's Birthdays from API
+  private loadTodaysBirthdays(): void {
+    this.api.GetTodaysBirthdaysAndQuotes().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          // Load birthdays
+          if (response.data.employees && response.data.employees.length > 0) {
+            this.todaysBirthdays = response.data.employees.map((emp: any, index: number) => {
+              // Handle base64 image - ensure it has proper data URI prefix
+              let profileImage = 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face&auto=format';
+              
+              if (emp.profileImageBase64) {
+                // Check if it already has data URI prefix
+                if (emp.profileImageBase64.startsWith('data:image')) {
+                  profileImage = emp.profileImageBase64;
+                } else {
+                  // Add data URI prefix
+                  profileImage = `data:image/jpeg;base64,${emp.profileImageBase64}`;
+                }
+              }
+              
+              return {
+                id: index.toString(),
+                name: emp.employeeName,
+                department: emp.department,
+                profileImage: profileImage
+              };
+            });
+            
+            // Start carousel after birthdays are loaded
+            console.log(`Loaded ${this.todaysBirthdays.length} birthdays`);
+            this.startBirthdayCarousel();
+          } else {
+            this.todaysBirthdays = [];
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error fetching birthdays:', error);
+        this.todaysBirthdays = [];
+      }
+    });
+  }
+
+  // Start Birthday Carousel Auto-slide
+  private startBirthdayCarousel(): void {
+    console.log(`Starting birthday carousel with ${this.todaysBirthdays.length} birthdays`);
+    if (this.todaysBirthdays.length > 1) {
+      // Clear any existing interval
+      if (this.birthdayInterval) {
+        clearInterval(this.birthdayInterval);
+      }
+      
+      this.birthdayInterval = setInterval(() => {
+        this.nextBirthday();
+        console.log(`Birthday carousel moved to index: ${this.currentBirthdayIndex}`);
+      }, 4000); // Change slide every 4 seconds
+    }
+  }
+
+  // Navigate to next birthday
+  nextBirthday(): void {
+    if (this.todaysBirthdays.length > 0) {
+      this.currentBirthdayIndex = (this.currentBirthdayIndex + 1) % this.todaysBirthdays.length;
+    }
+  }
+
+  // Navigate to specific birthday
+  goToBirthday(index: number): void {
+    this.currentBirthdayIndex = index;
+    if (this.birthdayInterval) {
+      clearInterval(this.birthdayInterval);
+      this.startBirthdayCarousel();
+    }
   }
 
 }

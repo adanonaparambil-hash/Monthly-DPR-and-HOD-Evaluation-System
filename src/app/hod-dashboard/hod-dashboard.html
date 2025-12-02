@@ -9,6 +9,124 @@
     </div>
   } @else {
 
+  <!-- Header Section with Month/Year Selector -->
+  <header class="dashboard-header" #dashboardHeader>
+    <div class="header-glow"></div>
+    <div class="header-content">
+      <!-- Top Row: Title, Quote, Birthday, Month/Year -->
+      <div class="header-main-row">
+        <!-- Dashboard Title -->
+        <div class="section-title">
+          <div class="title-icon">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div class="title-text">
+            <h2>HOD Performance Dashboard</h2>
+            <p>Monitor your department's performance</p>
+          </div>
+        </div>
+
+        <!-- Quote of the Day -->
+        <div class="info-card quote-card">
+          <div class="card-glow-effect"></div>
+          <div class="card-icon">
+            <i class="fas fa-quote-left"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Quote of the Day</h3>
+            <p class="quote-text">"{{ quoteOfTheDay.text }}"</p>
+            <span class="quote-author">— {{ quoteOfTheDay.author }}</span>
+          </div>
+          <div class="card-decoration">
+            <i class="fas fa-quote-right"></i>
+          </div>
+        </div>
+
+        <!-- Today's Birthdays -->
+        <div class="info-card birthday-card">
+          <div class="card-glow-effect"></div>
+          <div class="card-icon">
+            <i class="fas fa-birthday-cake"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Today's Birthdays 🎉</h3>
+            @if (todaysBirthdays.length > 0) {
+              <div class="birthday-carousel">
+                <div class="birthday-slider" [style.transform]="'translateX(-' + (currentBirthdayIndex * 100) + '%)'">
+                  @for (birthday of todaysBirthdays; track birthday.id) {
+                    <div class="birthday-slide">
+                      <div class="birthday-avatar">
+                        <img [src]="birthday.profileImage" [alt]="birthday.name">
+                        <div class="birthday-badge">
+                          <i class="fas fa-gift"></i>
+                        </div>
+                      </div>
+                      <div class="birthday-info">
+                        <h4 class="birthday-name">{{ birthday.name }}</h4>
+                        <p class="birthday-department">{{ birthday.department }}</p>
+                        <div class="birthday-wish">
+                          <i class="fas fa-heart"></i>
+                          <span>Happy Birthday!</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+                @if (todaysBirthdays.length > 1) {
+                  <div class="carousel-indicators">
+                    @for (birthday of todaysBirthdays; track birthday.id; let i = $index) {
+                      <button 
+                        class="indicator" 
+                        [class.active]="i === currentBirthdayIndex"
+                        (click)="goToBirthday(i)">
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="no-birthdays">
+                <i class="fas fa-calendar-check"></i>
+                <p>No birthdays today</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Month/Year Selector -->
+        <div class="date-selector">
+          <div class="selector-wrapper">
+            <div class="selector-group">
+              <label>
+                <i class="fas fa-calendar-alt"></i>
+                Month
+              </label>
+              <div class="select-container">
+                <select [(ngModel)]="selectedMonth" (change)="onMonthYearChange()" class="modern-select">
+                  <option *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
+                </select>
+                <i class="fas fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+            <div class="selector-divider"></div>
+            <div class="selector-group">
+              <label>
+                <i class="fas fa-calendar"></i>
+                Year
+              </label>
+              <div class="select-container">
+                <select [(ngModel)]="selectedYear" (change)="onMonthYearChange()" class="modern-select">
+                  <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+                </select>
+                <i class="fas fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
   <!-- Parallax Background -->
   <div class="parallax-bg">
     <div class="parallax-layer bg-layer-1"></div>

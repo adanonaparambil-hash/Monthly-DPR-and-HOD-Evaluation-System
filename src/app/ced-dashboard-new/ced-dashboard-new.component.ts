@@ -500,12 +500,37 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         }
     ];
 
+    // Quote of the Day
+    quoteOfTheDay = {
+        text: 'Excellence is not a destination; it is a continuous journey that never ends.',
+        author: 'Brian Tracy'
+    };
+
+    // All quotes from API
+    allQuotes: Array<{ text: string; author: string }> = [];
+    currentQuoteIndex: number = 0;
+    quoteInterval: any;
+
+    // Today's Birthdays
+    todaysBirthdays: Array<{
+        id: string;
+        name: string;
+        department: string;
+        profileImage: string;
+    }> = [];
+
+    currentBirthdayIndex: number = 0;
+    birthdayInterval: any;
+
     constructor(private apiService: Api, private router: Router) { }
 
     ngOnInit() {
         console.log('CED Dashboard initialized');
         this.initializeDefaultMonthYear();
         this.loadDashboardData();
+        this.loadQuoteOfTheDay();
+        this.loadTodaysBirthdays();
+        // Don't start carousel here - it will be started after birthdays are loaded
         
         // Debug: Log initial values
         console.log('Initial selectedMonth:', this.selectedMonth);
@@ -565,7 +590,12 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     ngOnDestroy() {
-        // Cleanup any subscriptions or intervals
+        if (this.birthdayInterval) {
+            clearInterval(this.birthdayInterval);
+        }
+        if (this.quoteInterval) {
+            clearInterval(this.quoteInterval);
+        }
     }
 
     onMonthYearChange() {
@@ -883,6 +913,127 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             case 2: return 'rank-silver';
             case 3: return 'rank-bronze';
             default: return 'rank-default';
+        }
+    }
+
+    // Load Quote of the Day and Birthdays from API
+    private loadQuoteOfTheDay(): void {
+        this.apiService.GetTodaysBirthdaysAndQuotes().subscribe({
+            next: (response: any) => {
+                if (response && response.success && response.data) {
+                    // Load all quotes
+                    if (response.data.quotes && response.data.quotes.length > 0) {
+                        this.allQuotes = response.data.quotes.map((q: any) => ({
+                            text: q.quoteText,
+                            author: q.author
+                        }));
+                        
+                        // Display first quote
+                        this.currentQuoteIndex = 0;
+                        this.quoteOfTheDay = this.allQuotes[0];
+                        
+                        // Start rotating quotes if more than one
+                        if (this.allQuotes.length > 1) {
+                            this.startQuoteRotation();
+                        }
+                    }
+                }
+            },
+            error: (error: any) => {
+                console.error('Error fetching quotes:', error);
+                // Keep default quote on error
+            }
+        });
+    }
+
+    // Start Quote Rotation
+    private startQuoteRotation(): void {
+        this.quoteInterval = setInterval(() => {
+            this.nextQuote();
+        }, 10000); // Change quote every 10 seconds
+    }
+
+    // Navigate to next quote
+    private nextQuote(): void {
+        if (this.allQuotes.length > 0) {
+            this.currentQuoteIndex = (this.currentQuoteIndex + 1) % this.allQuotes.length;
+            this.quoteOfTheDay = this.allQuotes[this.currentQuoteIndex];
+        }
+    }
+
+    // Load Today's Birthdays from API
+    private loadTodaysBirthdays(): void {
+        this.apiService.GetTodaysBirthdaysAndQuotes().subscribe({
+            next: (response: any) => {
+                if (response && response.success && response.data) {
+                    // Load birthdays
+                    if (response.data.employees && response.data.employees.length > 0) {
+                        this.todaysBirthdays = response.data.employees.map((emp: any, index: number) => {
+                            // Handle base64 image - ensure it has proper data URI prefix
+                            let profileImage = 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face&auto=format';
+                            
+                            if (emp.profileImageBase64) {
+                                // Check if it already has data URI prefix
+                                if (emp.profileImageBase64.startsWith('data:image')) {
+                                    profileImage = emp.profileImageBase64;
+                                } else {
+                                    // Add data URI prefix
+                                    profileImage = `data:image/jpeg;base64,${emp.profileImageBase64}`;
+                                }
+                            }
+                            
+                            return {
+                                id: index.toString(),
+                                name: emp.employeeName,
+                                department: emp.department,
+                                profileImage: profileImage
+                            };
+                        });
+                        
+                        // Start carousel after birthdays are loaded
+                        console.log(`Loaded ${this.todaysBirthdays.length} birthdays`);
+                        this.startBirthdayCarousel();
+                    } else {
+                        this.todaysBirthdays = [];
+                    }
+                }
+            },
+            error: (error: any) => {
+                console.error('Error fetching birthdays:', error);
+                this.todaysBirthdays = [];
+            }
+        });
+    }
+
+    // Start Birthday Carousel Auto-slide
+    private startBirthdayCarousel(): void {
+        console.log(`Starting birthday carousel with ${this.todaysBirthdays.length} birthdays`);
+        if (this.todaysBirthdays.length > 1) {
+            // Clear any existing interval
+            if (this.birthdayInterval) {
+                clearInterval(this.birthdayInterval);
+            }
+            
+            this.birthdayInterval = setInterval(() => {
+                this.nextBirthday();
+                console.log(`Birthday carousel moved to index: ${this.currentBirthdayIndex}`);
+            }, 4000); // Change slide every 4 seconds
+        }
+    }
+
+    // Navigate to next birthday
+    nextBirthday(): void {
+        if (this.todaysBirthdays.length > 0) {
+            this.currentBirthdayIndex = (this.currentBirthdayIndex + 1) % this.todaysBirthdays.length;
+        }
+    }
+
+    // Navigate to specific birthday
+    goToBirthday(index: number): void {
+        this.currentBirthdayIndex = index;
+        if (this.birthdayInterval) {
+            clearInterval(this.birthdayInterval);
+            this.startBirthdayCarousel();
         }
     }
 }
