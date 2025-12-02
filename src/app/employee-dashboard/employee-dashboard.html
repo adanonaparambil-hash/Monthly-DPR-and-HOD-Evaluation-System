@@ -1,10 +1,19 @@
 <div class="dashboard-container">
+  <!-- Loading Indicator -->
+  @if (isLoading) {
+  <div class="loading-container">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p>Loading dashboard data...</p>
+  </div>
+  }
   <!-- Parallax Background Elements -->
   <div class="parallax-bg">
     <div class="parallax-layer bg-layer-1"></div>
     <div class="parallax-layer bg-layer-2"></div>
     <div class="parallax-layer bg-layer-3"></div>
-    
+
     <!-- Floating Elements -->
     <div class="floating-elements">
       <div class="floating-shape shape-1"></div>
@@ -13,15 +22,13 @@
       <div class="floating-shape shape-4"></div>
       <div class="floating-shape shape-5"></div>
     </div>
-    
+
     <!-- Animated Particles -->
     <div class="particles-bg">
       @for (particle of particles; track particle.x) {
-        <div class="particle" 
-             [style.left.px]="particle.x" 
-             [style.top.px]="particle.y"
-             [style.animation-delay.s]="particle.delay">
-        </div>
+      <div class="particle" [style.left.px]="particle.x" [style.top.px]="particle.y"
+        [style.animation-delay.s]="particle.delay">
+      </div>
       }
     </div>
   </div>
@@ -68,44 +75,41 @@
           <div class="card-content">
             <h3 class="card-title">Today's Birthdays 🎉</h3>
             @if (todaysBirthdays.length > 0) {
-              <div class="birthday-carousel">
-                <div class="birthday-slider" [style.transform]="'translateX(-' + (currentBirthdayIndex * 100) + '%)'">
-                  @for (birthday of todaysBirthdays; track birthday.id) {
-                    <div class="birthday-slide">
-                      <div class="birthday-avatar">
-                        <img [src]="birthday.profileImage" [alt]="birthday.name">
-                        <div class="birthday-badge">
-                          <i class="fas fa-gift"></i>
-                        </div>
-                      </div>
-                      <div class="birthday-info">
-                        <h4 class="birthday-name">{{ birthday.name }}</h4>
-                        <p class="birthday-department">{{ birthday.department }}</p>
-                        <div class="birthday-wish">
-                          <i class="fas fa-heart"></i>
-                          <span>Happy Birthday!</span>
-                        </div>
-                      </div>
+            <div class="birthday-carousel">
+              <div class="birthday-slider" [style.transform]="'translateX(-' + (currentBirthdayIndex * 100) + '%)'">
+                @for (birthday of todaysBirthdays; track birthday.id) {
+                <div class="birthday-slide">
+                  <div class="birthday-avatar">
+                    <img [src]="birthday.profileImage" [alt]="birthday.name">
+                    <div class="birthday-badge">
+                      <i class="fas fa-gift"></i>
                     </div>
-                  }
-                </div>
-                @if (todaysBirthdays.length > 1) {
-                  <div class="carousel-indicators">
-                    @for (birthday of todaysBirthdays; track birthday.id; let i = $index) {
-                      <button 
-                        class="indicator" 
-                        [class.active]="i === currentBirthdayIndex"
-                        (click)="goToBirthday(i)">
-                      </button>
-                    }
                   </div>
+                  <div class="birthday-info">
+                    <h4 class="birthday-name">{{ birthday.name }}</h4>
+                    <p class="birthday-department">{{ birthday.department }}</p>
+                    <div class="birthday-wish">
+                      <i class="fas fa-heart"></i>
+                      <span>Happy Birthday!</span>
+                    </div>
+                  </div>
+                </div>
                 }
               </div>
-            } @else {
-              <div class="no-birthdays">
-                <i class="fas fa-calendar-check"></i>
-                <p>No birthdays today</p>
+              @if (todaysBirthdays.length > 1) {
+              <div class="carousel-indicators">
+                @for (birthday of todaysBirthdays; track birthday.id; let i = $index) {
+                <button class="indicator" [class.active]="i === currentBirthdayIndex" (click)="goToBirthday(i)">
+                </button>
+                }
               </div>
+              }
+            </div>
+            } @else {
+            <div class="no-birthdays">
+              <i class="fas fa-calendar-check"></i>
+              <p>No birthdays today</p>
+            </div>
             }
           </div>
         </div>
@@ -153,7 +157,8 @@
         <i class="fas fa-check-circle stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" [attr.data-target]="dashboardData.taskCompleted || 0">{{ dashboardData.taskCompleted || 0 }}</div>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.taskCompleted || 0">{{
+          dashboardData.taskCompleted || 0 }}</div>
         <div class="stat-subtitle">This month</div>
       </div>
     </div>
@@ -165,10 +170,13 @@
         <i class="fas fa-chart-line stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" [attr.data-target]="dashboardData.productivityScore || 0">{{ dashboardData.productivityScore || 0 }}</div>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.productivityScore || 0">{{
+          dashboardData.productivityScore || 0 }}</div>
         <div class="stat-subtitle">Out of 100</div>
-        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.productivityScorePercentage) >= 0" [class.negative]="getPercentageValue(dashboardData.productivityScorePercentage) < 0">
-          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.productivityScorePercentage) >= 0" [class.fa-arrow-down]="getPercentageValue(dashboardData.productivityScorePercentage) < 0"></i>
+        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.productivityScorePercentage) >= 0"
+          [class.negative]="getPercentageValue(dashboardData.productivityScorePercentage) < 0">
+          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.productivityScorePercentage) >= 0"
+            [class.fa-arrow-down]="getPercentageValue(dashboardData.productivityScorePercentage) < 0"></i>
           <span>{{ Math.abs(getPercentageValue(dashboardData.productivityScorePercentage)) }}%</span>
         </div>
       </div>
@@ -181,10 +189,13 @@
         <i class="fas fa-clock stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" [attr.data-target]="dashboardData.hoursThisMonth || 0">{{ dashboardData.hoursThisMonth || 0 }}</div>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.hoursThisMonth || 0">{{
+          dashboardData.hoursThisMonth || 0 }}</div>
         <div class="stat-subtitle">Hours logged</div>
-        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.hoursThisMonthPercentage) >= 0" [class.negative]="getPercentageValue(dashboardData.hoursThisMonthPercentage) < 0">
-          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.hoursThisMonthPercentage) >= 0" [class.fa-arrow-down]="getPercentageValue(dashboardData.hoursThisMonthPercentage) < 0"></i>
+        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.hoursThisMonthPercentage) >= 0"
+          [class.negative]="getPercentageValue(dashboardData.hoursThisMonthPercentage) < 0">
+          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.hoursThisMonthPercentage) >= 0"
+            [class.fa-arrow-down]="getPercentageValue(dashboardData.hoursThisMonthPercentage) < 0"></i>
           <span>{{ Math.abs(getPercentageValue(dashboardData.hoursThisMonthPercentage)) }}%</span>
         </div>
       </div>
@@ -197,10 +208,13 @@
         <i class="fas fa-star stat-icon"></i>
       </div>
       <div class="stat-content">
-        <div class="stat-number counter" [attr.data-target]="dashboardData.hodRating || 0">{{ dashboardData.hodRating || 0 }}</div>
+        <div class="stat-number counter" [attr.data-target]="dashboardData.hodRating || 0">{{ dashboardData.hodRating ||
+          0 }}</div>
         <div class="stat-subtitle">out of 100</div>
-        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.hodRatingPercentage) >= 0" [class.negative]="getPercentageValue(dashboardData.hodRatingPercentage) < 0">
-          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.hodRatingPercentage) >= 0" [class.fa-arrow-down]="getPercentageValue(dashboardData.hodRatingPercentage) < 0"></i>
+        <div class="stat-change" [class.positive]="getPercentageValue(dashboardData.hodRatingPercentage) >= 0"
+          [class.negative]="getPercentageValue(dashboardData.hodRatingPercentage) < 0">
+          <i class="fas" [class.fa-arrow-up]="getPercentageValue(dashboardData.hodRatingPercentage) >= 0"
+            [class.fa-arrow-down]="getPercentageValue(dashboardData.hodRatingPercentage) < 0"></i>
           <span>{{ Math.abs(getPercentageValue(dashboardData.hodRatingPercentage)) }}%</span>
         </div>
       </div>

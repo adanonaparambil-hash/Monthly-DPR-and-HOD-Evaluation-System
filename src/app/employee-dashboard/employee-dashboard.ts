@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate, query, stagger } from '@angular/animations';
@@ -64,6 +64,13 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
 
   // Dashboard data
   dashboardData: EmployeeDashboardData = {};
+  isLoading = false;
+
+  // Chart Instances
+  hoursChartInstance: Chart | null = null;
+  performanceChartInstance: Chart | null = null;
+  skillsChartInstance: Chart | null = null;
+  taskStatusChartInstance: Chart | null = null;
 
   // Make Math available in template
   Math = Math;
@@ -111,7 +118,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   currentBirthdayIndex: number = 0;
   birthdayInterval: any;
 
-  constructor(private api: Api) {
+  constructor(private api: Api, private cdr: ChangeDetectorRef) {
   }
 
   animationState = 'in';
@@ -141,18 +148,50 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
 
   onMonthYearChange() {
     console.log(`Month/Year changed to: ${this.selectedMonth}/${this.selectedYear}`);
+    
+    // Clear existing data before loading new data
+    this.dashboardData = {};
+    this.isLoading = true;
+    
+    // Force UI update to show cleared state
+    this.cdr.detectChanges();
+    
+    // Load new data
     this.loadEmployeeDashBoard();
   }
 
   ngAfterViewInit() {
     setTimeout(() => {
-      this.createHoursChart();
-      this.createPerformanceChart();
-      this.createSkillsChart();
-      this.createTaskStatusChart();
-      this.initializeGSAPAnimations();
-      this.setupScrollTriggers();
+      if (this.checkCanvasElements()) {
+        this.initializeCharts();
+        this.initializeGSAPAnimations();
+        this.setupScrollTriggers();
+      } else {
+        setTimeout(() => {
+          if (this.checkCanvasElements()) {
+            this.initializeCharts();
+            this.initializeGSAPAnimations();
+            this.setupScrollTriggers();
+          }
+        }, 500);
+      }
     }, 100);
+  }
+
+  private checkCanvasElements(): boolean {
+    return !!(
+      this.hoursChart?.nativeElement &&
+      this.performanceChart?.nativeElement &&
+      this.skillsChart?.nativeElement &&
+      this.taskStatusChart?.nativeElement
+    );
+  }
+
+  private initializeCharts() {
+    this.createHoursChart();
+    this.createPerformanceChart();
+    this.createSkillsChart();
+    this.createTaskStatusChart();
   }
 
   ngOnDestroy() {
@@ -163,6 +202,11 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
     if (this.quoteInterval) {
       clearInterval(this.quoteInterval);
     }
+    // Destroy charts
+    this.hoursChartInstance?.destroy();
+    this.performanceChartInstance?.destroy();
+    this.skillsChartInstance?.destroy();
+    this.taskStatusChartInstance?.destroy();
   }
 
   @HostListener('mousemove', ['$event'])
@@ -376,30 +420,35 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
 
 
   private createHoursChart() {
+    if (!this.hoursChart?.nativeElement) return;
     const ctx = this.hoursChart.nativeElement.getContext('2d');
-    if (ctx) {
-      // Clear existing chart
-      Chart.getChart(ctx)?.destroy();
+    if (!ctx) return;
 
-      // Prepare data from API response
-      const hoursData = this.dashboardData.hoursLoggedEstimateGraphs || [];
-      const labels: string[] = [];
-      const estimatedData: number[] = [];
-      const actualData: number[] = [];
+    // Prepare data from API response
+    const hoursData = this.dashboardData.hoursLoggedEstimateGraphs || [];
+    const labels: string[] = [];
+    const estimatedData: number[] = [];
+    const actualData: number[] = [];
 
-      if (hoursData.length > 0) {
-        hoursData.forEach(item => {
-          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const monthLabel = item.month ? monthNames[item.month - 1] : 'Unknown';
-          const yearLabel = item.year || new Date().getFullYear();
-          labels.push(`${monthLabel} ${yearLabel}`);
-          estimatedData.push(item.estimatedHours || 0);
-          actualData.push(item.actualHours || 0);
-        });
-      }
-      // If no data, show empty chart (no fallback values)
+    if (hoursData.length > 0) {
+      hoursData.forEach(item => {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthLabel = item.month ? monthNames[item.month - 1] : 'Unknown';
+        const yearLabel = item.year || new Date().getFullYear();
+        labels.push(`${monthLabel} ${yearLabel}`);
+        estimatedData.push(item.estimatedHours || 0);
+        actualData.push(item.actualHours || 0);
+      });
+    }
 
-      new Chart(ctx, {
+    if (this.hoursChartInstance) {
+      // Clear and update with new data (empty arrays if no data)
+      this.hoursChartInstance.data.labels = labels;
+      this.hoursChartInstance.data.datasets[0].data = estimatedData;
+      this.hoursChartInstance.data.datasets[1].data = actualData;
+      this.hoursChartInstance.update('none'); // Update without animation for immediate effect
+    } else {
+      this.hoursChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: labels,
@@ -448,35 +497,33 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private createPerformanceChart() {
+    if (!this.performanceChart?.nativeElement) return;
     const ctx = this.performanceChart.nativeElement.getContext('2d');
-    if (ctx) {
-      // Clear existing chart
-      Chart.getChart(ctx)?.destroy();
+    if (!ctx) return;
 
-      // Prepare data from API response
-      const performanceData = this.dashboardData.monthlyPerformanceTrend || [];
-      const labels: string[] = [];
-      const performanceScores: number[] = [];
+    // Prepare data from API response
+    const performanceData = this.dashboardData.monthlyPerformanceTrend || [];
+    const labels: string[] = [];
+    const performanceScores: number[] = [];
 
-      if (performanceData.length > 0) {
-        performanceData.forEach(item => {
-          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const monthLabel = item.performanceMonth ? monthNames[item.performanceMonth - 1] : 'Unknown';
-          const yearLabel = item.performanceYear || new Date().getFullYear();
-          labels.push(`${monthLabel} ${yearLabel}`);
-          performanceScores.push(item.performanceScore || 0);
-        });
-      } else {
-        // Fallback data if no API data
-        const currentDate = new Date();
+    if (performanceData.length > 0) {
+      performanceData.forEach(item => {
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const currentMonth = monthNames[currentDate.getMonth()];
-        const currentYear = currentDate.getFullYear();
-        labels.push(`${currentMonth} ${currentYear}`);
-        performanceScores.push(this.dashboardData.productivityScore || 0);
-      }
+        const monthLabel = item.performanceMonth ? monthNames[item.performanceMonth - 1] : 'Unknown';
+        const yearLabel = item.performanceYear || new Date().getFullYear();
+        labels.push(`${monthLabel} ${yearLabel}`);
+        performanceScores.push(item.performanceScore || 0);
+      });
+    }
+    // Remove fallback - show empty chart if no data
 
-      new Chart(ctx, {
+    if (this.performanceChartInstance) {
+      // Clear and update with new data (empty arrays if no data)
+      this.performanceChartInstance.data.labels = labels;
+      this.performanceChartInstance.data.datasets[0].data = performanceScores;
+      this.performanceChartInstance.update('none'); // Update without animation for immediate effect
+    } else {
+      this.performanceChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: labels,
@@ -522,22 +569,26 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private createSkillsChart() {
+    if (!this.skillsChart?.nativeElement) return;
     const ctx = this.skillsChart.nativeElement.getContext('2d');
-    if (ctx) {
-      // Clear existing chart
-      Chart.getChart(ctx)?.destroy();
+    if (!ctx) return;
 
-      // Use actual scores from API (0-100 scale) - no fallback values
-      const skillsData = [
-        this.dashboardData.qualityScore || 0,
-        this.dashboardData.timelinessScore || 0,
-        this.dashboardData.initiativeScore || 0,
-        this.dashboardData.communicationScore || 0,
-        this.dashboardData.teamWorkScore || 0,
-        this.dashboardData.problemSolvingScore || 0
-      ];
+    // Use actual scores from API (0-100 scale) - no fallback values
+    const skillsData = [
+      this.dashboardData.qualityScore || 0,
+      this.dashboardData.timelinessScore || 0,
+      this.dashboardData.initiativeScore || 0,
+      this.dashboardData.communicationScore || 0,
+      this.dashboardData.teamWorkScore || 0,
+      this.dashboardData.problemSolvingScore || 0
+    ];
 
-      new Chart(ctx, {
+    if (this.skillsChartInstance) {
+      // Clear and update with new data
+      this.skillsChartInstance.data.datasets[0].data = skillsData;
+      this.skillsChartInstance.update('none'); // Update without animation for immediate effect
+    } else {
+      this.skillsChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
           labels: ['Quality', 'Timeliness', 'Initiative', 'Communication', 'Teamwork', 'Problem Solving'],
@@ -591,17 +642,21 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private createTaskStatusChart() {
+    if (!this.taskStatusChart?.nativeElement) return;
     const ctx = this.taskStatusChart.nativeElement.getContext('2d');
-    if (ctx) {
-      // Clear existing chart
-      Chart.getChart(ctx)?.destroy();
+    if (!ctx) return;
 
-      // Use actual task counts from API - no fallback values
-      const completed = this.dashboardData.taskCompleted || 0;
-      const inProgress = this.dashboardData.progressTasks || 0;
-      const pending = this.dashboardData.pendingTasks || 0;
+    // Use actual task counts from API - no fallback values
+    const completed = this.dashboardData.taskCompleted || 0;
+    const inProgress = this.dashboardData.progressTasks || 0;
+    const pending = this.dashboardData.pendingTasks || 0;
 
-      new Chart(ctx, {
+    if (this.taskStatusChartInstance) {
+      // Clear and update with new data
+      this.taskStatusChartInstance.data.datasets[0].data = [completed, inProgress, pending];
+      this.taskStatusChartInstance.update('none'); // Update without animation for immediate effect
+    } else {
+      this.taskStatusChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: ['Completed', 'In Progress', 'Pending'],
@@ -648,22 +703,45 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.isLoading = true;
+    
+    // Clear existing dashboard data to prevent stale values
+    this.dashboardData = {};
+    this.cdr.detectChanges();
+    
     this.api.GetEmployeeDashBoardDetailsByMonthYear(this.EmployeeID, this.selectedMonth, this.selectedYear).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           console.log("loadEmployeeDashBoard: " + JSON.stringify(response, null, 2));
-          this.dashboardData = response.data;
+          
+          // Assign fresh data from API
+          this.dashboardData = { ...response.data };
+          this.isLoading = false;
+          this.cdr.detectChanges();
 
-          // Update charts with new data after a short delay to ensure DOM is ready
+          // Update charts and counters with new data after a short delay to ensure DOM is ready
           setTimeout(() => {
             this.updateChartsWithData();
+            this.updateCounters();
           }, 200);
         } else {
           console.warn('No dashboard records found or API call failed');
+          // Clear data to show empty state
+          this.dashboardData = {};
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.updateChartsWithData();
+            this.updateCounters();
+          }, 200);
         }
       },
       error: (error: any) => {
         console.error('Error fetching dashboard list:', error);
+        // Clear data on error
+        this.dashboardData = {};
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -674,6 +752,33 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
     this.createPerformanceChart();
     this.createSkillsChart();
     this.createTaskStatusChart();
+  }
+
+  private updateCounters() {
+    const counters = document.querySelectorAll('.counter');
+
+    counters.forEach((counter) => {
+      const target = parseFloat(counter.getAttribute('data-target') || '0');
+      const current = parseFloat(counter.innerHTML) || 0;
+
+      gsap.fromTo(counter,
+        { innerHTML: current },
+        {
+          innerHTML: target,
+          duration: 1.5,
+          ease: 'power2.out',
+          snap: { innerHTML: target < 10 ? 0.1 : 1 },
+          onUpdate: function () {
+            const value = parseFloat(this.targets()[0].innerHTML);
+            if (target < 10) {
+              counter.innerHTML = value.toFixed(1);
+            } else {
+              counter.innerHTML = Math.round(value).toString();
+            }
+          }
+        }
+      );
+    });
   }
 
   getTaskPercentage(type: 'completed' | 'progress' | 'pending'): number {
@@ -712,11 +817,11 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
               text: q.quoteText,
               author: q.author
             }));
-            
+
             // Display first quote
             this.currentQuoteIndex = 0;
             this.quoteOfTheDay = this.allQuotes[0];
-            
+
             // Start rotating quotes if more than one
             if (this.allQuotes.length > 1) {
               this.startQuoteRotation();
@@ -756,7 +861,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
             this.todaysBirthdays = response.data.employees.map((emp: any, index: number) => {
               // Handle base64 image - ensure it has proper data URI prefix
               let profileImage = 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face&auto=format';
-              
+
               if (emp.profileImageBase64) {
                 // Check if it already has data URI prefix
                 if (emp.profileImageBase64.startsWith('data:image')) {
@@ -766,7 +871,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
                   profileImage = `data:image/jpeg;base64,${emp.profileImageBase64}`;
                 }
               }
-              
+
               return {
                 id: index.toString(),
                 name: emp.employeeName,
@@ -774,7 +879,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
                 profileImage: profileImage
               };
             });
-            
+
             // Start carousel after birthdays are loaded
             console.log(`Loaded ${this.todaysBirthdays.length} birthdays`);
             this.startBirthdayCarousel();
@@ -798,7 +903,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
       if (this.birthdayInterval) {
         clearInterval(this.birthdayInterval);
       }
-      
+
       this.birthdayInterval = setInterval(() => {
         this.nextBirthday();
         console.log(`Birthday carousel moved to index: ${this.currentBirthdayIndex}`);
