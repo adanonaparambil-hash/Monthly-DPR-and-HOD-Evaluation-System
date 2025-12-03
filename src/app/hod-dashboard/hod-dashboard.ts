@@ -740,7 +740,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.isLoading = true;
-    this.api.GetHODDashBoardDetailsByMonthYear(this.EmployeeID, this.selectedMonth, this.selectedYear).subscribe({
+    this.api.GetHODDashBoardDetails(this.EmployeeID, this.selectedMonth, this.selectedYear).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           console.log("Dashboard Data: ", JSON.stringify(response.data.hodPendingEvaluations, null, 2));

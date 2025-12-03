@@ -494,18 +494,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     return descriptions[this.currentView]?.[this.currentStep] || '';
   }
 
-  logout() {
-    this.authService.logout('manual');
-  }
-
-  getToken(): string | null {
-    return this.authService.getToken();
-  }
-
-  isLoggedIn(): boolean {
-    return this.authService.isLoggedIn();
-  }
-
   ngOnDestroy() {
     this.clearOtpTimer();
   }

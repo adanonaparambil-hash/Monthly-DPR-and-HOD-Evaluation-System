@@ -709,7 +709,7 @@ export class EmployeeDashboard implements OnInit, AfterViewInit, OnDestroy {
     this.dashboardData = {};
     this.cdr.detectChanges();
     
-    this.api.GetEmployeeDashBoardDetailsByMonthYear(this.EmployeeID, this.selectedMonth, this.selectedYear).subscribe({
+    this.api.GetEmployeeDashBoardDetails(this.EmployeeID, this.selectedMonth, this.selectedYear).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           console.log("loadEmployeeDashBoard: " + JSON.stringify(response, null, 2));

@@ -1,14 +1,12 @@
 import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
-import { trigger, transition, style, animate, state } from '@angular/animations';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { filter } from 'rxjs/operators';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
-import { SessionService } from '../services/session.service';
 import { SessionMonitorComponent } from '../components/session-monitor.component';
-import { UrlCleanupUtil } from '../utils/url-cleanup.util';
 
 @Component({
   selector: 'app-layout',
@@ -81,25 +79,26 @@ export class layout implements OnInit, OnDestroy {
     private router: Router, 
     private themeService: Theme, 
     private api: Api,
-    private sessionService: SessionService
+    private authService: AuthService
   ) {
     // Subscribe to theme changes
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
     });
 
-    // Subscribe to session validity changes
-    this.sessionService.sessionValid$.subscribe(isValid => {
-      if (!isValid) {
-        console.log('Session invalid detected in layout - user will be redirected');
+    // Subscribe to session changes
+    this.authService.session$.subscribe(session => {
+      if (!session) {
+        console.log('Session cleared - user will be redirected');
       }
     });
   }
 
   ngOnInit() {
-    // Validate session on layout initialization
-    if (!this.sessionService.validateSession()) {
-      return; // Session service will handle redirect
+    // Check if user is logged in
+    if (!this.authService.isLoggedIn()) {
+      this.authService.logout('unauthorized');
+      return;
     }
 
     // Initialize sidebar state based on screen size
@@ -111,8 +110,8 @@ export class layout implements OnInit, OnDestroy {
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
       
-      // Validate session on each route change
-      this.sessionService.validateSession();
+      // Update activity on route change
+      this.authService.updateActivity();
     });
 
     // Theme is automatically applied by the service
@@ -271,15 +270,10 @@ export class layout implements OnInit, OnDestroy {
     
     this.isLoggingOut = true;
     
-    // Use session service for proper logout
-    this.sessionService.clearSession();
+    // Use auth service for proper logout
+    this.authService.logout('manual');
     
-    // Navigate to login without query parameters
-    this.router.navigate(['/login'], { 
-      replaceUrl: true // Replace current history entry
-    }).finally(() => {
-      this.isLoggingOut = false;
-    });
+    this.isLoggingOut = false;
   }
 
   // Method to add new notifications (for testing or real-time updates)
@@ -478,7 +472,7 @@ export class layout implements OnInit, OnDestroy {
   }
 
   // TrackBy function for better performance with ngFor
-  trackNotificationById(index: number, notification: any): number {
+  trackNotificationById(_index: number, notification: any): number {
     return notification.id;
   }
 

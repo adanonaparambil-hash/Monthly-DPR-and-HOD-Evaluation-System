@@ -1270,7 +1270,8 @@ html {
 }
 
 /* Dark mode adjustments */
-[data-theme="dark"] .dashboard-header {
+[data-theme="dark"] .dashboard-header,
+:host-context(.dark-theme) .dashboard-header {
   background: linear-gradient(135deg, 
     rgba(191, 169, 70, 0.08) 0%, 
     rgba(72, 94, 43, 0.05) 100%);
@@ -1281,29 +1282,65 @@ html {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .selector-wrapper {
-  background: rgba(40, 40, 40, 0.6);
-  border-color: rgba(191, 169, 70, 0.2);
-}
-
-[data-theme="dark"] .modern-select {
-  background: rgba(50, 50, 50, 0.8);
+[data-theme="dark"] .selector-wrapper,
+:host-context(.dark-theme) .selector-wrapper {
+  background: rgba(40, 40, 40, 0.8);
   border-color: rgba(191, 169, 70, 0.25);
-  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .modern-select:hover {
-  background: rgba(60, 60, 60, 0.9);
+[data-theme="dark"] .modern-select,
+:host-context(.dark-theme) .modern-select {
+  background: rgba(30, 30, 30, 0.95);
+  border-color: rgba(191, 169, 70, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .modern-select:hover,
+:host-context(.dark-theme) .modern-select:hover {
+  background: rgba(40, 40, 40, 1);
   border-color: var(--primary-color);
 }
 
-[data-theme="dark"] .modern-select:focus {
-  background: rgba(60, 60, 60, 1);
+[data-theme="dark"] .modern-select:focus,
+:host-context(.dark-theme) .modern-select:focus {
+  background: rgba(40, 40, 40, 1);
+  border-color: var(--primary-color);
 }
 
-[data-theme="dark"] .title-icon {
-  background: linear-gradient(135deg, rgba(191, 169, 70, 0.15), rgba(72, 94, 43, 0.1));
-  border-color: rgba(191, 169, 70, 0.25);
+[data-theme="dark"] .modern-select option,
+:host-context(.dark-theme) .modern-select option {
+  background: rgba(30, 30, 30, 1);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .selector-group label,
+:host-context(.dark-theme) .selector-group label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .select-arrow,
+:host-context(.dark-theme) .select-arrow {
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .title-icon,
+:host-context(.dark-theme) .title-icon {
+  background: linear-gradient(135deg, rgba(191, 169, 70, 0.2), rgba(72, 94, 43, 0.15));
+  border-color: rgba(191, 169, 70, 0.3);
+}
+
+[data-theme="dark"] .title-text h2,
+:host-context(.dark-theme) .title-text h2 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, var(--primary-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .title-text p,
+:host-context(.dark-theme) .title-text p {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Responsive Design */
@@ -1881,18 +1918,8 @@ html {
 }
 
 /* Dark Mode Adjustments */
-[data-theme="dark"] .dashboard-header {
-  background: linear-gradient(135deg, 
-    rgba(191, 169, 70, 0.08) 0%, 
-    rgba(72, 94, 43, 0.05) 100%);
-  border-color: rgba(191, 169, 70, 0.25);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(191, 169, 70, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-[data-theme="dark"] .info-card {
+[data-theme="dark"] .info-card,
+:host-context(.dark-theme) .info-card {
   background: linear-gradient(135deg, 
     rgba(40, 40, 40, 0.95) 0%, 
     rgba(30, 30, 30, 0.9) 100%);
@@ -1900,69 +1927,78 @@ html {
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="dark"] .info-card:hover {
+[data-theme="dark"] .info-card:hover,
+:host-context(.dark-theme) .info-card:hover {
   border-color: rgba(191, 169, 70, 0.4);
   box-shadow: 0 6px 20px rgba(191, 169, 70, 0.2);
 }
 
-[data-theme="dark"] .card-icon {
+[data-theme="dark"] .card-icon,
+:host-context(.dark-theme) .card-icon {
   background: linear-gradient(135deg, rgba(191, 169, 70, 0.25), rgba(72, 94, 43, 0.2));
   border-color: rgba(191, 169, 70, 0.3);
 }
 
-[data-theme="dark"] .card-title {
+[data-theme="dark"] .card-title,
+:host-context(.dark-theme) .card-title {
   color: rgba(255, 255, 255, 0.7);
 }
 
-[data-theme="dark"] .quote-text {
+[data-theme="dark"] .quote-text,
+:host-context(.dark-theme) .quote-text {
   color: rgba(255, 255, 255, 0.9);
 }
 
-[data-theme="dark"] .quote-author {
+[data-theme="dark"] .quote-author,
+:host-context(.dark-theme) .quote-author {
   color: var(--primary-color);
 }
 
-[data-theme="dark"] .card-decoration {
+[data-theme="dark"] .card-decoration,
+:host-context(.dark-theme) .card-decoration {
   color: rgba(191, 169, 70, 0.15);
 }
 
-[data-theme="dark"] .birthday-carousel {
+[data-theme="dark"] .birthday-carousel,
+:host-context(.dark-theme) .birthday-carousel {
   background: rgba(50, 50, 50, 0.6);
   border: 1px solid rgba(191, 169, 70, 0.15);
 }
 
-[data-theme="dark"] .birthday-avatar img {
+[data-theme="dark"] .birthday-avatar img,
+:host-context(.dark-theme) .birthday-avatar img {
   border-color: var(--primary-color);
 }
 
-[data-theme="dark"] .birthday-name {
+[data-theme="dark"] .birthday-name,
+:host-context(.dark-theme) .birthday-name {
   color: rgba(255, 255, 255, 0.95);
 }
 
-[data-theme="dark"] .birthday-department {
+[data-theme="dark"] .birthday-department,
+:host-context(.dark-theme) .birthday-department {
   color: rgba(255, 255, 255, 0.6);
 }
 
-[data-theme="dark"] .birthday-wish {
+[data-theme="dark"] .birthday-wish,
+:host-context(.dark-theme) .birthday-wish {
   background: linear-gradient(135deg, rgba(255, 107, 107, 0.25), rgba(238, 90, 111, 0.2));
   color: #ff8a9a;
 }
 
-[data-theme="dark"] .no-birthdays {
+[data-theme="dark"] .no-birthdays,
+:host-context(.dark-theme) .no-birthdays {
   color: rgba(255, 255, 255, 0.5);
 }
 
-[data-theme="dark"] .indicator {
+[data-theme="dark"] .indicator,
+:host-context(.dark-theme) .indicator {
   background: rgba(191, 169, 70, 0.4);
 }
 
-[data-theme="dark"] .indicator.active {
+[data-theme="dark"] .indicator.active,
+:host-context(.dark-theme) .indicator.active {
   background: var(--primary-color);
-}
-
-[data-theme="dark"] .title-icon {
-  background: linear-gradient(135deg, rgba(191, 169, 70, 0.2), rgba(72, 94, 43, 0.15));
-  border-color: rgba(191, 169, 70, 0.3);
 }
 
 @media (max-width: 480px) {

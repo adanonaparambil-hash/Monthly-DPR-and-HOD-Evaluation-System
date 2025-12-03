@@ -11,6 +11,7 @@ import { CedDashboardNewComponent } from './ced-dashboard-new/ced-dashboard-new.
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
 import { EmployeeExitFormComponent } from './employee-exit-form/employee-exit-form.component';
 import { layout } from './layout/layout';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -22,6 +23,7 @@ export const routes: Routes = [
   {
     path: '',
     component: layout,
+    canActivate: [AuthGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'employee-dashboard', component: EmployeeDashboard },

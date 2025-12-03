@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
-import { SessionService } from '../services/session.service';
+import { AuthService } from '../services/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +8,7 @@ import { SessionService } from '../services/session.service';
 export class AuthGuard implements CanActivate {
 
   constructor(
-    private sessionService: SessionService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -17,28 +17,16 @@ export class AuthGuard implements CanActivate {
     state: RouterStateSnapshot
   ): boolean {
     
-    // Check if session is valid
-    if (this.sessionService.validateSession()) {
-      // Check if session is expired based on time
-      if (this.sessionService.isSessionExpired()) {
-        console.log('Session expired based on time - redirecting to login');
-        this.sessionService.handleSessionExpiry();
-        return false;
-      }
-      
-      // Refresh session on successful validation
-      this.sessionService.refreshSession();
+    // Check if user is logged in
+    if (this.authService.isLoggedIn()) {
+      // Update activity timestamp
+      this.authService.updateActivity();
       return true;
     }
 
-    // Session is invalid - redirect to login
-    console.log('Invalid session - redirecting to login');
-    this.router.navigate(['/login'], {
-      queryParams: { 
-        sessionExpired: 'true',
-        returnUrl: state.url 
-      }
-    });
+    // Not logged in - redirect to login
+    console.log('Unauthorized access attempt - redirecting to login');
+    this.authService.logout('unauthorized');
     return false;
   }
 }
