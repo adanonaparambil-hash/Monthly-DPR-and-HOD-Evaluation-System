@@ -4487,7 +4487,9 @@ mprehensive Dark Mode Support */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  min-height: 105px;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
 }
 
 .info-card:hover {
@@ -4759,16 +4761,24 @@ mprehensive Dark Mode Support */
   font-size: 12px;
 }
 
+/* Date Selector Container - Match Employee & HOD Dashboards */
+.header-main-row .date-selector {
+  height: 140px;
+  display: flex;
+  align-items: center;
+}
+
 .selector-wrapper {
   display: flex;
   gap: 0;
-  align-items: flex-end;
+  align-items: center;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 12px;
   padding: 16px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(191, 169, 70, 0.15);
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .selector-divider {
@@ -5130,28 +5140,7 @@ mprehensive Dark Mode Support */
 
 
 /* Info Cards in Header Row - Matching Employee & HOD Dashboards */
-.info-card {
-  position: relative;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.9) 0%, 
-    rgba(255, 255, 255, 0.7) 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 10px;
-  padding: 12px 14px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(191, 169, 70, 0.15);
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  min-height: 105px;
-}
-
-.info-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(191, 169, 70, 0.2);
-  border-color: rgba(191, 169, 70, 0.3);
-}
+/* Removed duplicate - using the definition above */
 
 .card-glow-effect {
   position: absolute;

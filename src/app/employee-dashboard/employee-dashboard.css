@@ -1149,6 +1149,9 @@ html {
 /* Date Selector */
 .date-selector {
   animation: fadeInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 140px;
+  display: flex;
+  align-items: center;
 }
 
 @keyframes fadeInRight {
@@ -1165,13 +1168,14 @@ html {
 .selector-wrapper {
   display: flex;
   gap: 0;
-  align-items: flex-end;
+  align-items: center;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 12px;
   padding: 16px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(191, 169, 70, 0.15);
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .selector-wrapper:hover {
@@ -1383,7 +1387,13 @@ html {
   }
 
   .info-card {
-    min-height: 95px;
+    height: 130px;
+    min-height: 130px;
+    max-height: 130px;
+  }
+  
+  .date-selector {
+    height: 130px;
   }
 
   .card-icon {
@@ -1429,8 +1439,14 @@ html {
 
   .info-card {
     padding: 10px 12px;
-    min-height: 90px;
+    height: 120px;
+    min-height: 120px;
+    max-height: 120px;
     border-radius: 8px;
+  }
+  
+  .date-selector {
+    height: 120px;
   }
 
   .card-icon {
@@ -1572,7 +1588,13 @@ html {
 
   .info-card {
     padding: 8px 10px;
-    min-height: 80px;
+    height: 110px;
+    min-height: 110px;
+    max-height: 110px;
+  }
+  
+  .date-selector {
+    height: 110px;
   }
 
   .card-icon {
@@ -1645,7 +1667,9 @@ html {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  min-height: 105px;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
 }
 
 .info-card:hover {

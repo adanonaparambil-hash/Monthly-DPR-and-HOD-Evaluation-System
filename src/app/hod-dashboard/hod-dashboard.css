@@ -3212,6 +3212,9 @@ dditional Top Performer Card Enhancements */
 /* Date Selector */
 .date-selector {
   animation: fadeInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 140px;
+  display: flex;
+  align-items: center;
 }
 
 @keyframes fadeInRight {
@@ -3228,13 +3231,14 @@ dditional Top Performer Card Enhancements */
 .selector-wrapper {
   display: flex;
   gap: 0;
-  align-items: flex-end;
+  align-items: center;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 12px;
   padding: 16px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(191, 169, 70, 0.15);
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .selector-wrapper:hover {
@@ -3504,7 +3508,9 @@ dditional Top Performer Card Enhancements */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  min-height: 105px;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
 }
 
 .info-card:hover {
