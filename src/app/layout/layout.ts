@@ -101,6 +101,9 @@ export class layout implements OnInit, OnDestroy {
       return;
     }
 
+    // Initialize current route immediately
+    this.currentRoute = this.router.url;
+
     // Initialize sidebar state based on screen size
     this.initializeSidebarState();
 
@@ -217,9 +220,16 @@ export class layout implements OnInit, OnDestroy {
     }
   }
 
+  isDashboardRoute(): boolean {
+    return this.currentRoute === '/employee-dashboard' || 
+           this.currentRoute === '/hod-dashboard' || 
+           this.currentRoute === '/ced-dashboard' ||
+           this.currentRoute === '/ced-dashboard-new';
+  }
+
   getPageSubtitle(): string {
     if (this.currentRoute === '/ced-dashboard' || this.currentRoute === '/ced-dashboard-new') {
-      return 'Al Adrak Corporate Performance Management System';
+      return '';
     }
     
     // Add subtitle for Past Reports based on role

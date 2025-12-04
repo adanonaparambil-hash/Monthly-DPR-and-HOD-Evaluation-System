@@ -70,6 +70,7 @@ interface ApiEmployee {
     styleUrls: ['./ced-dashboard-new.component.css']
 })
 export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestroy {
+    currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     selectedMonth: number = 0;
     selectedYear: number = 0;
     currentView: 'departments' | 'employees' = 'departments';
