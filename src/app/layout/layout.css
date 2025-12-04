@@ -329,6 +329,7 @@
   gap: 12px;
   padding: 8px 16px;
   border-radius: 12px;
+  background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   flex-shrink: 0;
@@ -346,10 +347,12 @@
 }
 
 .logo-image {
-  width: 80px;
-  height: 32px;
+  width: 120px;
+  height: 48px;
   object-fit: contain;
   border-radius: 6px;
+  background: white;
+  padding: 4px;
 }
 
 .company-name {
