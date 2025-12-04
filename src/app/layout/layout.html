@@ -4,7 +4,7 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
-      <i class="fas fa-chart-bar"></i>
+      <img src="assets/images/logo.png" alt="Company Logo" class="sidebar-logo-image">
       <span>MPR Portal</span>
     </div>
 
@@ -66,10 +66,6 @@
         <button class="menu-toggle" (click)="toggleSidebar()">
           <i class="fas fa-bars"></i>
         </button>
-        <div class="company-logo">
-          <img src="assets/images/logo.png" alt="Company Logo" class="logo-image">
-         <!-- <span class="company-name">Al Adrak DPR Portal</span> -->
-        </div>
         <div class="page-title-section">
           <h1 class="page-title">{{ getPageTitle() }}</h1>
           <p class="page-subtitle" *ngIf="getPageSubtitle()">{{ getPageSubtitle() }}</p>
