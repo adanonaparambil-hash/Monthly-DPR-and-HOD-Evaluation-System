@@ -1,13 +1,5 @@
 <div class="past-reports-container" [@fadeInUp]="animationState">
 
-  <!-- Page Header -->
-  <div class="header-section">
-    <h1>{{ getRoleBasedTitle() }}</h1>
-    <p *ngIf="isEmployee">View your monthly performance reports</p>
-    <p *ngIf="isHod">View and manage your team's performance reports</p>
-    <p *ngIf="isCed">View all employee performance reports across the organization</p>
-  </div>
-
   <!-- Filter Section -->
   <div class="filter-section" [@slideIn]>
     <div class="filter-row">

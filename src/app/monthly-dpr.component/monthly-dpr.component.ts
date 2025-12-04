@@ -495,7 +495,11 @@ export class MonthlyDprComponent {
     this.isReadOnlyMode = (this.route.snapshot.queryParamMap.get('readonly') || '') === '1';
     this.navigationSource = this.route.snapshot.queryParamMap.get('from') || '';
 
-    // Don't set monthYear here - it will be set from DPR data or when creating new DPR
+    // Set a default title immediately (will be updated when data loads)
+    if (!sessionStorage.getItem('currentMPRMonthYear')) {
+      sessionStorage.setItem('currentMPRMonthYear', 'Loading...');
+      window.dispatchEvent(new CustomEvent('mprMonthYearUpdated'));
+    }
 
     // this.loadKPIs();
 
@@ -1087,6 +1091,18 @@ export class MonthlyDprComponent {
 
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
     this.monthYear = currentDate.toLocaleDateString('en-US', options);
+    
+    // Update header immediately
+    this.updateHeaderTitle();
+  }
+
+  // Helper method to update the header title
+  private updateHeaderTitle(): void {
+    if (this.monthYear) {
+      sessionStorage.setItem('currentMPRMonthYear', this.monthYear);
+      // Trigger a custom event to notify the layout component
+      window.dispatchEvent(new CustomEvent('mprMonthYearUpdated', { detail: this.monthYear }));
+    }
   }
 
 
@@ -1309,6 +1325,9 @@ export class MonthlyDprComponent {
               'July', 'August', 'September', 'October', 'November', 'December'
             ];
             this.monthYear = `${monthNames[dpr.month - 1]} ${dpr.year}`;
+            
+            // Update header immediately
+            this.updateHeaderTitle();
           }
 
           // Check if HOD is viewing their own DPR

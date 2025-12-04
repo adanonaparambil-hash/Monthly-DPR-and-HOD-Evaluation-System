@@ -112,12 +112,33 @@ export class layout implements OnInit, OnDestroy {
       
       // Update activity on route change
       this.authService.updateActivity();
+      
+      // Force update of page title for MPR routes
+      if (this.currentRoute.includes('/monthly-dpr')) {
+        // Small delay to ensure MPR component has set session storage
+        setTimeout(() => {
+          this.currentRoute = event.url;
+        }, 100);
+      }
     });
+
+    // Listen for MPR month/year updates from the MPR component
+    window.addEventListener('mprMonthYearUpdated', this.handleMPRMonthYearUpdate.bind(this));
 
     // Theme is automatically applied by the service
 
     // Start polling for notification count every 10 seconds (lightweight)
     this.startNotificationCountPolling();
+  }
+
+  // Handler for MPR month/year updates
+  private handleMPRMonthYearUpdate(event: any): void {
+    // The title will automatically update on next change detection cycle
+    // We can force it by triggering a micro-task
+    Promise.resolve().then(() => {
+      // This will trigger change detection
+      this.currentRoute = this.router.url;
+    });
   }
 
   private initializeSidebarState() {
@@ -142,9 +163,27 @@ export class layout implements OnInit, OnDestroy {
     if (this.notificationCountInterval) {
       clearInterval(this.notificationCountInterval);
     }
+    
+    // Clean up event listener
+    window.removeEventListener('mprMonthYearUpdated', this.handleMPRMonthYearUpdate.bind(this));
   }
 
   getPageTitle(): string {
+    // Handle MPR routes with dynamic IDs (e.g., /monthly-dpr/123)
+    if (this.currentRoute.includes('/monthly-dpr')) {
+      return this.getMPRTitle();
+    }
+
+    // Handle Past Reports with role-based title
+    if (this.currentRoute.includes('/past-reports')) {
+      return this.getPastReportsTitle();
+    }
+
+    // Handle emergency exit form with query parameters
+    if (this.currentRoute.includes('/emergency-exit-form')) {
+      return 'Exit Form';
+    }
+
     const routeTitles: { [key: string]: string } = {
       '/dashboard': 'Dashboard',
       '/employee-dashboard': 'Employee Analytics',
@@ -152,24 +191,48 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard': 'CED Performance Dashboard',
       '/ced-dashboard-old': 'CED Dashboard (Old)',
       '/ced-dashboard-new': 'CED Performance Dashboard',
-      '/monthly-dpr': 'MPR Entry',
-      '/past-reports': 'Past Reports',
-      '/profile': 'My Profile',
-      '/emergency-exit-form': 'Exit Form'
+      '/profile': 'My Profile'
     };
 
-    // Handle emergency exit form with query parameters
-    if (this.currentRoute.includes('/emergency-exit-form')) {
-      return 'Exit Form';
-    }
-
     return routeTitles[this.currentRoute] || 'Dashboard';
+  }
+
+  getMPRTitle(): string {
+    // Get month and year from session storage if available
+    const monthYear = sessionStorage.getItem('currentMPRMonthYear');
+    if (monthYear) {
+      return `Monthly Performance Review - ${monthYear}`;
+    }
+    return 'Monthly Performance Review';
+  }
+
+  getPastReportsTitle(): string {
+    // Get role-based title for Past Reports
+    const code = (this.userSession?.isHOD || '').toString().toUpperCase();
+    switch (code) {
+      case 'E': return 'My Reports';
+      case 'H': return 'Team Reports';
+      case 'C': return 'All Reports';
+      default: return 'Past Reports';
+    }
   }
 
   getPageSubtitle(): string {
     if (this.currentRoute === '/ced-dashboard' || this.currentRoute === '/ced-dashboard-new') {
       return 'Al Adrak Corporate Performance Management System';
     }
+    
+    // Add subtitle for Past Reports based on role
+    if (this.currentRoute.includes('/past-reports')) {
+      const code = (this.userSession?.isHOD || '').toString().toUpperCase();
+      switch (code) {
+        case 'E': return 'View your monthly performance reports';
+        case 'H': return 'View and manage your team\'s performance reports';
+        case 'C': return 'View all employee performance reports across the organization';
+        default: return '';
+      }
+    }
+    
     return '';
   }
 
