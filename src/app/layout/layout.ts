@@ -39,6 +39,8 @@ export class layout implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   currentRoute = '';
   isExitFormMenuOpen = false;
+  isMPRMenuOpen = false;
+  isApprovalsMenuOpen = false;
 
   notificationCount = 0;
   hasNewNotifications = false;
@@ -103,6 +105,9 @@ export class layout implements OnInit, OnDestroy {
 
     // Initialize current route immediately
     this.currentRoute = this.router.url;
+    
+    // Update menu states based on initial route
+    this.updateMenuStatesBasedOnRoute();
 
     // Initialize sidebar state based on screen size
     this.initializeSidebarState();
@@ -112,6 +117,9 @@ export class layout implements OnInit, OnDestroy {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
+      
+      // Auto-open relevant menus based on current route
+      this.updateMenuStatesBasedOnRoute();
       
       // Update activity on route change
       this.authService.updateActivity();
@@ -331,6 +339,41 @@ export class layout implements OnInit, OnDestroy {
 
   isExitFormRouteActive(): boolean {
     return this.currentRoute.includes('/emergency-exit-form');
+  }
+
+  toggleMPRMenu() {
+    this.isMPRMenuOpen = !this.isMPRMenuOpen;
+  }
+
+  isMPRRouteActive(): boolean {
+    return this.currentRoute.includes('/monthly-dpr') || this.currentRoute.includes('/past-reports');
+  }
+
+  toggleApprovalsMenu() {
+    this.isApprovalsMenuOpen = !this.isApprovalsMenuOpen;
+  }
+
+  isApprovalsRouteActive(): boolean {
+    // For future approval routes
+    return this.currentRoute.includes('/approvals');
+  }
+
+  // Update menu states based on current route
+  updateMenuStatesBasedOnRoute(): void {
+    // Auto-open MPR menu if on MPR-related routes
+    if (this.isMPRRouteActive()) {
+      this.isMPRMenuOpen = true;
+    }
+    
+    // Auto-open Exit Form menu if on exit form routes
+    if (this.isExitFormRouteActive()) {
+      this.isExitFormMenuOpen = true;
+    }
+    
+    // Auto-open Approvals menu if on approval routes (future)
+    if (this.isApprovalsRouteActive()) {
+      this.isApprovalsMenuOpen = true;
+    }
   }
 
   isLoggingOut = false;

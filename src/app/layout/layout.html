@@ -9,9 +9,7 @@
     </div>
 
     <nav class="menu">
-      <!-- <a routerLink="/dashboard" routerLinkActive="active">
-        <i class="fas fa-tachometer-alt"></i> Dashboard
-      </a> -->
+      <!-- Dashboard Menu - Keep as is -->
       <a *ngIf="isEmployee" routerLink="/employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-chart-pie"></i> Employee Analytics
       </a>
@@ -21,12 +19,47 @@
       <a *ngIf="isCed" routerLink="/ced-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-chart-line"></i> Dashboard
       </a>
-      <a routerLink="/monthly-dpr" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-file-alt"></i> MPR Entry
-      </a>
-      <a routerLink="/past-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-history"></i> Past Reports
-      </a>
+
+      <!-- MPR Menu with Sub-items -->
+      <div class="menu-item-with-submenu">
+        <a class="parent-menu" (click)="toggleMPRMenu()" [class.active]="isMPRRouteActive()">
+          <div class="menu-content">
+            <i class="fas fa-file-alt"></i>
+            <span>MPR</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isMPRMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isMPRMenuOpen" [@slideDown]>
+          <a routerLink="/monthly-dpr" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-edit"></i>
+            <span>MPR Entry</span>
+          </a>
+          <a routerLink="/past-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-history"></i>
+            <span>MPR Past Reports</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Approvals Menu (Empty for now, for future use) -->
+      <div class="menu-item-with-submenu">
+        <a class="parent-menu" (click)="toggleApprovalsMenu()" [class.active]="isApprovalsRouteActive()">
+          <div class="menu-content">
+            <i class="fas fa-check-circle"></i>
+            <span>Approvals</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isApprovalsMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isApprovalsMenuOpen" [@slideDown]>
+          <!-- Future approval menu items will go here -->
+          <div class="submenu-placeholder">
+            <i class="fas fa-info-circle"></i>
+            <span>Coming Soon...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exit Form Menu - Keep as is -->
       <div class="menu-item-with-submenu">
         <a class="parent-menu" (click)="toggleExitFormMenu()" [class.active]="isExitFormRouteActive()">
           <div class="menu-content">
@@ -42,10 +75,12 @@
           </a>
           <a routerLink="/emergency-exit-form" [queryParams]="{type: 'P'}" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="fas fa-calendar-check"></i>
-            <span>Employee Exit Form (Planned Leave)</span>
+            <span>Planned Exit Form</span>
           </a>
         </div>
       </div>
+
+      <!-- Profile Menu - Keep as is -->
       <a routerLink="/profile" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-user"></i> My Profile
       </a>

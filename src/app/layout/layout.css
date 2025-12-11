@@ -250,6 +250,23 @@
   color: white;
 }
 
+.submenu-placeholder {
+  padding: 16px 16px 16px 44px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  cursor: default;
+}
+
+.submenu-placeholder i {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
 .menu a:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
