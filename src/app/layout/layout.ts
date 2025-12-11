@@ -367,6 +367,42 @@ export class layout implements OnInit, OnDestroy {
     this.hasNewNotifications = true;
   }
 
+  // Keyboard shortcuts for navigation
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    // Only trigger if not typing in an input field
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+      return;
+    }
+
+    // Navigation shortcuts
+    switch (event.key) {
+      case '1':
+        // Navigate to Dashboard based on role
+        if (this.isEmployee) {
+          this.router.navigate(['/employee-dashboard']);
+        } else if (this.isHod) {
+          this.router.navigate(['/hod-dashboard']);
+        } else if (this.isCed) {
+          this.router.navigate(['/ced-dashboard']);
+        }
+        break;
+      case '2':
+        // Navigate to MPR Entry
+        this.router.navigate(['/monthly-dpr']);
+        break;
+      case '3':
+        // Navigate to Past Reports
+        this.router.navigate(['/past-reports']);
+        break;
+      case '4':
+        // Navigate to Profile
+        this.router.navigate(['/profile']);
+        break;
+    }
+  }
+
   // Close dropdowns when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
@@ -575,7 +611,6 @@ export class layout implements OnInit, OnDestroy {
           const notification = this.notifications.find((n: any) => n.id === notificationId);
           if (notification) {
             notification.isRead = true;
-
             // Update the count locally
             this.notificationCount = this.notifications.filter((n: any) => !n.isRead).length;
           }

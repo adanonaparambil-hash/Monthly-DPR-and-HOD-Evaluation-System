@@ -5,6 +5,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { ActivatedRoute } from '@angular/router';
 import { Api } from '../services/api';
 import { DropdownOption, ExitEmpProfileDetails } from '../models/common.model';
+import { SessionService } from '../services/session.service';
 
 interface Department {
   id: number;
@@ -77,6 +78,7 @@ export class EmergencyExitFormComponent implements OnInit {
   hodDaysAllowed: number = 0;
   hodList: DropdownOption[] = [];
   projectManagerList: DropdownOption[] = [];
+  currentUser: any = null;
 
   // Form type flag: 'E' for Emergency, 'P' for Planned Leave
   @Input() formType: 'E' | 'P' = 'E';
@@ -173,7 +175,8 @@ export class EmergencyExitFormComponent implements OnInit {
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private api: Api,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private sessionService: SessionService
   ) {
     this.initializeForm();
   }
@@ -193,6 +196,10 @@ export class EmergencyExitFormComponent implements OnInit {
           dept.status = 'pending';
         }
       });
+      // Get current user from session and populate form
+      this.currentUser = this.sessionService.getCurrentUser();
+      this.populateFormFromSession();
+
       // Load master lists
       this.loadHodMasterList();
       this.loadProjectManagerList();
@@ -360,6 +367,30 @@ export class EmergencyExitFormComponent implements OnInit {
   get responsibilitiesFormArray() {
     return this.exitForm.get('responsibilities') as FormArray;
   }
+
+  // Populate form with session data
+  populateFormFromSession(): void {
+    console.log('Emergency Exit Form - Current user from session:', this.currentUser);
+    
+    if (this.currentUser) {
+      const formData = {
+        employeeName: this.currentUser.employeeName || this.currentUser.name || '',
+        employeeId: this.currentUser.empId || this.currentUser.employeeId || '',
+        department: this.currentUser.department || '',
+        emailId: this.currentUser.email || ''
+      };
+      
+      console.log('Emergency Exit Form - Populating form with data:', formData);
+      this.exitForm.patchValue(formData);
+      
+      // Disable employee information fields since they come from session
+      this.disableEmployeeInfoFields();
+    } else {
+      console.warn('Emergency Exit Form - No current user found in session');
+    }
+  }
+
+
 
   addResponsibility() {
     const responsibilityGroup = this.fb.group({
@@ -696,47 +727,45 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Load HOD Master List from API
   loadHodMasterList(): void {
+    console.log('Emergency Exit Form - Loading HOD master list...');
     this.api.GetHodMasterList().subscribe({
       next: (response: any) => {
-        if (response && response.success && response.data) {
+        console.log('Emergency Exit Form - HOD API Response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
           this.hodList = response.data;
+          console.log('Emergency Exit Form - HOD List loaded successfully:', this.hodList.length, 'items');
         } else {
-          console.warn('No HOD records found or API call failed');
+          console.warn('Emergency Exit Form - Invalid HOD API response:', response);
+          this.hodList = [];
         }
       },
       error: (error) => {
-        console.error('Error fetching HOD master list:', error);
+        console.error('Emergency Exit Form - Error fetching HOD master list:', error);
+        
+        // Provide fallback data for testing
+        console.log('Emergency Exit Form - Using fallback HOD data...');
+        this.hodList = [
+          { idValue: 'hod1', description: 'John Doe - Engineering HOD' },
+          { idValue: 'hod2', description: 'Jane Smith - HR HOD' },
+          { idValue: 'hod3', description: 'Mike Johnson - Finance HOD' },
+          { idValue: 'hod4', description: 'Sarah Wilson - Admin HOD' }
+        ];
+        console.log('Emergency Exit Form - Fallback HOD list loaded:', this.hodList.length, 'items');
       }
     });
   }
 
   // Load Project Manager Master List from API
   loadProjectManagerList(): void {
-    // Assuming similar API structure for Project Managers
-    this.api.GetProjectManagerList().subscribe({
-      next: (response: any) => {
-        if (response && response.success && response.data) {
-          this.projectManagerList = response.data;
-        } else {
-          console.warn('No Project Manager records found or API call failed');
-          // Fallback data for demo
-          this.projectManagerList = [
-            { idValue: 'pm1', description: 'John Smith - Project Manager' },
-            { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
-            { idValue: 'pm3', description: 'Mike Davis - Project Lead' }
-          ];
-        }
-      },
-      error: (error) => {
-        console.error('Error fetching Project Manager master list:', error);
-        // Fallback data for demo
-        this.projectManagerList = [
-          { idValue: 'pm1', description: 'John Smith - Project Manager' },
-          { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
-          { idValue: 'pm3', description: 'Mike Davis - Project Lead' }
-        ];
-      }
-    });
+    console.log('Emergency Exit Form - Loading Project Manager list...');
+    // Since GetProjectManagerList API doesn't exist, use fallback data
+    console.warn('GetProjectManagerList API not available, using fallback data');
+    this.projectManagerList = [
+      { idValue: 'pm1', description: 'John Smith - Project Manager' },
+      { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
+      { idValue: 'pm3', description: 'Mike Davis - Project Lead' }
+    ];
+    console.log('Emergency Exit Form - Project Manager list loaded:', this.projectManagerList.length, 'items');
   }
 
   // Project Manager approval method

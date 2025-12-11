@@ -14,7 +14,9 @@
             <input type="text" 
                    id="employeeName" 
                    formControlName="employeeName"
-                   placeholder="Enter full name">
+                   placeholder="Employee Name"
+                   readonly
+                   tabindex="1"> 
           </div>
           
           <div class="form-group">
@@ -22,34 +24,35 @@
             <input type="text" 
                    id="employeeId" 
                    formControlName="employeeId"
-                   placeholder="Employee ID">
+                   placeholder="Employee ID"
+                   readonly
+                   tabindex="2">
           </div>
           
           <div class="form-group">
             <label for="department">Department *</label>
-            <select id="department" formControlName="department">
-              <option value="">Select Department</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Sales">Sales</option>
-              <option value="HR">HR</option>
-              <option value="Finance">Finance</option>
-              <option value="Admin">Admin</option>
-            </select>
+            <input type="text" 
+                   id="department" 
+                   formControlName="department"
+                   placeholder="Department"
+                   readonly
+                   tabindex="3">
           </div>
           
           <div class="form-group">
             <label for="plannedLeaveDate">Planned Leave Date *</label>
             <input type="date" 
                    id="plannedLeaveDate" 
-                   formControlName="plannedLeaveDate">
+                   formControlName="plannedLeaveDate"
+                   tabindex="4">
           </div>
           
           <div class="form-group">
             <label for="returnDate">Return Date *</label>
             <input type="date" 
                    id="returnDate" 
-                   formControlName="returnDate">
+                   formControlName="returnDate"
+                   tabindex="5">
           </div>
           
           <div class="form-group">
@@ -57,24 +60,35 @@
             <textarea id="reason" 
                       formControlName="reason"
                       rows="4"
-                      placeholder="Please provide reason for planned leave"></textarea>
+                      placeholder="Please provide reason for planned leave"
+                      tabindex="6"></textarea>
           </div>
           
           <div class="form-group hod-dropdown-group">
             <label for="hodName">HOD Name *</label>
-            <select id="hodName" formControlName="hodName">
+            <select id="hodName" formControlName="hodName" tabindex="7">
               <option value="">Select HOD</option>
-              <option *ngFor="let hod of hodList" [value]="hod.idValue">
-                {{ hod.description }}
-              </option>
+              @for (hod of hodList; track hod.idValue) {
+                <option [value]="hod.idValue">
+                  {{ hod.description }}
+                </option>
+              } @empty {
+                <option value="" disabled>Loading HODs...</option>
+              }
             </select>
+            <!-- Debug info - remove in production -->
+            <small style="color: #666; font-size: 12px;">
+              HOD Count: {{ hodList.length }} | 
+              Session User: {{ currentUser?.employeeName || 'Not found' }} | 
+              Department: {{ currentUser?.department || 'Not found' }}
+            </small>
           </div>
         </div>
       </div>
       
       <div class="form-actions">
-        <button type="button" class="btn-secondary">Cancel</button>
-        <button type="button" class="btn-primary" (click)="submitForm()">Submit</button>
+        <button type="button" class="btn-secondary" tabindex="8">Cancel</button>
+        <button type="button" class="btn-primary" (click)="submitForm()" tabindex="9">Submit</button>
       </div>
     </form>
   </div>

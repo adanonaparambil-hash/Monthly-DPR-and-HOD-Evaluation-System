@@ -81,11 +81,31 @@
 
             <div class="form-group">
               <label for="department">Department/Site *</label>
-              <input type="text" id="department" formControlName="department" placeholder="Department/Site"
-                [disabled]="true">
+              <input type="text" id="department" formControlName="department" placeholder="Department/Site" [disabled]="true">
               <span class="error-message" *ngIf="isFieldInvalid('department')">
                 {{ getFieldError('department') }}
               </span>
+            </div>
+
+            <div class="form-group">
+              <label for="hodName">HOD Name *</label>
+              <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
+                <option value="">Select HOD</option>
+                @for (hod of hodList; track hod.idValue) {
+                  <option [value]="hod.idValue">
+                    {{ hod.description }}
+                  </option>
+                } @empty {
+                  <option value="" disabled>Loading HODs...</option>
+                }
+              </select>
+              <span class="error-message" *ngIf="isFieldInvalid('hodName')">
+                {{ getFieldError('hodName') }}
+              </span>
+              <!-- Debug info - remove in production -->
+              <small style="color: #666; font-size: 12px;">
+                Emergency Form HOD Count: {{ hodList.length }}
+              </small>
             </div>
 
             <!-- Planned Leave Specific Fields -->
@@ -114,9 +134,13 @@
               <select id="projectManagerName" formControlName="projectManagerName"
                 [class.error]="isFieldInvalid('projectManagerName')">
                 <option value="">Select Project Manager / Site Incharge</option>
-                <option *ngFor="let pm of projectManagerList" [value]="pm.idValue">
-                  {{ pm.description }}
-                </option>
+                @for (pm of projectManagerList; track pm.idValue) {
+                  <option [value]="pm.idValue">
+                    {{ pm.description }}
+                  </option>
+                } @empty {
+                  <option value="" disabled>Loading Project Managers...</option>
+                }
               </select>
               <span class="error-message" *ngIf="isFieldInvalid('projectManagerName')">
                 {{ getFieldError('projectManagerName') }}
@@ -136,6 +160,18 @@
                 {{ getFieldError('hodName') }}
               </span>
             </div>
+
+
+          <div class="form-group hod-name-group" *ngIf="formType === 'P'">
+            <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
+            <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
+              [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
+              placeholder="Enter name of person taking over responsibilities">
+            <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
+              {{ getFieldError('responsibilitiesHandedOverTo') }}
+            </span>
+          </div>
+
           </div>
         </div>
 
@@ -254,7 +290,7 @@
           </div>
 
           <!-- Responsibilities Handed Over To (Planned Leave Only) -->
-          <div class="form-group full-width" *ngIf="formType === 'P'">
+          <!-- <div class="form-group full-width" *ngIf="formType === 'P'">
             <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
             <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
               [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
@@ -262,7 +298,7 @@
             <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
               {{ getFieldError('responsibilitiesHandedOverTo') }}
             </span>
-          </div>
+          </div> -->
         </div>
       </div>
 

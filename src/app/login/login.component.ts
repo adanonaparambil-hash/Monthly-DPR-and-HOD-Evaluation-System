@@ -144,17 +144,20 @@ export class LoginComponent implements OnInit, OnDestroy {
     });
   }
 
+  private rafId: number | null = null;
+
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     this.mouseX = (event.clientX / window.innerWidth) * 100;
     this.mouseY = (event.clientY / window.innerHeight) * 100;
-    this.updateParallaxLayers();
-  }
-
-  @HostListener('window:scroll')
-  onScroll() {
-    this.scrollY = window.scrollY;
-    this.updateParallaxLayers();
+    
+    // Use requestAnimationFrame to throttle updates
+    if (!this.rafId) {
+      this.rafId = requestAnimationFrame(() => {
+        this.updateParallaxLayers();
+        this.rafId = null;
+      });
+    }
   }
 
   @HostListener('window:resize')
@@ -163,50 +166,65 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private initializeParticles() {
+    // Removed heavy particle generation
     this.particles = [];
-    const particleCount = window.innerWidth < 768 ? 15 : 25;
-    
-    for (let i = 0; i < particleCount; i++) {
-      this.particles.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        delay: Math.random() * 5,
-        duration: 10 + Math.random() * 20
-      });
-    }
   }
 
   private startParallaxAnimations() {
-    // Continuous animation loop for smooth parallax effects
-    const animate = () => {
-      this.updateParallaxLayers();
-      requestAnimationFrame(animate);
-    };
-    animate();
+    // Lightweight mouse parallax only - no continuous animation needed
   }
 
   private updateParallaxLayers() {
-    const layers = document.querySelectorAll('.parallax-layer');
-    const shapes = document.querySelectorAll('.shape');
+    // GPU-friendly parallax effect using transform only
+    const card = document.querySelector('.auth-card') as HTMLElement;
+    const forgotCard = document.querySelector('.forgot-password-card') as HTMLElement;
+    const floatingShapes = document.querySelectorAll('.floating-circle');
+    const spotlight = document.querySelector('.cursor-spotlight') as HTMLElement;
+    const backgroundOverlay = document.querySelector('.background-overlay') as HTMLElement;
+    const darkOverlay = document.querySelector('.dark-overlay') as HTMLElement;
     
-    layers.forEach((layer, index) => {
-      const speed = (index + 1) * 0.5;
-      const xOffset = (this.mouseX - 50) * speed * 0.02;
-      const yOffset = (this.mouseY - 50) * speed * 0.02;
-      
-      (layer as HTMLElement).style.transform = 
-        `translate3d(${xOffset}px, ${yOffset}px, 0) scale(${1 + speed * 0.01})`;
-    });
+    // Move the card based on mouse position (subtle)
+    if (card) {
+      const xOffset = (this.mouseX - 50) * 0.2;
+      const yOffset = (this.mouseY - 50) * 0.2;
+      card.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+    }
 
-    shapes.forEach((shape, index) => {
-      const speed = (index + 1) * 0.3;
-      const xOffset = (this.mouseX - 50) * speed * 0.01;
-      const yOffset = (this.mouseY - 50) * speed * 0.01;
-      const rotation = (this.mouseX + this.mouseY) * speed * 0.1;
+    if (forgotCard) {
+      const xOffset = (this.mouseX - 50) * 0.2;
+      const yOffset = (this.mouseY - 50) * 0.2;
+      forgotCard.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+    }
+
+    // Move floating circles with cursor
+    floatingShapes.forEach((shape, index) => {
+      const speed = 0.08 + (index * 0.04);
+      const xOffset = (this.mouseX - 50) * speed;
+      const yOffset = (this.mouseY - 50) * speed;
       
       (shape as HTMLElement).style.transform = 
-        `translate3d(${xOffset}px, ${yOffset}px, 0) rotate(${rotation}deg)`;
+        `translate3d(${xOffset}px, ${yOffset}px, 0)`;
     });
+
+    // Subtle background parallax (1-3px shift)
+    if (backgroundOverlay) {
+      const xOffset = (this.mouseX - 50) * 0.03;
+      const yOffset = (this.mouseY - 50) * 0.03;
+      backgroundOverlay.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+    }
+
+    // Fluid gradient that follows mouse
+    if (darkOverlay) {
+      darkOverlay.style.setProperty('--mouse-x', `${this.mouseX}%`);
+      darkOverlay.style.setProperty('--mouse-y', `${this.mouseY}%`);
+    }
+
+    // Cursor spotlight effect
+    if (spotlight) {
+      const x = (this.mouseX / 100) * window.innerWidth;
+      const y = (this.mouseY / 100) * window.innerHeight;
+      spotlight.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+    }
   }
 
 
@@ -496,6 +514,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.clearOtpTimer();
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+    }
   }
 
 
