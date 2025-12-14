@@ -78,6 +78,7 @@ export class EmergencyExitFormComponent implements OnInit {
   hodDaysAllowed: number = 0;
   hodList: DropdownOption[] = [];
   projectManagerList: DropdownOption[] = [];
+  employeeMasterList: DropdownOption[] = [];
   currentUser: any = null;
 
   // Form type flag: 'E' for Emergency, 'P' for Planned Leave
@@ -208,6 +209,7 @@ export class EmergencyExitFormComponent implements OnInit {
       // Load master lists
       this.loadHodMasterList();
       this.loadProjectManagerList();
+      this.loadEmployeeMasterList();
 
       // Disable employee information fields (always disabled)
       this.disableEmployeeInfoFields();
@@ -790,14 +792,59 @@ export class EmergencyExitFormComponent implements OnInit {
   // Load Project Manager Master List from API
   loadProjectManagerList(): void {
     console.log('Emergency Exit Form - Loading Project Manager list...');
-    // Since GetProjectManagerList API doesn't exist, use fallback data
-    console.warn('GetProjectManagerList API not available, using fallback data');
-    this.projectManagerList = [
-      { idValue: 'pm1', description: 'John Smith - Project Manager' },
-      { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
-      { idValue: 'pm3', description: 'Mike Davis - Project Lead' }
-    ];
-    console.log('Emergency Exit Form - Project Manager list loaded:', this.projectManagerList.length, 'items');
+    this.api.GetProjectManagerList().subscribe({
+      next: (response: any) => {
+        console.log('Emergency Exit Form - Project Manager API Response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          this.projectManagerList = response.data;
+          console.log('Emergency Exit Form - Project Manager List loaded successfully:', this.projectManagerList.length, 'items');
+        } else {
+          console.warn('Emergency Exit Form - Invalid Project Manager API response:', response);
+          this.projectManagerList = [];
+        }
+      },
+      error: (error) => {
+        console.error('Emergency Exit Form - Error fetching Project Manager list:', error);
+        // Provide fallback data for testing
+        console.log('Emergency Exit Form - Using fallback Project Manager data...');
+        this.projectManagerList = [
+          { idValue: 'pm1', description: 'John Smith - Project Manager' },
+          { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
+          { idValue: 'pm3', description: 'Mike Davis - Project Lead' }
+        ];
+        console.log('Emergency Exit Form - Fallback Project Manager list loaded:', this.projectManagerList.length, 'items');
+      }
+    });
+  }
+
+  // Load Employee Master List from API
+  loadEmployeeMasterList(): void {
+    console.log('Emergency Exit Form - Loading Employee master list...');
+    this.api.GetEmployeeMasterList().subscribe({
+      next: (response: any) => {
+        console.log('Emergency Exit Form - Employee Master API Response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          this.employeeMasterList = response.data;
+          console.log('Emergency Exit Form - Employee Master List loaded successfully:', this.employeeMasterList.length, 'items');
+        } else {
+          console.warn('Emergency Exit Form - Invalid Employee Master API response:', response);
+          this.employeeMasterList = [];
+        }
+      },
+      error: (error) => {
+        console.error('Emergency Exit Form - Error fetching Employee master list:', error);
+        
+        // Provide fallback data for testing
+        console.log('Emergency Exit Form - Using fallback Employee Master data...');
+        this.employeeMasterList = [
+          { idValue: 'ADS3239', description: 'PRABIN BABY | ADS3239' },
+          { idValue: 'ADS3121', description: 'SAJITH THANKAMONY HARIHARAN | ADS3121' },
+          { idValue: 'ADS3456', description: 'JOHN DOE | ADS3456' },
+          { idValue: 'ADS3789', description: 'JANE SMITH | ADS3789' }
+        ];
+        console.log('Emergency Exit Form - Fallback Employee Master list loaded:', this.employeeMasterList.length, 'items');
+      }
+    });
   }
 
   // Project Manager approval method
@@ -1057,6 +1104,143 @@ export class EmergencyExitFormComponent implements OnInit {
     } else {
       console.warn('No employee profile data available to bind');
     }
+  }
+
+  // Handle employee selection from dropdown
+  onEmployeeSelected(responsibilityIndex: number, selectedEmployeeId: string): void {
+    const selectedEmployee = this.employeeMasterList.find(emp => emp.idValue === selectedEmployeeId);
+    if (selectedEmployee) {
+      const responsibilityGroup = this.responsibilitiesFormArray.at(responsibilityIndex) as FormGroup;
+      
+      // Update the responsible person name with the selected employee's description
+      responsibilityGroup.patchValue({
+        responsiblePersonName: selectedEmployee.description
+      });
+      
+      console.log('Employee selected:', selectedEmployee);
+      console.log('Updated responsibility at index', responsibilityIndex, 'with:', selectedEmployee.description);
+    }
+  }
+
+  // Filter employees based on search term
+  getFilteredEmployees(searchTerm: string): DropdownOption[] {
+    if (!searchTerm || searchTerm.length < 2) {
+      return this.employeeMasterList;
+    }
+    
+    const term = searchTerm.toLowerCase();
+    return this.employeeMasterList.filter(employee => 
+      (employee.description || '').toLowerCase().includes(term) ||
+      (employee.idValue || '').toLowerCase().includes(term)
+    );
+  }
+
+  // Dropdown visibility management
+  private dropdownVisibility: { [key: number]: boolean } = {};
+  private searchTerms: { [key: number]: string } = {};
+  
+  // Planned leave dropdown management
+  private plannedDropdownVisible: boolean = false;
+  plannedSearchTerm: string = '';
+
+  showDropdown(index: number): void {
+    this.dropdownVisibility[index] = true;
+  }
+
+  hideDropdown(index: number): void {
+    // Add a small delay to allow for item selection
+    setTimeout(() => {
+      this.dropdownVisibility[index] = false;
+    }, 200);
+  }
+
+  isDropdownVisible(index: number): boolean {
+    return !!this.dropdownVisibility[index];
+  }
+
+  onSearchInputChange(event: any, index: number): void {
+    const searchTerm = event.target.value;
+    this.searchTerms[index] = searchTerm;
+    this.dropdownVisibility[index] = true;
+  }
+
+  getSearchTerm(index: number): string {
+    return this.searchTerms[index] || '';
+  }
+
+  selectEmployee(index: number, employee: DropdownOption): void {
+    const responsibilityGroup = this.responsibilitiesFormArray.at(index) as FormGroup;
+    
+    // Update the form control with the employee's description
+    const description = employee.description || '';
+    responsibilityGroup.patchValue({
+      responsiblePersonName: description
+    });
+    
+    // Update search term and hide dropdown
+    this.searchTerms[index] = description;
+    this.dropdownVisibility[index] = false;
+    
+    console.log('Employee selected:', employee);
+    console.log('Updated responsibility at index', index, 'with:', description);
+  }
+
+  isEmployeeSelected(index: number, employee: DropdownOption): boolean {
+    const responsibilityGroup = this.responsibilitiesFormArray.at(index) as FormGroup;
+    const currentValue = responsibilityGroup.get('responsiblePersonName')?.value;
+    return currentValue === (employee.description || '');
+  }
+
+  getEmployeeName(description: string): string {
+    // Extract name from description (format: "NAME | ID")
+    const parts = description.split(' | ');
+    return parts[0] || description;
+  }
+
+  // Always use consistent small dropdown height
+  shouldUseSmallDropdown(searchTerm: string): boolean {
+    return false; // Always use fixed height for consistency
+  }
+
+  // Planned leave dropdown methods
+  showPlannedDropdown(): void {
+    this.plannedDropdownVisible = true;
+  }
+
+  hidePlannedDropdown(): void {
+    // Add a small delay to allow for item selection
+    setTimeout(() => {
+      this.plannedDropdownVisible = false;
+    }, 200);
+  }
+
+  isPlannedDropdownVisible(): boolean {
+    return this.plannedDropdownVisible;
+  }
+
+  onPlannedSearchInputChange(event: any): void {
+    this.plannedSearchTerm = event.target.value;
+    this.plannedDropdownVisible = true;
+  }
+
+  selectPlannedEmployee(employee: DropdownOption): void {
+    // Update the form control with the employee's description
+    const description = employee.description || '';
+    this.exitForm.patchValue({
+      responsibilitiesHandedOverTo: description
+    });
+    
+    // Update search term and hide dropdown
+    this.plannedSearchTerm = description;
+    this.plannedDropdownVisible = false;
+    
+    console.log('Planned leave employee selected:', employee);
+    console.log('Updated responsibilitiesHandedOverTo with:', description);
+  }
+
+  isPlannedEmployeeSelected(employee: DropdownOption): boolean {
+    const currentValue = this.exitForm.get('responsibilitiesHandedOverTo')?.value;
+    return currentValue === (employee.description || '');
   }
 
 }

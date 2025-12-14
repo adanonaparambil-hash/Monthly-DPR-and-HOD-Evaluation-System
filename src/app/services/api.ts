@@ -189,7 +189,6 @@ export class Api {
   }
 
 
-
   GetEmployeeDetailsForcedDashboard(month: number, year: number, statusCondition: string, department: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDetailsForcedDashboard/${month}/${year}/${statusCondition}/${department}`);
   }
@@ -201,6 +200,11 @@ export class Api {
   
   GetTodaysBirthdaysAndQuotes(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetTodaysBirthdaysAndQuotes`);
+  }
+
+
+  GetEmployeeMasterList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
 
 

@@ -9,6 +9,7 @@ import { HodDashboard } from './hod-dashboard/hod-dashboard';
 import { CedDashboard } from './ced-dashboard/ced-dashboard';
 import { CedDashboardNewComponent } from './ced-dashboard-new/ced-dashboard-new.component';
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
+import { LeaveApprovalComponent } from './leave-approval/leave-approval.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
@@ -37,6 +38,7 @@ export const routes: Routes = [
       { path: 'profile', component: ProfileComponent },
       { path: 'emergency-exit-form', component: EmergencyExitFormComponent },
       { path: 'employee-exit-form', redirectTo: 'emergency-exit-form?type=P', pathMatch: 'full' },
+      { path: 'leave-approval', component: LeaveApprovalComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

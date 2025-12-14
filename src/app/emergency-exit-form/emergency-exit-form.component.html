@@ -81,11 +81,12 @@
 
             <div class="form-group">
               <label for="department">Department/Site *</label>
-              <input type="text" id="department" formControlName="department" placeholder="Department/Site" [disabled]="true">
+              <input type="text" id="department" formControlName="department" placeholder="Department/Site"
+                [disabled]="true">
               <span class="error-message" *ngIf="isFieldInvalid('department')">
                 {{ getFieldError('department') }}
               </span>
-             
+
             </div>
 
             <div class="form-group">
@@ -93,11 +94,11 @@
               <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
                 <option value="">Select HOD</option>
                 @for (hod of hodList; track hod.idValue) {
-                  <option [value]="hod.idValue">
-                    {{ hod.description }}
-                  </option>
+                <option [value]="hod.idValue">
+                  {{ hod.description }}
+                </option>
                 } @empty {
-                  <option value="" disabled>Loading HODs...</option>
+                <option value="" disabled>Loading HODs...</option>
                 }
               </select>
               <span class="error-message" *ngIf="isFieldInvalid('hodName')">
@@ -136,11 +137,11 @@
                 [class.error]="isFieldInvalid('projectManagerName')">
                 <option value="">Select Project Manager / Site Incharge</option>
                 @for (pm of projectManagerList; track pm.idValue) {
-                  <option [value]="pm.idValue">
-                    {{ pm.description }}
-                  </option>
+                <option [value]="pm.idValue">
+                  {{ pm.description }}
+                </option>
                 } @empty {
-                  <option value="" disabled>Loading Project Managers...</option>
+                <option value="" disabled>Loading Project Managers...</option>
                 }
               </select>
               <span class="error-message" *ngIf="isFieldInvalid('projectManagerName')">
@@ -148,81 +149,134 @@
               </span>
             </div>
 
-           
 
-          <div class="form-group hod-name-group" *ngIf="formType === 'P'">
-            <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
-            <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
-              [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
-              placeholder="Enter name of person taking over responsibilities">
-            <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
-              {{ getFieldError('responsibilitiesHandedOverTo') }}
-            </span>
-          </div>
+
+            <div class="form-group hod-name-group" *ngIf="formType === 'P'">
+              <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
+              <div class="searchable-dropdown">
+                <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
+                  [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
+                  placeholder="Search and select employee..." class="dropdown-input" #plannedSearchInput
+                  (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
+                  (blur)="hidePlannedDropdown()" autocomplete="off">
+                <div class="dropdown-icon">
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="dropdown-list planned-dropdown" *ngIf="isPlannedDropdownVisible()"
+                  [class.small-list]="shouldUseSmallDropdown(plannedSearchTerm)">
+                  <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(plannedSearchTerm)"
+                    (mousedown)="selectPlannedEmployee(employee)"
+                    [class.selected]="isPlannedEmployeeSelected(employee)">
+                    <div class="employee-info">
+                      <div class="employee-name">{{ getEmployeeName(employee.description || '') }}</div>
+                      <div class="employee-id">{{ employee.idValue || '' }}</div>
+                    </div>
+                  </div>
+                  <div class="no-results" *ngIf="getFilteredEmployees(plannedSearchTerm).length === 0">
+                    No employees found
+                  </div>
+                </div>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
+                {{ getFieldError('responsibilitiesHandedOverTo') }}
+              </span>
+            </div>
 
           </div>
         </div>
 
         <div class="form-section" *ngIf="formType === 'E'">
           <h3><i class="fas fa-address-card"></i> Contact Details</h3>
-          <div class="form-grid">
-            <div class="form-group full-width">
-              <label for="address">Address *</label>
-              <textarea id="address" formControlName="address" [class.error]="isFieldInvalid('address')" rows="3"
-                placeholder="Full address"></textarea>
-              <span class="error-message" *ngIf="isFieldInvalid('address')">
-                {{ getFieldError('address') }}
-              </span>
+          <div class="contact-info-note">
+            <i class="fas fa-info-circle"></i>
+            <span>Contact details are automatically populated from your profile. To update, please modify your profile information.</span>
+          </div>
+          
+          <div class="contact-details-grid">
+            <!-- Address Information -->
+            <div class="contact-item">
+              <label><i class="fas fa-home"></i> Address *</label>
+              <div class="contact-value">
+                {{ exitForm.get('address')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="district">District</label>
-              <input type="text" id="district" formControlName="district" placeholder="District">
+            <!-- Place -->
+            <div class="contact-item">
+              <label><i class="fas fa-map-marker-alt"></i> Place</label>
+              <div class="contact-value">
+                {{ exitForm.get('place')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="telephoneMobile">Telephone No (Mobile) *</label>
-              <input type="tel" id="telephoneMobile" formControlName="telephoneMobile"
-                [class.error]="isFieldInvalid('telephoneMobile')" placeholder="Mobile number">
-              <span class="error-message" *ngIf="isFieldInvalid('telephoneMobile')">
-                {{ getFieldError('telephoneMobile') }}
-              </span>
+            <!-- District -->
+            <div class="contact-item">
+              <label><i class="fas fa-map"></i> District</label>
+              <div class="contact-value">
+                {{ exitForm.get('district')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="place">Place</label>
-              <input type="text" id="place" formControlName="place" placeholder="Place">
+            <!-- State -->
+            <div class="contact-item">
+              <label><i class="fas fa-flag"></i> State</label>
+              <div class="contact-value">
+                {{ exitForm.get('state')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="state">State</label>
-              <input type="text" id="state" formControlName="state" placeholder="State">
+            <!-- Post Office -->
+            <div class="contact-item">
+              <label><i class="fas fa-mail-bulk"></i> Post Office</label>
+              <div class="contact-value">
+                {{ exitForm.get('postOffice')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="telephoneLandline">Telephone No (Landline)</label>
-              <input type="tel" id="telephoneLandline" formControlName="telephoneLandline"
-                placeholder="Landline number">
+            <!-- Nation -->
+            <div class="contact-item">
+              <label><i class="fas fa-globe"></i> Nation</label>
+              <div class="contact-value">
+                {{ exitForm.get('nation')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="postOffice">Post Office</label>
-              <input type="text" id="postOffice" formControlName="postOffice" placeholder="Post office">
+            <!-- Mobile Number -->
+            <div class="contact-item">
+              <label><i class="fas fa-mobile-alt"></i> Telephone No (Mobile) *</label>
+              <div class="contact-value">
+                {{ exitForm.get('telephoneMobile')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="nation">Nation</label>
-              <input type="text" id="nation" formControlName="nation" placeholder="Country">
+            <!-- Landline Number -->
+            <div class="contact-item">
+              <label><i class="fas fa-phone"></i> Telephone No (Landline)</label>
+              <div class="contact-value">
+                {{ exitForm.get('telephoneLandline')?.value || 'Not provided' }}
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="emailId">Email ID *</label>
-              <input type="email" id="emailId" formControlName="emailId" [class.error]="isFieldInvalid('emailId')"
-                placeholder="Email address">
-              <span class="error-message" *ngIf="isFieldInvalid('emailId')">
-                {{ getFieldError('emailId') }}
-              </span>
+            <!-- Email Address -->
+            <div class="contact-item">
+              <label><i class="fas fa-envelope"></i> Email ID *</label>
+              <div class="contact-value">
+                {{ exitForm.get('emailId')?.value || 'Not provided' }}
+              </div>
             </div>
+          </div>
+
+          <!-- Hidden form controls to maintain form structure -->
+          <div style="display: none;">
+            <textarea formControlName="address"></textarea>
+            <input formControlName="district">
+            <input formControlName="telephoneMobile">
+            <input formControlName="place">
+            <input formControlName="state">
+            <input formControlName="telephoneLandline">
+            <input formControlName="postOffice">
+            <input formControlName="nation">
+            <input formControlName="emailId">
           </div>
         </div>
 
@@ -326,8 +380,28 @@
 
                 <div class="form-group name-field">
                   <label>Responsible Person Name *</label>
-                  <input type="text" formControlName="responsiblePersonName"
-                    placeholder="Full name of person taking over">
+                  <div class="searchable-dropdown">
+                    <input type="text" formControlName="responsiblePersonName"
+                      placeholder="Search and select employee..." class="dropdown-input" #searchInput
+                      (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
+                      autocomplete="off">
+                    <div class="dropdown-icon">
+                      <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-list" *ngIf="isDropdownVisible(i)" [attr.data-index]="i"
+                      [class.small-list]="shouldUseSmallDropdown(getSearchTerm(i))">
+                      <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(getSearchTerm(i))"
+                        (mousedown)="selectEmployee(i, employee)" [class.selected]="isEmployeeSelected(i, employee)">
+                        <div class="employee-info">
+                          <div class="employee-name">{{ getEmployeeName(employee.description || '') }}</div>
+                          <div class="employee-id">{{ employee.idValue || '' }}</div>
+                        </div>
+                      </div>
+                      <div class="no-results" *ngIf="getFilteredEmployees(getSearchTerm(i)).length === 0">
+                        No employees found
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group phone-field">
@@ -439,7 +513,8 @@
                 <div><strong>Category:</strong> {{ exitForm.get('category')?.value }}</div>
                 <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
                 <div><strong>Days Requested:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
-                <div><strong>Responsibilities Handed Over To:</strong> {{ exitForm.get('responsibilitiesHandedOverTo')?.value }}</div>
+                <div><strong>Responsibilities Handed Over To:</strong> {{
+                  exitForm.get('responsibilitiesHandedOverTo')?.value }}</div>
               </div>
             </div>
           </div>
@@ -492,7 +567,7 @@
       <div class="step-content" *ngIf="currentStep === 4" [@fadeInUp]="'in'">
         <div class="form-section">
           <h3><i class="fas fa-clipboard-check"></i> Approval From Concerned Departments</h3>
-          
+
 
 
           <div class="approval-progress">
@@ -629,7 +704,8 @@
           <div class="final-actions" *ngIf="getAllApprovalStatus() === 'approved'">
             <div class="success-notice">
               <i class="fas fa-check-circle"></i>
-              <span>All approvals completed! Your {{ formType === 'E' ? 'emergency exit' : 'planned leave' }} request has been fully approved.</span>
+              <span>All approvals completed! Your {{ formType === 'E' ? 'emergency exit' : 'planned leave' }} request
+                has been fully approved.</span>
             </div>
             <div class="action-buttons">
               <button type="button" class="btn-primary" (click)="downloadPDF()">
@@ -659,8 +735,7 @@
       </button>
 
       <button type="button" class="btn-submit" (click)="submitForm()"
-        [disabled]="!allDeclarationsChecked() || isSubmitting"
-        *ngIf="currentStep === 3">
+        [disabled]="!allDeclarationsChecked() || isSubmitting" *ngIf="currentStep === 3">
         <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
         <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
         {{ isSubmitting ? 'Submitting...' : 'Submit Form' }}

@@ -101,10 +101,13 @@
 }
 
 @keyframes emergencyPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
   }
+
   50% {
     transform: scale(1.1);
     box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
@@ -112,10 +115,13 @@
 }
 
 @keyframes plannedGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
@@ -123,9 +129,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.8;
   }
@@ -341,6 +350,10 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   align-items: start;
+  overflow: visible;
+  /* Ensure dropdown can show outside grid */
+  position: relative;
+  /* Establish positioning context */
 }
 
 /* Planned Leave specific field styling */
@@ -352,6 +365,23 @@
 .form-grid-planned .hod-name-group {
   max-width: none;
   width: 100%;
+  position: relative;
+  /* Ensure proper positioning for dropdown */
+  overflow: visible;
+  /* Allow dropdown to show outside the container */
+  z-index: 10;
+  /* Higher z-index for the container */
+  /* Prevent container from expanding */
+  contain: layout !important;
+}
+
+/* Ensure the searchable dropdown container doesn't affect layout */
+.form-grid-planned .hod-name-group .searchable-dropdown {
+  position: relative !important;
+  overflow: visible !important;
+  contain: layout !important;
+  height: auto !important;
+  min-height: 0 !important;
 }
 
 /* Ensure proper alignment for planned leave fields */
@@ -385,7 +415,7 @@
   .form-grid-planned {
     grid-template-columns: 1fr;
   }
-  
+
   .form-grid-planned .form-group {
     min-width: auto;
   }
@@ -394,7 +424,7 @@
 .responsibility-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-areas: 
+  grid-template-areas:
     "project activities activities"
     "name phone email"
     "remarks remarks remarks";
@@ -496,17 +526,17 @@
 @media (max-width: 1024px) {
   .responsibility-form-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-areas: 
+    grid-template-areas:
       "project activities"
       "name phone"
       "email email"
       "remarks remarks";
   }
-  
+
   .responsibility-form-grid .phone-field {
     max-width: none;
   }
-  
+
   .responsibility-form-grid .project-field {
     max-width: none;
   }
@@ -515,7 +545,7 @@
 @media (max-width: 768px) {
   .responsibility-form-grid {
     grid-template-columns: 1fr;
-    grid-template-areas: 
+    grid-template-areas:
       "project"
       "activities"
       "name"
@@ -529,6 +559,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Ensure dropdown parent has proper stacking */
+.hod-name-group {
+  position: relative !important;
+  z-index: 10000 !important;
+  isolation: isolate !important;
 }
 
 .hod-name-group {
@@ -968,6 +1005,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -1118,12 +1156,12 @@
   position: relative;
 }
 
-.radio-label input[type="radio"]:checked + .radio-mark {
+.radio-label input[type="radio"]:checked+.radio-mark {
   border-color: var(--primary-color);
   background: var(--background-primary);
 }
 
-.radio-label input[type="radio"]:checked + .radio-mark::after {
+.radio-label input[type="radio"]:checked+.radio-mark::after {
   content: '';
   width: 8px;
   height: 8px;
@@ -1158,12 +1196,12 @@
   background: var(--background-primary);
 }
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark {
+.checkbox-label input[type="checkbox"]:checked+.checkmark {
   background: var(--primary-color);
   border-color: var(--primary-color);
 }
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+.checkbox-label input[type="checkbox"]:checked+.checkmark::after {
   content: '✓';
   color: white;
   font-size: 12px;
@@ -1220,7 +1258,7 @@
   gap: 8px;
 }
 
-.summary-grid > div {
+.summary-grid>div {
   font-size: 14px;
   color: var(--text-primary);
 }
@@ -1474,25 +1512,25 @@
   .emergency-exit-container {
     padding: 20px;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .departments-grid {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 16px;
   }
-  
+
   .departments-grid .department-card {
     display: block !important;
   }
-  
+
   .review-summary {
     grid-template-columns: 1fr;
   }
-  
+
   .signature-row {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -1503,65 +1541,65 @@
   .emergency-exit-container {
     padding: 16px;
   }
-  
+
   .form-header {
     padding: 20px;
     margin-bottom: 20px;
   }
-  
+
   .header-content {
     flex-direction: column;
     gap: 12px;
     text-align: center;
   }
-  
+
   .company-branding {
     flex-direction: column;
     gap: 12px;
     width: 100%;
   }
-  
+
   .title-with-icon {
     flex-direction: column;
     gap: 12px;
     text-align: center;
   }
-  
+
   .animated-icon {
     width: 50px;
     height: 50px;
     font-size: 20px;
   }
-  
+
   .radio-group {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
   }
-  
+
   .form-title-section h1 {
     font-size: 22px;
   }
-  
+
   .form-title-section p {
     font-size: 13px;
   }
-  
+
   .stepper-container,
   .form-content {
     padding: 20px;
     margin-bottom: 20px;
   }
-  
+
   .stepper {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .stepper::before {
     display: none;
   }
-  
+
   .step {
     flex-direction: row;
     width: 100%;
@@ -1571,51 +1609,51 @@
     border-radius: 12px;
     border: 1px solid var(--border-color);
   }
-  
+
   .step-circle {
     width: 36px;
     height: 36px;
     margin-right: 12px;
   }
-  
+
   .form-navigation {
     padding: 16px 20px;
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .form-navigation .btn-primary,
   .form-navigation .btn-secondary,
   .form-navigation .btn-submit {
     width: 100%;
     justify-content: center;
   }
-  
+
   .success-card {
     padding: 24px 20px;
   }
-  
+
   .success-actions {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .success-actions .btn-primary,
   .success-actions .btn-secondary {
     width: 100%;
     justify-content: center;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .departments-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .responsibility-card,
   .department-card,
   .summary-card {
@@ -1627,95 +1665,95 @@
   .emergency-exit-container {
     padding: 12px;
   }
-  
+
   .form-header {
     padding: 16px;
     margin-bottom: 16px;
   }
-  
+
   .form-title-section h1 {
     font-size: 20px;
   }
-  
+
   .form-title-section p {
     font-size: 12px;
   }
-  
+
   .company-logo-img {
     height: 32px;
   }
-  
+
   .stepper-container,
   .form-content {
     padding: 16px;
     margin-bottom: 16px;
   }
-  
+
   .form-section {
     margin-bottom: 24px;
   }
-  
+
   .form-section h3 {
     font-size: 18px;
     margin-bottom: 16px;
   }
-  
+
   .form-grid {
     gap: 16px;
   }
-  
+
   .form-group input,
   .form-group select,
   .form-group textarea {
     padding: 10px 14px;
     font-size: 14px;
   }
-  
+
   .responsibility-card,
   .department-card,
   .summary-card {
     padding: 16px;
   }
-  
+
   .signature-pad {
     flex-direction: column;
     align-items: stretch;
     padding: 12px;
   }
-  
+
   .signature-pad canvas {
     width: 100%;
     max-width: 280px;
     margin: 0 auto;
     height: 80px;
   }
-  
+
   .demo-approval-actions {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .success-card {
     padding: 20px 16px;
   }
-  
+
   .success-icon {
     font-size: 48px;
   }
-  
+
   .success-card h2 {
     font-size: 22px;
   }
-  
+
   .form-navigation {
     padding: 16px;
   }
-  
+
   .step-indicator {
     font-size: 12px;
     padding: 6px 12px;
   }
-  
+
   .btn-primary,
   .btn-secondary,
   .btn-submit {
@@ -1728,7 +1766,7 @@
   .emergency-exit-container {
     padding: 8px;
   }
-  
+
   .form-header,
   .stepper-container,
   .form-content,
@@ -1736,23 +1774,23 @@
     padding: 12px;
     margin-bottom: 12px;
   }
-  
+
   .form-title-section h1 {
     font-size: 18px;
   }
-  
+
   .company-logo-img {
     height: 28px;
   }
-  
+
   .form-section h3 {
     font-size: 16px;
   }
-  
+
   .form-grid {
     gap: 12px;
   }
-  
+
   .responsibility-card,
   .department-card,
   .summary-card {
@@ -1766,6 +1804,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1785,6 +1824,7 @@
 
 /* Print Styles */
 @media print {
+
   .form-navigation,
   .stepper-container,
   .demo-approval-actions,
@@ -1792,18 +1832,20 @@
   .btn-remove {
     display: none !important;
   }
-  
+
   .emergency-exit-container {
     padding: 0;
     box-shadow: none;
   }
-  
+
   .form-content,
   .form-header {
     box-shadow: none;
     border: 1px solid #000;
   }
-}/* Co
+}
+
+/* Co
 ntainer Improvements */
 .emergency-exit-container * {
   box-sizing: border-box;
@@ -1844,6 +1886,7 @@ ntainer Improvements */
 
 /* Better mobile touch targets */
 @media (max-width: 768px) {
+
   .btn-primary,
   .btn-secondary,
   .btn-submit,
@@ -1854,7 +1897,7 @@ ntainer Improvements */
     min-height: 48px;
     padding: 12px 20px;
   }
-  
+
   .form-group input,
   .form-group select,
   .form-group textarea {
@@ -1893,16 +1936,17 @@ ntainer Improvements */
 
 /* Ensure proper grid behavior on very small screens */
 @media (max-width: 320px) {
+
   .form-grid,
   .departments-grid,
   .review-summary {
     grid-template-columns: 1fr;
   }
-  
+
   .emergency-exit-container {
     padding: 8px;
   }
-  
+
   .form-header,
   .stepper-container,
   .form-content,
@@ -1932,6 +1976,7 @@ ntainer Improvements */
   width: 100%;
   max-width: 500px;
 }
+
 /* Su
 bmission Notice Styles */
 .submission-notice {
@@ -2109,4 +2154,647 @@ bmission Notice Styles */
 .dept-status.status-rejected .status-badge {
   background: var(--error-color);
   color: white;
+}
+
+/* Searchable Dropdown Styles */
+.searchable-dropdown {
+  position: relative !important;
+  width: 100% !important;
+  overflow: visible !important;
+  isolation: isolate !important;
+  z-index: 10 !important;
+}
+
+.dropdown-input {
+  width: 100% !important;
+  padding-right: 40px !important;
+  cursor: text;
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.dropdown-list {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 2px solid #dee2e6 !important;
+  border-top: none !important;
+  border-radius: 0 0 12px 12px !important;
+  max-height: 200px !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 99999 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  isolation: isolate !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dropdown-item {
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  border-bottom: 1px solid #e9ecef !important;
+  transition: all 0.2s ease !important;
+  min-height: 50px !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 1 !important;
+  isolation: isolate !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none !important;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa !important;
+  background-color: #f8f9fa !important;
+}
+
+.dropdown-item.selected {
+  background: #007bff !important;
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.employee-info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  flex: 1 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.employee-name {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: #2c3e50 !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.dropdown-item.selected .employee-name {
+  color: white !important;
+}
+
+.employee-id {
+  font-size: 12px !important;
+  color: #6c757d !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.dropdown-item.selected .employee-id {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.no-results {
+  padding: 16px !important;
+  text-align: center !important;
+  color: var(--text-secondary) !important;
+  font-style: italic !important;
+  font-size: 14px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  margin: 0 !important;
+  border: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure dropdown items don't inherit any background styles from parent elements */
+.dropdown-item * {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Prevent any form elements from showing in dropdown */
+.dropdown-item input,
+.dropdown-item select,
+.dropdown-item textarea,
+.dropdown-item button,
+.dropdown-item form,
+.dropdown-item .form-group,
+.dropdown-item .form-section {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Ensure only employee info is visible */
+.dropdown-item .employee-info,
+.dropdown-item .employee-name,
+.dropdown-item .employee-id {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Additional isolation rules to prevent background bleeding */
+.dropdown-list {
+  contain: strict !important;
+  isolation: isolate !important;
+}
+
+.dropdown-item {
+  contain: layout style !important;
+  isolation: isolate !important;
+}
+
+/* Ensure dropdown has its own stacking context */
+.searchable-dropdown {
+  transform: translateZ(0) !important;
+  contain: layout !important;
+}
+
+/* Hide any potential background elements that might bleed through */
+.dropdown-list::before,
+.dropdown-list::after,
+.dropdown-item::before,
+.dropdown-item::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Ensure clean background for dropdown container */
+.dropdown-list {
+  background-image: none !important;
+  background-attachment: initial !important;
+  background-origin: initial !important;
+  background-clip: initial !important;
+  background-size: initial !important;
+  background-repeat: no-repeat !important;
+  background-position: initial !important;
+}
+
+/* Force clean state for dropdown items */
+.dropdown-item {
+  background-image: none !important;
+  background-attachment: initial !important;
+  background-origin: initial !important;
+  background-clip: initial !important;
+  background-size: initial !important;
+  background-repeat: no-repeat !important;
+  background-position: initial !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Ultimate fallback - force white background for all dropdown elements */
+.dropdown-list,
+.dropdown-list *,
+.dropdown-item,
+.dropdown-item *,
+.planned-dropdown,
+.planned-dropdown *,
+.dropdown-list.planned-dropdown,
+.dropdown-list.planned-dropdown * {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+/* Exception for hover and selected states */
+.dropdown-item:hover,
+.dropdown-item:hover * {
+  background: #f8f9fa !important;
+  background-color: #f8f9fa !important;
+}
+
+.dropdown-item.selected,
+.dropdown-item.selected * {
+  background: #007bff !important;
+  background-color: #007bff !important;
+}
+
+/* Ensure text colors are correct */
+.dropdown-item .employee-name {
+  color: #2c3e50 !important;
+}
+
+.dropdown-item .employee-id {
+  color: #6c757d !important;
+}
+
+.dropdown-item.selected .employee-name,
+.dropdown-item.selected .employee-id {
+  color: white !important;
+}
+
+.dropdown-item:hover .employee-name {
+  color: #2c3e50 !important;
+}
+
+.dropdown-item:hover .employee-id {
+  color: #6c757d !important;
+}
+
+/* Ensure dropdown container is completely isolated from parent styles */
+.searchable-dropdown .dropdown-list {
+  all: initial !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 2px solid #dee2e6 !important;
+  border-top: none !important;
+  border-radius: 0 0 12px 12px !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 99999 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  color: #2c3e50 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Reset all dropdown item styles completely */
+.searchable-dropdown .dropdown-list .dropdown-item {
+  all: initial !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  border-bottom: 1px solid #e9ecef !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #2c3e50 !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  min-height: 50px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.2s ease !important;
+}
+
+/* Contact Details Section Styles */
+.contact-info-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #2563eb;
+}
+
+.contact-info-note i {
+  color: #2563eb;
+  font-size: 12px;
+}
+
+.contact-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.contact-item {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.3s ease;
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.contact-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 1px 4px rgba(204, 153, 51, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Subtle highlighting for required fields */
+.contact-item:first-child, /* Address */
+.contact-item:nth-child(7), /* Mobile */
+.contact-item:nth-child(9) { /* Email */
+  border-color: rgba(204, 153, 51, 0.4);
+  background: rgba(204, 153, 51, 0.03);
+}
+
+.contact-item:first-child:hover,
+.contact-item:nth-child(7):hover,
+.contact-item:nth-child(9):hover {
+  border-color: var(--primary-color);
+  background: rgba(204, 153, 51, 0.08);
+}
+
+.contact-item label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contact-item label i {
+  color: var(--primary-color);
+  font-size: 12px;
+  width: 14px;
+  text-align: center;
+}
+
+.contact-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+/* Compact 4-column layout - no special positioning needed */
+.contact-item:first-child .contact-value {
+  line-height: 1.3;
+}
+
+/* Responsive adjustments for contact details */
+@media (max-width: 1200px) {
+  .contact-details-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .contact-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .contact-details-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .contact-item {
+    padding: 10px;
+    min-height: 45px;
+  }
+  
+  .contact-item label {
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+  
+  .contact-value {
+    font-size: 12px;
+  }
+}
+
+/* Empty state styling */
+.address-content:empty::before,
+.contact-value:empty::before {
+  content: 'Not provided';
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Ensure proper spacing */
+.contact-details-grid + * {
+  margin-top: 24px;
+}
+
+/* Custom scrollbar for dropdown - BOLD and VISIBLE */
+.dropdown-list::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 6px !important;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: #007bff !important;
+  border-radius: 6px !important;
+  border: 2px solid #f1f1f1 !important;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #0056b3 !important;
+}
+
+/* For Firefox */
+.dropdown-list {
+  scrollbar-width: auto !important;
+  scrollbar-color: #007bff #f1f1f1 !important;
+}
+
+/* Specific styling for planned leave dropdown with high specificity */
+/* Multiple selectors to ensure we catch all instances */
+.dropdown-list.planned-dropdown,
+.planned-dropdown.dropdown-list,
+.form-grid-planned .hod-name-group .searchable-dropdown .dropdown-list.planned-dropdown,
+.form-grid-planned .hod-name-group .searchable-dropdown .planned-dropdown.dropdown-list,
+.hod-name-group .searchable-dropdown .dropdown-list.planned-dropdown,
+.hod-name-group .searchable-dropdown .planned-dropdown.dropdown-list,
+.searchable-dropdown .dropdown-list.planned-dropdown,
+.searchable-dropdown .planned-dropdown.dropdown-list {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 99999 !important;
+  isolation: isolate !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  border: 2px solid #dee2e6 !important;
+  border-top: none !important;
+  border-radius: 0 0 12px 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  transform: translateZ(0) !important;
+}
+
+/* Ensure planned leave dropdown items are clearly visible */
+.dropdown-list.planned-dropdown .dropdown-item,
+.planned-dropdown.dropdown-list .dropdown-item,
+.form-grid-planned .hod-name-group .searchable-dropdown .dropdown-list.planned-dropdown .dropdown-item,
+.form-grid-planned .hod-name-group .searchable-dropdown .planned-dropdown.dropdown-list .dropdown-item,
+.hod-name-group .searchable-dropdown .dropdown-list.planned-dropdown .dropdown-item,
+.hod-name-group .searchable-dropdown .planned-dropdown.dropdown-list .dropdown-item,
+.searchable-dropdown .dropdown-list.planned-dropdown .dropdown-item,
+.searchable-dropdown .planned-dropdown.dropdown-list .dropdown-item {
+  padding: 12px 16px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  border-bottom: 1px solid #e9ecef !important;
+  position: relative !important;
+  z-index: 1 !important;
+  isolation: isolate !important;
+}
+
+/* Mobile specific for planned dropdown */
+@media (max-width: 768px) {
+
+  .dropdown-list.planned-dropdown,
+  .planned-dropdown.dropdown-list,
+  .form-grid-planned .hod-name-group .searchable-dropdown .dropdown-list.planned-dropdown,
+  .form-grid-planned .hod-name-group .searchable-dropdown .planned-dropdown.dropdown-list,
+  .hod-name-group .searchable-dropdown .dropdown-list.planned-dropdown,
+  .hod-name-group .searchable-dropdown .planned-dropdown.dropdown-list,
+  .searchable-dropdown .dropdown-list.planned-dropdown,
+  .searchable-dropdown .planned-dropdown.dropdown-list {
+    max-height: 150px !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Ensure dropdown doesn't push content down */
+.form-section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Specific fix for planned leave form section */
+.form-section:has(.form-grid-planned) {
+  overflow: visible !important;
+}
+
+/* Ensure the form grid doesn't expand when dropdown appears */
+.form-grid-planned {
+  overflow: visible !important;
+}
+
+/* Prevent step content from expanding when dropdown appears */
+.step-content {
+  overflow: visible !important;
+}
+
+/* Additional safety for form content */
+.form-content {
+  overflow: visible !important;
+}
+
+.searchable-dropdown .dropdown-list {
+  /* Ensure dropdown is positioned correctly and doesn't affect layout */
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+/* Prevent layout shift when dropdown appears */
+.form-group {
+  position: relative;
+  z-index: auto;
+}
+
+.form-group:has(.dropdown-list) {
+  z-index: 1001;
+  /* Higher z-index when dropdown is active */
+}
+
+/* Ensure the dropdown container doesn't expand the parent */
+.searchable-dropdown {
+  contain: layout;
+}
+
+/* Additional safety to prevent layout shifts */
+.form-content {
+  position: relative;
+}
+
+.step-content {
+  position: relative;
+  overflow: visible;
+}
+
+/* Responsive adjustments for dropdown */
+@media (max-width: 768px) {
+  .dropdown-list {
+    max-height: 100px;
+    /* Even smaller height for mobile - shows about 2 items */
+  }
+
+  .dropdown-item {
+    padding: 8px 12px;
+    /* Smaller padding for mobile */
+  }
+
+  .employee-name {
+    font-size: 13px;
+  }
+
+  .employee-id {
+    font-size: 11px;
+  }
 }

@@ -9,19 +9,20 @@ export interface EmployeeExitResponsibility {
 
 
 export interface EmployeeExitRequest {
-  exitId?: number;                 
+  exitId?: number;
   employeeId: string;
-  formType: string;                
-  dateOfDeparture: string;         
-  dateArrival: string;             
+  formType: string;
+  dateOfDeparture: string;
+  dateArrival: string;
   flightTime: string;
   responsibilitiesHanded: string;
   noOfDaysApproved: number;
   depHod: string;
   projectSiteIncharge: string;
   reasonForLeave: string;
-  approvalStatus: string;          
-  declaration1?: string;           
+  approvalStatus: string;
+  category: string;
+  declaration1?: string;
   declaration2?: string;
   declaration3?: string;
   declaration4?: string;

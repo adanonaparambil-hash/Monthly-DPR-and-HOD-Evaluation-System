@@ -4,7 +4,7 @@
   padding: 20px;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .form-header {
@@ -132,4 +132,165 @@
 
 .hod-dropdown-group select {
   min-width: 100%;
+}
+
+/* Searchable Dropdown Styles */
+.searchable-dropdown {
+  position: relative;
+  width: 100%;
+  /* Ensure the dropdown doesn't affect the parent container's height */
+  overflow: visible;
+  contain: layout;
+}
+
+.dropdown-input {
+  width: 100% !important;
+  padding: 12px;
+  padding-right: 40px !important;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  cursor: text;
+}
+
+.dropdown-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.dropdown-list {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: #fff;
+  border: 2px solid #e9ecef;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  max-height: 200px;
+  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 9999 !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Prevent the dropdown from affecting layout */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.dropdown-item.selected {
+  background: #007bff;
+  color: white;
+}
+
+.employee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.employee-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+
+.dropdown-item.selected .employee-name {
+  color: white;
+}
+
+.employee-id {
+  font-size: 12px;
+  color: #6c757d;
+  opacity: 0.8;
+  line-height: 1.1;
+}
+
+.dropdown-item.selected .employee-id {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.no-results {
+  padding: 16px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Custom scrollbar for dropdown */
+.dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 2px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: #007bff;
+  border-radius: 4px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
+}
+
+/* Ensure form sections don't expand when dropdown appears */
+.form-section {
+  position: relative;
+  overflow: visible !important;
+}
+
+.form-grid {
+  overflow: visible !important;
+}
+
+.form-group {
+  position: relative;
+  z-index: auto;
+}
+
+.form-group:has(.dropdown-list) {
+  z-index: 1001;
+  /* Higher z-index when dropdown is active */
+}
+
+.form-content {
+  position: relative;
+  overflow: visible !important;
 }

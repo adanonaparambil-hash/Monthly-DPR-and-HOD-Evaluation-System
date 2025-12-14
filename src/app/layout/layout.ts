@@ -202,7 +202,8 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard': 'CED Performance Dashboard',
       '/ced-dashboard-old': 'CED Dashboard (Old)',
       '/ced-dashboard-new': 'CED Performance Dashboard',
-      '/profile': 'My Profile'
+      '/profile': 'My Profile',
+      '/leave-approval': 'Leave Approval Management'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';
@@ -354,8 +355,7 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isApprovalsRouteActive(): boolean {
-    // For future approval routes
-    return this.currentRoute.includes('/approvals');
+    return this.currentRoute.includes('/leave-approval') || this.currentRoute.includes('/approvals');
   }
 
   // Update menu states based on current route

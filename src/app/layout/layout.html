@@ -51,11 +51,10 @@
           <i class="fas fa-chevron-down" [class.rotated]="isApprovalsMenuOpen"></i>
         </a>
         <div class="submenu" *ngIf="isApprovalsMenuOpen" [@slideDown]>
-          <!-- Future approval menu items will go here -->
-          <div class="submenu-placeholder">
-            <i class="fas fa-info-circle"></i>
-            <span>Coming Soon...</span>
-          </div>
+          <a routerLink="/leave-approval" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-clipboard-check"></i>
+            <span>Leave Approval</span>
+          </a>
         </div>
       </div>
 
