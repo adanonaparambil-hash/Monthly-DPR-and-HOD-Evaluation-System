@@ -85,6 +85,7 @@
               <span class="error-message" *ngIf="isFieldInvalid('department')">
                 {{ getFieldError('department') }}
               </span>
+             
             </div>
 
             <div class="form-group">
@@ -103,9 +104,9 @@
                 {{ getFieldError('hodName') }}
               </span>
               <!-- Debug info - remove in production -->
-              <small style="color: #666; font-size: 12px;">
+              <!-- <small style="color: #666; font-size: 12px;">
                 Emergency Form HOD Count: {{ hodList.length }}
-              </small>
+              </small> -->
             </div>
 
             <!-- Planned Leave Specific Fields -->
@@ -147,20 +148,7 @@
               </span>
             </div>
 
-            <!-- HOD Selection -->
-            <div class="form-group hod-name-group">
-              <label for="hodName">HOD *</label>
-              <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
-                <option value="">Select HOD</option>
-                <option *ngFor="let hod of hodList" [value]="hod.idValue">
-                  {{ hod.description }}
-                </option>
-              </select>
-              <span class="error-message" *ngIf="isFieldInvalid('hodName')">
-                {{ getFieldError('hodName') }}
-              </span>
-            </div>
-
+           
 
           <div class="form-group hod-name-group" *ngIf="formType === 'P'">
             <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
@@ -325,60 +313,187 @@
               </div>
 
               <div class="responsibility-form-grid">
-                <div class="form-group full-width">
+                <div class="form-group project-field">
                   <label>Project *</label>
                   <input type="text" formControlName="project" placeholder="Enter project name">
                 </div>
 
-                <div class="form-group full-width">
+                <div class="form-group activities-field">
                   <label>Activities *</label>
                   <textarea formControlName="activities" rows="4"
                     placeholder="Describe the activities and responsibilities being handed over"></textarea>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group name-field">
                   <label>Responsible Person Name *</label>
                   <input type="text" formControlName="responsiblePersonName"
                     placeholder="Full name of person taking over">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group phone-field">
                   <label>Phone Number *</label>
                   <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number">
                 </div>
 
-                <div class="form-group full-width">
+                <div class="form-group email-field">
                   <label>Email ID *</label>
                   <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address">
                 </div>
 
-                <div class="form-group full-width">
+                <div class="form-group remarks-field">
                   <label>Remarks</label>
                   <textarea formControlName="remarks" rows="3"
                     placeholder="Any additional remarks or special instructions"></textarea>
                 </div>
               </div>
 
-              <div class="signature-section">
-                <label>Digital Signature</label>
-                <div class="signature-input-container">
-                  <input type="text" formControlName="digitalSignature"
-                    placeholder="Type your full name as digital signature" class="signature-input">
-                  <div class="signature-note">
-                    <i class="fas fa-info-circle"></i>
-                    <span>By typing your name, you agree this serves as your digital signature</span>
-                  </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Final Review (Emergency) / Approval Workflow (Planned) -->
+      <div class="step-content" *ngIf="currentStep === 3" [@fadeInUp]="'in'">
+        <!-- For Emergency: Show Final Review -->
+        <div class="form-section" *ngIf="formType === 'E'">
+          <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
+
+          <div class="review-summary">
+            <div class="summary-card">
+              <h4>Employee Information</h4>
+              <div class="summary-grid">
+                <div><strong>Name:</strong> {{ exitForm.get('employeeName')?.value }}</div>
+                <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
+                <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
+                <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
+                <div><strong>Days Approved:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
+                <div><strong>Email:</strong> {{ exitForm.get('emailId')?.value }}</div>
+              </div>
+            </div>
+
+            <div class="summary-card">
+              <h4>Responsibilities</h4>
+              <div class="responsibilities-summary">
+                <div *ngFor="let resp of responsibilitiesFormArray.controls; let i = index"
+                  class="responsibility-summary">
+                  <strong>{{ i + 1 }}. {{ resp.get('project')?.value }}</strong>
+                  <p>Handed over to: {{ resp.get('responsiblePersonName')?.value }}</p>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="declarations">
+            <h4>Declarations</h4>
+            <div class="declaration-list">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decInfoAccurate">
+                <span class="checkmark"></span>
+                I confirm that all information provided is accurate and complete
+              </label>
+
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decHandoverComplete">
+                <span class="checkmark"></span>
+                I have handed over all my responsibilities to the designated personnel
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decReturnAssets">
+                <span class="checkmark"></span>
+                I will return all company assets (laptop, phone, keys, etc.) before departure
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decUnderstandReturn">
+                <span class="checkmark"></span>
+                I understand this is an emergency exit and I will return as per the approved dates
+              </label>
+            </div>
+
+            <div class="declaration-notes">
+              <div class="note info">
+                <i class="fas fa-info-circle"></i>
+                <span>Once submitted, your request will be sent to all approving departments. You will receive email
+                  notifications as each department approves your request.</span>
+              </div>
+              <div class="note success">
+                <i class="fas fa-clock"></i>
+                <span>Emergency exit requests are typically processed within 2-3 business days. You will be notified of
+                  the final decision via email.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- For Planned Leave: Show Final Review -->
+        <div class="form-section" *ngIf="formType === 'P'">
+          <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
+
+          <div class="review-summary">
+            <div class="summary-card">
+              <h4>Employee Information</h4>
+              <div class="summary-grid">
+                <div><strong>Name:</strong> {{ exitForm.get('employeeName')?.value }}</div>
+                <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
+                <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
+                <div><strong>Category:</strong> {{ exitForm.get('category')?.value }}</div>
+                <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
+                <div><strong>Days Requested:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
+                <div><strong>Responsibilities Handed Over To:</strong> {{ exitForm.get('responsibilitiesHandedOverTo')?.value }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="declarations">
+            <h4>Declarations</h4>
+            <div class="declaration-list">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decInfoAccurate">
+                <span class="checkmark"></span>
+                I confirm that all information provided is accurate and complete
+              </label>
+
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decHandoverComplete">
+                <span class="checkmark"></span>
+                I have properly handed over my responsibilities to {{
+                exitForm.get('responsibilitiesHandedOverTo')?.value ||
+                'the designated person' }}
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decReturnAssets">
+                <span class="checkmark"></span>
+                I will return all company assets (laptop, phone, keys, etc.) before my planned departure
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="decUnderstandReturn">
+                <span class="checkmark"></span>
+                I understand this is a planned leave and I will return as per the approved schedule
+              </label>
+            </div>
+
+            <div class="declaration-notes">
+              <div class="note info">
+                <i class="fas fa-info-circle"></i>
+                <span>Once submitted, your request will be sent to all approving departments. You will receive email
+                  notifications as each department approves your request.</span>
+              </div>
+              <div class="note success">
+                <i class="fas fa-calendar-check"></i>
+                <span>Planned leave requests are typically processed within 5-7 business days. You will be notified of
+                  the final decision via email.</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 3: Department Approvals -->
-      <div class="step-content" *ngIf="currentStep === 3" [@fadeInUp]="'in'">
+      <!-- Step 4: Department Approvals (Post-Submission) -->
+      <div class="step-content" *ngIf="currentStep === 4" [@fadeInUp]="'in'">
         <div class="form-section">
           <h3><i class="fas fa-clipboard-check"></i> Approval From Concerned Departments</h3>
+          
+
 
           <div class="approval-progress">
             <div class="progress-header">
@@ -508,157 +623,21 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Step 4: Final Review -->
-      <div class="step-content" *ngIf="currentStep === 4" [@fadeInUp]="'in'">
-        <div class="form-section">
-          <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
 
-          <div class="review-summary">
-            <div class="summary-card">
-              <h4>Employee Information</h4>
-              <div class="summary-grid">
-                <div><strong>Name:</strong> {{ exitForm.get('employeeName')?.value }}</div>
-                <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
-                <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
-                <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
-                <div><strong>Days Approved:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
-                <div><strong>Email:</strong> {{ exitForm.get('emailId')?.value }}</div>
-              </div>
+
+          <div class="final-actions" *ngIf="getAllApprovalStatus() === 'approved'">
+            <div class="success-notice">
+              <i class="fas fa-check-circle"></i>
+              <span>All approvals completed! Your {{ formType === 'E' ? 'emergency exit' : 'planned leave' }} request has been fully approved.</span>
             </div>
-
-            <div class="summary-card">
-              <h4>Responsibilities</h4>
-              <div class="responsibilities-summary">
-                <div *ngFor="let resp of responsibilitiesFormArray.controls; let i = index"
-                  class="responsibility-summary">
-                  <strong>{{ i + 1 }}. {{ resp.get('project')?.value }}</strong>
-                  <p>Handed over to: {{ resp.get('responsiblePersonName')?.value }}</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="summary-card">
-              <h4>Approval Status</h4>
-              <div class="approval-summary">
-                <div class="approval-status-grid">
-                  <div *ngFor="let dept of departments" class="dept-status" [ngClass]="'status-' + dept.status">
-                    <span>{{ dept.name }}</span>
-                    <span class="status-badge">{{ dept.status | titlecase }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="final-signatures">
-            <div class="signature-row">
-              <div class="signature-block">
-                <h5>Employee Digital Signature</h5>
-                <div class="final-signature-input-container">
-                  <input type="text" formControlName="employeeSignature"
-                    placeholder="Type your full name as digital signature" class="final-signature-input">
-                  <div class="signature-note">
-                    <i class="fas fa-info-circle"></i>
-                    <span>By typing your name, you agree this serves as your digital signature</span>
-                  </div>
-                </div>
-                <input type="date" formControlName="employeeSignatureDate" placeholder="Signature Date">
-              </div>
-
-              <div class="signature-block">
-                <h5>HR Digital Signature</h5>
-                <div class="final-signature-input-container">
-                  <input type="text" formControlName="hrSignature" placeholder="HR representative name"
-                    class="final-signature-input">
-                  <div class="signature-note">
-                    <i class="fas fa-info-circle"></i>
-                    <span>HR digital signature confirmation</span>
-                  </div>
-                </div>
-                <input type="date" formControlName="hrSignatureDate" placeholder="Signature Date">
-              </div>
-            </div>
-          </div>
-
-          <div class="travel-documents">
-            <label class="checkbox-label">
-              <input type="checkbox" formControlName="travelDocumentsHandedOver">
-              <span class="checkmark"></span>
-              Travel Documents Handed Over to the Employee
-            </label>
-          </div>
-
-          <div class="declarations">
-            <h4>Declarations</h4>
-            <div class="declaration-list">
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decInfoAccurate">
-                <span class="checkmark"></span>
-                I confirm that all information provided is accurate and complete
-              </label>
-
-              <!-- Emergency Exit Form Declarations -->
-              <ng-container *ngIf="formType === 'E'">
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="decHandoverComplete">
-                  <span class="checkmark"></span>
-                  I have handed over all my responsibilities to the designated personnel
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="decReturnAssets">
-                  <span class="checkmark"></span>
-                  I will return all company assets (laptop, phone, keys, etc.) before departure
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="decUnderstandReturn">
-                  <span class="checkmark"></span>
-                  I understand this is an emergency exit and I will return as per the approved dates
-                </label>
-              </ng-container>
-
-              <!-- Planned Leave Form Declarations -->
-              <ng-container *ngIf="formType === 'P'">
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="decHandoverComplete">
-                  <span class="checkmark"></span>
-                  I have properly handed over my responsibilities to {{
-                  exitForm.get('responsibilitiesHandedOverTo')?.value ||
-                  'the designated person' }}
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="decReturnAssets">
-                  <span class="checkmark"></span>
-                  I will return all company assets (laptop, phone, keys, etc.) before my planned departure
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="decUnderstandReturn">
-                  <span class="checkmark"></span>
-                  I understand this is a planned leave and I will return as per the approved schedule
-                </label>
-              </ng-container>
-            </div>
-
-            <div class="declaration-notes">
-              <div class="note info">
-                <i class="fas fa-info-circle"></i>
-                <span>Once submitted, your request will be sent to all approving departments. You will receive email
-                  notifications as each department approves your request.</span>
-              </div>
-              <div class="note success" *ngIf="formType === 'E'">
-                <i class="fas fa-clock"></i>
-                <span>Emergency exit requests are typically processed within 2-3 business days. You will be notified of
-                  the
-                  final decision via email.</span>
-              </div>
-              <div class="note success" *ngIf="formType === 'P'">
-                <i class="fas fa-calendar-check"></i>
-                <span>Planned leave requests are typically processed within 5-7 business days. You will be notified of
-                  the
-                  final decision via email.</span>
-              </div>
+            <div class="action-buttons">
+              <button type="button" class="btn-primary" (click)="downloadPDF()">
+                <i class="fas fa-download"></i> Download Approved Form
+              </button>
+              <button type="button" class="btn-secondary" (click)="resetForm()">
+                <i class="fas fa-plus"></i> New Request
+              </button>
             </div>
           </div>
         </div>
@@ -680,11 +659,16 @@
       </button>
 
       <button type="button" class="btn-submit" (click)="submitForm()"
-        [disabled]="getAllApprovalStatus() !== 'approved' || !allDeclarationsChecked() || isSubmitting"
-        *ngIf="currentStep === 4">
+        [disabled]="!allDeclarationsChecked() || isSubmitting"
+        *ngIf="currentStep === 3">
         <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
         <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
         {{ isSubmitting ? 'Submitting...' : 'Submit Form' }}
+      </button>
+
+      <button type="button" class="btn-primary" (click)="downloadPDF()"
+        *ngIf="currentStep === 4 && getAllApprovalStatus() === 'approved'">
+        <i class="fas fa-download"></i> Download Approved Form
       </button>
     </div>
 

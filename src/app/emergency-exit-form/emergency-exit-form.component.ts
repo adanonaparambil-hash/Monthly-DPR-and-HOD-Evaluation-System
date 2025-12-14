@@ -183,32 +183,31 @@ export class EmergencyExitFormComponent implements OnInit {
 
   ngOnInit() {
     try {
-      // Set form type based on URL parameter or input
-      this.setFormType();
+      // Get current user from session first
+      this.currentUser = this.sessionService.getCurrentUser();
+      
+      // Debug: Log all available user properties
+      this.debugUserProperties();
 
-      // Adjust total steps based on form type
-      this.totalSteps = this.formType === 'P' ? 2 : 4; // Planned leave: Step 1 (all info) -> Step 2 (approvals)
-
-      this.addResponsibility(); // Add one default responsibility row
+      // Add one default responsibility row
+      this.addResponsibility();
+      
       // Ensure all departments are visible by default
       this.departments.forEach(dept => {
         if (!dept.status) {
           dept.status = 'pending';
         }
       });
-      // Get current user from session and populate form
-      this.currentUser = this.sessionService.getCurrentUser();
+
+      // Populate form with session data first
       this.populateFormFromSession();
+
+      // Set form type based on URL parameter or input (this will re-populate if needed)
+      this.setFormType();
 
       // Load master lists
       this.loadHodMasterList();
       this.loadProjectManagerList();
-
-      // Load employee details for both Emergency and Planned Leave forms
-      this.loadEmployeeDetails();
-
-      // Update form validations based on form type
-      this.updateFormValidations();
 
       // Disable employee information fields (always disabled)
       this.disableEmployeeInfoFields();
@@ -221,6 +220,30 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('Departments initialized:', this.departments.length); // Debug log
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
+    }
+  }
+
+  // Debug method to log all user properties
+  debugUserProperties(): void {
+    if (this.currentUser) {
+      console.log('=== DEBUG: All User Properties ===');
+      console.log('Full user object:', this.currentUser);
+      console.log('Available properties:', Object.keys(this.currentUser));
+      
+      // Check for department-related properties
+      const departmentProps = Object.keys(this.currentUser).filter(key => 
+        key.toLowerCase().includes('dept') || key.toLowerCase().includes('department')
+      );
+      console.log('Department-related properties:', departmentProps);
+      
+      // Log values of department-related properties
+      departmentProps.forEach(prop => {
+        console.log(`${prop}:`, this.currentUser[prop]);
+      });
+      
+      console.log('=== END DEBUG ===');
+    } else {
+      console.warn('No current user found for debugging');
     }
   }
 
@@ -237,12 +260,12 @@ export class EmergencyExitFormComponent implements OnInit {
         console.log('Form type defaulted to Emergency'); // Debug log
       }
 
-      // Clear form and reset to step 1 when form type changes
-      this.clearFormAndReset();
-
       // Update form validations and steps when form type changes
       this.totalSteps = this.formType === 'P' ? 2 : 4;
       this.updateFormValidations();
+
+      // Re-populate form with session data after form type change
+      this.populateFormFromSession();
 
       // Load employee details for the new form type
       this.loadEmployeeDetails();
@@ -346,16 +369,6 @@ export class EmergencyExitFormComponent implements OnInit {
       // Department approvals will be handled separately
       departmentApprovals: this.fb.group({}),
 
-      // Final signatures
-      employeeSignature: [''],
-      hrSignature: [''],
-      employeeSignatureDate: [''],
-      hrSignatureDate: [''],
-      digitalSignature: [''],
-
-      // Travel documents
-      travelDocumentsHandedOver: [false],
-
       // Declarations (must all be checked to submit)
       decInfoAccurate: [false, Validators.requiredTrue],
       decHandoverComplete: [false, Validators.requiredTrue],
@@ -373,13 +386,23 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('Emergency Exit Form - Current user from session:', this.currentUser);
     
     if (this.currentUser) {
+      // Try different possible property names for department
+      const department = this.currentUser.department || 
+                        this.currentUser.empDept || 
+                        this.currentUser.dept || 
+                        this.currentUser.departmentName || 
+                        this.currentUser.empDepartment ||
+                        '';
+      
       const formData = {
         employeeName: this.currentUser.employeeName || this.currentUser.name || '',
         employeeId: this.currentUser.empId || this.currentUser.employeeId || '',
-        department: this.currentUser.department || '',
-        emailId: this.currentUser.email || ''
+        department: department,
+        emailId: this.currentUser.email || this.currentUser.emailId || ''
       };
       
+      console.log('Emergency Exit Form - Available user properties:', Object.keys(this.currentUser));
+      console.log('Emergency Exit Form - Department value found:', department);
       console.log('Emergency Exit Form - Populating form with data:', formData);
       this.exitForm.patchValue(formData);
       
@@ -399,7 +422,6 @@ export class EmergencyExitFormComponent implements OnInit {
       responsiblePersonName: ['', Validators.required],
       responsiblePersonPhone: ['', Validators.required],
       responsiblePersonEmail: ['', [Validators.required, Validators.email]],
-      digitalSignature: [''],
       remarks: ['']
     });
 
@@ -418,24 +440,15 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('Validation result:', isValid);
 
     if (isValid) {
-      // For Planned Leave, go directly from Step 1 to Step 3 (approvals)
+      // For Planned Leave: Step 1 -> Step 3 (Final Review)
       if (this.formType === 'P' && this.currentStep === 1) {
-        this.currentStep = 3; // Skip to step 3 (approvals) - displays as Step 2
-        console.log('Planned Leave: Moving from Step 1 to Step 3');
-      } else if (this.formType === 'E' && this.currentStep < 4) {
+        this.currentStep = 3; // Go to final review step
+        console.log('Planned Leave: Moving from Step 1 to Step 3 (Final Review)');
+      } 
+      // For Emergency: Step 1 -> Step 2 -> Step 3 (Final Review)
+      else if (this.formType === 'E' && this.currentStep < 3) {
         this.currentStep++;
         console.log('Emergency: Moving to step', this.currentStep);
-      } else if (this.formType === 'P' && this.currentStep === 3) {
-        this.currentStep = 4; // Go to final step for planned leave
-        console.log('Planned Leave: Moving from Step 3 to Step 4');
-      }
-
-      // Ensure all department cards are visible when reaching step 3
-      if (this.currentStep === 3) {
-        this.cdr.detectChanges(); // Force change detection
-        setTimeout(() => {
-          this.ensureAllCardsVisible();
-        }, 100);
       }
     } else {
       console.log('Validation failed, not moving to next step');
@@ -444,11 +457,17 @@ export class EmergencyExitFormComponent implements OnInit {
 
   previousStep() {
     if (this.currentStep > 1) {
-      // For Planned Leave, go back from Step 3 (approvals) to Step 1
+      // For Planned Leave, go back from Step 3 (Final Review) to Step 1
       if (this.formType === 'P' && this.currentStep === 3) {
         this.currentStep = 1; // Go back to step 1
-      } else if (this.formType === 'P' && this.currentStep === 4) {
-        this.currentStep = 3; // Go back to approvals step
+      } 
+      // For Planned Leave, go back from Step 4 (Approvals) to Step 3 (Final Review)
+      else if (this.formType === 'P' && this.currentStep === 4) {
+        this.currentStep = 3; // Go back to final review step
+      } 
+      // For Emergency, go back from Step 4 (Approvals) to Step 3 (Final Review)
+      else if (this.formType === 'E' && this.currentStep === 4) {
+        this.currentStep = 3; // Go back to final review step
       } else {
         this.currentStep--;
       }
@@ -458,8 +477,8 @@ export class EmergencyExitFormComponent implements OnInit {
   goToStep(step: number) {
     if (step >= 1 && step <= this.totalSteps) {
       this.currentStep = step;
-      // Ensure all department cards are visible when going to step 3
-      if (step === 3) {
+      // Ensure all department cards are visible when going to step 4 (approvals)
+      if (step === 4) {
         this.cdr.detectChanges(); // Force change detection
         setTimeout(() => {
           this.ensureAllCardsVisible();
@@ -493,9 +512,9 @@ export class EmergencyExitFormComponent implements OnInit {
       case 2:
         return this.validateResponsibilities();
       case 3:
-        return true; // Department approvals are handled by HODs
+        return true; // Final review step - no additional validation needed
       case 4:
-        return true; // Final review
+        return true; // Department approvals are handled by HODs
       default:
         return true;
     }
@@ -561,16 +580,16 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.formType === 'P') {
       switch (this.currentStep) {
         case 1: return 'Employee Information';
-        case 3: return 'Department Approvals';
-        case 4: return 'Final Review & Submit';
+        case 3: return 'Final Review & Submit';
+        case 4: return 'Department Approvals';
         default: return 'Employee Exit Form - Planned Leave';
       }
     } else {
       switch (this.currentStep) {
         case 1: return 'Employee Information';
         case 2: return 'Responsibility Handover';
-        case 3: return 'Department Approvals';
-        case 4: return 'Final Review & Submit';
+        case 3: return 'Final Review & Submit';
+        case 4: return 'Department Approvals';
         default: return 'Emergency Exit Form';
       }
     }
@@ -580,16 +599,16 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.formType === 'P') {
       switch (this.currentStep) {
         case 1: return 'Please fill in your personal information, travel details, and leave information';
-        case 3: return 'Department HODs and Project Manager will review and approve';
-        case 4: return 'Review all information and submit the form';
+        case 3: return 'Review all information and submit the form';
+        case 4: return 'Department HODs and Project Manager will review and approve your request';
         default: return '';
       }
     } else {
       switch (this.currentStep) {
         case 1: return 'Please fill in your personal and travel information';
         case 2: return 'List all responsibilities to be handed over';
-        case 3: return 'Department HODs will review and approve';
-        case 4: return 'Review all information and submit the form';
+        case 3: return 'Review all information and submit the form';
+        case 4: return 'Department HODs will review and approve your request';
         default: return '';
       }
     }
@@ -655,14 +674,21 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   submitForm() {
-    if (this.exitForm.valid && this.getAllApprovalStatus() === 'approved') {
+    if (this.exitForm.valid && this.allDeclarationsChecked()) {
       this.isSubmitting = true;
 
       // Simulate API call
       setTimeout(() => {
         this.isSubmitting = false;
-        this.formSubmitted = true;
-        console.log('Form submitted:', this.exitForm.value);
+        // Move to approval workflow step instead of showing success message
+        this.currentStep = 4; // Go to approval workflow step
+        console.log('Form submitted, moving to approval workflow:', this.exitForm.value);
+        
+        // Ensure all department cards are visible when reaching step 4
+        this.cdr.detectChanges(); // Force change detection
+        setTimeout(() => {
+          this.ensureAllCardsVisible();
+        }, 100);
       }, 2000);
     }
   }
@@ -678,6 +704,12 @@ export class EmergencyExitFormComponent implements OnInit {
     });
     this.responsibilitiesFormArray.clear();
     this.addResponsibility();
+    
+    // Re-populate form with session data
+    this.populateFormFromSession();
+    
+    // Re-disable employee information fields
+    this.disableEmployeeInfoFields();
   }
 
   downloadPDF() {
@@ -807,20 +839,26 @@ export class EmergencyExitFormComponent implements OnInit {
   // Get display step number (for planned leave, step 3 shows as step 2, step 4 shows as step 3)
   getDisplayStepNumber(step: number): number {
     if (this.formType === 'P') {
-      if (step === 3) return 2; // Approvals step shows as Step 2
-      if (step === 4) return 3; // Final review shows as Step 3
+      if (step === 3) return 2; // Final review shows as Step 2
+      if (step === 4) return 3; // Approvals step shows as Step 3
     }
     return step;
   }
 
   // Get total display steps
   getTotalDisplaySteps(): number {
-    return this.formType === 'P' ? 2 : 4;
+    return this.formType === 'P' ? 3 : 4;
   }
 
   // Disable employee information fields (they should always be read-only)
   disableEmployeeInfoFields(): void {
     console.log('Disabling employee information fields');
+    console.log('Current form values before disabling:', {
+      employeeName: this.exitForm.get('employeeName')?.value,
+      employeeId: this.exitForm.get('employeeId')?.value,
+      department: this.exitForm.get('department')?.value
+    });
+    
     this.exitForm.get('employeeName')?.disable();
     this.exitForm.get('employeeId')?.disable();
     this.exitForm.get('department')?.disable();
@@ -829,6 +867,12 @@ export class EmergencyExitFormComponent implements OnInit {
     this.exitForm.get('employeeName')?.setErrors(null);
     this.exitForm.get('employeeId')?.setErrors(null);
     this.exitForm.get('department')?.setErrors(null);
+    
+    console.log('Form values after disabling:', {
+      employeeName: this.exitForm.get('employeeName')?.value,
+      employeeId: this.exitForm.get('employeeId')?.value,
+      department: this.exitForm.get('department')?.value
+    });
   }
 
   // Check if current step is the last step
@@ -843,10 +887,19 @@ export class EmergencyExitFormComponent implements OnInit {
   // Check if we should show the Next button
   shouldShowNextButton(): boolean {
     if (this.formType === 'P') {
-      return this.currentStep === 1 || this.currentStep === 3; // Show on Step 1 and Step 3 (approvals)
+      return this.currentStep === 1; // Show only on Step 1 for planned leave
     } else {
-      return this.currentStep < 4; // Show on all steps except final for emergency
+      return this.currentStep < 3; // Show on Steps 1 and 2 for emergency
     }
+  }
+
+  // Force refresh employee data from session
+  refreshEmployeeDataFromSession(): void {
+    console.log('Force refreshing employee data from session');
+    this.currentUser = this.sessionService.getCurrentUser();
+    this.debugUserProperties();
+    this.populateFormFromSession();
+    this.disableEmployeeInfoFields();
   }
 
 
@@ -930,12 +983,20 @@ export class EmergencyExitFormComponent implements OnInit {
     
     if (currentUser && (currentUser.empId || currentUser.employeeId)) {
       console.log('Loading employee details from session:', currentUser);
+      console.log('Available properties in session:', Object.keys(currentUser));
+      
+      // Try different possible property names for department
+      const department = currentUser.department || 
+                        currentUser.empDept || 
+                        currentUser.dept || 
+                        currentUser.departmentName || 
+                        '';
       
       // Map session data to employee profile format
       this.employeeProfileData = {
         empId: currentUser.empId || currentUser.employeeId || '',
         employeeName: currentUser.employeeName || currentUser.name || '',
-        empDept: currentUser.department || currentUser.empDept || '',
+        empDept: department,
         email: currentUser.email || currentUser.emailId || '',
         phone: currentUser.phone || currentUser.mobile || '',
         address: currentUser.address || '',
@@ -978,6 +1039,7 @@ export class EmergencyExitFormComponent implements OnInit {
       };
 
       console.log('Form data to be patched:', formData);
+      console.log('Department value being set:', formData.department);
       this.exitForm.patchValue(formData);
 
       // Always disable employee information fields (they should not be editable)
