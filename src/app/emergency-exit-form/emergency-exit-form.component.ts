@@ -5,7 +5,10 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { ActivatedRoute } from '@angular/router';
 import { Api } from '../services/api';
 import { DropdownOption, ExitEmpProfileDetails } from '../models/common.model';
+import { EmployeeExitRequest, EmployeeExitResponsibility } from '../models/employeeExit.model';
 import { SessionService } from '../services/session.service';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 interface Department {
   id: number;
@@ -177,7 +180,8 @@ export class EmergencyExitFormComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private api: Api,
     private route: ActivatedRoute,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private toastr: ToastrService
   ) {
     this.initializeForm();
   }
@@ -205,6 +209,9 @@ export class EmergencyExitFormComponent implements OnInit {
 
       // Set form type based on URL parameter or input (this will re-populate if needed)
       this.setFormType();
+
+      // Update validators based on form type
+      this.updateValidatorsForFormType();
 
       // Load master lists
       this.loadHodMasterList();
@@ -340,16 +347,16 @@ export class EmergencyExitFormComponent implements OnInit {
       dateOfArrival: [''],
       noOfDaysApproved: ['', [Validators.required, Validators.min(1)]],
 
-      // Contact Details
-      address: ['', Validators.required],
+      // Contact Details (conditionally required)
+      address: [''],
       district: [''],
-      telephoneMobile: ['', Validators.required],
+      telephoneMobile: [''],
       place: [''],
       state: [''],
       telephoneLandline: [''],
       postOffice: [''],
       nation: [''],
-      emailId: ['', [Validators.required, Validators.email]],
+      emailId: [''],
 
       // Reason (Emergency or Planned Leave specific)
       reasonForEmergency: ['', Validators.required],
@@ -357,6 +364,7 @@ export class EmergencyExitFormComponent implements OnInit {
       // Planned Leave specific fields
       category: [''], // Staff or Worker
       responsibilitiesHandedOverTo: [''], // Text input for planned leave
+      responsibilitiesHandedOverToId: [''], // ID of the person for planned leave
 
       // HOD Information
       hodName: ['', Validators.required],
@@ -422,7 +430,8 @@ export class EmergencyExitFormComponent implements OnInit {
       project: ['', Validators.required],
       activities: ['', Validators.required],
       responsiblePersonName: ['', Validators.required],
-      responsiblePersonPhone: ['', Validators.required],
+      responsiblePersonId: [''], // Store the employee ID
+      responsiblePersonPhone: ['', [Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]],
       responsiblePersonEmail: ['', [Validators.required, Validators.email]],
       remarks: ['']
     });
@@ -440,6 +449,12 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('NextStep called - Current step:', this.currentStep, 'Form type:', this.formType);
     const isValid = this.validateCurrentStep();
     console.log('Validation result:', isValid);
+    
+    if (!isValid) {
+      // Show user-friendly message about what's missing
+      this.showValidationErrors();
+      return;
+    }
 
     if (isValid) {
       // For Planned Leave: Step 1 -> Step 3 (Final Review)
@@ -536,10 +551,7 @@ export class EmergencyExitFormComponent implements OnInit {
     // Regular required fields that are editable
     let requiredFields = ['dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
 
-    // Add contact details validation only for Emergency form
-    if (this.formType === 'E') {
-      requiredFields.push('address', 'telephoneMobile', 'emailId');
-    }
+    // Contact details are NOT validated - they are display-only from profile
 
     // Add planned leave specific validations
     if (this.formType === 'P') {
@@ -562,20 +574,71 @@ export class EmergencyExitFormComponent implements OnInit {
 
   validateResponsibilities(): boolean {
     const responsibilities = this.responsibilitiesFormArray;
+    console.log('Validating responsibilities - Count:', responsibilities.length);
+    
     if (responsibilities.length === 0) {
+      console.log('No responsibilities found');
       return false;
     }
 
     for (let i = 0; i < responsibilities.length; i++) {
       const group = responsibilities.at(i) as FormGroup;
+      console.log(`Responsibility ${i + 1} - Valid:`, group.valid, 'Value:', group.value);
+      
       if (group.invalid) {
+        console.log(`Responsibility ${i + 1} - Invalid fields:`);
         Object.keys(group.controls).forEach(key => {
-          group.get(key)?.markAsTouched();
+          const control = group.get(key);
+          if (control && control.invalid) {
+            console.log(`  - ${key}:`, control.errors, 'Value:', control.value);
+          }
+          control?.markAsTouched();
         });
         return false;
       }
     }
+    console.log('All responsibilities validation passed');
     return true;
+  }
+
+  showValidationErrors(): void {
+    if (this.currentStep === 1) {
+      this.toastr.error('Please fill in all required fields in Step 1 before proceeding.', 'Validation Error');
+    } else if (this.currentStep === 2) {
+      const responsibilities = this.responsibilitiesFormArray;
+      const errors: string[] = [];
+      
+      for (let i = 0; i < responsibilities.length; i++) {
+        const group = responsibilities.at(i) as FormGroup;
+        if (group.invalid) {
+          Object.keys(group.controls).forEach(key => {
+            const control = group.get(key);
+            if (control && control.invalid) {
+              const fieldName = this.getResponsibilityFieldName(key);
+              errors.push(`Responsibility ${i + 1} - ${fieldName}`);
+            }
+          });
+        }
+      }
+      
+      if (errors.length > 0) {
+        this.toastr.error(`Please complete the following fields:\n\n${errors.join('\n')}`, 'Validation Error');
+      } else {
+        this.toastr.error('Please complete all responsibility information before proceeding.', 'Validation Error');
+      }
+    }
+  }
+
+  getResponsibilityFieldName(key: string): string {
+    switch (key) {
+      case 'project': return 'Project Name';
+      case 'activities': return 'Activities Description';
+      case 'responsiblePersonName': return 'Responsible Person Name';
+      case 'responsiblePersonPhone': return 'Phone Number';
+      case 'responsiblePersonEmail': return 'Email Address';
+      case 'remarks': return 'Remarks';
+      default: return key;
+    }
   }
 
   getStepTitle(): string {
@@ -600,14 +663,14 @@ export class EmergencyExitFormComponent implements OnInit {
   getStepDescription(): string {
     if (this.formType === 'P') {
       switch (this.currentStep) {
-        case 1: return 'Please fill in your personal information, travel details, and leave information';
+        case 1: return 'Review your profile information and provide travel details and leave information';
         case 3: return 'Review all information and submit the form';
         case 4: return 'Department HODs and Project Manager will review and approve your request';
         default: return '';
       }
     } else {
       switch (this.currentStep) {
-        case 1: return 'Please fill in your personal and travel information';
+        case 1: return 'Review your profile information and provide travel details';
         case 2: return 'List all responsibilities to be handed over';
         case 3: return 'Review all information and submit the form';
         case 4: return 'Department HODs will review and approve your request';
@@ -676,23 +739,287 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   submitForm() {
-    if (this.exitForm.valid && this.allDeclarationsChecked()) {
-      this.isSubmitting = true;
-
-      // Simulate API call
-      setTimeout(() => {
-        this.isSubmitting = false;
-        // Move to approval workflow step instead of showing success message
-        this.currentStep = 4; // Go to approval workflow step
-        console.log('Form submitted, moving to approval workflow:', this.exitForm.value);
-        
-        // Ensure all department cards are visible when reaching step 4
-        this.cdr.detectChanges(); // Force change detection
-        setTimeout(() => {
-          this.ensureAllCardsVisible();
-        }, 100);
-      }, 2000);
+    console.log('Submit form called - Form Type:', this.formType);
+    console.log('Form valid:', this.exitForm.valid);
+    console.log('Form value:', this.exitForm.value);
+    
+    // Debug: Check which fields are invalid
+    if (!this.exitForm.valid) {
+      console.log('Invalid fields:');
+      Object.keys(this.exitForm.controls).forEach(key => {
+        const control = this.exitForm.get(key);
+        if (control && control.invalid) {
+          console.log(`- ${key}:`, control.errors);
+        }
+      });
+      
+      // Also check responsibilities array for Emergency forms
+      if (this.formType === 'E') {
+        const responsibilities = this.exitForm.get('responsibilities') as FormArray;
+        if (responsibilities) {
+          responsibilities.controls.forEach((respControl, index) => {
+            if (respControl.invalid) {
+              console.log(`- Responsibility ${index + 1}:`, respControl.errors);
+              Object.keys((respControl as FormGroup).controls).forEach(fieldKey => {
+                const fieldControl = respControl.get(fieldKey);
+                if (fieldControl && fieldControl.invalid) {
+                  console.log(`  - ${fieldKey}:`, fieldControl.errors);
+                }
+              });
+            }
+          });
+        }
+      }
+      
+      this.markAllFieldsAsTouched();
+      
+      // Check if this is a validation issue with form type specific fields
+      if (!this.validateFormForCurrentType()) {
+        return;
+      }
     }
+
+    if (!this.allDeclarationsChecked()) {
+      this.toastr.error('Please check all declaration checkboxes before submitting.', 'Validation Error');
+      return;
+    }
+
+    // Additional email and phone validation
+    if (!this.validateEmailAndPhone()) {
+      return;
+    }
+
+    // Show confirmation popup
+    this.showSubmissionConfirmation();
+  }
+
+  private showSubmissionConfirmation(): void {
+    const formTypeText = this.formType === 'E' ? 'Emergency Exit' : 'Planned Leave';
+    
+    Swal.fire({
+      title: 'Confirm Submission',
+      text: `Are you sure you want to submit this ${formTypeText} form? Once submitted, you cannot modify the information and it will be sent for approval.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Submit',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performFormSubmission();
+      }
+    });
+  }
+
+  private performFormSubmission(): void {
+    this.isSubmitting = true;
+    
+    try {
+      // Prepare data for API
+      const exitRequest = this.prepareExitRequest();
+      
+      // Call API
+      this.api.InsertEmployeeExit(exitRequest).subscribe({
+        next: (response: any) => {
+          console.log('Form submitted successfully:', response);
+          this.isSubmitting = false;
+          
+          if (response && response.success) {
+            // Show success message
+            this.toastr.success('Form submitted successfully! Your request is now being processed.', 'Submission Successful');
+            
+            // Move to approval workflow step
+            this.currentStep = 4;
+            this.cdr.detectChanges();
+            setTimeout(() => {
+              this.ensureAllCardsVisible();
+            }, 100);
+          } else {
+            this.toastr.error('Form submission failed: ' + (response?.message || 'Unknown error'), 'Submission Error');
+          }
+        },
+        error: (error) => {
+          console.error('Form submission error:', error);
+          this.isSubmitting = false;
+          this.toastr.error('Form submission failed. Please try again.', 'Network Error');
+        }
+      });
+    } catch (error) {
+      console.error('Error preparing form data:', error);
+      this.isSubmitting = false;
+      this.toastr.error('Error preparing form data. Please check your inputs.', 'Data Error');
+    }
+  }
+
+  private prepareExitRequest(): EmployeeExitRequest {
+    const formValue = this.exitForm.getRawValue(); // Use getRawValue to get disabled field values
+    
+    // Prepare responsibilities array for Emergency forms
+    const responsibilities: EmployeeExitResponsibility[] = [];
+    if (this.formType === 'E' && formValue.responsibilities) {
+      formValue.responsibilities.forEach((resp: any) => {
+        responsibilities.push({
+          activities: resp.activities || '',
+          project: resp.project || '',
+          rpersonPhone: resp.responsiblePersonPhone || '',
+          rpersonEmail: resp.responsiblePersonEmail || '',
+          rpersonEmpId: resp.responsiblePersonId || resp.responsiblePersonName || '', // Use ID if available, fallback to name
+          remarks: resp.remarks || ''
+        });
+      });
+    }
+
+    // Format dates properly
+    const formatDate = (date: any): string => {
+      if (!date) return '';
+      const d = new Date(date);
+      return d.toISOString().split('T')[0]; // YYYY-MM-DD format
+    };
+
+    const exitRequest: EmployeeExitRequest = {
+      employeeId: formValue.employeeId || '',
+      formType: this.formType, // 'E' for Emergency, 'P' for Planned
+      dateOfDeparture: formatDate(formValue.dateOfDeparture),
+      dateArrival: formatDate(formValue.dateOfArrival),
+      flightTime: formValue.flightTime || '',
+      responsibilitiesHanded: this.formType === 'P' ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
+      noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
+      depHod: formValue.hodName || '',
+      projectSiteIncharge: formValue.projectManagerName || '',
+      reasonForLeave: formValue.reasonForEmergency || '',
+      approvalStatus: 'P',
+      category: formValue.category || '',
+      declaration1: formValue.decInfoAccurate ? 'Y' : 'N',
+      declaration2: formValue.decHandoverComplete ? 'Y' : 'N',
+      declaration3: formValue.decReturnAssets ? 'Y' : 'N',
+      declaration4: formValue.decUnderstandReturn ? 'Y' : 'N',
+      responsibilities: responsibilities
+    };
+
+    console.log('Prepared exit request:', exitRequest);
+    return exitRequest;
+  }
+
+  private validateEmailAndPhone(): boolean {
+    const formValue = this.exitForm.value;
+    
+    // Skip contact details validation - they are display-only from profile
+    // Only validate responsibility emails and phones for Emergency forms
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[+]?[0-9\s\-()]{7,15}$/; // More flexible phone pattern
+
+    // Validate responsibility emails for Emergency forms
+    if (this.formType === 'E' && formValue.responsibilities) {
+      for (let i = 0; i < formValue.responsibilities.length; i++) {
+        const resp = formValue.responsibilities[i];
+        if (resp.responsiblePersonEmail && !emailRegex.test(resp.responsiblePersonEmail)) {
+          this.toastr.error(`Please enter a valid email address for responsibility ${i + 1}.`, 'Validation Error');
+          return false;
+        }
+        if (resp.responsiblePersonPhone && !phoneRegex.test(resp.responsiblePersonPhone)) {
+          this.toastr.error(`Please enter a valid phone number for responsibility ${i + 1}.`, 'Validation Error');
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  private updateValidatorsForFormType(): void {
+    // Contact details are NEVER required - they are display-only from profile
+    this.exitForm.get('address')?.clearValidators();
+    this.exitForm.get('telephoneMobile')?.clearValidators();
+    this.exitForm.get('emailId')?.clearValidators();
+    this.exitForm.get('telephoneLandline')?.clearValidators();
+    this.exitForm.get('district')?.clearValidators();
+    this.exitForm.get('place')?.clearValidators();
+    this.exitForm.get('state')?.clearValidators();
+    this.exitForm.get('postOffice')?.clearValidators();
+    this.exitForm.get('nation')?.clearValidators();
+    
+    if (this.formType === 'E') {
+      // Emergency form - only planned leave fields are not required
+      this.exitForm.get('category')?.clearValidators();
+      this.exitForm.get('projectManagerName')?.clearValidators();
+      this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
+      
+    } else if (this.formType === 'P') {
+      // Planned leave specific fields are required
+      this.exitForm.get('category')?.setValidators([Validators.required]);
+      this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
+      this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
+    }
+    
+    // Update validity after changing validators
+    Object.keys(this.exitForm.controls).forEach(key => {
+      this.exitForm.get(key)?.updateValueAndValidity();
+    });
+  }
+
+  private validateFormForCurrentType(): boolean {
+    const formValue = this.exitForm.value;
+    const missingFields: string[] = [];
+
+    // Common required fields
+    if (!formValue.employeeName) missingFields.push('Employee Name');
+    if (!formValue.employeeId) missingFields.push('Employee ID');
+    if (!formValue.department) missingFields.push('Department');
+    if (!formValue.dateOfDeparture) missingFields.push('Date of Departure');
+    if (!formValue.noOfDaysApproved || formValue.noOfDaysApproved < 1) missingFields.push('Number of Days');
+    if (!formValue.reasonForEmergency) missingFields.push('Reason for Leave');
+    if (!formValue.hodName) missingFields.push('HOD Name');
+
+    // Contact details are NOT validated - they are display-only from profile
+
+    // Planned leave specific fields
+    if (this.formType === 'P') {
+      if (!formValue.category) missingFields.push('Category (Staff/Worker)');
+      if (!formValue.projectManagerName) missingFields.push('Project Manager');
+      if (!formValue.responsibilitiesHandedOverTo) missingFields.push('Responsibilities Handed Over To');
+    }
+
+    // Emergency specific - check responsibilities
+    if (this.formType === 'E') {
+      if (!formValue.responsibilities || formValue.responsibilities.length === 0) {
+        missingFields.push('At least one responsibility');
+      } else {
+        formValue.responsibilities.forEach((resp: any, index: number) => {
+          if (!resp.project) missingFields.push(`Responsibility ${index + 1} - Project`);
+          if (!resp.activities) missingFields.push(`Responsibility ${index + 1} - Activities`);
+          if (!resp.responsiblePersonName) missingFields.push(`Responsibility ${index + 1} - Person Name`);
+          if (!resp.responsiblePersonPhone) missingFields.push(`Responsibility ${index + 1} - Phone`);
+          if (!resp.responsiblePersonEmail) missingFields.push(`Responsibility ${index + 1} - Email`);
+        });
+      }
+    }
+
+    if (missingFields.length > 0) {
+      console.log('Missing required fields:', missingFields);
+      this.toastr.error(`Please fill in the following required fields:\n\n${missingFields.join('\n')}`, 'Validation Error');
+      return false;
+    }
+
+    return true;
+  }
+
+  private markAllFieldsAsTouched(): void {
+    Object.keys(this.exitForm.controls).forEach(key => {
+      const control = this.exitForm.get(key);
+      if (control) {
+        control.markAsTouched();
+        if (control instanceof FormArray) {
+          control.controls.forEach(arrayControl => {
+            if (arrayControl instanceof FormGroup) {
+              Object.keys(arrayControl.controls).forEach(nestedKey => {
+                arrayControl.get(nestedKey)?.markAsTouched();
+              });
+            }
+          });
+        }
+      }
+    });
   }
 
   resetForm() {
@@ -749,8 +1076,18 @@ export class EmergencyExitFormComponent implements OnInit {
     const field = this.exitForm.get(fieldName);
     if (field?.errors) {
       if (field.errors['required']) return 'This field is required';
-      if (field.errors['email']) return 'Please enter a valid email';
+      if (field.errors['email']) return 'Please enter a valid email address';
       if (field.errors['min']) return 'Value must be greater than 0';
+      if (field.errors['pattern']) {
+        if (fieldName.includes('Phone') || fieldName.includes('Mobile')) {
+          return 'Please enter a valid phone number (7-15 digits, may include +, spaces, -, ())';
+        }
+        if (fieldName.includes('Landline')) {
+          return 'Please enter a valid landline number';
+        }
+        return 'Please enter a valid format';
+      }
+      if (field.errors['requiredTrue']) return 'This declaration must be checked';
     }
     return '';
   }
@@ -1171,10 +1508,12 @@ export class EmergencyExitFormComponent implements OnInit {
   selectEmployee(index: number, employee: DropdownOption): void {
     const responsibilityGroup = this.responsibilitiesFormArray.at(index) as FormGroup;
     
-    // Update the form control with the employee's description
+    // Update the form control with the employee's ID and description
+    const employeeId = employee.idValue || '';
     const description = employee.description || '';
     responsibilityGroup.patchValue({
-      responsiblePersonName: description
+      responsiblePersonName: description,
+      responsiblePersonId: employeeId // Store the ID separately
     });
     
     // Update search term and hide dropdown
@@ -1224,10 +1563,12 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   selectPlannedEmployee(employee: DropdownOption): void {
-    // Update the form control with the employee's description
+    // Update the form control with the employee's ID and description
+    const employeeId = employee.idValue || '';
     const description = employee.description || '';
     this.exitForm.patchValue({
-      responsibilitiesHandedOverTo: description
+      responsibilitiesHandedOverTo: description,
+      responsibilitiesHandedOverToId: employeeId // Store the ID separately
     });
     
     // Update search term and hide dropdown
