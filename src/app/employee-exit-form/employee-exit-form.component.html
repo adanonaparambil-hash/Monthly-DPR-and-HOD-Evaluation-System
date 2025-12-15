@@ -83,12 +83,69 @@
               Department: {{ currentUser?.department || 'Not found' }}
             </small>
           </div>
+
+          <div class="form-group project-manager-dropdown-group">
+            <label for="projectManagerName">Project Manager / Site Incharge *</label>
+            <select id="projectManagerName" formControlName="projectManagerName" tabindex="8">
+              <option value="">Select Project Manager / Site Incharge</option>
+              @for (pm of projectManagerList; track pm.idValue) {
+                <option [value]="pm.idValue">
+                  {{ pm.description }}
+                </option>
+              } @empty {
+                <option value="" disabled>Loading Project Managers...</option>
+              }
+            </select>
+            <!-- Debug info - remove in production -->
+            <small style="color: #666; font-size: 12px;">
+              Project Manager Count: {{ projectManagerList.length }}
+            </small>
+          </div>
+
+          <div class="form-group responsibilities-dropdown-group">
+            <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
+            <div class="searchable-dropdown">
+              <input type="text" 
+                     id="responsibilitiesHandedOverTo" 
+                     formControlName="responsibilitiesHandedOverTo"
+                     placeholder="Search and select employee..." 
+                     class="dropdown-input" 
+                     #searchInput
+                     (input)="onSearchInputChange($event)" 
+                     (focus)="showDropdown()" 
+                     (blur)="hideDropdown()" 
+                     autocomplete="off"
+                     tabindex="9">
+              <div class="dropdown-icon">
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              @if (isDropdownVisible) {
+                <div class="dropdown-list" 
+                     [class.small-list]="shouldUseSmallDropdown(searchTerm)">
+                  @for (employee of getFilteredEmployees(searchTerm); track employee.idValue) {
+                    <div class="dropdown-item" 
+                         (mousedown)="selectEmployee(employee)"
+                         [class.selected]="isEmployeeSelected(employee)">
+                      <div class="employee-info">
+                        <div class="employee-name">{{ getEmployeeName(employee.description || '') }}</div>
+                        <div class="employee-id">{{ employee.idValue || '' }}</div>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="no-results">
+                      No employees found
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
         </div>
       </div>
       
       <div class="form-actions">
-        <button type="button" class="btn-secondary" tabindex="8">Cancel</button>
-        <button type="button" class="btn-primary" (click)="submitForm()" tabindex="9">Submit</button>
+        <button type="button" class="btn-secondary" tabindex="10">Cancel</button>
+        <button type="button" class="btn-primary" (click)="submitForm()" tabindex="11">Submit</button>
       </div>
     </form>
   </div>

@@ -15,7 +15,13 @@ import { SessionService } from '../services/session.service';
 export class EmployeeExitFormComponent implements OnInit {
   exitForm!: FormGroup;
   hodList: DropdownOption[] = [];
+  projectManagerList: DropdownOption[] = [];
+  employeeMasterList: DropdownOption[] = [];
   currentUser: any = null;
+
+  // Searchable dropdown properties
+  isDropdownVisible = false;
+  searchTerm = '';
 
   constructor(private fb: FormBuilder, private api: Api, private sessionService: SessionService) {
     this.initializeForm();
@@ -37,8 +43,10 @@ export class EmployeeExitFormComponent implements OnInit {
     console.log('Testing API connectivity...');
     console.log('API base URL:', this.api);
     
-    // Load HOD master list
+    // Load master lists
     this.loadHodMasterList();
+    this.loadProjectManagerList();
+    this.loadEmployeeMasterList();
   }
 
   initializeForm() {
@@ -49,7 +57,10 @@ export class EmployeeExitFormComponent implements OnInit {
       plannedLeaveDate: ['', Validators.required],
       returnDate: ['', Validators.required],
       reason: ['', Validators.required],
-      hodName: ['', Validators.required]
+      hodName: ['', Validators.required],
+      projectManagerName: ['', Validators.required],
+      responsibilitiesHandedOverTo: ['', Validators.required],
+      responsibilitiesHandedOverToId: [''] // Store the employee ID
     });
   }
 
@@ -107,5 +118,116 @@ export class EmployeeExitFormComponent implements OnInit {
         console.log('Fallback HOD list loaded:', this.hodList.length, 'items');
       }
     });
+  }
+
+  // Load Project Manager Master List from API
+  loadProjectManagerList(): void {
+    console.log('Employee Exit Form - Loading Project Manager list...');
+    this.api.GetProjectManagerList().subscribe({
+      next: (response: any) => {
+        console.log('Employee Exit Form - Project Manager API Response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          this.projectManagerList = response.data;
+          console.log('Employee Exit Form - Project Manager List loaded successfully:', this.projectManagerList.length, 'items');
+        } else {
+          console.warn('Employee Exit Form - Invalid Project Manager API response:', response);
+          this.projectManagerList = [];
+        }
+      },
+      error: (error) => {
+        console.error('Employee Exit Form - Error fetching Project Manager list:', error);
+        // Provide fallback data for testing
+        console.log('Employee Exit Form - Using fallback Project Manager data...');
+        this.projectManagerList = [
+          { idValue: 'pm1', description: 'John Smith - Project Manager' },
+          { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
+          { idValue: 'pm3', description: 'Mike Davis - Project Lead' },
+          { idValue: 'pm4', description: 'Lisa Brown - Senior Project Manager' }
+        ];
+        console.log('Employee Exit Form - Fallback Project Manager list loaded:', this.projectManagerList.length, 'items');
+      }
+    });
+  }
+
+  // Load Employee Master List from API
+  loadEmployeeMasterList(): void {
+    console.log('Employee Exit Form - Loading Employee master list...');
+    this.api.GetEmployeeMasterList().subscribe({
+      next: (response: any) => {
+        console.log('Employee Exit Form - Employee API Response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          this.employeeMasterList = response.data;
+          console.log('Employee Exit Form - Employee List loaded successfully:', this.employeeMasterList.length, 'items');
+        } else {
+          console.warn('Employee Exit Form - Invalid Employee API response:', response);
+          this.employeeMasterList = [];
+        }
+      },
+      error: (error) => {
+        console.error('Employee Exit Form - Error fetching Employee list:', error);
+        // Provide fallback data for testing
+        console.log('Employee Exit Form - Using fallback Employee data...');
+        this.employeeMasterList = [
+          { idValue: 'emp1', description: 'Alice Johnson - Software Engineer' },
+          { idValue: 'emp2', description: 'Bob Smith - Senior Developer' },
+          { idValue: 'emp3', description: 'Carol Davis - Team Lead' },
+          { idValue: 'emp4', description: 'David Wilson - Project Coordinator' },
+          { idValue: 'emp5', description: 'Emma Brown - Business Analyst' }
+        ];
+        console.log('Employee Exit Form - Fallback Employee list loaded:', this.employeeMasterList.length, 'items');
+      }
+    });
+  }
+
+  // Searchable dropdown methods for Responsibilities Handed Over To
+  onSearchInputChange(event: any): void {
+    this.searchTerm = event.target.value;
+    this.isDropdownVisible = true;
+  }
+
+  showDropdown(): void {
+    this.isDropdownVisible = true;
+  }
+
+  hideDropdown(): void {
+    // Delay hiding to allow for item selection
+    setTimeout(() => {
+      this.isDropdownVisible = false;
+    }, 200);
+  }
+
+  getFilteredEmployees(searchTerm: string): DropdownOption[] {
+    if (!searchTerm) {
+      return this.employeeMasterList;
+    }
+    
+    const term = searchTerm.toLowerCase();
+    return this.employeeMasterList.filter(employee => 
+      employee.description?.toLowerCase().includes(term) ||
+      employee.idValue?.toLowerCase().includes(term)
+    );
+  }
+
+  selectEmployee(employee: DropdownOption): void {
+    this.exitForm.patchValue({
+      responsibilitiesHandedOverTo: employee.description,
+      responsibilitiesHandedOverToId: employee.idValue
+    });
+    this.isDropdownVisible = false;
+    this.searchTerm = employee.description || '';
+  }
+
+  isEmployeeSelected(employee: DropdownOption): boolean {
+    return this.exitForm.get('responsibilitiesHandedOverToId')?.value === employee.idValue;
+  }
+
+  getEmployeeName(description: string): string {
+    // Extract name from "Name - Title" format
+    const parts = description.split(' - ');
+    return parts[0] || description;
+  }
+
+  shouldUseSmallDropdown(searchTerm: string): boolean {
+    return this.getFilteredEmployees(searchTerm).length <= 5;
   }
 }

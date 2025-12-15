@@ -126,12 +126,43 @@
   transform: translateY(-1px);
 }
 
-.hod-dropdown-group {
+.hod-dropdown-group,
+.project-manager-dropdown-group,
+.responsibilities-dropdown-group {
   min-width: 350px;
 }
 
-.hod-dropdown-group select {
+.hod-dropdown-group select,
+.project-manager-dropdown-group select {
   min-width: 100%;
+  background-color: #fff;
+  color: #2c3e50;
+}
+
+.project-manager-dropdown-group select:focus,
+.hod-dropdown-group select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Ensure dropdown options are clearly visible */
+.project-manager-dropdown-group select option,
+.hod-dropdown-group select option {
+  padding: 8px 12px;
+  background-color: #fff;
+  color: #2c3e50;
+}
+
+.project-manager-dropdown-group select option:hover,
+.hod-dropdown-group select option:hover {
+  background-color: #f8f9fa;
+}
+
+/* Improve visibility of selected options */
+.project-manager-dropdown-group select option:checked,
+.hod-dropdown-group select option:checked {
+  background-color: #007bff;
+  color: white;
 }
 
 /* Searchable Dropdown Styles */
