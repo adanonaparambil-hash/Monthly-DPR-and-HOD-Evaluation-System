@@ -8,8 +8,8 @@
 
         <div class="form-title-section">
           <div class="title-with-icon">
-            <div class="animated-icon" [ngClass]="formType === 'E' ? 'emergency-icon' : 'planned-icon'">
-              <i class="fas" [ngClass]="formType === 'E' ? 'fa-exclamation-triangle' : 'fa-calendar-check'"></i>
+            <div class="animated-icon" [ngClass]="formType === 'E' ? 'emergency-icon' : (formType === 'R' ? 'resignation-icon' : 'planned-icon')">
+              <i class="fas" [ngClass]="formType === 'E' ? 'fa-exclamation-triangle' : (formType === 'R' ? 'fa-user-times' : 'fa-calendar-check')"></i>
             </div>
             <div class="title-text">
               <h1>{{ getFormHeaderTitle() }}</h1>
@@ -23,6 +23,30 @@
           {{ getAllApprovalStatus() | titlecase }}
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Form Type Selection Tabs -->
+  <div class="form-type-tabs" *ngIf="!formSubmitted">
+    <div class="tab-container">
+      <button class="tab-button" 
+              [class.active]="formType === 'E'" 
+              (click)="switchFormType('E')">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Emergency Leave</span>
+      </button>
+      <button class="tab-button" 
+              [class.active]="formType === 'P'" 
+              (click)="switchFormType('P')">
+        <i class="fas fa-calendar-check"></i>
+        <span>Planned Leave</span>
+      </button>
+      <button class="tab-button" 
+              [class.active]="formType === 'R'" 
+              (click)="switchFormType('R')">
+        <i class="fas fa-user-times"></i>
+        <span>Resignation</span>
+      </button>
     </div>
   </div>
 
@@ -110,8 +134,8 @@
               </small> -->
             </div>
 
-            <!-- Planned Leave Specific Fields -->
-            <div class="form-group" *ngIf="formType === 'P'">
+            <!-- Planned Leave and Resignation Specific Fields -->
+            <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
               <label>Category *</label>
               <div class="radio-group">
                 <label class="radio-label">
@@ -130,28 +154,39 @@
               </span>
             </div>
 
-            <!-- Project Manager / Site Incharge Selection (Planned Leave Only) -->
-            <div class="form-group" *ngIf="formType === 'P'">
+            <!-- Project Manager / Site Incharge Selection (Planned Leave and Resignation) -->
+            <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
               <label for="projectManagerName">Project Manager / Site Incharge *</label>
-              <select id="projectManagerName" formControlName="projectManagerName"
-                [class.error]="isFieldInvalid('projectManagerName')">
-                <option value="">Select Project Manager / Site Incharge</option>
-                @for (pm of projectManagerList; track pm.idValue) {
-                <option [value]="pm.idValue">
-                  {{ pm.description }}
-                </option>
-                } @empty {
-                <option value="" disabled>Loading Project Managers...</option>
-                }
-              </select>
+              <div class="searchable-dropdown">
+                <input type="text" id="projectManagerName" formControlName="projectManagerName"
+                  [class.error]="isFieldInvalid('projectManagerName')"
+                  placeholder="Search and select project manager..." class="dropdown-input" #pmSearchInput
+                  (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()"
+                  (blur)="hidePMDropdown()" autocomplete="off">
+                <div class="dropdown-icon">
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="dropdown-list pm-dropdown" *ngIf="isPMDropdownVisible()"
+                  [class.small-list]="shouldUseSmallDropdown(pmSearchTerm)">
+                  <div class="dropdown-item" *ngFor="let pm of getFilteredProjectManagers(pmSearchTerm)"
+                    (mousedown)="selectProjectManager(pm)"
+                    [class.selected]="isPMSelected(pm)">
+                    <div class="employee-info">
+                      <div class="employee-name">{{ getEmployeeName(pm.description || '') }}</div>
+                      <div class="employee-id">{{ pm.idValue || '' }}</div>
+                    </div>
+                  </div>
+                  <div class="no-results" *ngIf="getFilteredProjectManagers(pmSearchTerm).length === 0">
+                    No project managers found
+                  </div>
+                </div>
+              </div>
               <span class="error-message" *ngIf="isFieldInvalid('projectManagerName')">
                 {{ getFieldError('projectManagerName') }}
               </span>
             </div>
 
-
-
-            <div class="form-group hod-name-group" *ngIf="formType === 'P'">
+            <div class="form-group hod-name-group" *ngIf="formType === 'P' || formType === 'R'">
               <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
               <div class="searchable-dropdown">
                 <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
@@ -281,10 +316,16 @@
         </div>
 
         <div class="form-section travel-section">
-          <h3><i class="fas fa-plane"></i> Travel Information</h3>
+          <h3>
+            <i class="fas fa-plane" *ngIf="formType === 'E' || formType === 'P'"></i>
+            <i class="fas fa-calendar-times" *ngIf="formType === 'R'"></i>
+            {{ formType === 'R' ? 'Resignation Information' : 'Travel Information' }}
+          </h3>
           <div class="travel-grid">
             <div class="form-group">
-              <label for="dateOfDeparture">Date of Departure *</label>
+              <label for="dateOfDeparture">
+                {{ formType === 'R' ? 'Last Working Date *' : 'Date of Departure *' }}
+              </label>
               <input type="date" id="dateOfDeparture" formControlName="dateOfDeparture"
                 [class.error]="isFieldInvalid('dateOfDeparture')">
               <span class="error-message" *ngIf="isFieldInvalid('dateOfDeparture')">
@@ -292,21 +333,26 @@
               </span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" *ngIf="formType !== 'R'">
               <label for="dateOfArrival">Date of Arrival</label>
               <input type="date" id="dateOfArrival" formControlName="dateOfArrival">
             </div>
 
             <div class="form-group">
-              <label for="noOfDaysApproved">No. of Days Requested *</label>
+              <label for="noOfDaysApproved">
+                {{ formType === 'R' ? 'Notice Period (Days) *' : 'No. of Days Requested *' }}
+              </label>
               <input type="number" id="noOfDaysApproved" formControlName="noOfDaysApproved"
-                [class.error]="isFieldInvalid('noOfDaysApproved')" min="1" placeholder="Number of days">
+                [class.error]="isFieldInvalid('noOfDaysApproved')" min="1" 
+                [placeholder]="formType === 'R' ? 'Notice period in days' : 'Number of days'">
               <span class="error-message" *ngIf="isFieldInvalid('noOfDaysApproved')">
                 {{ getFieldError('noOfDaysApproved') }}
               </span>
             </div>
 
-            <div class="form-group">
+
+
+            <div class="form-group" *ngIf="formType !== 'R'">
               <label for="flightTime">Flight Time</label>
               <input type="time" id="flightTime" formControlName="flightTime">
             </div>
@@ -317,15 +363,16 @@
           <h3>
             <i class="fas fa-exclamation-triangle" *ngIf="formType === 'E'"></i>
             <i class="fas fa-clipboard-list" *ngIf="formType === 'P'"></i>
-            {{ formType === 'E' ? 'Emergency Details' : 'Leave Details' }}
+            <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
+            {{ formType === 'E' ? 'Emergency Details' : (formType === 'R' ? 'Resignation Details' : 'Leave Details') }}
           </h3>
           <div class="form-group full-width">
             <label for="reasonForEmergency">
-              {{ formType === 'E' ? 'Reason for the Emergency *' : 'Reason for Planned Leave *' }}
+              {{ formType === 'E' ? 'Reason for the Emergency *' : (formType === 'R' ? 'Reason for Resignation *' : 'Reason for Planned Leave *') }}
             </label>
             <textarea id="reasonForEmergency" formControlName="reasonForEmergency"
               [class.error]="isFieldInvalid('reasonForEmergency')" rows="4"
-              [placeholder]="formType === 'E' ? 'Please provide detailed reason for emergency leave' : 'Please provide detailed reason for planned leave'"></textarea>
+              [placeholder]="formType === 'E' ? 'Please provide detailed reason for emergency leave' : (formType === 'R' ? 'Please provide detailed reason for resignation' : 'Please provide detailed reason for planned leave')"></textarea>
             <span class="error-message" *ngIf="isFieldInvalid('reasonForEmergency')">
               {{ getFieldError('reasonForEmergency') }}
             </span>
@@ -499,8 +546,8 @@
           </div>
         </div>
 
-        <!-- For Planned Leave: Show Final Review -->
-        <div class="form-section" *ngIf="formType === 'P'">
+        <!-- For Planned Leave and Resignation: Show Final Review -->
+        <div class="form-section" *ngIf="formType === 'P' || formType === 'R'">
           <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
 
           <div class="review-summary">
@@ -511,8 +558,8 @@
                 <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
                 <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
                 <div><strong>Category:</strong> {{ exitForm.get('category')?.value }}</div>
-                <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
-                <div><strong>Days Requested:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
+                <div><strong>{{ formType === 'R' ? 'Last Working Date:' : 'Departure Date:' }}</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
+                <div><strong>{{ formType === 'R' ? 'Notice Period (Days):' : 'Days Requested:' }}</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
                 <div><strong>Responsibilities Handed Over To:</strong> {{
                   exitForm.get('responsibilitiesHandedOverTo')?.value }}</div>
               </div>
@@ -538,12 +585,13 @@
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="decReturnAssets">
                 <span class="checkmark"></span>
-                I will return all company assets (laptop, phone, keys, etc.) before my planned departure
+                I will return all company assets (laptop, phone, keys, etc.) before my {{ formType === 'R' ? 'last working day' : 'planned departure' }}
               </label>
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="decUnderstandReturn">
                 <span class="checkmark"></span>
-                I understand this is a planned leave and I will return as per the approved schedule
+                <span *ngIf="formType === 'P'">I understand this is a planned leave and I will return as per the approved schedule</span>
+                <span *ngIf="formType === 'R'">I understand this is a resignation and I will complete the full notice period as required</span>
               </label>
             </div>
 
@@ -554,8 +602,11 @@
                   notifications as each department approves your request.</span>
               </div>
               <div class="note success">
-                <i class="fas fa-calendar-check"></i>
-                <span>Planned leave requests are typically processed within 5-7 business days. You will be notified of
+                <i class="fas fa-calendar-check" *ngIf="formType === 'P'"></i>
+                <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
+                <span *ngIf="formType === 'P'">Planned leave requests are typically processed within 5-7 business days. You will be notified of
+                  the final decision via email.</span>
+                <span *ngIf="formType === 'R'">Resignation requests are typically processed within 7-10 business days. You will be notified of
                   the final decision via email.</span>
               </div>
             </div>
@@ -581,8 +632,8 @@
           </div>
 
           <div class="departments-grid">
-            <!-- Project Manager Approval Card (Planned Leave Only) -->
-            <div class="department-card pm-approval-card" *ngIf="formType === 'P'" [ngClass]="'status-pending'">
+            <!-- Project Manager Approval Card (Planned Leave and Resignation) -->
+            <div class="department-card pm-approval-card" *ngIf="formType === 'P' || formType === 'R'" [ngClass]="'status-pending'">
 
               <div class="dept-header">
                 <h4>Project Manager / Site Incharge Approval</h4>
@@ -704,7 +755,7 @@
           <div class="final-actions" *ngIf="getAllApprovalStatus() === 'approved'">
             <div class="success-notice">
               <i class="fas fa-check-circle"></i>
-              <span>All approvals completed! Your {{ formType === 'E' ? 'emergency exit' : 'planned leave' }} request
+              <span>All approvals completed! Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} request
                 has been fully approved.</span>
             </div>
             <div class="action-buttons">
@@ -754,9 +805,9 @@
           <i class="fas fa-check-circle"></i>
         </div>
         <h2>Form Submitted Successfully!</h2>
-        <p>Your {{ formType === 'E' ? 'emergency exit' : 'planned leave' }} form has been submitted and is now being
+        <p>Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} form has been submitted and is now being
           processed.</p>
-        <p><strong>Reference ID:</strong> {{ formType === 'E' ? 'EEF' : 'PLF' }}-{{ getCurrentTimestamp() }}</p>
+        <p><strong>Reference ID:</strong> {{ formType === 'E' ? 'EEF' : (formType === 'R' ? 'RF' : 'PLF') }}-{{ getCurrentTimestamp() }}</p>
 
         <div class="success-actions">
           <button type="button" class="btn-primary" (click)="downloadPDF()">

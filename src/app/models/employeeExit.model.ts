@@ -22,6 +22,8 @@ export interface EmployeeExitRequest {
   reasonForLeave: string;
   approvalStatus: string;
   category: string;
+  lastWorkingDate :string;
+  NoticePeriod : number;
   declaration1?: string;
   declaration2?: string;
   declaration3?: string;

@@ -84,8 +84,8 @@ export class EmergencyExitFormComponent implements OnInit {
   employeeMasterList: DropdownOption[] = [];
   currentUser: any = null;
 
-  // Form type flag: 'E' for Emergency, 'P' for Planned Leave
-  @Input() formType: 'E' | 'P' = 'E';
+  // Form type flag: 'E' for Emergency, 'P' for Planned Leave, 'R' for Resignation
+  @Input() formType: 'E' | 'P' | 'R' = 'E';
 
   // Employee profile data
   employeeProfileData: ExitEmpProfileDetails = {};
@@ -260,7 +260,7 @@ export class EmergencyExitFormComponent implements OnInit {
     // Read form type from route query parameters
     this.route.queryParams.subscribe(params => {
       const typeParam = params['type'];
-      if (typeParam === 'P' || typeParam === 'E') {
+      if (typeParam === 'P' || typeParam === 'E' || typeParam === 'R') {
         this.formType = typeParam;
         console.log('Form type set to:', this.formType); // Debug log
       } else {
@@ -270,7 +270,8 @@ export class EmergencyExitFormComponent implements OnInit {
       }
 
       // Update form validations and steps when form type changes
-      this.totalSteps = this.formType === 'P' ? 2 : 4;
+      // Planned Leave and Resignation use same structure (2 steps), Emergency uses 4 steps
+      this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
       this.updateFormValidations();
 
       // Re-populate form with session data after form type change
@@ -279,6 +280,30 @@ export class EmergencyExitFormComponent implements OnInit {
       // Load employee details for the new form type
       this.loadEmployeeDetails();
     });
+  }
+
+  // Switch form type using tabs
+  switchFormType(newType: 'E' | 'P' | 'R') {
+    if (this.formType !== newType) {
+      this.formType = newType;
+      console.log('Form type switched to:', this.formType);
+      
+      // Reset to step 1
+      this.currentStep = 1;
+      
+      // Update form validations and steps
+      this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
+      this.updateFormValidations();
+      
+      // Clear form data and reset
+      this.clearFormAndReset();
+      
+      // Re-populate with session data
+      this.populateFormFromSession();
+      
+      // Update URL without navigation
+      window.history.replaceState({}, '', `/exit-form?type=${newType}`);
+    }
   }
 
   // Clear form data and validation errors when switching form types
@@ -366,11 +391,13 @@ export class EmergencyExitFormComponent implements OnInit {
       responsibilitiesHandedOverTo: [''], // Text input for planned leave
       responsibilitiesHandedOverToId: [''], // ID of the person for planned leave
 
+
+
       // HOD Information
       hodName: ['', Validators.required],
       hodSignature: [''],
 
-      // Project Manager / Site Incharge (for Planned Leave)
+      // Project Manager / Site Incharge (for Planned Leave and Resignation)
       projectManagerName: [''],
 
       // Responsibilities (FormArray)
@@ -457,10 +484,10 @@ export class EmergencyExitFormComponent implements OnInit {
     }
 
     if (isValid) {
-      // For Planned Leave: Step 1 -> Step 3 (Final Review)
-      if (this.formType === 'P' && this.currentStep === 1) {
+      // For Planned Leave and Resignation: Step 1 -> Step 3 (Final Review)
+      if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 1) {
         this.currentStep = 3; // Go to final review step
-        console.log('Planned Leave: Moving from Step 1 to Step 3 (Final Review)');
+        console.log('Planned Leave/Resignation: Moving from Step 1 to Step 3 (Final Review)');
       } 
       // For Emergency: Step 1 -> Step 2 -> Step 3 (Final Review)
       else if (this.formType === 'E' && this.currentStep < 3) {
@@ -474,12 +501,12 @@ export class EmergencyExitFormComponent implements OnInit {
 
   previousStep() {
     if (this.currentStep > 1) {
-      // For Planned Leave, go back from Step 3 (Final Review) to Step 1
-      if (this.formType === 'P' && this.currentStep === 3) {
+      // For Planned Leave and Resignation, go back from Step 3 (Final Review) to Step 1
+      if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 3) {
         this.currentStep = 1; // Go back to step 1
       } 
-      // For Planned Leave, go back from Step 4 (Approvals) to Step 3 (Final Review)
-      else if (this.formType === 'P' && this.currentStep === 4) {
+      // For Planned Leave and Resignation, go back from Step 4 (Approvals) to Step 3 (Final Review)
+      else if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 4) {
         this.currentStep = 3; // Go back to final review step
       } 
       // For Emergency, go back from Step 4 (Approvals) to Step 3 (Final Review)
@@ -553,8 +580,8 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Contact details are NOT validated - they are display-only from profile
 
-    // Add planned leave specific validations
-    if (this.formType === 'P') {
+    // Add planned leave and resignation specific validations
+    if (this.formType === 'P' || this.formType === 'R') {
       requiredFields.push('category', 'responsibilitiesHandedOverTo', 'projectManagerName');
     }
 
@@ -649,6 +676,13 @@ export class EmergencyExitFormComponent implements OnInit {
         case 4: return 'Department Approvals';
         default: return 'Employee Exit Form - Planned Leave';
       }
+    } else if (this.formType === 'R') {
+      switch (this.currentStep) {
+        case 1: return 'Employee Information';
+        case 3: return 'Final Review & Submit';
+        case 4: return 'Department Approvals';
+        default: return 'Employee Exit Form - Resignation';
+      }
     } else {
       switch (this.currentStep) {
         case 1: return 'Employee Information';
@@ -664,6 +698,13 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.formType === 'P') {
       switch (this.currentStep) {
         case 1: return 'Review your profile information and provide travel details and leave information';
+        case 3: return 'Review all information and submit the form';
+        case 4: return 'Department HODs and Project Manager will review and approve your request';
+        default: return '';
+      }
+    } else if (this.formType === 'R') {
+      switch (this.currentStep) {
+        case 1: return 'Review your profile information and provide resignation details';
         case 3: return 'Review all information and submit the form';
         case 4: return 'Department HODs and Project Manager will review and approve your request';
         default: return '';
@@ -794,7 +835,7 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   private showSubmissionConfirmation(): void {
-    const formTypeText = this.formType === 'E' ? 'Emergency Exit' : 'Planned Leave';
+    const formTypeText = this.formType === 'E' ? 'Emergency Exit' : (this.formType === 'R' ? 'Resignation' : 'Planned Leave');
     
     Swal.fire({
       title: 'Confirm Submission',
@@ -855,7 +896,7 @@ export class EmergencyExitFormComponent implements OnInit {
   private prepareExitRequest(): EmployeeExitRequest {
     const formValue = this.exitForm.getRawValue(); // Use getRawValue to get disabled field values
     
-    // Prepare responsibilities array for Emergency forms
+    // Prepare responsibilities array for Emergency forms only
     const responsibilities: EmployeeExitResponsibility[] = [];
     if (this.formType === 'E' && formValue.responsibilities) {
       formValue.responsibilities.forEach((resp: any) => {
@@ -879,17 +920,20 @@ export class EmergencyExitFormComponent implements OnInit {
 
     const exitRequest: EmployeeExitRequest = {
       employeeId: formValue.employeeId || '',
-      formType: this.formType, // 'E' for Emergency, 'P' for Planned
+      formType: this.formType, // 'E' for Emergency, 'P' for Planned, 'R' for Resignation
       dateOfDeparture: formatDate(formValue.dateOfDeparture),
       dateArrival: formatDate(formValue.dateOfArrival),
       flightTime: formValue.flightTime || '',
-      responsibilitiesHanded: this.formType === 'P' ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
+      responsibilitiesHanded: (this.formType === 'P' || this.formType === 'R') ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
       noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
       depHod: formValue.hodName || '',
       projectSiteIncharge: formValue.projectManagerName || '',
       reasonForLeave: formValue.reasonForEmergency || '',
       approvalStatus: 'P',
       category: formValue.category || '',
+      // Resignation specific fields (reuse existing fields)
+      lastWorkingDate: this.formType === 'R' ? formatDate(formValue.dateOfDeparture) : '',
+      NoticePeriod: this.formType === 'R' ? parseInt(formValue.noOfDaysApproved) || 0 : 0,
       declaration1: formValue.decInfoAccurate ? 'Y' : 'N',
       declaration2: formValue.decHandoverComplete ? 'Y' : 'N',
       declaration3: formValue.decReturnAssets ? 'Y' : 'N',
@@ -940,7 +984,7 @@ export class EmergencyExitFormComponent implements OnInit {
     this.exitForm.get('nation')?.clearValidators();
     
     if (this.formType === 'E') {
-      // Emergency form - only planned leave fields are not required
+      // Emergency form - only planned leave and resignation fields are not required
       this.exitForm.get('category')?.clearValidators();
       this.exitForm.get('projectManagerName')?.clearValidators();
       this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
@@ -950,6 +994,13 @@ export class EmergencyExitFormComponent implements OnInit {
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
       this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
+      
+    } else if (this.formType === 'R') {
+      // Resignation specific fields are required (reuse existing fields)
+      this.exitForm.get('category')?.setValidators([Validators.required]);
+      this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
+      this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
+      // dateOfDeparture and noOfDaysApproved are already required and will be used for lastWorkingDate and noticePeriod
     }
     
     // Update validity after changing validators
@@ -973,11 +1024,14 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Contact details are NOT validated - they are display-only from profile
 
-    // Planned leave specific fields
-    if (this.formType === 'P') {
+    // Planned leave and resignation specific fields
+    if (this.formType === 'P' || this.formType === 'R') {
       if (!formValue.category) missingFields.push('Category (Staff/Worker)');
       if (!formValue.projectManagerName) missingFields.push('Project Manager');
       if (!formValue.responsibilitiesHandedOverTo) missingFields.push('Responsibilities Handed Over To');
+      
+      // Resignation uses existing dateOfDeparture and noOfDaysApproved fields with different labels
+      // No additional validation needed as they are already validated above
     }
 
     // Emergency specific - check responsibilities
@@ -1126,10 +1180,10 @@ export class EmergencyExitFormComponent implements OnInit {
     });
   }
 
-  // Load Project Manager Master List from API
+  // Load Project Manager Master List from Employee API (same as employee list)
   loadProjectManagerList(): void {
-    console.log('Emergency Exit Form - Loading Project Manager list...');
-    this.api.GetProjectManagerList().subscribe({
+    console.log('Emergency Exit Form - Loading Project Manager list from Employee API...');
+    this.api.GetEmployeeMasterList().subscribe({
       next: (response: any) => {
         console.log('Emergency Exit Form - Project Manager API Response:', response);
         if (response && response.success && response.data && Array.isArray(response.data)) {
@@ -1145,9 +1199,10 @@ export class EmergencyExitFormComponent implements OnInit {
         // Provide fallback data for testing
         console.log('Emergency Exit Form - Using fallback Project Manager data...');
         this.projectManagerList = [
-          { idValue: 'pm1', description: 'John Smith - Project Manager' },
-          { idValue: 'pm2', description: 'Sarah Johnson - Site Incharge' },
-          { idValue: 'pm3', description: 'Mike Davis - Project Lead' }
+          { idValue: 'ADS3239', description: 'PRABIN BABY | ADS3239' },
+          { idValue: 'ADS3121', description: 'SAJITH THANKAMONY HARIHARAN | ADS3121' },
+          { idValue: 'ADS3456', description: 'JOHN DOE | ADS3456' },
+          { idValue: 'ADS3789', description: 'JANE SMITH | ADS3789' }
         ];
         console.log('Emergency Exit Form - Fallback Project Manager list loaded:', this.projectManagerList.length, 'items');
       }
@@ -1209,20 +1264,25 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Get form header title based on form type
   getFormHeaderTitle(): string {
-    return this.formType === 'P' ? 'Employee Exit Form - For Planned Leave' : 'Emergency Exit Form';
+    switch (this.formType) {
+      case 'P': return 'Employee Exit Form - For Planned Leave';
+      case 'R': return 'Employee Exit Form - For Resignation';
+      case 'E':
+      default: return 'Emergency Exit Form';
+    }
   }
 
   // Check if current step should be displayed based on form type
   shouldShowStep(step: number): boolean {
-    if (this.formType === 'P' && step === 2) {
-      return false; // Hide step 2 for planned leave
+    if ((this.formType === 'P' || this.formType === 'R') && step === 2) {
+      return false; // Hide step 2 for planned leave and resignation
     }
     return true;
   }
 
-  // Get display step number (for planned leave, step 3 shows as step 2, step 4 shows as step 3)
+  // Get display step number (for planned leave and resignation, step 3 shows as step 2, step 4 shows as step 3)
   getDisplayStepNumber(step: number): number {
-    if (this.formType === 'P') {
+    if (this.formType === 'P' || this.formType === 'R') {
       if (step === 3) return 2; // Final review shows as Step 2
       if (step === 4) return 3; // Approvals step shows as Step 3
     }
@@ -1231,7 +1291,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Get total display steps
   getTotalDisplaySteps(): number {
-    return this.formType === 'P' ? 3 : 4;
+    return (this.formType === 'P' || this.formType === 'R') ? 3 : 4;
   }
 
   // Disable employee information fields (they should always be read-only)
@@ -1261,8 +1321,8 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Check if current step is the last step
   isLastStep(): boolean {
-    if (this.formType === 'P') {
-      return this.currentStep === 4; // Final step for planned leave
+    if (this.formType === 'P' || this.formType === 'R') {
+      return this.currentStep === 4; // Final step for planned leave and resignation
     } else {
       return this.currentStep === 4; // Final step for emergency
     }
@@ -1270,8 +1330,8 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Check if we should show the Next button
   shouldShowNextButton(): boolean {
-    if (this.formType === 'P') {
-      return this.currentStep === 1; // Show only on Step 1 for planned leave
+    if (this.formType === 'P' || this.formType === 'R') {
+      return this.currentStep === 1; // Show only on Step 1 for planned leave and resignation
     } else {
       return this.currentStep < 3; // Show on Steps 1 and 2 for emergency
     }
@@ -1297,18 +1357,20 @@ export class EmergencyExitFormComponent implements OnInit {
     const telephoneMobileControl = this.exitForm.get('telephoneMobile');
     const emailIdControl = this.exitForm.get('emailId');
 
-    if (this.formType === 'P') {
-      // Add validators for planned leave fields
+    if (this.formType === 'P' || this.formType === 'R') {
+      // Add validators for planned leave and resignation fields
       categoryControl?.setValidators([Validators.required]);
       responsibilitiesHandedOverToControl?.setValidators([Validators.required]);
       projectManagerNameControl?.setValidators([Validators.required]);
 
-      // Remove contact details requirements for planned leave
+
+
+      // Remove contact details requirements for planned leave and resignation
       addressControl?.clearValidators();
       telephoneMobileControl?.clearValidators();
       emailIdControl?.clearValidators();
     } else {
-      // Remove validators for planned leave fields
+      // Remove validators for planned leave and resignation fields
       categoryControl?.clearValidators();
       responsibilitiesHandedOverToControl?.clearValidators();
       projectManagerNameControl?.clearValidators();
@@ -1480,6 +1542,10 @@ export class EmergencyExitFormComponent implements OnInit {
   private plannedDropdownVisible: boolean = false;
   plannedSearchTerm: string = '';
 
+  // Project Manager dropdown management
+  private pmDropdownVisible: boolean = false;
+  pmSearchTerm: string = '';
+
   showDropdown(index: number): void {
     this.dropdownVisibility[index] = true;
   }
@@ -1582,6 +1648,60 @@ export class EmergencyExitFormComponent implements OnInit {
   isPlannedEmployeeSelected(employee: DropdownOption): boolean {
     const currentValue = this.exitForm.get('responsibilitiesHandedOverTo')?.value;
     return currentValue === (employee.description || '');
+  }
+
+  // Project Manager dropdown methods
+  showPMDropdown(): void {
+    this.pmDropdownVisible = true;
+  }
+
+  hidePMDropdown(): void {
+    // Add a small delay to allow for item selection
+    setTimeout(() => {
+      this.pmDropdownVisible = false;
+    }, 200);
+  }
+
+  isPMDropdownVisible(): boolean {
+    return this.pmDropdownVisible;
+  }
+
+  onPMSearchInputChange(event: any): void {
+    this.pmSearchTerm = event.target.value;
+    this.pmDropdownVisible = true;
+  }
+
+  getFilteredProjectManagers(searchTerm: string): DropdownOption[] {
+    if (!searchTerm || searchTerm.length < 2) {
+      return this.projectManagerList;
+    }
+    
+    const term = searchTerm.toLowerCase();
+    return this.projectManagerList.filter(pm => 
+      (pm.description || '').toLowerCase().includes(term) ||
+      (pm.idValue || '').toLowerCase().includes(term)
+    );
+  }
+
+  selectProjectManager(pm: DropdownOption): void {
+    // Update the form control with the PM's ID and description
+    const pmId = pm.idValue || '';
+    const description = pm.description || '';
+    this.exitForm.patchValue({
+      projectManagerName: description
+    });
+    
+    // Update search term and hide dropdown
+    this.pmSearchTerm = description;
+    this.pmDropdownVisible = false;
+    
+    console.log('Project Manager selected:', pm);
+    console.log('Updated projectManagerName with:', description);
+  }
+
+  isPMSelected(pm: DropdownOption): boolean {
+    const currentValue = this.exitForm.get('projectManagerName')?.value;
+    return currentValue === (pm.description || '');
   }
 
 }

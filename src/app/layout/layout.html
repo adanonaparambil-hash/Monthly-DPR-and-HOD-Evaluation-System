@@ -58,26 +58,10 @@
         </div>
       </div>
 
-      <!-- Exit Form Menu - Keep as is -->
-      <div class="menu-item-with-submenu">
-        <a class="parent-menu" (click)="toggleExitFormMenu()" [class.active]="isExitFormRouteActive()">
-          <div class="menu-content">
-            <i class="fas fa-plane-departure"></i>
-            <span>Exit Form</span>
-          </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isExitFormMenuOpen"></i>
-        </a>
-        <div class="submenu" *ngIf="isExitFormMenuOpen" [@slideDown]>
-          <a routerLink="/emergency-exit-form" [queryParams]="{type: 'E'}" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>Emergency Exit Form</span>
-          </a>
-          <a routerLink="/emergency-exit-form" [queryParams]="{type: 'P'}" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-calendar-check"></i>
-            <span>Planned Exit Form</span>
-          </a>
-        </div>
-      </div>
+      <!-- Exit Form Menu - Single Item -->
+      <a routerLink="/exit-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+        <i class="fas fa-plane-departure"></i> Exit Form
+      </a>
 
       <!-- Profile Menu - Keep as is -->
       <a routerLink="/profile" routerLinkActive="active" (click)="closeSidebarOnMobile()">

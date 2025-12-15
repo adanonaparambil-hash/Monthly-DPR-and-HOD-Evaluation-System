@@ -36,8 +36,7 @@ export const routes: Routes = [
       { path: 'monthly-dpr/:id', component: MonthlyDprComponent },
       { path: 'past-reports', component: PastReportsComponent },
       { path: 'profile', component: ProfileComponent },
-      { path: 'emergency-exit-form', component: EmergencyExitFormComponent },
-      { path: 'employee-exit-form', redirectTo: 'emergency-exit-form?type=P', pathMatch: 'full' },
+      { path: 'exit-form', component: EmergencyExitFormComponent },
       { path: 'leave-approval', component: LeaveApprovalComponent },
     ]
   },

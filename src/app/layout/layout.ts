@@ -190,8 +190,8 @@ export class layout implements OnInit, OnDestroy {
       return this.getPastReportsTitle();
     }
 
-    // Handle emergency exit form with query parameters
-    if (this.currentRoute.includes('/emergency-exit-form')) {
+    // Handle exit form with query parameters
+    if (this.currentRoute.includes('/exit-form')) {
       return 'Exit Form';
     }
 
@@ -339,7 +339,7 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isExitFormRouteActive(): boolean {
-    return this.currentRoute.includes('/emergency-exit-form');
+    return this.currentRoute.includes('/exit-form');
   }
 
   toggleMPRMenu() {
