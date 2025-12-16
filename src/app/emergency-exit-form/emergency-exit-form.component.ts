@@ -213,7 +213,7 @@ export class EmergencyExitFormComponent implements OnInit {
       // Update validators based on form type
       this.updateValidatorsForFormType();
 
-      // Load master lists
+      // Load master lists from API
       this.loadHodMasterList();
       this.loadProjectManagerList();
       this.loadEmployeeMasterList();
@@ -231,6 +231,8 @@ export class EmergencyExitFormComponent implements OnInit {
       console.error('Error initializing emergency exit form:', error);
     }
   }
+
+
 
   // Debug method to log all user properties
   debugUserProperties(): void {
@@ -1152,89 +1154,110 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Load HOD Master List from API
   loadHodMasterList(): void {
-    console.log('Emergency Exit Form - Loading HOD master list...');
+    console.log('Loading HOD master list...');
     this.api.GetHodMasterList().subscribe({
       next: (response: any) => {
-        console.log('Emergency Exit Form - HOD API Response:', response);
-        if (response && response.success && response.data && Array.isArray(response.data)) {
+        console.log('HOD API Response:', response);
+        if (response && Array.isArray(response)) {
+          this.hodList = response;
+          console.log('HOD List loaded:', this.hodList.length, 'items');
+        } else if (response && response.success && response.data && Array.isArray(response.data)) {
           this.hodList = response.data;
-          console.log('Emergency Exit Form - HOD List loaded successfully:', this.hodList.length, 'items');
+          console.log('HOD List loaded from data:', this.hodList.length, 'items');
+        } else if (response && Array.isArray(response.data)) {
+          this.hodList = response.data;
+          console.log('HOD List loaded from response.data:', this.hodList.length, 'items');
         } else {
-          console.warn('Emergency Exit Form - Invalid HOD API response:', response);
+          console.warn('Unexpected HOD API response format:', response);
           this.hodList = [];
         }
       },
       error: (error) => {
-        console.error('Emergency Exit Form - Error fetching HOD master list:', error);
-        
-        // Provide fallback data for testing
-        console.log('Emergency Exit Form - Using fallback HOD data...');
-        this.hodList = [
-          { idValue: 'hod1', description: 'John Doe - Engineering HOD' },
-          { idValue: 'hod2', description: 'Jane Smith - HR HOD' },
-          { idValue: 'hod3', description: 'Mike Johnson - Finance HOD' },
-          { idValue: 'hod4', description: 'Sarah Wilson - Admin HOD' }
-        ];
-        console.log('Emergency Exit Form - Fallback HOD list loaded:', this.hodList.length, 'items');
+        console.error('Error fetching HOD master list:', error);
+        this.hodList = [];
       }
     });
   }
 
-  // Load Project Manager Master List from Employee API (same as employee list)
+  // Load Project Manager Master List - Use Employee API as fallback
   loadProjectManagerList(): void {
-    console.log('Emergency Exit Form - Loading Project Manager list from Employee API...');
+    console.log('Loading Project Manager list...');
+    // Try dedicated PM API first
+    this.api.GetProjectManagerList().subscribe({
+      next: (response: any) => {
+        console.log('PM API Response:', response);
+        if (response && Array.isArray(response)) {
+          this.projectManagerList = response;
+          console.log('PM List loaded:', this.projectManagerList.length, 'items');
+        } else if (response && response.success && response.data && Array.isArray(response.data)) {
+          this.projectManagerList = response.data;
+          console.log('PM List loaded from data:', this.projectManagerList.length, 'items');
+        } else if (response && Array.isArray(response.data)) {
+          this.projectManagerList = response.data;
+          console.log('PM List loaded from response.data:', this.projectManagerList.length, 'items');
+        } else {
+          console.warn('PM API failed, trying Employee API as fallback');
+          this.loadProjectManagerFromEmployeeAPI();
+        }
+      },
+      error: (error) => {
+        console.error('PM API error, trying Employee API as fallback:', error);
+        this.loadProjectManagerFromEmployeeAPI();
+      }
+    });
+  }
+
+  // Fallback: Load Project Managers from Employee API
+  loadProjectManagerFromEmployeeAPI(): void {
     this.api.GetEmployeeMasterList().subscribe({
       next: (response: any) => {
-        console.log('Emergency Exit Form - Project Manager API Response:', response);
-        if (response && response.success && response.data && Array.isArray(response.data)) {
+        console.log('Employee API Response for PM:', response);
+        if (response && Array.isArray(response)) {
+          this.projectManagerList = response;
+          console.log('PM List loaded from Employee API:', this.projectManagerList.length, 'items');
+        } else if (response && response.success && response.data && Array.isArray(response.data)) {
           this.projectManagerList = response.data;
-          console.log('Emergency Exit Form - Project Manager List loaded successfully:', this.projectManagerList.length, 'items');
+          console.log('PM List loaded from Employee API data:', this.projectManagerList.length, 'items');
+        } else if (response && Array.isArray(response.data)) {
+          this.projectManagerList = response.data;
+          console.log('PM List loaded from Employee API response.data:', this.projectManagerList.length, 'items');
         } else {
-          console.warn('Emergency Exit Form - Invalid Project Manager API response:', response);
+          console.warn('Employee API also failed for PM list:', response);
           this.projectManagerList = [];
         }
       },
       error: (error) => {
-        console.error('Emergency Exit Form - Error fetching Project Manager list:', error);
-        // Provide fallback data for testing
-        console.log('Emergency Exit Form - Using fallback Project Manager data...');
-        this.projectManagerList = [
-          { idValue: 'ADS3239', description: 'PRABIN BABY | ADS3239' },
-          { idValue: 'ADS3121', description: 'SAJITH THANKAMONY HARIHARAN | ADS3121' },
-          { idValue: 'ADS3456', description: 'JOHN DOE | ADS3456' },
-          { idValue: 'ADS3789', description: 'JANE SMITH | ADS3789' }
-        ];
-        console.log('Emergency Exit Form - Fallback Project Manager list loaded:', this.projectManagerList.length, 'items');
+        console.error('Employee API error for PM list:', error);
+        this.projectManagerList = [];
       }
     });
   }
 
   // Load Employee Master List from API
   loadEmployeeMasterList(): void {
-    console.log('Emergency Exit Form - Loading Employee master list...');
+    console.log('Loading Employee master list...');
     this.api.GetEmployeeMasterList().subscribe({
       next: (response: any) => {
-        console.log('Emergency Exit Form - Employee Master API Response:', response);
-        if (response && response.success && response.data && Array.isArray(response.data)) {
+        console.log('Employee API Response:', response);
+        if (response && Array.isArray(response)) {
+          this.employeeMasterList = response;
+          console.log('Employee List loaded:', this.employeeMasterList.length, 'items');
+        } else if (response && response.success && response.data && Array.isArray(response.data)) {
           this.employeeMasterList = response.data;
-          console.log('Emergency Exit Form - Employee Master List loaded successfully:', this.employeeMasterList.length, 'items');
+          console.log('Employee List loaded from data:', this.employeeMasterList.length, 'items');
+        } else if (response && Array.isArray(response.data)) {
+          this.employeeMasterList = response.data;
+          console.log('Employee List loaded from response.data:', this.employeeMasterList.length, 'items');
         } else {
-          console.warn('Emergency Exit Form - Invalid Employee Master API response:', response);
+          console.warn('Unexpected Employee API response format:', response);
+          console.log('Response type:', typeof response);
+          console.log('Response keys:', response ? Object.keys(response) : 'null');
           this.employeeMasterList = [];
         }
       },
       error: (error) => {
-        console.error('Emergency Exit Form - Error fetching Employee master list:', error);
-        
-        // Provide fallback data for testing
-        console.log('Emergency Exit Form - Using fallback Employee Master data...');
-        this.employeeMasterList = [
-          { idValue: 'ADS3239', description: 'PRABIN BABY | ADS3239' },
-          { idValue: 'ADS3121', description: 'SAJITH THANKAMONY HARIHARAN | ADS3121' },
-          { idValue: 'ADS3456', description: 'JOHN DOE | ADS3456' },
-          { idValue: 'ADS3789', description: 'JANE SMITH | ADS3789' }
-        ];
-        console.log('Emergency Exit Form - Fallback Employee Master list loaded:', this.employeeMasterList.length, 'items');
+        console.error('Error fetching Employee master list:', error);
+        this.employeeMasterList = [];
       }
     });
   }
@@ -1261,6 +1284,8 @@ export class EmergencyExitFormComponent implements OnInit {
       pmDept.comments = `Rejected by Project Manager. Remarks: ${this.pmRemarks}`;
     }
   }
+
+
 
   // Get form header title based on form type
   getFormHeaderTitle(): string {
