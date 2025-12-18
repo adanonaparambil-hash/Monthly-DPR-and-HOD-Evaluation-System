@@ -1,19 +1,5 @@
 <div class="leave-approval-container" [@slideInUp]="'in'">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="title-section">
-        <h1><i class="fas fa-clipboard-check"></i> Leave Approval Management</h1>
-        <p>Manage leave requests and track approval status</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn-refresh" (click)="refreshData()" [disabled]="isLoadingPending || isLoadingMyRequests">
-          <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingPending || isLoadingMyRequests"></i>
-          Refresh
-        </button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Tab Navigation -->
   <div class="tab-navigation">
@@ -23,7 +9,7 @@
       (click)="switchTab('pending')">
       <i class="fas fa-clock"></i>
       <span>Pending Approvals</span>
-      <span class="tab-badge" *ngIf="pendingApprovals.length > 0">{{ pendingApprovals.length }}</span>
+      <span class="tab-badge" *ngIf="getPendingApprovalsCount() > 0">{{ getPendingApprovalsCount() }}</span>
     </button>
     <button 
       class="tab-button" 
@@ -47,6 +33,7 @@
             <option value="all">All Types</option>
             <option value="emergency">Emergency</option>
             <option value="planned">Planned</option>
+            <option value="resignation">Resignation</option>
           </select>
           <select [(ngModel)]="dateFilter" class="filter-select">
             <option value="all">All Dates</option>
@@ -65,74 +52,102 @@
         </div>
       </div>
 
-      <!-- Pending Approvals List -->
-      <div class="requests-grid" *ngIf="!isLoadingPending">
-        <div class="request-card" 
-             *ngFor="let request of getFilteredPendingApprovals(); trackBy: trackByRequestId"
-             [class]="getPriorityClass(request.priority)">
-          
-          <div class="card-header">
-            <div class="employee-info">
-              <h3>{{ request.employeeName }}</h3>
-              <p class="employee-details">{{ request.employeeId }} • {{ request.department }}</p>
-            </div>
-            <div class="request-badges">
-              <span class="badge" [class]="getTypeClass(request.leaveType)">
-                <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'" 
-                   [class.fa-calendar-check]="request.leaveType === 'Planned'"></i>
-                {{ request.leaveType }}
-              </span>
-              <span class="badge priority-badge" [class]="getPriorityClass(request.priority)">
-                {{ request.priority }} Priority
-              </span>
-            </div>
-          </div>
+      <!-- Pending Approvals Table -->
+      <div class="requests-table-container" *ngIf="!isLoadingPending">
+        <div class="table-wrapper">
+          <table class="requests-table" *ngIf="getMyPendingApprovals().length > 0">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Request Date</th>
+                <th>Departure</th>
+                <th>Duration</th>
+                <th>Reason</th>
+                <th>Current Step</th>
+                <th>Progress</th>
+                <th>Priority</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let request of getMyPendingApprovals(); trackBy: trackByRequestId" 
+                  class="request-row" [class]="getPriorityClass(request.priority)">
+                
+                <!-- Employee Info -->
+                <td class="employee-cell">
+                  <div class="employee-info">
+                    <div class="employee-name">{{ request.employeeName }}</div>
+                    <div class="employee-details">{{ request.employeeId }} • {{ request.department }}</div>
+                  </div>
+                </td>
 
-          <div class="card-body">
-            <div class="request-details">
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-calendar-alt"></i> Request Date:</span>
-                <span class="value">{{ formatDate(request.requestDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-plane-departure"></i> Departure:</span>
-                <span class="value">{{ formatDate(request.departureDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-plane-arrival"></i> Return:</span>
-                <span class="value">{{ formatDate(request.returnDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-clock"></i> Duration:</span>
-                <span class="value">{{ request.daysRequested }} days</span>
-              </div>
-            </div>
-            
-            <div class="reason-section">
-              <h4><i class="fas fa-comment-alt"></i> Reason</h4>
-              <p class="reason-text">{{ request.reason }}</p>
-            </div>
-          </div>
+                <!-- Type -->
+                <td class="type-cell">
+                  <span class="badge type-badge" [class]="getTypeClass(request.leaveType)">
+                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'" 
+                       [class.fa-calendar-check]="request.leaveType === 'Planned'"
+                       [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
+                    {{ getFormTypeText(request.leaveType) }}
+                  </span>
+                </td>
 
-          <div class="card-actions">
-            <button class="btn-approve" (click)="approveRequest(request)">
-              <i class="fas fa-check"></i>
-              Approve
-            </button>
-            <button class="btn-reject" (click)="rejectRequest(request)">
-              <i class="fas fa-times"></i>
-              Reject
-            </button>
-          </div>
+                <!-- Request Date -->
+                <td class="date-cell">{{ formatDate(request.requestDate) }}</td>
+
+                <!-- Departure Date -->
+                <td class="date-cell">{{ formatDate(request.departureDate) }}</td>
+
+                <!-- Duration -->
+                <td class="duration-cell">{{ request.daysRequested }} days</td>
+
+                <!-- Reason -->
+                <td class="reason-cell">
+                  <div class="reason-text" [title]="request.reason">{{ request.reason }}</div>
+                </td>
+
+                <!-- Current Step -->
+                <td class="step-cell">
+                  <div class="current-step">{{ getCurrentStepName(request) }}</div>
+                </td>
+
+                <!-- Progress -->
+                <td class="progress-cell">
+                  <div class="progress-container">
+                    <div class="progress-bar-mini">
+                      <div class="progress-fill-mini" [style.width.%]="getWorkflowProgress(request)"></div>
+                    </div>
+                    <span class="progress-text">{{ getWorkflowProgress(request) }}%</span>
+                  </div>
+                </td>
+
+                <!-- Priority -->
+                <td class="priority-cell">
+                  <span class="badge priority-badge" [class]="getPriorityClass(request.priority)">
+                    {{ request.priority }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="actions-cell">
+                  <div class="action-buttons">
+                    <button class="btn-view-table" (click)="viewRequestDetails(request)" title="View & Review">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- Empty State -->
-        <div class="empty-state" *ngIf="getFilteredPendingApprovals().length === 0">
+        <!-- No Pending Approvals -->
+        <div class="empty-state" *ngIf="getMyPendingApprovals().length === 0">
           <div class="empty-icon">
-            <i class="fas fa-inbox"></i>
+            <i class="fas fa-check-circle"></i>
           </div>
           <h3>No Pending Approvals</h3>
-          <p>You don't have any leave requests waiting for your approval at the moment.</p>
+          <p>You have no requests awaiting your approval at this time.</p>
         </div>
       </div>
     </div>
@@ -140,7 +155,7 @@
     <!-- My Requests Tab -->
     <div class="tab-panel" *ngIf="activeTab === 'myRequests'" [@fadeInUp]="'in'">
       <div class="panel-header">
-        <h2><i class="fas fa-list-alt"></i> My Leave Requests</h2>
+        <h2><i class="fas fa-user"></i> My Submitted Requests</h2>
         <div class="filters">
           <select [(ngModel)]="statusFilter" class="filter-select">
             <option value="all">All Status</option>
@@ -152,6 +167,7 @@
             <option value="all">All Types</option>
             <option value="emergency">Emergency</option>
             <option value="planned">Planned</option>
+            <option value="resignation">Resignation</option>
           </select>
         </div>
       </div>
@@ -164,84 +180,92 @@
         </div>
       </div>
 
-      <!-- My Requests List -->
-      <div class="requests-grid" *ngIf="!isLoadingMyRequests">
-        <div class="request-card my-request" 
-             *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId">
-          
-          <div class="card-header">
-            <div class="request-info">
-              <h3>{{ request.leaveType }} Leave Request</h3>
-              <p class="request-id">Request ID: {{ request.id }}</p>
-            </div>
-            <div class="request-badges">
-              <span class="badge" [class]="getTypeClass(request.leaveType)">
-                <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'" 
-                   [class.fa-calendar-check]="request.leaveType === 'Planned'"></i>
-                {{ request.leaveType }}
-              </span>
-              <span class="badge status-badge" [class]="getStatusClass(request.status)">
-                <i class="fas" [class.fa-clock]="request.status === 'Pending'"
-                   [class.fa-check]="request.status === 'Approved'"
-                   [class.fa-times]="request.status === 'Rejected'"></i>
-                {{ request.status }}
-              </span>
-            </div>
-          </div>
+      <!-- My Requests Table -->
+      <div class="requests-table-container" *ngIf="!isLoadingMyRequests">
+        <div class="table-wrapper">
+          <table class="requests-table" *ngIf="getFilteredMyRequests().length > 0">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Type</th>
+                <th>Submitted Date</th>
+                <th>Departure</th>
+                <th>Duration</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Approved By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId" 
+                  class="request-row" [class]="getStatusClass(request.status)">
+                
+                <!-- Request ID -->
+                <td class="id-cell">
+                  <div class="request-id">{{ request.id }}</div>
+                </td>
 
-          <div class="card-body">
-            <div class="request-details">
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-calendar-alt"></i> Submitted:</span>
-                <span class="value">{{ formatDate(request.requestDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-plane-departure"></i> Departure:</span>
-                <span class="value">{{ formatDate(request.departureDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-plane-arrival"></i> Return:</span>
-                <span class="value">{{ formatDate(request.returnDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label"><i class="fas fa-clock"></i> Duration:</span>
-                <span class="value">{{ request.daysRequested }} days</span>
-              </div>
-            </div>
-            
-            <div class="reason-section">
-              <h4><i class="fas fa-comment-alt"></i> Reason</h4>
-              <p class="reason-text">{{ request.reason }}</p>
-            </div>
+                <!-- Type -->
+                <td class="type-cell">
+                  <span class="badge type-badge" [class]="getTypeClass(request.leaveType)">
+                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'" 
+                       [class.fa-calendar-check]="request.leaveType === 'Planned'"
+                       [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
+                    {{ getFormTypeText(request.leaveType) }}
+                  </span>
+                </td>
 
-            <!-- Approval Details -->
-            <div class="approval-details" *ngIf="request.status !== 'Pending'">
-              <h4><i class="fas fa-user-tie"></i> Approval Details</h4>
-              <div class="approval-info">
-                <div class="detail-row">
-                  <span class="label">Approver:</span>
-                  <span class="value">{{ request.approverName }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="label">Date:</span>
-                  <span class="value">{{ formatDate(request.approvedDate!) }}</span>
-                </div>
-                <div class="detail-row" *ngIf="request.approverComments">
-                  <span class="label">Comments:</span>
-                  <span class="value">{{ request.approverComments }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+                <!-- Submitted Date -->
+                <td class="date-cell">{{ formatDate(request.requestDate) }}</td>
+
+                <!-- Departure Date -->
+                <td class="date-cell">{{ formatDate(request.departureDate) }}</td>
+
+                <!-- Duration -->
+                <td class="duration-cell">{{ request.daysRequested }} days</td>
+
+                <!-- Reason -->
+                <td class="reason-cell">
+                  <div class="reason-text" [title]="request.reason">{{ request.reason }}</div>
+                </td>
+
+                <!-- Status -->
+                <td class="status-cell">
+                  <span class="badge status-badge" [class]="getStatusClass(request.status)">
+                    {{ request.status }}
+                  </span>
+                </td>
+
+                <!-- Approved By -->
+                <td class="approver-cell">
+                  <div class="approver-info" *ngIf="request.status !== 'Pending'">
+                    <div class="approver-name">{{ request.approverName || 'N/A' }}</div>
+                    <div class="approval-date" *ngIf="request.approvedDate">{{ formatDate(request.approvedDate) }}</div>
+                  </div>
+                  <span class="pending-text" *ngIf="request.status === 'Pending'">Awaiting Approval</span>
+                </td>
+
+                <!-- Actions -->
+                <td class="actions-cell">
+                  <div class="action-buttons">
+                    <button class="btn-view-table" (click)="viewMyRequestDetails(request)" title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- Empty State -->
+        <!-- No Requests -->
         <div class="empty-state" *ngIf="getFilteredMyRequests().length === 0">
           <div class="empty-icon">
-            <i class="fas fa-file-alt"></i>
+            <i class="fas fa-inbox"></i>
           </div>
           <h3>No Requests Found</h3>
-          <p>You haven't submitted any leave requests yet, or no requests match your current filters.</p>
+          <p>You haven't submitted any requests yet.</p>
         </div>
       </div>
     </div>

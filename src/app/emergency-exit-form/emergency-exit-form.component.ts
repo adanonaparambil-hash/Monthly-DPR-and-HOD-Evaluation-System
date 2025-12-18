@@ -2,12 +2,13 @@ import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, Input } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Api } from '../services/api';
 import { DropdownOption, ExitEmpProfileDetails } from '../models/common.model';
-import { EmployeeExitRequest, EmployeeExitResponsibility } from '../models/employeeExit.model';
+import { EmployeeExitRequest, EmployeeExitResponsibility, ApprovalStep, DepartmentApproval } from '../models/employeeExit.model';
 import { SessionService } from '../services/session.service';
 import { ToastrService } from 'ngx-toastr';
+import { ApprovalWorkflowService } from '../services/approval-workflow.service';
 import Swal from 'sweetalert2';
 
 interface Department {
@@ -86,6 +87,11 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Form type flag: 'E' for Emergency, 'P' for Planned Leave, 'R' for Resignation
   @Input() formType: 'E' | 'P' | 'R' = 'E';
+
+  // Approval mode flags
+  isApprovalMode: boolean = false;
+  approvalRequestData: any = null;
+  returnUrl: string = '';
 
   // Employee profile data
   employeeProfileData: ExitEmpProfileDetails = {};
@@ -175,13 +181,21 @@ export class EmergencyExitFormComponent implements OnInit {
 
   responsibilities: ResponsibilityHandover[] = [];
 
+  // Approval workflow properties
+  approvalWorkflow: ApprovalStep[] = [];
+  departmentApprovals: DepartmentApproval[] = [];
+  currentApprovalStep: ApprovalStep | null = null;
+  workflowProgress: number = 0;
+
   constructor(
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private api: Api,
     private route: ActivatedRoute,
+    private router: Router,
     private sessionService: SessionService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private approvalWorkflowService: ApprovalWorkflowService
   ) {
     this.initializeForm();
   }
@@ -262,13 +276,54 @@ export class EmergencyExitFormComponent implements OnInit {
     // Read form type from route query parameters
     this.route.queryParams.subscribe(params => {
       const typeParam = params['type'];
+      const modeParam = params['mode'];
+      const requestId = params['requestId'];
+      
       if (typeParam === 'P' || typeParam === 'E' || typeParam === 'R') {
         this.formType = typeParam;
-        console.log('Form type set to:', this.formType); // Debug log
+        console.log('Form type set to:', this.formType);
       } else {
         // Default to Emergency if no valid type is provided
         this.formType = 'E';
-        console.log('Form type defaulted to Emergency'); // Debug log
+        console.log('Form type defaulted to Emergency');
+      }
+
+      // Check if this is approval mode or view mode
+      if (modeParam === 'approval') {
+        this.isApprovalMode = true;
+        this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval';
+        
+        // Load approval request data
+        const requestData = sessionStorage.getItem('approvalRequestData');
+        if (requestData) {
+          this.approvalRequestData = JSON.parse(requestData);
+          console.log('Approval mode activated for request:', requestId);
+          
+          // Go directly to step 4 for approval from listing
+          this.currentStep = 4;
+          
+          // Populate form with request data
+          this.populateFormFromApprovalData();
+        }
+      } else if (modeParam === 'view') {
+        this.isApprovalMode = false; // View mode, not approval mode
+        this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval';
+        
+        // Load request data for viewing
+        const requestData = sessionStorage.getItem('approvalRequestData');
+        if (requestData) {
+          this.approvalRequestData = JSON.parse(requestData);
+          console.log('View mode activated for request:', requestId);
+          
+          // Start from step 1 to show complete form for viewing
+          this.currentStep = 1;
+          
+          // Populate form with request data
+          this.populateFormFromApprovalData();
+        }
+      } else {
+        this.isApprovalMode = false;
+        this.approvalRequestData = null;
       }
 
       // Update form validations and steps when form type changes
@@ -276,11 +331,18 @@ export class EmergencyExitFormComponent implements OnInit {
       this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
       this.updateFormValidations();
 
-      // Re-populate form with session data after form type change
-      this.populateFormFromSession();
-
-      // Load employee details for the new form type
-      this.loadEmployeeDetails();
+      if (!this.isApprovalMode) {
+        // Re-populate form with session data after form type change
+        this.populateFormFromSession();
+        
+        // Load employee details for the new form type
+        this.loadEmployeeDetails();
+        
+        // Load master lists for non-approval mode
+        this.loadHodMasterList();
+        this.loadProjectManagerList();
+        this.loadEmployeeMasterList();
+      }
     });
   }
 
@@ -475,7 +537,18 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   nextStep() {
-    console.log('NextStep called - Current step:', this.currentStep, 'Form type:', this.formType);
+    console.log('NextStep called - Current step:', this.currentStep, 'Form type:', this.formType, 'Approval mode:', this.isApprovalMode);
+    
+    // In approval mode or view mode, allow simple sequential navigation without validation
+    if (this.isApprovalMode || this.approvalRequestData) {
+      if (this.currentStep < 4) {
+        this.currentStep++;
+        console.log('Approval/View mode: Moving to step', this.currentStep);
+      }
+      return;
+    }
+    
+    // Regular form mode - validate before proceeding
     const isValid = this.validateCurrentStep();
     console.log('Validation result:', isValid);
     
@@ -502,7 +575,17 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   previousStep() {
+    console.log('PreviousStep called - Current step:', this.currentStep, 'Form type:', this.formType, 'Approval mode:', this.isApprovalMode);
+    
     if (this.currentStep > 1) {
+      // In approval mode or view mode, allow simple sequential navigation
+      if (this.isApprovalMode || this.approvalRequestData) {
+        this.currentStep--;
+        console.log('Approval/View mode: Moving to step', this.currentStep);
+        return;
+      }
+      
+      // Regular form mode - use form-type-specific navigation
       // For Planned Leave and Resignation, go back from Step 3 (Final Review) to Step 1
       if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 3) {
         this.currentStep = 1; // Go back to step 1
@@ -862,6 +945,16 @@ export class EmergencyExitFormComponent implements OnInit {
       // Prepare data for API
       const exitRequest = this.prepareExitRequest();
       
+      // Generate approval workflow
+      this.generateApprovalWorkflow(exitRequest);
+      
+      // Add workflow to exit request
+      exitRequest.approvalWorkflow = this.approvalWorkflow;
+      exitRequest.departmentApprovals = this.departmentApprovals;
+      exitRequest.currentApprovalStep = 1;
+      exitRequest.overallStatus = 'PENDING';
+      exitRequest.submittedDate = new Date().toISOString();
+      
       // Call API
       this.api.InsertEmployeeExit(exitRequest).subscribe({
         next: (response: any) => {
@@ -871,6 +964,9 @@ export class EmergencyExitFormComponent implements OnInit {
           if (response && response.success) {
             // Show success message
             this.toastr.success('Form submitted successfully! Your request is now being processed.', 'Submission Successful');
+            
+            // Update workflow progress
+            this.updateWorkflowProgress();
             
             // Move to approval workflow step
             this.currentStep = 4;
@@ -940,7 +1036,13 @@ export class EmergencyExitFormComponent implements OnInit {
       declaration2: formValue.decHandoverComplete ? 'Y' : 'N',
       declaration3: formValue.decReturnAssets ? 'Y' : 'N',
       declaration4: formValue.decUnderstandReturn ? 'Y' : 'N',
-      responsibilities: responsibilities
+      responsibilities: responsibilities,
+      // New workflow properties - will be set after generation
+      approvalWorkflow: [],
+      departmentApprovals: [],
+      currentApprovalStep: 1,
+      overallStatus: 'PENDING',
+      submittedDate: new Date().toISOString()
     };
 
     console.log('Prepared exit request:', exitRequest);
@@ -1154,112 +1256,98 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Load HOD Master List from API
   loadHodMasterList(): void {
-    console.log('Loading HOD master list...');
-    this.api.GetHodMasterList().subscribe({
-      next: (response: any) => {
-        console.log('HOD API Response:', response);
-        if (response && Array.isArray(response)) {
-          this.hodList = response;
-          console.log('HOD List loaded:', this.hodList.length, 'items');
-        } else if (response && response.success && response.data && Array.isArray(response.data)) {
+    console.log('🔄 Loading HOD master list...');
+    
+    this.api.GetHodMasterList().subscribe(
+      (response: any) => {
+        console.log('✅ HOD API Response received:', response);
+        
+        if (response && response.success && response.data) {
           this.hodList = response.data;
-          console.log('HOD List loaded from data:', this.hodList.length, 'items');
-        } else if (response && Array.isArray(response.data)) {
-          this.hodList = response.data;
-          console.log('HOD List loaded from response.data:', this.hodList.length, 'items');
+          console.log('✅ HOD List loaded successfully:', this.hodList.length, 'items');
+          console.log('📝 First HOD item:', this.hodList[0]);
         } else {
-          console.warn('Unexpected HOD API response format:', response);
+          console.warn('⚠️ No HOD records found or API call failed');
+          console.log('📋 Response structure:', response);
           this.hodList = [];
         }
+        
+        // Force change detection
+        this.cdr.detectChanges();
       },
-      error: (error) => {
-        console.error('Error fetching HOD master list:', error);
+      (error) => {
+        console.error('❌ Error fetching HOD master list:', error);
         this.hodList = [];
+        this.cdr.detectChanges();
       }
-    });
+    );
   }
 
-  // Load Project Manager Master List - Use Employee API as fallback
+  // Load Project Manager Master List
   loadProjectManagerList(): void {
-    console.log('Loading Project Manager list...');
-    // Try dedicated PM API first
-    this.api.GetProjectManagerList().subscribe({
-      next: (response: any) => {
-        console.log('PM API Response:', response);
-        if (response && Array.isArray(response)) {
-          this.projectManagerList = response;
-          console.log('PM List loaded:', this.projectManagerList.length, 'items');
-        } else if (response && response.success && response.data && Array.isArray(response.data)) {
+    console.log('🔄 Loading Project Manager list...');
+    
+    this.api.GetProjectManagerList().subscribe(
+      (response: any) => {
+        console.log('✅ PM API Response received:', response);
+        
+        if (response && response.success && response.data) {
           this.projectManagerList = response.data;
-          console.log('PM List loaded from data:', this.projectManagerList.length, 'items');
-        } else if (response && Array.isArray(response.data)) {
-          this.projectManagerList = response.data;
-          console.log('PM List loaded from response.data:', this.projectManagerList.length, 'items');
+          console.log('✅ PM List loaded successfully:', this.projectManagerList.length, 'items');
         } else {
-          console.warn('PM API failed, trying Employee API as fallback');
+          console.warn('⚠️ No PM records found, trying Employee API as fallback');
           this.loadProjectManagerFromEmployeeAPI();
         }
       },
-      error: (error) => {
-        console.error('PM API error, trying Employee API as fallback:', error);
+      (error) => {
+        console.error('❌ PM API error, trying Employee API as fallback:', error);
         this.loadProjectManagerFromEmployeeAPI();
       }
-    });
+    );
   }
 
   // Fallback: Load Project Managers from Employee API
   loadProjectManagerFromEmployeeAPI(): void {
-    this.api.GetEmployeeMasterList().subscribe({
-      next: (response: any) => {
-        console.log('Employee API Response for PM:', response);
-        if (response && Array.isArray(response)) {
-          this.projectManagerList = response;
-          console.log('PM List loaded from Employee API:', this.projectManagerList.length, 'items');
-        } else if (response && response.success && response.data && Array.isArray(response.data)) {
+    this.api.GetEmployeeMasterList().subscribe(
+      (response: any) => {
+        console.log('✅ Employee API Response for PM:', response);
+        
+        if (response && response.success && response.data) {
           this.projectManagerList = response.data;
-          console.log('PM List loaded from Employee API data:', this.projectManagerList.length, 'items');
-        } else if (response && Array.isArray(response.data)) {
-          this.projectManagerList = response.data;
-          console.log('PM List loaded from Employee API response.data:', this.projectManagerList.length, 'items');
+          console.log('✅ PM List loaded from Employee API:', this.projectManagerList.length, 'items');
         } else {
-          console.warn('Employee API also failed for PM list:', response);
+          console.warn('⚠️ Employee API also failed for PM list');
           this.projectManagerList = [];
         }
       },
-      error: (error) => {
-        console.error('Employee API error for PM list:', error);
+      (error) => {
+        console.error('❌ Employee API error for PM list:', error);
         this.projectManagerList = [];
       }
-    });
+    );
   }
 
   // Load Employee Master List from API
   loadEmployeeMasterList(): void {
-    console.log('Loading Employee master list...');
-    this.api.GetEmployeeMasterList().subscribe({
-      next: (response: any) => {
-        console.log('Employee API Response:', response);
-        if (response && Array.isArray(response)) {
-          this.employeeMasterList = response;
-          console.log('Employee List loaded:', this.employeeMasterList.length, 'items');
-        } else if (response && response.success && response.data && Array.isArray(response.data)) {
+    console.log('🔄 Loading Employee master list...');
+    
+    this.api.GetEmployeeMasterList().subscribe(
+      (response: any) => {
+        console.log('✅ Employee API Response received:', response);
+        
+        if (response && response.success && response.data) {
           this.employeeMasterList = response.data;
-          console.log('Employee List loaded from data:', this.employeeMasterList.length, 'items');
-        } else if (response && Array.isArray(response.data)) {
-          this.employeeMasterList = response.data;
-          console.log('Employee List loaded from response.data:', this.employeeMasterList.length, 'items');
+          console.log('✅ Employee List loaded successfully:', this.employeeMasterList.length, 'items');
         } else {
-          console.warn('Unexpected Employee API response format:', response);
-          console.log('Response type:', typeof response);
-          console.log('Response keys:', response ? Object.keys(response) : 'null');
+          console.warn('⚠️ No Employee records found or API call failed');
           this.employeeMasterList = [];
         }
       },
-      error: (error) => {
-        console.error('Error fetching Employee master list:', error);
+      (error) => {
+        console.error('❌ Error fetching Employee master list:', error);
         this.employeeMasterList = [];
       }
-    });
+    );
   }
 
   // Project Manager approval method
@@ -1355,6 +1443,12 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Check if we should show the Next button
   shouldShowNextButton(): boolean {
+    // In approval mode or view mode, show Next button for steps 1-3
+    if (this.isApprovalMode || this.approvalRequestData) {
+      return this.currentStep < 4;
+    }
+    
+    // Regular form mode
     if (this.formType === 'P' || this.formType === 'R') {
       return this.currentStep === 1; // Show only on Step 1 for planned leave and resignation
     } else {
@@ -1557,6 +1651,415 @@ export class EmergencyExitFormComponent implements OnInit {
       (employee.description || '').toLowerCase().includes(term) ||
       (employee.idValue || '').toLowerCase().includes(term)
     );
+  }
+
+  /**
+   * Generate approval workflow based on form type and data
+   */
+  generateApprovalWorkflow(exitRequest: EmployeeExitRequest): void {
+    const formValue = this.exitForm.getRawValue();
+    
+    // Generate approval workflow
+    this.approvalWorkflow = this.approvalWorkflowService.generateApprovalWorkflow(this.formType, formValue);
+    
+    // Generate department approvals
+    this.departmentApprovals = this.approvalWorkflowService.generateDepartmentApprovals();
+    
+    // Set current approval step
+    this.currentApprovalStep = this.approvalWorkflowService.getCurrentApprovalStep(this.approvalWorkflow);
+    
+    console.log('Generated approval workflow:', this.approvalWorkflow);
+    console.log('Generated department approvals:', this.departmentApprovals);
+  }
+
+  /**
+   * Update workflow progress
+   */
+  updateWorkflowProgress(): void {
+    this.workflowProgress = this.approvalWorkflowService.getWorkflowProgress(this.approvalWorkflow);
+  }
+
+  /**
+   * Get approval status text for display
+   */
+  getApprovalStatusText(status: string): string {
+    return this.approvalWorkflowService.getApprovalStatusText(status);
+  }
+
+  /**
+   * Get approval status CSS class
+   */
+  getApprovalStatusClass(status: string): string {
+    return this.approvalWorkflowService.getApprovalStatusClass(status);
+  }
+
+  /**
+   * Check if workflow is complete
+   */
+  isWorkflowComplete(): boolean {
+    return this.approvalWorkflowService.isWorkflowComplete(this.approvalWorkflow);
+  }
+
+  /**
+   * Check if workflow is rejected
+   */
+  isWorkflowRejected(): boolean {
+    return this.approvalWorkflowService.isWorkflowRejected(this.approvalWorkflow);
+  }
+
+  /**
+   * Get overall workflow status
+   */
+  getOverallWorkflowStatus(): string {
+    if (this.isWorkflowRejected()) {
+      return 'REJECTED';
+    } else if (this.isWorkflowComplete()) {
+      return 'APPROVED';
+    } else if (this.approvalWorkflow.some(step => step.status === 'APPROVED')) {
+      return 'IN_PROGRESS';
+    } else {
+      return 'PENDING';
+    }
+  }
+
+  /**
+   * Simulate approval action (for demo purposes)
+   */
+  simulateApproval(stepId: number, approved: boolean, comments?: string): void {
+    const step = this.approvalWorkflow.find(s => s.stepId === stepId);
+    if (step) {
+      if (approved) {
+        this.approvalWorkflow = this.approvalWorkflowService.approveStep(
+          this.approvalWorkflow, 
+          stepId, 
+          'current-user-id', 
+          'Current User', 
+          comments
+        );
+        this.toastr.success(`${step.stepName} approved successfully!`, 'Approval Success');
+      } else {
+        this.approvalWorkflow = this.approvalWorkflowService.rejectStep(
+          this.approvalWorkflow, 
+          stepId, 
+          'current-user-id', 
+          'Current User', 
+          comments || 'Rejected'
+        );
+        this.toastr.error(`${step.stepName} rejected.`, 'Approval Rejected');
+      }
+      
+      // Update current step and progress
+      this.currentApprovalStep = this.approvalWorkflowService.getCurrentApprovalStep(this.approvalWorkflow);
+      this.updateWorkflowProgress();
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Simulate department approval
+   */
+  simulateDepartmentApproval(departmentId: string, approved: boolean, comments?: string): void {
+    const department = this.departmentApprovals.find(d => d.departmentId === departmentId);
+    if (department) {
+      department.status = approved ? 'APPROVED' : 'REJECTED';
+      department.approverName = 'Current User';
+      department.approvedDate = new Date().toISOString();
+      department.comments = comments || '';
+      
+      if (approved) {
+        this.toastr.success(`${department.departmentName} clearance approved!`, 'Department Approval');
+      } else {
+        this.toastr.error(`${department.departmentName} clearance rejected.`, 'Department Rejection');
+      }
+      
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Get pending approvals count
+   */
+  getPendingApprovalsCount(): number {
+    return this.approvalWorkflow.filter(step => step.status === 'PENDING').length;
+  }
+
+  /**
+   * Get approved steps count
+   */
+  getApprovedStepsCount(): number {
+    return this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
+  }
+
+  /**
+   * Get department approval progress
+   */
+  getDepartmentApprovalProgress(): number {
+    const totalDepts = this.departmentApprovals.length;
+    const approvedDepts = this.departmentApprovals.filter(d => d.status === 'APPROVED').length;
+    return totalDepts > 0 ? Math.round((approvedDepts / totalDepts) * 100) : 0;
+  }
+
+  /**
+   * Get approved departments count
+   */
+  getApprovedDepartmentsCount(): number {
+    return this.departmentApprovals.filter(d => d.status === 'APPROVED').length;
+  }
+
+  /**
+   * Track by function for HOD dropdown
+   */
+  trackByHodId(index: number, item: DropdownOption): any {
+    return item.idValue;
+  }
+
+  /**
+   * Get form type display text
+   */
+  getFormTypeText(leaveType: string): string {
+    switch (leaveType) {
+      case 'Emergency': return 'Emergency Exit';
+      case 'Planned': return 'Planned Leave';
+      case 'Resignation': return 'Resignation';
+      default: return leaveType;
+    }
+  }
+
+  /**
+   * Get contextual title based on mode and form type
+   */
+  getContextualTitle(): string {
+    if (this.isApprovalMode && this.approvalRequestData) {
+      const formTypeText = this.getFormTypeText(this.approvalRequestData.leaveType);
+      return `${formTypeText} Review`;
+    } else if (this.approvalRequestData) {
+      const formTypeText = this.getFormTypeText(this.approvalRequestData.leaveType);
+      return `${formTypeText} Status`;
+    } else {
+      return this.getFormHeaderTitle();
+    }
+  }
+
+  /**
+   * Get contextual description based on mode
+   */
+  getContextualDescription(): string {
+    if (this.isApprovalMode) {
+      return 'Review all details and approve the request';
+    } else if (this.approvalRequestData) {
+      return 'Track your request progress and status';
+    } else {
+      return 'Digital approval workflow system';
+    }
+  }
+
+  /**
+   * Populate form from approval request data
+   */
+  populateFormFromApprovalData(): void {
+    if (!this.approvalRequestData) return;
+
+    const request = this.approvalRequestData;
+    
+    // Format dates properly for form inputs
+    const formatDateForInput = (dateString: string): string => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    };
+
+    // Populate comprehensive form data
+    this.exitForm.patchValue({
+      // Employee Information
+      employeeName: request.employeeName || '',
+      employeeId: request.employeeId || '',
+      department: request.department || '',
+      
+      // Travel Information
+      dateOfDeparture: formatDateForInput(request.departureDate),
+      dateOfArrival: formatDateForInput(request.returnDate),
+      flightTime: request.flightTime || '',
+      noOfDaysApproved: request.daysRequested || 0,
+      
+      // Reason and Category
+      reasonForEmergency: request.reason || '',
+      category: request.category || '',
+      
+      // HOD and Project Manager
+      hodName: request.hodName || '',
+      projectManagerName: request.projectManagerName || '',
+      
+      // Planned Leave/Resignation specific
+      responsibilitiesHandedOverTo: request.responsibilitiesHandedOverTo || '',
+      
+      // Contact Information (if available)
+      address: request.address || '',
+      district: request.district || '',
+      place: request.place || '',
+      state: request.state || '',
+      postOffice: request.postOffice || '',
+      nation: request.nation || '',
+      telephoneMobile: request.telephoneMobile || '',
+      telephoneLandline: request.telephoneLandline || '',
+      emailId: request.emailId || '',
+      
+      // Declarations (set to true if this is a submitted request)
+      decInfoAccurate: true,
+      decHandoverComplete: true,
+      decReturnAssets: true,
+      decUnderstandReturn: true
+    });
+
+    // Populate responsibilities for Emergency forms
+    if (this.formType === 'E' && request.responsibilities && request.responsibilities.length > 0) {
+      // Clear existing responsibilities
+      this.responsibilitiesFormArray.clear();
+      
+      // Add responsibilities from request data
+      request.responsibilities.forEach((resp: any) => {
+        const responsibilityGroup = this.fb.group({
+          project: [resp.project || '', Validators.required],
+          activities: [resp.activities || '', Validators.required],
+          responsiblePersonName: [resp.responsiblePersonName || '', Validators.required],
+          responsiblePersonId: [resp.responsiblePersonId || ''],
+          responsiblePersonPhone: [resp.responsiblePersonPhone || '', [Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]],
+          responsiblePersonEmail: [resp.responsiblePersonEmail || '', [Validators.required, Validators.email]],
+          remarks: [resp.remarks || '']
+        });
+        this.responsibilitiesFormArray.push(responsibilityGroup);
+      });
+    }
+
+    // Set up approval workflow from request data
+    if (request.approvalWorkflow) {
+      this.approvalWorkflow = request.approvalWorkflow;
+      this.currentApprovalStep = this.approvalWorkflowService.getCurrentApprovalStep(this.approvalWorkflow);
+      this.updateWorkflowProgress();
+    } else {
+      // Generate workflow if not present
+      this.generateApprovalWorkflow(request);
+    }
+
+    if (request.departmentApprovals) {
+      this.departmentApprovals = request.departmentApprovals;
+    } else {
+      // Generate department approvals if not present
+      this.departmentApprovals = this.approvalWorkflowService.generateDepartmentApprovals();
+    }
+
+    // Disable all form fields in approval/view mode
+    if (this.isApprovalMode || this.approvalRequestData) {
+      this.disableAllFormFields();
+    }
+    
+    console.log('Form populated from approval data:', request);
+    console.log('Form values after population:', this.exitForm.value);
+  }
+
+  /**
+   * Disable all form fields in approval mode
+   */
+  disableAllFormFields(): void {
+    Object.keys(this.exitForm.controls).forEach(key => {
+      this.exitForm.get(key)?.disable();
+    });
+  }
+
+  /**
+   * Return to approval listing
+   */
+  returnToApprovalListing(): void {
+    // Clear session storage
+    sessionStorage.removeItem('approvalRequestData');
+    sessionStorage.removeItem('approvalMode');
+    sessionStorage.removeItem('returnUrl');
+    
+    // Navigate back
+    this.router.navigate([this.returnUrl]);
+  }
+
+  /**
+   * Approve current step in approval mode
+   */
+  approveCurrentStep(comments?: string): void {
+    if (!this.isApprovalMode || !this.currentApprovalStep) return;
+
+    this.approvalWorkflow = this.approvalWorkflowService.approveStep(
+      this.approvalWorkflow,
+      this.currentApprovalStep.stepId,
+      'current-user-id',
+      'Current User',
+      comments
+    );
+
+    // Update current step and progress
+    this.currentApprovalStep = this.approvalWorkflowService.getCurrentApprovalStep(this.approvalWorkflow);
+    this.updateWorkflowProgress();
+
+    // Update session storage with new workflow state
+    if (this.approvalRequestData) {
+      this.approvalRequestData.approvalWorkflow = this.approvalWorkflow;
+      sessionStorage.setItem('approvalRequestData', JSON.stringify(this.approvalRequestData));
+    }
+
+    this.toastr.success('Request approved successfully!', 'Approval Success');
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Reject current step in approval mode
+   */
+  rejectCurrentStep(comments: string): void {
+    if (!this.isApprovalMode || !this.currentApprovalStep) return;
+
+    this.approvalWorkflow = this.approvalWorkflowService.rejectStep(
+      this.approvalWorkflow,
+      this.currentApprovalStep.stepId,
+      'current-user-id',
+      'Current User',
+      comments
+    );
+
+    // Update current step and progress
+    this.currentApprovalStep = this.approvalWorkflowService.getCurrentApprovalStep(this.approvalWorkflow);
+    this.updateWorkflowProgress();
+
+    // Update session storage with new workflow state
+    if (this.approvalRequestData) {
+      this.approvalRequestData.approvalWorkflow = this.approvalWorkflow;
+      sessionStorage.setItem('approvalRequestData', JSON.stringify(this.approvalRequestData));
+    }
+
+    this.toastr.error('Request rejected.', 'Approval Rejected');
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Check if all department approvals are complete
+   */
+  areAllDepartmentApprovalsComplete(): boolean {
+    return this.departmentApprovals.every(d => d.status === 'APPROVED');
+  }
+
+  /**
+   * Get workflow step by ID
+   */
+  getWorkflowStep(stepId: number): ApprovalStep | undefined {
+    return this.approvalWorkflow.find(step => step.stepId === stepId);
+  }
+
+  /**
+   * Format approval date for display
+   */
+  formatApprovalDate(dateString?: string): string {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   // Dropdown visibility management

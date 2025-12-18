@@ -5,20 +5,25 @@
   <div class="form-header">
     <div class="header-content">
       <div class="company-branding">
-
         <div class="form-title-section">
           <div class="title-with-icon">
             <div class="animated-icon" [ngClass]="formType === 'E' ? 'emergency-icon' : (formType === 'R' ? 'resignation-icon' : 'planned-icon')">
               <i class="fas" [ngClass]="formType === 'E' ? 'fa-exclamation-triangle' : (formType === 'R' ? 'fa-user-times' : 'fa-calendar-check')"></i>
             </div>
             <div class="title-text">
-              <h1>{{ getFormHeaderTitle() }}</h1>
-              <p>Digital approval workflow system</p>
+              <h1>{{ getContextualTitle() }}</h1>
+              <p>{{ getContextualDescription() }}</p>
             </div>
           </div>
         </div>
       </div>
-      <div class="form-status" *ngIf="!formSubmitted">
+      <div class="header-actions" *ngIf="isApprovalMode">
+        <button class="btn-back" (click)="returnToApprovalListing()">
+          <i class="fas fa-arrow-left"></i>
+          Back to Approvals
+        </button>
+      </div>
+      <div class="form-status" *ngIf="!formSubmitted && !isApprovalMode">
         <div class="status-badge" [ngClass]="'status-' + getAllApprovalStatus()">
           {{ getAllApprovalStatus() | titlecase }}
         </div>
@@ -27,7 +32,7 @@
   </div>
 
   <!-- Form Type Selection Tabs -->
-  <div class="form-type-tabs" *ngIf="!formSubmitted">
+  <div class="form-type-tabs" *ngIf="!formSubmitted && !isApprovalMode">
     <div class="tab-container">
       <button class="tab-button" 
               [class.active]="formType === 'E'" 
@@ -57,7 +62,7 @@
         <div class="step" *ngIf="shouldShowStep(step)" [ngClass]="{
                'active': currentStep === step,
                'completed': currentStep > step,
-               'disabled': currentStep < step
+               'disabled': false
              }" (click)="goToStep(step)">
           <div class="step-circle">
             <i class="fas fa-check" *ngIf="currentStep > step"></i>
@@ -70,12 +75,14 @@
       </ng-container>
     </div>
     <div class="step-description">
-      <p>{{ getStepDescription() }}</p>
+      <p>{{ isApprovalMode ? 'Review all steps and approve in Step 4' : (approvalRequestData ? 'View your request details and status' : getStepDescription()) }}</p>
     </div>
   </div>
 
+
+
   <!-- Form Content -->
-  <div class="form-content" *ngIf="!formSubmitted">
+  <div class="form-content" *ngIf="!formSubmitted || isApprovalMode">
     <form [formGroup]="exitForm" [@stepTransition]>
 
 
@@ -116,22 +123,18 @@
             <div class="form-group">
               <label for="hodName">HOD Name *</label>
               <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
-                <option value="">Select HOD</option>
-                @for (hod of hodList; track hod.idValue) {
-                <option [value]="hod.idValue">
+                <option value="">{{ hodList.length === 0 ? 'Loading HODs...' : 'Select HOD' }}</option>
+                <option *ngFor="let hod of hodList; trackBy: trackByHodId" [value]="hod.idValue">
                   {{ hod.description }}
                 </option>
-                } @empty {
-                <option value="" disabled>Loading HODs...</option>
-                }
               </select>
               <span class="error-message" *ngIf="isFieldInvalid('hodName')">
                 {{ getFieldError('hodName') }}
               </span>
-              <!-- Debug info - remove in production -->
-              <!-- <small style="color: #666; font-size: 12px;">
-                Emergency Form HOD Count: {{ hodList.length }}
-              </small> -->
+              <!-- Loading indicator -->
+              <small style="color: #666; font-size: 12px;" *ngIf="hodList.length === 0">
+                Loading HOD list...
+              </small>
             </div>
 
             <!-- Planned Leave and Resignation Specific Fields -->
@@ -614,157 +617,202 @@
         </div>
       </div>
 
-      <!-- Step 4: Department Approvals (Post-Submission) -->
+      <!-- Step 4: Comprehensive Approval Workflow -->
       <div class="step-content" *ngIf="currentStep === 4" [@fadeInUp]="'in'">
         <div class="form-section">
-          <h3><i class="fas fa-clipboard-check"></i> Approval From Concerned Departments</h3>
+          <h3><i class="fas fa-clipboard-check"></i> Approval Status & Workflow</h3>
 
-
-
-          <div class="approval-progress">
-            <div class="progress-header">
-              <span>Overall Progress</span>
-              <span>{{ getProgressPercentage() | number:'1.0-0' }}%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
-            </div>
-          </div>
-
-          <div class="departments-grid">
-            <!-- Project Manager Approval Card (Planned Leave and Resignation) -->
-            <div class="department-card pm-approval-card" *ngIf="formType === 'P' || formType === 'R'" [ngClass]="'status-pending'">
-
-              <div class="dept-header">
-                <h4>Project Manager / Site Incharge Approval</h4>
-                <div class="status-indicator status-pending">
-                  <i class="fas fa-clock"></i>
-                  Pending
+          <!-- Overall Workflow Progress -->
+          <div class="workflow-overview">
+            <div class="workflow-header">
+              <div class="workflow-title">
+                <h4>{{ formType === 'E' ? 'Emergency Exit' : (formType === 'R' ? 'Resignation' : 'Planned Leave') }} Approval Workflow</h4>
+                <div class="workflow-status" [ngClass]="getApprovalStatusClass(getOverallWorkflowStatus())">
+                  <i class="fas fa-clock" *ngIf="getOverallWorkflowStatus() === 'PENDING'"></i>
+                  <i class="fas fa-spinner fa-spin" *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'"></i>
+                  <i class="fas fa-check-circle" *ngIf="getOverallWorkflowStatus() === 'APPROVED'"></i>
+                  <i class="fas fa-times-circle" *ngIf="getOverallWorkflowStatus() === 'REJECTED'"></i>
+                  {{ getApprovalStatusText(getOverallWorkflowStatus()) }}
                 </div>
               </div>
-
-              <div class="pm-approval-actions">
-                <div class="pm-approval-form">
-                  <div class="approval-inputs">
-                    <div class="form-group">
-                      <label>Number of Days Allowed *</label>
-                      <input type="number" [(ngModel)]="pmDaysAllowed" placeholder="Enter number of days allowed"
-                        min="1" required>
-                    </div>
-                    <div class="form-group">
-                      <label>Remarks *</label>
-                      <textarea [(ngModel)]="pmRemarks" placeholder="Enter your remarks or comments" rows="4"
-                        required></textarea>
-                    </div>
-                  </div>
-                  <div class="approval-buttons">
-                    <button type="button" class="btn-approve" (click)="approveProjectManager(true)">
-                      <i class="fas fa-check"></i> Approve
-                    </button>
-                    <button type="button" class="btn-reject" (click)="approveProjectManager(false)">
-                      <i class="fas fa-times"></i> Reject
-                    </button>
-                  </div>
+              <div class="workflow-progress">
+                <div class="progress-info">
+                  <span>Progress: {{ getApprovedStepsCount() }} of {{ approvalWorkflow.length }} steps completed</span>
+                  <span class="progress-percentage">{{ workflowProgress }}%</span>
                 </div>
-              </div>
-            </div>
-
-            <!-- HOD and Other Department Approval Cards -->
-            <div class="department-card hod-approval-card" *ngFor="let dept of departments; let first = first"
-              [ngClass]="'status-' + dept.status" [class.hod-approval]="first">
-
-              <div class="dept-header">
-                <h4>{{ dept.name }}</h4>
-                <div class="status-indicator" [ngClass]="'status-' + dept.status">
-                  <i class="fas fa-clock" *ngIf="dept.status === 'pending'"></i>
-                  <i class="fas fa-check" *ngIf="dept.status === 'approved'"></i>
-                  <i class="fas fa-times" *ngIf="dept.status === 'rejected'"></i>
-                  {{ dept.status | titlecase }}
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="workflowProgress"></div>
                 </div>
-              </div>
-
-              <div class="dept-items">
-                <div class="item-row" *ngFor="let item of dept.items">
-                  <label>{{ item.label }}</label>
-                  <div class="item-input">
-                    <input *ngIf="item.type === 'text'" type="text"
-                      [value]="getDepartmentItemValue(dept.id, item.label)"
-                      (input)="updateDepartmentItem(dept.id, item.label, $event)" placeholder="Enter value">
-
-                    <input *ngIf="item.type === 'number'" type="number"
-                      [value]="getDepartmentItemValue(dept.id, item.label)"
-                      (input)="updateDepartmentItem(dept.id, item.label, $event)" placeholder="0">
-
-                    <label *ngIf="item.type === 'checkbox'" class="checkbox-label">
-                      <input type="checkbox" [checked]="getDepartmentItemValue(dept.id, item.label)"
-                        (change)="updateDepartmentItem(dept.id, item.label, $event)">
-                      <span class="checkmark"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="dept-approval" *ngIf="dept.status !== 'pending'">
-                <div class="approval-info">
-                  <p><strong>HOD:</strong> {{ dept.hodName || 'System Admin' }}</p>
-                  <p><strong>Date:</strong> {{ dept.approvedDate | date:'short' }}</p>
-                  <p *ngIf="dept.comments"><strong>Comments:</strong> {{ dept.comments }}</p>
-                </div>
-              </div>
-
-              <!-- HOD Approval Actions -->
-              <div class="hod-approval-actions" *ngIf="dept.id === 0 && dept.status === 'pending'">
-                <div class="hod-approval-form">
-                  <div class="approval-inputs">
-                    <div class="form-group">
-                      <label>Number of Days Allowed *</label>
-                      <input type="number" [(ngModel)]="hodDaysAllowed" placeholder="Enter number of days allowed"
-                        min="1" required>
-                    </div>
-                    <div class="form-group">
-                      <label>Remarks *</label>
-                      <textarea [(ngModel)]="hodRemarks" placeholder="Enter your remarks or comments" rows="4"
-                        required></textarea>
-                    </div>
-                  </div>
-                  <div class="approval-buttons">
-                    <button type="button" class="btn-approve" (click)="approveHOD(true)">
-                      <i class="fas fa-check"></i> Approve
-                    </button>
-                    <button type="button" class="btn-reject" (click)="approveHOD(false)">
-                      <i class="fas fa-times"></i> Reject
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Demo approval buttons for other departments -->
-              <div class="demo-approval-actions" *ngIf="dept.id !== 0 && dept.status === 'pending'">
-                <button type="button" class="btn-approve" (click)="approveDepartment(dept.id, true, 'Approved by HOD')">
-                  <i class="fas fa-check"></i> Approve
-                </button>
-                <button type="button" class="btn-reject" (click)="approveDepartment(dept.id, false, 'Rejected by HOD')">
-                  <i class="fas fa-times"></i> Reject
-                </button>
               </div>
             </div>
           </div>
 
-
-
-          <div class="final-actions" *ngIf="getAllApprovalStatus() === 'approved'">
-            <div class="success-notice">
-              <i class="fas fa-check-circle"></i>
-              <span>All approvals completed! Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} request
-                has been fully approved.</span>
+          <!-- Simple Approval Flow -->
+          <div class="simple-approval-flow">
+            <h4><i class="fas fa-route"></i> Approval Flow</h4>
+            <div class="approval-cards">
+              <div class="approval-card" 
+                   *ngFor="let step of approvalWorkflow; let i = index" 
+                   [ngClass]="getApprovalStatusClass(step.status)">
+                
+                <div class="card-header">
+                  <div class="step-number">{{ i + 1 }}</div>
+                  <h5>{{ step.stepName }}</h5>
+                  <div class="status-badge" [ngClass]="getApprovalStatusClass(step.status)">
+                    {{ getApprovalStatusText(step.status) }}
+                  </div>
+                </div>
+                
+                <div class="card-body">
+                  <div class="approvers-section">
+                    <strong>Approvers:</strong>
+                    <div class="approver-list">
+                      <span class="approver-badge" *ngFor="let approver of step.approverNames">{{ approver }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Demo Note and Actions for Pending Steps -->
+                  <div class="approval-actions" *ngIf="step.status === 'PENDING'">
+                    <p class="demo-info"><i class="fas fa-info-circle"></i> Demo: Simulate approval for {{ step.stepName }}</p>
+                    <div class="action-buttons">
+                      <button type="button" class="btn-approve" 
+                              (click)="simulateApproval(step.stepId, true, 'Approved')">
+                        <i class="fas fa-check"></i> Approve
+                      </button>
+                      <button type="button" class="btn-reject" 
+                              (click)="simulateApproval(step.stepId, false, 'Rejected')">
+                        <i class="fas fa-times"></i> Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="action-buttons">
-              <button type="button" class="btn-primary" (click)="downloadPDF()">
-                <i class="fas fa-download"></i> Download Approved Form
-              </button>
-              <button type="button" class="btn-secondary" (click)="resetForm()">
-                <i class="fas fa-plus"></i> New Request
-              </button>
+          </div>
+
+          <!-- Department Clearances -->
+          <div class="department-clearances">
+            <h4><i class="fas fa-building"></i> Department Clearances</h4>
+            <div class="clearance-progress">
+              <div class="progress-info">
+                <span>Department Clearances: {{ getApprovedDepartmentsCount() }} of {{ departmentApprovals.length }} completed</span>
+                <span class="progress-percentage">{{ getDepartmentApprovalProgress() }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="getDepartmentApprovalProgress()"></div>
+              </div>
+            </div>
+
+            <div class="departments-grid">
+              <div class="department-card" 
+                   *ngFor="let dept of departmentApprovals" 
+                   [ngClass]="getApprovalStatusClass(dept.status)">
+                
+                <div class="dept-header">
+                  <h5>{{ dept.departmentName }}</h5>
+                  <div class="status-indicator" [ngClass]="getApprovalStatusClass(dept.status)">
+                    <i class="fas fa-clock" *ngIf="dept.status === 'PENDING'"></i>
+                    <i class="fas fa-check" *ngIf="dept.status === 'APPROVED'"></i>
+                    <i class="fas fa-times" *ngIf="dept.status === 'REJECTED'"></i>
+                    {{ getApprovalStatusText(dept.status) }}
+                  </div>
+                </div>
+
+                <div class="dept-items">
+                  <div class="clearance-item" *ngFor="let item of dept.items">
+                    <div class="item-header">
+                      <span class="item-name">{{ item.itemName }}</span>
+                      <div class="clearance-status" [class.cleared]="item.isCleared">
+                        <i class="fas fa-check-circle" *ngIf="item.isCleared"></i>
+                        <i class="fas fa-circle" *ngIf="!item.isCleared"></i>
+                        {{ item.isCleared ? 'Cleared' : 'Pending' }}
+                      </div>
+                    </div>
+                    
+                    <div class="item-value" *ngIf="item.value">
+                      <strong>Value:</strong> {{ item.value }}
+                    </div>
+                    
+                    <div class="item-comments" *ngIf="item.comments">
+                      <strong>Comments:</strong> {{ item.comments }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dept-approval-info" *ngIf="dept.status !== 'PENDING'">
+                  <div class="approval-details">
+                    <p><strong>Approved by:</strong> {{ dept.approverName }}</p>
+                    <p><strong>Date:</strong> {{ formatApprovalDate(dept.approvedDate) }}</p>
+                    <p *ngIf="dept.comments"><strong>Comments:</strong> {{ dept.comments }}</p>
+                  </div>
+                </div>
+
+                <!-- Demo Department Approval Actions -->
+                <div class="dept-actions" *ngIf="dept.status === 'PENDING'">
+                  <div class="demo-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Demo: Simulate {{ dept.departmentName }} clearance</span>
+                  </div>
+                  <div class="action-buttons">
+                    <button type="button" class="btn-approve" 
+                            (click)="simulateDepartmentApproval(dept.departmentId, true, 'All items cleared')">
+                      <i class="fas fa-check"></i> Clear All Items
+                    </button>
+                    <button type="button" class="btn-reject" 
+                            (click)="simulateDepartmentApproval(dept.departmentId, false, 'Items not cleared')">
+                      <i class="fas fa-times"></i> Reject Clearance
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Final Status and Actions -->
+          <div class="final-status">
+            <div class="status-summary" [ngClass]="getApprovalStatusClass(getOverallWorkflowStatus())">
+              <div class="status-icon">
+                <i class="fas fa-clock" *ngIf="getOverallWorkflowStatus() === 'PENDING'"></i>
+                <i class="fas fa-spinner fa-spin" *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'"></i>
+                <i class="fas fa-check-circle" *ngIf="getOverallWorkflowStatus() === 'APPROVED'"></i>
+                <i class="fas fa-times-circle" *ngIf="getOverallWorkflowStatus() === 'REJECTED'"></i>
+              </div>
+              <div class="status-text">
+                <h4 *ngIf="getOverallWorkflowStatus() === 'PENDING'">{{ isApprovalMode ? 'Awaiting Your Approval' : 'Awaiting Initial Approval' }}</h4>
+                <h4 *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'">Approval In Progress</h4>
+                <h4 *ngIf="getOverallWorkflowStatus() === 'APPROVED'">All Approvals Completed!</h4>
+                <h4 *ngIf="getOverallWorkflowStatus() === 'REJECTED'">Request Rejected</h4>
+                
+                <p *ngIf="getOverallWorkflowStatus() === 'PENDING' && !isApprovalMode">
+                  Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} request has been submitted and is awaiting approval.
+                </p>
+                <p *ngIf="getOverallWorkflowStatus() === 'PENDING' && isApprovalMode">
+                  This {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} request is awaiting your approval decision.
+                </p>
+                <p *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'">
+                  {{ isApprovalMode ? 'This request is being processed.' : 'Your request is being processed.' }} {{ getPendingApprovalsCount() }} approval(s) still pending.
+                </p>
+                <p *ngIf="getOverallWorkflowStatus() === 'APPROVED'">
+                  {{ isApprovalMode ? 'This request has been fully approved by all departments.' : 'Congratulations! Your request has been fully approved by all departments.' }}
+                </p>
+                <p *ngIf="getOverallWorkflowStatus() === 'REJECTED'">
+                  {{ isApprovalMode ? 'This request has been rejected.' : 'Your request has been rejected. Please contact HR for more information.' }}
+                </p>
+              </div>
+            </div>
+
+
+
+            <!-- Regular Mode Actions -->
+            <div class="final-actions" *ngIf="!isApprovalMode && getOverallWorkflowStatus() === 'APPROVED'">
+              <div class="action-buttons">
+                <button type="button" class="btn-primary" (click)="downloadPDF()">
+                  <i class="fas fa-download"></i> Download Approved Form
+                </button>
+                <button type="button" class="btn-secondary" (click)="resetForm()">
+                  <i class="fas fa-plus"></i> New Request
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -773,29 +821,55 @@
 
     <!-- Form Navigation -->
     <div class="form-navigation" *ngIf="!formSubmitted">
-      <button type="button" class="btn-secondary" (click)="previousStep()" [disabled]="currentStep === 1">
-        <i class="fas fa-arrow-left"></i> Previous
-      </button>
+      <div class="navigation-container">
+        <!-- Left Side: Previous Button -->
+        <div class="nav-left">
+          <button type="button" class="btn-secondary" 
+                  (click)="previousStep()" 
+                  [disabled]="currentStep === 1">
+            <i class="fas fa-arrow-left"></i> Previous
+          </button>
+        </div>
 
-      <div class="step-indicator">
-        Step {{ getDisplayStepNumber(currentStep) }} of {{ getTotalDisplaySteps() }}
+        <!-- Center: Step Indicator -->
+        <div class="nav-center">
+          <div class="step-indicator">
+            <span *ngIf="!isApprovalMode && !approvalRequestData">
+              Step {{ getDisplayStepNumber(currentStep) }} of {{ getTotalDisplaySteps() }}
+            </span>
+            <span *ngIf="isApprovalMode || approvalRequestData">
+              Step {{ getDisplayStepNumber(currentStep) }} of {{ getTotalDisplaySteps() }} ({{ isApprovalMode ? 'Review Mode' : 'View Mode' }})
+            </span>
+          </div>
+        </div>
+
+        <!-- Right Side: Next/Submit Button -->
+        <div class="nav-right">
+          <!-- Next Button -->
+          <button type="button" class="btn-primary" 
+                  (click)="nextStep()" 
+                  *ngIf="shouldShowNextButton()">
+            Next <i class="fas fa-arrow-right"></i>
+          </button>
+
+          <!-- Submit Button -->
+          <button type="button" class="btn-submit" 
+                  (click)="submitForm()"
+                  [disabled]="!allDeclarationsChecked() || isSubmitting" 
+                  *ngIf="currentStep === 3 && !isApprovalMode && !approvalRequestData">
+            <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+            <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+            {{ isSubmitting ? 'Submitting...' : 'Submit Form' }}
+          </button>
+
+          <!-- Download Button -->
+          <button type="button" class="btn-primary" 
+                  (click)="downloadPDF()"
+                  *ngIf="currentStep === 4 && getOverallWorkflowStatus() === 'APPROVED'">
+            <i class="fas fa-download"></i> Download Form
+          </button>
+        </div>
       </div>
-
-      <button type="button" class="btn-primary" (click)="nextStep()" *ngIf="shouldShowNextButton()">
-        Next <i class="fas fa-arrow-right"></i>
-      </button>
-
-      <button type="button" class="btn-submit" (click)="submitForm()"
-        [disabled]="!allDeclarationsChecked() || isSubmitting" *ngIf="currentStep === 3">
-        <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
-        <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
-        {{ isSubmitting ? 'Submitting...' : 'Submit Form' }}
-      </button>
-
-      <button type="button" class="btn-primary" (click)="downloadPDF()"
-        *ngIf="currentStep === 4 && getAllApprovalStatus() === 'approved'">
-        <i class="fas fa-download"></i> Download Approved Form
-      </button>
     </div>
 
     <!-- Success Message -->

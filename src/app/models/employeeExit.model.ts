@@ -7,6 +7,37 @@ export interface EmployeeExitResponsibility {
   remarks: string;
 }
 
+export interface ApprovalStep {
+  stepId: number;
+  stepName: string;
+  approverType: 'RESPONSIBLE_PERSON' | 'PROJECT_MANAGER' | 'HOD' | 'DEPARTMENT';
+  approverIds: string[]; // Multiple approvers for responsible persons
+  approverNames: string[];
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  approvedBy?: string;
+  approvedDate?: string;
+  comments?: string;
+  isRequired: boolean;
+  order: number;
+}
+
+export interface DepartmentApproval {
+  departmentId: string;
+  departmentName: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  approverName?: string;
+  approvedDate?: string;
+  comments?: string;
+  items: DepartmentApprovalItem[];
+}
+
+export interface DepartmentApprovalItem {
+  itemName: string;
+  itemType: 'checkbox' | 'text' | 'number';
+  value?: any;
+  isCleared: boolean;
+  comments?: string;
+}
 
 export interface EmployeeExitRequest {
   exitId?: number;
@@ -22,11 +53,17 @@ export interface EmployeeExitRequest {
   reasonForLeave: string;
   approvalStatus: string;
   category: string;
-  lastWorkingDate :string;
-  NoticePeriod : number;
+  lastWorkingDate: string;
+  NoticePeriod: number;
   declaration1?: string;
   declaration2?: string;
   declaration3?: string;
   declaration4?: string;
   responsibilities: EmployeeExitResponsibility[];
+  approvalWorkflow: ApprovalStep[];
+  departmentApprovals: DepartmentApproval[];
+  currentApprovalStep: number;
+  overallStatus: 'PENDING' | 'IN_PROGRESS' | 'APPROVED' | 'REJECTED';
+  submittedDate?: string;
+  completedDate?: string;
 }
