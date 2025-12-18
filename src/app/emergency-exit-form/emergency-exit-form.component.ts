@@ -208,8 +208,10 @@ export class EmergencyExitFormComponent implements OnInit {
       // Debug: Log all available user properties
       this.debugUserProperties();
 
-      // Add one default responsibility row
-      this.addResponsibility();
+      // Add one default responsibility row for Emergency forms
+      if (this.formType === 'E') {
+        this.addResponsibility();
+      }
       
       // Ensure all departments are visible by default
       this.departments.forEach(dept => {
@@ -235,12 +237,7 @@ export class EmergencyExitFormComponent implements OnInit {
       // Disable employee information fields (always disabled)
       this.disableEmployeeInfoFields();
 
-      // Ensure all cards are visible from the start
-      setTimeout(() => {
-        this.ensureAllCardsVisible();
-      }, 100);
-
-      console.log('Departments initialized:', this.departments.length); // Debug log
+      console.log('Single screen form initialized for type:', this.formType);
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
     }
@@ -352,11 +349,7 @@ export class EmergencyExitFormComponent implements OnInit {
       this.formType = newType;
       console.log('Form type switched to:', this.formType);
       
-      // Reset to step 1
-      this.currentStep = 1;
-      
-      // Update form validations and steps
-      this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
+      // Update form validations
       this.updateFormValidations();
       
       // Clear form data and reset
@@ -365,6 +358,11 @@ export class EmergencyExitFormComponent implements OnInit {
       // Re-populate with session data
       this.populateFormFromSession();
       
+      // Add responsibility for Emergency forms
+      if (this.formType === 'E' && this.responsibilitiesFormArray.length === 0) {
+        this.addResponsibility();
+      }
+      
       // Update URL without navigation
       window.history.replaceState({}, '', `/exit-form?type=${newType}`);
     }
@@ -372,8 +370,6 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Clear form data and validation errors when switching form types
   clearFormAndReset() {
-    this.currentStep = 1;
-    
     // Store employee data before reset
     const employeeData = {
       employeeName: this.exitForm.get('employeeName')?.value,
@@ -422,7 +418,6 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Reset responsibilities array
     this.responsibilitiesFormArray.clear();
-    this.addResponsibility();
   }
 
   initializeForm() {
@@ -869,40 +864,10 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('Form valid:', this.exitForm.valid);
     console.log('Form value:', this.exitForm.value);
     
-    // Debug: Check which fields are invalid
-    if (!this.exitForm.valid) {
-      console.log('Invalid fields:');
-      Object.keys(this.exitForm.controls).forEach(key => {
-        const control = this.exitForm.get(key);
-        if (control && control.invalid) {
-          console.log(`- ${key}:`, control.errors);
-        }
-      });
-      
-      // Also check responsibilities array for Emergency forms
-      if (this.formType === 'E') {
-        const responsibilities = this.exitForm.get('responsibilities') as FormArray;
-        if (responsibilities) {
-          responsibilities.controls.forEach((respControl, index) => {
-            if (respControl.invalid) {
-              console.log(`- Responsibility ${index + 1}:`, respControl.errors);
-              Object.keys((respControl as FormGroup).controls).forEach(fieldKey => {
-                const fieldControl = respControl.get(fieldKey);
-                if (fieldControl && fieldControl.invalid) {
-                  console.log(`  - ${fieldKey}:`, fieldControl.errors);
-                }
-              });
-            }
-          });
-        }
-      }
-      
+    // Validate form for current type
+    if (!this.validateFormForCurrentType()) {
       this.markAllFieldsAsTouched();
-      
-      // Check if this is a validation issue with form type specific fields
-      if (!this.validateFormForCurrentType()) {
-        return;
-      }
+      return;
     }
 
     if (!this.allDeclarationsChecked()) {
@@ -1182,7 +1147,6 @@ export class EmergencyExitFormComponent implements OnInit {
 
   resetForm() {
     this.exitForm.reset();
-    this.currentStep = 1;
     this.formSubmitted = false;
     this.departments.forEach(dept => {
       dept.status = 'pending';
@@ -1190,7 +1154,11 @@ export class EmergencyExitFormComponent implements OnInit {
       dept.comments = undefined;
     });
     this.responsibilitiesFormArray.clear();
-    this.addResponsibility();
+    
+    // Add responsibility for Emergency forms
+    if (this.formType === 'E') {
+      this.addResponsibility();
+    }
     
     // Re-populate form with session data
     this.populateFormFromSession();
@@ -2074,6 +2042,9 @@ export class EmergencyExitFormComponent implements OnInit {
   private pmDropdownVisible: boolean = false;
   pmSearchTerm: string = '';
 
+  // Collapsible sections management
+  isResponsibilitiesSectionOpen: boolean = true;
+
   showDropdown(index: number): void {
     this.dropdownVisibility[index] = true;
   }
@@ -2230,6 +2201,13 @@ export class EmergencyExitFormComponent implements OnInit {
   isPMSelected(pm: DropdownOption): boolean {
     const currentValue = this.exitForm.get('projectManagerName')?.value;
     return currentValue === (pm.description || '');
+  }
+
+  /**
+   * Toggle responsibilities section visibility
+   */
+  toggleResponsibilitiesSection(): void {
+    this.isResponsibilitiesSectionOpen = !this.isResponsibilitiesSectionOpen;
   }
 
 }

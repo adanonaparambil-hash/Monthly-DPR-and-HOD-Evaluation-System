@@ -1,7 +1,7 @@
 /* Emergency Exit Form Styles */
 .emergency-exit-container {
-  padding: 24px;
-  background: var(--background-primary);
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: calc(100vh - 80px);
   font-family: 'Roboto', sans-serif !important;
   width: 100%;
@@ -346,58 +346,99 @@
   font-size: 11px;
 }
 
-/* Form Content */
-.form-content {
-  background: var(--background-primary);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color);
+/* Single Screen Form Layout */
+.single-screen-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   width: 100%;
   box-sizing: border-box;
 }
 
-.step-content {
+.form-section-card {
+  background: var(--background-primary);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  width: 100%;
+  box-sizing: border-box;
   animation: fadeInUp 0.5s ease-out;
+  transition: all 0.3s ease;
 }
 
-.form-section {
-  margin-bottom: 24px;
-}
-
-.form-section:last-child {
-  margin-bottom: 0;
-}
-
-.form-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.form-section h3 i {
-  color: var(--primary-color);
-  font-size: 18px;
+.form-section-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
-  border: none;
-  padding: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-header h3 i {
+  color: var(--primary-color);
+  font-size: 20px;
+}
+
+/* Collapsible Section Styles */
+.collapsible-section {
+  overflow: hidden;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.collapsible-header:hover {
+  background: rgba(204, 153, 51, 0.05);
+  border-radius: 8px;
+  margin: -8px;
+  padding: 8px;
+}
+
+.toggle-icon {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+  font-size: 16px;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-out, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.collapsible-content.open {
+  max-height: 2000px;
+  opacity: 1;
+  transition: max-height 0.4s ease-in, opacity 0.3s ease;
+}
+
+.form-section {
+  margin-bottom: 0;
 }
 
 /* Form Grid */
@@ -704,49 +745,74 @@
   cursor: not-allowed;
 }
 
-/* Form Navigation */
-.form-navigation {
-  background: transparent;
-  padding: 24px 0;
-  margin-top: 32px;
-  margin-bottom: 24px;
+/* Submit Section */
+.submit-section {
+  background: var(--background-primary);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
   width: 100%;
   box-sizing: border-box;
+  margin-top: 20px;
 }
 
-.navigation-container {
+.submit-container {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 100%;
-  position: relative;
+  gap: 16px;
 }
 
-.nav-left {
-  flex: 0 0 140px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.nav-center {
-  flex: 1;
-  display: flex;
+.btn-submit-large {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  padding: 0 20px;
-}
-
-.nav-right {
-  flex: 0 0 140px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.step-indicator {
-  font-size: 14px;
+  gap: 12px;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  outline: none;
+  background: var(--gradient-primary);
+  color: white;
+  min-width: 280px;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-submit-large:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-xl);
+  background: linear-gradient(135deg, #e6b800, #cc9900);
+}
+
+.btn-submit-large:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-submit-large i {
+  font-size: 18px;
+}
+
+.submit-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submit-note i {
+  color: var(--primary-color);
 }
 
 /* Radio Button Styling */
@@ -2836,4 +2902,133 @@ Approval Mode Styles */
     padding: 12px 20px;
     font-size: 13px;
   }
+}
+/* R
+esponsive Design Improvements */
+@media (max-width: 768px) {
+  .emergency-exit-container {
+    padding: 16px;
+  }
+  
+  .form-section-card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .section-header h3 {
+    font-size: 16px;
+  }
+  
+  .btn-submit-large {
+    min-width: 100%;
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+  
+  .submit-section {
+    padding: 24px 20px;
+  }
+  
+  .collapsible-header h3 {
+    flex-wrap: wrap;
+  }
+  
+  .toggle-icon {
+    margin-left: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .emergency-exit-container {
+    padding: 12px;
+  }
+  
+  .form-section-card {
+    padding: 16px;
+  }
+  
+  .section-header h3 {
+    font-size: 15px;
+  }
+  
+  .btn-add {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .responsibility-form-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "project"
+      "activities"
+      "name"
+      "phone"
+      "email"
+      "remarks";
+  }
+}
+
+/* Enhanced Visual Effects */
+.form-section-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.form-section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.form-section-card:hover::before {
+  opacity: 1;
+}
+
+/* Improved Form Field Styling */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(204, 153, 51, 0.1);
+  background: var(--background-primary);
+  transform: translateY(-1px);
+}
+
+/* Enhanced Button Animations */
+.btn-add:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(204, 153, 51, 0.3);
+}
+
+.btn-remove:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Smooth Transitions */
+* {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Loading State */
+.btn-submit-large:disabled {
+  background: linear-gradient(135deg, #cccccc, #999999);
+  cursor: not-allowed;
+}
+
+.btn-submit-large:disabled:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
 }

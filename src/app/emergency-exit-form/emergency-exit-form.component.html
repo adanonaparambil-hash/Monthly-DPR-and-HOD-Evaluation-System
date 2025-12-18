@@ -1,6 +1,5 @@
 <div class="emergency-exit-container" [@slideInUp]="'in'">
 
-
   <!-- Header -->
   <div class="form-header">
     <div class="header-content">
@@ -55,41 +54,16 @@
     </div>
   </div>
 
-  <!-- Progress Stepper -->
-  <div class="stepper-container" *ngIf="!formSubmitted">
-    <div class="stepper">
-      <ng-container *ngFor="let step of [1,2,3,4]; let i = index">
-        <div class="step" *ngIf="shouldShowStep(step)" [ngClass]="{
-               'active': currentStep === step,
-               'completed': currentStep > step,
-               'disabled': false
-             }" (click)="goToStep(step)">
-          <div class="step-circle">
-            <i class="fas fa-check" *ngIf="currentStep > step"></i>
-            <span *ngIf="currentStep <= step">{{ getDisplayStepNumber(step) }}</span>
-          </div>
-          <div class="step-label">
-            <span class="step-title">Step {{ getDisplayStepNumber(step) }}</span>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-    <div class="step-description">
-      <p>{{ isApprovalMode ? 'Review all steps and approve in Step 4' : (approvalRequestData ? 'View your request details and status' : getStepDescription()) }}</p>
-    </div>
-  </div>
+  <!-- Single Screen Form Content -->
+  <div class="single-screen-form" *ngIf="!formSubmitted || isApprovalMode">
+    <form [formGroup]="exitForm">
 
-
-
-  <!-- Form Content -->
-  <div class="form-content" *ngIf="!formSubmitted || isApprovalMode">
-    <form [formGroup]="exitForm" [@stepTransition]>
-
-
-      <!-- Step 1: Employee Information -->
-      <div class="step-content" *ngIf="currentStep === 1" [@fadeInUp]="'in'">
-        <div class="form-section">
+      <!-- Employee Information Section -->
+      <div class="form-section-card" [@fadeInUp]="'in'">
+        <div class="section-header">
           <h3><i class="fas fa-user"></i> Personal Information</h3>
+        </div>
+        <div class="form-section">
           <div [ngClass]="formType === 'P' ? 'form-grid-planned' : 'form-grid'">
             <!-- Left Column for Personal Info -->
             <div class="form-group">
@@ -117,7 +91,6 @@
               <span class="error-message" *ngIf="isFieldInvalid('department')">
                 {{ getFieldError('department') }}
               </span>
-
             </div>
 
             <div class="form-group">
@@ -131,7 +104,6 @@
               <span class="error-message" *ngIf="isFieldInvalid('hodName')">
                 {{ getFieldError('hodName') }}
               </span>
-              <!-- Loading indicator -->
               <small style="color: #666; font-size: 12px;" *ngIf="hodList.length === 0">
                 Loading HOD list...
               </small>
@@ -219,12 +191,16 @@
                 {{ getFieldError('responsibilitiesHandedOverTo') }}
               </span>
             </div>
-
           </div>
         </div>
+      </div>
 
-        <div class="form-section" *ngIf="formType === 'E'">
+      <!-- Contact Details Section (Emergency Only) -->
+      <div class="form-section-card" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
+        <div class="section-header">
           <h3><i class="fas fa-address-card"></i> Contact Details</h3>
+        </div>
+        <div class="form-section">
           <div class="contact-info-note">
             <i class="fas fa-info-circle"></i>
             <span>Contact details are automatically populated from your profile. To update, please modify your profile information.</span>
@@ -317,13 +293,18 @@
             <input formControlName="emailId">
           </div>
         </div>
+      </div>
 
-        <div class="form-section travel-section">
+      <!-- Travel/Resignation Information Section -->
+      <div class="form-section-card" [@fadeInUp]="'in'">
+        <div class="section-header">
           <h3>
             <i class="fas fa-plane" *ngIf="formType === 'E' || formType === 'P'"></i>
             <i class="fas fa-calendar-times" *ngIf="formType === 'R'"></i>
             {{ formType === 'R' ? 'Resignation Information' : 'Travel Information' }}
           </h3>
+        </div>
+        <div class="form-section travel-section">
           <div class="travel-grid">
             <div class="form-group">
               <label for="dateOfDeparture">
@@ -353,22 +334,25 @@
               </span>
             </div>
 
-
-
             <div class="form-group" *ngIf="formType !== 'R'">
               <label for="flightTime">Flight Time</label>
               <input type="time" id="flightTime" formControlName="flightTime">
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="form-section">
+      <!-- Leave/Emergency/Resignation Details Section -->
+      <div class="form-section-card" [@fadeInUp]="'in'">
+        <div class="section-header">
           <h3>
             <i class="fas fa-exclamation-triangle" *ngIf="formType === 'E'"></i>
             <i class="fas fa-clipboard-list" *ngIf="formType === 'P'"></i>
             <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
             {{ formType === 'E' ? 'Emergency Details' : (formType === 'R' ? 'Resignation Details' : 'Leave Details') }}
           </h3>
+        </div>
+        <div class="form-section">
           <div class="form-group full-width">
             <label for="reasonForEmergency">
               {{ formType === 'E' ? 'Reason for the Emergency *' : (formType === 'R' ? 'Reason for Resignation *' : 'Reason for Planned Leave *') }}
@@ -380,197 +364,103 @@
               {{ getFieldError('reasonForEmergency') }}
             </span>
           </div>
-
-          <!-- Responsibilities Handed Over To (Planned Leave Only) -->
-          <!-- <div class="form-group full-width" *ngIf="formType === 'P'">
-            <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
-            <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
-              [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
-              placeholder="Enter name of person taking over responsibilities">
-            <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
-              {{ getFieldError('responsibilitiesHandedOverTo') }}
-            </span>
-          </div> -->
         </div>
       </div>
 
-      <!-- Step 2: Responsibility Handover (Emergency Only) -->
-      <div class="step-content" *ngIf="currentStep === 2 && formType === 'E'" [@fadeInUp]="'in'">
-        <div class="form-section">
-          <div class="section-header">
-            <h3><i class="fas fa-handshake"></i> Responsibilities Handed Over To</h3>
-            <button type="button" class="btn-add" (click)="addResponsibility()">
-              <i class="fas fa-plus"></i> Add Responsibility
-            </button>
-          </div>
+      <!-- Collapsible Responsibilities Section (Emergency Only) -->
+      <div class="form-section-card collapsible-section" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
+        <div class="section-header collapsible-header" (click)="toggleResponsibilitiesSection()">
+          <h3>
+            <i class="fas fa-handshake"></i> 
+            Responsibilities Handed Over To
+            <i class="fas fa-chevron-down toggle-icon" [class.rotated]="isResponsibilitiesSectionOpen"></i>
+          </h3>
+          <button type="button" class="btn-add" (click)="addResponsibility(); $event.stopPropagation()">
+            <i class="fas fa-plus"></i> Add Responsibility
+          </button>
+        </div>
+        
+        <div class="collapsible-content" [class.open]="isResponsibilitiesSectionOpen">
+          <div class="form-section">
+            <div class="responsibilities-container" formArrayName="responsibilities">
+              <div class="responsibility-card"
+                *ngFor="let responsibility of responsibilitiesFormArray.controls; let i = index" [formGroupName]="i">
 
-          <div class="responsibilities-container" formArrayName="responsibilities">
-            <div class="responsibility-card"
-              *ngFor="let responsibility of responsibilitiesFormArray.controls; let i = index" [formGroupName]="i">
-
-              <div class="card-header">
-                <h4>Responsibility {{ i + 1 }}</h4>
-                <button type="button" class="btn-remove" (click)="removeResponsibility(i)"
-                  *ngIf="responsibilitiesFormArray.length > 1">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-
-              <div class="responsibility-form-grid">
-                <div class="form-group project-field">
-                  <label>Project *</label>
-                  <input type="text" formControlName="project" placeholder="Enter project name">
+                <div class="card-header">
+                  <h4>Responsibility {{ i + 1 }}</h4>
+                  <button type="button" class="btn-remove" (click)="removeResponsibility(i)"
+                    *ngIf="responsibilitiesFormArray.length > 1">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
 
-                <div class="form-group activities-field">
-                  <label>Activities *</label>
-                  <textarea formControlName="activities" rows="4"
-                    placeholder="Describe the activities and responsibilities being handed over"></textarea>
-                </div>
+                <div class="responsibility-form-grid">
+                  <div class="form-group project-field">
+                    <label>Project *</label>
+                    <input type="text" formControlName="project" placeholder="Enter project name">
+                  </div>
 
-                <div class="form-group name-field">
-                  <label>Responsible Person Name *</label>
-                  <div class="searchable-dropdown">
-                    <input type="text" formControlName="responsiblePersonName"
-                      placeholder="Search and select employee..." class="dropdown-input" #searchInput
-                      (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
-                      autocomplete="off">
-                    <div class="dropdown-icon">
-                      <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="dropdown-list" *ngIf="isDropdownVisible(i)" [attr.data-index]="i"
-                      [class.small-list]="shouldUseSmallDropdown(getSearchTerm(i))">
-                      <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(getSearchTerm(i))"
-                        (mousedown)="selectEmployee(i, employee)" [class.selected]="isEmployeeSelected(i, employee)">
-                        <div class="employee-info">
-                          <div class="employee-name">{{ getEmployeeName(employee.description || '') }}</div>
-                          <div class="employee-id">{{ employee.idValue || '' }}</div>
-                        </div>
+                  <div class="form-group activities-field">
+                    <label>Activities *</label>
+                    <textarea formControlName="activities" rows="4"
+                      placeholder="Describe the activities and responsibilities being handed over"></textarea>
+                  </div>
+
+                  <div class="form-group name-field">
+                    <label>Responsible Person Name *</label>
+                    <div class="searchable-dropdown">
+                      <input type="text" formControlName="responsiblePersonName"
+                        placeholder="Search and select employee..." class="dropdown-input" #searchInput
+                        (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
+                        autocomplete="off">
+                      <div class="dropdown-icon">
+                        <i class="fas fa-chevron-down"></i>
                       </div>
-                      <div class="no-results" *ngIf="getFilteredEmployees(getSearchTerm(i)).length === 0">
-                        No employees found
+                      <div class="dropdown-list" *ngIf="isDropdownVisible(i)" [attr.data-index]="i"
+                        [class.small-list]="shouldUseSmallDropdown(getSearchTerm(i))">
+                        <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(getSearchTerm(i))"
+                          (mousedown)="selectEmployee(i, employee)" [class.selected]="isEmployeeSelected(i, employee)">
+                          <div class="employee-info">
+                            <div class="employee-name">{{ getEmployeeName(employee.description || '') }}</div>
+                            <div class="employee-id">{{ employee.idValue || '' }}</div>
+                          </div>
+                        </div>
+                        <div class="no-results" *ngIf="getFilteredEmployees(getSearchTerm(i)).length === 0">
+                          No employees found
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="form-group phone-field">
-                  <label>Phone Number *</label>
-                  <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number">
-                </div>
+                  <div class="form-group phone-field">
+                    <label>Phone Number *</label>
+                    <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number">
+                  </div>
 
-                <div class="form-group email-field">
-                  <label>Email ID *</label>
-                  <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address">
-                </div>
+                  <div class="form-group email-field">
+                    <label>Email ID *</label>
+                    <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address">
+                  </div>
 
-                <div class="form-group remarks-field">
-                  <label>Remarks</label>
-                  <textarea formControlName="remarks" rows="3"
-                    placeholder="Any additional remarks or special instructions"></textarea>
+                  <div class="form-group remarks-field">
+                    <label>Remarks</label>
+                    <textarea formControlName="remarks" rows="3"
+                      placeholder="Any additional remarks or special instructions"></textarea>
+                  </div>
                 </div>
               </div>
-
-
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 3: Final Review (Emergency) / Approval Workflow (Planned) -->
-      <div class="step-content" *ngIf="currentStep === 3" [@fadeInUp]="'in'">
-        <!-- For Emergency: Show Final Review -->
-        <div class="form-section" *ngIf="formType === 'E'">
-          <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
-
-          <div class="review-summary">
-            <div class="summary-card">
-              <h4>Employee Information</h4>
-              <div class="summary-grid">
-                <div><strong>Name:</strong> {{ exitForm.get('employeeName')?.value }}</div>
-                <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
-                <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
-                <div><strong>Departure Date:</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
-                <div><strong>Days Approved:</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
-                <div><strong>Email:</strong> {{ exitForm.get('emailId')?.value }}</div>
-              </div>
-            </div>
-
-            <div class="summary-card">
-              <h4>Responsibilities</h4>
-              <div class="responsibilities-summary">
-                <div *ngFor="let resp of responsibilitiesFormArray.controls; let i = index"
-                  class="responsibility-summary">
-                  <strong>{{ i + 1 }}. {{ resp.get('project')?.value }}</strong>
-                  <p>Handed over to: {{ resp.get('responsiblePersonName')?.value }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="declarations">
-            <h4>Declarations</h4>
-            <div class="declaration-list">
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decInfoAccurate">
-                <span class="checkmark"></span>
-                I confirm that all information provided is accurate and complete
-              </label>
-
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decHandoverComplete">
-                <span class="checkmark"></span>
-                I have handed over all my responsibilities to the designated personnel
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decReturnAssets">
-                <span class="checkmark"></span>
-                I will return all company assets (laptop, phone, keys, etc.) before departure
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decUnderstandReturn">
-                <span class="checkmark"></span>
-                I understand this is an emergency exit and I will return as per the approved dates
-              </label>
-            </div>
-
-            <div class="declaration-notes">
-              <div class="note info">
-                <i class="fas fa-info-circle"></i>
-                <span>Once submitted, your request will be sent to all approving departments. You will receive email
-                  notifications as each department approves your request.</span>
-              </div>
-              <div class="note success">
-                <i class="fas fa-clock"></i>
-                <span>Emergency exit requests are typically processed within 2-3 business days. You will be notified of
-                  the final decision via email.</span>
-              </div>
-            </div>
-          </div>
+      <!-- Declarations Section -->
+      <div class="form-section-card" [@fadeInUp]="'in'">
+        <div class="section-header">
+          <h3><i class="fas fa-check-circle"></i> Declarations</h3>
         </div>
-
-        <!-- For Planned Leave and Resignation: Show Final Review -->
-        <div class="form-section" *ngIf="formType === 'P' || formType === 'R'">
-          <h3><i class="fas fa-eye"></i> Final Review & Submission</h3>
-
-          <div class="review-summary">
-            <div class="summary-card">
-              <h4>Employee Information</h4>
-              <div class="summary-grid">
-                <div><strong>Name:</strong> {{ exitForm.get('employeeName')?.value }}</div>
-                <div><strong>ID:</strong> {{ exitForm.get('employeeId')?.value }}</div>
-                <div><strong>Department:</strong> {{ exitForm.get('department')?.value }}</div>
-                <div><strong>Category:</strong> {{ exitForm.get('category')?.value }}</div>
-                <div><strong>{{ formType === 'R' ? 'Last Working Date:' : 'Departure Date:' }}</strong> {{ exitForm.get('dateOfDeparture')?.value | date }}</div>
-                <div><strong>{{ formType === 'R' ? 'Notice Period (Days):' : 'Days Requested:' }}</strong> {{ exitForm.get('noOfDaysApproved')?.value }}</div>
-                <div><strong>Responsibilities Handed Over To:</strong> {{
-                  exitForm.get('responsibilitiesHandedOverTo')?.value }}</div>
-              </div>
-            </div>
-          </div>
-
+        <div class="form-section">
           <div class="declarations">
-            <h4>Declarations</h4>
             <div class="declaration-list">
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="decInfoAccurate">
@@ -581,18 +471,22 @@
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="decHandoverComplete">
                 <span class="checkmark"></span>
-                I have properly handed over my responsibilities to {{
-                exitForm.get('responsibilitiesHandedOverTo')?.value ||
-                'the designated person' }}
+                <span *ngIf="formType === 'E'">I have handed over all my responsibilities to the designated personnel</span>
+                <span *ngIf="formType === 'P' || formType === 'R'">I have properly handed over my responsibilities to {{ exitForm.get('responsibilitiesHandedOverTo')?.value || 'the designated person' }}</span>
               </label>
+
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="decReturnAssets">
                 <span class="checkmark"></span>
-                I will return all company assets (laptop, phone, keys, etc.) before my {{ formType === 'R' ? 'last working day' : 'planned departure' }}
+                <span *ngIf="formType === 'E'">I will return all company assets (laptop, phone, keys, etc.) before departure</span>
+                <span *ngIf="formType === 'P'">I will return all company assets (laptop, phone, keys, etc.) before my planned departure</span>
+                <span *ngIf="formType === 'R'">I will return all company assets (laptop, phone, keys, etc.) before my last working day</span>
               </label>
+
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="decUnderstandReturn">
                 <span class="checkmark"></span>
+                <span *ngIf="formType === 'E'">I understand this is an emergency exit and I will return as per the approved dates</span>
                 <span *ngIf="formType === 'P'">I understand this is a planned leave and I will return as per the approved schedule</span>
                 <span *ngIf="formType === 'R'">I understand this is a resignation and I will complete the full notice period as required</span>
               </label>
@@ -601,295 +495,59 @@
             <div class="declaration-notes">
               <div class="note info">
                 <i class="fas fa-info-circle"></i>
-                <span>Once submitted, your request will be sent to all approving departments. You will receive email
-                  notifications as each department approves your request.</span>
+                <span>Once submitted, your request will be sent to all approving departments. You will receive email notifications as each department approves your request.</span>
               </div>
               <div class="note success">
+                <i class="fas fa-clock" *ngIf="formType === 'E'"></i>
                 <i class="fas fa-calendar-check" *ngIf="formType === 'P'"></i>
                 <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
-                <span *ngIf="formType === 'P'">Planned leave requests are typically processed within 5-7 business days. You will be notified of
-                  the final decision via email.</span>
-                <span *ngIf="formType === 'R'">Resignation requests are typically processed within 7-10 business days. You will be notified of
-                  the final decision via email.</span>
+                <span *ngIf="formType === 'E'">Emergency exit requests are typically processed within 2-3 business days. You will be notified of the final decision via email.</span>
+                <span *ngIf="formType === 'P'">Planned leave requests are typically processed within 5-7 business days. You will be notified of the final decision via email.</span>
+                <span *ngIf="formType === 'R'">Resignation requests are typically processed within 7-10 business days. You will be notified of the final decision via email.</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 4: Comprehensive Approval Workflow -->
-      <div class="step-content" *ngIf="currentStep === 4" [@fadeInUp]="'in'">
-        <div class="form-section">
-          <h3><i class="fas fa-clipboard-check"></i> Approval Status & Workflow</h3>
-
-          <!-- Overall Workflow Progress -->
-          <div class="workflow-overview">
-            <div class="workflow-header">
-              <div class="workflow-title">
-                <h4>{{ formType === 'E' ? 'Emergency Exit' : (formType === 'R' ? 'Resignation' : 'Planned Leave') }} Approval Workflow</h4>
-                <div class="workflow-status" [ngClass]="getApprovalStatusClass(getOverallWorkflowStatus())">
-                  <i class="fas fa-clock" *ngIf="getOverallWorkflowStatus() === 'PENDING'"></i>
-                  <i class="fas fa-spinner fa-spin" *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'"></i>
-                  <i class="fas fa-check-circle" *ngIf="getOverallWorkflowStatus() === 'APPROVED'"></i>
-                  <i class="fas fa-times-circle" *ngIf="getOverallWorkflowStatus() === 'REJECTED'"></i>
-                  {{ getApprovalStatusText(getOverallWorkflowStatus()) }}
-                </div>
-              </div>
-              <div class="workflow-progress">
-                <div class="progress-info">
-                  <span>Progress: {{ getApprovedStepsCount() }} of {{ approvalWorkflow.length }} steps completed</span>
-                  <span class="progress-percentage">{{ workflowProgress }}%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="workflowProgress"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Simple Approval Flow -->
-          <div class="simple-approval-flow">
-            <h4><i class="fas fa-route"></i> Approval Flow</h4>
-            <div class="approval-cards">
-              <div class="approval-card" 
-                   *ngFor="let step of approvalWorkflow; let i = index" 
-                   [ngClass]="getApprovalStatusClass(step.status)">
-                
-                <div class="card-header">
-                  <div class="step-number">{{ i + 1 }}</div>
-                  <h5>{{ step.stepName }}</h5>
-                  <div class="status-badge" [ngClass]="getApprovalStatusClass(step.status)">
-                    {{ getApprovalStatusText(step.status) }}
-                  </div>
-                </div>
-                
-                <div class="card-body">
-                  <div class="approvers-section">
-                    <strong>Approvers:</strong>
-                    <div class="approver-list">
-                      <span class="approver-badge" *ngFor="let approver of step.approverNames">{{ approver }}</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Demo Note and Actions for Pending Steps -->
-                  <div class="approval-actions" *ngIf="step.status === 'PENDING'">
-                    <p class="demo-info"><i class="fas fa-info-circle"></i> Demo: Simulate approval for {{ step.stepName }}</p>
-                    <div class="action-buttons">
-                      <button type="button" class="btn-approve" 
-                              (click)="simulateApproval(step.stepId, true, 'Approved')">
-                        <i class="fas fa-check"></i> Approve
-                      </button>
-                      <button type="button" class="btn-reject" 
-                              (click)="simulateApproval(step.stepId, false, 'Rejected')">
-                        <i class="fas fa-times"></i> Reject
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Department Clearances -->
-          <div class="department-clearances">
-            <h4><i class="fas fa-building"></i> Department Clearances</h4>
-            <div class="clearance-progress">
-              <div class="progress-info">
-                <span>Department Clearances: {{ getApprovedDepartmentsCount() }} of {{ departmentApprovals.length }} completed</span>
-                <span class="progress-percentage">{{ getDepartmentApprovalProgress() }}%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="getDepartmentApprovalProgress()"></div>
-              </div>
-            </div>
-
-            <div class="departments-grid">
-              <div class="department-card" 
-                   *ngFor="let dept of departmentApprovals" 
-                   [ngClass]="getApprovalStatusClass(dept.status)">
-                
-                <div class="dept-header">
-                  <h5>{{ dept.departmentName }}</h5>
-                  <div class="status-indicator" [ngClass]="getApprovalStatusClass(dept.status)">
-                    <i class="fas fa-clock" *ngIf="dept.status === 'PENDING'"></i>
-                    <i class="fas fa-check" *ngIf="dept.status === 'APPROVED'"></i>
-                    <i class="fas fa-times" *ngIf="dept.status === 'REJECTED'"></i>
-                    {{ getApprovalStatusText(dept.status) }}
-                  </div>
-                </div>
-
-                <div class="dept-items">
-                  <div class="clearance-item" *ngFor="let item of dept.items">
-                    <div class="item-header">
-                      <span class="item-name">{{ item.itemName }}</span>
-                      <div class="clearance-status" [class.cleared]="item.isCleared">
-                        <i class="fas fa-check-circle" *ngIf="item.isCleared"></i>
-                        <i class="fas fa-circle" *ngIf="!item.isCleared"></i>
-                        {{ item.isCleared ? 'Cleared' : 'Pending' }}
-                      </div>
-                    </div>
-                    
-                    <div class="item-value" *ngIf="item.value">
-                      <strong>Value:</strong> {{ item.value }}
-                    </div>
-                    
-                    <div class="item-comments" *ngIf="item.comments">
-                      <strong>Comments:</strong> {{ item.comments }}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="dept-approval-info" *ngIf="dept.status !== 'PENDING'">
-                  <div class="approval-details">
-                    <p><strong>Approved by:</strong> {{ dept.approverName }}</p>
-                    <p><strong>Date:</strong> {{ formatApprovalDate(dept.approvedDate) }}</p>
-                    <p *ngIf="dept.comments"><strong>Comments:</strong> {{ dept.comments }}</p>
-                  </div>
-                </div>
-
-                <!-- Demo Department Approval Actions -->
-                <div class="dept-actions" *ngIf="dept.status === 'PENDING'">
-                  <div class="demo-note">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Demo: Simulate {{ dept.departmentName }} clearance</span>
-                  </div>
-                  <div class="action-buttons">
-                    <button type="button" class="btn-approve" 
-                            (click)="simulateDepartmentApproval(dept.departmentId, true, 'All items cleared')">
-                      <i class="fas fa-check"></i> Clear All Items
-                    </button>
-                    <button type="button" class="btn-reject" 
-                            (click)="simulateDepartmentApproval(dept.departmentId, false, 'Items not cleared')">
-                      <i class="fas fa-times"></i> Reject Clearance
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Final Status and Actions -->
-          <div class="final-status">
-            <div class="status-summary" [ngClass]="getApprovalStatusClass(getOverallWorkflowStatus())">
-              <div class="status-icon">
-                <i class="fas fa-clock" *ngIf="getOverallWorkflowStatus() === 'PENDING'"></i>
-                <i class="fas fa-spinner fa-spin" *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'"></i>
-                <i class="fas fa-check-circle" *ngIf="getOverallWorkflowStatus() === 'APPROVED'"></i>
-                <i class="fas fa-times-circle" *ngIf="getOverallWorkflowStatus() === 'REJECTED'"></i>
-              </div>
-              <div class="status-text">
-                <h4 *ngIf="getOverallWorkflowStatus() === 'PENDING'">{{ isApprovalMode ? 'Awaiting Your Approval' : 'Awaiting Initial Approval' }}</h4>
-                <h4 *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'">Approval In Progress</h4>
-                <h4 *ngIf="getOverallWorkflowStatus() === 'APPROVED'">All Approvals Completed!</h4>
-                <h4 *ngIf="getOverallWorkflowStatus() === 'REJECTED'">Request Rejected</h4>
-                
-                <p *ngIf="getOverallWorkflowStatus() === 'PENDING' && !isApprovalMode">
-                  Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} request has been submitted and is awaiting approval.
-                </p>
-                <p *ngIf="getOverallWorkflowStatus() === 'PENDING' && isApprovalMode">
-                  This {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} request is awaiting your approval decision.
-                </p>
-                <p *ngIf="getOverallWorkflowStatus() === 'IN_PROGRESS'">
-                  {{ isApprovalMode ? 'This request is being processed.' : 'Your request is being processed.' }} {{ getPendingApprovalsCount() }} approval(s) still pending.
-                </p>
-                <p *ngIf="getOverallWorkflowStatus() === 'APPROVED'">
-                  {{ isApprovalMode ? 'This request has been fully approved by all departments.' : 'Congratulations! Your request has been fully approved by all departments.' }}
-                </p>
-                <p *ngIf="getOverallWorkflowStatus() === 'REJECTED'">
-                  {{ isApprovalMode ? 'This request has been rejected.' : 'Your request has been rejected. Please contact HR for more information.' }}
-                </p>
-              </div>
-            </div>
-
-
-
-            <!-- Regular Mode Actions -->
-            <div class="final-actions" *ngIf="!isApprovalMode && getOverallWorkflowStatus() === 'APPROVED'">
-              <div class="action-buttons">
-                <button type="button" class="btn-primary" (click)="downloadPDF()">
-                  <i class="fas fa-download"></i> Download Approved Form
-                </button>
-                <button type="button" class="btn-secondary" (click)="resetForm()">
-                  <i class="fas fa-plus"></i> New Request
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </form>
 
-    <!-- Form Navigation -->
-    <div class="form-navigation" *ngIf="!formSubmitted">
-      <div class="navigation-container">
-        <!-- Left Side: Previous Button -->
-        <div class="nav-left">
-          <button type="button" class="btn-secondary" 
-                  (click)="previousStep()" 
-                  [disabled]="currentStep === 1">
-            <i class="fas fa-arrow-left"></i> Previous
-          </button>
-        </div>
-
-        <!-- Center: Step Indicator -->
-        <div class="nav-center">
-          <div class="step-indicator">
-            <span *ngIf="!isApprovalMode && !approvalRequestData">
-              Step {{ getDisplayStepNumber(currentStep) }} of {{ getTotalDisplaySteps() }}
-            </span>
-            <span *ngIf="isApprovalMode || approvalRequestData">
-              Step {{ getDisplayStepNumber(currentStep) }} of {{ getTotalDisplaySteps() }} ({{ isApprovalMode ? 'Review Mode' : 'View Mode' }})
-            </span>
-          </div>
-        </div>
-
-        <!-- Right Side: Next/Submit Button -->
-        <div class="nav-right">
-          <!-- Next Button -->
-          <button type="button" class="btn-primary" 
-                  (click)="nextStep()" 
-                  *ngIf="shouldShowNextButton()">
-            Next <i class="fas fa-arrow-right"></i>
-          </button>
-
-          <!-- Submit Button -->
-          <button type="button" class="btn-submit" 
-                  (click)="submitForm()"
-                  [disabled]="!allDeclarationsChecked() || isSubmitting" 
-                  *ngIf="currentStep === 3 && !isApprovalMode && !approvalRequestData">
-            <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
-            <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
-            {{ isSubmitting ? 'Submitting...' : 'Submit Form' }}
-          </button>
-
-          <!-- Download Button -->
-          <button type="button" class="btn-primary" 
-                  (click)="downloadPDF()"
-                  *ngIf="currentStep === 4 && getOverallWorkflowStatus() === 'APPROVED'">
-            <i class="fas fa-download"></i> Download Form
-          </button>
-        </div>
+    <!-- Submit Section -->
+    <div class="submit-section" *ngIf="!formSubmitted && !isApprovalMode && !approvalRequestData">
+      <div class="submit-container">
+        <button type="button" class="btn-submit-large" 
+                (click)="submitForm()"
+                [disabled]="!allDeclarationsChecked() || isSubmitting">
+          <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+          {{ isSubmitting ? 'Submitting Request...' : 'Submit ' + (formType === 'E' ? 'Emergency Exit' : (formType === 'R' ? 'Resignation' : 'Planned Leave')) + ' Request' }}
+        </button>
+        <p class="submit-note">
+          <i class="fas fa-info-circle"></i>
+          Please ensure all information is accurate before submitting. You cannot modify the form after submission.
+        </p>
       </div>
     </div>
+  </div>
 
-    <!-- Success Message -->
-    <div class="success-container" *ngIf="formSubmitted" [@fadeInUp]="'in'">
-      <div class="success-card">
-        <div class="success-icon">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <h2>Form Submitted Successfully!</h2>
-        <p>Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} form has been submitted and is now being
-          processed.</p>
-        <p><strong>Reference ID:</strong> {{ formType === 'E' ? 'EEF' : (formType === 'R' ? 'RF' : 'PLF') }}-{{ getCurrentTimestamp() }}</p>
+  <!-- Success Message -->
+  <div class="success-container" *ngIf="formSubmitted" [@fadeInUp]="'in'">
+    <div class="success-card">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2>Form Submitted Successfully!</h2>
+      <p>Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} form has been submitted and is now being processed.</p>
+      <p><strong>Reference ID:</strong> {{ formType === 'E' ? 'EEF' : (formType === 'R' ? 'RF' : 'PLF') }}-{{ getCurrentTimestamp() }}</p>
 
-        <div class="success-actions">
-          <button type="button" class="btn-primary" (click)="downloadPDF()">
-            <i class="fas fa-download"></i> Download PDF
-          </button>
-          <button type="button" class="btn-secondary" (click)="resetForm()">
-            <i class="fas fa-plus"></i> New Form
-          </button>
-        </div>
+      <div class="success-actions">
+        <button type="button" class="btn-primary" (click)="downloadPDF()">
+          <i class="fas fa-download"></i> Download PDF
+        </button>
+        <button type="button" class="btn-secondary" (click)="resetForm()">
+          <i class="fas fa-plus"></i> New Form
+        </button>
       </div>
     </div>
+  </div>
+</div>
