@@ -6,6 +6,8 @@
   font-family: 'Roboto', sans-serif !important;
   width: 100%;
   box-sizing: border-box;
+  overflow: visible;
+  position: relative;
 }
 
 /* Header */
@@ -353,6 +355,8 @@
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
+  overflow: visible;
+  position: relative;
 }
 
 .form-section-card {
@@ -365,6 +369,8 @@
   box-sizing: border-box;
   animation: fadeInUp 0.5s ease-out;
   transition: all 0.3s ease;
+  overflow: visible;
+  position: relative;
 }
 
 .form-section-card:hover {
@@ -399,6 +405,12 @@
 /* Collapsible Section Styles */
 .collapsible-section {
   overflow: hidden;
+  position: relative;
+}
+
+/* Allow dropdowns to overflow collapsible sections */
+.collapsible-section:has(.searchable-dropdown) {
+  overflow: visible;
 }
 
 .collapsible-header {
@@ -435,6 +447,13 @@
   max-height: 2000px;
   opacity: 1;
   transition: max-height 0.4s ease-in, opacity 0.3s ease;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Ensure dropdowns in collapsible content are visible */
+.collapsible-content.open:has(.searchable-dropdown) {
+  overflow: visible;
 }
 
 .form-section {
@@ -446,6 +465,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
+  overflow: visible;
+  position: relative;
 }
 
 .form-grid-planned {
@@ -466,9 +487,27 @@
 }
 
 .form-grid-planned .form-group:has(.searchable-dropdown) {
+  z-index: 1000 !important;
+  position: relative !important;
+  overflow: visible !important;
+  max-width: none;
+  width: 100%;
+}
+
+/* Apply HOD dropdown styling to ALL form groups with dropdowns */
+.form-group:has(.searchable-dropdown) {
+  z-index: 1000 !important;
+  position: relative !important;
+  overflow: visible !important;
+  max-width: none;
+  width: 100%;
+}
+
+/* Ensure all form groups with dropdowns have proper z-index */
+.form-group:has(.searchable-dropdown) {
   z-index: 1000;
   position: relative;
-  overflow: visible;
+  overflow: visible !important;
 }
 
 .form-grid-planned .hod-name-group {
@@ -486,6 +525,9 @@
   min-height: 0 !important;
   z-index: 1000 !important;
 }
+
+/* Ensure all searchable dropdowns have proper overflow - matching HOD dropdown */
+/* This is now defined in SIMPLE WORKING DROPDOWN STYLES section above */
 
 .form-grid-planned .form-group input,
 .form-grid-planned .form-group select,
@@ -524,6 +566,17 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  overflow: visible;
+}
+
+/* Ensure form groups with dropdowns allow overflow - matching HOD dropdown */
+.form-group:has(.searchable-dropdown) {
+  overflow: visible !important;
+  z-index: 1000 !important;
+  position: relative !important;
+  max-width: none;
+  width: 100%;
 }
 
 .form-group label {
@@ -544,6 +597,32 @@
   transition: all 0.3s ease;
   outline: none;
   font-family: inherit;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure inputs in form groups WITHOUT dropdowns have lower z-index */
+.form-group:not(:has(.searchable-dropdown)) input,
+.form-group:not(:has(.searchable-dropdown)) textarea,
+.form-group:not(:has(.searchable-dropdown)) select,
+.responsibility-form-grid .form-group:not(:has(.searchable-dropdown)) input,
+.responsibility-form-grid .form-group:not(:has(.searchable-dropdown)) textarea,
+.responsibility-form-grid .form-group:not(:has(.searchable-dropdown)) select {
+  z-index: 1 !important;
+  position: relative;
+}
+
+/* Specifically target textareas to ensure they don't cover dropdowns */
+textarea {
+  z-index: 1 !important;
+  position: relative;
+}
+
+/* Ensure remarks textarea doesn't cover dropdown */
+.responsibility-form-grid .remarks-field textarea,
+.form-group.remarks-field textarea {
+  z-index: 1 !important;
+  position: relative;
 }
 
 .form-group input:focus,
@@ -564,6 +643,8 @@
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
+  z-index: 1 !important;
+  position: relative;
 }
 
 .error-message {
@@ -572,10 +653,23 @@
   margin-top: 4px;
 }
 
-/* SIMPLE WORKING DROPDOWN STYLES */
+/* SIMPLE WORKING DROPDOWN STYLES - Matching HOD dropdown behavior */
 .searchable-dropdown {
-  position: relative;
+  position: relative !important;
   width: 100%;
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 0 !important;
+  z-index: 2147483646 !important;
+}
+
+/* When dropdown is open, ensure maximum z-index */
+.searchable-dropdown:has(.dropdown-list[style*="display: block"]),
+.searchable-dropdown:has(.dropdown-list:not([style*="display: none"])),
+.searchable-dropdown.active {
+  z-index: 2147483646 !important;
+  position: relative !important;
+  overflow: visible !important;
 }
 
 .dropdown-input {
@@ -609,22 +703,132 @@
 }
 
 .dropdown-list {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  width: 100%;
-  background: white;
-  border: 2px solid #dee2e6;
-  border-top: none;
-  border-radius: 0 0 12px 12px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 99999;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  display: block;
-  visibility: visible;
-  opacity: 1;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background: white !important;
+  border: 2px solid #dee2e6 !important;
+  border-top: none !important;
+  border-radius: 0 0 12px 12px !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  overflow-x: visible !important;
+  z-index: 2147483647 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin-top: 2px !important;
+  /* Force dropdown above everything - maximum z-index value */
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  /* Create new stacking context */
+  isolation: isolate !important;
+  /* Ensure it's not clipped */
+  clip: unset !important;
+  clip-path: none !important;
+}
+
+/* When dropdown is visible, ensure it's above everything - already handled above */
+
+/* Ensure dropdown list is always on top - maximum z-index */
+.dropdown-list,
+.planned-dropdown,
+.pm-dropdown {
+  z-index: 2147483647 !important;
+  position: absolute !important;
+}
+
+/* Make sure inputs below dropdowns don't cover them - lower z-index */
+.form-group:not(:has(.searchable-dropdown)) input,
+.form-group:not(:has(.searchable-dropdown)) textarea,
+.form-group:not(:has(.searchable-dropdown)) select,
+.responsibility-form-grid .form-group:not(:has(.searchable-dropdown)) input,
+.responsibility-form-grid .form-group:not(:has(.searchable-dropdown)) textarea,
+.responsibility-form-grid .form-group:not(:has(.searchable-dropdown)) select {
+  position: relative;
+  z-index: 1 !important;
+}
+
+/* Fallback for browsers that don't support :has() */
+.searchable-dropdown .dropdown-list {
+  z-index: 2147483647 !important;
+}
+
+/* Ensure parent containers don't clip dropdown - matching HOD dropdown behavior */
+.responsibilities-container,
+.responsibility-card,
+.responsibility-form-grid {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: auto;
+}
+
+/* Make sure all containers with dropdowns allow overflow */
+.form-section-card:has(.searchable-dropdown),
+.single-screen-form:has(.searchable-dropdown),
+.form-grid:has(.searchable-dropdown),
+.form-grid-planned:has(.searchable-dropdown),
+.form-section-card,
+.single-screen-form {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Ensure responsibility form grid allows dropdown overflow */
+.responsibility-form-grid .form-group:has(.searchable-dropdown) {
+  z-index: 2147483645 !important;
+  position: relative !important;
+  overflow: visible !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.responsibility-form-grid .form-group {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Ensure the searchable dropdown in responsibility grid has maximum z-index */
+.responsibility-form-grid .searchable-dropdown {
+  z-index: 2147483646 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Force all form groups in responsibility cards to allow overflow */
+.responsibility-card .form-group:has(.searchable-dropdown) {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 2147483645 !important;
+}
+
+.responsibility-card .form-group {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Critical: Ensure parent containers of dropdowns allow overflow - be specific */
+.form-section-card:has(.searchable-dropdown),
+.form-section-card:has(.dropdown-list),
+.single-screen-form:has(.searchable-dropdown),
+.single-screen-form:has(.dropdown-list),
+.responsibility-card:has(.searchable-dropdown),
+.responsibility-card:has(.dropdown-list),
+.responsibility-form-grid:has(.searchable-dropdown),
+.responsibility-form-grid:has(.dropdown-list),
+.collapsible-content.open:has(.searchable-dropdown),
+.collapsible-content.open:has(.dropdown-list) {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Ensure the entire chain allows overflow when dropdown is present */
+.emergency-exit-container:has(.searchable-dropdown),
+.emergency-exit-container:has(.dropdown-list) {
+  overflow: visible !important;
 }
 
 .dropdown-item {
@@ -915,6 +1119,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  overflow: visible !important;
+  position: relative;
 }
 
 .responsibility-card {
@@ -923,6 +1129,8 @@
   border-radius: 16px;
   padding: 24px;
   transition: all 0.3s ease;
+  overflow: visible !important;
+  position: relative;
 }
 
 .responsibility-card:hover {
@@ -1003,6 +1211,8 @@
     "remarks remarks remarks";
   gap: 20px;
   align-items: start;
+  overflow: visible !important;
+  position: relative;
 }
 
 .responsibility-form-grid .project-field {
@@ -3031,4 +3241,1176 @@ esponsive Design Improvements */
 .btn-submit-large:disabled:hover {
   transform: none;
   box-shadow: var(--shadow-sm);
+}
+
+/* Form Layout with Sidebar */
+.form-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.form-layout.has-sidebar {
+  flex-direction: row !important;
+  gap: 0;
+  align-items: flex-start;
+}
+
+/* Form Content Column */
+.form-layout.has-sidebar .form-content-column {
+  flex: 1;
+  max-width: calc(100% - 340px);
+  padding-right: 0;
+}
+
+/* Workflow Sidebar */
+.workflow-sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: #f8f9fa;
+  border-left: 1px solid #e9ecef;
+  padding: 16px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  position: sticky;
+  top: 20px;
+}
+
+/* Custom Scrollbar for Sidebar */
+.workflow-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.workflow-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.workflow-sidebar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.workflow-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Approval Card Styles */
+.approval-card {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(6, 78, 59, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: white;
+}
+
+.approval-card-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.approval-card-header p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+.approval-form {
+  margin-top: 20px;
+}
+
+.approval-form .form-group {
+  margin-bottom: 20px;
+}
+
+.approval-form label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.approval-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.approval-textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.approval-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.approval-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-approve,
+.btn-reject {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-approve {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-approve:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.btn-reject {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.btn-reject:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+.btn-approve:disabled,
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Approval Flow Card */
+.approval-flow-card {
+  background: rgba(6, 78, 59, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.flow-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-header i {
+  color: #10b981;
+}
+
+.stage-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.approval-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.approval-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.approval-step.completed {
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid #10b981;
+}
+
+.approval-step.in-progress {
+  background: rgba(251, 191, 36, 0.1);
+  border-left: 3px solid #f59e0b;
+}
+
+.approval-step.pending {
+  background: rgba(107, 114, 128, 0.1);
+  border-left: 3px solid #6b7280;
+}
+
+.step-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.approval-step.completed .step-icon {
+  background: #10b981;
+  color: white;
+}
+
+.approval-step.in-progress .step-icon {
+  background: #f59e0b;
+  color: white;
+}
+
+.approval-step.pending .step-icon {
+  background: #6b7280;
+  color: white;
+}
+
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.step-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.approval-step.completed .step-status {
+  color: #10b981;
+}
+
+.approval-step.in-progress .step-status {
+  color: #f59e0b;
+}
+
+/* Responsive Design for Approval Layout */
+@media (max-width: 1400px) {
+  .approval-actions-column {
+    flex: 0 0 320px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .approval-actions-column {
+    flex: 0 0 300px;
+  }
+}
+
+@media (max-width: 900px) {
+  .form-layout.approval-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .approval-actions-column {
+    flex: none;
+    position: static;
+    order: -1;
+  }
+  
+  .approval-card {
+    padding: 20px;
+  }
+  
+  .approval-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-approve,
+  .btn-reject {
+    flex: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .approval-card {
+    padding: 16px;
+  }
+  
+  .approval-card-header h3 {
+    font-size: 18px;
+  }
+  
+  .approval-textarea {
+    min-height: 80px;
+  }
+  
+  .approval-buttons {
+    gap: 8px;
+  }
+  
+  .btn-approve,
+  .btn-reject {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Animation for approval actions */
+.approval-actions-column {
+  animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced hover effects */
+.approval-step:hover {
+  background: rgba(16, 185, 129, 0.05);
+  transform: translateX(4px);
+}
+
+.approval-step.completed:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.approval-step.in-progress:hover {
+  background: rgba(251, 191, 36, 0.15);
+}/* Debug st
+yles to ensure proper layout */
+.form-layout.approval-layout {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.form-layout.approval-layout .form-content-column {
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  padding-right: 20px;
+}
+
+.form-layout.approval-layout .approval-actions-column {
+  padding-left: 10px;
+}
+
+/* Ensure the sidebar is always visible on desktop */
+@media (min-width: 901px) {
+  .form-layout.approval-layout {
+    flex-direction: row !important;
+  }
+  
+  .approval-actions-column {
+    display: flex !important;
+    position: sticky !important;
+    top: 20px !important;
+  }
+}
+
+/* Force right-side positioning */
+.approval-actions-column {
+  order: 2;
+}
+
+.form-content-column {
+  order: 1;
+}
+/* P
+ersonal Information Layout with Photo */
+.personal-info-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.employee-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.photo-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #f8f9fa;
+}
+
+.employee-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.photo-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  font-size: 24px;
+}
+
+.photo-container:hover .photo-overlay {
+  opacity: 1;
+}
+
+.photo-container:hover .employee-photo {
+  transform: scale(1.05);
+}
+
+.photo-label {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  font-weight: 500;
+}
+
+.employee-info-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .personal-info-layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .employee-info-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  
+  .photo-container {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .photo-container {
+    border-color: #495057;
+    background: #343a40;
+  }
+  
+  .photo-label {
+    color: #adb5bd;
+  }
+}/* Enhan
+ced Approval Actions Column */
+.approval-actions-column {
+  width: 320px; /* Reduced from previous width */
+  min-width: 320px;
+  background: #f8f9fa;
+  border-left: 1px solid #e9ecef;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+/* Approval Card Enhancements */
+.approval-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.approval-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.header-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-content h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.required-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Approval Form Styling */
+.approval-form .form-group {
+  margin-bottom: 16px;
+}
+
+.approval-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #495057;
+  font-size: 13px;
+}
+
+.approval-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+}
+
+.approval-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.approval-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-reject, .btn-approve {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-reject {
+  background: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #fed7d7;
+}
+
+.btn-reject:hover:not(:disabled) {
+  background: #fed7d7;
+}
+
+.btn-approve {
+  background: #f0fff4;
+  color: #38a169;
+  border: 1px solid #c6f6d5;
+}
+
+.btn-approve:hover:not(:disabled) {
+  background: #c6f6d5;
+}
+
+.btn-reject:disabled, .btn-approve:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Enhanced Approval Flow Card */
+.approval-flow-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.flow-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.flow-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-title i {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.flow-title h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Timeline Styling */
+.approval-timeline {
+  position: relative;
+}
+
+.timeline-step {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.timeline-step:last-child {
+  margin-bottom: 0;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.step-dot.completed {
+  background: #38a169;
+  color: white;
+}
+
+.step-dot.in-progress {
+  background: #3182ce;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.step-dot.pending {
+  background: #e2e8f0;
+  color: #718096;
+  border: 2px solid #cbd5e0;
+}
+
+.step-line {
+  width: 2px;
+  height: 24px;
+  background: #e2e8f0;
+  margin-top: 4px;
+}
+
+.timeline-step:last-child .step-line {
+  display: none;
+}
+
+.timeline-step.completed .step-line {
+  background: #38a169;
+}
+
+.timeline-step.in-progress .step-line {
+  background: linear-gradient(to bottom, #3182ce 50%, #e2e8f0 50%);
+}
+
+/* Step Details */
+.step-details {
+  flex: 1;
+  padding-top: 2px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.step-header h5 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.completed {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-badge.pending {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.step-info {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  color: #4a5568;
+  line-height: 1.4;
+}
+
+.step-time {
+  font-size: 11px;
+  color: #718096;
+  font-style: italic;
+}
+
+/* Department List */
+.department-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.dept-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #4a5568;
+  padding: 4px 6px;
+  background: #f7fafc;
+  border-radius: 4px;
+}
+
+.dept-item i {
+  font-size: 10px;
+  color: #718096;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .workflow-sidebar {
+    width: 280px;
+    min-width: 280px;
+  }
+  
+  .form-layout.has-sidebar .form-content-column {
+    max-width: calc(100% - 300px);
+  }
+}
+
+@media (max-width: 768px) {
+  .form-layout.has-sidebar {
+    flex-direction: column;
+  }
+  
+  .workflow-sidebar {
+    width: 100%;
+    min-width: auto;
+    border-left: none;
+    border-top: 1px solid #e9ecef;
+    max-height: 400px;
+    position: static;
+  }
+  
+  .form-layout.has-sidebar .form-content-column {
+    max-width: 100%;
+  }
+}
+
+/* Animation for in-progress step */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(49, 130, 206, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(49, 130, 206, 0);
+  }
+}
+
+/* =====
+ CLEAN WORKFLOW SIDEBAR STYLES ===== */
+
+/* Workflow Sidebar - Clean and Simple */
+.workflow-sidebar {
+  width: 300px !important;
+  min-width: 300px !important;
+  background: #f8f9fa !important;
+  border-left: 1px solid #e9ecef !important;
+  padding: 20px !important;
+  height: fit-content !important;
+  position: sticky !important;
+  top: 20px !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+/* Actions Card */
+.actions-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.actions-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.actions-header i {
+  color: #007bff;
+  font-size: 18px;
+}
+
+.actions-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  flex: 1;
+}
+
+.required-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.actions-content .remarks-section {
+  margin-bottom: 15px;
+}
+
+.actions-content label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+  font-size: 14px;
+}
+
+.actions-content textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.actions-content textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.reject-btn, .approve-btn {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.reject-btn {
+  background: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #fed7d7;
+}
+
+.reject-btn:hover:not(:disabled) {
+  background: #fed7d7;
+}
+
+.approve-btn {
+  background: #22c55e;
+  color: white;
+  border: 1px solid #22c55e;
+}
+
+.approve-btn:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.reject-btn:disabled, .approve-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Flow Card */
+.flow-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.flow-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.flow-header i {
+  color: #6c757d;
+  font-size: 16px;
+}
+
+.flow-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Flow Steps */
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.flow-step.completed .step-dot {
+  background: #22c55e;
+  color: white;
+}
+
+.flow-step.pending .step-dot {
+  background: #e2e8f0;
+  color: #718096;
+  border: 2px solid #cbd5e0;
+}
+
+.step-info {
+  flex: 1;
+}
+
+.step-info h5 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.step-info .status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.step-info .status.completed {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.step-info .status.pending {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+/* === FORCE RIGHT SIDE POSITIONING ===== */
+
+/* Ensure form layout is flex row */
+.form-layout.has-sidebar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 0 !important;
+  width: 100% !important;
+}
+
+/* Form content takes left side */
+.form-layout.has-sidebar .form-content-column {
+  flex: 1 !important;
+  order: 1 !important;
+  max-width: calc(100% - 320px) !important;
+  padding-right: 0 !important;
+}
+
+/* Workflow sidebar takes right side */
+.form-layout.has-sidebar .workflow-sidebar {
+  flex: 0 0 300px !important;
+  order: 2 !important;
+  width: 300px !important;
+  min-width: 300px !important;
+  background: #f8f9fa !important;
+  border-left: 1px solid #e9ecef !important;
+  padding: 20px !important;
+  height: fit-content !important;
+  position: sticky !important;
+  top: 20px !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+/* Force right positioning with margin */
+.workflow-sidebar {
+  margin-left: auto !important;
+}
+
+/* Debug - add border to see positioning */
+.workflow-sidebar {
+  border: 2px solid red !important;
+}
+
+.form-content-column {
+  border: 2px solid blue !important;
+}/* Remove
+ debug borders */
+.workflow-sidebar {
+  border: none !important;
+}
+
+.form-content-column {
+  border: none !important;
 }

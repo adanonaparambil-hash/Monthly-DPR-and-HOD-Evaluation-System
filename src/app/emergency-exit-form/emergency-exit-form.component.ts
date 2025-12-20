@@ -95,6 +95,9 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Employee profile data
   employeeProfileData: ExitEmpProfileDetails = {};
+  
+  // Employee photo
+  employeePhoto: string = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format';
 
   // Project Manager / Site Incharge approval
   pmRemarks: string = '';
@@ -110,17 +113,6 @@ export class EmergencyExitFormComponent implements OnInit {
     },
     {
       id: 1,
-      name: 'CWH',
-      status: 'pending',
-      items: [
-        { label: 'Staff-CWH', type: 'checkbox' },
-        { label: 'Worker-Site/CWH', type: 'checkbox' },
-        { label: 'Tool Box Kit', type: 'text' },
-        { label: 'Liabilities if any', type: 'text' }
-      ]
-    },
-    {
-      id: 2,
       name: 'IT',
       status: 'pending',
       items: [
@@ -128,6 +120,17 @@ export class EmergencyExitFormComponent implements OnInit {
         { label: 'Desktop', type: 'checkbox' },
         { label: 'Laptop', type: 'checkbox' },
         { label: 'Tab', type: 'checkbox' },
+        { label: 'Liabilities if any', type: 'text' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Audit',
+      status: 'pending',
+      items: [
+        { label: 'Audit Clearance', type: 'checkbox' },
+        { label: 'Document Verification', type: 'checkbox' },
+        { label: 'Compliance Check', type: 'checkbox' },
         { label: 'Liabilities if any', type: 'text' }
       ]
     },
@@ -143,10 +146,20 @@ export class EmergencyExitFormComponent implements OnInit {
     },
     {
       id: 4,
-      name: 'Facility Management/Transport',
+      name: 'Facility Management',
       status: 'pending',
       items: [
         { label: 'Accommodation Key', type: 'checkbox' },
+        { label: 'Office Key', type: 'checkbox' },
+        { label: 'Access Card', type: 'checkbox' },
+        { label: 'Liabilities if any', type: 'text' }
+      ]
+    },
+    {
+      id: 5,
+      name: 'Transport',
+      status: 'pending',
+      items: [
         { label: 'Company Car', type: 'checkbox' },
         { label: 'Make/Model', type: 'text' },
         { label: 'Car Km', type: 'number' },
@@ -154,7 +167,7 @@ export class EmergencyExitFormComponent implements OnInit {
       ]
     },
     {
-      id: 5,
+      id: 6,
       name: 'HR',
       status: 'pending',
       items: [
@@ -166,7 +179,7 @@ export class EmergencyExitFormComponent implements OnInit {
       ]
     },
     {
-      id: 6,
+      id: 7,
       name: 'Admin',
       status: 'pending',
       items: [
@@ -208,6 +221,13 @@ export class EmergencyExitFormComponent implements OnInit {
       // Debug: Log all available user properties
       this.debugUserProperties();
 
+      // Debug: Check if form is incorrectly in approval mode
+      console.log('=== FORM MODE DEBUG ===');
+      console.log('isApprovalMode:', this.isApprovalMode);
+      console.log('approvalRequestData:', this.approvalRequestData);
+      console.log('URL params will be checked in setFormType()');
+      console.log('=== END DEBUG ===');
+
       // Add one default responsibility row for Emergency forms
       if (this.formType === 'E') {
         this.addResponsibility();
@@ -237,7 +257,20 @@ export class EmergencyExitFormComponent implements OnInit {
       // Disable employee information fields (always disabled)
       this.disableEmployeeInfoFields();
 
+      // Ensure other fields are enabled for regular form usage
+      if (!this.isApprovalMode && !this.approvalRequestData) {
+        this.enableFormFields();
+      }
+
       console.log('Single screen form initialized for type:', this.formType);
+      console.log('Final form disabled status check:', {
+        employeeName: this.exitForm.get('employeeName')?.disabled,
+        employeeId: this.exitForm.get('employeeId')?.disabled,
+        department: this.exitForm.get('department')?.disabled,
+        dateOfDeparture: this.exitForm.get('dateOfDeparture')?.disabled,
+        hodName: this.exitForm.get('hodName')?.disabled,
+        reasonForEmergency: this.exitForm.get('reasonForEmergency')?.disabled
+      });
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
     }
@@ -275,6 +308,10 @@ export class EmergencyExitFormComponent implements OnInit {
       const typeParam = params['type'];
       const modeParam = params['mode'];
       const requestId = params['requestId'];
+      
+      console.log('=== SETFORMTYPE DEBUG ===');
+      console.log('URL params:', { typeParam, modeParam, requestId });
+      console.log('Current approval mode before processing:', this.isApprovalMode);
       
       if (typeParam === 'P' || typeParam === 'E' || typeParam === 'R') {
         this.formType = typeParam;
@@ -321,7 +358,11 @@ export class EmergencyExitFormComponent implements OnInit {
       } else {
         this.isApprovalMode = false;
         this.approvalRequestData = null;
+        console.log('Regular form mode - no approval/view mode');
       }
+
+      console.log('Final approval mode after processing:', this.isApprovalMode);
+      console.log('=== END SETFORMTYPE DEBUG ===');
 
       // Update form validations and steps when form type changes
       // Planned Leave and Resignation use same structure (2 steps), Emergency uses 4 steps
@@ -339,6 +380,9 @@ export class EmergencyExitFormComponent implements OnInit {
         this.loadHodMasterList();
         this.loadProjectManagerList();
         this.loadEmployeeMasterList();
+        
+        // Ensure fields are enabled for regular form usage
+        this.enableFormFields();
       }
     });
   }
@@ -402,6 +446,11 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Always disable employee information fields
     this.disableEmployeeInfoFields();
+    
+    // Enable other fields for regular form usage
+    if (!this.isApprovalMode && !this.approvalRequestData) {
+      this.enableFormFields();
+    }
 
     // Reset department statuses
     this.departments.forEach(dept => {
@@ -502,11 +551,60 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('Emergency Exit Form - Populating form with data:', formData);
       this.exitForm.patchValue(formData);
       
+      // Load employee profile with photo
+      this.loadEmployeeProfile();
+      
       // Disable employee information fields since they come from session
       this.disableEmployeeInfoFields();
     } else {
       console.warn('Emergency Exit Form - No current user found in session');
     }
+  }
+
+  // Load employee profile with photo
+  loadEmployeeProfile(): void {
+    const empId = this.currentUser?.empId;
+    if (empId) {
+      this.api.GetEmployeeProfile(empId).subscribe({
+        next: (response: any) => {
+          if (response && response.success && response.data) {
+            const data = response.data;
+            
+            // Set employee photo
+            if (data.profileImageBase64) {
+              this.employeePhoto = `data:image/jpeg;base64,${data.profileImageBase64}`;
+            } else if (this.currentUser.photo) {
+              this.employeePhoto = this.currentUser.photo;
+            }
+            
+            // Update contact details from profile
+            this.exitForm.patchValue({
+              address: data.address || '',
+              district: data.district || '',
+              place: data.place || '',
+              state: data.state || '',
+              postOffice: data.postOffice || '',
+              nation: data.nation || '',
+              telephoneMobile: data.phone || '',
+              telephoneLandline: data.telephone || '',
+              emailId: data.email || this.currentUser.email || ''
+            });
+            
+            console.log('Employee profile loaded successfully');
+          }
+        },
+        error: (err) => {
+          console.error('Error loading employee profile:', err);
+          // Keep default photo on error
+        }
+      });
+    }
+  }
+
+  // Handle photo loading error
+  onPhotoError(event: any): void {
+    console.log('Photo loading failed, using default avatar');
+    event.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format';
   }
 
 
@@ -774,7 +872,7 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
-  getStepDescription(): string {
+  getStepDescriptionOld(): string {
     if (this.formType === 'P') {
       switch (this.currentStep) {
         case 1: return 'Review your profile information and provide travel details and leave information';
@@ -1508,6 +1606,9 @@ export class EmergencyExitFormComponent implements OnInit {
         this.loadEmployeeDetailsFromSession();
       }
     });
+
+    // Also load employee profile with photo
+    this.loadEmployeeProfile();
   }
 
   // Fallback method to load employee details from session storage
@@ -1786,9 +1887,12 @@ export class EmergencyExitFormComponent implements OnInit {
    */
   getFormTypeText(leaveType: string): string {
     switch (leaveType) {
-      case 'Emergency': return 'Emergency Exit';
-      case 'Planned': return 'Planned Leave';
-      case 'Resignation': return 'Resignation';
+      case 'Emergency':
+      case 'E': return 'Emergency Exit';
+      case 'Planned':
+      case 'P': return 'Planned Leave';
+      case 'Resignation':
+      case 'R': return 'Resignation';
       default: return leaveType;
     }
   }
@@ -1917,8 +2021,14 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Disable all form fields in approval/view mode
     if (this.isApprovalMode || this.approvalRequestData) {
+      console.log('Disabling all form fields because isApprovalMode:', this.isApprovalMode, 'or approvalRequestData exists:', !!this.approvalRequestData);
       this.disableAllFormFields();
+    } else {
+      console.log('NOT disabling all form fields - regular form mode');
     }
+    
+    // Load employee photo for approval/view mode
+    this.loadEmployeeProfile();
     
     console.log('Form populated from approval data:', request);
     console.log('Form values after population:', this.exitForm.value);
@@ -1931,6 +2041,253 @@ export class EmergencyExitFormComponent implements OnInit {
     Object.keys(this.exitForm.controls).forEach(key => {
       this.exitForm.get(key)?.disable();
     });
+  }
+
+  /**
+   * Enable all form fields except employee info fields (for regular form usage)
+   */
+  enableFormFields(): void {
+    console.log('Enabling all form fields except employee info fields');
+    Object.keys(this.exitForm.controls).forEach(key => {
+      // Don't enable employee info fields - they should always be disabled
+      if (key !== 'employeeName' && key !== 'employeeId' && key !== 'department') {
+        this.exitForm.get(key)?.enable();
+      }
+    });
+  }
+
+  // Approval workflow helper methods
+  canUserTakeAction(): boolean {
+    // Only show actions if user is in approval mode (coming from approval listing)
+    console.log('canUserTakeAction check:', {
+      isApprovalMode: this.isApprovalMode,
+      approvalRequestData: !!this.approvalRequestData,
+      result: this.isApprovalMode
+    });
+    return this.isApprovalMode;
+  }
+
+  shouldShowWorkflowSidebar(): boolean {
+    // Always show workflow sidebar except when form is submitted
+    console.log('shouldShowWorkflowSidebar check:', {
+      formSubmitted: this.formSubmitted,
+      result: !this.formSubmitted
+    });
+    return !this.formSubmitted;
+  }
+
+  shouldShowProjectManagerStep(): boolean {
+    // Only show PM step for planned leave and resignation when PM is selected
+    return (this.formType === 'P' || this.formType === 'R') && 
+           !!this.exitForm.get('projectManagerName')?.value;
+  }
+
+  // Get step status based on approval mode and form state
+  getStepStatus(step: string): string {
+    // If in approval mode, get actual status from data
+    if (this.isApprovalMode && this.approvalRequestData) {
+      // This would come from actual approval data
+      // For now, return mock status
+      return 'pending';
+    }
+    
+    // For new form entry, all steps are pending
+    return 'pending';
+  }
+
+  getStepStatusText(step: string): string {
+    const status = this.getStepStatus(step);
+    return status === 'completed' ? 'Completed' : 
+           status === 'in-progress' ? 'In Progress' : 'Pending';
+  }
+
+  getStepDescription(step: string): string {
+    const status = this.getStepStatus(step);
+    
+    switch(step) {
+      case 'handover':
+        return status === 'completed' ? 'Approved by User' : 'Awaiting submission';
+      case 'hod':
+        const hodName = this.exitForm.get('hodName')?.value || 'HOD';
+        return status === 'completed' ? `Approved by ${hodName}` : 
+               status === 'in-progress' ? `Awaiting approval from ${hodName}` : 
+               `Next approver: ${hodName}`;
+      case 'pm':
+        const pmName = this.exitForm.get('projectManagerName')?.value || 'Project Manager';
+        return status === 'completed' ? `Approved by ${pmName}` : 
+               status === 'in-progress' ? `Awaiting approval from ${pmName}` : 
+               `Next approver: ${pmName}`;
+      case 'it':
+        return status === 'completed' ? 'Approved by IT' : 'Awaiting IT approval';
+      case 'audit':
+        return status === 'completed' ? 'Approved by Audit' : 'Awaiting Audit approval';
+      case 'finance':
+        return status === 'completed' ? 'Approved by Finance' : 'Awaiting Finance approval';
+      case 'facility':
+        return status === 'completed' ? 'Approved by Facility Management' : 'Awaiting Facility Management approval';
+      case 'transport':
+        return status === 'completed' ? 'Approved by Transport' : 'Awaiting Transport approval';
+      case 'hr':
+        return status === 'completed' ? 'Approved by HR' : 'Awaiting HR approval';
+      case 'admin':
+        return status === 'completed' ? 'Approved by Admin' : 'Awaiting Admin approval';
+      default:
+        return 'Pending';
+    }
+  }
+
+  getEmployeeName(): string {
+    return this.exitForm.get('employeeName')?.value || 'Employee';
+  }
+
+  getSubmissionTime(): string {
+    // This would come from actual data
+    return '2 hours ago';
+  }
+
+  // HOD Step Methods
+  getHODStepStatus(): string {
+    // This would be determined by actual approval data
+    return 'in-progress'; // completed, in-progress, pending
+  }
+
+  getHODStatusText(): string {
+    const status = this.getHODStepStatus();
+    return status === 'completed' ? 'Approved' : 
+           status === 'in-progress' ? 'Pending' : 'Pending';
+  }
+
+  getHODApproverInfo(): string {
+    const hodName = this.exitForm.get('hodName')?.value;
+    const status = this.getHODStepStatus();
+    
+    if (status === 'completed') {
+      return `Approved by ${hodName || 'HOD'}`;
+    } else if (status === 'in-progress') {
+      return `Awaiting approval from ${hodName || 'HOD'}`;
+    } else {
+      return `Next approver: ${hodName || 'HOD'}`;
+    }
+  }
+
+  getHODStepTime(): string {
+    const status = this.getHODStepStatus();
+    return status === 'completed' ? '1 hour ago' : 
+           status === 'in-progress' ? 'Current step' : '';
+  }
+
+  // Project Manager Step Methods
+  getPMStepStatus(): string {
+    const hodStatus = this.getHODStepStatus();
+    if (hodStatus !== 'completed') return 'pending';
+    // This would be determined by actual approval data
+    return 'pending'; // completed, in-progress, pending
+  }
+
+  getPMStatusText(): string {
+    const status = this.getPMStepStatus();
+    return status === 'completed' ? 'Approved' : 
+           status === 'in-progress' ? 'Pending' : 'Pending';
+  }
+
+  getPMApproverInfo(): string {
+    const pmName = this.exitForm.get('projectManagerName')?.value;
+    const status = this.getPMStepStatus();
+    
+    if (status === 'completed') {
+      return `Approved by ${pmName || 'Project Manager'}`;
+    } else if (status === 'in-progress') {
+      return `Awaiting approval from ${pmName || 'Project Manager'}`;
+    } else {
+      return `Next approver: ${pmName || 'Project Manager'}`;
+    }
+  }
+
+  getPMStepTime(): string {
+    const status = this.getPMStepStatus();
+    return status === 'completed' ? '30 minutes ago' : 
+           status === 'in-progress' ? 'Current step' : '';
+  }
+
+  // Department Methods
+  getActiveDepartments(): any[] {
+    // Return only departments that are relevant for this form type
+    return this.departments.filter(dept => dept.id > 0); // Exclude HOD (id: 0)
+  }
+
+  trackByDeptId(index: number, dept: any): number {
+    return dept.id;
+  }
+
+  getDepartmentStepStatus(deptId: number): string {
+    // This would be determined by actual approval data
+    const dept = this.departments.find(d => d.id === deptId);
+    return dept?.status === 'approved' ? 'completed' : 'pending';
+  }
+
+  getDepartmentStatusText(deptId: number): string {
+    const status = this.getDepartmentStepStatus(deptId);
+    return status === 'completed' ? 'Approved' : 'Pending';
+  }
+
+  getDepartmentApproverInfo(deptId: number): string {
+    const dept = this.departments.find(d => d.id === deptId);
+    const status = this.getDepartmentStepStatus(deptId);
+    
+    if (status === 'completed') {
+      return `Approved by ${dept?.name} Department`;
+    } else {
+      return `Awaiting ${dept?.name} approval`;
+    }
+  }
+
+  getDepartmentStepTime(deptId: number): string {
+    const status = this.getDepartmentStepStatus(deptId);
+    return status === 'completed' ? 'Completed' : '';
+  }
+
+  getDepartmentIcon(deptName: string): string {
+    const iconMap: { [key: string]: string } = {
+      'CWH': 'fas fa-building',
+      'IT': 'fas fa-laptop',
+      'Finance': 'fas fa-dollar-sign',
+      'Facility Management/Transport': 'fas fa-car',
+      'HR': 'fas fa-users',
+      'Admin': 'fas fa-cog'
+    };
+    return iconMap[deptName] || 'fas fa-building';
+  }
+
+  isLastDepartment(deptId: number): boolean {
+    const activeDepts = this.getActiveDepartments();
+    return activeDepts[activeDepts.length - 1]?.id === deptId;
+  }
+
+  // Final Step Methods
+  getFinalStepStatus(): string {
+    // Check if all previous steps are completed
+    const allDepartmentsApproved = this.getActiveDepartments()
+      .every(dept => this.getDepartmentStepStatus(dept.id) === 'completed');
+    
+    if (allDepartmentsApproved && this.getHODStepStatus() === 'completed') {
+      return 'completed';
+    }
+    return 'pending';
+  }
+
+  getFinalStatusText(): string {
+    const status = this.getFinalStepStatus();
+    return status === 'completed' ? 'Completed' : 'Pending';
+  }
+
+  getFinalApprovalInfo(): string {
+    const status = this.getFinalStepStatus();
+    return status === 'completed' ? 'All approvals completed' : 'All approvals required';
+  }
+
+  getFinalStepTime(): string {
+    const status = this.getFinalStepStatus();
+    return status === 'completed' ? 'Completed' : '';
   }
 
   /**
@@ -2045,6 +2402,9 @@ export class EmergencyExitFormComponent implements OnInit {
   // Collapsible sections management
   isResponsibilitiesSectionOpen: boolean = true;
 
+  // Approval actions
+  approvalRemarks: string = '';
+
   showDropdown(index: number): void {
     this.dropdownVisibility[index] = true;
   }
@@ -2095,7 +2455,7 @@ export class EmergencyExitFormComponent implements OnInit {
     return currentValue === (employee.description || '');
   }
 
-  getEmployeeName(description: string): string {
+  getEmployeeNameFromDescription(description: string): string {
     // Extract name from description (format: "NAME | ID")
     const parts = description.split(' | ');
     return parts[0] || description;
@@ -2208,6 +2568,133 @@ export class EmergencyExitFormComponent implements OnInit {
    */
   toggleResponsibilitiesSection(): void {
     this.isResponsibilitiesSectionOpen = !this.isResponsibilitiesSectionOpen;
+  }
+
+  /**
+   * Approve the current request
+   */
+  approveRequest(): void {
+    if (!this.approvalRemarks.trim()) {
+      this.toastr.error('Please provide remarks for approval', 'Validation Error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Approve Request',
+      text: `Are you sure you want to approve this ${this.getFormTypeText(this.formType)} request?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#22c55e',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performApproval(true);
+      }
+    });
+  }
+
+  /**
+   * Reject the current request
+   */
+  rejectRequest(): void {
+    if (!this.approvalRemarks.trim()) {
+      this.toastr.error('Please provide remarks for rejection', 'Validation Error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Reject Request',
+      text: `Are you sure you want to reject this ${this.getFormTypeText(this.formType)} request?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Reject',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performApproval(false);
+      }
+    });
+  }
+
+  /**
+   * Perform the approval/rejection action
+   */
+  private performApproval(approved: boolean): void {
+    // Here you would typically call an API to update the approval status
+    // For now, we'll simulate the action
+    
+    const action = approved ? 'approved' : 'rejected';
+    const message = approved ? 'Request approved successfully!' : 'Request rejected successfully!';
+    const icon = approved ? 'success' : 'error';
+
+    // Simulate API call
+    setTimeout(() => {
+      this.toastr.success(message, 'Action Completed');
+      
+      // Navigate back to approval listing
+      this.returnToApprovalListing();
+    }, 1000);
+  }
+
+  /**
+   * Get approval steps for the flow display
+   */
+  getApprovalSteps(): any[] {
+    return [
+      {
+        title: 'Handover',
+        status: 'completed',
+        statusText: 'Completed'
+      },
+      {
+        title: 'HOD Approval',
+        status: 'in-progress',
+        statusText: 'In Progress (You)'
+      },
+      {
+        title: 'Audit Check',
+        status: 'pending',
+        statusText: 'Pending'
+      },
+      {
+        title: 'Finance',
+        status: 'pending',
+        statusText: 'Pending'
+      },
+      {
+        title: 'IT Clearance',
+        status: 'pending',
+        statusText: 'Pending'
+      },
+      {
+        title: 'Facility',
+        status: 'pending',
+        statusText: 'Pending'
+      },
+      {
+        title: 'HR Review',
+        status: 'pending',
+        statusText: 'Pending'
+      }
+    ];
+  }
+
+  /**
+   * Get current stage number
+   */
+  getCurrentStageNumber(): number {
+    return 2; // HOD Approval stage
+  }
+
+  /**
+   * Get total number of stages
+   */
+  getTotalStages(): number {
+    return 7;
   }
 
 }
