@@ -7,7 +7,8 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest } from '../models/employeeExit.model';
- 
+import { MyApprovalRequest } from '../models/employeeExit.model';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -197,7 +198,7 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetDepartmentList`);
   }
 
-  
+
   GetTodaysBirthdaysAndQuotes(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetTodaysBirthdaysAndQuotes`);
   }
@@ -212,6 +213,10 @@ export class Api {
     return this.http.post(`${this.apiUrl}/EmpExitForm/InsertEmployeeExit`, EmployeeExitRequest);
   }
 
+
+  GetMySubmittedRequests(MyApprovalRequest: MyApprovalRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/EmpExitForm/GetMySubmittedRequests`, MyApprovalRequest);
+  }
 
 }
 

@@ -73,3 +73,9 @@ export interface EmployeeExitRequest {
   declaration4?: string;
   responsibilities?: EmployeeExitResponsibility[];
 }
+
+export interface MyApprovalRequest {
+  employeeId?: string;
+  status?: string;
+  formType?: string
+}

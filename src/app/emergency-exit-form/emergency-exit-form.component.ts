@@ -786,8 +786,8 @@ export class EmergencyExitFormComponent implements OnInit {
       next: (response: any) => {
         if (response && response.success && response.data) {
           this.hodList = response.data.map((hod: any) => ({
-            idValue: hod.empId || hod.id || hod.employeeId,
-            description: hod.employeeName || hod.name || hod.description
+            idValue: hod.idValue || hod.empId || hod.id || hod.employeeId,
+            description: hod.description || hod.employeeName || hod.name
           }));
         }
       },
@@ -802,8 +802,8 @@ export class EmergencyExitFormComponent implements OnInit {
       next: (response: any) => {
         if (response && response.success && response.data) {
           this.projectManagerList = response.data.map((pm: any) => ({
-            idValue: pm.empId || pm.id || pm.employeeId,
-            description: pm.employeeName || pm.name || pm.description
+            idValue: pm.idValue || pm.empId || pm.id || pm.employeeId,
+            description: pm.description || pm.employeeName || pm.name
           }));
         }
       },
@@ -818,8 +818,8 @@ export class EmergencyExitFormComponent implements OnInit {
       next: (response: any) => {
         if (response && response.success && response.data) {
           this.employeeMasterList = response.data.map((emp: any) => ({
-            idValue: emp.empId || emp.id || emp.employeeId,
-            description: emp.employeeName || emp.name || emp.description
+            idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
+            description: emp.description || emp.employeeName || emp.name
           }));
         }
       },
