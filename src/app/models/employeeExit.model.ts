@@ -39,31 +39,37 @@ export interface DepartmentApprovalItem {
   comments?: string;
 }
 
-export interface EmployeeExitRequest {
+export interface EmployeeExitApprovalWorkflow {
   exitId?: number;
-  employeeId: string;
-  formType: string;
-  dateOfDeparture: string;
-  dateArrival: string;
-  flightTime: string;
-  responsibilitiesHanded: string;
-  noOfDaysApproved: number;
-  depHod: string;
-  projectSiteIncharge: string;
-  reasonForLeave: string;
-  approvalStatus: string;
-  category: string;
-  lastWorkingDate: string;
-  NoticePeriod: number;
-  declaration1?: string;
-  declaration2?: string;
-  declaration3?: string;
-  declaration4?: string;
-  responsibilities: EmployeeExitResponsibility[];
   approvalWorkflow: ApprovalStep[];
   departmentApprovals: DepartmentApproval[];
   currentApprovalStep: number;
   overallStatus: 'PENDING' | 'IN_PROGRESS' | 'APPROVED' | 'REJECTED';
   submittedDate?: string;
   completedDate?: string;
+}
+
+export interface EmployeeExitRequest {
+  exitId?: number;
+  employeeId: string;
+  employeeName?: string;
+  emailId?: string;
+  formType?: string;
+  dateOfDeparture?: string;
+  dateArrival?: string;
+  flightTime?: string;
+  responsibilitiesHanded?: string;
+  noOfDaysApproved?: number;
+  depHod?: string;
+  projectSiteIncharge?: string;
+  reasonForLeave?: string;
+  approvalStatus?: string;
+  category?: string;
+  lastWorkingDate?: string;
+  NoticePeriod?: number;
+  declaration1?: string;
+  declaration2?: string;
+  declaration3?: string;
+  declaration4?: string;
+  responsibilities?: EmployeeExitResponsibility[];
 }
