@@ -6,24 +6,25 @@ import { Router } from '@angular/router';
 import { Api } from '../services/api';
 import { SessionService } from '../services/session.service';
 import { ApprovalWorkflowService } from '../services/approval-workflow.service';
-import { EmployeeExitRequest, ApprovalStep, DepartmentApproval } from '../models/employeeExit.model';
+import { EmployeeExitRequest, ApprovalStep, DepartmentApproval, MyApprovalRequest } from '../models/employeeExit.model';
 
 interface LeaveRequest {
   id: string;
+  exitId?: number;
   employeeName: string;
   employeeId: string;
   department: string;
-  leaveType: 'Emergency' | 'Planned' | 'Resignation';
-  requestDate: Date;
-  departureDate: Date;
-  returnDate: Date;
+  leaveType: string;
+  requestDate: any;
+  departureDate: any;
+  returnDate?: any;
   daysRequested: number;
   reason: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: string;
   approverName?: string;
   approverComments?: string;
   approvedDate?: Date;
-  priority: 'High' | 'Medium' | 'Low';
+  priority?: string;
   approvalWorkflow?: ApprovalStep[];
   departmentApprovals?: DepartmentApproval[];
   currentApprovalStep?: number;
@@ -63,31 +64,31 @@ interface LeaveRequest {
 })
 export class LeaveApprovalComponent implements OnInit {
   activeTab: 'pending' | 'myRequests' = 'pending';
-  
+
   // Pending approvals data
   pendingApprovals: LeaveRequest[] = [];
-  
+
   // My requests data
   myRequests: LeaveRequest[] = [];
-  
+
   // Filters
   statusFilter: string = 'all';
   typeFilter: string = 'all';
   dateFilter: string = 'all';
-  
+
   // Loading states
   isLoadingPending = false;
   isLoadingMyRequests = false;
-  
+
   // Current user info
   currentUser: any = null;
-  
+
   constructor(
     private api: Api,
     private sessionService: SessionService,
     private approvalWorkflowService: ApprovalWorkflowService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.currentUser = this.sessionService.getCurrentUser();
@@ -106,7 +107,7 @@ export class LeaveApprovalComponent implements OnInit {
 
   loadPendingApprovals(): void {
     this.isLoadingPending = true;
-    
+
     // Mock data with comprehensive approval workflow
     setTimeout(() => {
       this.pendingApprovals = [
@@ -286,76 +287,104 @@ export class LeaveApprovalComponent implements OnInit {
   }
 
   loadMyRequests(): void {
+    if (!this.currentUser) return;
+
     this.isLoadingMyRequests = true;
-    
-    // Mock data for now - replace with actual API call
-    setTimeout(() => {
-      this.myRequests = [
-        {
-          id: 'REQ003',
-          employeeName: this.currentUser?.name || 'Current User',
-          employeeId: this.currentUser?.employeeId || 'EMP003',
-          department: this.currentUser?.department || 'Current Department',
-          leaveType: 'Planned',
-          requestDate: new Date('2024-11-20'),
-          departureDate: new Date('2024-12-01'),
-          returnDate: new Date('2024-12-10'),
-          daysRequested: 9,
-          reason: 'Personal vacation',
-          status: 'Approved',
-          approverName: 'Manager Name',
-          approverComments: 'Approved for planned vacation',
-          approvedDate: new Date('2024-11-22'),
-          priority: 'Medium'
-        },
-        {
-          id: 'REQ004',
-          employeeName: this.currentUser?.name || 'Current User',
-          employeeId: this.currentUser?.employeeId || 'EMP003',
-          department: this.currentUser?.department || 'Current Department',
-          leaveType: 'Emergency',
-          requestDate: new Date('2024-12-12'),
-          departureDate: new Date('2024-12-18'),
-          returnDate: new Date('2024-12-22'),
-          daysRequested: 4,
-          reason: 'Medical emergency',
-          status: 'Pending',
-          priority: 'High'
+
+    // Map filters to API parameters
+    let statusParam = '';
+    if (this.statusFilter === 'pending') statusParam = 'P';
+    else if (this.statusFilter === 'approved') statusParam = 'A';
+    else if (this.statusFilter === 'rejected') statusParam = 'R';
+
+    let typeParam = '';
+    if (this.typeFilter === 'emergency') typeParam = 'E';
+    else if (this.typeFilter === 'planned') typeParam = 'P';
+    else if (this.typeFilter === 'resignation') typeParam = 'R';
+
+    const requestParams: MyApprovalRequest = {
+      employeeId: this.currentUser.empId || this.currentUser.employeeId,
+      status: statusParam,
+      formType: typeParam
+    };
+
+    this.api.GetMySubmittedRequests(requestParams).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.myRequests = response.data.map((item: any) => ({
+            id: `REQ${item.exitId}`,
+            exitId: item.exitId,
+            employeeName: this.currentUser.name || '',
+            employeeId: this.currentUser.empId || this.currentUser.employeeId,
+            department: this.currentUser.department || '',
+            leaveType: this.mapTypeToLabel(item.type),
+            requestDate: item.submittedDate,
+            departureDate: item.departureDate,
+            daysRequested: item.duration,
+            reason: item.reason,
+            status: this.mapStatusToLabel(item.status),
+            priority: 'Medium' // Default priority as it's not in the response
+          }));
+        } else {
+          this.myRequests = [];
         }
-      ];
-      this.isLoadingMyRequests = false;
-    }, 1000);
+        this.isLoadingMyRequests = false;
+      },
+      error: (error) => {
+        console.error('Error fetching my requests:', error);
+        this.isLoadingMyRequests = false;
+        this.myRequests = [];
+      }
+    });
+  }
+
+  private mapTypeToLabel(type: string): string {
+    switch (type) {
+      case 'E': return 'Emergency';
+      case 'P': return 'Planned';
+      case 'R': return 'Resignation';
+      default: return type;
+    }
+  }
+
+  private mapStatusToLabel(status: string): string {
+    switch (status) {
+      case 'P': return 'Pending';
+      case 'A': return 'Approved';
+      case 'R': return 'Rejected';
+      default: return status;
+    }
   }
 
   approveRequest(request: LeaveRequest): void {
     const comments = prompt('Enter approval comments (optional):');
-    
+
     // Update request status
     request.status = 'Approved';
     request.approverName = this.currentUser?.name || 'Current User';
     request.approverComments = comments || 'Approved';
     request.approvedDate = new Date();
-    
+
     // Here you would make an API call to update the request
     console.log('Approved request:', request);
-    
+
     // Remove from pending list
     this.pendingApprovals = this.pendingApprovals.filter(r => r.id !== request.id);
   }
 
   rejectRequest(request: LeaveRequest): void {
     const comments = prompt('Enter rejection reason:');
-    
+
     if (comments) {
       // Update request status
       request.status = 'Rejected';
       request.approverName = this.currentUser?.name || 'Current User';
       request.approverComments = comments;
       request.approvedDate = new Date();
-      
+
       // Here you would make an API call to update the request
       console.log('Rejected request:', request);
-      
+
       // Remove from pending list
       this.pendingApprovals = this.pendingApprovals.filter(r => r.id !== request.id);
     }
@@ -363,15 +392,15 @@ export class LeaveApprovalComponent implements OnInit {
 
   getFilteredPendingApprovals(): LeaveRequest[] {
     let filtered = [...this.pendingApprovals];
-    
+
     if (this.typeFilter !== 'all') {
       filtered = filtered.filter(r => r.leaveType.toLowerCase() === this.typeFilter);
     }
-    
+
     if (this.dateFilter !== 'all') {
       const now = new Date();
       const filterDate = new Date();
-      
+
       switch (this.dateFilter) {
         case 'today':
           filterDate.setHours(0, 0, 0, 0);
@@ -387,26 +416,19 @@ export class LeaveApprovalComponent implements OnInit {
           break;
       }
     }
-    
+
     return filtered;
   }
 
   getFilteredMyRequests(): LeaveRequest[] {
-    let filtered = [...this.myRequests];
-    
-    if (this.statusFilter !== 'all') {
-      filtered = filtered.filter(r => r.status.toLowerCase() === this.statusFilter);
-    }
-    
-    if (this.typeFilter !== 'all') {
-      filtered = filtered.filter(r => r.leaveType.toLowerCase() === this.typeFilter);
-    }
-    
-    return filtered;
+    // With API integration, filtering is done server-side
+    // But we keep this for consistency or minor local filtering if needed
+    return this.myRequests;
   }
 
-  getPriorityClass(priority: string): string {
-    switch (priority.toLowerCase()) {
+  getPriorityClass(priority: any): string {
+    if (!priority) return 'priority-medium';
+    switch (String(priority).toLowerCase()) {
       case 'high': return 'priority-high';
       case 'medium': return 'priority-medium';
       case 'low': return 'priority-low';
@@ -414,8 +436,9 @@ export class LeaveApprovalComponent implements OnInit {
     }
   }
 
-  getStatusClass(status: string): string {
-    switch (status.toLowerCase()) {
+  getStatusClass(status: any): string {
+    if (!status) return 'status-pending';
+    switch (String(status).toLowerCase()) {
       case 'approved': return 'status-approved';
       case 'rejected': return 'status-rejected';
       case 'pending': return 'status-pending';
@@ -423,11 +446,13 @@ export class LeaveApprovalComponent implements OnInit {
     }
   }
 
-  getTypeClass(type: string): string {
-    return type.toLowerCase() === 'emergency' ? 'type-emergency' : 'type-planned';
+  getTypeClass(type: any): string {
+    if (!type) return 'type-planned';
+    return String(type).toLowerCase() === 'emergency' ? 'type-emergency' : 'type-planned';
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: any): string {
+    if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -522,7 +547,7 @@ export class LeaveApprovalComponent implements OnInit {
 
     // Check if user is in the approver list for current step
     return currentStep.approverIds.includes(this.currentUser.empId || this.currentUser.employeeId) ||
-           this.isUserDepartmentApprover(currentStep, this.currentUser);
+      this.isUserDepartmentApprover(currentStep, this.currentUser);
   }
 
   /**
@@ -534,9 +559,9 @@ export class LeaveApprovalComponent implements OnInit {
     const userDept = (user.department || user.empDept || '').toLowerCase();
     const stepDept = step.approverIds[0];
 
-    return userDept.includes(stepDept) || 
-           user.role?.toLowerCase().includes('admin') ||
-           user.role?.toLowerCase().includes('hod');
+    return userDept.includes(stepDept) ||
+      user.role?.toLowerCase().includes('admin') ||
+      user.role?.toLowerCase().includes('hod');
   }
 
   /**
@@ -566,7 +591,7 @@ export class LeaveApprovalComponent implements OnInit {
    */
   getCurrentStepName(request: LeaveRequest): string {
     if (!request.approvalWorkflow) return 'Unknown';
-    
+
     const currentStep = request.approvalWorkflow.find(s => s.status === 'PENDING');
     return currentStep ? currentStep.stepName : 'Completed';
   }
@@ -578,9 +603,9 @@ export class LeaveApprovalComponent implements OnInit {
     const action = approve ? 'approve' : 'reject';
     const title = approve ? 'Approve Request' : 'Reject Request';
     const confirmText = approve ? 'Approve' : 'Reject';
-    
+
     const comments = prompt(`${title}\n\nEmployee: ${request.employeeName}\nType: ${request.leaveType}\nReason: ${request.reason}\n\nEnter your comments:`);
-    
+
     if (comments !== null) {
       if (approve) {
         this.approveWorkflowStep(request, request.myApprovalStep?.stepId || 0, comments);
@@ -598,12 +623,13 @@ export class LeaveApprovalComponent implements OnInit {
   /**
    * Get form type display text
    */
-  getFormTypeText(leaveType: string): string {
-    switch (leaveType) {
+  getFormTypeText(leaveType: any): string {
+    if (!leaveType) return 'N/A';
+    switch (String(leaveType)) {
       case 'Emergency': return 'Emergency Exit';
       case 'Planned': return 'Planned Leave';
       case 'Resignation': return 'Resignation';
-      default: return leaveType;
+      default: return String(leaveType);
     }
   }
 
@@ -650,17 +676,17 @@ export class LeaveApprovalComponent implements OnInit {
     sessionStorage.setItem('approvalRequestData', JSON.stringify(request));
     sessionStorage.setItem('approvalMode', 'true');
     sessionStorage.setItem('returnUrl', '/leave-approval');
-    
+
     // Navigate to emergency exit form with approval mode
-    const formType = request.leaveType === 'Emergency' ? 'E' : 
-                    request.leaveType === 'Resignation' ? 'R' : 'P';
-    
-    this.router.navigate(['/exit-form'], { 
-      queryParams: { 
-        type: formType, 
+    const formType = request.leaveType === 'Emergency' ? 'E' :
+      request.leaveType === 'Resignation' ? 'R' : 'P';
+
+    this.router.navigate(['/exit-form'], {
+      queryParams: {
+        type: formType,
         mode: 'approval',
-        requestId: request.id 
-      } 
+        requestId: request.id
+      }
     });
   }
 
@@ -672,17 +698,17 @@ export class LeaveApprovalComponent implements OnInit {
     sessionStorage.setItem('approvalRequestData', JSON.stringify(request));
     sessionStorage.setItem('approvalMode', 'view'); // View mode instead of approval mode
     sessionStorage.setItem('returnUrl', '/leave-approval');
-    
+
     // Navigate to emergency exit form with view mode
-    const formType = request.leaveType === 'Emergency' ? 'E' : 
-                    request.leaveType === 'Resignation' ? 'R' : 'P';
-    
-    this.router.navigate(['/exit-form'], { 
-      queryParams: { 
-        type: formType, 
+    const formType = request.leaveType === 'Emergency' ? 'E' :
+      request.leaveType === 'Resignation' ? 'R' : 'P';
+
+    this.router.navigate(['/exit-form'], {
+      queryParams: {
+        type: formType,
         mode: 'view',
-        requestId: request.id 
-      } 
+        exitId: request.exitId || request.id
+      }
     });
   }
 

@@ -3,18 +3,12 @@
 
   <!-- Tab Navigation -->
   <div class="tab-navigation">
-    <button 
-      class="tab-button" 
-      [class.active]="activeTab === 'pending'"
-      (click)="switchTab('pending')">
+    <button class="tab-button" [class.active]="activeTab === 'pending'" (click)="switchTab('pending')">
       <i class="fas fa-clock"></i>
       <span>Pending Approvals</span>
       <span class="tab-badge" *ngIf="getPendingApprovalsCount() > 0">{{ getPendingApprovalsCount() }}</span>
     </button>
-    <button 
-      class="tab-button" 
-      [class.active]="activeTab === 'myRequests'"
-      (click)="switchTab('myRequests')">
+    <button class="tab-button" [class.active]="activeTab === 'myRequests'" (click)="switchTab('myRequests')">
       <i class="fas fa-user-check"></i>
       <span>My Requests</span>
       <span class="tab-badge" *ngIf="myRequests.length > 0">{{ myRequests.length }}</span>
@@ -23,24 +17,30 @@
 
   <!-- Tab Content -->
   <div class="tab-content" [@tabTransition]>
-    
+
     <!-- Pending Approvals Tab -->
     <div class="tab-panel" *ngIf="activeTab === 'pending'" [@fadeInUp]="'in'">
       <div class="panel-header">
         <h2><i class="fas fa-hourglass-half"></i> Requests Awaiting Your Approval</h2>
         <div class="filters">
-          <select [(ngModel)]="typeFilter" class="filter-select">
-            <option value="all">All Types</option>
-            <option value="emergency">Emergency</option>
-            <option value="planned">Planned</option>
-            <option value="resignation">Resignation</option>
-          </select>
-          <select [(ngModel)]="dateFilter" class="filter-select">
-            <option value="all">All Dates</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
+          <div class="filter-group">
+            <label class="filter-label">Leave type</label>
+            <select [(ngModel)]="typeFilter" class="filter-select">
+              <option value="all">All Types</option>
+              <option value="emergency">Emergency</option>
+              <option value="planned">Planned</option>
+              <option value="resignation">Resignation</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Date Range</label>
+            <select [(ngModel)]="dateFilter" class="filter-select">
+              <option value="all">All Dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -71,9 +71,9 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let request of getMyPendingApprovals(); trackBy: trackByRequestId" 
-                  class="request-row" [class]="getPriorityClass(request.priority)">
-                
+              <tr *ngFor="let request of getMyPendingApprovals(); trackBy: trackByRequestId" class="request-row"
+                [class]="getPriorityClass(request.priority)">
+
                 <!-- Employee Info -->
                 <td class="employee-cell">
                   <div class="employee-info">
@@ -85,9 +85,9 @@
                 <!-- Type -->
                 <td class="type-cell">
                   <span class="badge type-badge" [class]="getTypeClass(request.leaveType)">
-                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'" 
-                       [class.fa-calendar-check]="request.leaveType === 'Planned'"
-                       [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
+                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'"
+                      [class.fa-calendar-check]="request.leaveType === 'Planned'"
+                      [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
                     {{ getFormTypeText(request.leaveType) }}
                   </span>
                 </td>
@@ -157,18 +157,24 @@
       <div class="panel-header">
         <h2><i class="fas fa-user"></i> My Submitted Requests</h2>
         <div class="filters">
-          <select [(ngModel)]="statusFilter" class="filter-select">
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <select [(ngModel)]="typeFilter" class="filter-select">
-            <option value="all">All Types</option>
-            <option value="emergency">Emergency</option>
-            <option value="planned">Planned</option>
-            <option value="resignation">Resignation</option>
-          </select>
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select [(ngModel)]="statusFilter" (change)="loadMyRequests()" class="filter-select">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Leave type</label>
+            <select [(ngModel)]="typeFilter" (change)="loadMyRequests()" class="filter-select">
+              <option value="all">All Types</option>
+              <option value="emergency">Emergency</option>
+              <option value="planned">Planned</option>
+              <option value="resignation">Resignation</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -193,14 +199,13 @@
                 <th>Duration</th>
                 <th>Reason</th>
                 <th>Status</th>
-                <th>Approved By</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId" 
-                  class="request-row" [class]="getStatusClass(request.status)">
-                
+              <tr *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId" class="request-row"
+                [class]="getStatusClass(request.status)">
+
                 <!-- Request ID -->
                 <td class="id-cell">
                   <div class="request-id">{{ request.id }}</div>
@@ -209,9 +214,9 @@
                 <!-- Type -->
                 <td class="type-cell">
                   <span class="badge type-badge" [class]="getTypeClass(request.leaveType)">
-                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'" 
-                       [class.fa-calendar-check]="request.leaveType === 'Planned'"
-                       [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
+                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'"
+                      [class.fa-calendar-check]="request.leaveType === 'Planned'"
+                      [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
                     {{ getFormTypeText(request.leaveType) }}
                   </span>
                 </td>
@@ -235,15 +240,6 @@
                   <span class="badge status-badge" [class]="getStatusClass(request.status)">
                     {{ request.status }}
                   </span>
-                </td>
-
-                <!-- Approved By -->
-                <td class="approver-cell">
-                  <div class="approver-info" *ngIf="request.status !== 'Pending'">
-                    <div class="approver-name">{{ request.approverName || 'N/A' }}</div>
-                    <div class="approval-date" *ngIf="request.approvedDate">{{ formatDate(request.approvedDate) }}</div>
-                  </div>
-                  <span class="pending-text" *ngIf="request.status === 'Pending'">Awaiting Approval</span>
                 </td>
 
                 <!-- Actions -->
