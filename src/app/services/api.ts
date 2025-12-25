@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
-import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest } from '../models/employeeExit.model';
+import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
 
 @Injectable({
   providedIn: 'root'
@@ -224,6 +224,11 @@ export class Api {
 
   GetEmployeeExitSavedInfo(exitId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetEmployeeExitSavedInfo/${exitId}`);
+  }
+
+
+  UpdateExitApproval(updateExitApprovalRequest: UpdateExitApprovalRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/EmpExitForm/UpdateExitApproval`, updateExitApprovalRequest);
   }
 
 

@@ -568,42 +568,31 @@ export class LeaveApprovalComponent implements OnInit {
    * Navigate to detailed view for approval
    */
   viewRequestDetails(request: LeaveRequest): void {
-    // Store the request data in session storage for the emergency exit form to access
-    sessionStorage.setItem('approvalRequestData', JSON.stringify(request));
-    sessionStorage.setItem('approvalMode', 'true');
     sessionStorage.setItem('returnUrl', '/leave-approval');
 
-    // Navigate to emergency exit form with approval mode
+    // Navigate to emergency exit form - mode will be determined by presence of approvalID
     const formType = request.leaveType === 'Emergency' ? 'E' :
       request.leaveType === 'Resignation' ? 'R' : 'P';
 
     this.router.navigate(['/exit-form'], {
       queryParams: {
         type: formType,
-        mode: 'approval',
         exitID: request.exitID,
         approvalID: request.approvalID
       }
     });
   }
 
-  /**
-   * Navigate to view my own request details
-   */
   viewMyRequestDetails(request: LeaveRequest): void {
-    // Store the request data in session storage for viewing
-    sessionStorage.setItem('approvalRequestData', JSON.stringify(request));
-    sessionStorage.setItem('approvalMode', 'view'); // View mode instead of approval mode
     sessionStorage.setItem('returnUrl', '/leave-approval?tab=myRequests');
 
-    // Navigate to emergency exit form with view mode
+    // Navigate to emergency exit form - mode will be determined by data ownership/status
     const formType = request.leaveType === 'Emergency' ? 'E' :
       request.leaveType === 'Resignation' ? 'R' : 'P';
 
     this.router.navigate(['/exit-form'], {
       queryParams: {
         type: formType,
-        mode: 'view',
         exitID: request.exitID || request.exitId
       }
     });

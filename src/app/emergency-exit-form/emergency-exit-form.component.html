@@ -18,7 +18,7 @@
           </div>
         </div>
       </div>
-      <div class="header-actions" *ngIf="isApprovalMode || returnUrl">
+      <div class="header-actions" *ngIf="isApprovalMode || isViewMode || returnUrl">
         <button class="btn-back" (click)="returnToApprovalListing()">
           <i class="fas fa-arrow-left"></i>
           Back to Approvals
@@ -395,7 +395,7 @@
                 Responsibilities Handed Over To
                 <i class="fas fa-chevron-down toggle-icon" [class.rotated]="isResponsibilitiesSectionOpen"></i>
               </h3>
-              <button type="button" class="btn-add" *ngIf="!isViewMode"
+              <button type="button" class="btn-add" *ngIf="!isViewMode && !isApprovalMode"
                 (click)="addResponsibility(); $event.stopPropagation()">
                 <i class="fas fa-plus"></i> Add Responsibility
               </button>
@@ -411,7 +411,7 @@
                     <div class="card-header">
                       <h4>Responsibility {{ i + 1 }}</h4>
                       <button type="button" class="btn-remove" (click)="removeResponsibility(i)"
-                        *ngIf="responsibilitiesFormArray.length > 1 && !isViewMode">
+                        *ngIf="responsibilitiesFormArray.length > 1 && !isViewMode && !isApprovalMode">
                         <i class="fas fa-trash"></i>
                       </button>
                     </div>
@@ -549,7 +549,7 @@
         </form>
 
         <!-- Submit Section -->
-        <div class="submit-section" *ngIf="!formSubmitted && !isApprovalMode && !approvalRequestData">
+        <div class="submit-section" *ngIf="!formSubmitted && !isApprovalMode && !isViewMode">
           <div class="submit-container">
             <button type="button" class="btn-submit-large" (click)="submitForm()"
               [disabled]="!allDeclarationsChecked() || isSubmitting">

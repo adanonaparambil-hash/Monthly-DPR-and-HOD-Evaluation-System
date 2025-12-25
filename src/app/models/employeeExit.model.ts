@@ -113,3 +113,11 @@ export interface ExitApprovalDetailDto {
 
   phoneNumber?: string;
 }
+
+export interface UpdateExitApprovalRequest {
+  approvalId?: number;
+  exitId?: number;
+  approverId?: number;
+  status?: string;
+  remarks?: string;
+}

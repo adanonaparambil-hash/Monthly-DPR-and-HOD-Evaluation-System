@@ -73,8 +73,7 @@ interface ResponsibilityHandover {
 export class EmergencyExitFormComponent implements OnInit {
   @ViewChild('signatureCanvas') signatureCanvas!: ElementRef<HTMLCanvasElement>;
 
-  currentStep = 1;
-  totalSteps = 4;
+
   exitForm!: FormGroup;
   isSubmitting = false;
   formSubmitted = false;
@@ -321,51 +320,16 @@ export class EmergencyExitFormComponent implements OnInit {
         console.log('Form type defaulted to Emergency');
       }
 
-      // Check if this is approval mode or view mode
-      if (modeParam === 'approval') {
-        this.isApprovalMode = true;
-        this.isViewMode = false;
+      // Determine mode and return URL based on presence of approvalID or requestId
+      if (approvalID || requestId) {
+        this.isApprovalMode = !!approvalID;
+        this.isViewMode = !approvalID; // If we have an ID but not approvalID, it's typically view mode until data is assessed
         this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval';
-
-        // Load approval request data
-        const requestData = sessionStorage.getItem('approvalRequestData');
-        if (requestData) {
-          this.approvalRequestData = JSON.parse(requestData);
-          console.log('Approval mode activated for request:', requestId);
-
-          // Go directly to step 4 for approval from listing
-          this.currentStep = 4;
-
-          // Populate form with request data
-          this.populateFormFromApprovalData();
-        }
-      } else if (modeParam === 'view') {
-        this.isApprovalMode = false;
-        this.isViewMode = true;
-        this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval?tab=myRequests';
-
-        // Load request data for viewing
-        const requestData = sessionStorage.getItem('approvalRequestData');
-        if (requestData) {
-          this.approvalRequestData = JSON.parse(requestData);
-          console.log('View mode activated for request:', requestId);
-
-          // Start from step 1 to show complete form for viewing
-          this.currentStep = 1;
-
-          // Populate form with request data
-          this.populateFormFromApprovalData();
-
-          // Disable all fields for view mode
-          setTimeout(() => {
-            this.disableAllFormFields();
-          }, 300);
-        }
+        console.log('Mode Determined:', { isApprovalMode: this.isApprovalMode, isViewMode: this.isViewMode, returnUrl: this.returnUrl });
       } else {
         this.isApprovalMode = false;
         this.isViewMode = false;
-        this.approvalRequestData = null;
-        console.log('Regular form mode - no approval/view mode');
+        this.returnUrl = '';
       }
 
       console.log('Final approval mode after processing:', this.isApprovalMode);
@@ -377,8 +341,7 @@ export class EmergencyExitFormComponent implements OnInit {
       }
 
       // Update form validations and steps when form type changes
-      // Planned Leave and Resignation use same structure (2 steps), Emergency uses 4 steps
-      this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
+
       this.updateFormValidations();
 
       // Check for exitID to load saved data (check multiple common names for better compatibility)
@@ -414,7 +377,6 @@ export class EmergencyExitFormComponent implements OnInit {
           // Update form type if different
           if (data.formType && data.formType.trim() !== this.formType) {
             this.formType = data.formType.trim() as 'E' | 'P' | 'R';
-            this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
             this.updateFormValidations();
           }
 
@@ -485,8 +447,31 @@ export class EmergencyExitFormComponent implements OnInit {
             this.loadEmployeeDetailsById(data.employeeId);
           }
 
-          // In view mode, disable fields again after patching
-          if (this.isViewMode || this.isApprovalMode) {
+          // Assess access control based on status and ownership
+          const ownerId = data.employeeId || data.employeeID || data.empId;
+          const status = data.approvalStatus || data.approvalStatus;
+          const currentUserId = this.currentUser?.empId;
+
+          console.log('Access Control Check:', { ownerId, status, currentUserId, isApprovalMode: this.isApprovalMode });
+
+          // If in approval mode, we keep everything disabled except approval actions
+          if (this.isApprovalMode) {
+            this.isViewMode = false;
+            setTimeout(() => this.disableAllFormFields(), 100);
+          }
+          // If not in approval mode, check if it's the owner and rejected
+          else if (ownerId === currentUserId && status === 'R') {
+            this.isViewMode = false;
+            console.log('Owner accessed a rejected request - enabling form for editing');
+            setTimeout(() => {
+              this.enableFormFields();
+              this.disableEmployeeInfoFields(); // Keep identity fields read-only
+            }, 100);
+          }
+          // Default to read-only for all other cases where an ID is present
+          else {
+            this.isViewMode = true;
+            console.log('Read-only view mode activated based on status/ownership');
             setTimeout(() => this.disableAllFormFields(), 100);
           }
         }
@@ -504,25 +489,15 @@ export class EmergencyExitFormComponent implements OnInit {
         if (response && response.success && response.data) {
           const profile = response.data;
 
-          // Update photo - check multiple naming conventions (camelCase and PascalCase)
-          const photoBase64 = profile.profileImageBase64 || profile.ProfileImageBase64;
+          // Update photo using helper
+          this.setEmployeePhotoFromData(profile);
 
-          if (photoBase64) {
-            this.employeePhoto = `data:image/jpeg;base64,${photoBase64}`;
-          } else if (profile.photo || profile.Photo) {
-            this.employeePhoto = profile.photo || profile.Photo;
-          } else {
-            // If no photo in exit details, try the general profile API
+          // If no photo in exit details response, try the general profile API
+          if (this.employeePhoto === 'assets/images/default-avatar.png' || !this.employeePhoto) {
             this.api.GetEmployeeProfile(empId).subscribe({
               next: (profResponse: any) => {
                 if (profResponse && profResponse.success && profResponse.data) {
-                  const profData = profResponse.data;
-                  const innerPhotoBase64 = profData.profileImageBase64 || profData.ProfileImageBase64;
-                  if (innerPhotoBase64) {
-                    this.employeePhoto = `data:image/jpeg;base64,${innerPhotoBase64}`;
-                  } else if (profData.photo || profData.Photo) {
-                    this.employeePhoto = profData.photo || profData.Photo;
-                  }
+                  this.setEmployeePhotoFromData(profResponse.data);
                 }
               }
             });
@@ -652,10 +627,11 @@ export class EmergencyExitFormComponent implements OnInit {
           if (response && response.success && response.data) {
             const data = response.data;
 
-            // Set employee photo
-            if (data.profileImageBase64) {
-              this.employeePhoto = `data:image/jpeg;base64,${data.profileImageBase64}`;
-            } else if (this.currentUser.photo) {
+            // Set employee photo using helper
+            this.setEmployeePhotoFromData(data);
+
+            // Fallback to session photo if still not set
+            if ((this.employeePhoto === 'assets/images/default-avatar.png' || !this.employeePhoto) && this.currentUser.photo) {
               this.employeePhoto = this.currentUser.photo;
             }
 
@@ -684,10 +660,28 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
+  /**
+   * Centralized helper to set employee photo from various data formats
+   */
+  setEmployeePhotoFromData(data: any): void {
+    if (!data) return;
+
+    const photoBase64 = data.profileImageBase64 || data.ProfileImageBase64;
+    const photoUrl = data.photo || data.Photo;
+
+    if (photoBase64) {
+      this.employeePhoto = `data:image/jpeg;base64,${photoBase64}`;
+    } else if (photoUrl) {
+      this.employeePhoto = photoUrl;
+    } else {
+      this.employeePhoto = 'assets/images/default-avatar.png';
+    }
+  }
+
   // Handle photo loading error
   onPhotoError(event: any): void {
     console.log('Photo loading failed, using default avatar');
-    event.target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format';
+    this.employeePhoto = 'assets/images/default-avatar.png';
   }
 
   addResponsibility() {
@@ -786,8 +780,6 @@ export class EmergencyExitFormComponent implements OnInit {
             // Update workflow progress
             this.updateWorkflowProgress();
 
-            // Move to approval workflow step
-            this.currentStep = 4;
             this.cdr.detectChanges();
             setTimeout(() => {
               this.ensureAllCardsVisible();
@@ -1083,7 +1075,6 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Reset flags
     this.formSubmitted = false;
-    this.currentStep = 1;
     this.employeePhoto = 'assets/images/default-avatar.png';
 
     // Reset form with identity fields cleared
@@ -1104,20 +1095,7 @@ export class EmergencyExitFormComponent implements OnInit {
     this.updateValidatorsForFormType();
   }
 
-  validateCurrentStep(): boolean {
-    switch (this.currentStep) {
-      case 1:
-        return this.validateEmployeeInfo();
-      case 2:
-        return this.validateResponsibilities();
-      case 3:
-        return true; // Final review step - no additional validation needed
-      case 4:
-        return true; // Department approvals are handled by HODs
-      default:
-        return true;
-    }
-  }
+
 
   validateEmployeeInfo(): boolean {
     // Disabled fields (employee info) - check if they have values
@@ -1172,13 +1150,7 @@ export class EmergencyExitFormComponent implements OnInit {
     return true;
   }
 
-  showValidationErrors(): void {
-    if (this.currentStep === 1) {
-      this.toastr.error('Please fill in all required fields in Step 1 before proceeding.', 'Validation Error');
-    } else if (this.currentStep === 2) {
-      this.toastr.error('Please complete all responsibility information before proceeding.', 'Validation Error');
-    }
-  }
+
 
   validateFormForCurrentType(): boolean {
     const formValue = this.exitForm.value;
@@ -1278,70 +1250,6 @@ export class EmergencyExitFormComponent implements OnInit {
     }, 50);
   }
 
-  nextStep(): void {
-    // In approval mode or view mode, allow simple sequential navigation without validation
-    if (this.isApprovalMode || this.approvalRequestData) {
-      if (this.currentStep < 4) {
-        this.currentStep++;
-      }
-      return;
-    }
-
-    // Regular form mode - validate before proceeding
-    const isValid = this.validateCurrentStep();
-
-    if (!isValid) {
-      this.showValidationErrors();
-      return;
-    }
-
-    if (isValid) {
-      // For Planned Leave and Resignation: Step 1 -> Step 3 (Final Review)
-      if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 1) {
-        this.currentStep = 3; // Go to final review step
-      }
-      // For Emergency: Step 1 -> Step 2 -> Step 3 (Final Review)
-      else if (this.formType === 'E' && this.currentStep < 3) {
-        this.currentStep++;
-      }
-    }
-  }
-
-  previousStep(): void {
-    if (this.currentStep > 1) {
-      // In approval mode or view mode, allow simple sequential navigation
-      if (this.isApprovalMode || this.approvalRequestData) {
-        this.currentStep--;
-        return;
-      }
-
-      // Regular form mode - use form-type-specific navigation
-      if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 3) {
-        this.currentStep = 1; // Go back to step 1
-      }
-      else if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 4) {
-        this.currentStep = 3; // Go back to final review step
-      }
-      else if (this.formType === 'E' && this.currentStep === 4) {
-        this.currentStep = 3; // Go back to final review step
-      } else {
-        this.currentStep--;
-      }
-    }
-  }
-
-  goToStep(step: number): void {
-    if (step >= 1 && step <= this.totalSteps) {
-      this.currentStep = step;
-      // Ensure all department cards are visible when going to step 4 (approvals)
-      if (step === 4) {
-        this.cdr.detectChanges();
-        setTimeout(() => {
-          this.ensureAllCardsVisible();
-        }, 100);
-      }
-    }
-  }
 
 
   // Additional methods needed by the HTML template
@@ -1585,6 +1493,5 @@ export class EmergencyExitFormComponent implements OnInit {
 
   resetForm(): void {
     this.exitForm.reset();
-    this.currentStep = 1;
   }
 }
