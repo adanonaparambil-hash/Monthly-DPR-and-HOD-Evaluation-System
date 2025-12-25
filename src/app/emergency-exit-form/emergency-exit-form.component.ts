@@ -90,12 +90,13 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Approval mode flags
   isApprovalMode: boolean = false;
+  isViewMode: boolean = false;
   approvalRequestData: any = null;
   returnUrl: string = '';
 
   // Employee profile data
   employeeProfileData: ExitEmpProfileDetails = {};
-  
+
   // Employee photo
   employeePhoto: string = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format';
 
@@ -217,7 +218,7 @@ export class EmergencyExitFormComponent implements OnInit {
     try {
       // Get current user from session first
       this.currentUser = this.sessionService.getCurrentUser();
-      
+
       // Debug: Log all available user properties
       this.debugUserProperties();
 
@@ -232,7 +233,7 @@ export class EmergencyExitFormComponent implements OnInit {
       if (this.formType === 'E') {
         this.addResponsibility();
       }
-      
+
       // Ensure all departments are visible by default
       this.departments.forEach(dept => {
         if (!dept.status) {
@@ -284,18 +285,18 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('=== DEBUG: All User Properties ===');
       console.log('Full user object:', this.currentUser);
       console.log('Available properties:', Object.keys(this.currentUser));
-      
+
       // Check for department-related properties
-      const departmentProps = Object.keys(this.currentUser).filter(key => 
+      const departmentProps = Object.keys(this.currentUser).filter(key =>
         key.toLowerCase().includes('dept') || key.toLowerCase().includes('department')
       );
       console.log('Department-related properties:', departmentProps);
-      
+
       // Log values of department-related properties
       departmentProps.forEach(prop => {
         console.log(`${prop}:`, this.currentUser[prop]);
       });
-      
+
       console.log('=== END DEBUG ===');
     } else {
       console.warn('No current user found for debugging');
@@ -307,12 +308,13 @@ export class EmergencyExitFormComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const typeParam = params['type'];
       const modeParam = params['mode'];
-      const requestId = params['requestId'];
-      
+      const requestId = params['requestId'] || params['exitID'];
+      const approvalID = params['approvalID'];
+
       console.log('=== SETFORMTYPE DEBUG ===');
-      console.log('URL params:', { typeParam, modeParam, requestId });
+      console.log('URL params:', { typeParam, modeParam, requestId, approvalID });
       console.log('Current approval mode before processing:', this.isApprovalMode);
-      
+
       if (typeParam === 'P' || typeParam === 'E' || typeParam === 'R') {
         this.formType = typeParam;
         console.log('Form type set to:', this.formType);
@@ -325,38 +327,46 @@ export class EmergencyExitFormComponent implements OnInit {
       // Check if this is approval mode or view mode
       if (modeParam === 'approval') {
         this.isApprovalMode = true;
+        this.isViewMode = false;
         this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval';
-        
+
         // Load approval request data
         const requestData = sessionStorage.getItem('approvalRequestData');
         if (requestData) {
           this.approvalRequestData = JSON.parse(requestData);
           console.log('Approval mode activated for request:', requestId);
-          
+
           // Go directly to step 4 for approval from listing
           this.currentStep = 4;
-          
+
           // Populate form with request data
           this.populateFormFromApprovalData();
         }
       } else if (modeParam === 'view') {
-        this.isApprovalMode = false; // View mode, not approval mode
-        this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval';
-        
+        this.isApprovalMode = false;
+        this.isViewMode = true;
+        this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval?tab=myRequests';
+
         // Load request data for viewing
         const requestData = sessionStorage.getItem('approvalRequestData');
         if (requestData) {
           this.approvalRequestData = JSON.parse(requestData);
           console.log('View mode activated for request:', requestId);
-          
+
           // Start from step 1 to show complete form for viewing
           this.currentStep = 1;
-          
+
           // Populate form with request data
           this.populateFormFromApprovalData();
+
+          // Disable all fields for view mode
+          setTimeout(() => {
+            this.disableAllFormFields();
+          }, 300);
         }
       } else {
         this.isApprovalMode = false;
+        this.isViewMode = false;
         this.approvalRequestData = null;
         console.log('Regular form mode - no approval/view mode');
       }
@@ -369,18 +379,18 @@ export class EmergencyExitFormComponent implements OnInit {
       this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
       this.updateFormValidations();
 
-      if (!this.isApprovalMode) {
+      if (!this.isApprovalMode && !this.isViewMode) {
         // Re-populate form with session data after form type change
         this.populateFormFromSession();
-        
+
         // Load employee details for the new form type
         this.loadEmployeeDetails();
-        
+
         // Load master lists for non-approval mode
         this.loadHodMasterList();
         this.loadProjectManagerList();
         this.loadEmployeeMasterList();
-        
+
         // Ensure fields are enabled for regular form usage
         this.enableFormFields();
       }
@@ -445,31 +455,31 @@ export class EmergencyExitFormComponent implements OnInit {
   // Populate form with session data
   populateFormFromSession(): void {
     console.log('Emergency Exit Form - Current user from session:', this.currentUser);
-    
+
     if (this.currentUser) {
       // Try different possible property names for department
-      const department = this.currentUser.department || 
-                        this.currentUser.empDept || 
-                        this.currentUser.dept || 
-                        this.currentUser.departmentName || 
-                        this.currentUser.empDepartment ||
-                        '';
-      
+      const department = this.currentUser.department ||
+        this.currentUser.empDept ||
+        this.currentUser.dept ||
+        this.currentUser.departmentName ||
+        this.currentUser.empDepartment ||
+        '';
+
       const formData = {
         employeeName: this.currentUser.employeeName || this.currentUser.name || '',
         employeeId: this.currentUser.empId || this.currentUser.employeeId || '',
         department: department,
         emailId: this.currentUser.email || this.currentUser.emailId || ''
       };
-      
+
       console.log('Emergency Exit Form - Available user properties:', Object.keys(this.currentUser));
       console.log('Emergency Exit Form - Department value found:', department);
       console.log('Emergency Exit Form - Populating form with data:', formData);
       this.exitForm.patchValue(formData);
-      
+
       // Load employee profile with photo
       this.loadEmployeeProfile();
-      
+
       // Disable employee information fields since they come from session
       this.disableEmployeeInfoFields();
     } else {
@@ -485,14 +495,14 @@ export class EmergencyExitFormComponent implements OnInit {
         next: (response: any) => {
           if (response && response.success && response.data) {
             const data = response.data;
-            
+
             // Set employee photo
             if (data.profileImageBase64) {
               this.employeePhoto = `data:image/jpeg;base64,${data.profileImageBase64}`;
             } else if (this.currentUser.photo) {
               this.employeePhoto = this.currentUser.photo;
             }
-            
+
             // Update contact details from profile
             this.exitForm.patchValue({
               address: data.address || '',
@@ -506,7 +516,7 @@ export class EmergencyExitFormComponent implements OnInit {
               emailId: data.email || this.currentUser.email || '',
               department: data.department || '',
             });
-            
+
             console.log('Employee profile loaded successfully');
           }
         },
@@ -546,7 +556,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   submitForm() {
     console.log('Submit form called - Form Type:', this.formType);
-    
+
     // Validate form for current type
     if (!this.validateFormForCurrentType()) {
       this.markAllFieldsAsTouched();
@@ -570,7 +580,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   private showSubmissionConfirmation(): void {
     const formTypeText = this.formType === 'E' ? 'Emergency Exit' : (this.formType === 'R' ? 'Resignation' : 'Planned Leave');
-    
+
     Swal.fire({
       title: 'Confirm Submission',
       text: `Are you sure you want to submit this ${formTypeText} form? Once submitted, you cannot modify the information and it will be sent for approval.`,
@@ -589,14 +599,14 @@ export class EmergencyExitFormComponent implements OnInit {
 
   private performFormSubmission(): void {
     this.isSubmitting = true;
-    
+
     try {
       // Prepare data for API
       const exitRequest = this.prepareExitRequest();
-      
+
       // Generate approval workflow
       this.generateApprovalWorkflow(exitRequest);
-      
+
       // Create separate approval workflow object
       const approvalWorkflow: EmployeeExitApprovalWorkflow = {
         exitId: exitRequest.exitId,
@@ -606,20 +616,20 @@ export class EmergencyExitFormComponent implements OnInit {
         overallStatus: 'PENDING',
         submittedDate: new Date().toISOString()
       };
-      
+
       // Call API with just the exit request (without approval workflow)
       this.api.InsertEmployeeExit(exitRequest).subscribe({
         next: (response: any) => {
           console.log('Form submitted successfully:', response);
           this.isSubmitting = false;
-          
+
           if (response && response.success) {
             // Show success message
             this.toastr.success('Form submitted successfully! Your request is now being processed.', 'Submission Successful');
-            
+
             // Update workflow progress
             this.updateWorkflowProgress();
-            
+
             // Move to approval workflow step
             this.currentStep = 4;
             this.cdr.detectChanges();
@@ -645,7 +655,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   private prepareExitRequest(): EmployeeExitRequest {
     const formValue = this.exitForm.getRawValue(); // Use getRawValue to get disabled field values
-    
+
     // Prepare responsibilities array for Emergency forms only
     const responsibilities: EmployeeExitResponsibility[] = [];
     if (this.formType === 'E' && formValue.responsibilities) {
@@ -704,19 +714,19 @@ export class EmergencyExitFormComponent implements OnInit {
       employeeId: this.exitForm.get('employeeId')?.value,
       department: this.exitForm.get('department')?.value
     });
-    
+
     // Only disable employeeId and department - keep employeeName and emailId editable
     this.exitForm.get('employeeId')?.disable();
     this.exitForm.get('department')?.disable();
-    
+
     // Keep employeeName and emailId enabled for user input
     this.exitForm.get('employeeName')?.enable();
     this.exitForm.get('emailId')?.enable();
-    
+
     // Mark disabled fields as valid even when disabled
     this.exitForm.get('employeeId')?.setErrors(null);
     this.exitForm.get('department')?.setErrors(null);
-    
+
     console.log('Form values after disabling:', {
       employeeName: this.exitForm.get('employeeName')?.value,
       employeeId: this.exitForm.get('employeeId')?.value,
@@ -738,6 +748,24 @@ export class EmergencyExitFormComponent implements OnInit {
     });
   }
 
+  /**
+   * Disable all form fields for view mode
+   */
+  disableAllFormFields(): void {
+    console.log('Disabling all form fields for view mode');
+    Object.keys(this.exitForm.controls).forEach(key => {
+      this.exitForm.get(key)?.disable();
+    });
+
+    // Also disable responsibilities form array
+    const responsibilities = this.exitForm.get('responsibilities') as FormArray;
+    if (responsibilities) {
+      responsibilities.controls.forEach(control => {
+        control.disable();
+      });
+    }
+  }
+
   shouldShowWorkflowSidebar(): boolean {
     // Always show workflow sidebar except when form is submitted
     return !this.formSubmitted;
@@ -755,26 +783,26 @@ export class EmergencyExitFormComponent implements OnInit {
     this.exitForm.get('state')?.clearValidators();
     this.exitForm.get('postOffice')?.clearValidators();
     this.exitForm.get('nation')?.clearValidators();
-    
+
     if (this.formType === 'E') {
       // Emergency form - only planned leave and resignation fields are not required
       this.exitForm.get('category')?.clearValidators();
       this.exitForm.get('projectManagerName')?.clearValidators();
       this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
-      
+
     } else if (this.formType === 'P') {
       // Planned leave specific fields are required
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
       this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
-      
+
     } else if (this.formType === 'R') {
       // Resignation specific fields are required (reuse existing fields)
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
       this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
     }
-    
+
     // Update validity after changing validators
     Object.keys(this.exitForm.controls).forEach(key => {
       this.exitForm.get(key)?.updateValueAndValidity();
@@ -854,7 +882,7 @@ export class EmergencyExitFormComponent implements OnInit {
   populateFormFromApprovalData(): void {
     if (this.approvalRequestData) {
       const request = this.approvalRequestData;
-      
+
       // Format date for input fields
       const formatDateForInput = (dateString: string): string => {
         if (!dateString) return '';
@@ -935,14 +963,14 @@ export class EmergencyExitFormComponent implements OnInit {
 
   validateResponsibilities(): boolean {
     const responsibilities = this.responsibilitiesFormArray;
-    
+
     if (responsibilities.length === 0) {
       return false;
     }
 
     for (let i = 0; i < responsibilities.length; i++) {
       const group = responsibilities.at(i) as FormGroup;
-      
+
       if (group.invalid) {
         Object.keys(group.controls).forEach(key => {
           const control = group.get(key);
@@ -1000,10 +1028,10 @@ export class EmergencyExitFormComponent implements OnInit {
 
   allDeclarationsChecked(): boolean {
     const formValue = this.exitForm.value;
-    return formValue.decInfoAccurate && 
-           formValue.decHandoverComplete && 
-           formValue.decReturnAssets && 
-           formValue.decUnderstandReturn;
+    return formValue.decInfoAccurate &&
+      formValue.decHandoverComplete &&
+      formValue.decReturnAssets &&
+      formValue.decUnderstandReturn;
   }
 
   validateEmailAndPhone(): boolean {
@@ -1035,7 +1063,7 @@ export class EmergencyExitFormComponent implements OnInit {
     // Generate approval workflow based on form type
     this.approvalWorkflow = [];
     this.departmentApprovals = [];
-    
+
     // This would typically call the approval workflow service
     // For now, just initialize empty arrays
     console.log('Generating approval workflow for:', exitRequest.formType);
@@ -1070,10 +1098,10 @@ export class EmergencyExitFormComponent implements OnInit {
       }
       return;
     }
-    
+
     // Regular form mode - validate before proceeding
     const isValid = this.validateCurrentStep();
-    
+
     if (!isValid) {
       this.showValidationErrors();
       return;
@@ -1083,7 +1111,7 @@ export class EmergencyExitFormComponent implements OnInit {
       // For Planned Leave and Resignation: Step 1 -> Step 3 (Final Review)
       if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 1) {
         this.currentStep = 3; // Go to final review step
-      } 
+      }
       // For Emergency: Step 1 -> Step 2 -> Step 3 (Final Review)
       else if (this.formType === 'E' && this.currentStep < 3) {
         this.currentStep++;
@@ -1098,14 +1126,14 @@ export class EmergencyExitFormComponent implements OnInit {
         this.currentStep--;
         return;
       }
-      
+
       // Regular form mode - use form-type-specific navigation
       if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 3) {
         this.currentStep = 1; // Go back to step 1
-      } 
+      }
       else if ((this.formType === 'P' || this.formType === 'R') && this.currentStep === 4) {
         this.currentStep = 3; // Go back to final review step
-      } 
+      }
       else if (this.formType === 'E' && this.currentStep === 4) {
         this.currentStep = 3; // Go back to final review step
       } else {
@@ -1127,11 +1155,6 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
-  disableAllFormFields(): void {
-    Object.keys(this.exitForm.controls).forEach(key => {
-      this.exitForm.get(key)?.disable();
-    });
-  }
 
   // Additional methods needed by the HTML template
   getContextualTitle(): string {
@@ -1153,6 +1176,7 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   switchFormType(newType: 'E' | 'P' | 'R'): void {
+    if (this.isApprovalMode || this.isViewMode) return;
     if (this.formType !== newType) {
       this.formType = newType;
       this.updateFormValidations();
@@ -1181,7 +1205,11 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   returnToApprovalListing(): void {
-    this.router.navigate([this.returnUrl]);
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+    } else {
+      this.router.navigate(['/leave-approval']);
+    }
   }
 
   // Project Manager dropdown methods
@@ -1212,7 +1240,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   getFilteredProjectManagers(searchTerm: string): DropdownOption[] {
     if (!searchTerm) return this.projectManagerList;
-    return this.projectManagerList.filter(pm => 
+    return this.projectManagerList.filter(pm =>
       pm.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
@@ -1256,7 +1284,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   getFilteredEmployees(searchTerm: string): DropdownOption[] {
     if (!searchTerm) return this.employeeMasterList;
-    return this.employeeMasterList.filter(emp => 
+    return this.employeeMasterList.filter(emp =>
       emp.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }

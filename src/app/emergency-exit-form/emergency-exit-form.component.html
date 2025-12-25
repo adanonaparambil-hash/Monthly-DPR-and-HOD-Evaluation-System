@@ -6,8 +6,10 @@
       <div class="company-branding">
         <div class="form-title-section">
           <div class="title-with-icon">
-            <div class="animated-icon" [ngClass]="formType === 'E' ? 'emergency-icon' : (formType === 'R' ? 'resignation-icon' : 'planned-icon')">
-              <i class="fas" [ngClass]="formType === 'E' ? 'fa-exclamation-triangle' : (formType === 'R' ? 'fa-user-times' : 'fa-calendar-check')"></i>
+            <div class="animated-icon"
+              [ngClass]="formType === 'E' ? 'emergency-icon' : (formType === 'R' ? 'resignation-icon' : 'planned-icon')">
+              <i class="fas"
+                [ngClass]="formType === 'E' ? 'fa-exclamation-triangle' : (formType === 'R' ? 'fa-user-times' : 'fa-calendar-check')"></i>
             </div>
             <div class="title-text">
               <h1>{{ getContextualTitle() }}</h1>
@@ -16,7 +18,7 @@
           </div>
         </div>
       </div>
-      <div class="header-actions" *ngIf="isApprovalMode">
+      <div class="header-actions" *ngIf="isApprovalMode || returnUrl">
         <button class="btn-back" (click)="returnToApprovalListing()">
           <i class="fas fa-arrow-left"></i>
           Back to Approvals
@@ -31,23 +33,17 @@
   </div>
 
   <!-- Form Type Selection Tabs -->
-  <div class="form-type-tabs" *ngIf="!formSubmitted && !isApprovalMode">
+  <div class="form-type-tabs" *ngIf="!formSubmitted && !isApprovalMode && !isViewMode">
     <div class="tab-container">
-      <button class="tab-button" 
-              [class.active]="formType === 'E'" 
-              (click)="switchFormType('E')">
+      <button class="tab-button" [class.active]="formType === 'E'" (click)="switchFormType('E')">
         <i class="fas fa-exclamation-triangle"></i>
         <span>Emergency Leave</span>
       </button>
-      <button class="tab-button" 
-              [class.active]="formType === 'P'" 
-              (click)="switchFormType('P')">
+      <button class="tab-button" [class.active]="formType === 'P'" (click)="switchFormType('P')">
         <i class="fas fa-calendar-check"></i>
         <span>Planned Leave</span>
       </button>
-      <button class="tab-button" 
-              [class.active]="formType === 'R'" 
-              (click)="switchFormType('R')">
+      <button class="tab-button" [class.active]="formType === 'R'" (click)="switchFormType('R')">
         <i class="fas fa-user-times"></i>
         <span>Resignation</span>
       </button>
@@ -61,487 +57,506 @@
       <div class="form-content-column">
         <form [formGroup]="exitForm">
 
-        <!-- Employee Information Section -->
-      <div class="form-section-card" [@fadeInUp]="'in'">
-        <div class="section-header">
-          <h3><i class="fas fa-user"></i> Personal Information</h3>
-        </div>
-        <div class="form-section">
-          <div class="personal-info-layout">
-            <!-- Employee Photo Section -->
-            <div class="employee-photo-section">
-              <div class="photo-container">
-                <img [src]="employeePhoto" [alt]="exitForm.get('employeeName')?.value || 'Employee Photo'" 
-                     class="employee-photo" 
-                     (error)="onPhotoError($event)">
-                <div class="photo-overlay">
-                  <i class="fas fa-user"></i>
-                </div>
-              </div>
-              <div class="photo-label">Employee Photo</div>
+          <!-- Employee Information Section -->
+          <div class="form-section-card" [@fadeInUp]="'in'">
+            <div class="section-header">
+              <h3><i class="fas fa-user"></i> Personal Information</h3>
             </div>
-
-            <!-- Employee Information Grid -->
-            <div class="employee-info-grid" [ngClass]="formType === 'P' ? 'form-grid-planned' : 'form-grid'">
-              <div class="form-group">
-                <label for="employeeName">Name *</label>
-                <input type="text" id="employeeName" formControlName="employeeName"
-                  [class.error]="isFieldInvalid('employeeName')" placeholder="Enter full name" [disabled]="true">
-                <span class="error-message" *ngIf="isFieldInvalid('employeeName')">
-                  {{ getFieldError('employeeName') }}
-                </span>
-              </div>
-
-              <div class="form-group">
-                <label for="employeeId">ID No. *</label>
-                <input type="text" id="employeeId" formControlName="employeeId"
-                  [class.error]="isFieldInvalid('employeeId')" placeholder="Employee ID" [disabled]="true">
-                <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
-                  {{ getFieldError('employeeId') }}
-                </span>
-              </div>
-
-              <div class="form-group">
-                <label for="department">Department/Site *</label>
-                <input type="text" id="department" formControlName="department" placeholder="Department/Site"
-                  [disabled]="true">
-                <span class="error-message" *ngIf="isFieldInvalid('department')">
-                  {{ getFieldError('department') }}
-                </span>
-              </div>
-
-              <div class="form-group">
-                <label for="hodName">HOD Name *</label>
-                <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
-                  <option value="">{{ hodList.length === 0 ? 'Loading HODs...' : 'Select HOD' }}</option>
-                  <option *ngFor="let hod of hodList; trackBy: trackByHodId" [value]="hod.idValue">
-                    {{ hod.description }}
-                  </option>
-                </select>
-                <span class="error-message" *ngIf="isFieldInvalid('hodName')">
-                  {{ getFieldError('hodName') }}
-                </span>
-                <small style="color: #666; font-size: 12px;" *ngIf="hodList.length === 0">
-                  Loading HOD list...
-                </small>
-              </div>
-
-              <!-- Planned Leave and Resignation Specific Fields -->
-             
-
-              <!-- Project Manager / Site Incharge Selection (Planned Leave and Resignation) -->
-              <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
-                <label for="projectManagerName">Project Manager / Site Incharge *</label>
-                <div class="searchable-dropdown">
-                  <input type="text" id="projectManagerName" formControlName="projectManagerName"
-                    [class.error]="isFieldInvalid('projectManagerName')"
-                    placeholder="Search and select project manager..." class="dropdown-input" #pmSearchInput
-                    (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()"
-                    (blur)="hidePMDropdown()" autocomplete="off">
-                  <div class="dropdown-icon">
-                    <i class="fas fa-chevron-down"></i>
-                  </div>
-                  <div class="dropdown-list pm-dropdown" *ngIf="isPMDropdownVisible()"
-                    [class.small-list]="shouldUseSmallDropdown(pmSearchTerm)">
-                    <div class="dropdown-item" *ngFor="let pm of getFilteredProjectManagers(pmSearchTerm)"
-                      (mousedown)="selectProjectManager(pm)"
-                      [class.selected]="isPMSelected(pm)">
-                      <div class="employee-info">
-                        <div class="employee-name">{{ getEmployeeNameFromDescription(pm.description || '') }}</div>
-                        <div class="employee-id">{{ pm.idValue || '' }}</div>
-                      </div>
-                    </div>
-                    <div class="no-results" *ngIf="getFilteredProjectManagers(pmSearchTerm).length === 0">
-                      No project managers found
+            <div class="form-section">
+              <div class="personal-info-layout">
+                <!-- Employee Photo Section -->
+                <div class="employee-photo-section">
+                  <div class="photo-container">
+                    <img [src]="employeePhoto" [alt]="exitForm.get('employeeName')?.value || 'Employee Photo'"
+                      class="employee-photo" (error)="onPhotoError($event)">
+                    <div class="photo-overlay">
+                      <i class="fas fa-user"></i>
                     </div>
                   </div>
-                </div>
-                <span class="error-message" *ngIf="isFieldInvalid('projectManagerName')">
-                  {{ getFieldError('projectManagerName') }}
-                </span>
-              </div>
-
-              <div class="form-group hod-name-group" *ngIf="formType === 'P' || formType === 'R'">
-                <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
-                <div class="searchable-dropdown">
-                  <input type="text" id="responsibilitiesHandedOverTo" formControlName="responsibilitiesHandedOverTo"
-                    [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
-                    placeholder="Search and select employee..." class="dropdown-input" #plannedSearchInput
-                    (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
-                    (blur)="hidePlannedDropdown()" autocomplete="off">
-                  <div class="dropdown-icon">
-                    <i class="fas fa-chevron-down"></i>
-                  </div>
-                  <div class="dropdown-list planned-dropdown" *ngIf="isPlannedDropdownVisible()"
-                    [class.small-list]="shouldUseSmallDropdown(plannedSearchTerm)">
-                    <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(plannedSearchTerm)"
-                      (mousedown)="selectPlannedEmployee(employee)"
-                      [class.selected]="isPlannedEmployeeSelected(employee)">
-                      <div class="employee-info">
-                        <div class="employee-name">{{ getEmployeeNameFromDescription(employee.description || '') }}</div>
-                        <div class="employee-id">{{ employee.idValue || '' }}</div>
-                      </div>
-                    </div>
-                    <div class="no-results" *ngIf="getFilteredEmployees(plannedSearchTerm).length === 0">
-                      No employees found
-                    </div>
-                  </div>
-                </div>
-                <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
-                  {{ getFieldError('responsibilitiesHandedOverTo') }}
-                </span>
-              </div>
-
-              <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
-                <label>Category *</label>
-                <div class="radio-group">
-                  <label class="radio-label">
-                    <input type="radio" formControlName="category" value="Staff">
-                    <span class="radio-mark"></span>
-                    Staff
-                  </label>
-                  <label class="radio-label">
-                    <input type="radio" formControlName="category" value="Worker">
-                    <span class="radio-mark"></span>
-                    Worker
-                  </label>
-                </div>
-                <span class="error-message" *ngIf="isFieldInvalid('category')">
-                  {{ getFieldError('category') }}
-                </span>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contact Details Section (Emergency Only) -->
-      <div class="form-section-card" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
-        <div class="section-header">
-          <h3><i class="fas fa-address-card"></i> Contact Details</h3>
-        </div>
-        <div class="form-section">
-          <div class="contact-info-note">
-            <i class="fas fa-info-circle"></i>
-            <span>Contact details are automatically populated from your profile. To update, please modify your profile information.</span>
-          </div>
-          
-          <div class="contact-details-grid">
-            <!-- Address Information -->
-            <div class="contact-item">
-              <label><i class="fas fa-home"></i> Address *</label>
-              <div class="contact-value">
-                {{ exitForm.get('address')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- Place -->
-            <div class="contact-item">
-              <label><i class="fas fa-map-marker-alt"></i> Place</label>
-              <div class="contact-value">
-                {{ exitForm.get('place')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- District -->
-            <div class="contact-item">
-              <label><i class="fas fa-map"></i> District</label>
-              <div class="contact-value">
-                {{ exitForm.get('district')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- State -->
-            <div class="contact-item">
-              <label><i class="fas fa-flag"></i> State</label>
-              <div class="contact-value">
-                {{ exitForm.get('state')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- Post Office -->
-            <div class="contact-item">
-              <label><i class="fas fa-mail-bulk"></i> Post Office</label>
-              <div class="contact-value">
-                {{ exitForm.get('postOffice')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- Nation -->
-            <div class="contact-item">
-              <label><i class="fas fa-globe"></i> Nation</label>
-              <div class="contact-value">
-                {{ exitForm.get('nation')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- Mobile Number -->
-            <div class="contact-item">
-              <label><i class="fas fa-mobile-alt"></i> Telephone No (Mobile) *</label>
-              <div class="contact-value">
-                {{ exitForm.get('telephoneMobile')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- Landline Number -->
-            <div class="contact-item">
-              <label><i class="fas fa-phone"></i> Telephone No (Landline)</label>
-              <div class="contact-value">
-                {{ exitForm.get('telephoneLandline')?.value || 'Not provided' }}
-              </div>
-            </div>
-
-            <!-- Email Address -->
-            <div class="contact-item">
-              <label><i class="fas fa-envelope"></i> Email ID *</label>
-              <div class="contact-value">
-                {{ exitForm.get('emailId')?.value || 'Not provided' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Hidden form controls to maintain form structure -->
-          <div style="display: none;">
-            <textarea formControlName="address"></textarea>
-            <input formControlName="district">
-            <input formControlName="telephoneMobile">
-            <input formControlName="place">
-            <input formControlName="state">
-            <input formControlName="telephoneLandline">
-            <input formControlName="postOffice">
-            <input formControlName="nation">
-            <input formControlName="emailId">
-          </div>
-        </div>
-      </div>
-
-      <!-- Travel/Resignation Information Section -->
-      <div class="form-section-card" [@fadeInUp]="'in'">
-        <div class="section-header">
-          <h3>
-            <i class="fas fa-plane" *ngIf="formType === 'E' || formType === 'P'"></i>
-            <i class="fas fa-calendar-times" *ngIf="formType === 'R'"></i>
-            {{ formType === 'R' ? 'Resignation Information' : 'Travel Information' }}
-          </h3>
-        </div>
-        <div class="form-section travel-section">
-          <div class="travel-grid">
-            <div class="form-group">
-              <label for="dateOfDeparture">
-                {{ formType === 'R' ? 'Last Working Date *' : 'Date of Departure *' }}
-              </label>
-              <input type="date" id="dateOfDeparture" formControlName="dateOfDeparture"
-                [class.error]="isFieldInvalid('dateOfDeparture')">
-              <span class="error-message" *ngIf="isFieldInvalid('dateOfDeparture')">
-                {{ getFieldError('dateOfDeparture') }}
-              </span>
-            </div>
-
-            <div class="form-group" *ngIf="formType !== 'R'">
-              <label for="dateOfArrival">Date of Arrival</label>
-              <input type="date" id="dateOfArrival" formControlName="dateOfArrival">
-            </div>
-
-            <div class="form-group">
-              <label for="noOfDaysApproved">
-                {{ formType === 'R' ? 'Notice Period (Days) *' : 'No. of Days Requested *' }}
-              </label>
-              <input type="number" id="noOfDaysApproved" formControlName="noOfDaysApproved"
-                [class.error]="isFieldInvalid('noOfDaysApproved')" min="1" 
-                [placeholder]="formType === 'R' ? 'Notice period in days' : 'Number of days'">
-              <span class="error-message" *ngIf="isFieldInvalid('noOfDaysApproved')">
-                {{ getFieldError('noOfDaysApproved') }}
-              </span>
-            </div>
-
-            <div class="form-group" *ngIf="formType !== 'R'">
-              <label for="flightTime">Flight Time</label>
-              <input type="time" id="flightTime" formControlName="flightTime">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Leave/Emergency/Resignation Details Section -->
-      <div class="form-section-card" [@fadeInUp]="'in'">
-        <div class="section-header">
-          <h3>
-            <i class="fas fa-exclamation-triangle" *ngIf="formType === 'E'"></i>
-            <i class="fas fa-clipboard-list" *ngIf="formType === 'P'"></i>
-            <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
-            {{ formType === 'E' ? 'Emergency Details' : (formType === 'R' ? 'Resignation Details' : 'Leave Details') }}
-          </h3>
-        </div>
-        <div class="form-section">
-          <div class="form-group full-width">
-            <label for="reasonForEmergency">
-              {{ formType === 'E' ? 'Reason for the Emergency *' : (formType === 'R' ? 'Reason for Resignation *' : 'Reason for Planned Leave *') }}
-            </label>
-            <textarea id="reasonForEmergency" formControlName="reasonForEmergency"
-              [class.error]="isFieldInvalid('reasonForEmergency')" rows="4"
-              [placeholder]="formType === 'E' ? 'Please provide detailed reason for emergency leave' : (formType === 'R' ? 'Please provide detailed reason for resignation' : 'Please provide detailed reason for planned leave')"></textarea>
-            <span class="error-message" *ngIf="isFieldInvalid('reasonForEmergency')">
-              {{ getFieldError('reasonForEmergency') }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Collapsible Responsibilities Section (Emergency Only) -->
-      <div class="form-section-card collapsible-section" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
-        <div class="section-header collapsible-header" (click)="toggleResponsibilitiesSection()">
-          <h3>
-            <i class="fas fa-handshake"></i> 
-            Responsibilities Handed Over To
-            <i class="fas fa-chevron-down toggle-icon" [class.rotated]="isResponsibilitiesSectionOpen"></i>
-          </h3>
-          <button type="button" class="btn-add" (click)="addResponsibility(); $event.stopPropagation()">
-            <i class="fas fa-plus"></i> Add Responsibility
-          </button>
-        </div>
-        
-        <div class="collapsible-content" [class.open]="isResponsibilitiesSectionOpen">
-          <div class="form-section">
-            <div class="responsibilities-container" formArrayName="responsibilities">
-              <div class="responsibility-card"
-                *ngFor="let responsibility of responsibilitiesFormArray.controls; let i = index" [formGroupName]="i">
-
-                <div class="card-header">
-                  <h4>Responsibility {{ i + 1 }}</h4>
-                  <button type="button" class="btn-remove" (click)="removeResponsibility(i)"
-                    *ngIf="responsibilitiesFormArray.length > 1">
-                    <i class="fas fa-trash"></i>
-                  </button>
+                  <div class="photo-label">Employee Photo</div>
                 </div>
 
-                <div class="responsibility-form-grid">
-                  <div class="form-group project-field">
-                    <label>Project *</label>
-                    <input type="text" formControlName="project" placeholder="Enter project name">
+                <!-- Employee Information Grid -->
+                <div class="employee-info-grid" [ngClass]="formType === 'P' ? 'form-grid-planned' : 'form-grid'">
+                  <div class="form-group">
+                    <label for="employeeName">Name *</label>
+                    <input type="text" id="employeeName" formControlName="employeeName"
+                      [class.error]="isFieldInvalid('employeeName')" placeholder="Enter full name" [disabled]="true">
+                    <span class="error-message" *ngIf="isFieldInvalid('employeeName')">
+                      {{ getFieldError('employeeName') }}
+                    </span>
                   </div>
 
-                  <div class="form-group activities-field">
-                    <label>Activities *</label>
-                    <textarea formControlName="activities" rows="4"
-                      placeholder="Describe the activities and responsibilities being handed over"></textarea>
+                  <div class="form-group">
+                    <label for="employeeId">ID No. *</label>
+                    <input type="text" id="employeeId" formControlName="employeeId"
+                      [class.error]="isFieldInvalid('employeeId')" placeholder="Employee ID" [disabled]="true">
+                    <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
+                      {{ getFieldError('employeeId') }}
+                    </span>
                   </div>
 
-                  <div class="form-group name-field">
-                    <label>Responsible Person Name *</label>
+                  <div class="form-group">
+                    <label for="department">Department/Site *</label>
+                    <input type="text" id="department" formControlName="department" placeholder="Department/Site"
+                      [disabled]="true">
+                    <span class="error-message" *ngIf="isFieldInvalid('department')">
+                      {{ getFieldError('department') }}
+                    </span>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="hodName">HOD Name *</label>
+                    <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
+                      <option value="">{{ hodList.length === 0 ? 'Loading HODs...' : 'Select HOD' }}</option>
+                      <option *ngFor="let hod of hodList; trackBy: trackByHodId" [value]="hod.idValue">
+                        {{ hod.description }}
+                      </option>
+                    </select>
+                    <span class="error-message" *ngIf="isFieldInvalid('hodName')">
+                      {{ getFieldError('hodName') }}
+                    </span>
+                    <small style="color: #666; font-size: 12px;" *ngIf="hodList.length === 0">
+                      Loading HOD list...
+                    </small>
+                  </div>
+
+                  <!-- Planned Leave and Resignation Specific Fields -->
+
+
+                  <!-- Project Manager / Site Incharge Selection (Planned Leave and Resignation) -->
+                  <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
+                    <label for="projectManagerName">Project Manager / Site Incharge *</label>
                     <div class="searchable-dropdown">
-                      <input type="text" formControlName="responsiblePersonName"
-                        placeholder="Search and select employee..." class="dropdown-input" #searchInput
-                        (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
+                      <input type="text" id="projectManagerName" formControlName="projectManagerName"
+                        [class.error]="isFieldInvalid('projectManagerName')"
+                        placeholder="Search and select project manager..." class="dropdown-input" #pmSearchInput
+                        (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()" (blur)="hidePMDropdown()"
                         autocomplete="off">
                       <div class="dropdown-icon">
                         <i class="fas fa-chevron-down"></i>
                       </div>
-                      <div class="dropdown-list" *ngIf="isDropdownVisible(i)" [attr.data-index]="i"
-                        [class.small-list]="shouldUseSmallDropdown(getSearchTerm(i))">
-                        <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(getSearchTerm(i))"
-                          (mousedown)="selectEmployee(i, employee)" [class.selected]="isEmployeeSelected(i, employee)">
+                      <div class="dropdown-list pm-dropdown" *ngIf="isPMDropdownVisible()"
+                        [class.small-list]="shouldUseSmallDropdown(pmSearchTerm)">
+                        <div class="dropdown-item" *ngFor="let pm of getFilteredProjectManagers(pmSearchTerm)"
+                          (mousedown)="selectProjectManager(pm)" [class.selected]="isPMSelected(pm)">
                           <div class="employee-info">
-                            <div class="employee-name">{{ getEmployeeNameFromDescription(employee.description || '') }}</div>
+                            <div class="employee-name">{{ getEmployeeNameFromDescription(pm.description || '') }}</div>
+                            <div class="employee-id">{{ pm.idValue || '' }}</div>
+                          </div>
+                        </div>
+                        <div class="no-results" *ngIf="getFilteredProjectManagers(pmSearchTerm).length === 0">
+                          No project managers found
+                        </div>
+                      </div>
+                    </div>
+                    <span class="error-message" *ngIf="isFieldInvalid('projectManagerName')">
+                      {{ getFieldError('projectManagerName') }}
+                    </span>
+                  </div>
+
+                  <div class="form-group hod-name-group" *ngIf="formType === 'P' || formType === 'R'">
+                    <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
+                    <div class="searchable-dropdown">
+                      <input type="text" id="responsibilitiesHandedOverTo"
+                        formControlName="responsibilitiesHandedOverTo"
+                        [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
+                        placeholder="Search and select employee..." class="dropdown-input" #plannedSearchInput
+                        (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
+                        (blur)="hidePlannedDropdown()" autocomplete="off">
+                      <div class="dropdown-icon">
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                      <div class="dropdown-list planned-dropdown" *ngIf="isPlannedDropdownVisible()"
+                        [class.small-list]="shouldUseSmallDropdown(plannedSearchTerm)">
+                        <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(plannedSearchTerm)"
+                          (mousedown)="selectPlannedEmployee(employee)"
+                          [class.selected]="isPlannedEmployeeSelected(employee)">
+                          <div class="employee-info">
+                            <div class="employee-name">{{ getEmployeeNameFromDescription(employee.description || '') }}
+                            </div>
                             <div class="employee-id">{{ employee.idValue || '' }}</div>
                           </div>
                         </div>
-                        <div class="no-results" *ngIf="getFilteredEmployees(getSearchTerm(i)).length === 0">
+                        <div class="no-results" *ngIf="getFilteredEmployees(plannedSearchTerm).length === 0">
                           No employees found
                         </div>
                       </div>
                     </div>
+                    <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
+                      {{ getFieldError('responsibilitiesHandedOverTo') }}
+                    </span>
                   </div>
 
-                  <div class="form-group phone-field">
-                    <label>Phone Number *</label>
-                    <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number">
+                  <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
+                    <label>Category *</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input type="radio" formControlName="category" value="Staff">
+                        <span class="radio-mark"></span>
+                        Staff
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" formControlName="category" value="Worker">
+                        <span class="radio-mark"></span>
+                        Worker
+                      </label>
+                    </div>
+                    <span class="error-message" *ngIf="isFieldInvalid('category')">
+                      {{ getFieldError('category') }}
+                    </span>
                   </div>
 
-                  <div class="form-group email-field">
-                    <label>Email ID *</label>
-                    <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address">
-                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  <div class="form-group remarks-field">
-                    <label>Remarks</label>
-                    <textarea formControlName="remarks" rows="3"
-                      placeholder="Any additional remarks or special instructions"></textarea>
+          <!-- Contact Details Section (Emergency Only) -->
+          <div class="form-section-card" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
+            <div class="section-header">
+              <h3><i class="fas fa-address-card"></i> Contact Details</h3>
+            </div>
+            <div class="form-section">
+              <div class="contact-info-note">
+                <i class="fas fa-info-circle"></i>
+                <span>Contact details are automatically populated from your profile. To update, please modify your
+                  profile information.</span>
+              </div>
+
+              <div class="contact-details-grid">
+                <!-- Address Information -->
+                <div class="contact-item">
+                  <label><i class="fas fa-home"></i> Address *</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('address')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- Place -->
+                <div class="contact-item">
+                  <label><i class="fas fa-map-marker-alt"></i> Place</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('place')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- District -->
+                <div class="contact-item">
+                  <label><i class="fas fa-map"></i> District</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('district')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- State -->
+                <div class="contact-item">
+                  <label><i class="fas fa-flag"></i> State</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('state')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- Post Office -->
+                <div class="contact-item">
+                  <label><i class="fas fa-mail-bulk"></i> Post Office</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('postOffice')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- Nation -->
+                <div class="contact-item">
+                  <label><i class="fas fa-globe"></i> Nation</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('nation')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- Mobile Number -->
+                <div class="contact-item">
+                  <label><i class="fas fa-mobile-alt"></i> Telephone No (Mobile) *</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('telephoneMobile')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- Landline Number -->
+                <div class="contact-item">
+                  <label><i class="fas fa-phone"></i> Telephone No (Landline)</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('telephoneLandline')?.value || 'Not provided' }}
+                  </div>
+                </div>
+
+                <!-- Email Address -->
+                <div class="contact-item">
+                  <label><i class="fas fa-envelope"></i> Email ID *</label>
+                  <div class="contact-value">
+                    {{ exitForm.get('emailId')?.value || 'Not provided' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hidden form controls to maintain form structure -->
+              <div style="display: none;">
+                <textarea formControlName="address"></textarea>
+                <input formControlName="district">
+                <input formControlName="telephoneMobile">
+                <input formControlName="place">
+                <input formControlName="state">
+                <input formControlName="telephoneLandline">
+                <input formControlName="postOffice">
+                <input formControlName="nation">
+                <input formControlName="emailId">
+              </div>
+            </div>
+          </div>
+
+          <!-- Travel/Resignation Information Section -->
+          <div class="form-section-card" [@fadeInUp]="'in'">
+            <div class="section-header">
+              <h3>
+                <i class="fas fa-plane" *ngIf="formType === 'E' || formType === 'P'"></i>
+                <i class="fas fa-calendar-times" *ngIf="formType === 'R'"></i>
+                {{ formType === 'R' ? 'Resignation Information' : 'Travel Information' }}
+              </h3>
+            </div>
+            <div class="form-section travel-section">
+              <div class="travel-grid">
+                <div class="form-group">
+                  <label for="dateOfDeparture">
+                    {{ formType === 'R' ? 'Last Working Date *' : 'Date of Departure *' }}
+                  </label>
+                  <input type="date" id="dateOfDeparture" formControlName="dateOfDeparture"
+                    [class.error]="isFieldInvalid('dateOfDeparture')">
+                  <span class="error-message" *ngIf="isFieldInvalid('dateOfDeparture')">
+                    {{ getFieldError('dateOfDeparture') }}
+                  </span>
+                </div>
+
+                <div class="form-group" *ngIf="formType !== 'R'">
+                  <label for="dateOfArrival">Date of Arrival</label>
+                  <input type="date" id="dateOfArrival" formControlName="dateOfArrival">
+                </div>
+
+                <div class="form-group">
+                  <label for="noOfDaysApproved">
+                    {{ formType === 'R' ? 'Notice Period (Days) *' : 'No. of Days Requested *' }}
+                  </label>
+                  <input type="number" id="noOfDaysApproved" formControlName="noOfDaysApproved"
+                    [class.error]="isFieldInvalid('noOfDaysApproved')" min="1"
+                    [placeholder]="formType === 'R' ? 'Notice period in days' : 'Number of days'">
+                  <span class="error-message" *ngIf="isFieldInvalid('noOfDaysApproved')">
+                    {{ getFieldError('noOfDaysApproved') }}
+                  </span>
+                </div>
+
+                <div class="form-group" *ngIf="formType !== 'R'">
+                  <label for="flightTime">Flight Time</label>
+                  <input type="time" id="flightTime" formControlName="flightTime">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Leave/Emergency/Resignation Details Section -->
+          <div class="form-section-card" [@fadeInUp]="'in'">
+            <div class="section-header">
+              <h3>
+                <i class="fas fa-exclamation-triangle" *ngIf="formType === 'E'"></i>
+                <i class="fas fa-clipboard-list" *ngIf="formType === 'P'"></i>
+                <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
+                {{ formType === 'E' ? 'Emergency Details' : (formType === 'R' ? 'Resignation Details' : 'Leave Details')
+                }}
+              </h3>
+            </div>
+            <div class="form-section">
+              <div class="form-group full-width">
+                <label for="reasonForEmergency">
+                  {{ formType === 'E' ? 'Reason for the Emergency *' : (formType === 'R' ? 'Reason for Resignation *' :
+                  'Reason for Planned Leave *') }}
+                </label>
+                <textarea id="reasonForEmergency" formControlName="reasonForEmergency"
+                  [class.error]="isFieldInvalid('reasonForEmergency')" rows="4"
+                  [placeholder]="formType === 'E' ? 'Please provide detailed reason for emergency leave' : (formType === 'R' ? 'Please provide detailed reason for resignation' : 'Please provide detailed reason for planned leave')"></textarea>
+                <span class="error-message" *ngIf="isFieldInvalid('reasonForEmergency')">
+                  {{ getFieldError('reasonForEmergency') }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible Responsibilities Section (Emergency Only) -->
+          <div class="form-section-card collapsible-section" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
+            <div class="section-header collapsible-header" (click)="toggleResponsibilitiesSection()">
+              <h3>
+                <i class="fas fa-handshake"></i>
+                Responsibilities Handed Over To
+                <i class="fas fa-chevron-down toggle-icon" [class.rotated]="isResponsibilitiesSectionOpen"></i>
+              </h3>
+              <button type="button" class="btn-add" *ngIf="!isViewMode"
+                (click)="addResponsibility(); $event.stopPropagation()">
+                <i class="fas fa-plus"></i> Add Responsibility
+              </button>
+            </div>
+
+            <div class="collapsible-content" [class.open]="isResponsibilitiesSectionOpen">
+              <div class="form-section">
+                <div class="responsibilities-container" formArrayName="responsibilities">
+                  <div class="responsibility-card"
+                    *ngFor="let responsibility of responsibilitiesFormArray.controls; let i = index"
+                    [formGroupName]="i">
+
+                    <div class="card-header">
+                      <h4>Responsibility {{ i + 1 }}</h4>
+                      <button type="button" class="btn-remove" (click)="removeResponsibility(i)"
+                        *ngIf="responsibilitiesFormArray.length > 1 && !isViewMode">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+
+                    <div class="responsibility-form-grid">
+                      <div class="form-group project-field">
+                        <label>Project *</label>
+                        <input type="text" formControlName="project" placeholder="Enter project name">
+                      </div>
+
+                      <div class="form-group activities-field">
+                        <label>Activities *</label>
+                        <textarea formControlName="activities" rows="4"
+                          placeholder="Describe the activities and responsibilities being handed over"></textarea>
+                      </div>
+
+                      <div class="form-group name-field">
+                        <label>Responsible Person Name *</label>
+                        <div class="searchable-dropdown">
+                          <input type="text" formControlName="responsiblePersonName"
+                            placeholder="Search and select employee..." class="dropdown-input" #searchInput
+                            (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
+                            autocomplete="off">
+                          <div class="dropdown-icon">
+                            <i class="fas fa-chevron-down"></i>
+                          </div>
+                          <div class="dropdown-list" *ngIf="isDropdownVisible(i)" [attr.data-index]="i"
+                            [class.small-list]="shouldUseSmallDropdown(getSearchTerm(i))">
+                            <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(getSearchTerm(i))"
+                              (mousedown)="selectEmployee(i, employee)"
+                              [class.selected]="isEmployeeSelected(i, employee)">
+                              <div class="employee-info">
+                                <div class="employee-name">{{ getEmployeeNameFromDescription(employee.description || '')
+                                  }}</div>
+                                <div class="employee-id">{{ employee.idValue || '' }}</div>
+                              </div>
+                            </div>
+                            <div class="no-results" *ngIf="getFilteredEmployees(getSearchTerm(i)).length === 0">
+                              No employees found
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group phone-field">
+                        <label>Phone Number *</label>
+                        <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number">
+                      </div>
+
+                      <div class="form-group email-field">
+                        <label>Email ID *</label>
+                        <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address">
+                      </div>
+
+                      <div class="form-group remarks-field">
+                        <label>Remarks</label>
+                        <textarea formControlName="remarks" rows="3"
+                          placeholder="Any additional remarks or special instructions"></textarea>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Declarations Section -->
-      <div class="form-section-card" [@fadeInUp]="'in'">
-        <div class="section-header">
-          <h3><i class="fas fa-check-circle"></i> Declarations</h3>
-        </div>
-        <div class="form-section">
-          <div class="declarations">
-            <div class="declaration-list">
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decInfoAccurate">
-                <span class="checkmark"></span>
-                I confirm that all information provided is accurate and complete
-              </label>
-
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decHandoverComplete">
-                <span class="checkmark"></span>
-                <span *ngIf="formType === 'E'">I have handed over all my responsibilities to the designated personnel</span>
-                <span *ngIf="formType === 'P' || formType === 'R'">I have properly handed over my responsibilities to {{ exitForm.get('responsibilitiesHandedOverTo')?.value || 'the designated person' }}</span>
-              </label>
-
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decReturnAssets">
-                <span class="checkmark"></span>
-                <span *ngIf="formType === 'E'">I will return all company assets (laptop, phone, keys, etc.) before departure</span>
-                <span *ngIf="formType === 'P'">I will return all company assets (laptop, phone, keys, etc.) before my planned departure</span>
-                <span *ngIf="formType === 'R'">I will return all company assets (laptop, phone, keys, etc.) before my last working day</span>
-              </label>
-
-              <label class="checkbox-label">
-                <input type="checkbox" formControlName="decUnderstandReturn">
-                <span class="checkmark"></span>
-                <span *ngIf="formType === 'E'">I understand this is an emergency exit and I will return as per the approved dates</span>
-                <span *ngIf="formType === 'P'">I understand this is a planned leave and I will return as per the approved schedule</span>
-                <span *ngIf="formType === 'R'">I understand this is a resignation and I will complete the full notice period as required</span>
-              </label>
+          <!-- Declarations Section -->
+          <div class="form-section-card" [@fadeInUp]="'in'">
+            <div class="section-header">
+              <h3><i class="fas fa-check-circle"></i> Declarations</h3>
             </div>
+            <div class="form-section">
+              <div class="declarations">
+                <div class="declaration-list">
+                  <label class="checkbox-label">
+                    <input type="checkbox" formControlName="decInfoAccurate">
+                    <span class="checkmark"></span>
+                    I confirm that all information provided is accurate and complete
+                  </label>
 
-            <div class="declaration-notes">
-              <div class="note info">
-                <i class="fas fa-info-circle"></i>
-                <span>Once submitted, your request will be sent to all approving departments. You will receive email notifications as each department approves your request.</span>
-              </div>
-              <div class="note success">
-                <i class="fas fa-clock" *ngIf="formType === 'E'"></i>
-                <i class="fas fa-calendar-check" *ngIf="formType === 'P'"></i>
-                <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
-                <span *ngIf="formType === 'E'">Emergency exit requests are typically processed within 2-3 business days. You will be notified of the final decision via email.</span>
-                <span *ngIf="formType === 'P'">Planned leave requests are typically processed within 5-7 business days. You will be notified of the final decision via email.</span>
-                <span *ngIf="formType === 'R'">Resignation requests are typically processed within 7-10 business days. You will be notified of the final decision via email.</span>
+                  <label class="checkbox-label">
+                    <input type="checkbox" formControlName="decHandoverComplete">
+                    <span class="checkmark"></span>
+                    <span *ngIf="formType === 'E'">I have handed over all my responsibilities to the designated
+                      personnel</span>
+                    <span *ngIf="formType === 'P' || formType === 'R'">I have properly handed over my responsibilities
+                      to {{ exitForm.get('responsibilitiesHandedOverTo')?.value || 'the designated person' }}</span>
+                  </label>
+
+                  <label class="checkbox-label">
+                    <input type="checkbox" formControlName="decReturnAssets">
+                    <span class="checkmark"></span>
+                    <span *ngIf="formType === 'E'">I will return all company assets (laptop, phone, keys, etc.) before
+                      departure</span>
+                    <span *ngIf="formType === 'P'">I will return all company assets (laptop, phone, keys, etc.) before
+                      my planned departure</span>
+                    <span *ngIf="formType === 'R'">I will return all company assets (laptop, phone, keys, etc.) before
+                      my last working day</span>
+                  </label>
+
+                  <label class="checkbox-label">
+                    <input type="checkbox" formControlName="decUnderstandReturn">
+                    <span class="checkmark"></span>
+                    <span *ngIf="formType === 'E'">I understand this is an emergency exit and I will return as per the
+                      approved dates</span>
+                    <span *ngIf="formType === 'P'">I understand this is a planned leave and I will return as per the
+                      approved schedule</span>
+                    <span *ngIf="formType === 'R'">I understand this is a resignation and I will complete the full
+                      notice period as required</span>
+                  </label>
+                </div>
+
+                <div class="declaration-notes">
+                  <div class="note info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Once submitted, your request will be sent to all approving departments. You will receive email
+                      notifications as each department approves your request.</span>
+                  </div>
+                  <div class="note success">
+                    <i class="fas fa-clock" *ngIf="formType === 'E'"></i>
+                    <i class="fas fa-calendar-check" *ngIf="formType === 'P'"></i>
+                    <i class="fas fa-user-times" *ngIf="formType === 'R'"></i>
+                    <span *ngIf="formType === 'E'">Emergency exit requests are typically processed within 2-3 business
+                      days. You will be notified of the final decision via email.</span>
+                    <span *ngIf="formType === 'P'">Planned leave requests are typically processed within 5-7 business
+                      days. You will be notified of the final decision via email.</span>
+                    <span *ngIf="formType === 'R'">Resignation requests are typically processed within 7-10 business
+                      days. You will be notified of the final decision via email.</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
         </form>
 
         <!-- Submit Section -->
         <div class="submit-section" *ngIf="!formSubmitted && !isApprovalMode && !approvalRequestData">
           <div class="submit-container">
-            <button type="button" class="btn-submit-large" 
-                    (click)="submitForm()"
-                    [disabled]="!allDeclarationsChecked() || isSubmitting">
+            <button type="button" class="btn-submit-large" (click)="submitForm()"
+              [disabled]="!allDeclarationsChecked() || isSubmitting">
               <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
               <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
-              {{ isSubmitting ? 'Submitting Request...' : 'Submit ' + (formType === 'E' ? 'Emergency Exit' : (formType === 'R' ? 'Resignation' : 'Planned Leave')) + ' Request' }}
+              {{ isSubmitting ? 'Submitting Request...' : 'Submit ' + (formType === 'E' ? 'Emergency Exit' : (formType
+              === 'R' ? 'Resignation' : 'Planned Leave')) + ' Request' }}
             </button>
             <p class="submit-note">
               <i class="fas fa-info-circle"></i>
@@ -560,28 +575,20 @@
             <h3>Your Actions</h3>
             <span class="required-badge">Required</span>
           </div>
-          
+
           <div class="actions-content">
             <div class="remarks-section">
               <label>Remarks</label>
-              <textarea 
-                [(ngModel)]="approvalRemarks" 
-                placeholder="Enter remarks (optional for approval)..."
-                rows="3">
+              <textarea [(ngModel)]="approvalRemarks" placeholder="Enter remarks (optional for approval)..." rows="3">
               </textarea>
             </div>
-            
+
             <div class="action-buttons">
-              <button 
-                class="reject-btn" 
-                (click)="rejectRequest()"
-                [disabled]="!approvalRemarks.trim()">
+              <button class="reject-btn" (click)="rejectRequest()" [disabled]="!approvalRemarks.trim()">
                 <i class="fas fa-times"></i>
                 Reject
               </button>
-              <button 
-                class="approve-btn" 
-                (click)="approveRequest()">
+              <button class="approve-btn" (click)="approveRequest()">
                 <i class="fas fa-check"></i>
                 Approve
               </button>
@@ -595,7 +602,7 @@
             <i class="fas fa-route"></i>
             <h4>Current Approval Flow</h4>
           </div>
-          
+
           <div class="flow-steps">
             <!-- Handover Step -->
             <div class="flow-step" [ngClass]="getStepStatus('handover')">
@@ -748,8 +755,10 @@
         <i class="fas fa-check-circle"></i>
       </div>
       <h2>Form Submitted Successfully!</h2>
-      <p>Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} form has been submitted and is now being processed.</p>
-      <p><strong>Reference ID:</strong> {{ formType === 'E' ? 'EEF' : (formType === 'R' ? 'RF' : 'PLF') }}-{{ getCurrentTimestamp() }}</p>
+      <p>Your {{ formType === 'E' ? 'emergency exit' : (formType === 'R' ? 'resignation' : 'planned leave') }} form has
+        been submitted and is now being processed.</p>
+      <p><strong>Reference ID:</strong> {{ formType === 'E' ? 'EEF' : (formType === 'R' ? 'RF' : 'PLF') }}-{{
+        getCurrentTimestamp() }}</p>
 
       <div class="success-actions">
         <button type="button" class="btn-primary" (click)="downloadPDF()">

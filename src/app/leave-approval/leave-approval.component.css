@@ -72,9 +72,22 @@
 }
 
 /* Table Cell Styles - Optimized for screen fit */
-.employee-cell {
-  min-width: 140px;
-  max-width: 160px;
+.id-cell {
+  min-width: 90px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.name-cell {
+  min-width: 130px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dept-cell {
+  min-width: 120px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
 }
 
 .employee-name {
@@ -256,7 +269,9 @@
   align-items: center;
 }
 
-.btn-view-table, .btn-quick-approve-table, .btn-quick-reject-table {
+.btn-view-table,
+.btn-quick-approve-table,
+.btn-quick-reject-table {
   width: 32px;
   height: 32px;
   border: none;
@@ -988,6 +1003,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1010,6 +1026,7 @@
 
 /* Print Styles */
 @media print {
+
   .page-header,
   .tab-navigation,
   .card-actions,
@@ -1454,29 +1471,30 @@
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .stat-card {
     min-width: auto;
   }
-  
+
   .summary-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .workflow-step {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .step-indicator {
     align-self: flex-start;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
-  
-  .btn-approve, .btn-reject {
+
+  .btn-approve,
+  .btn-reject {
     justify-content: center;
   }
 }
@@ -1485,39 +1503,41 @@
   .workflow-progress {
     padding: 12px;
   }
-  
+
   .approval-action {
     padding: 12px;
   }
-  
+
   .progress-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-}/*
+}
+
+/*
  Responsive Table Improvements */
 @media (max-width: 1200px) {
   .requests-table {
     min-width: 900px;
     font-size: 13px;
   }
-  
+
   .requests-table th,
   .requests-table td {
     padding: 8px 4px;
   }
-  
+
   .employee-cell {
     min-width: 120px;
     max-width: 140px;
   }
-  
+
   .reason-cell {
     min-width: 120px;
     max-width: 150px;
   }
-  
+
   .step-cell {
     min-width: 100px;
     max-width: 120px;
@@ -1528,20 +1548,20 @@
   .requests-table-container {
     padding: 12px;
   }
-  
+
   .requests-table {
     min-width: 800px;
     font-size: 12px;
   }
-  
+
   .employee-name {
     font-size: 0.8rem;
   }
-  
+
   .employee-details {
     font-size: 0.7rem;
   }
-  
+
   .type-badge {
     font-size: 0.7rem;
     padding: 2px 4px;
@@ -1553,15 +1573,15 @@
     padding: 8px;
     margin: 0 -8px;
   }
-  
+
   .table-wrapper {
     border-radius: 4px;
   }
-  
+
   .requests-table {
     min-width: 700px;
   }
-  
+
   .requests-table th,
   .requests-table td {
     padding: 6px 3px;

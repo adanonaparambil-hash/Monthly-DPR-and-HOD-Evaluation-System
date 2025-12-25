@@ -72,10 +72,44 @@ export interface EmployeeExitRequest {
   declaration3?: string;
   declaration4?: string;
   responsibilities?: EmployeeExitResponsibility[];
+  ExitApprovalDetails?: ExitApprovalDetailDto[];
 }
 
 export interface MyApprovalRequest {
   employeeId?: string;
   status?: string;
   formType?: string
+}
+
+
+export interface EmployeeApprovalInboxRequest {
+  ApproverEmployeeId?: string;
+  FormType?: string
+}
+
+
+export interface ExitApprovalDetailDto {
+  approverRole?: string;
+
+  approvalStatusCode?: string;
+
+  approvalStatus?: string;
+
+  remarks?: string;
+
+  department?: string;
+
+  approvalDate?: string;
+
+  approvalLevel?: number;
+
+  exitId?: number;
+
+  approvedId?: string;
+
+  employeeName?: string;
+
+  email?: string;
+
+  phoneNumber?: string;
 }

@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Api } from '../services/api';
 import { SessionService } from '../services/session.service';
 import { ApprovalWorkflowService } from '../services/approval-workflow.service';
-import { EmployeeExitRequest, ApprovalStep, DepartmentApproval, MyApprovalRequest } from '../models/employeeExit.model';
+import { EmployeeExitRequest, ApprovalStep, DepartmentApproval, MyApprovalRequest, EmployeeApprovalInboxRequest } from '../models/employeeExit.model';
 
 interface LeaveRequest {
   id: string;
@@ -31,6 +31,9 @@ interface LeaveRequest {
   overallStatus?: string;
   canApprove?: boolean;
   myApprovalStep?: ApprovalStep;
+  approvalID?: number;
+  exitID?: number;
+  currentStepName?: string;
 }
 
 @Component({
@@ -87,203 +90,92 @@ export class LeaveApprovalComponent implements OnInit {
     private api: Api,
     private sessionService: SessionService,
     private approvalWorkflowService: ApprovalWorkflowService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
     this.currentUser = this.sessionService.getCurrentUser();
-    this.loadPendingApprovals();
-    this.loadMyRequests();
+
+    // Check for tab parameter in URL
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab === 'myRequests') {
+        this.activeTab = 'myRequests';
+        this.loadMyRequests();
+      } else {
+        this.activeTab = 'pending';
+        this.loadPendingApprovals();
+      }
+    });
   }
 
   switchTab(tab: 'pending' | 'myRequests'): void {
     this.activeTab = tab;
-    if (tab === 'pending' && this.pendingApprovals.length === 0) {
+    this.typeFilter = 'all'; // Reset filter when switching tabs
+    if (tab === 'pending') {
       this.loadPendingApprovals();
-    } else if (tab === 'myRequests' && this.myRequests.length === 0) {
+    } else if (tab === 'myRequests') {
+      this.loadMyRequests();
+    }
+  }
+
+  onTypeFilterChange(value: any): void {
+    this.typeFilter = value;
+    if (this.activeTab === 'pending') {
+      this.loadPendingApprovals();
+    } else {
       this.loadMyRequests();
     }
   }
 
   loadPendingApprovals(): void {
+    if (!this.currentUser) return;
+
     this.isLoadingPending = true;
 
-    // Mock data with comprehensive approval workflow
-    setTimeout(() => {
-      this.pendingApprovals = [
-        {
-          id: 'REQ001',
-          employeeName: 'John Smith',
-          employeeId: 'EMP001',
-          department: 'IT Department',
-          leaveType: 'Emergency',
-          requestDate: new Date('2024-12-10'),
-          departureDate: new Date('2024-12-15'),
-          returnDate: new Date('2024-12-20'),
-          daysRequested: 5,
-          reason: 'Family emergency - need to travel urgently',
-          status: 'Pending',
-          priority: 'High',
-          overallStatus: 'PENDING',
-          currentApprovalStep: 1,
-          canApprove: true,
-          approvalWorkflow: [
-            {
-              stepId: 1,
-              stepName: 'Responsible Person Approval',
-              approverType: 'RESPONSIBLE_PERSON',
-              approverIds: ['EMP123'],
-              approverNames: ['Mike Johnson'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 1
-            },
-            {
-              stepId: 2,
-              stepName: 'HOD Approval',
-              approverType: 'HOD',
-              approverIds: ['HOD001'],
-              approverNames: ['IT HOD'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 2
-            },
-            {
-              stepId: 3,
-              stepName: 'IT Department Approval',
-              approverType: 'DEPARTMENT',
-              approverIds: ['it'],
-              approverNames: ['IT'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 3
-            },
-            {
-              stepId: 4,
-              stepName: 'Admin Final Approval',
-              approverType: 'DEPARTMENT',
-              approverIds: ['admin'],
-              approverNames: ['Admin'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 4
-            }
-          ],
-          myApprovalStep: {
-            stepId: 1,
-            stepName: 'Responsible Person Approval',
-            approverType: 'RESPONSIBLE_PERSON',
-            approverIds: ['EMP123'],
-            approverNames: ['Mike Johnson'],
-            status: 'PENDING',
-            isRequired: true,
-            order: 1
-          }
-        },
-        {
-          id: 'REQ002',
-          employeeName: 'Sarah Johnson',
-          employeeId: 'EMP002',
-          department: 'HR Department',
-          leaveType: 'Planned',
-          requestDate: new Date('2024-12-08'),
-          departureDate: new Date('2024-12-25'),
-          returnDate: new Date('2025-01-05'),
-          daysRequested: 11,
-          reason: 'Annual vacation with family',
-          status: 'Pending',
-          priority: 'Medium',
-          overallStatus: 'IN_PROGRESS',
-          currentApprovalStep: 2,
-          canApprove: true,
-          approvalWorkflow: [
-            {
-              stepId: 1,
-              stepName: 'Responsibilities Handover Approval',
-              approverType: 'RESPONSIBLE_PERSON',
-              approverIds: ['EMP456'],
-              approverNames: ['Tom Wilson'],
-              status: 'APPROVED',
-              approvedBy: 'Tom Wilson',
-              approvedDate: '2024-12-09T10:30:00Z',
-              comments: 'Handover completed successfully',
-              isRequired: true,
-              order: 1
-            },
-            {
-              stepId: 2,
-              stepName: 'Project Manager / Site Incharge Approval',
-              approverType: 'PROJECT_MANAGER',
-              approverIds: ['PM001'],
-              approverNames: ['Project Manager'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 2
-            },
-            {
-              stepId: 3,
-              stepName: 'HOD Approval',
-              approverType: 'HOD',
-              approverIds: ['HOD002'],
-              approverNames: ['HR HOD'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 3
-            }
-          ],
-          myApprovalStep: {
-            stepId: 2,
-            stepName: 'Project Manager / Site Incharge Approval',
-            approverType: 'PROJECT_MANAGER',
-            approverIds: ['PM001'],
-            approverNames: ['Project Manager'],
-            status: 'PENDING',
-            isRequired: true,
-            order: 2
-          }
-        },
-        {
-          id: 'REQ003',
-          employeeName: 'David Brown',
-          employeeId: 'EMP003',
-          department: 'Finance Department',
-          leaveType: 'Resignation',
-          requestDate: new Date('2024-12-12'),
-          departureDate: new Date('2025-01-15'),
-          returnDate: new Date('2025-01-15'),
-          daysRequested: 30,
-          reason: 'Career change - joining new company',
-          status: 'Pending',
-          priority: 'High',
-          overallStatus: 'PENDING',
-          currentApprovalStep: 1,
-          canApprove: false,
-          approvalWorkflow: [
-            {
-              stepId: 1,
-              stepName: 'Responsibilities Handover Approval',
-              approverType: 'RESPONSIBLE_PERSON',
-              approverIds: ['EMP789'],
-              approverNames: ['Lisa Chen'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 1
-            },
-            {
-              stepId: 2,
-              stepName: 'Project Manager / Site Incharge Approval',
-              approverType: 'PROJECT_MANAGER',
-              approverIds: ['PM002'],
-              approverNames: ['Finance PM'],
-              status: 'PENDING',
-              isRequired: true,
-              order: 2
-            }
-          ]
+    // Map filters to API parameters
+    let typeParam = '';
+    if (this.typeFilter === 'emergency') typeParam = 'E';
+    else if (this.typeFilter === 'planned') typeParam = 'P';
+    else if (this.typeFilter === 'resignation') typeParam = 'R';
+
+    const requestParams: EmployeeApprovalInboxRequest = {
+      ApproverEmployeeId: this.currentUser.empId || this.currentUser.employeeId,
+      FormType: typeParam || ""
+    };
+
+    this.api.GetExitApprovalList(requestParams).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.pendingApprovals = response.data.map((item: any) => ({
+            id: `REQ${item.exitID}`,
+            exitId: item.exitID, // Keeping both for compatibility if needed elsewhere
+            exitID: item.exitID,
+            approvalID: item.approvalID,
+            employeeName: item.employeeName,
+            employeeId: item.employeeId,
+            department: item.department,
+            leaveType: this.mapTypeToLabel(item.type.trim()),
+            requestDate: item.requestDate,
+            departureDate: item.departureDate,
+            daysRequested: item.duration,
+            reason: item.reason,
+            status: this.mapStatusToLabel(item.status),
+            currentStepName: item.currentStep,
+            canApprove: true, // Since it's in the inbox, user can approve
+          }));
+        } else {
+          this.pendingApprovals = [];
         }
-      ];
-      this.isLoadingPending = false;
-    }, 1000);
+        this.isLoadingPending = false;
+      },
+      error: (error) => {
+        console.error('Error fetching pending approvals:', error);
+        this.isLoadingPending = false;
+        this.pendingApprovals = [];
+      }
+    });
   }
 
   loadMyRequests(): void {
@@ -311,6 +203,7 @@ export class LeaveApprovalComponent implements OnInit {
     this.api.GetMySubmittedRequests(requestParams).subscribe({
       next: (response) => {
         if (response.success && response.data) {
+
           this.myRequests = response.data.map((item: any) => ({
             id: `REQ${item.exitId}`,
             exitId: item.exitId,
@@ -590,6 +483,7 @@ export class LeaveApprovalComponent implements OnInit {
    * Get current approval step name
    */
   getCurrentStepName(request: LeaveRequest): string {
+    if (request.currentStepName) return request.currentStepName;
     if (!request.approvalWorkflow) return 'Unknown';
 
     const currentStep = request.approvalWorkflow.find(s => s.status === 'PENDING');
@@ -685,7 +579,8 @@ export class LeaveApprovalComponent implements OnInit {
       queryParams: {
         type: formType,
         mode: 'approval',
-        requestId: request.id
+        exitID: request.exitID,
+        approvalID: request.approvalID
       }
     });
   }
@@ -697,7 +592,7 @@ export class LeaveApprovalComponent implements OnInit {
     // Store the request data in session storage for viewing
     sessionStorage.setItem('approvalRequestData', JSON.stringify(request));
     sessionStorage.setItem('approvalMode', 'view'); // View mode instead of approval mode
-    sessionStorage.setItem('returnUrl', '/leave-approval');
+    sessionStorage.setItem('returnUrl', '/leave-approval?tab=myRequests');
 
     // Navigate to emergency exit form with view mode
     const formType = request.leaveType === 'Emergency' ? 'E' :

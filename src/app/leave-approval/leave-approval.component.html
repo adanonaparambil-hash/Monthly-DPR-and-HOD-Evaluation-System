@@ -25,22 +25,15 @@
         <div class="filters">
           <div class="filter-group">
             <label class="filter-label">Leave type</label>
-            <select [(ngModel)]="typeFilter" class="filter-select">
+            <select [ngModel]="typeFilter" (change)="onTypeFilterChange($any($event.target).value)"
+              class="filter-select">
               <option value="all">All Types</option>
               <option value="emergency">Emergency</option>
               <option value="planned">Planned</option>
               <option value="resignation">Resignation</option>
             </select>
           </div>
-          <div class="filter-group">
-            <label class="filter-label">Date Range</label>
-            <select [(ngModel)]="dateFilter" class="filter-select">
-              <option value="all">All Dates</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-          </div>
+
         </div>
       </div>
 
@@ -58,15 +51,15 @@
           <table class="requests-table" *ngIf="getMyPendingApprovals().length > 0">
             <thead>
               <tr>
-                <th>Employee</th>
+                <th>Employee ID</th>
+                <th>Employee Name</th>
+                <th>Department</th>
                 <th>Type</th>
                 <th>Request Date</th>
                 <th>Departure</th>
                 <th>Duration</th>
                 <th>Reason</th>
                 <th>Current Step</th>
-                <th>Progress</th>
-                <th>Priority</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -74,13 +67,14 @@
               <tr *ngFor="let request of getMyPendingApprovals(); trackBy: trackByRequestId" class="request-row"
                 [class]="getPriorityClass(request.priority)">
 
-                <!-- Employee Info -->
-                <td class="employee-cell">
-                  <div class="employee-info">
-                    <div class="employee-name">{{ request.employeeName }}</div>
-                    <div class="employee-details">{{ request.employeeId }} • {{ request.department }}</div>
-                  </div>
-                </td>
+                <!-- Employee ID -->
+                <td class="id-cell">{{ request.employeeId }}</td>
+
+                <!-- Employee Name -->
+                <td class="name-cell">{{ request.employeeName }}</td>
+
+                <!-- Department -->
+                <td class="dept-cell">{{ request.department }}</td>
 
                 <!-- Type -->
                 <td class="type-cell">
@@ -109,23 +103,6 @@
                 <!-- Current Step -->
                 <td class="step-cell">
                   <div class="current-step">{{ getCurrentStepName(request) }}</div>
-                </td>
-
-                <!-- Progress -->
-                <td class="progress-cell">
-                  <div class="progress-container">
-                    <div class="progress-bar-mini">
-                      <div class="progress-fill-mini" [style.width.%]="getWorkflowProgress(request)"></div>
-                    </div>
-                    <span class="progress-text">{{ getWorkflowProgress(request) }}%</span>
-                  </div>
-                </td>
-
-                <!-- Priority -->
-                <td class="priority-cell">
-                  <span class="badge priority-badge" [class]="getPriorityClass(request.priority)">
-                    {{ request.priority }}
-                  </span>
                 </td>
 
                 <!-- Actions -->
@@ -168,7 +145,8 @@
           </div>
           <div class="filter-group">
             <label class="filter-label">Leave type</label>
-            <select [(ngModel)]="typeFilter" (change)="loadMyRequests()" class="filter-select">
+            <select [ngModel]="typeFilter" (change)="onTypeFilterChange($any($event.target).value)"
+              class="filter-select">
               <option value="all">All Types</option>
               <option value="emergency">Emergency</option>
               <option value="planned">Planned</option>
@@ -192,7 +170,6 @@
           <table class="requests-table" *ngIf="getFilteredMyRequests().length > 0">
             <thead>
               <tr>
-                <th>Request ID</th>
                 <th>Type</th>
                 <th>Submitted Date</th>
                 <th>Departure</th>
@@ -205,11 +182,6 @@
             <tbody>
               <tr *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId" class="request-row"
                 [class]="getStatusClass(request.status)">
-
-                <!-- Request ID -->
-                <td class="id-cell">
-                  <div class="request-id">{{ request.id }}</div>
-                </td>
 
                 <!-- Type -->
                 <td class="type-cell">
