@@ -15,6 +15,13 @@ export interface ApprovalStep {
   approverNames: string[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS';
   approvedBy?: string;
+  approvedId?: string;
+  email?: string;
+  phoneNumber?: string;
+  photo?: string;
+  profileImageBase64?: string;
+  department?: string;
+  showRemarks?: boolean;
   approvedDate?: string;
   comments?: string;
   isRequired: boolean;
@@ -112,6 +119,9 @@ export interface ExitApprovalDetailDto {
   email?: string;
 
   phoneNumber?: string;
+
+  ProfileImageBase64?: string;
+
 }
 
 export interface UpdateExitApprovalRequest {

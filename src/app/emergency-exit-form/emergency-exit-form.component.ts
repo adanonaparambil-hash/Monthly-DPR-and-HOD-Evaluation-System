@@ -5,7 +5,14 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { ActivatedRoute, Router } from '@angular/router';
 import { Api } from '../services/api';
 import { DropdownOption, ExitEmpProfileDetails } from '../models/common.model';
-import { EmployeeExitRequest, EmployeeExitResponsibility, ApprovalStep, DepartmentApproval, EmployeeExitApprovalWorkflow } from '../models/employeeExit.model';
+import {
+  EmployeeExitRequest,
+  EmployeeExitResponsibility,
+  ApprovalStep,
+  DepartmentApproval,
+  EmployeeExitApprovalWorkflow,
+  UpdateExitApprovalRequest
+} from '../models/employeeExit.model';
 import { SessionService } from '../services/session.service';
 import { ToastrService } from 'ngx-toastr';
 import { ApprovalWorkflowService } from '../services/approval-workflow.service';
@@ -91,6 +98,7 @@ export class EmergencyExitFormComponent implements OnInit {
   isApprovalMode: boolean = false;
   isViewMode: boolean = false;
   approvalRequestData: any = null;
+  approvalID: number | null = null;
   returnUrl: string = '';
 
   // Employee profile data
@@ -305,10 +313,11 @@ export class EmergencyExitFormComponent implements OnInit {
       const typeParam = params['type'];
       const modeParam = params['mode'];
       const requestId = params['requestId'] || params['exitID'];
-      const approvalID = params['approvalID'];
+      const approvalIDParam = params['approvalID'];
+      this.approvalID = approvalIDParam ? parseInt(approvalIDParam) : null;
 
       console.log('=== SETFORMTYPE DEBUG ===');
-      console.log('URL params:', { typeParam, modeParam, requestId, approvalID });
+      console.log('URL params:', { typeParam, modeParam, requestId, approvalIDParam });
       console.log('Current approval mode before processing:', this.isApprovalMode);
 
       if (typeParam === 'P' || typeParam === 'E' || typeParam === 'R') {
@@ -321,9 +330,9 @@ export class EmergencyExitFormComponent implements OnInit {
       }
 
       // Determine mode and return URL based on presence of approvalID or requestId
-      if (approvalID || requestId) {
-        this.isApprovalMode = !!approvalID;
-        this.isViewMode = !approvalID; // If we have an ID but not approvalID, it's typically view mode until data is assessed
+      if (this.approvalID || requestId) {
+        this.isApprovalMode = !!this.approvalID;
+        this.isViewMode = !this.approvalID; // If we have an ID but not approvalID, it's typically view mode until data is assessed
         this.returnUrl = sessionStorage.getItem('returnUrl') || '/leave-approval';
         console.log('Mode Determined:', { isApprovalMode: this.isApprovalMode, isViewMode: this.isViewMode, returnUrl: this.returnUrl });
       } else {
@@ -434,6 +443,12 @@ export class EmergencyExitFormComponent implements OnInit {
               approverNames: [history.employeeName],
               status: history.approvalStatusCode === 'A' ? 'APPROVED' : (history.approvalStatusCode === 'R' ? 'REJECTED' : (history.approvalStatusCode === 'I' ? 'IN_PROGRESS' : 'PENDING')),
               approvedBy: history.employeeName,
+              approvedId: history.approvedId,
+              email: history.email,
+              phoneNumber: history.phoneNumber,
+              photo: history.photo,
+              department: history.department,
+              profileImageBase64: history.ProfileImageBase64 ? (history.ProfileImageBase64.startsWith('data:') ? history.ProfileImageBase64 : 'data:image/jpeg;base64,' + history.ProfileImageBase64) : null,
               approvedDate: history.approvalDate,
               comments: history.remarks,
               isRequired: true,
@@ -1452,19 +1467,70 @@ export class EmergencyExitFormComponent implements OnInit {
   approvalRemarks: string = '';
 
   approveRequest(): void {
-    if (this.approvalRemarks.trim()) {
-      // Handle approval logic
-      this.toastr.success('Request approved successfully', 'Approval Successful');
-      this.returnToApprovalListing();
+    if (!this.approvalID) {
+      this.toastr.error('Approval ID missing', 'Error');
+      return;
     }
+
+    const request: UpdateExitApprovalRequest = {
+      approvalId: this.approvalID,
+      status: 'A',
+      remarks: this.approvalRemarks || 'Approved'
+    };
+
+    this.isSubmitting = true;
+    this.api.UpdateExitApproval(request).subscribe({
+      next: (response) => {
+        if (response && response.success) {
+          this.toastr.success('Request approved successfully', 'Approval Successful');
+          this.returnToApprovalListing();
+        } else {
+          this.toastr.error(response?.message || 'Failed to approve request', 'Error');
+        }
+        this.isSubmitting = false;
+      },
+      error: (error) => {
+        console.error('Error approving request:', error);
+        this.toastr.error('An error occurred during approval', 'Error');
+        this.isSubmitting = false;
+      }
+    });
   }
 
   rejectRequest(): void {
-    if (this.approvalRemarks.trim()) {
-      // Handle rejection logic
-      this.toastr.success('Request rejected successfully', 'Rejection Successful');
-      this.returnToApprovalListing();
+    if (!this.approvalID) {
+      this.toastr.error('Approval ID missing', 'Error');
+      return;
     }
+
+    if (!this.approvalRemarks.trim()) {
+      this.toastr.warning('Please provide remarks for rejection', 'Warning');
+      return;
+    }
+
+    const request: UpdateExitApprovalRequest = {
+      approvalId: this.approvalID,
+      status: 'R',
+      remarks: this.approvalRemarks
+    };
+
+    this.isSubmitting = true;
+    this.api.UpdateExitApproval(request).subscribe({
+      next: (response) => {
+        if (response && response.success) {
+          this.toastr.success('Request rejected successfully', 'Rejection Successful');
+          this.returnToApprovalListing();
+        } else {
+          this.toastr.error(response?.message || 'Failed to reject request', 'Error');
+        }
+        this.isSubmitting = false;
+      },
+      error: (error) => {
+        console.error('Error rejecting request:', error);
+        this.toastr.error('An error occurred during rejection', 'Error');
+        this.isSubmitting = false;
+      }
+    });
   }
 
   // Additional missing properties and methods

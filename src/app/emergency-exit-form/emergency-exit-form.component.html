@@ -603,25 +603,88 @@
             <h4>Current Approval Flow</h4>
           </div>
 
-          <div class="flow-steps">
-            <div class="flow-step" *ngFor="let step of approvalWorkflow" [ngClass]="step.status.toLowerCase()">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="step.status === 'APPROVED'"></i>
-                <i class="fas fa-times" *ngIf="step.status === 'REJECTED'"></i>
-                <i class="fas fa-clock" *ngIf="step.status === 'IN_PROGRESS'"></i>
-                <i class="fas fa-circle" *ngIf="step.status === 'PENDING'"></i>
+          <div class="flow-timeline">
+            <div class="timeline-step" *ngFor="let step of approvalWorkflow; let last = last"
+              [ngClass]="step.status.toLowerCase()">
+
+              <!-- Timeline Icon/Dot -->
+              <div class="timeline-indicator">
+                <div class="indicator-dot">
+                  <i class="fas" [ngClass]="{
+                    'fa-check-circle': step.status === 'APPROVED',
+                    'fa-times-circle': step.status === 'REJECTED',
+                    'fa-hourglass-half': step.status === 'IN_PROGRESS',
+                    'fa-circle-notch fa-spin': step.status === 'PENDING' && isApprovalMode,
+                    'fa-dot-circle': step.status === 'PENDING' && !isApprovalMode
+                  }"></i>
+                </div>
+                <div class="indicator-line" *ngIf="!last"></div>
               </div>
-              <div class="step-info">
-                <h5>{{ step.stepName }}</h5>
-                <span class="status" [ngClass]="step.status.toLowerCase()">{{ step.status | titlecase }}</span>
-                <p *ngIf="step.approvedBy"><strong>By:</strong> {{ step.approvedBy }}</p>
-                <p *ngIf="step.comments" class="step-comments">"{{ step.comments }}"</p>
-                <p *ngIf="step.approvedDate" class="step-date">{{ step.approvedDate | date:'medium' }}</p>
+
+              <!-- Step Card -->
+              <div class="step-card-container">
+                <div class="step-card-header">
+                  <span class="step-title" [title]="step.stepName">{{ step.stepName }}</span>
+                  <div class="badge-wrapper">
+                    <span class="status-badge" [ngClass]="step.status.toLowerCase()">
+                      {{ step.status | titlecase }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="approver-card"
+                  *ngIf="step.approvedBy || step.status === 'PENDING' || step.status === 'IN_PROGRESS'">
+                  <div class="approver-avatar">
+                    <img *ngIf="step.profileImageBase64 || step.photo"
+                      [src]="step.profileImageBase64 || step.photo || 'assets/images/default-avatar.png'"
+                      [alt]="step.approvedBy">
+                    <div *ngIf="!step.profileImageBase64 && !step.photo" class="avatar-icon">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <div class="status-mini-dot" [ngClass]="step.status.toLowerCase()"></div>
+                  </div>
+                  <div class="approver-details">
+                    <div class="approver-name">{{ step.approvedBy || 'Assigning...' }}</div>
+                    <div class="approver-contact" *ngIf="step.department">
+                      <i class="fas fa-building"></i> {{ step.department }}
+                    </div>
+                    <div class="approver-contact" *ngIf="step.email">
+                      <i class="fas fa-envelope"></i> {{ step.email }}
+                    </div>
+                    <div class="approver-contact" *ngIf="step.phoneNumber">
+                      <i class="fas fa-phone-alt"></i> {{ step.phoneNumber }}
+                    </div>
+
+                    <div class="approval-meta" *ngIf="step.approvedDate">
+                      <i class="fas fa-calendar-alt"></i> {{ step.status === 'APPROVED' ? 'Approved' : 'Actioned' }} on
+                      {{ step.approvedDate | date:'mediumDate' }}
+                    </div>
+
+                    <!-- Remarks Toggle -->
+                    <div class="remarks-toggle" *ngIf="step.comments"
+                      (click)="step['showRemarks'] = !step['showRemarks']">
+                      <i class="fas fa-comment-dots"></i>
+                      <span>{{ step['showRemarks'] ? 'Hide Remarks' : 'View Remarks' }}</span>
+                      <i class="fas" [ngClass]="step['showRemarks'] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+
+                    <div class="step-comments-bubble" *ngIf="step.comments && step['showRemarks']" [@fadeInUp]>
+                      {{ step.comments }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="waiting-info" *ngIf="step.status === 'PENDING' && !isApprovalMode">
+                  <p><i class="fas fa-info-circle"></i> Waiting for next level approval</p>
+                </div>
               </div>
             </div>
 
             <div class="no-workflow" *ngIf="approvalWorkflow.length === 0">
-              <p><i class="fas fa-info-circle"></i> No approval history available</p>
+              <div class="empty-flow">
+                <i class="fas fa-route"></i>
+                <p>Approval flow initiated...</p>
+              </div>
             </div>
           </div>
         </div>
