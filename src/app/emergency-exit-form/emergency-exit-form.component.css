@@ -4140,6 +4140,142 @@ ced Approval Actions Column */
     min-width: 280px;
   }
 
+  .flow-card {
+    padding: 20px;
+  }
+
+  .step-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .badge-wrapper {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .workflow-sidebar {
+    width: 100%;
+    min-width: auto;
+    border-left: none;
+    border-top: 1px solid #e9ecef;
+    padding: 12px;
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
+
+  .flow-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .flow-header {
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+
+  .flow-header h4 {
+    font-size: 16px;
+  }
+
+  .timeline-step {
+    min-height: 80px;
+    gap: 10px;
+  }
+
+  .timeline-indicator {
+    width: 28px;
+  }
+
+  .indicator-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .approver-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .approver-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .status-mini-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .approver-name {
+    font-size: 13px;
+  }
+
+  .approver-contact {
+    font-size: 11px;
+  }
+
+  .step-title {
+    font-size: 13px;
+    min-width: 100px;
+  }
+
+  .status-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .workflow-sidebar {
+    padding: 8px;
+  }
+
+  .flow-card {
+    padding: 12px;
+  }
+
+  .timeline-step {
+    min-height: 70px;
+    gap: 8px;
+  }
+
+  .approver-card {
+    padding: 8px;
+    gap: 8px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .approver-avatar {
+    width: 32px;
+    height: 32px;
+    align-self: center;
+  }
+
+  .approver-details {
+    align-items: center;
+    text-align: center;
+  }
+
+  .approver-contact {
+    justify-content: center;
+  }
+
+  .step-card-header {
+    text-align: center;
+  }
+
+  .step-title {
+    text-align: center;
+    min-width: auto;
+  }
+}
+
   .form-layout.has-sidebar .form-content-column {
     max-width: calc(100% - 300px);
   }
@@ -4498,6 +4634,13 @@ ced Approval Actions Column */
   flex-shrink: 0;
 }
 
+.image-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
 .approver-avatar img,
 .avatar-icon {
   width: 100%;
@@ -4506,6 +4649,14 @@ ced Approval Actions Column */
   object-fit: cover;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.approver-image {
+  transition: opacity 0.3s ease;
+}
+
+.approver-image:hover {
+  opacity: 0.9;
 }
 
 .avatar-icon {

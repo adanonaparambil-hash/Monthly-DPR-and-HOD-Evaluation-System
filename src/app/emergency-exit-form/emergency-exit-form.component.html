@@ -601,6 +601,12 @@
           <div class="flow-header">
             <i class="fas fa-route"></i>
             <h4>Current Approval Flow</h4>
+            <!-- Debug button - remove in production -->
+            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                    (click)="refreshApprovalImages()" 
+                    style="font-size: 10px; padding: 2px 6px;">
+              🔄 Refresh Images
+            </button>
           </div>
 
           <div class="flow-timeline">
@@ -635,10 +641,15 @@
                 <div class="approver-card"
                   *ngIf="step.approvedBy || step.status === 'PENDING' || step.status === 'IN_PROGRESS'">
                   <div class="approver-avatar">
-                    <img *ngIf="step.profileImageBase64 || step.photo"
-                      [src]="step.profileImageBase64 || step.photo || 'assets/images/default-avatar.png'"
-                      [alt]="step.approvedBy">
-                    <div *ngIf="!step.profileImageBase64 && !step.photo" class="avatar-icon">
+                    <div class="image-container" *ngIf="getApproverImage(step)">
+                      <img [src]="getApproverImage(step)"
+                        [alt]="step.approvedBy || 'Approver'"
+                        (error)="onApproverImageError($event, step)"
+                        (load)="onApproverImageLoad($event, step)"
+                        loading="lazy"
+                        class="approver-image">
+                    </div>
+                    <div *ngIf="!getApproverImage(step)" class="avatar-icon">
                       <i class="fas fa-user"></i>
                     </div>
                     <div class="status-mini-dot" [ngClass]="step.status.toLowerCase()"></div>

@@ -448,13 +448,19 @@ export class EmergencyExitFormComponent implements OnInit {
               phoneNumber: history.phoneNumber,
               photo: history.photo,
               department: history.department,
-              profileImageBase64: history.ProfileImageBase64 ? (history.ProfileImageBase64.startsWith('data:') ? history.ProfileImageBase64 : 'data:image/jpeg;base64,' + history.ProfileImageBase64) : null,
+              profileImageBase64: this.processProfileImage(history.profileImageBase64 || history.ProfileImageBase64),
               approvedDate: history.approvalDate,
               comments: history.remarks,
               isRequired: true,
               order: history.approvalLevel || index + 1
             }));
             this.updateWorkflowProgress();
+            
+            // Debug the loaded approval workflow
+            this.debugApprovalWorkflow();
+            
+            // Test image processing
+            this.testImageProcessing();
           }
 
           // Fetch additional employee details (profile/image) using the employeeId from saved data
@@ -685,7 +691,7 @@ export class EmergencyExitFormComponent implements OnInit {
     const photoUrl = data.photo || data.Photo;
 
     if (photoBase64) {
-      this.employeePhoto = `data:image/jpeg;base64,${photoBase64}`;
+      this.employeePhoto = this.processProfileImage(photoBase64) || 'assets/images/default-avatar.png';
     } else if (photoUrl) {
       this.employeePhoto = photoUrl;
     } else {
@@ -1559,5 +1565,141 @@ export class EmergencyExitFormComponent implements OnInit {
 
   resetForm(): void {
     this.exitForm.reset();
+  }
+
+  /**
+   * Process profile image data to ensure proper base64 format
+   */
+  processProfileImage(imageData: string | null): string | null {
+    if (!imageData) return null;
+    
+    // If it already has data URI prefix, return as is
+    if (imageData.startsWith('data:image')) {
+      return imageData;
+    }
+    
+    // Add data URI prefix for base64 data
+    return `data:image/jpeg;base64,${imageData}`;
+  }
+
+  /**
+   * Get the approver image with proper base64 handling
+   */
+  getApproverImage(step: ApprovalStep): string | null {
+    if (step.profileImageBase64) {
+      // Check if it already has data URI prefix
+      if (step.profileImageBase64.startsWith('data:image')) {
+        return step.profileImageBase64;
+      } else {
+        // Add data URI prefix for base64 data
+        return `data:image/jpeg;base64,${step.profileImageBase64}`;
+      }
+    } else if (step.photo) {
+      return step.photo;
+    }
+    return null;
+  }
+
+  /**
+   * Handle approver image loading errors
+   */
+  onApproverImageError(event: any, step: ApprovalStep): void {
+    console.log('Approver image loading failed for step:', step.stepName);
+    console.log('Image source was:', event.target.src);
+    console.log('Step data:', {
+      profileImageBase64: step.profileImageBase64,
+      photo: step.photo,
+      approvedBy: step.approvedBy
+    });
+    // Hide the image and show fallback icon
+    event.target.style.display = 'none';
+    // Find the parent container and show fallback
+    const container = event.target.closest('.approver-avatar');
+    if (container) {
+      const fallback = container.querySelector('.avatar-icon');
+      if (fallback) {
+        fallback.style.display = 'flex';
+      }
+    }
+  }
+
+  /**
+   * Handle approver image loading success
+   */
+  onApproverImageLoad(event: any, step: ApprovalStep): void {
+    console.log('Approver image loaded successfully for step:', step.stepName);
+    // Hide any fallback icon
+    const container = event.target.closest('.approver-avatar');
+    if (container) {
+      const fallback = container.querySelector('.avatar-icon');
+      if (fallback) {
+        fallback.style.display = 'none';
+      }
+    }
+  }
+
+  /**
+   * Debug method to log approval workflow data
+   */
+  debugApprovalWorkflow(): void {
+    console.log('=== APPROVAL WORKFLOW DEBUG ===');
+    console.log('Approval workflow length:', this.approvalWorkflow.length);
+    this.approvalWorkflow.forEach((step, index) => {
+      console.log(`Step ${index + 1}:`, {
+        stepName: step.stepName,
+        status: step.status,
+        approvedBy: step.approvedBy,
+        hasProfileImageBase64: !!step.profileImageBase64,
+        profileImageBase64Preview: step.profileImageBase64 ? step.profileImageBase64.substring(0, 50) + '...' : null,
+        profileImageBase64Length: step.profileImageBase64?.length,
+        hasPhoto: !!step.photo,
+        photo: step.photo,
+        email: step.email,
+        phoneNumber: step.phoneNumber
+      });
+    });
+    console.log('=== END DEBUG ===');
+  }
+
+  /**
+   * Manually refresh images in the approval workflow
+   */
+  refreshApprovalImages(): void {
+    console.log('Refreshing approval workflow images...');
+    this.approvalWorkflow.forEach((step, index) => {
+      if (step.profileImageBase64) {
+        console.log(`Step ${index + 1} (${step.stepName}):`, {
+          hasImage: !!step.profileImageBase64,
+          imagePreview: step.profileImageBase64.substring(0, 50) + '...'
+        });
+      }
+    });
+    // Force change detection
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Test method to verify image processing
+   */
+  testImageProcessing(): void {
+    const testBase64 = "/9j/4AAQSkZJRgABAQEAYABgAAD/4QBaRXhpZgAATU0AKgAAA";
+    console.log('Testing image processing:');
+    console.log('Input:', testBase64);
+    console.log('Output:', this.processProfileImage(testBase64));
+    
+    const testWithPrefix = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QBaRXhpZgAATU0AKgAAA";
+    console.log('Input with prefix:', testWithPrefix);
+    console.log('Output with prefix:', this.processProfileImage(testWithPrefix));
+  }
+
+  /**
+   * Refresh approval workflow data
+   */
+  refreshApprovalWorkflow(): void {
+    const exitId = this.route.snapshot.queryParams['exitID'] || this.route.snapshot.queryParams['requestId'];
+    if (exitId) {
+      console.log('Refreshing approval workflow for exitId:', exitId);
+      this.loadSavedExitData(parseInt(exitId));
+    }
   }
 }

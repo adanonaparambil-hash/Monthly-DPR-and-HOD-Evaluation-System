@@ -120,7 +120,7 @@ export interface ExitApprovalDetailDto {
 
   phoneNumber?: string;
 
-  ProfileImageBase64?: string;
+  profileImageBase64Length?: string;
 
 }
 
