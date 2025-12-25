@@ -13,7 +13,7 @@ export interface ApprovalStep {
   approverType: 'RESPONSIBLE_PERSON' | 'PROJECT_MANAGER' | 'HOD' | 'DEPARTMENT';
   approverIds: string[]; // Multiple approvers for responsible persons
   approverNames: string[];
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS';
   approvedBy?: string;
   approvedDate?: string;
   comments?: string;
@@ -24,7 +24,7 @@ export interface ApprovalStep {
 export interface DepartmentApproval {
   departmentId: string;
   departmentName: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS';
   approverName?: string;
   approvedDate?: string;
   comments?: string;

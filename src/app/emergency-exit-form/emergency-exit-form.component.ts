@@ -16,7 +16,7 @@ interface Department {
   name: string;
   items: DepartmentItem[];
   hodName?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'in-progress';
   approvedDate?: Date;
   comments?: string;
 }
@@ -241,10 +241,7 @@ export class EmergencyExitFormComponent implements OnInit {
         }
       });
 
-      // Populate form with session data first
-      this.populateFormFromSession();
-
-      // Set form type based on URL parameter or input (this will re-populate if needed)
+      // Set form type based on URL parameter or input (this will handle population)
       this.setFormType();
 
       // Update validators based on form type
@@ -374,12 +371,22 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('Final approval mode after processing:', this.isApprovalMode);
       console.log('=== END SETFORMTYPE DEBUG ===');
 
+      // Clear previous form state if we are going to a new entry or regular mode
+      if (!modeParam && !requestId) {
+        this.resetFormCompletely();
+      }
+
       // Update form validations and steps when form type changes
       // Planned Leave and Resignation use same structure (2 steps), Emergency uses 4 steps
       this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
       this.updateFormValidations();
 
-      if (!this.isApprovalMode && !this.isViewMode) {
+      // Check for exitID to load saved data (check multiple common names for better compatibility)
+      const exitIdParam = params['exitID'] || params['exitId'] || params['requestId'];
+      if (exitIdParam) {
+        console.log('Loading saved data for exitId:', exitIdParam);
+        this.loadSavedExitData(parseInt(exitIdParam));
+      } else if (!this.isApprovalMode && !this.isViewMode) {
         // Re-populate form with session data after form type change
         this.populateFormFromSession();
 
@@ -393,6 +400,155 @@ export class EmergencyExitFormComponent implements OnInit {
 
         // Ensure fields are enabled for regular form usage
         this.enableFormFields();
+      }
+    });
+  }
+
+  loadSavedExitData(exitId: number): void {
+    this.api.GetEmployeeExitSavedInfo(exitId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          const data = response.data;
+          console.log('Saved exit data fetched:', data);
+
+          // Update form type if different
+          if (data.formType && data.formType.trim() !== this.formType) {
+            this.formType = data.formType.trim() as 'E' | 'P' | 'R';
+            this.totalSteps = (this.formType === 'P' || this.formType === 'R') ? 2 : 4;
+            this.updateFormValidations();
+          }
+
+          // Format dates for input fields
+          const formatDateForInput = (dateString: string): string => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+          };
+
+          // Bind data to form fields
+          this.exitForm.patchValue({
+            employeeName: data.employeeName || data.EmployeeName || data.name || this.exitForm.get('employeeName')?.value || '',
+            employeeId: data.employeeId || data.employeeID || data.empId || '',
+            formType: data.formType?.trim() || 'E',
+            dateOfDeparture: formatDateForInput(data.dateOfDeparture),
+            dateOfArrival: formatDateForInput(data.dateArrival),
+            flightTime: data.flightTime || '',
+            noOfDaysApproved: data.noOfDaysApproved || 0,
+            hodName: data.depHod || '',
+            projectManagerName: data.projectSiteIncharge || '',
+            reasonForEmergency: data.reasonForLeave || '',
+            category: data.category || '',
+            responsibilitiesHandedOverTo: data.responsibilitiesHanded || '',
+            decInfoAccurate: data.declaration1 === 'Y',
+            decHandoverComplete: data.declaration2 === 'Y',
+            decReturnAssets: data.declaration3 === 'Y',
+            decUnderstandReturn: data.declaration4 === 'Y'
+          });
+
+          // Bind responsibilities
+          if (data.responsibilities && data.responsibilities.length > 0) {
+            this.responsibilitiesFormArray.clear();
+            data.responsibilities.forEach((resp: any) => {
+              const responsibilityGroup = this.fb.group({
+                project: [resp.project || '', Validators.required],
+                activities: [resp.activities || '', Validators.required],
+                responsiblePersonName: [resp.rpersonEmpId || '', Validators.required], // Fallback to ID if name not separate
+                responsiblePersonId: [resp.rpersonEmpId || ''],
+                responsiblePersonPhone: [resp.rpersonPhone || '', [Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]],
+                responsiblePersonEmail: [resp.rpersonEmail || '', [Validators.required, Validators.email]],
+                remarks: [resp.remarks || '']
+              });
+              this.responsibilitiesFormArray.push(responsibilityGroup);
+            });
+          }
+
+          // Map approval status
+          if (data.approvalListHistory) {
+            this.approvalWorkflow = data.approvalListHistory.map((history: any, index: number) => ({
+              stepId: index + 1,
+              stepName: history.approverRole || 'Approver',
+              approverType: 'DEPARTMENT',
+              approverIds: [history.approvedId],
+              approverNames: [history.employeeName],
+              status: history.approvalStatusCode === 'A' ? 'APPROVED' : (history.approvalStatusCode === 'R' ? 'REJECTED' : (history.approvalStatusCode === 'I' ? 'IN_PROGRESS' : 'PENDING')),
+              approvedBy: history.employeeName,
+              approvedDate: history.approvalDate,
+              comments: history.remarks,
+              isRequired: true,
+              order: history.approvalLevel || index + 1
+            }));
+            this.updateWorkflowProgress();
+          }
+
+          // Fetch additional employee details (profile/image) using the employeeId from saved data
+          if (data.employeeId) {
+            this.loadEmployeeDetailsById(data.employeeId);
+          }
+
+          // In view mode, disable fields again after patching
+          if (this.isViewMode || this.isApprovalMode) {
+            setTimeout(() => this.disableAllFormFields(), 100);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading saved exit info:', error);
+        this.toastr.error('Failed to load saved request data.', 'Error');
+      }
+    });
+  }
+
+  loadEmployeeDetailsById(empId: string): void {
+    this.api.GetExitEmployeeDetails(empId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          const profile = response.data;
+
+          // Update photo - check multiple naming conventions (camelCase and PascalCase)
+          const photoBase64 = profile.profileImageBase64 || profile.ProfileImageBase64;
+
+          if (photoBase64) {
+            this.employeePhoto = `data:image/jpeg;base64,${photoBase64}`;
+          } else if (profile.photo || profile.Photo) {
+            this.employeePhoto = profile.photo || profile.Photo;
+          } else {
+            // If no photo in exit details, try the general profile API
+            this.api.GetEmployeeProfile(empId).subscribe({
+              next: (profResponse: any) => {
+                if (profResponse && profResponse.success && profResponse.data) {
+                  const profData = profResponse.data;
+                  const innerPhotoBase64 = profData.profileImageBase64 || profData.ProfileImageBase64;
+                  if (innerPhotoBase64) {
+                    this.employeePhoto = `data:image/jpeg;base64,${innerPhotoBase64}`;
+                  } else if (profData.photo || profData.Photo) {
+                    this.employeePhoto = profData.photo || profData.Photo;
+                  }
+                }
+              }
+            });
+          }
+
+          // Patch profile info
+          this.exitForm.patchValue({
+            employeeName: profile.employeeName || profile.empName || profile.name || this.exitForm.get('employeeName')?.value || '',
+            employeeId: profile.employeeId || profile.employeeID || profile.empId || this.exitForm.get('employeeId')?.value || '',
+            department: profile.empDept || profile.department || this.exitForm.get('department')?.value || '',
+            emailId: profile.email || this.exitForm.get('emailId')?.value || '',
+            address: profile.address || '',
+            district: profile.district || '',
+            place: profile.place || '',
+            state: profile.state || '',
+            postOffice: profile.postOffice || '',
+            nation: profile.nationality || profile.nation || '',
+            telephoneMobile: profile.phone || '',
+            telephoneLandline: profile.telephoneNo || profile.telephone || ''
+          });
+
+          console.log('Employee details loaded by ID:', empId);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading employee details by ID:', error);
       }
     });
   }
@@ -510,11 +666,11 @@ export class EmergencyExitFormComponent implements OnInit {
               place: data.place || '',
               state: data.state || '',
               postOffice: data.postOffice || '',
-              nation: data.nation || '',
+              nation: data.nationality || data.nation || '',
               telephoneMobile: data.phone || '',
-              telephoneLandline: data.telephone || '',
+              telephoneLandline: data.telephoneNo || data.telephone || '',
               emailId: data.email || this.currentUser.email || '',
-              department: data.department || '',
+              department: data.empDept || data.department || '',
             });
 
             console.log('Employee profile loaded successfully');
@@ -890,26 +1046,58 @@ export class EmergencyExitFormComponent implements OnInit {
         return date.toISOString().split('T')[0];
       };
 
-      // Populate basic form fields
+      // Populate basic form fields - using flexible names to support both listing data and full saved data
       this.exitForm.patchValue({
-        employeeName: request.employeeName || '',
-        employeeId: request.employeeId || '',
+        employeeName: request.employeeName || request.EmployeeName || request.name || '',
+        employeeId: request.employeeId || request.employeeID || request.empId || '',
         department: request.department || '',
-        dateOfDeparture: formatDateForInput(request.dateOfDeparture),
-        dateOfArrival: formatDateForInput(request.dateArrival),
+        dateOfDeparture: formatDateForInput(request.dateOfDeparture || request.departureDate),
+        dateOfArrival: formatDateForInput(request.dateArrival || request.arrivalDate || request.returnDate),
         flightTime: request.flightTime || '',
-        noOfDaysApproved: request.noOfDaysApproved || 0,
-        reasonForEmergency: request.reasonForLeave || '',
-        hodName: request.depHod || '',
-        projectManagerName: request.projectSiteIncharge || '',
+        noOfDaysApproved: request.noOfDaysApproved || request.daysRequested || 0,
+        reasonForEmergency: request.reasonForLeave || request.reason || '',
+        hodName: request.depHod || request.hodName || '',
+        projectManagerName: request.projectSiteIncharge || request.projectManagerName || '',
         category: request.category || '',
-        responsibilitiesHandedOverTo: request.responsibilitiesHanded || '',
+        responsibilitiesHandedOverTo: request.responsibilitiesHanded || request.responsibilitiesHandedOverTo || '',
         emailId: request.emailId || ''
       });
 
       // Disable all form fields for approval/view mode
       this.disableAllFormFields();
+
+      // Also fetch extended details and photo if employeeId is available
+      const empId = request.employeeId || request.employeeID || request.empId;
+      if (empId) {
+        this.loadEmployeeDetailsById(empId);
+      }
     }
+  }
+
+  resetFormCompletely(): void {
+    console.log('Resetting form completely for new entry');
+
+    // Clear arrays
+    this.responsibilitiesFormArray.clear();
+    this.approvalWorkflow = [];
+
+    // Reset flags
+    this.formSubmitted = false;
+    this.currentStep = 1;
+    this.employeePhoto = 'assets/images/default-avatar.png';
+
+    // Reset form with identity fields cleared
+    this.exitForm.reset({
+      formType: this.formType,
+      noOfDaysApproved: 0,
+      decInfoAccurate: false,
+      decHandoverComplete: false,
+      decReturnAssets: false,
+      decUnderstandReturn: false
+    });
+
+    // Re-enable fields if they were disabled
+    this.enableFormFields();
   }
 
   updateFormValidations(): void {

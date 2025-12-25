@@ -170,18 +170,31 @@
           <table class="requests-table" *ngIf="getFilteredMyRequests().length > 0">
             <thead>
               <tr>
+                <th>Employee ID</th>
+                <th>Employee Name</th>
+                <th>Department</th>
                 <th>Type</th>
-                <th>Submitted Date</th>
+                <th>Request Date</th>
                 <th>Departure</th>
                 <th>Duration</th>
                 <th>Reason</th>
                 <th>Status</th>
+                <th>Current Step</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId" class="request-row"
                 [class]="getStatusClass(request.status)">
+
+                <!-- Employee ID -->
+                <td class="id-cell">{{ request.employeeId }}</td>
+
+                <!-- Employee Name -->
+                <td class="name-cell">{{ request.employeeName }}</td>
+
+                <!-- Department -->
+                <td class="dept-cell">{{ request.department }}</td>
 
                 <!-- Type -->
                 <td class="type-cell">
@@ -212,6 +225,11 @@
                   <span class="badge status-badge" [class]="getStatusClass(request.status)">
                     {{ request.status }}
                   </span>
+                </td>
+
+                <!-- Current Step -->
+                <td class="step-cell">
+                  <div class="current-step">{{ request.currentStepName || 'Processing' }}</div>
                 </td>
 
                 <!-- Actions -->

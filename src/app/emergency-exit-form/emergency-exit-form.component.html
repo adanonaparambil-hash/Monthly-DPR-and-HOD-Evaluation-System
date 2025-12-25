@@ -604,143 +604,24 @@
           </div>
 
           <div class="flow-steps">
-            <!-- Handover Step -->
-            <div class="flow-step" [ngClass]="getStepStatus('handover')">
+            <div class="flow-step" *ngFor="let step of approvalWorkflow" [ngClass]="step.status.toLowerCase()">
               <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('handover') === 'completed'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('handover') === 'pending'"></i>
+                <i class="fas fa-check" *ngIf="step.status === 'APPROVED'"></i>
+                <i class="fas fa-times" *ngIf="step.status === 'REJECTED'"></i>
+                <i class="fas fa-clock" *ngIf="step.status === 'IN_PROGRESS'"></i>
+                <i class="fas fa-circle" *ngIf="step.status === 'PENDING'"></i>
               </div>
               <div class="step-info">
-                <h5>Handover</h5>
-                <span class="status" [ngClass]="getStepStatus('handover')">{{ getStepStatusText('handover') }}</span>
-                <p>{{ getStepDescription('handover') }}</p>
+                <h5>{{ step.stepName }}</h5>
+                <span class="status" [ngClass]="step.status.toLowerCase()">{{ step.status | titlecase }}</span>
+                <p *ngIf="step.approvedBy"><strong>By:</strong> {{ step.approvedBy }}</p>
+                <p *ngIf="step.comments" class="step-comments">"{{ step.comments }}"</p>
+                <p *ngIf="step.approvedDate" class="step-date">{{ step.approvedDate | date:'medium' }}</p>
               </div>
             </div>
 
-            <!-- HOD Approval Step -->
-            <div class="flow-step" [ngClass]="getStepStatus('hod')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('hod') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('hod') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('hod') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>HOD Approval</h5>
-                <span class="status" [ngClass]="getStepStatus('hod')">{{ getStepStatusText('hod') }}</span>
-                <p>{{ getStepDescription('hod') }}</p>
-              </div>
-            </div>
-
-            <!-- Project Manager Step - Only for Planned Leave and Resignation -->
-            <div class="flow-step" [ngClass]="getStepStatus('pm')" *ngIf="shouldShowProjectManagerStep()">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('pm') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('pm') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('pm') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>Project Manager</h5>
-                <span class="status" [ngClass]="getStepStatus('pm')">{{ getStepStatusText('pm') }}</span>
-                <p>{{ getStepDescription('pm') }}</p>
-              </div>
-            </div>
-
-            <!-- IT Department -->
-            <div class="flow-step" [ngClass]="getStepStatus('it')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('it') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('it') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('it') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>IT</h5>
-                <span class="status" [ngClass]="getStepStatus('it')">{{ getStepStatusText('it') }}</span>
-                <p>{{ getStepDescription('it') }}</p>
-              </div>
-            </div>
-
-            <!-- Audit Department -->
-            <div class="flow-step" [ngClass]="getStepStatus('audit')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('audit') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('audit') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('audit') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>Audit</h5>
-                <span class="status" [ngClass]="getStepStatus('audit')">{{ getStepStatusText('audit') }}</span>
-                <p>{{ getStepDescription('audit') }}</p>
-              </div>
-            </div>
-
-            <!-- Finance Department -->
-            <div class="flow-step" [ngClass]="getStepStatus('finance')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('finance') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('finance') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('finance') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>Finance</h5>
-                <span class="status" [ngClass]="getStepStatus('finance')">{{ getStepStatusText('finance') }}</span>
-                <p>{{ getStepDescription('finance') }}</p>
-              </div>
-            </div>
-
-            <!-- Facility Management -->
-            <div class="flow-step" [ngClass]="getStepStatus('facility')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('facility') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('facility') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('facility') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>Facility Management</h5>
-                <span class="status" [ngClass]="getStepStatus('facility')">{{ getStepStatusText('facility') }}</span>
-                <p>{{ getStepDescription('facility') }}</p>
-              </div>
-            </div>
-
-            <!-- Transport -->
-            <div class="flow-step" [ngClass]="getStepStatus('transport')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('transport') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('transport') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('transport') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>Transport</h5>
-                <span class="status" [ngClass]="getStepStatus('transport')">{{ getStepStatusText('transport') }}</span>
-                <p>{{ getStepDescription('transport') }}</p>
-              </div>
-            </div>
-
-            <!-- HR Department -->
-            <div class="flow-step" [ngClass]="getStepStatus('hr')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('hr') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('hr') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('hr') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>HR</h5>
-                <span class="status" [ngClass]="getStepStatus('hr')">{{ getStepStatusText('hr') }}</span>
-                <p>{{ getStepDescription('hr') }}</p>
-              </div>
-            </div>
-
-            <!-- Admin Department -->
-            <div class="flow-step" [ngClass]="getStepStatus('admin')">
-              <div class="step-dot">
-                <i class="fas fa-check" *ngIf="getStepStatus('admin') === 'completed'"></i>
-                <i class="fas fa-clock" *ngIf="getStepStatus('admin') === 'in-progress'"></i>
-                <i class="fas fa-circle" *ngIf="getStepStatus('admin') === 'pending'"></i>
-              </div>
-              <div class="step-info">
-                <h5>Admin</h5>
-                <span class="status" [ngClass]="getStepStatus('admin')">{{ getStepStatusText('admin') }}</span>
-                <p>{{ getStepDescription('admin') }}</p>
-              </div>
+            <div class="no-workflow" *ngIf="approvalWorkflow.length === 0">
+              <p><i class="fas fa-info-circle"></i> No approval history available</p>
             </div>
           </div>
         </div>

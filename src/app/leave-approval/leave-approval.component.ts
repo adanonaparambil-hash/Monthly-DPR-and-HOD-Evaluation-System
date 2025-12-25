@@ -153,17 +153,17 @@ export class LeaveApprovalComponent implements OnInit {
             exitId: item.exitID, // Keeping both for compatibility if needed elsewhere
             exitID: item.exitID,
             approvalID: item.approvalID,
-            employeeName: item.employeeName,
-            employeeId: item.employeeId,
-            department: item.department,
+            employeeName: item.employeeName || item.employeeName || '',
+            employeeId: item.employeeId || item.employeeID || '',
+            department: item.department || '',
             leaveType: this.mapTypeToLabel(item.type.trim()),
             requestDate: item.requestDate,
             departureDate: item.departureDate,
             daysRequested: item.duration,
-            reason: item.reason,
             status: this.mapStatusToLabel(item.status),
-            currentStepName: item.currentStep,
-            canApprove: true, // Since it's in the inbox, user can approve
+            currentStepName: item.currentStep || 'Pending',
+            canApprove: true,
+            reason: item.reason || item.reasonForLeave || ''
           }));
         } else {
           this.pendingApprovals = [];
@@ -205,18 +205,20 @@ export class LeaveApprovalComponent implements OnInit {
         if (response.success && response.data) {
 
           this.myRequests = response.data.map((item: any) => ({
-            id: `REQ${item.exitId}`,
-            exitId: item.exitId,
-            employeeName: this.currentUser.name || '',
-            employeeId: this.currentUser.empId || this.currentUser.employeeId,
-            department: this.currentUser.department || '',
+            id: `REQ${item.exitID || item.exitId}`,
+            exitId: item.exitID || item.exitId,
+            exitID: item.exitID || item.exitId,
+            employeeName: item.employeeName || item.EmployeeName || this.currentUser.name || '',
+            employeeId: item.employeeId || item.employeeID || this.currentUser.empId || this.currentUser.employeeId,
+            department: item.department || this.currentUser.department || '',
             leaveType: this.mapTypeToLabel(item.type),
-            requestDate: item.submittedDate,
-            departureDate: item.departureDate,
-            daysRequested: item.duration,
-            reason: item.reason,
+            requestDate: item.submittedDate || item.requestDate || item.submittedOn,
+            departureDate: item.departureDate || item.dateOfDeparture,
+            daysRequested: item.duration || item.noOfDaysApproved,
+            reason: item.reason || item.reasonForLeave || '',
             status: this.mapStatusToLabel(item.status),
-            priority: 'Medium' // Default priority as it's not in the response
+            currentStepName: item.currentStep || item.approvalStatus || 'Processing',
+            priority: 'Medium'
           }));
         } else {
           this.myRequests = [];
@@ -602,7 +604,7 @@ export class LeaveApprovalComponent implements OnInit {
       queryParams: {
         type: formType,
         mode: 'view',
-        exitId: request.exitId || request.id
+        exitID: request.exitID || request.exitId
       }
     });
   }
