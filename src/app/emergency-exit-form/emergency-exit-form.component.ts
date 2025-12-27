@@ -1467,7 +1467,32 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   canUserTakeAction(): boolean {
-    return this.isApprovalMode && !!this.approvalRequestData;
+    // Only show action buttons when:
+    // 1. User is in approval mode (came from approval listing)
+    // 2. There is an approvalID (specific approval request)
+    // 3. User has permission to take action on this request
+    return this.isApprovalMode && !!this.approvalID && !this.isViewMode;
+  }
+
+  /**
+   * Check if the current user is the assigned approver for this step
+   */
+  isCurrentUserApprover(): boolean {
+    if (!this.currentUser || !this.approvalWorkflow) {
+      return false;
+    }
+
+    // Find the current pending approval step
+    const currentStep = this.approvalWorkflow.find(step => 
+      step.status === 'PENDING' || step.status === 'IN_PROGRESS'
+    );
+
+    if (!currentStep) {
+      return false;
+    }
+
+    // Check if current user is in the approver list for this step
+    return currentStep.approverIds?.includes(this.currentUser.empId) || false;
   }
 
   approvalRemarks: string = '';
@@ -1478,10 +1503,28 @@ export class EmergencyExitFormComponent implements OnInit {
       return;
     }
 
+    // Show confirmation dialog
+    Swal.fire({
+      title: 'Confirm Approval',
+      text: 'Are you sure you want to approve this request?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performApproval();
+      }
+    });
+  }
+
+  private performApproval(): void {
     const request: UpdateExitApprovalRequest = {
-      approvalId: this.approvalID,
+      approvalId: this.approvalID || undefined,
       status: 'A',
-      remarks: this.approvalRemarks || 'Approved'
+      remarks: this.approvalRemarks?.trim() || 'Approved'
     };
 
     this.isSubmitting = true;
@@ -1509,15 +1552,33 @@ export class EmergencyExitFormComponent implements OnInit {
       return;
     }
 
-    if (!this.approvalRemarks.trim()) {
-      this.toastr.warning('Please provide remarks for rejection', 'Warning');
+    if (!this.approvalRemarks || !this.approvalRemarks.trim()) {
+      this.toastr.warning('Please provide remarks for rejection', 'Remarks Required');
       return;
     }
 
+    // Show confirmation dialog
+    Swal.fire({
+      title: 'Confirm Rejection',
+      text: 'Are you sure you want to reject this request?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Reject',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performRejection();
+      }
+    });
+  }
+
+  private performRejection(): void {
     const request: UpdateExitApprovalRequest = {
-      approvalId: this.approvalID,
+      approvalId: this.approvalID || undefined,
       status: 'R',
-      remarks: this.approvalRemarks
+      remarks: this.approvalRemarks.trim()
     };
 
     this.isSubmitting = true;

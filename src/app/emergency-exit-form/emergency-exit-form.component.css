@@ -4161,10 +4161,34 @@ ced Approval Actions Column */
     min-width: auto;
     border-left: none;
     border-top: 1px solid #e9ecef;
-    padding: 12px;
+    padding: 16px;
     position: relative;
     top: 0;
     max-height: none;
+  }
+
+  .approval-actions-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .actions-header h3 {
+    font-size: 16px;
+  }
+
+  .remarks-textarea {
+    min-height: 80px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .approve-btn,
+  .reject-btn {
+    width: 100%;
+    min-width: auto;
   }
 
   .flow-card {
@@ -4172,33 +4196,97 @@ ced Approval Actions Column */
     border-radius: 12px;
   }
 
-  .flow-header {
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-  }
-
   .flow-header h4 {
     font-size: 16px;
   }
 
-  .timeline-step {
-    min-height: 80px;
+  .step-title {
+    font-size: 15px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    min-width: 70px;
+  }
+
+  .approver-card {
+    padding: 12px;
     gap: 10px;
   }
 
-  .timeline-indicator {
-    width: 28px;
+  .approver-avatar {
+    width: 40px;
+    height: 40px;
   }
 
-  .indicator-dot {
-    width: 28px;
-    height: 28px;
+  .approver-name {
+    font-size: 15px;
+  }
+
+  .detail-item {
     font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .workflow-sidebar {
+    padding: 12px;
+  }
+
+  .approval-actions-card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .actions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .actions-header h3 {
+    font-size: 15px;
+  }
+
+  .required-badge {
+    align-self: flex-end;
+  }
+
+  .remarks-textarea {
+    min-height: 70px;
+    font-size: 13px;
+  }
+
+  .approve-btn,
+  .reject-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .flow-card {
+    padding: 12px;
+  }
+
+  .step-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .step-title {
+    font-size: 14px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    min-width: 60px;
   }
 
   .approver-card {
     padding: 10px;
-    gap: 10px;
+    gap: 8px;
   }
 
   .approver-avatar {
@@ -4206,33 +4294,18 @@ ced Approval Actions Column */
     height: 36px;
   }
 
-  .status-mini-dot {
-    width: 10px;
-    height: 10px;
-  }
-
   .approver-name {
-    font-size: 13px;
+    font-size: 14px;
   }
 
-  .approver-contact {
+  .detail-item {
     font-size: 11px;
-  }
-
-  .step-title {
-    font-size: 13px;
-    min-width: 100px;
-  }
-
-  .status-badge {
-    font-size: 9px;
-    padding: 2px 6px;
   }
 }
 
 @media (max-width: 480px) {
   .workflow-sidebar {
-    padding: 8px;
+    padding: 12px;
   }
 
   .flow-card {
@@ -4241,38 +4314,54 @@ ced Approval Actions Column */
 
   .timeline-step {
     min-height: 70px;
-    gap: 8px;
-  }
-
-  .approver-card {
-    padding: 8px;
-    gap: 8px;
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .approver-avatar {
-    width: 32px;
-    height: 32px;
-    align-self: center;
-  }
-
-  .approver-details {
-    align-items: center;
-    text-align: center;
-  }
-
-  .approver-contact {
-    justify-content: center;
+    gap: 10px;
   }
 
   .step-card-header {
-    text-align: center;
+    text-align: left;
+    gap: 6px;
   }
 
   .step-title {
-    text-align: center;
+    font-size: 15px;
+    text-align: left;
     min-width: auto;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .approver-card {
+    padding: 12px;
+    gap: 10px;
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .approver-avatar {
+    width: 36px;
+    height: 36px;
+    align-self: flex-start;
+  }
+
+  .approver-details {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .approver-name {
+    font-size: 15px;
+  }
+
+  .approver-contact {
+    justify-content: flex-start;
+    font-size: 13px;
+  }
+
+  .approval-meta {
+    font-size: 12px;
   }
 }
 
@@ -4446,13 +4535,13 @@ ced Approval Actions Column */
   cursor: not-allowed;
 }
 
-/* Flow Card */
+/* Enhanced contrast and visibility */
 .flow-card {
   background: #ffffff;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  border: 1px solid #edf2f7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 .flow-header {
@@ -4461,7 +4550,7 @@ ced Approval Actions Column */
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 2px solid #edf2f7;
 }
 
 .flow-header i {
@@ -4471,7 +4560,7 @@ ced Approval Actions Column */
 
 .flow-header h4 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: #1a202c;
   flex: 1;
@@ -4562,69 +4651,382 @@ ced Approval Actions Column */
 .step-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
 }
 
 .step-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
-  color: #2d3748;
+  color: #1a202c;
+  margin: 0;
   flex: 1;
+}
+
+/* Approver Card - CONTAINED AND VISIBLE */
+.approver-card {
+  display: flex;
+  gap: 12px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Avatar Section */
+.approver-avatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.approver-image,
+.avatar-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-icon {
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 20px;
+}
+
+.status-mini-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-mini-dot.dot-approved {
+  background: #48bb78;
+}
+
+.status-mini-dot.dot-rejected {
+  background: #f56565;
+}
+
+.status-mini-dot.dot-in_progress {
+  background: #ed8936;
+}
+
+.status-mini-dot.dot-pending {
+  background: #4a5568;
+}
+
+/* Approver Info Section */
+.approver-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.approver-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.approver-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.detail-item i {
+  width: 16px;
+  color: #718096;
+  font-size: 12px;
+}
+
+.approval-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #38a169;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Approval Actions Card - Above Current Approval Flow */
+.approval-actions-card {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 25px rgba(26, 54, 93, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: white;
+}
+
+.actions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.actions-header i {
+  color: #60a5fa;
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.actions-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  flex: 1;
+}
+
+.required-badge {
+  background: #dc2626;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.actions-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.remarks-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.remarks-section label {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.remarks-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.remarks-textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.remarks-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.approve-btn,
+.reject-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   min-width: 120px;
+  justify-content: center;
+}
+
+.approve-btn {
+  background: #10b981;
+  color: white;
+  border: 2px solid #059669;
+}
+
+.approve-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.approve-btn:disabled {
+  background: #6b7280;
+  border-color: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.reject-btn {
+  background: #ef4444;
+  color: white;
+  border: 2px solid #dc2626;
+}
+
+.reject-btn:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.reject-btn:disabled {
+  background: #6b7280;
+  border-color: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.approve-btn i,
+.reject-btn i {
+  font-size: 16px;
+}
+
+/* Waiting Info */
+.waiting-info {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 3px solid #4299e1;
+}
+
+.waiting-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.waiting-info i {
+  color: #4299e1;
 }
 
 .status-badge {
-  font-size: 10px;
+  display: inline-block;
+  font-size: 12px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 6px 12px;
   border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  border: 2px solid;
+  min-width: 80px;
+  text-align: center;
 }
 
-.status-badge.approved {
-  background: #c6f6d5;
-  color: #22543d;
+.status-badge.status-approved {
+  background: #48bb78;
+  color: white;
+  border-color: #38a169;
 }
 
-.status-badge.rejected {
-  background: #fed7d7;
-  color: #742a2a;
+.status-badge.status-rejected {
+  background: #f56565;
+  color: white;
+  border-color: #e53e3e;
 }
 
-.status-badge.in_progress {
-  background: #feebc8;
-  color: #7b341e;
+.status-badge.status-in_progress {
+  background: #ed8936;
+  color: white;
+  border-color: #dd6b20;
 }
 
-.status-badge.pending {
-  background: #edf2f7;
-  color: #4a5568;
+.status-badge.status-pending {
+  background: #4a5568;
+  color: white;
+  border-color: #2d3748;
+}
+  color: white;
+  border-color: #2d3748;
 }
 
 /* Approver Card Details */
 .approver-card {
   display: flex;
-  gap: 12px;
-  background: #f8fafc;
+  gap: 14px;
+  background: #ffffff;
   border-radius: 12px;
-  padding: 12px;
-  border: 1px solid #ebf1f5;
+  padding: 16px;
+  border: 2px solid #e2e8f0;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .timeline-step.approved .approver-card {
   background: #f0fff4;
-  border-color: #c6f6d5;
+  border-color: #48bb78;
+  box-shadow: 0 2px 8px rgba(72, 187, 120, 0.15);
 }
 
 .timeline-step.in_progress .approver-card {
   background: #fffaf0;
-  border-color: #fbd38d;
+  border-color: #ed8936;
+  box-shadow: 0 2px 8px rgba(237, 137, 54, 0.15);
+}
+
+.timeline-step.pending .approver-card {
+  background: #f8fafc;
+  border-color: #cbd5e0;
+}
+
+.timeline-step.rejected .approver-card {
+  background: #fff5f5;
+  border-color: #f56565;
+  box-shadow: 0 2px 8px rgba(245, 101, 101, 0.15);
 }
 
 .approver-avatar {
@@ -4695,33 +5097,40 @@ ced Approval Actions Column */
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .approver-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: #1a202c;
+  line-height: 1.3;
+  margin-bottom: 2px;
 }
 
 .approver-contact {
-  font-size: 12px;
-  color: #718096;
+  font-size: 13px;
+  color: #4a5568;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  line-height: 1.4;
 }
 
 .approver-contact i {
-  font-size: 10px;
-  width: 12px;
+  font-size: 12px;
+  width: 14px;
+  color: #718096;
 }
 
 .approval-meta {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #48bb78;
-  font-weight: 500;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #38a169;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Remarks Section */
