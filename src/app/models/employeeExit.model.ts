@@ -97,37 +97,25 @@ export interface EmployeeApprovalInboxRequest {
 
 export interface ExitApprovalDetailDto {
   approverRole?: string;
-
   approvalStatusCode?: string;
-
   approvalStatus?: string;
-
   remarks?: string;
-
   department?: string;
-
   approvalDate?: string;
-
   approvalLevel?: number;
-
   exitId?: number;
-
   approvedId?: string;
-
   employeeName?: string;
-
   email?: string;
-
   phoneNumber?: string;
-
-  profileImageBase64Length?: string;
-
+  profileImageBase64?: string;
+  ProfileImageBase64?: string; // Alternative field name for compatibility
 }
 
 export interface UpdateExitApprovalRequest {
   approvalId?: number;
   exitId?: number;
-  approverId?: number;
+  approverId?: string; // Changed to string to match empId type
   status?: string;
   remarks?: string;
 }

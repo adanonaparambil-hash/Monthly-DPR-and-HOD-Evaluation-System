@@ -241,6 +241,12 @@ export class EmergencyExitFormComponent implements OnInit {
         this.addResponsibility();
       }
 
+      // Keep responsibilities section open by default for all modes
+      this.isResponsibilitiesSectionOpen = true;
+      
+      // Ensure responsibilities section is properly initialized
+      this.ensureResponsibilitiesSectionInitialized();
+
       // Ensure all departments are visible by default
       this.departments.forEach(dept => {
         if (!dept.status) {
@@ -347,6 +353,11 @@ export class EmergencyExitFormComponent implements OnInit {
       // Clear previous form state if we are going to a new entry or regular mode
       if (!modeParam && !requestId) {
         this.resetFormCompletely();
+        
+        // Re-initialize responsibilities section for Emergency forms after reset
+        setTimeout(() => {
+          this.ensureResponsibilitiesSectionInitialized();
+        }, 100);
       }
 
       // Update form validations and steps when form type changes
@@ -372,6 +383,11 @@ export class EmergencyExitFormComponent implements OnInit {
 
         // Ensure fields are enabled for regular form usage
         this.enableFormFields();
+        
+        // Ensure responsibilities section is properly initialized
+        setTimeout(() => {
+          this.ensureResponsibilitiesSectionInitialized();
+        }, 100);
       }
     });
   }
@@ -450,7 +466,7 @@ export class EmergencyExitFormComponent implements OnInit {
               department: history.department,
               profileImageBase64: this.processProfileImage(history.profileImageBase64 || history.ProfileImageBase64),
               approvedDate: history.approvalDate,
-              comments: history.remarks,
+              comments: history.remarks || null, // Map remarks to comments
               isRequired: true,
               order: history.approvalLevel || index + 1
             }));
@@ -1098,6 +1114,9 @@ export class EmergencyExitFormComponent implements OnInit {
     this.formSubmitted = false;
     this.employeePhoto = 'assets/images/default-avatar.png';
 
+    // Reset responsibilities section to open state
+    this.isResponsibilitiesSectionOpen = true;
+
     // Reset form with identity fields cleared
     this.exitForm.reset({
       formType: this.formType,
@@ -1297,6 +1316,12 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.formType !== newType) {
       this.formType = newType;
       this.updateFormValidations();
+      
+      // Initialize responsibilities section for Emergency forms
+      setTimeout(() => {
+        this.ensureResponsibilitiesSectionInitialized();
+      }, 100);
+      
       // Update URL without navigation
       window.history.replaceState({}, '', `/exit-form?type=${newType}`);
     }
@@ -1458,8 +1483,29 @@ export class EmergencyExitFormComponent implements OnInit {
     return responsibilityGroup.get('responsiblePersonName')?.value === employee.description;
   }
 
+  ensureResponsibilitiesSectionInitialized(): void {
+    if (this.formType === 'E') {
+      // Ensure section is open by default
+      this.isResponsibilitiesSectionOpen = true;
+      
+      // Add default responsibility if none exist
+      if (this.responsibilitiesFormArray.length === 0) {
+        this.addResponsibility();
+      }
+    }
+  }
+
   toggleResponsibilitiesSection(): void {
-    // Toggle responsibilities section visibility if needed
+    this.isResponsibilitiesSectionOpen = !this.isResponsibilitiesSectionOpen;
+    console.log('Responsibilities section toggled:', this.isResponsibilitiesSectionOpen);
+    
+    // Force change detection and update DOM
+    this.cdr.detectChanges();
+    
+    // Additional DOM update after a short delay to ensure proper rendering
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 50);
   }
 
   getCurrentTimestamp(): number {
@@ -1521,11 +1567,33 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   private performApproval(): void {
+    // Get exitId from query parameters
+    const exitId = this.route.snapshot.queryParams['exitID'] || this.route.snapshot.queryParams['exitId'] || this.route.snapshot.queryParams['requestId'];
+    
+    // Get approverId from current logged-in user
+    const approverId = this.currentUser?.empId;
+
+    if (!exitId) {
+      this.toastr.error('Exit ID is missing', 'Error');
+      this.isSubmitting = false;
+      return;
+    }
+
+    if (!approverId) {
+      this.toastr.error('Approver ID is missing', 'Error');
+      this.isSubmitting = false;
+      return;
+    }
+
     const request: UpdateExitApprovalRequest = {
       approvalId: this.approvalID || undefined,
+      exitId: parseInt(exitId),
+      approverId: approverId,
       status: 'A',
-      remarks: this.approvalRemarks?.trim() || 'Approved'
+      remarks: this.approvalRemarks?.trim() || undefined // Allow empty remarks for approval
     };
+
+    console.log('Approval request payload:', request);
 
     this.isSubmitting = true;
     this.api.UpdateExitApproval(request).subscribe({
@@ -1575,11 +1643,38 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   private performRejection(): void {
+    // Get exitId from query parameters
+    const exitId = this.route.snapshot.queryParams['exitID'] || this.route.snapshot.queryParams['exitId'] || this.route.snapshot.queryParams['requestId'];
+    
+    // Get approverId from current logged-in user
+    const approverId = this.currentUser?.empId;
+
+    if (!exitId) {
+      this.toastr.error('Exit ID is missing', 'Error');
+      this.isSubmitting = false;
+      return;
+    }
+
+    if (!approverId) {
+      this.toastr.error('Approver ID is missing', 'Error');
+      this.isSubmitting = false;
+      return;
+    }
+
+    if (!this.approvalRemarks || !this.approvalRemarks.trim()) {
+      this.toastr.warning('Please provide remarks for rejection', 'Remarks Required');
+      return;
+    }
+
     const request: UpdateExitApprovalRequest = {
       approvalId: this.approvalID || undefined,
+      exitId: parseInt(exitId),
+      approverId: approverId,
       status: 'R',
       remarks: this.approvalRemarks.trim()
     };
+
+    console.log('Rejection request payload:', request);
 
     this.isSubmitting = true;
     this.api.UpdateExitApproval(request).subscribe({
@@ -1601,7 +1696,7 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   // Additional missing properties and methods
-  isResponsibilitiesSectionOpen: boolean = true;
+  isResponsibilitiesSectionOpen: boolean = true; // Start open by default
 
   shouldShowProjectManagerStep(): boolean {
     return this.formType === 'P' || this.formType === 'R';
@@ -1634,30 +1729,40 @@ export class EmergencyExitFormComponent implements OnInit {
   processProfileImage(imageData: string | null): string | null {
     if (!imageData) return null;
     
+    // Remove any whitespace
+    const cleanImageData = imageData.trim();
+    
     // If it already has data URI prefix, return as is
-    if (imageData.startsWith('data:image')) {
-      return imageData;
+    if (cleanImageData.startsWith('data:image')) {
+      return cleanImageData;
     }
     
     // Add data URI prefix for base64 data
-    return `data:image/jpeg;base64,${imageData}`;
+    // Try different image formats
+    if (cleanImageData.length > 0) {
+      return `data:image/jpeg;base64,${cleanImageData}`;
+    }
+    
+    return null;
   }
 
   /**
    * Get the approver image with proper base64 handling
    */
   getApproverImage(step: ApprovalStep): string | null {
+    // Try profileImageBase64 first
     if (step.profileImageBase64) {
-      // Check if it already has data URI prefix
-      if (step.profileImageBase64.startsWith('data:image')) {
-        return step.profileImageBase64;
-      } else {
-        // Add data URI prefix for base64 data
-        return `data:image/jpeg;base64,${step.profileImageBase64}`;
+      const processedImage = this.processProfileImage(step.profileImageBase64);
+      if (processedImage) {
+        return processedImage;
       }
-    } else if (step.photo) {
+    }
+    
+    // Fallback to photo field
+    if (step.photo) {
       return step.photo;
     }
+    
     return null;
   }
 
@@ -1668,18 +1773,20 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('Approver image loading failed for step:', step.stepName);
     console.log('Image source was:', event.target.src);
     console.log('Step data:', {
-      profileImageBase64: step.profileImageBase64,
-      photo: step.photo,
-      approvedBy: step.approvedBy
+      profileImageBase64: step.profileImageBase64 ? 'Present (' + step.profileImageBase64.length + ' chars)' : 'Not present',
+      photo: step.photo || 'Not present',
+      approvedBy: step.approvedBy || (step.approverNames && step.approverNames[0]) || 'Not assigned'
     });
-    // Hide the image and show fallback icon
+    
+    // Hide the image element
     event.target.style.display = 'none';
+    
     // Find the parent container and show fallback
     const container = event.target.closest('.approver-avatar');
     if (container) {
       const fallback = container.querySelector('.avatar-icon');
       if (fallback) {
-        fallback.style.display = 'flex';
+        (fallback as HTMLElement).style.display = 'flex';
       }
     }
   }
@@ -1689,12 +1796,13 @@ export class EmergencyExitFormComponent implements OnInit {
    */
   onApproverImageLoad(event: any, step: ApprovalStep): void {
     console.log('Approver image loaded successfully for step:', step.stepName);
+    
     // Hide any fallback icon
     const container = event.target.closest('.approver-avatar');
     if (container) {
       const fallback = container.querySelector('.avatar-icon');
       if (fallback) {
-        fallback.style.display = 'none';
+        (fallback as HTMLElement).style.display = 'none';
       }
     }
   }
@@ -1716,7 +1824,9 @@ export class EmergencyExitFormComponent implements OnInit {
         hasPhoto: !!step.photo,
         photo: step.photo,
         email: step.email,
-        phoneNumber: step.phoneNumber
+        phoneNumber: step.phoneNumber,
+        comments: step.comments || 'No comments',
+        hasComments: !!step.comments
       });
     });
     console.log('=== END DEBUG ===');
@@ -1751,6 +1861,51 @@ export class EmergencyExitFormComponent implements OnInit {
     const testWithPrefix = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QBaRXhpZgAATU0AKgAAA";
     console.log('Input with prefix:', testWithPrefix);
     console.log('Output with prefix:', this.processProfileImage(testWithPrefix));
+  }
+
+  /**
+   * Toggle remarks visibility for a step
+   */
+  toggleRemarks(step: ApprovalStep): void {
+    step['showRemarks'] = !step['showRemarks'];
+  }
+
+  /**
+   * Get approval progress percentage
+   */
+  getApprovalProgress(): number {
+    if (!this.approvalWorkflow || this.approvalWorkflow.length === 0) {
+      return 0;
+    }
+    
+    const approvedSteps = this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
+    return Math.round((approvedSteps / this.approvalWorkflow.length) * 100);
+  }
+
+  /**
+   * Get line status for timeline
+   */
+  getLineStatus(index: number): string {
+    if (!this.approvalWorkflow || index >= this.approvalWorkflow.length - 1) {
+      return 'pending';
+    }
+    
+    const currentStep = this.approvalWorkflow[index];
+    const nextStep = this.approvalWorkflow[index + 1];
+    
+    if (currentStep.status === 'APPROVED') {
+      return nextStep.status === 'APPROVED' ? 'completed' : 'active';
+    }
+    
+    return 'pending';
+  }
+
+  /**
+   * Get approved count for progress display
+   */
+  getApprovedCount(): number {
+    if (!this.approvalWorkflow) return 0;
+    return this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
   }
 
   /**

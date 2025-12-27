@@ -594,7 +594,7 @@
                 type="button"
                 class="reject-btn" 
                 (click)="rejectRequest()" 
-                [disabled]="!approvalRemarks.trim()">
+                [disabled]="isSubmitting">
                 <i class="fas fa-times-circle"></i>
                 Reject
               </button>
@@ -638,55 +638,100 @@
               <!-- Step Card -->
               <div class="step-card-container">
                 <div class="step-card-header">
-                  <h5 class="step-title">{{ step.stepName }}</h5>
+                  <h5 class="step-title">{{ step.stepName || 'Approval Step' }}</h5>
                   <span class="status-badge" [ngClass]="'status-' + step.status.toLowerCase()">
                     {{ step.status | titlecase }}
                   </span>
                 </div>
 
                 <div class="approver-card">
-                  <div class="approver-avatar">
-                    <img *ngIf="getApproverImage(step)"
-                      [src]="getApproverImage(step)"
-                      [alt]="step.approvedBy || 'Approver'"
-                      (error)="onApproverImageError($event, step)"
-                      class="approver-image">
-                    <div *ngIf="!getApproverImage(step)" class="avatar-icon">
-                      <i class="fas fa-user"></i>
+                  <!-- Approver Avatar and Info in Flex Layout -->
+                  <div class="approver-main-info">
+                    <div class="approver-avatar">
+                      <img *ngIf="getApproverImage(step)"
+                        [src]="getApproverImage(step)"
+                        [alt]="step.approvedBy || step.approverNames[0] || 'Approver'"
+                        (error)="onApproverImageError($event, step)"
+                        (load)="onApproverImageLoad($event, step)"
+                        class="approver-image">
+                      <div *ngIf="!getApproverImage(step)" class="avatar-icon">
+                        <i class="fas fa-user"></i>
+                      </div>
+                      <div class="status-mini-dot" [ngClass]="'dot-' + step.status.toLowerCase()"></div>
                     </div>
-                    <div class="status-mini-dot" [ngClass]="'dot-' + step.status.toLowerCase()"></div>
+                    
+                    <div class="approver-info">
+                      <div class="approver-name">
+                        {{ step.approvedBy || step.approverNames[0] || 'Pending Assignment' }}
+                      </div>
+                      <div class="approver-id" *ngIf="step.approvedId || step.approverIds[0]">
+                        ID: {{ step.approvedId || step.approverIds[0] }}
+                      </div>
+                    </div>
                   </div>
                   
-                  <div class="approver-info">
-                    <div class="approver-name">{{ step.approvedBy || 'Pending Assignment' }}</div>
-                    <div class="approver-details-list">
-                      <div class="detail-item" *ngIf="step.email">
-                        <i class="fas fa-envelope"></i>
-                        <span>{{ step.email }}</span>
-                      </div>
-                      <div class="detail-item" *ngIf="step.phoneNumber">
-                        <i class="fas fa-phone"></i>
-                        <span>{{ step.phoneNumber }}</span>
-                      </div>
-                      <div class="detail-item" *ngIf="step.department">
-                        <i class="fas fa-building"></i>
-                        <span>{{ step.department }}</span>
+                  <!-- Contact Details -->
+                  <div class="approver-details-list" *ngIf="step.email || step.phoneNumber || step.department">
+                    <div class="detail-item" *ngIf="step.email">
+                      <i class="fas fa-envelope"></i>
+                      <span>{{ step.email }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="step.phoneNumber">
+                      <i class="fas fa-phone"></i>
+                      <span>{{ step.phoneNumber }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="step.department">
+                      <i class="fas fa-building"></i>
+                      <span>{{ step.department }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Approval Date -->
+                  <div class="approval-date" *ngIf="step.approvedDate && step.status !== 'PENDING'">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>{{ step.status === 'APPROVED' ? 'Approved' : (step.status === 'REJECTED' ? 'Rejected' : 'Actioned') }} on {{ step.approvedDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                  </div>
+
+                  <!-- Comments/Remarks Section - Always show department comments -->
+                  <div class="department-comments-section">
+                    <div class="department-comments-header">
+                      <i class="fas fa-comment-alt"></i>
+                      <span>{{ step.stepName }} Comments</span>
+                    </div>
+                    
+                    <!-- Show comments if available -->
+                    <div class="department-comments-content" *ngIf="step.comments && step.comments.trim(); else noComments">
+                      <div class="comment-bubble department-comment">
+                        <div class="comment-text">{{ step.comments }}</div>
+                        <div class="comment-meta" *ngIf="step.approvedDate && step.status !== 'PENDING'">
+                          <i class="fas fa-clock"></i>
+                          <span>Added on {{ step.approvedDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                        </div>
                       </div>
                     </div>
                     
-                    <div class="approval-date" *ngIf="step.approvedDate">
-                      <i class="fas fa-calendar"></i>
-                      <span>{{ step.status === 'APPROVED' ? 'Approved' : 'Actioned' }} on {{ step.approvedDate | date:'shortDate' }}</span>
-                    </div>
+                    <!-- No comments template -->
+                    <ng-template #noComments>
+                      <div class="no-comments-content">
+                        <span class="no-comments-text">No comments yet.</span>
+                      </div>
+                    </ng-template>
                   </div>
+                </div>
+
+                <!-- Pending Status Message -->
+                <div class="pending-status" *ngIf="step.status === 'PENDING' && (!step.approvedBy && !step.approverNames[0])">
+                  <i class="fas fa-clock"></i>
+                  <span>Awaiting assignment to approver</span>
                 </div>
               </div>
             </div>
 
-            <div class="no-workflow" *ngIf="approvalWorkflow.length === 0">
+            <!-- Empty State -->
+            <div class="no-workflow" *ngIf="!approvalWorkflow || approvalWorkflow.length === 0">
               <div class="empty-flow">
                 <i class="fas fa-route"></i>
-                <p>Approval flow initiated...</p>
+                <p>Approval flow will appear here once the request is submitted</p>
               </div>
             </div>
           </div>
