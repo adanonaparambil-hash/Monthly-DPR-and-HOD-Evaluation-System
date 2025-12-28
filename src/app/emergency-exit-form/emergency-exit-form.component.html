@@ -128,11 +128,12 @@
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="projectManagerName">Project Manager / Site Incharge *</label>
                     <div class="searchable-dropdown">
-                      <input type="text" id="projectManagerName" formControlName="projectManagerName"
+                      <input type="text" id="projectManagerName" 
+                        [value]="getProjectManagerDisplayName()"
                         [class.error]="isFieldInvalid('projectManagerName')"
                         [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select project manager...'" class="dropdown-input" #pmSearchInput
                         (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()" (blur)="hidePMDropdown()"
-                        autocomplete="off">
+                        autocomplete="off" readonly>
                       <div class="dropdown-icon">
                         <i class="fas fa-chevron-down"></i>
                       </div>
@@ -159,11 +160,12 @@
                     <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
                     <div class="searchable-dropdown">
                       <input type="text" id="responsibilitiesHandedOverTo"
-                        formControlName="responsibilitiesHandedOverTo"
+                        [value]="getResponsibilitiesHandoverDisplayName()"
                         [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
                         [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #plannedSearchInput
                         (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
-                        (blur)="hidePlannedDropdown()" autocomplete="off">
+                        (blur)="hidePlannedDropdown()" autocomplete="off" readonly>
+                       
                       <div class="dropdown-icon">
                         <i class="fas fa-chevron-down"></i>
                       </div>
@@ -192,12 +194,12 @@
                     <label>Category *</label>
                     <div class="radio-group">
                       <label class="radio-label">
-                        <input type="radio" formControlName="category" value="S">
+                        <input type="radio" formControlName="category" value="Staff">
                         <span class="radio-mark"></span>
                         Staff
                       </label>
                       <label class="radio-label">
-                        <input type="radio" formControlName="category" value="W">
+                        <input type="radio" formControlName="category" value="Worker">
                         <span class="radio-mark"></span>
                         Worker
                       </label>
@@ -309,6 +311,10 @@
                 <input formControlName="postOffice">
                 <input formControlName="nation">
                 <input formControlName="emailId">
+                <!-- Hidden controls for dropdown values -->
+                <input formControlName="projectManagerName">
+                <input formControlName="responsibilitiesHandedOverTo">
+                <input formControlName="responsibilitiesHandedOverToId">
               </div>
             </div>
           </div>

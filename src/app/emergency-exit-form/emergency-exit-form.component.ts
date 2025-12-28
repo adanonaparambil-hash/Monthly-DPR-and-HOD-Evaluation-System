@@ -596,10 +596,11 @@ export class EmergencyExitFormComponent implements OnInit {
             flightTime: data.flightTime || '',
             noOfDaysApproved: data.noOfDaysApproved || 0,
             hodName: data.depHod || '',
-            projectManagerName: data.projectSiteIncharge || '',
+            projectManagerName: data.projectSiteIncharge || '', // Store the ID
             reasonForEmergency: data.reasonForLeave || '',
-            category: data.category || '',
-            responsibilitiesHandedOverTo: data.responsibilitiesHanded || '',
+            category: this.mapCategoryFromBackend(data.category), // Map S/W to Staff/Worker
+            responsibilitiesHandedOverTo: data.responsibilitiesHanded || '', // This might be name or ID
+            responsibilitiesHandedOverToId: data.responsibilitiesHandedToId || data.responsibilitiesHandedOverToId || '', // Store the ID separately if available
             decInfoAccurate: data.declaration1 === 'Y',
             decHandoverComplete: data.declaration2 === 'Y',
             decReturnAssets: data.declaration3 === 'Y',
@@ -1054,10 +1055,10 @@ export class EmergencyExitFormComponent implements OnInit {
       responsibilitiesHanded: (this.formType === 'P' || this.formType === 'R') ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
       noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
       depHod: formValue.hodName || '',
-      projectSiteIncharge: formValue.projectSiteIncharge || '',
+      projectSiteIncharge: formValue.projectManagerName || '', // Fix: use projectManagerName from form
       reasonForLeave: formValue.reasonForEmergency || '',
       approvalStatus: 'P',
-      category: formValue.category || '',
+      category: this.mapCategoryToBackend(formValue.category || ''), // Map Staff/Worker to S/W
       lastWorkingDate: this.formType === 'R' ? formatDate(formValue.dateOfDeparture) : undefined,
       NoticePeriod: this.formType === 'R' ? parseInt(formValue.noOfDaysApproved) || 0 : 0,
       declaration1: formValue.decInfoAccurate ? 'Y' : 'N',
@@ -1219,6 +1220,9 @@ export class EmergencyExitFormComponent implements OnInit {
             description: emp.description || emp.employeeName || emp.name
           }));
           console.log('Employee Master List loaded:', this.employeeMasterList);
+          
+          // Trigger change detection to update display names
+          this.cdr.detectChanges();
         } else {
           console.warn('Employee Master API response structure unexpected:', response);
           // Try to handle different response structures
@@ -1282,9 +1286,10 @@ export class EmergencyExitFormComponent implements OnInit {
         noOfDaysApproved: request.noOfDaysApproved || request.daysRequested || 0,
         reasonForEmergency: request.reasonForLeave || request.reason || '',
         hodName: request.depHod || request.hodName || '',
-        projectManagerName: request.projectSiteIncharge || request.projectManagerName || '',
-        category: request.category || '',
+        projectManagerName: request.projectSiteIncharge || request.projectManagerName || '', // Store ID
+        category: this.mapCategoryFromBackend(request.category || ''), // Map S/W to Staff/Worker
         responsibilitiesHandedOverTo: request.responsibilitiesHanded || request.responsibilitiesHandedOverTo || '',
+        responsibilitiesHandedOverToId: request.responsibilitiesHandedToId || request.responsibilitiesHandedOverToId || '',
         emailId: request.emailId || ''
       });
 
@@ -1604,17 +1609,92 @@ export class EmergencyExitFormComponent implements OnInit {
 
   selectProjectManager(pm: DropdownOption): void {
     this.exitForm.patchValue({
-      projectManagerName: pm.description
+      projectManagerName: pm.idValue // Save the ID instead of description
     });
     this.isPMDropdownOpen = false;
   }
 
   isPMSelected(pm: DropdownOption): boolean {
-    return this.exitForm.get('projectManagerName')?.value === pm.description;
+    return this.exitForm.get('projectManagerName')?.value === pm.idValue;
   }
 
   getEmployeeNameFromDescription(description: string): string {
     return description.split(' - ')[0] || description;
+  }
+
+  /**
+   * Map category from backend format (S/W) to display format (Staff/Worker)
+   */
+  mapCategoryFromBackend(category: string): string {
+    if (!category) return '';
+    switch (category.toUpperCase()) {
+      case 'S': return 'Staff';
+      case 'W': return 'Worker';
+      default: return category; // Return as-is if already in full form
+    }
+  }
+
+  /**
+   * Map category to backend format (Staff/Worker to S/W)
+   */
+  mapCategoryToBackend(category: string): string {
+    if (!category) return '';
+    switch (category) {
+      case 'Staff': return 'S';
+      case 'Worker': return 'W';
+      default: return category; // Return as-is if already in short form
+    }
+  }
+
+  /**
+   * Get the display name for project manager from the stored ID
+   */
+  getProjectManagerDisplayName(): string {
+    const selectedId = this.exitForm.get('projectManagerName')?.value;
+    if (!selectedId) return '';
+    
+    // First try to find in employee master list (since we're using that now)
+    const selectedPM = this.employeeMasterList.find(emp => emp.idValue === selectedId);
+    if (selectedPM) {
+      return selectedPM.description || '';
+    }
+    
+    // Fallback to project manager list if not found
+    const selectedPMFromPMList = this.projectManagerList.find(emp => emp.idValue === selectedId);
+    if (selectedPMFromPMList) {
+      return selectedPMFromPMList.description || '';
+    }
+    
+    // If still not found, return the ID itself
+    return selectedId;
+  }
+
+  /**
+   * Get the display name for responsibilities handed over to from the stored ID
+   */
+  getResponsibilitiesHandoverDisplayName(): string {
+    // First try to get from the ID field
+    const selectedId = this.exitForm.get('responsibilitiesHandedOverToId')?.value;
+    if (selectedId) {
+      const selectedEmp = this.employeeMasterList.find(emp => emp.idValue === selectedId);
+      if (selectedEmp) {
+        return selectedEmp.description || '';
+      }
+    }
+    
+    // Fallback to the text field - check if it's an ID or name
+    const textValue = this.exitForm.get('responsibilitiesHandedOverTo')?.value;
+    if (textValue) {
+      // Check if the text value is actually an ID by looking it up
+      const empById = this.employeeMasterList.find(emp => emp.idValue === textValue);
+      if (empById) {
+        return empById.description || '';
+      }
+      // If not found by ID, assume it's already a name
+      return textValue;
+    }
+    
+    return '';
   }
 
   // Planned Leave dropdown methods
@@ -1649,14 +1729,16 @@ export class EmergencyExitFormComponent implements OnInit {
 
   selectPlannedEmployee(employee: DropdownOption): void {
     this.exitForm.patchValue({
-      responsibilitiesHandedOverTo: employee.description,
-      responsibilitiesHandedOverToId: employee.idValue
+      responsibilitiesHandedOverTo: employee.description, // Store the name for display
+      responsibilitiesHandedOverToId: employee.idValue    // Store the ID for backend
     });
     this.isPlannedDropdownOpen = false;
   }
 
   isPlannedEmployeeSelected(employee: DropdownOption): boolean {
-    return this.exitForm.get('responsibilitiesHandedOverTo')?.value === employee.description;
+    const selectedName = this.exitForm.get('responsibilitiesHandedOverTo')?.value;
+    const selectedId = this.exitForm.get('responsibilitiesHandedOverToId')?.value;
+    return selectedName === employee.description || selectedId === employee.idValue;
   }
 
   // Responsibility dropdown methods
