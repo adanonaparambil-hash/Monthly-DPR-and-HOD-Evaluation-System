@@ -208,6 +208,181 @@ export class EmergencyExitFormComponent implements OnInit {
   currentApprovalStep: ApprovalStep | null = null;
   workflowProgress: number = 0;
 
+  // Static approval flow for new forms (when no ExitId exists)
+  staticApprovalFlow: ApprovalStep[] = [
+    {
+      stepId: 1,
+      stepName: 'Handover Verification',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 1
+    },
+    {
+      stepId: 2,
+      stepName: 'HOD Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 2
+    },
+    {
+      stepId: 3,
+      stepName: 'IT Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 3
+    },
+    {
+      stepId: 4,
+      stepName: 'Audit Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 4
+    },
+    {
+      stepId: 5,
+      stepName: 'Finance Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 5
+    },
+    {
+      stepId: 6,
+      stepName: 'Facility Management',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 6
+    },
+    {
+      stepId: 7,
+      stepName: 'Transport Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 7
+    },
+    {
+      stepId: 8,
+      stepName: 'HR Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 8
+    },
+    {
+      stepId: 9,
+      stepName: 'Admin Approval',
+      approverType: 'DEPARTMENT',
+      approverIds: [],
+      approverNames: ['Will be assigned after submission'],
+      status: 'PENDING',
+      approvedBy: undefined,
+      approvedId: undefined,
+      email: undefined,
+      phoneNumber: undefined,
+      photo: undefined,
+      department: undefined,
+      profileImageBase64: undefined,
+      approvedDate: undefined,
+      comments: undefined,
+      isRequired: true,
+      order: 9
+    }
+  ];
+
   constructor(
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
@@ -264,7 +439,7 @@ export class EmergencyExitFormComponent implements OnInit {
       setTimeout(() => {
         this.loadHodMasterList();
         this.loadProjectManagerList();
-        this.loadEmployeeMasterList();
+        // Note: Using projectManagerList for all dropdowns now, so no need to load employeeMasterList
       }, 100);
 
       // Disable employee information fields (always disabled)
@@ -379,7 +554,7 @@ export class EmergencyExitFormComponent implements OnInit {
         // Load master lists for non-approval mode
         this.loadHodMasterList();
         this.loadProjectManagerList();
-        this.loadEmployeeMasterList();
+        // Note: Using projectManagerList for all dropdowns now
 
         // Ensure fields are enabled for regular form usage
         this.enableFormFields();
@@ -995,33 +1170,113 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   loadHodMasterList(): void {
+    console.log('Loading HOD master list...');
     this.api.GetHodMasterList().subscribe({
       next: (response: any) => {
+        console.log('HOD API Response:', response);
+        
+        // Handle different possible response structures
+        let dataArray = null;
+        
         if (response && response.success && response.data) {
-          this.hodList = response.data.map((hod: any) => ({
-            idValue: hod.idValue || hod.empId || hod.id || hod.employeeId,
-            description: hod.description || hod.employeeName || hod.name
-          }));
+          // Standard success response with data property
+          dataArray = response.data;
+          console.log('Using response.data:', dataArray);
+        } else if (response && Array.isArray(response)) {
+          // Direct array response
+          dataArray = response;
+          console.log('Using direct array response:', dataArray);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Response with data property (no success flag)
+          dataArray = response.data;
+          console.log('Using response.data (no success flag):', dataArray);
+        } else if (response && typeof response === 'object') {
+          // Try to find any array property in the response
+          const keys = Object.keys(response);
+          for (const key of keys) {
+            if (Array.isArray(response[key])) {
+              dataArray = response[key];
+              console.log(`Using response.${key}:`, dataArray);
+              break;
+            }
+          }
+        }
+        
+        if (dataArray && Array.isArray(dataArray)) {
+          console.log('Raw HOD data:', dataArray);
+          this.hodList = dataArray.map((hod: any) => {
+            const mapped = {
+              idValue: hod.idValue || hod.empId || hod.id || hod.employeeId || hod.EmpId || hod.ID,
+              description: hod.description || hod.employeeName || hod.name || hod.Name || hod.EmployeeName || `${hod.firstName || hod.FirstName || ''} ${hod.lastName || hod.LastName || ''}`.trim()
+            };
+            console.log('Mapping HOD:', hod, ' -> ', mapped);
+            return mapped;
+          });
+          console.log('Final mapped HOD list:', this.hodList);
+        } else {
+          console.warn('Could not find array data in HOD response:', response);
+          this.hodList = [];
         }
       },
       error: (error: any) => {
         console.error('Error loading HOD master list:', error);
+        this.hodList = [];
       }
     });
   }
 
   loadProjectManagerList(): void {
+    console.log('Loading project manager list...');
     this.api.GetProjectManagerList().subscribe({
       next: (response: any) => {
+        console.log('Project Manager API Response:', response);
+        
+        // Handle different possible response structures
+        let dataArray = null;
+        
         if (response && response.success && response.data) {
-          this.projectManagerList = response.data.map((pm: any) => ({
-            idValue: pm.idValue || pm.empId || pm.id || pm.employeeId,
-            description: pm.description || pm.employeeName || pm.name
-          }));
+          // Standard success response with data property
+          dataArray = response.data;
+          console.log('Using response.data:', dataArray);
+        } else if (response && Array.isArray(response)) {
+          // Direct array response
+          dataArray = response;
+          console.log('Using direct array response:', dataArray);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Response with data property (no success flag)
+          dataArray = response.data;
+          console.log('Using response.data (no success flag):', dataArray);
+        } else if (response && typeof response === 'object') {
+          // Try to find any array property in the response
+          const keys = Object.keys(response);
+          for (const key of keys) {
+            if (Array.isArray(response[key])) {
+              dataArray = response[key];
+              console.log(`Using response.${key}:`, dataArray);
+              break;
+            }
+          }
+        }
+        
+        if (dataArray && Array.isArray(dataArray)) {
+          console.log('Raw project manager data:', dataArray);
+          this.projectManagerList = dataArray.map((pm: any) => {
+            const mapped = {
+              idValue: pm.idValue || pm.empId || pm.id || pm.employeeId || pm.EmpId || pm.ID,
+              description: pm.description || pm.employeeName || pm.name || pm.Name || pm.EmployeeName || `${pm.firstName || pm.FirstName || ''} ${pm.lastName || pm.LastName || ''}`.trim()
+            };
+            console.log('Mapping PM:', pm, ' -> ', mapped);
+            return mapped;
+          });
+          console.log('Final mapped project manager list:', this.projectManagerList);
+        } else {
+          console.warn('Could not find array data in response:', response);
+          this.projectManagerList = [];
         }
       },
       error: (error: any) => {
         console.error('Error loading project manager list:', error);
+        this.projectManagerList = [];
       }
     });
   }
@@ -1363,6 +1618,7 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   showPMDropdown(): void {
+    console.log('showPMDropdown called, projectManagerList:', this.projectManagerList);
     this.isPMDropdownOpen = true;
   }
 
@@ -1381,8 +1637,12 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   getFilteredProjectManagers(searchTerm: string): DropdownOption[] {
-    if (!searchTerm) return this.projectManagerList;
-    return this.projectManagerList.filter(pm =>
+    console.log('getFilteredProjectManagers called with searchTerm:', searchTerm);
+    console.log('Current projectManagerList:', this.projectManagerList);
+    console.log('projectManagerList length:', this.projectManagerList?.length || 0);
+    
+    if (!searchTerm) return this.projectManagerList || [];
+    return (this.projectManagerList || []).filter(pm =>
       pm.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
@@ -1424,9 +1684,11 @@ export class EmergencyExitFormComponent implements OnInit {
     return this.isPlannedDropdownOpen;
   }
 
+  // Generic method for filtering project managers (used by all dropdowns)
   getFilteredEmployees(searchTerm: string): DropdownOption[] {
-    if (!searchTerm) return this.employeeMasterList;
-    return this.employeeMasterList.filter(emp =>
+    // Use projectManagerList instead of employeeMasterList for consistency
+    if (!searchTerm) return this.projectManagerList;
+    return this.projectManagerList.filter(emp =>
       emp.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
@@ -1906,6 +2168,35 @@ export class EmergencyExitFormComponent implements OnInit {
   getApprovedCount(): number {
     if (!this.approvalWorkflow) return 0;
     return this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
+  }
+
+  /**
+   * Get the approval workflow to display - static for new forms, dynamic for existing ones
+   */
+  getDisplayApprovalWorkflow(): ApprovalStep[] {
+    // Check if we have an ExitId (from URL parameters or loaded data)
+    const exitId = this.route.snapshot.queryParams['exitID'] || 
+                   this.route.snapshot.queryParams['exitId'] || 
+                   this.route.snapshot.queryParams['requestId'];
+    
+    // If no ExitId and no dynamic approval workflow data, show static flow
+    if (!exitId && (!this.approvalWorkflow || this.approvalWorkflow.length === 0)) {
+      return this.staticApprovalFlow;
+    }
+    
+    // Otherwise show the dynamic approval workflow
+    return this.approvalWorkflow;
+  }
+
+  /**
+   * Check if we should show the static approval flow
+   */
+  isShowingStaticFlow(): boolean {
+    const exitId = this.route.snapshot.queryParams['exitID'] || 
+                   this.route.snapshot.queryParams['exitId'] || 
+                   this.route.snapshot.queryParams['requestId'];
+    
+    return !exitId && (!this.approvalWorkflow || this.approvalWorkflow.length === 0);
   }
 
   /**
