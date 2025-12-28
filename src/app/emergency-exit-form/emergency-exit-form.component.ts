@@ -1202,18 +1202,57 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   loadHodMasterList(): void {
+    console.log('Loading HOD master list...');
     this.api.GetHodMasterList().subscribe({
       next: (response: any) => {
+        console.log('HOD API Response:', response);
+        
+        // Handle different possible response structures
+        let dataArray = null;
+        
         if (response && response.success && response.data) {
-          this.hodList = response.data.map((hod: any) => ({
-            idValue: hod.idValue || hod.empId || hod.id || hod.employeeId,
-            description: hod.description || hod.employeeName || hod.name
-          }));
-          console.log('HOD List loaded:', this.hodList);
+          // Standard success response with data property
+          dataArray = response.data;
+          console.log('Using response.data:', dataArray);
+        } else if (response && Array.isArray(response)) {
+          // Direct array response
+          dataArray = response;
+          console.log('Using direct array response:', dataArray);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Response with data property (no success flag)
+          dataArray = response.data;
+          console.log('Using response.data (no success flag):', dataArray);
+        } else if (response && typeof response === 'object') {
+          // Try to find any array property in the response
+          const keys = Object.keys(response);
+          for (const key of keys) {
+            if (Array.isArray(response[key])) {
+              dataArray = response[key];
+              console.log(`Using response.${key}:`, dataArray);
+              break;
+            }
+          }
+        }
+        
+        if (dataArray && Array.isArray(dataArray)) {
+          console.log('Raw HOD data:', dataArray);
+          this.hodList = dataArray.map((hod: any) => {
+            const mapped = {
+              idValue: hod.idValue || hod.empId || hod.id || hod.employeeId || hod.EmpId || hod.ID,
+              description: hod.description || hod.employeeName || hod.name || hod.Name || hod.EmployeeName || `${hod.firstName || hod.FirstName || ''} ${hod.lastName || hod.LastName || ''}`.trim()
+            };
+            console.log('Mapping HOD:', hod, ' -> ', mapped);
+            return mapped;
+          });
+          console.log('Final mapped HOD list:', this.hodList);
+        } else {
+          console.warn('Could not find array data in HOD response:', response);
+          this.hodList = [];
         }
       },
       error: (error: any) => {
         console.error('Error loading HOD master list:', error);
+        this.hodList = [];
       }
     });
   }
@@ -1354,6 +1393,7 @@ export class EmergencyExitFormComponent implements OnInit {
     // Reset form with identity fields cleared
     this.exitForm.reset({
       formType: this.formType,
+      hodName: '', // Explicitly set HOD to empty string
       noOfDaysApproved: 0,
       decInfoAccurate: false,
       decHandoverComplete: false,

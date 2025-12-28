@@ -6503,3 +6503,29 @@ ced Approval Actions Column */
     font-size: 13px;
   }
 }
+/* HOD Auto-Select Info Styles */
+.hod-auto-select-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #059669;
+  font-size: 12px;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: rgba(5, 150, 105, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #059669;
+}
+
+.hod-auto-select-info i {
+  color: #059669;
+  font-size: 11px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hod-auto-select-info {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
