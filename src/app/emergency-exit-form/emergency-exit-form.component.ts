@@ -100,6 +100,7 @@ export class EmergencyExitFormComponent implements OnInit {
   approvalRequestData: any = null;
   approvalID: number | null = null;
   returnUrl: string = '';
+  actionTaken: boolean = false; // Flag to track if approval/rejection action has been taken
 
   // Employee profile data
   employeeProfileData: ExitEmpProfileDetails = {};
@@ -994,6 +995,12 @@ export class EmergencyExitFormComponent implements OnInit {
             setTimeout(() => {
               this.ensureAllCardsVisible();
             }, 100);
+
+            // Redirect to listing page after successful submission
+            setTimeout(() => {
+              const redirectRoute = this.getRedirectRoute();
+              this.router.navigate([redirectRoute]);
+            }, 2000); // Wait 2 seconds to show success message
           } else {
             this.toastr.error('Form submission failed: ' + (response?.message || 'Unknown error'), 'Submission Error');
           }
@@ -1047,7 +1054,7 @@ export class EmergencyExitFormComponent implements OnInit {
       responsibilitiesHanded: (this.formType === 'P' || this.formType === 'R') ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
       noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
       depHod: formValue.hodName || '',
-      projectSiteIncharge: formValue.projectManagerName || '',
+      projectSiteIncharge: formValue.projectSiteIncharge || '',
       reasonForLeave: formValue.reasonForEmergency || '',
       approvalStatus: 'P',
       category: formValue.category || '',
@@ -1543,6 +1550,24 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
+  /**
+   * Get the appropriate redirect route after form submission based on user context
+   */
+  getRedirectRoute(): string {
+    // You can customize this based on your application's routing structure
+    // Check user role or other factors to determine the correct route
+    if (this.currentUser?.role === 'employee') {
+      return '/employee-dashboard';
+    } else if (this.currentUser?.role === 'hod') {
+      return '/hod-dashboard';
+    } else if (this.currentUser?.role === 'ced') {
+      return '/ced-dashboard';
+    }
+    
+    // Default fallback routes
+    return '/employee-dashboard'; // or '/dashboard' or whatever your main listing page is
+  }
+
   // Project Manager dropdown methods
   pmSearchTerm: string = '';
   isPMDropdownOpen: boolean = false;
@@ -1708,7 +1733,8 @@ export class EmergencyExitFormComponent implements OnInit {
     // 1. User is in approval mode (came from approval listing)
     // 2. There is an approvalID (specific approval request)
     // 3. User has permission to take action on this request
-    return this.isApprovalMode && !!this.approvalID && !this.isViewMode;
+    // 4. No action has been taken yet
+    return this.isApprovalMode && !!this.approvalID && !this.isViewMode && !this.actionTaken;
   }
 
   /**
@@ -1790,8 +1816,13 @@ export class EmergencyExitFormComponent implements OnInit {
     this.api.UpdateExitApproval(request).subscribe({
       next: (response) => {
         if (response && response.success) {
+          this.actionTaken = true; // Set flag to hide action buttons
           this.toastr.success('Request approved successfully', 'Approval Successful');
-          this.returnToApprovalListing();
+          
+          // Redirect after a short delay to show success message
+          setTimeout(() => {
+            this.returnToApprovalListing();
+          }, 2000);
         } else {
           this.toastr.error(response?.message || 'Failed to approve request', 'Error');
         }
@@ -1871,8 +1902,13 @@ export class EmergencyExitFormComponent implements OnInit {
     this.api.UpdateExitApproval(request).subscribe({
       next: (response) => {
         if (response && response.success) {
+          this.actionTaken = true; // Set flag to hide action buttons
           this.toastr.success('Request rejected successfully', 'Rejection Successful');
-          this.returnToApprovalListing();
+          
+          // Redirect after a short delay to show success message
+          setTimeout(() => {
+            this.returnToApprovalListing();
+          }, 2000);
         } else {
           this.toastr.error(response?.message || 'Failed to reject request', 'Error');
         }

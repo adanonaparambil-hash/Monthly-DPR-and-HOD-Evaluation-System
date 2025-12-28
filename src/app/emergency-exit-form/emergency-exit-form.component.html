@@ -192,12 +192,12 @@
                     <label>Category *</label>
                     <div class="radio-group">
                       <label class="radio-label">
-                        <input type="radio" formControlName="category" value="Staff">
+                        <input type="radio" formControlName="category" value="S">
                         <span class="radio-mark"></span>
                         Staff
                       </label>
                       <label class="radio-label">
-                        <input type="radio" formControlName="category" value="Worker">
+                        <input type="radio" formControlName="category" value="W">
                         <span class="radio-mark"></span>
                         Worker
                       </label>
@@ -606,6 +606,22 @@
                 <i class="fas fa-check-circle"></i>
                 Approve
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Taken Success Card - Show when action has been taken -->
+        <div class="action-taken-card" *ngIf="isApprovalMode && actionTaken">
+          <div class="success-header">
+            <i class="fas fa-check-circle"></i>
+            <h3>Action Completed</h3>
+            <span class="success-badge">Completed</span>
+          </div>
+
+          <div class="success-content">
+            <div class="success-message">
+              <i class="fas fa-thumbs-up"></i>
+              <p>Your action has been recorded successfully. You will be redirected to the approval listing shortly.</p>
             </div>
           </div>
         </div>

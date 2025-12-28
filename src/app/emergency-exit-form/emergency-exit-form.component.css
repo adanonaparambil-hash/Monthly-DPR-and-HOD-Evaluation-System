@@ -6368,3 +6368,138 @@ ced Approval Actions Column */
     align-self: flex-start;
   }
 }
+/* Action Taken Success Card Styles */
+.action-taken-card {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border: 1px solid #28a745;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+  animation: slideInSuccess 0.5s ease-out;
+}
+
+@keyframes slideInSuccess {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.success-header i {
+  color: #28a745;
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.success-header h3 {
+  margin: 0;
+  color: #155724;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.success-badge {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+  animation: successPulse 2s infinite;
+}
+
+@keyframes successPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.5);
+  }
+}
+
+.success-content {
+  padding: 0;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(40, 167, 69, 0.1);
+}
+
+.success-message i {
+  color: #28a745;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.success-message p {
+  margin: 0;
+  color: #155724;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Responsive adjustments for action taken card */
+@media (max-width: 768px) {
+  .action-taken-card {
+    padding: 16px;
+  }
+  
+  .success-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .success-badge {
+    align-self: flex-end;
+  }
+  
+  .success-message {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-taken-card {
+    padding: 12px;
+  }
+  
+  .success-message {
+    padding: 8px;
+  }
+  
+  .success-message p {
+    font-size: 13px;
+  }
+}
