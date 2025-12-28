@@ -438,8 +438,7 @@ export class EmergencyExitFormComponent implements OnInit {
       // Load master lists from API - Add delay to ensure component is ready
       setTimeout(() => {
         this.loadHodMasterList();
-        this.loadProjectManagerList();
-        // Note: Using projectManagerList for all dropdowns now, so no need to load employeeMasterList
+        this.loadEmployeeMasterList(); // Using this for both Project Manager and Responsibilities dropdowns
       }, 100);
 
       // Disable employee information fields (always disabled)
@@ -553,8 +552,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
         // Load master lists for non-approval mode
         this.loadHodMasterList();
-        this.loadProjectManagerList();
-        // Note: Using projectManagerList for all dropdowns now
+        this.loadEmployeeMasterList(); // Using this for both Project Manager and Responsibilities dropdowns
 
         // Ensure fields are enabled for regular form usage
         this.enableFormFields();
@@ -1170,125 +1168,61 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   loadHodMasterList(): void {
-    console.log('Loading HOD master list...');
     this.api.GetHodMasterList().subscribe({
       next: (response: any) => {
-        console.log('HOD API Response:', response);
-        
-        // Handle different possible response structures
-        let dataArray = null;
-        
         if (response && response.success && response.data) {
-          // Standard success response with data property
-          dataArray = response.data;
-          console.log('Using response.data:', dataArray);
-        } else if (response && Array.isArray(response)) {
-          // Direct array response
-          dataArray = response;
-          console.log('Using direct array response:', dataArray);
-        } else if (response && response.data && Array.isArray(response.data)) {
-          // Response with data property (no success flag)
-          dataArray = response.data;
-          console.log('Using response.data (no success flag):', dataArray);
-        } else if (response && typeof response === 'object') {
-          // Try to find any array property in the response
-          const keys = Object.keys(response);
-          for (const key of keys) {
-            if (Array.isArray(response[key])) {
-              dataArray = response[key];
-              console.log(`Using response.${key}:`, dataArray);
-              break;
-            }
-          }
-        }
-        
-        if (dataArray && Array.isArray(dataArray)) {
-          console.log('Raw HOD data:', dataArray);
-          this.hodList = dataArray.map((hod: any) => {
-            const mapped = {
-              idValue: hod.idValue || hod.empId || hod.id || hod.employeeId || hod.EmpId || hod.ID,
-              description: hod.description || hod.employeeName || hod.name || hod.Name || hod.EmployeeName || `${hod.firstName || hod.FirstName || ''} ${hod.lastName || hod.LastName || ''}`.trim()
-            };
-            console.log('Mapping HOD:', hod, ' -> ', mapped);
-            return mapped;
-          });
-          console.log('Final mapped HOD list:', this.hodList);
-        } else {
-          console.warn('Could not find array data in HOD response:', response);
-          this.hodList = [];
+          this.hodList = response.data.map((hod: any) => ({
+            idValue: hod.idValue || hod.empId || hod.id || hod.employeeId,
+            description: hod.description || hod.employeeName || hod.name
+          }));
+          console.log('HOD List loaded:', this.hodList);
         }
       },
       error: (error: any) => {
         console.error('Error loading HOD master list:', error);
-        this.hodList = [];
       }
     });
   }
 
   loadProjectManagerList(): void {
-    console.log('Loading project manager list...');
     this.api.GetProjectManagerList().subscribe({
       next: (response: any) => {
-        console.log('Project Manager API Response:', response);
-        
-        // Handle different possible response structures
-        let dataArray = null;
-        
         if (response && response.success && response.data) {
-          // Standard success response with data property
-          dataArray = response.data;
-          console.log('Using response.data:', dataArray);
-        } else if (response && Array.isArray(response)) {
-          // Direct array response
-          dataArray = response;
-          console.log('Using direct array response:', dataArray);
-        } else if (response && response.data && Array.isArray(response.data)) {
-          // Response with data property (no success flag)
-          dataArray = response.data;
-          console.log('Using response.data (no success flag):', dataArray);
-        } else if (response && typeof response === 'object') {
-          // Try to find any array property in the response
-          const keys = Object.keys(response);
-          for (const key of keys) {
-            if (Array.isArray(response[key])) {
-              dataArray = response[key];
-              console.log(`Using response.${key}:`, dataArray);
-              break;
-            }
-          }
-        }
-        
-        if (dataArray && Array.isArray(dataArray)) {
-          console.log('Raw project manager data:', dataArray);
-          this.projectManagerList = dataArray.map((pm: any) => {
-            const mapped = {
-              idValue: pm.idValue || pm.empId || pm.id || pm.employeeId || pm.EmpId || pm.ID,
-              description: pm.description || pm.employeeName || pm.name || pm.Name || pm.EmployeeName || `${pm.firstName || pm.FirstName || ''} ${pm.lastName || pm.LastName || ''}`.trim()
-            };
-            console.log('Mapping PM:', pm, ' -> ', mapped);
-            return mapped;
-          });
-          console.log('Final mapped project manager list:', this.projectManagerList);
-        } else {
-          console.warn('Could not find array data in response:', response);
-          this.projectManagerList = [];
+          this.projectManagerList = response.data.map((pm: any) => ({
+            idValue: pm.idValue || pm.empId || pm.id || pm.employeeId,
+            description: pm.description || pm.employeeName || pm.name
+          }));
+          console.log('Project Manager List loaded:', this.projectManagerList);
         }
       },
       error: (error: any) => {
         console.error('Error loading project manager list:', error);
-        this.projectManagerList = [];
       }
     });
   }
 
   loadEmployeeMasterList(): void {
+    console.log('Loading employee master list...');
     this.api.GetEmployeeMasterList().subscribe({
       next: (response: any) => {
+        console.log('Employee Master API Response:', response);
         if (response && response.success && response.data) {
           this.employeeMasterList = response.data.map((emp: any) => ({
             idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
             description: emp.description || emp.employeeName || emp.name
           }));
+          console.log('Employee Master List loaded:', this.employeeMasterList);
+        } else {
+          console.warn('Employee Master API response structure unexpected:', response);
+          // Try to handle different response structures
+          if (response && Array.isArray(response)) {
+            console.log('Employee Master Response is direct array, mapping...');
+            this.employeeMasterList = response.map((emp: any) => ({
+              idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
+              description: emp.description || emp.employeeName || emp.name
+            }));
+            console.log('Mapped Employee Master from direct array:', this.employeeMasterList);
+          }
         }
       },
       error: (error: any) => {
@@ -1618,7 +1552,6 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   showPMDropdown(): void {
-    console.log('showPMDropdown called, projectManagerList:', this.projectManagerList);
     this.isPMDropdownOpen = true;
   }
 
@@ -1637,12 +1570,9 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   getFilteredProjectManagers(searchTerm: string): DropdownOption[] {
-    console.log('getFilteredProjectManagers called with searchTerm:', searchTerm);
-    console.log('Current projectManagerList:', this.projectManagerList);
-    console.log('projectManagerList length:', this.projectManagerList?.length || 0);
-    
-    if (!searchTerm) return this.projectManagerList || [];
-    return (this.projectManagerList || []).filter(pm =>
+    // Use employeeMasterList for consistency with other dropdowns
+    if (!searchTerm) return this.employeeMasterList || [];
+    return (this.employeeMasterList || []).filter(pm =>
       pm.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
@@ -1684,11 +1614,10 @@ export class EmergencyExitFormComponent implements OnInit {
     return this.isPlannedDropdownOpen;
   }
 
-  // Generic method for filtering project managers (used by all dropdowns)
+  // Generic method for filtering employees (used by Responsibilities Handed Over To dropdown)
   getFilteredEmployees(searchTerm: string): DropdownOption[] {
-    // Use projectManagerList instead of employeeMasterList for consistency
-    if (!searchTerm) return this.projectManagerList;
-    return this.projectManagerList.filter(emp =>
+    if (!searchTerm) return this.employeeMasterList || [];
+    return (this.employeeMasterList || []).filter(emp =>
       emp.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }

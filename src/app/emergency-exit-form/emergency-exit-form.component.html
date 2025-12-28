@@ -130,7 +130,7 @@
                     <div class="searchable-dropdown">
                       <input type="text" id="projectManagerName" formControlName="projectManagerName"
                         [class.error]="isFieldInvalid('projectManagerName')"
-                        [placeholder]="projectManagerList.length === 0 ? 'Loading project managers...' : 'Search and select project manager...'" class="dropdown-input" #pmSearchInput
+                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select project manager...'" class="dropdown-input" #pmSearchInput
                         (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()" (blur)="hidePMDropdown()"
                         autocomplete="off">
                       <div class="dropdown-icon">
@@ -161,7 +161,7 @@
                       <input type="text" id="responsibilitiesHandedOverTo"
                         formControlName="responsibilitiesHandedOverTo"
                         [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
-                        [placeholder]="projectManagerList.length === 0 ? 'Loading project managers...' : 'Search and select project manager...'" class="dropdown-input" #plannedSearchInput
+                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #plannedSearchInput
                         (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
                         (blur)="hidePlannedDropdown()" autocomplete="off">
                       <div class="dropdown-icon">
@@ -169,7 +169,7 @@
                       </div>
                       <div class="dropdown-list planned-dropdown" *ngIf="isPlannedDropdownVisible()"
                         [class.small-list]="shouldUseSmallDropdown(plannedSearchTerm)">
-                        <div class="dropdown-item" *ngFor="let employee of getFilteredProjectManagers(plannedSearchTerm)"
+                        <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(plannedSearchTerm)"
                           (mousedown)="selectPlannedEmployee(employee)"
                           [class.selected]="isPlannedEmployeeSelected(employee)">
                           <div class="employee-info">
@@ -178,8 +178,8 @@
                             <div class="employee-id">{{ employee.idValue || '' }}</div>
                           </div>
                         </div>
-                        <div class="no-results" *ngIf="getFilteredProjectManagers(plannedSearchTerm).length === 0">
-                          No project managers found
+                        <div class="no-results" *ngIf="getFilteredEmployees(plannedSearchTerm).length === 0">
+                          No employees found
                         </div>
                       </div>
                     </div>
@@ -432,7 +432,7 @@
                         <label>Responsible Person Name *</label>
                         <div class="searchable-dropdown">
                           <input type="text" formControlName="responsiblePersonName"
-                            [placeholder]="projectManagerList.length === 0 ? 'Loading project managers...' : 'Search and select project manager...'" class="dropdown-input" #searchInput
+                            [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #searchInput
                             (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
                             autocomplete="off">
                           <div class="dropdown-icon">
@@ -440,7 +440,7 @@
                           </div>
                           <div class="dropdown-list" *ngIf="isDropdownVisible(i)" [attr.data-index]="i"
                             [class.small-list]="shouldUseSmallDropdown(getSearchTerm(i))">
-                            <div class="dropdown-item" *ngFor="let employee of getFilteredProjectManagers(getSearchTerm(i))"
+                            <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(getSearchTerm(i))"
                               (mousedown)="selectEmployee(i, employee)"
                               [class.selected]="isEmployeeSelected(i, employee)">
                               <div class="employee-info">
@@ -449,8 +449,8 @@
                                 <div class="employee-id">{{ employee.idValue || '' }}</div>
                               </div>
                             </div>
-                            <div class="no-results" *ngIf="getFilteredProjectManagers(getSearchTerm(i)).length === 0">
-                              No project managers found
+                            <div class="no-results" *ngIf="getFilteredEmployees(getSearchTerm(i)).length === 0">
+                              No employees found
                             </div>
                           </div>
                         </div>
