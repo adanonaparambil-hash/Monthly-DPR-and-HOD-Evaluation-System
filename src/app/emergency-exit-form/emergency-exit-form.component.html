@@ -26,7 +26,7 @@
       </div>
       <div class="form-status" *ngIf="!formSubmitted && !isApprovalMode">
         <div class="status-badge" [ngClass]="'status-' + getAllApprovalStatus()">
-          {{ getAllApprovalStatus() | titlecase }}
+          {{ getApprovalStatusText() }}
         </div>
       </div>
     </div>

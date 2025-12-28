@@ -90,7 +90,10 @@ export class EmergencyExitFormComponent implements OnInit {
   projectManagerList: DropdownOption[] = [];
   employeeMasterList: DropdownOption[] = [];
   currentUser: any = null;
-
+  
+  // Approval status from backend
+  approvalStatus: string = 'P'; // Default to Pending
+  
   // Form type flag: 'E' for Emergency, 'P' for Planned Leave, 'R' for Resignation
   @Input() formType: 'E' | 'P' | 'R' = 'E';
 
@@ -545,6 +548,9 @@ export class EmergencyExitFormComponent implements OnInit {
         console.log('Loading saved data for exitId:', exitIdParam);
         this.loadSavedExitData(parseInt(exitIdParam));
       } else if (!this.isApprovalMode && !this.isViewMode) {
+        // Reset approval status for new forms
+        this.approvalStatus = 'P';
+        
         // Re-populate form with session data after form type change
         this.populateFormFromSession();
 
@@ -578,6 +584,10 @@ export class EmergencyExitFormComponent implements OnInit {
             this.formType = data.formType.trim() as 'E' | 'P' | 'R';
             this.updateFormValidations();
           }
+
+          // Set approval status from backend data
+          this.approvalStatus = data.approvalStatus || 'P';
+          console.log('Approval status loaded:', this.approvalStatus);
 
           // Format dates for input fields
           const formatDateForInput = (dateString: string): string => {
@@ -1268,6 +1278,10 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.approvalRequestData) {
       const request = this.approvalRequestData;
 
+      // Set approval status from request data
+      this.approvalStatus = request.approvalStatus || request.status || 'P';
+      console.log('Approval status from request data:', this.approvalStatus);
+
       // Format date for input fields
       const formatDateForInput = (dateString: string): string => {
         if (!dateString) return '';
@@ -1509,7 +1523,46 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   getAllApprovalStatus(): string {
-    return 'pending';
+    return this.mapApprovalStatusToDisplay(this.approvalStatus);
+  }
+
+  /**
+   * Map backend approval status codes to display format
+   */
+  mapApprovalStatusToDisplay(status: string): string {
+    if (!status) return 'pending';
+    
+    switch (status.toUpperCase()) {
+      case 'A': 
+      case 'APPROVED': 
+        return 'approved';
+      case 'R': 
+      case 'REJECTED': 
+        return 'rejected';
+      case 'P': 
+      case 'PENDING': 
+        return 'pending';
+      case 'I': 
+      case 'IN_PROGRESS': 
+      case 'INPROGRESS': 
+        return 'in-progress';
+      default: 
+        return status.toLowerCase();
+    }
+  }
+
+  /**
+   * Get the display text for approval status
+   */
+  getApprovalStatusText(): string {
+    const status = this.mapApprovalStatusToDisplay(this.approvalStatus);
+    switch (status) {
+      case 'approved': return 'Approved';
+      case 'rejected': return 'Rejected';
+      case 'pending': return 'Pending';
+      case 'in-progress': return 'In Progress';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
   }
 
   switchFormType(newType: 'E' | 'P' | 'R'): void {
