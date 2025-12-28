@@ -133,7 +133,7 @@
                         [class.error]="isFieldInvalid('projectManagerName')"
                         [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select project manager...'" class="dropdown-input" #pmSearchInput
                         (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()" (blur)="hidePMDropdown()"
-                        autocomplete="off" readonly>
+                        autocomplete="off">
                       <div class="dropdown-icon">
                         <i class="fas fa-chevron-down"></i>
                       </div>
@@ -164,7 +164,7 @@
                         [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
                         [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #plannedSearchInput
                         (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
-                        (blur)="hidePlannedDropdown()" autocomplete="off" readonly>
+                        (blur)="hidePlannedDropdown()" autocomplete="off">
                        
                       <div class="dropdown-icon">
                         <i class="fas fa-chevron-down"></i>

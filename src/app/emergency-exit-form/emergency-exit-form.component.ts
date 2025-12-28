@@ -669,6 +669,9 @@ export class EmergencyExitFormComponent implements OnInit {
             this.loadEmployeeDetailsById(data.employeeId);
           }
 
+          // Sync input field display values
+          this.syncInputFieldValues();
+
           // Assess access control based on status and ownership
           const ownerId = data.employeeId || data.employeeID || data.empId;
           const status = data.approvalStatus || data.approvalStatus;
@@ -928,10 +931,23 @@ export class EmergencyExitFormComponent implements OnInit {
 
   submitForm() {
     console.log('Submit form called - Form Type:', this.formType);
+    console.log('Form valid:', this.exitForm.valid);
+    console.log('Form errors:', this.exitForm.errors);
+    console.log('Form value:', this.exitForm.value);
+    console.log('Raw form value:', this.exitForm.getRawValue());
+
+    // Log individual field validation status
+    Object.keys(this.exitForm.controls).forEach(key => {
+      const control = this.exitForm.get(key);
+      if (control && control.invalid) {
+        console.log(`Field ${key} is invalid:`, control.errors);
+      }
+    });
 
     // Validate form for current type
     if (!this.validateFormForCurrentType()) {
       this.markAllFieldsAsTouched();
+      this.showValidationErrors(); // Show specific validation errors
       this.toastr.error('Please fill in all required fields before submitting.', 'Validation Error');
       return;
     }
@@ -1060,7 +1076,7 @@ export class EmergencyExitFormComponent implements OnInit {
       emailId: formValue.emailId || '',
       formType: this.formType, // 'E' for Emergency, 'P' for Planned, 'R' for Resignation
       dateOfDeparture: formatDate(formValue.dateOfDeparture),
-      dateArrival: formatDate(formValue.dateOfArrival),
+      dateArrival: formValue.dateOfArrival ? formatDate(formValue.dateOfArrival) : undefined,
       flightTime: formValue.flightTime || '',
       responsibilitiesHanded: (this.formType === 'P' || this.formType === 'R') ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
       noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
@@ -1233,6 +1249,9 @@ export class EmergencyExitFormComponent implements OnInit {
           
           // Trigger change detection to update display names
           this.cdr.detectChanges();
+          
+          // Sync input field values
+          this.syncInputFieldValues();
         } else {
           console.warn('Employee Master API response structure unexpected:', response);
           // Try to handle different response structures
@@ -1411,27 +1430,76 @@ export class EmergencyExitFormComponent implements OnInit {
     const formValue = this.exitForm.value;
     const rawFormValue = this.exitForm.getRawValue(); // Get disabled field values too
 
+    console.log('=== VALIDATION DEBUG ===');
+    console.log('Form Type:', this.formType);
+    console.log('Form Values:', formValue);
+    console.log('Raw Form Values:', rawFormValue);
+
     // Common required fields - mix of enabled and disabled fields
-    if (!rawFormValue.employeeName) return false;
-    if (!rawFormValue.employeeId) return false;
-    if (!rawFormValue.department) return false;
-    if (!formValue.dateOfDeparture) return false;
-    if (!formValue.noOfDaysApproved || formValue.noOfDaysApproved < 1) return false;
-    if (!formValue.reasonForEmergency) return false;
-    if (!formValue.hodName) return false;
+    if (!rawFormValue.employeeName) {
+      console.log('Validation failed: employeeName missing');
+      return false;
+    }
+    if (!rawFormValue.employeeId) {
+      console.log('Validation failed: employeeId missing');
+      return false;
+    }
+    if (!rawFormValue.department) {
+      console.log('Validation failed: department missing');
+      return false;
+    }
+    if (!formValue.dateOfDeparture) {
+      console.log('Validation failed: dateOfDeparture missing');
+      return false;
+    }
+    if (!formValue.noOfDaysApproved || formValue.noOfDaysApproved < 1) {
+      console.log('Validation failed: noOfDaysApproved missing or invalid');
+      return false;
+    }
+    if (!formValue.reasonForEmergency) {
+      console.log('Validation failed: reasonForEmergency missing');
+      return false;
+    }
+    if (!formValue.hodName) {
+      console.log('Validation failed: hodName missing');
+      return false;
+    }
 
     // Planned leave and resignation specific fields
     if (this.formType === 'P' || this.formType === 'R') {
-      if (!formValue.category) return false;
-      if (!formValue.projectManagerName) return false;
-      if (!formValue.responsibilitiesHandedOverTo) return false;
+      if (!formValue.category) {
+        console.log('Validation failed: category missing for P/R form');
+        return false;
+      }
+      
+      // Check projectManagerName (stores ID) - should have a value
+      const projectManagerValue = formValue.projectManagerName || rawFormValue.projectManagerName;
+      if (!projectManagerValue) {
+        console.log('Validation failed: projectManagerName missing for P/R form');
+        console.log('projectManagerName value:', projectManagerValue);
+        return false;
+      }
+      
+      // Check responsibilitiesHandedOverTo - should have a value (name or ID)
+      const responsibilitiesValue = formValue.responsibilitiesHandedOverTo || rawFormValue.responsibilitiesHandedOverTo;
+      if (!responsibilitiesValue) {
+        console.log('Validation failed: responsibilitiesHandedOverTo missing for P/R form');
+        console.log('responsibilitiesHandedOverTo value:', responsibilitiesValue);
+        return false;
+      }
     }
 
     // Emergency form - validate responsibilities
     if (this.formType === 'E') {
-      return this.validateResponsibilities();
+      const responsibilitiesValid = this.validateResponsibilities();
+      if (!responsibilitiesValid) {
+        console.log('Validation failed: responsibilities invalid for E form');
+        return false;
+      }
     }
 
+    console.log('Validation passed for form type:', this.formType);
+    console.log('=== END VALIDATION DEBUG ===');
     return true;
   }
 
@@ -1439,6 +1507,35 @@ export class EmergencyExitFormComponent implements OnInit {
     Object.keys(this.exitForm.controls).forEach(key => {
       this.exitForm.get(key)?.markAsTouched();
     });
+  }
+
+  /**
+   * Show specific validation errors for debugging
+   */
+  showValidationErrors(): void {
+    console.log('=== VALIDATION ERRORS ===');
+    const formValue = this.exitForm.value;
+    const rawFormValue = this.exitForm.getRawValue();
+    
+    const requiredFields = ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
+    
+    if (this.formType === 'P' || this.formType === 'R') {
+      requiredFields.push('category', 'projectManagerName', 'responsibilitiesHandedOverTo');
+    }
+    
+    requiredFields.forEach(field => {
+      const value = rawFormValue[field] || formValue[field];
+      const control = this.exitForm.get(field);
+      
+      if (!value || (field === 'noOfDaysApproved' && value < 1)) {
+        console.log(`❌ ${field}: "${value}" (missing or invalid)`);
+        console.log(`   Control status: ${control?.status}, Errors:`, control?.errors);
+      } else {
+        console.log(`✅ ${field}: "${value}"`);
+      }
+    });
+    
+    console.log('=== END VALIDATION ERRORS ===');
   }
 
   allDeclarationsChecked(): boolean {
@@ -1632,9 +1729,18 @@ export class EmergencyExitFormComponent implements OnInit {
 
   onPMSearchInputChange(event: any): void {
     this.pmSearchTerm = event.target?.value || '';
+    // Clear the selected value when user starts typing to search
+    if (this.pmSearchTerm !== this.getProjectManagerDisplayName()) {
+      // User is typing something different, clear the selection
+      this.exitForm.patchValue({
+        projectManagerName: '' // Clear the stored ID
+      });
+    }
   }
 
   showPMDropdown(): void {
+    // Initialize search term with current display value for better UX
+    this.pmSearchTerm = this.getProjectManagerDisplayName();
     this.isPMDropdownOpen = true;
   }
 
@@ -1654,8 +1760,10 @@ export class EmergencyExitFormComponent implements OnInit {
 
   getFilteredProjectManagers(searchTerm: string): DropdownOption[] {
     // Use employeeMasterList for consistency with other dropdowns
-    if (!searchTerm) return this.employeeMasterList || [];
-    return (this.employeeMasterList || []).filter(pm =>
+    const list = this.employeeMasterList || [];
+    if (!searchTerm || searchTerm.trim() === '') return list;
+    
+    return list.filter(pm =>
       pm.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
@@ -1664,7 +1772,14 @@ export class EmergencyExitFormComponent implements OnInit {
     this.exitForm.patchValue({
       projectManagerName: pm.idValue // Save the ID instead of description
     });
+    this.pmSearchTerm = pm.description || ''; // Update search term to show selected name
     this.isPMDropdownOpen = false;
+    
+    // Update the input field value immediately
+    const inputElement = document.getElementById('projectManagerName') as HTMLInputElement;
+    if (inputElement) {
+      inputElement.value = pm.description || '';
+    }
   }
 
   isPMSelected(pm: DropdownOption): boolean {
@@ -1697,6 +1812,25 @@ export class EmergencyExitFormComponent implements OnInit {
       case 'Worker': return 'W';
       default: return category; // Return as-is if already in short form
     }
+  }
+
+  /**
+   * Sync input field display values after data loading
+   */
+  syncInputFieldValues(): void {
+    setTimeout(() => {
+      // Update Project Manager input field
+      const pmInputElement = document.getElementById('projectManagerName') as HTMLInputElement;
+      if (pmInputElement) {
+        pmInputElement.value = this.getProjectManagerDisplayName();
+      }
+      
+      // Update Responsibilities input field
+      const respInputElement = document.getElementById('responsibilitiesHandedOverTo') as HTMLInputElement;
+      if (respInputElement) {
+        respInputElement.value = this.getResponsibilitiesHandoverDisplayName();
+      }
+    }, 100);
   }
 
   /**
@@ -1756,9 +1890,19 @@ export class EmergencyExitFormComponent implements OnInit {
 
   onPlannedSearchInputChange(event: any): void {
     this.plannedSearchTerm = event.target?.value || '';
+    // Clear the selected value when user starts typing to search
+    if (this.plannedSearchTerm !== this.getResponsibilitiesHandoverDisplayName()) {
+      // User is typing something different, clear the selection
+      this.exitForm.patchValue({
+        responsibilitiesHandedOverTo: '', // Clear the stored name
+        responsibilitiesHandedOverToId: '' // Clear the stored ID
+      });
+    }
   }
 
   showPlannedDropdown(): void {
+    // Initialize search term with current display value for better UX
+    this.plannedSearchTerm = this.getResponsibilitiesHandoverDisplayName();
     this.isPlannedDropdownOpen = true;
   }
 
@@ -1774,8 +1918,10 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Generic method for filtering employees (used by Responsibilities Handed Over To dropdown)
   getFilteredEmployees(searchTerm: string): DropdownOption[] {
-    if (!searchTerm) return this.employeeMasterList || [];
-    return (this.employeeMasterList || []).filter(emp =>
+    const list = this.employeeMasterList || [];
+    if (!searchTerm || searchTerm.trim() === '') return list;
+    
+    return list.filter(emp =>
       emp.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
@@ -1785,7 +1931,14 @@ export class EmergencyExitFormComponent implements OnInit {
       responsibilitiesHandedOverTo: employee.description, // Store the name for display
       responsibilitiesHandedOverToId: employee.idValue    // Store the ID for backend
     });
+    this.plannedSearchTerm = employee.description || ''; // Update search term to show selected name
     this.isPlannedDropdownOpen = false;
+    
+    // Update the input field value immediately
+    const inputElement = document.getElementById('responsibilitiesHandedOverTo') as HTMLInputElement;
+    if (inputElement) {
+      inputElement.value = employee.description || '';
+    }
   }
 
   isPlannedEmployeeSelected(employee: DropdownOption): boolean {
