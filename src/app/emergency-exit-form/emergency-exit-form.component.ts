@@ -1047,7 +1047,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
     
   private getBaseUrl(): string {
-    return window.location.origin;
+    return window.location.origin + "/AdrakMPRUI/";
   }
 
 
