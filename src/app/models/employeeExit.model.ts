@@ -80,6 +80,7 @@ export interface EmployeeExitRequest {
   declaration4?: string;
   responsibilities?: EmployeeExitResponsibility[];
   ExitApprovalDetails?: ExitApprovalDetailDto[];
+  baseurl?:string;
 }
 
 export interface MyApprovalRequest {
@@ -118,4 +119,5 @@ export interface UpdateExitApprovalRequest {
   approverId?: string; // Changed to string to match empId type
   status?: string;
   remarks?: string;
+  baseurl?:string;
 }

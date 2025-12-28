@@ -1045,6 +1045,12 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
+    
+  private getBaseUrl(): string {
+    return window.location.origin;
+  }
+
+
   private prepareExitRequest(): EmployeeExitRequest {
     const formValue = this.exitForm.getRawValue(); // Use getRawValue to get disabled field values
 
@@ -1091,7 +1097,8 @@ export class EmergencyExitFormComponent implements OnInit {
       declaration2: formValue.decHandoverComplete ? 'Y' : 'N',
       declaration3: formValue.decReturnAssets ? 'Y' : 'N',
       declaration4: formValue.decUnderstandReturn ? 'Y' : 'N',
-      responsibilities: responsibilities
+      responsibilities: responsibilities,
+      baseurl:this.getBaseUrl()
     };
 
     console.log('Prepared exit request:', exitRequest);
@@ -2135,7 +2142,8 @@ export class EmergencyExitFormComponent implements OnInit {
       exitId: parseInt(exitId),
       approverId: approverId,
       status: 'A',
-      remarks: this.approvalRemarks?.trim() || undefined // Allow empty remarks for approval
+      remarks: this.approvalRemarks?.trim() || undefined, // Allow empty remarks for approval,
+      baseurl:this.getBaseUrl()
     };
 
     console.log('Approval request payload:', request);
@@ -2221,7 +2229,8 @@ export class EmergencyExitFormComponent implements OnInit {
       exitId: parseInt(exitId),
       approverId: approverId,
       status: 'R',
-      remarks: this.approvalRemarks.trim()
+      remarks: this.approvalRemarks.trim(),
+      baseurl:this.getBaseUrl()
     };
 
     console.log('Rejection request payload:', request);
