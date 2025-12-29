@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-# Monthly-DPR-and-HOD-Evaluation-System
-Monthly DPR and HOD Evaluation System 
-=======
-# TimeSheetUI
+# Adrak Portal
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.2.
+Al Adrak Portal - Employee Management and DPR System
 
 ## Development server
 
@@ -61,4 +57,3 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
->>>>>>> 66ff55e (AddingDPRSolutionFirstTimetoGit)
