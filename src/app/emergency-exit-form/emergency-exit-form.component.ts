@@ -11,7 +11,10 @@ import {
   ApprovalStep,
   DepartmentApproval,
   EmployeeExitApprovalWorkflow,
-  UpdateExitApprovalRequest
+  UpdateExitApprovalRequest,
+  IssuedAsset,
+  IssuedAssetsResponse,
+  GroupedAssets
 } from '../models/employeeExit.model';
 import { SessionService } from '../services/session.service';
 import { ToastrService } from 'ngx-toastr';
@@ -80,6 +83,9 @@ interface ResponsibilityHandover {
 export class EmergencyExitFormComponent implements OnInit {
   @ViewChild('signatureCanvas') signatureCanvas!: ElementRef<HTMLCanvasElement>;
 
+  // Make Object available in template
+  Object = Object;
+
 
   exitForm!: FormGroup;
   isSubmitting = false;
@@ -104,6 +110,13 @@ export class EmergencyExitFormComponent implements OnInit {
   approvalID: number | null = null;
   returnUrl: string = '';
   actionTaken: boolean = false; // Flag to track if approval/rejection action has been taken
+
+  // IT Assets properties
+  currentStage: string = '';
+  issuedAssets: IssuedAsset[] = [];
+  groupedAssets: GroupedAssets = {};
+  isITAssetsSectionOpen: boolean = false;
+  isLoadingAssets: boolean = false;
 
   // Employee profile data
   employeeProfileData: ExitEmpProfileDetails = {};
@@ -502,6 +515,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
       console.log('=== SETFORMTYPE DEBUG ===');
       console.log('URL params:', { typeParam, modeParam, requestId, approvalIDParam });
+      console.log('ApprovalID parsed:', this.approvalID);
       console.log('Current approval mode before processing:', this.isApprovalMode);
 
       if (typeParam === 'P' || typeParam === 'E' || typeParam === 'R') {
@@ -526,6 +540,8 @@ export class EmergencyExitFormComponent implements OnInit {
       }
 
       console.log('Final approval mode after processing:', this.isApprovalMode);
+      console.log('Final approvalID:', this.approvalID);
+      console.log('Will show IT assets section:', this.shouldShowITAssetsSection());
       console.log('=== END SETFORMTYPE DEBUG ===');
 
       // Clear previous form state if we are going to a new entry or regular mode
@@ -588,6 +604,18 @@ export class EmergencyExitFormComponent implements OnInit {
           // Set approval status from backend data
           this.approvalStatus = data.approvalStatus || 'P';
           console.log('Approval status loaded:', this.approvalStatus);
+
+          // Extract currentStage from response
+          this.currentStage = data.currentStage || '';
+          console.log('Current stage loaded:', this.currentStage);
+
+          // Load IT assets if currentStage is 'IT' or 'TRANSPORT' AND user is in approval mode (has approvalID)
+          if ((this.currentStage === 'IT' || this.currentStage === 'TRANSPORT') && this.approvalID && data.employeeId) {
+            console.log('Loading assets for approval mode - CurrentStage:', this.currentStage, 'ApprovalID:', this.approvalID);
+            this.loadITAssets(data.employeeId);
+          } else {
+            console.log('Not loading assets - CurrentStage:', this.currentStage, 'ApprovalID:', this.approvalID, 'IsApprovalMode:', this.isApprovalMode);
+          }
 
           // Format dates for input fields
           const formatDateForInput = (dateString: string): string => {
@@ -1073,10 +1101,11 @@ export class EmergencyExitFormComponent implements OnInit {
     const formatDate = (date: any): string => {
       if (!date) return '';
       const d = new Date(date);
-      return d.toISOString().split('T')[0]; // YYYY-MM-DD format
+      return d.toISOString().split('T')[0];
     };
 
     const exitRequest: EmployeeExitRequest = {
+      exitId : this.route.snapshot.queryParams['exitID'] || this.route.snapshot.queryParams['exitId'] || 0,
       employeeId: formValue.employeeId || '',
       employeeName: formValue.employeeName || '',
       emailId: formValue.emailId || '',
@@ -2509,6 +2538,201 @@ export class EmergencyExitFormComponent implements OnInit {
     if (exitId) {
       console.log('Refreshing approval workflow for exitId:', exitId);
       this.loadSavedExitData(parseInt(exitId));
+    }
+  }
+
+  // IT Assets Methods
+
+  /**
+   * Load assets for the employee (IT assets or Transport vehicles)
+   * Only called when user is in approval mode from "Requests Awaiting Your Approval" listing
+   */
+  loadITAssets(empId: string): void {
+    console.log('Loading assets for employee:', empId, 'CurrentStage:', this.currentStage, 'ApprovalID:', this.approvalID);
+    this.isLoadingAssets = true;
+    this.api.GetIssuedAssets(empId).subscribe({
+      next: (response: IssuedAssetsResponse) => {
+        this.isLoadingAssets = false;
+        if (response && response.success && response.data) {
+          this.issuedAssets = response.data;
+          this.groupAssetsByCategory();
+          console.log('Assets loaded successfully:', this.issuedAssets.length, 'total assets');
+          console.log('Filtered/Grouped Assets:', Object.keys(this.groupedAssets), 'categories');
+          console.log('Final count for display:', this.getTotalAssetCount(), 'assets');
+        } else {
+          console.warn('No assets found or invalid response:', response);
+          this.issuedAssets = [];
+          this.groupedAssets = {};
+        }
+      },
+      error: (error) => {
+        this.isLoadingAssets = false;
+        console.error('Error loading assets:', error);
+        this.toastr.error(`Failed to load ${this.currentStage === 'TRANSPORT' ? 'vehicles' : 'assets'}.`, 'Error');
+        this.issuedAssets = [];
+        this.groupedAssets = {};
+      }
+    });
+  }
+
+  /**
+   * Group assets by category
+   * For TRANSPORT stage, only show CAR category
+   * For IT stage, show all categories EXCEPT CAR
+   */
+  groupAssetsByCategory(): void {
+    this.groupedAssets = {};
+    
+    // Filter assets based on current stage
+    let assetsToGroup = this.issuedAssets;
+    if (this.currentStage === 'TRANSPORT') {
+      // Only show CAR category for transport stage
+      assetsToGroup = this.issuedAssets.filter(asset => 
+        asset.category && asset.category.toUpperCase().includes('CAR')
+      );
+      console.log('Filtered assets for TRANSPORT stage (CAR only):', assetsToGroup.length, 'out of', this.issuedAssets.length);
+    } else if (this.currentStage === 'IT') {
+      // Show all categories EXCEPT CAR for IT stage
+      assetsToGroup = this.issuedAssets.filter(asset => 
+        !asset.category || !asset.category.toUpperCase().includes('CAR')
+      );
+      console.log('Filtered assets for IT stage (excluding CAR):', assetsToGroup.length, 'out of', this.issuedAssets.length);
+    }
+    
+    assetsToGroup.forEach(asset => {
+      const category = asset.category || 'OTHER';
+      if (!this.groupedAssets[category]) {
+        this.groupedAssets[category] = [];
+      }
+      this.groupedAssets[category].push(asset);
+    });
+  }
+
+  /**
+   * Toggle IT assets section
+   */
+  toggleITAssetsSection(): void {
+    this.isITAssetsSectionOpen = !this.isITAssetsSectionOpen;
+  }
+
+  /**
+   * Get category display name
+   */
+  getCategoryDisplayName(category: string): string {
+    const categoryMap: { [key: string]: string } = {
+      'DESKTOP': 'Desktop',
+      'LAPTOP / NOTEBOOK': 'Laptop',
+      'MONITOR': 'Monitor',
+      'TAB': 'Tablet',
+      'IP PHONE': 'IP Phone',
+      'MOBILE': 'Mobile',
+      'CAR': 'Company Car',
+      'VEHICLE': 'Vehicle',
+      'OTHER': 'Other'
+    };
+    return categoryMap[category] || category;
+  }
+
+  /**
+   * Get category icon
+   */
+  getCategoryIcon(category: string): string {
+    const iconMap: { [key: string]: string } = {
+      'DESKTOP': 'fa-desktop',
+      'LAPTOP / NOTEBOOK': 'fa-laptop',
+      'MONITOR': 'fa-tv',
+      'TAB': 'fa-tablet-alt',
+      'IP PHONE': 'fa-phone',
+      'MOBILE': 'fa-mobile-alt',
+      'CAR': 'fa-car',
+      'VEHICLE': 'fa-car',
+      'OTHER': 'fa-cube'
+    };
+    return iconMap[category] || 'fa-cube';
+  }
+
+  /**
+   * Get asset count for category
+   */
+  getAssetCount(category: string): number {
+    return this.groupedAssets[category]?.length || 0;
+  }
+
+  /**
+   * Get total asset count (filtered based on current stage)
+   */
+  getTotalAssetCount(): number {
+    if (this.currentStage === 'TRANSPORT') {
+      // Only count CAR assets for transport stage
+      return this.issuedAssets.filter(asset => 
+        asset.category && asset.category.toUpperCase().includes('CAR')
+      ).length;
+    } else if (this.currentStage === 'IT') {
+      // Count all assets EXCEPT CAR for IT stage
+      return this.issuedAssets.filter(asset => 
+        !asset.category || !asset.category.toUpperCase().includes('CAR')
+      ).length;
+    }
+    return this.issuedAssets.length;
+  }
+
+  /**
+   * Get section title based on current stage
+   */
+  getAssetsSectionTitle(): string {
+    if (this.currentStage === 'TRANSPORT') {
+      return 'Review & Verify Vehicles';
+    }
+    return 'Review & Verify Assets';
+  }
+
+  /**
+   * Get section icon based on current stage
+   */
+  getAssetsSectionIcon(): string {
+    if (this.currentStage === 'TRANSPORT') {
+      return 'fa-car';
+    }
+    return 'fa-laptop';
+  }
+
+  /**
+   * Check if assets section should be shown
+   * Only show when:
+   * 1. currentStage is 'IT' or 'TRANSPORT'
+   * 2. User is in approval mode (has approvalID from "Requests Awaiting Your Approval" listing)
+   */
+  shouldShowITAssetsSection(): boolean {
+    return (this.currentStage === 'IT' || this.currentStage === 'TRANSPORT') && this.isApprovalMode && !!this.approvalID;
+  }
+
+  /**
+   * Format allocation date
+   */
+  formatAllocationDate(dateString: string): string {
+    if (!dateString) return 'N/A';
+    try {
+      // Handle different date formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        // Try parsing DD-MM-YYY format
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0]);
+          const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+          const year = parseInt(parts[2]);
+          const fullYear = year < 100 ? 2000 + year : year;
+          const parsedDate = new Date(fullYear, month, day);
+          if (!isNaN(parsedDate.getTime())) {
+            return parsedDate.toLocaleDateString('en-GB');
+          }
+        }
+        return dateString; // Return original if parsing fails
+      }
+      return date.toLocaleDateString('en-GB');
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return dateString;
     }
   }
 }

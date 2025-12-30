@@ -583,6 +583,69 @@
             <span class="required-badge">Action Required</span>
           </div>
 
+          <!-- IT Assets Review Section - Only show when currentStage is 'IT' or 'TRANSPORT' -->
+          <div class="it-assets-section" *ngIf="shouldShowITAssetsSection()">
+            <div class="assets-header" (click)="toggleITAssetsSection()">
+              <div class="assets-title">
+                <i class="fas" [ngClass]="getAssetsSectionIcon()"></i>
+                <h4>{{ getAssetsSectionTitle() }}</h4>
+                <span class="asset-count-badge">{{ getTotalAssetCount() }} Items</span>
+              </div>
+              <i class="fas fa-chevron-down toggle-icon" [class.rotated]="isITAssetsSectionOpen"></i>
+            </div>
+
+            <div class="assets-content" [class.open]="isITAssetsSectionOpen">
+              <div class="assets-loading" *ngIf="isLoadingAssets">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading {{ currentStage === 'TRANSPORT' ? 'vehicles' : 'assets' }}...</span>
+              </div>
+
+              <div class="assets-list" *ngIf="!isLoadingAssets && getTotalAssetCount() > 0">
+                <div class="category-group" *ngFor="let category of Object.keys(groupedAssets)">
+                  <div class="category-header">
+                    <div class="category-info">
+                      <i class="fas" [ngClass]="getCategoryIcon(category)"></i>
+                      <span class="category-name">{{ getCategoryDisplayName(category) }}</span>
+                      <span class="category-count">({{ getAssetCount(category) }} items)</span>
+                    </div>
+                    <div class="category-status">
+                      <span class="status-badge yes">YES</span>
+                    </div>
+                  </div>
+
+                  <div class="assets-items">
+                    <div class="asset-item" *ngFor="let asset of groupedAssets[category]">
+                      <div class="asset-details">
+                        <div class="asset-tag">{{ asset.tagNo }}</div>
+                        <div class="asset-date">
+                          <i class="fas fa-calendar"></i>
+                          {{ formatAllocationDate(asset.allocationDate) }}
+                        </div>
+                        <div class="asset-model">
+                          <i class="fas fa-info-circle"></i>
+                          {{ asset.model }}
+                        </div>
+                        <div class="asset-manufacture" *ngIf="asset.manufacture">
+                          <i class="fas fa-industry"></i>
+                          {{ asset.manufacture }}
+                        </div>
+                        <div class="asset-engine" *ngIf="asset.engNo">
+                          <i class="fas fa-cog"></i>
+                          Engine: {{ asset.engNo }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="no-assets" *ngIf="!isLoadingAssets && getTotalAssetCount() === 0">
+                <i class="fas fa-inbox"></i>
+                <p>No {{ currentStage === 'TRANSPORT' ? 'vehicles' : 'assets' }} found for this employee.</p>
+              </div>
+            </div>
+          </div>
+
           <div class="actions-content">
             <div class="remarks-section">
               <label for="approvalRemarks">Remarks</label>

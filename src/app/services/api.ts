@@ -232,5 +232,11 @@ export class Api {
   }
 
 
+  GetIssuedAssets(empId: string): Observable<any> {
+    empId = "ADS3198";
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetIssuedAssets/${empId}`);
+  }
+
+
 
 }

@@ -121,3 +121,23 @@ export interface UpdateExitApprovalRequest {
   remarks?: string;
   baseurl?:string;
 }
+
+export interface IssuedAsset {
+  tagNo: string;
+  category: string;
+  empId: string;
+  allocationDate: string;
+  model: string;
+  manufacture: string;
+  engNo?: string;
+}
+
+export interface IssuedAssetsResponse {
+  success: boolean;
+  message: string;
+  data: IssuedAsset[];
+}
+
+export interface GroupedAssets {
+  [category: string]: IssuedAsset[];
+}
