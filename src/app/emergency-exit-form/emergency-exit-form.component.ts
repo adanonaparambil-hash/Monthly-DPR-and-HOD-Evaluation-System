@@ -2568,7 +2568,6 @@ export class EmergencyExitFormComponent implements OnInit {
       error: (error) => {
         this.isLoadingAssets = false;
         console.error('Error loading assets:', error);
-        this.toastr.error(`Failed to load ${this.currentStage === 'TRANSPORT' ? 'vehicles' : 'assets'}.`, 'Error');
         this.issuedAssets = [];
         this.groupedAssets = {};
       }

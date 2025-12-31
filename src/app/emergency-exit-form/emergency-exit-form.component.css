@@ -6810,3 +6810,46 @@ ced Approval Actions Column */
 .assets-content.open {
   animation: slideDown 0.3s ease;
 }
+/* Loading Button Styles */
+.approve-btn:disabled,
+.reject-btn:disabled,
+.btn-submit-large:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.approve-btn:disabled .fa-spinner,
+.reject-btn:disabled .fa-spinner,
+.btn-submit-large:disabled .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Loading button text animation */
+.approve-btn:disabled,
+.reject-btn:disabled {
+  position: relative;
+}
+
+.approve-btn:disabled::after,
+.reject-btn:disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: inherit;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
