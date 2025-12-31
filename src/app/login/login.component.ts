@@ -494,7 +494,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   getStepDescription(): string {
-    if (this.currentView === 'login') return 'Sign in to access your dashboard';
+    if (this.currentView === 'login') return '';
     
     const descriptions: { [key: string]: { [key: string]: string } } = {
       'forgot-password': {

@@ -16,21 +16,23 @@
   <!-- Header with Logo -->
   <div class="app-header" [@fadeIn]>
     <div class="logo-container">
-      <div class="logo-icon">
+      <!-- <div class="logo-icon">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
           <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-      </div>
+      </div> -->
       <h1 class="app-title">Al Adrak Portal</h1>
     </div>
-    <p class="app-tagline">Streamline your time management</p>
+    <!-- <p class="app-tagline">Streamline your time management</p> -->
   </div>
 
   <!-- Login Card -->
   <div class="auth-card" *ngIf="currentView === 'login'" [@fadeIn]>
     <div class="auth-header">
-      <h2 class="auth-title">{{ getStepTitle() }}</h2>
+      <div class="auth-logo">
+        <img src="assets/images/Logo_LoginScreen.png" alt="Company Logo" class="login-logo-image">
+      </div>
       <p class="auth-subtitle">{{ getStepDescription() }}</p>
     </div>
 
