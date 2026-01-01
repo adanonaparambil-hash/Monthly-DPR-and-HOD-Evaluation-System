@@ -10,6 +10,7 @@ import { CedDashboard } from './ced-dashboard/ced-dashboard';
 import { CedDashboardNewComponent } from './ced-dashboard-new/ced-dashboard-new.component';
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
 import { LeaveApprovalComponent } from './leave-approval/leave-approval.component';
+import { ChatComponent } from './chat/chat.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
@@ -38,6 +39,7 @@ export const routes: Routes = [
       { path: 'profile', component: ProfileComponent },
       { path: 'exit-form', component: EmergencyExitFormComponent },
       { path: 'leave-approval', component: LeaveApprovalComponent },
+      { path: 'chat', component: ChatComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

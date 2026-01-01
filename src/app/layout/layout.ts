@@ -203,7 +203,8 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard-old': 'CED Dashboard (Old)',
       '/ced-dashboard-new': 'CED Performance Dashboard',
       '/profile': 'My Profile',
-      '/leave-approval': 'Leave Approval Management'
+      '/leave-approval': 'Leave Approval Management',
+      '/chat': 'Internal Communications'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';
