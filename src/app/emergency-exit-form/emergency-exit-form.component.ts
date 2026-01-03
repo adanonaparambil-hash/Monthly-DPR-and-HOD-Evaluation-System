@@ -691,12 +691,20 @@ export class EmergencyExitFormComponent implements OnInit {
           this.currentStage = data.currentStage || '';
           console.log('Current stage loaded:', this.currentStage);
 
-          // Load IT assets if currentStage is 'IT' or 'TRANSPORT' AND user is in approval mode (has approvalID)
-          if ((this.currentStage === 'IT' || this.currentStage === 'TRANSPORT') && this.approvalID && data.employeeId) {
-            console.log('Loading assets for approval mode - CurrentStage:', this.currentStage, 'ApprovalID:', this.approvalID);
-            this.loadITAssets(data.employeeId);
+          // Load IT assets if current user can take action and stage is IT or TRANSPORT
+          if ((this.currentStage === 'IT' || this.currentStage === 'TRANSPORT') && data.employeeId) {
+            // Check if current user can take action based on the approval workflow
+            // We need to wait for the approval workflow to be mapped first
+            setTimeout(() => {
+              if (this.canUserTakeAction()) {
+                console.log('Loading assets for approval mode - CurrentStage:', this.currentStage, 'User can take action:', this.canUserTakeAction());
+                this.loadITAssets(data.employeeId);
+              } else {
+                console.log('Not loading assets - CurrentStage:', this.currentStage, 'User cannot take action');
+              }
+            }, 100);
           } else {
-            console.log('Not loading assets - CurrentStage:', this.currentStage, 'ApprovalID:', this.approvalID, 'IsApprovalMode:', this.isApprovalMode);
+            console.log('Not loading assets - CurrentStage:', this.currentStage, 'No employee ID or wrong stage');
           }
 
           // Format dates for input fields
@@ -763,7 +771,10 @@ export class EmergencyExitFormComponent implements OnInit {
               approvedDate: history.approvalDate,
               comments: history.remarks || null, // Map remarks to comments
               isRequired: true,
-              order: history.approvalLevel || index + 1
+              order: history.approvalLevel || index + 1,
+              // Add these properties for the new logic
+              approverCode: history.approverCode,
+              approvalStatusCode: history.approvalStatusCode
             }));
             this.updateWorkflowProgress();
             
@@ -2285,12 +2296,45 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   canUserTakeAction(): boolean {
-    // Only show action buttons when:
-    // 1. User is in approval mode (came from approval listing)
-    // 2. There is an approvalID (specific approval request)
-    // 3. User has permission to take action on this request
-    // 4. No action has been taken yet
-    return this.isApprovalMode && !!this.approvalID && !this.isViewMode && !this.actionTaken;
+    // Check if current user can take action based on GetEmployeeExitSavedInfo response
+    if (!this.currentUser || !this.currentUser.empId) {
+      console.log('canUserTakeAction: No current user or empId');
+      return false;
+    }
+
+    console.log('canUserTakeAction: Checking for user:', this.currentUser.empId);
+    console.log('canUserTakeAction: Current stage:', this.currentStage);
+    console.log('canUserTakeAction: Approval workflow length:', this.approvalWorkflow?.length || 0);
+
+    // If we have approval workflow data from GetEmployeeExitSavedInfo
+    if (this.approvalWorkflow && this.approvalWorkflow.length > 0) {
+      // Find the current stage approval in the workflow
+      const currentStageApproval = this.approvalWorkflow.find(approval => {
+        const matches = approval.approverCode === this.currentStage &&
+                       approval.approvalStatusCode === 'P' && // Pending status
+                       approval.approvedId === this.currentUser.empId; // Current user is the assigned approver
+        
+        console.log('canUserTakeAction: Checking approval:', {
+          approverCode: approval.approverCode,
+          approvalStatusCode: approval.approvalStatusCode,
+          approvedId: approval.approvedId,
+          currentStage: this.currentStage,
+          currentUserEmpId: this.currentUser.empId,
+          matches: matches
+        });
+        
+        return matches;
+      });
+
+      const canTakeAction = !!currentStageApproval;
+      console.log('canUserTakeAction: Result based on workflow:', canTakeAction);
+      return canTakeAction;
+    }
+
+    // Fallback to original logic if no workflow data available
+    const fallbackResult = this.isApprovalMode && !!this.approvalID && !this.isViewMode && !this.actionTaken;
+    console.log('canUserTakeAction: Fallback result:', fallbackResult);
+    return fallbackResult;
   }
 
   /**
@@ -2891,10 +2935,19 @@ export class EmergencyExitFormComponent implements OnInit {
    * Check if assets section should be shown
    * Only show when:
    * 1. currentStage is 'IT' or 'TRANSPORT'
-   * 2. User is in approval mode (has approvalID from "Requests Awaiting Your Approval" listing)
+   * 2. Current user can take action (based on GetEmployeeExitSavedInfo response)
    */
   shouldShowITAssetsSection(): boolean {
-    return (this.currentStage === 'IT' || this.currentStage === 'TRANSPORT') && this.isApprovalMode && !!this.approvalID;
+    // Check if current stage is IT or TRANSPORT
+    if (this.currentStage !== 'IT' && this.currentStage !== 'TRANSPORT') {
+      console.log('shouldShowITAssetsSection: Wrong stage:', this.currentStage);
+      return false;
+    }
+
+    // Check if current user can take action based on the approval workflow
+    const canTakeAction = this.canUserTakeAction();
+    console.log('shouldShowITAssetsSection: Can take action:', canTakeAction);
+    return canTakeAction;
   }
 
   /**

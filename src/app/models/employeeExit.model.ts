@@ -26,6 +26,9 @@ export interface ApprovalStep {
   comments?: string;
   isRequired: boolean;
   order: number;
+  // Add these properties for the new logic
+  approverCode?: string;
+  approvalStatusCode?: string;
 }
 
 export interface DepartmentApproval {
