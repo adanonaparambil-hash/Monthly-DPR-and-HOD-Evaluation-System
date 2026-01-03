@@ -191,6 +191,24 @@
                   </div>
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
+                    <label for="responsibilitiesHandedOverToPhone">Phone Number *</label>
+                    <input type="tel" id="responsibilitiesHandedOverToPhone" formControlName="responsibilitiesHandedOverToPhone"
+                      [class.error]="isFieldInvalid('responsibilitiesHandedOverToPhone')" placeholder="Contact phone number">
+                    <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverToPhone')">
+                      {{ getFieldError('responsibilitiesHandedOverToPhone') }}
+                    </span>
+                  </div>
+
+                  <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
+                    <label for="responsibilitiesHandedOverToEmail">Email ID *</label>
+                    <input type="email" id="responsibilitiesHandedOverToEmail" formControlName="responsibilitiesHandedOverToEmail"
+                      [class.error]="isFieldInvalid('responsibilitiesHandedOverToEmail')" placeholder="Email address">
+                    <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverToEmail')">
+                      {{ getFieldError('responsibilitiesHandedOverToEmail') }}
+                    </span>
+                  </div>
+
+                  <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label>Category *</label>
                     <div class="radio-group">
                       <label class="radio-label">
@@ -353,6 +371,9 @@
                   <input type="number" id="noOfDaysApproved" formControlName="noOfDaysApproved"
                     [class.error]="isFieldInvalid('noOfDaysApproved')" min="1"
                     [placeholder]="formType === 'R' ? 'Notice period in days' : 'Number of days'">
+                  <small class="auto-calc-note" *ngIf="(formType === 'E' || formType === 'P') && wasAutoCalculated">
+                    <i class="fas fa-calculator"></i> Auto-calculated from departure and arrival dates
+                  </small>
                   <span class="error-message" *ngIf="isFieldInvalid('noOfDaysApproved')">
                     {{ getFieldError('noOfDaysApproved') }}
                   </span>
@@ -425,13 +446,21 @@
                     <div class="responsibility-form-grid">
                       <div class="form-group project-field">
                         <label>Project *</label>
-                        <input type="text" formControlName="project" placeholder="Enter project name">
+                        <input type="text" formControlName="project" placeholder="Enter project name"
+                          [class.error]="responsibility.get('project')?.invalid && responsibility.get('project')?.touched">
+                        <span class="error-message" *ngIf="responsibility.get('project')?.invalid && responsibility.get('project')?.touched">
+                          Project name is required
+                        </span>
                       </div>
 
                       <div class="form-group activities-field">
                         <label>Activities *</label>
                         <textarea formControlName="activities" rows="4"
-                          placeholder="Describe the activities and responsibilities being handed over"></textarea>
+                          placeholder="Describe the activities and responsibilities being handed over"
+                          [class.error]="responsibility.get('activities')?.invalid && responsibility.get('activities')?.touched"></textarea>
+                        <span class="error-message" *ngIf="responsibility.get('activities')?.invalid && responsibility.get('activities')?.touched">
+                          Activities description is required
+                        </span>
                       </div>
 
                       <div class="form-group name-field">
@@ -440,7 +469,8 @@
                           <input type="text" formControlName="responsiblePersonName"
                             [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #searchInput
                             (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
-                            autocomplete="off">
+                            autocomplete="off"
+                            [class.error]="responsibility.get('responsiblePersonName')?.invalid && responsibility.get('responsiblePersonName')?.touched">
                           <div class="dropdown-icon">
                             <i class="fas fa-chevron-down"></i>
                           </div>
@@ -460,16 +490,29 @@
                             </div>
                           </div>
                         </div>
+                        <span class="error-message" *ngIf="responsibility.get('responsiblePersonName')?.invalid && responsibility.get('responsiblePersonName')?.touched">
+                          Responsible person name is required
+                        </span>
                       </div>
 
                       <div class="form-group phone-field">
                         <label>Phone Number *</label>
-                        <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number">
+                        <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number"
+                          [class.error]="responsibility.get('responsiblePersonPhone')?.invalid && responsibility.get('responsiblePersonPhone')?.touched">
+                        <span class="error-message" *ngIf="responsibility.get('responsiblePersonPhone')?.invalid && responsibility.get('responsiblePersonPhone')?.touched">
+                          <span *ngIf="responsibility.get('responsiblePersonPhone')?.errors?.['required']">Phone number is required</span>
+                          <span *ngIf="responsibility.get('responsiblePersonPhone')?.errors?.['pattern']">Please enter a valid phone number</span>
+                        </span>
                       </div>
 
                       <div class="form-group email-field">
                         <label>Email ID *</label>
-                        <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address">
+                        <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address"
+                          [class.error]="responsibility.get('responsiblePersonEmail')?.invalid && responsibility.get('responsiblePersonEmail')?.touched">
+                        <span class="error-message" *ngIf="responsibility.get('responsiblePersonEmail')?.invalid && responsibility.get('responsiblePersonEmail')?.touched">
+                          <span *ngIf="responsibility.get('responsiblePersonEmail')?.errors?.['required']">Email address is required</span>
+                          <span *ngIf="responsibility.get('responsiblePersonEmail')?.errors?.['email']">Please enter a valid email address</span>
+                        </span>
                       </div>
 
                       <div class="form-group remarks-field">

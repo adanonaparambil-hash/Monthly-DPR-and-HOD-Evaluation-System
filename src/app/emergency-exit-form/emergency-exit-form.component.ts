@@ -103,6 +103,10 @@ export class EmergencyExitFormComponent implements OnInit {
   // Form type flag: 'E' for Emergency, 'P' for Planned Leave, 'R' for Resignation
   @Input() formType: 'E' | 'P' | 'R' = 'E';
 
+  // Date calculation tracking
+  wasAutoCalculated: boolean = false;
+  private isCalculatingDays: boolean = false;
+
   // Approval mode flags
   isApprovalMode: boolean = false;
   isViewMode: boolean = false;
@@ -475,6 +479,9 @@ export class EmergencyExitFormComponent implements OnInit {
         hodName: this.exitForm.get('hodName')?.disabled,
         reasonForEmergency: this.exitForm.get('reasonForEmergency')?.disabled
       });
+
+      // Setup date change listeners for auto-calculation
+      this.setupDateChangeListeners();
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
     }
@@ -501,6 +508,81 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('=== END DEBUG ===');
     } else {
       console.warn('No current user found for debugging');
+    }
+  }
+
+  setupDateChangeListeners(): void {
+    // Only setup listeners for Emergency and Planned Leave forms (not Resignation)
+    if (this.formType === 'E' || this.formType === 'P') {
+      // Listen to changes in Date of Departure
+      this.exitForm.get('dateOfDeparture')?.valueChanges.subscribe(() => {
+        this.calculateDaysDifference();
+      });
+
+      // Listen to changes in Date of Arrival
+      this.exitForm.get('dateOfArrival')?.valueChanges.subscribe(() => {
+        this.calculateDaysDifference();
+      });
+
+      // Listen to manual changes in No. of Days field to prevent auto-override
+      this.exitForm.get('noOfDaysApproved')?.valueChanges.subscribe((value) => {
+        // If user manually changes the days field, stop auto-calculation
+        if (value && !this.isCalculatingDays) {
+          this.wasAutoCalculated = false;
+        }
+      });
+    }
+  }
+
+  calculateDaysDifference(): void {
+    // Only calculate for Emergency and Planned Leave forms
+    if (this.formType !== 'E' && this.formType !== 'P') {
+      return;
+    }
+
+    const departureDate = this.exitForm.get('dateOfDeparture')?.value;
+    const arrivalDate = this.exitForm.get('dateOfArrival')?.value;
+
+    if (departureDate && arrivalDate) {
+      const departure = new Date(departureDate);
+      const arrival = new Date(arrivalDate);
+
+      // Calculate the difference in days
+      const timeDifference = arrival.getTime() - departure.getTime();
+      const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+      // Only update if the difference is positive (arrival after departure)
+      if (daysDifference > 0) {
+        console.log(`Auto-calculating days: ${daysDifference} days between ${departureDate} and ${arrivalDate}`);
+        
+        // Set flag to prevent triggering manual change detection
+        this.isCalculatingDays = true;
+        
+        // Update the number of days field without triggering validation
+        this.exitForm.get('noOfDaysApproved')?.setValue(daysDifference, { emitEvent: false });
+        
+        // Mark that this was auto-calculated
+        this.wasAutoCalculated = true;
+        
+        // Reset flag
+        this.isCalculatingDays = false;
+      } else if (daysDifference <= 0) {
+        // If arrival date is before or same as departure date, clear the days field
+        console.log('Arrival date must be after departure date');
+        this.isCalculatingDays = true;
+        this.exitForm.get('noOfDaysApproved')?.setValue('', { emitEvent: false });
+        this.isCalculatingDays = false;
+      }
+    } else {
+      // If either date is missing, clear the calculated days only if it was auto-calculated
+      if (!departureDate || !arrivalDate) {
+        const currentDays = this.exitForm.get('noOfDaysApproved')?.value;
+        if (currentDays && this.wasAutoCalculated) {
+          this.isCalculatingDays = true;
+          this.exitForm.get('noOfDaysApproved')?.setValue('', { emitEvent: false });
+          this.isCalculatingDays = false;
+        }
+      }
     }
   }
 
@@ -975,13 +1057,12 @@ export class EmergencyExitFormComponent implements OnInit {
     // Validate form for current type
     if (!this.validateFormForCurrentType()) {
       this.markAllFieldsAsTouched();
-      this.showValidationErrors(); // Show specific validation errors
-      this.toastr.error('Please fill in all required fields before submitting.', 'Validation Error');
+      this.showValidationErrors(); // Show specific validation errors with field names
       return;
     }
 
     if (!this.allDeclarationsChecked()) {
-      this.toastr.error('Please check all declaration checkboxes before submitting.', 'Validation Error');
+      this.showMissingDeclarations();
       return;
     }
 
@@ -1318,7 +1399,9 @@ export class EmergencyExitFormComponent implements OnInit {
         if (response && response.success && response.data) {
           this.employeeMasterList = response.data.map((emp: any) => ({
             idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
-            description: emp.description || emp.employeeName || emp.name
+            description: emp.description || emp.employeeName || emp.name,
+            email: emp.email || emp.Email || emp.emailId || emp.EmailId,
+            phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone
           }));
           console.log('Employee Master List loaded:', this.employeeMasterList);
           
@@ -1334,7 +1417,9 @@ export class EmergencyExitFormComponent implements OnInit {
             console.log('Employee Master Response is direct array, mapping...');
             this.employeeMasterList = response.map((emp: any) => ({
               idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
-              description: emp.description || emp.employeeName || emp.name
+              description: emp.description || emp.employeeName || emp.name,
+              email: emp.email || emp.Email || emp.emailId || emp.EmailId,
+              phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone
             }));
             console.log('Mapped Employee Master from direct array:', this.employeeMasterList);
           }
@@ -1580,13 +1665,25 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   markAllFieldsAsTouched(): void {
+    // Mark all main form controls as touched
     Object.keys(this.exitForm.controls).forEach(key => {
       this.exitForm.get(key)?.markAsTouched();
     });
+
+    // Mark all responsibility form controls as touched for Emergency forms
+    if (this.formType === 'E') {
+      const responsibilities = this.responsibilitiesFormArray;
+      responsibilities.controls.forEach(group => {
+        const responsibilityGroup = group as FormGroup;
+        Object.keys(responsibilityGroup.controls).forEach(key => {
+          responsibilityGroup.get(key)?.markAsTouched();
+        });
+      });
+    }
   }
 
   /**
-   * Show specific validation errors for debugging
+   * Show specific validation errors for debugging and user feedback
    */
   showValidationErrors(): void {
     console.log('=== VALIDATION ERRORS ===');
@@ -1599,6 +1696,20 @@ export class EmergencyExitFormComponent implements OnInit {
       requiredFields.push('category', 'projectManagerName', 'responsibilitiesHandedOverTo');
     }
     
+    const missingFields: string[] = [];
+    const fieldLabels: { [key: string]: string } = {
+      'employeeName': 'Employee Name',
+      'employeeId': 'Employee ID',
+      'department': 'Department/Site',
+      'dateOfDeparture': this.formType === 'R' ? 'Last Working Date' : 'Date of Departure',
+      'noOfDaysApproved': this.formType === 'R' ? 'Notice Period (Days)' : 'No. of Days Requested',
+      'reasonForEmergency': this.formType === 'E' ? 'Reason for Emergency' : (this.formType === 'R' ? 'Reason for Resignation' : 'Reason for Planned Leave'),
+      'hodName': 'HOD Name',
+      'category': 'Category',
+      'projectManagerName': 'Project Manager / Site Incharge',
+      'responsibilitiesHandedOverTo': 'Responsibilities Handed Over To'
+    };
+    
     requiredFields.forEach(field => {
       const value = rawFormValue[field] || formValue[field];
       const control = this.exitForm.get(field);
@@ -1606,10 +1717,45 @@ export class EmergencyExitFormComponent implements OnInit {
       if (!value || (field === 'noOfDaysApproved' && value < 1)) {
         console.log(`❌ ${field}: "${value}" (missing or invalid)`);
         console.log(`   Control status: ${control?.status}, Errors:`, control?.errors);
+        missingFields.push(fieldLabels[field] || field);
       } else {
         console.log(`✅ ${field}: "${value}"`);
       }
     });
+
+    // Check responsibilities for Emergency forms
+    if (this.formType === 'E') {
+      const responsibilities = this.responsibilitiesFormArray;
+      if (responsibilities.length === 0) {
+        missingFields.push('At least one Responsibility');
+      } else {
+        responsibilities.controls.forEach((group, index) => {
+          const responsibilityGroup = group as FormGroup;
+          const project = responsibilityGroup.get('project')?.value;
+          const activities = responsibilityGroup.get('activities')?.value;
+          const personName = responsibilityGroup.get('responsiblePersonName')?.value;
+          const personPhone = responsibilityGroup.get('responsiblePersonPhone')?.value;
+          const personEmail = responsibilityGroup.get('responsiblePersonEmail')?.value;
+
+          if (!project) missingFields.push(`Responsibility ${index + 1}: Project`);
+          if (!activities) missingFields.push(`Responsibility ${index + 1}: Activities`);
+          if (!personName) missingFields.push(`Responsibility ${index + 1}: Responsible Person Name`);
+          if (!personPhone) missingFields.push(`Responsibility ${index + 1}: Phone Number`);
+          if (!personEmail) missingFields.push(`Responsibility ${index + 1}: Email ID`);
+        });
+      }
+    }
+
+    // Show user-friendly error message with specific missing fields
+    if (missingFields.length > 0) {
+      const errorMessage = `Please fill in the following required fields:\n\n• ${missingFields.join('\n• ')}`;
+      this.toastr.error(errorMessage, 'Missing Required Fields', {
+        timeOut: 10000, // Show for 10 seconds
+        extendedTimeOut: 5000,
+        enableHtml: true,
+        closeButton: true
+      });
+    }
     
     console.log('=== END VALIDATION ERRORS ===');
   }
@@ -1620,6 +1766,47 @@ export class EmergencyExitFormComponent implements OnInit {
       formValue.decHandoverComplete &&
       formValue.decReturnAssets &&
       formValue.decUnderstandReturn;
+  }
+
+  showMissingDeclarations(): void {
+    const formValue = this.exitForm.value;
+    const missingDeclarations: string[] = [];
+
+    if (!formValue.decInfoAccurate) {
+      missingDeclarations.push('I confirm that all information provided is accurate and complete');
+    }
+    if (!formValue.decHandoverComplete) {
+      if (this.formType === 'E') {
+        missingDeclarations.push('I have handed over all my responsibilities to the designated personnel');
+      } else {
+        const personName = this.exitForm.get('responsibilitiesHandedOverTo')?.value || 'the designated person';
+        missingDeclarations.push(`I have properly handed over my responsibilities to ${personName}`);
+      }
+    }
+    if (!formValue.decReturnAssets) {
+      const timeText = this.formType === 'E' ? 'before departure' : 
+                      (this.formType === 'P' ? 'before my planned departure' : 'before my last working day');
+      missingDeclarations.push(`I will return all company assets (laptop, phone, keys, etc.) ${timeText}`);
+    }
+    if (!formValue.decUnderstandReturn) {
+      if (this.formType === 'E') {
+        missingDeclarations.push('I understand this is an emergency exit and I will return as per the approved dates');
+      } else if (this.formType === 'P') {
+        missingDeclarations.push('I understand this is a planned leave and I will return as per the approved schedule');
+      } else {
+        missingDeclarations.push('I understand this is a resignation and I will complete the full notice period as required');
+      }
+    }
+
+    if (missingDeclarations.length > 0) {
+      const errorMessage = `Please check the following declarations:\n\n• ${missingDeclarations.join('\n• ')}`;
+      this.toastr.error(errorMessage, 'Missing Declarations', {
+        timeOut: 10000,
+        extendedTimeOut: 5000,
+        enableHtml: true,
+        closeButton: true
+      });
+    }
   }
 
   validateEmailAndPhone(): boolean {
@@ -1743,6 +1930,9 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.formType !== newType) {
       this.formType = newType;
       this.updateFormValidations();
+      
+      // Setup date change listeners for the new form type
+      this.setupDateChangeListeners();
       
       // Initialize responsibilities section for Emergency forms
       setTimeout(() => {
@@ -2053,7 +2243,9 @@ export class EmergencyExitFormComponent implements OnInit {
     const responsibilityGroup = this.responsibilitiesFormArray.at(index) as FormGroup;
     responsibilityGroup.patchValue({
       responsiblePersonName: employee.description,
-      responsiblePersonId: employee.idValue
+      responsiblePersonId: employee.idValue,
+      responsiblePersonPhone: employee.phoneNumber || '',
+      responsiblePersonEmail: employee.email || ''
     });
     this.dropdownVisibility[index] = false;
   }

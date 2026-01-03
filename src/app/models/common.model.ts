@@ -46,6 +46,8 @@ export interface EmployeeProfileUpdateDto {
 export interface DropdownOption {
   idValue?: string;
   description?: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 export interface DropDownMasterDto {
