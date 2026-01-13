@@ -35,6 +35,23 @@ button, input, textarea, select, label {
   font-family: 'Roboto', sans-serif !important;
 }
 
+/* Apply gradient text to headings for better visibility */
+h1, h2, h3, h4, h5, h6 {
+  background: var(--text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not (-webkit-background-clip: text) {
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+  }
+}
+
 /* Override any component-specific font families (excluding icons) */
 .mat-typography, .mat-body, .mat-body-1, .mat-body-2, .mat-caption, .mat-button, .mat-input-element {
   font-family: 'Roboto', sans-serif !important;
@@ -42,57 +59,63 @@ button, input, textarea, select, label {
 
 /* CSS Custom Properties for Theme System */
 :root {
-  /* Light Theme - Company Colors */
-  --primary-color: #cc9933;
-  --secondary-color: #2f4f2f;
-  --accent-color: #cc9933;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
+  /* Modern Theme - Matching Sidebar Colors */
+  --primary-color: #1B2A38;
+  --secondary-color: #138271;
+  --accent-color: #10b981;
+  --text-primary: #1B2A38;
+  --text-secondary: #2C3E50;
+  --text-gradient: linear-gradient(135deg, #1B2A38, #2C3E50);
   --background-primary: #ffffff;
   --background-secondary: #f9fafb;
   --border-color: #e5e7eb;
-  --success-color: #22c55e;
+  --success-color: #10b981;
   --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  --info-color: #3b82f6;
+  --error-color: #e74c3c;
+  --info-color: #2C3E50;
   
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  --gradient-secondary: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-  --gradient-accent: linear-gradient(135deg, var(--accent-color), #b8860b);
+  --gradient-primary: linear-gradient(135deg, #1B2A38, #138271);
+  --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
+  --gradient-accent: linear-gradient(135deg, #10b981, #059669);
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-primary: 0 20px 40px -10px rgba(44, 62, 80, 0.25);
+  --shadow-secondary: 0 20px 40px -10px rgba(26, 188, 156, 0.25);
 }
 
 /* Dark Theme Override - Improved Contrast */
 .dark-theme {
-  --primary-color: #2d3748;
-  --secondary-color: #4a5568;
-  --accent-color: #fbbf24;
+  --primary-color: #1B2A38;
+  --secondary-color: #138271;
+  --accent-color: #10b981;
   --text-primary: #f7fafc;
   --text-secondary: #e2e8f0;
+  --text-gradient: linear-gradient(135deg, #f7fafc, #e2e8f0);
   --background-primary: #1a202c;
   --background-secondary: #2d3748;
   --border-color: #4a5568;
-  --success-color: #48bb78;
-  --warning-color: #ed8936;
-  --error-color: #fc8181;
-  --info-color: #4299e1;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #e74c3c;
+  --info-color: #2C3E50;
   
   /* Dark Gradients */
-  --gradient-primary: linear-gradient(135deg, #2d3748, #4a5568);
-  --gradient-secondary: linear-gradient(135deg, #4a5568, #2d3748);
-  --gradient-accent: linear-gradient(135deg, #fbbf24, #f59e0b);
+  --gradient-primary: linear-gradient(135deg, #1B2A38, #138271);
+  --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
+  --gradient-accent: linear-gradient(135deg, #10b981, #059669);
   
   /* Dark Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+  --shadow-primary: 0 20px 40px -10px rgba(44, 62, 80, 0.4);
+  --shadow-secondary: 0 20px 40px -10px rgba(26, 188, 156, 0.4);
 }
 
 * {
@@ -217,4 +240,71 @@ span[class^="fa-"], span[class*=" fa-"],
   -webkit-font-feature-settings: 'liga' !important;
   font-feature-settings: 'liga' !important;
   -webkit-font-smoothing: antialiased !important;
+}
+
+/* Enhanced Text Visibility - Dark Gradient Text */
+.enhanced-text, 
+.card-title, 
+.section-title, 
+.form-title,
+.page-header,
+.component-title {
+  background: linear-gradient(135deg, #1B2A38, #2C3E50) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 600 !important;
+}
+
+/* Fallback for enhanced text visibility */
+@supports not (-webkit-background-clip: text) {
+  .enhanced-text, 
+  .card-title, 
+  .section-title, 
+  .form-title,
+  .page-header,
+  .component-title {
+    color: #1B2A38 !important;
+    -webkit-text-fill-color: #1B2A38 !important;
+  }
+}
+
+/* Dark theme enhanced text */
+.dark-theme .enhanced-text, 
+.dark-theme .card-title, 
+.dark-theme .section-title, 
+.dark-theme .form-title,
+.dark-theme .page-header,
+.dark-theme .component-title {
+  background: linear-gradient(135deg, #f7fafc, #e2e8f0) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Dark theme fallback */
+@supports not (-webkit-background-clip: text) {
+  .dark-theme .enhanced-text, 
+  .dark-theme .card-title, 
+  .dark-theme .section-title, 
+  .dark-theme .form-title,
+  .dark-theme .page-header,
+  .dark-theme .component-title {
+    color: #f7fafc !important;
+    -webkit-text-fill-color: #f7fafc !important;
+  }
+}
+
+/* Loading text with enhanced visibility */
+.loading-text {
+  background: linear-gradient(135deg, #1B2A38, #2C3E50) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 500 !important;
+}
+
+/* Dark theme loading text */
+.dark-theme .loading-text {
+  background: linear-gradient(135deg, #f7fafc, #e2e8f0) !important;
 }

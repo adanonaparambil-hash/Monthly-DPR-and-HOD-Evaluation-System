@@ -40,6 +40,23 @@
         </div>
       </div>
 
+      <!-- DPR Menu with Sub-items -->
+      <div class="menu-item-with-submenu">
+        <a class="parent-menu" (click)="toggleDPRMenu()" [class.active]="isDPRRouteActive()">
+          <div class="menu-content">
+            <i class="fas fa-tasks"></i>
+            <span>DPR</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isDPRMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isDPRMenuOpen" [@slideDown]>
+          <a routerLink="/my-task" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-list-check"></i>
+            <span>My Task</span>
+          </a>
+        </div>
+      </div>
+
       <!-- Approvals Menu (Empty for now, for future use) -->
       <div class="menu-item-with-submenu">
         <a class="parent-menu" (click)="toggleApprovalsMenu()" [class.active]="isApprovalsRouteActive()">
@@ -58,7 +75,7 @@
       </div>
 
       <!-- Chat Menu - Single Item -->
-      <a routerLink="/chat" routerLinkActive="active" *ngIf="false" (click)="closeSidebarOnMobile()">
+      <a routerLink="/chat" routerLinkActive="active"  (click)="closeSidebarOnMobile()">
         <i class="fas fa-comments"></i> Chat
       </a>
 

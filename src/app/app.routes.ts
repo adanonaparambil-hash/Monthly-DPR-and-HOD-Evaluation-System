@@ -11,6 +11,7 @@ import { CedDashboardNewComponent } from './ced-dashboard-new/ced-dashboard-new.
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
 import { LeaveApprovalComponent } from './leave-approval/leave-approval.component';
 import { ChatComponent } from './chat/chat.component';
+import { MyTaskComponent } from './my-task/my-task.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
@@ -40,6 +41,7 @@ export const routes: Routes = [
       { path: 'exit-form', component: EmergencyExitFormComponent },
       { path: 'leave-approval', component: LeaveApprovalComponent },
       { path: 'chat', component: ChatComponent },
+      { path: 'my-task', component: MyTaskComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

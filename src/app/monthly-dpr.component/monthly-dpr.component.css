@@ -87,7 +87,7 @@
 }
 
 .btn-switch {
-  background: #f39c12;
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
 }
 
@@ -207,13 +207,19 @@
 
 /* Colorful animated icons */
 .header-left i.fa-star {
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(27, 42, 56, 0.5);
 }
 
 .header-left i.fa-comment {
-  color: #28a745;
-  text-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+  background: linear-gradient(135deg, #138271, #1ABC9C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(19, 130, 113, 0.5);
 }
 
 .header-left i.fa-history {
@@ -222,8 +228,11 @@
 }
 
 .header-left i.fa-hourglass-half {
-  color: #fd7e14;
-  text-shadow: 0 0 10px rgba(253, 126, 20, 0.5);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(27, 42, 56, 0.5);
 }
 
 .header-left i.fa-chart-line {
@@ -457,7 +466,7 @@
 }
 
 .add-btn {
-  background: #4e673b;
+  background: linear-gradient(135deg, #138271, #1ABC9C);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -468,12 +477,12 @@
 }
 
 .add-btn:hover {
-  background: #cc9933;
+  background: linear-gradient(135deg, #138271, #1ABC9C);
   transform: translateY(-3px);
 }
 
 .ptask {
-  background: #cc9933;
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -484,7 +493,7 @@
 }
 
 .ptask:hover {
-  background: #4e673b;
+  background: linear-gradient(135deg, #138271, #1ABC9C);
   transform: translateY(-3px);
 }
 
@@ -663,7 +672,7 @@ td input {
 }
 
 .btn-pushback.colorful-btn {
-  background: linear-gradient(90deg, #e74c3c 60%, #f39c12 100%);
+  background: linear-gradient(90deg, #e74c3c 60%, #1B2A38 100%);
   color: #fff;
 }
 
@@ -848,8 +857,10 @@ h3 i {
 
 /* Colorful icon for Achievements */
 h3 .colorful-icon {
-  color: #f39c12;
-  /* Golden yellow */
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Color for Challenges */
@@ -874,51 +885,37 @@ h3 .colorful-icon:hover {
 
 input:hover,
 select:hover {
-  border: 2px solid #cc9933;
-  /* Blue border on hover */
+  border: 2px solid #1B2A38;
   background-color: #f0f8ff;
-  /* Light background color on hover */
   outline: none;
-  /* Removes default outline */
   transition: all 0.3s ease;
-  /* Smooth transition for the hover effect */
 }
 
 /* Additional focus effect (in case of clicking) */
 input:focus,
 select:focus {
-  border: 2px solid #cc9933;
-  /* Same blue border on focus */
+  border: 2px solid #1B2A38;
   background-color: #f0f8ff;
-  /* Same light background color */
   outline: none;
-  /* Removes default outline */
 }
 
 /* Apply a border highlight effect when hovering over input fields, select (dropdowns), and textarea */
 input:hover,
 select:hover,
 textarea:hover {
-  border: 2px solid #cc9933;
-  /* Blue border on hover */
+  border: 2px solid #1B2A38;
   background-color: #f0f8ff;
-  /* Light background color on hover */
   outline: none;
-  /* Removes default outline */
   transition: all 0.3s ease;
-  /* Smooth transition for the hover effect */
 }
 
 /* Additional focus effect (in case of clicking) */
 input:focus,
 select:focus,
 textarea:focus {
-  border: 2px solid #cc9933;
-  /* Same blue border on focus */
+  border: 2px solid #1B2A38;
   background-color: #f0f8ff;
-  /* Same light background color */
   outline: none;
-  /* Removes default outline */
 }
 
 
@@ -1010,7 +1007,7 @@ h2:hover i {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  background: linear-gradient(135deg, #138271 0%, #1B2A38 100%);
   color: #fff;
   padding: 12px 20px;
   font-size: 18px;
@@ -1341,7 +1338,7 @@ td {
 
 /* Copy button styling */
 .copy-btn {
-  background: #cc9933;
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
   border: none;
   border-radius: 6px;
@@ -1406,14 +1403,14 @@ td {
 }
 
 .summary-box textarea:focus {
-  border-color: #cc9933;
+  border-color: #1B2A38;
   outline: none;
   background-color: #fff;
 }
 
 /* Copy success animation */
 .copy-btn.copied {
-  background: #28a745 !important;
+  background: linear-gradient(135deg, #138271, #1ABC9C) !important;
   animation: copySuccess 0.6s ease;
 }
 
@@ -1495,7 +1492,7 @@ td {
 /* Base styles for buttons */
 .generate-summary-btn,
 .close-modal-btn {
-  background: #cc9933;
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
   padding: 12px 24px;
   /* Increased padding */
@@ -1553,7 +1550,10 @@ td {
 .modal-table-loading i {
   font-size: 48px;
   margin-bottom: 16px;
-  color: #cc9933;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   animation: spin 1s linear infinite;
 }
 
@@ -1591,7 +1591,7 @@ td {
 
 /* Better checkbox styling */
 .modal-body input[type="checkbox"]:checked {
-  accent-color: #cc9933;
+  accent-color: #1B2A38;
 }
 
 /* Scrollbar styling for modal table */
@@ -1606,7 +1606,7 @@ td {
 }
 
 .modal-body .table-container::-webkit-scrollbar-thumb {
-  background: #cc9933;
+  background: linear-gradient(135deg, #1B2A38, #138271);
   border-radius: 4px;
 }
 
@@ -2002,7 +2002,10 @@ th {
 
 :host-context(.dark-theme) .header-content h1,
 .dark-theme .header-content h1 {
-  color: var(--primary-color);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 :host-context(.dark-theme) .header-content p,
@@ -2034,8 +2037,11 @@ th {
 /* Dark theme icon colors */
 :host-context(.dark-theme) .header-left i.fa-star,
 .dark-theme .header-left i.fa-star {
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+  background: linear-gradient(135deg, #f7fafc, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(247, 250, 252, 0.7);
 }
 
 :host-context(.dark-theme) .header-left i.fa-comment,
@@ -2249,7 +2255,7 @@ th {
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #007bff;
+  border-left: 4px solid #1B2A38;
 }
 
 .overall-rating-card h3 {
@@ -2262,7 +2268,10 @@ th {
 }
 
 .overall-rating-card h3 i {
-  color: #ffd700;
+  background: linear-gradient(135deg, #1B2A38, #2C3E50);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 1.2em;
 }
 
@@ -2294,14 +2303,17 @@ th {
 
 .breakdown-item .value {
   font-weight: bold;
-  color: #007bff;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 1.1em;
 }
 
 .breakdown-item.final-score {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
-  border: 2px solid #0056b3;
+  border: 2px solid #1B2A38;
   font-weight: bold;
   margin-top: 10px;
 }
@@ -2360,23 +2372,23 @@ th {
 
 /* Rating Classes with Colors */
 .rating-excellent {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  border: 3px solid #1e7e34;
+  background: linear-gradient(135deg, #138271, #1B2A38);
+  border: 3px solid #138271;
 }
 
 .rating-good {
-  background: linear-gradient(135deg, #17a2b8, #20c997);
-  border: 3px solid #117a8b;
+  background: linear-gradient(135deg, #138271, #1ABC9C);
+  border: 3px solid #138271;
 }
 
 .rating-average {
-  background: linear-gradient(135deg, #ffc107, #fd7e14);
-  border: 3px solid #e0a800;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  border: 3px solid #1B2A38;
 }
 
 .rating-below-average {
-  background: linear-gradient(135deg, #fd7e14, #dc3545);
-  border: 3px solid #d39e00;
+  background: linear-gradient(135deg, #138271, #dc3545);
+  border: 3px solid #138271;
 }
 
 .rating-poor {
@@ -2430,19 +2442,19 @@ th {
 }
 
 .legend-item.excellent .legend-color {
-  background: linear-gradient(135deg, #28a745, #20c997);
+  background: linear-gradient(135deg, #138271, #1B2A38);
 }
 
 .legend-item.good .legend-color {
-  background: linear-gradient(135deg, #17a2b8, #20c997);
+  background: linear-gradient(135deg, #138271, #1ABC9C);
 }
 
 .legend-item.average .legend-color {
-  background: linear-gradient(135deg, #ffc107, #fd7e14);
+  background: linear-gradient(135deg, #1B2A38, #138271);
 }
 
 .legend-item.below-average .legend-color {
-  background: linear-gradient(135deg, #fd7e14, #dc3545);
+  background: linear-gradient(135deg, #138271, #dc3545);
 }
 
 .legend-item.poor .legend-color {
@@ -2521,8 +2533,8 @@ nced validation styles for rating inputs */
 
 .rating-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  border-color: #1B2A38;
+  box-shadow: 0 0 0 0.2rem rgba(27, 42, 56, 0.25);
 }
 
 .rating-input.ng-invalid.ng-touched {
@@ -2531,8 +2543,8 @@ nced validation styles for rating inputs */
 }
 
 .rating-input.ng-valid.ng-touched {
-  border-color: #28a745;
-  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  border-color: #138271;
+  box-shadow: 0 0 0 0.2rem rgba(19, 130, 113, 0.25);
 }
 
 /* Warning animation for invalid input */
@@ -2557,7 +2569,7 @@ nced validation styles for rating inputs */
 
 .rating-input.valid-input {
   animation: pulse-success 0.6s ease-out;
-  border-color: #28a745;
+  border-color: #138271;
 }
 /* Performance Badge Section - Standalone */
 .performance-badge-section {
@@ -2742,7 +2754,7 @@ nced validation styles for rating inputs */
 }
 
 .productivity-excellent {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
 }
 
 .productivity-good {

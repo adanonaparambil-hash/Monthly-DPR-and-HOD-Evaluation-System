@@ -1,0 +1,620 @@
+<div class="my-task-container">
+  <!-- Main Grid Layout -->
+  <div class="main-grid">
+    <!-- Header Section - 8 columns -->
+    <div class="header-card">
+      <div class="header-background-effects">
+        <div class="bg-blur-1"></div>
+      </div>
+      
+      <div class="header-content">
+        <div class="timer-info">
+          <div class="timer-status">
+            <div class="status-badge">
+              <div class="status-indicator"></div>
+              <span class="status-text">ACTIVE NOW</span>
+            </div>
+            <span class="start-time">Started at 9:00 AM</span>
+          </div>
+          
+          <h1 class="timer-title">
+            Designing UI System 
+            <span class="version-text">v2.0</span>
+          </h1>
+          
+          <p class="timer-description">
+            Updating the component library with fresh variant designs and improved
+            accessibility standards across the platform.
+          </p>
+          
+          <!-- <div class="timer-tags">
+            <span class="tag">#design-system</span>
+            <span class="tag">#ui-ux</span>
+            <span class="tag">#accessibility</span>
+          </div> -->
+        </div>
+        
+        <div class="timer-display">
+          <div class="timer-digits">
+            <div class="digit-group">
+              <div class="digit">{{ currentTime.hours }}</div>
+            </div>
+            <div class="separator">:</div>
+            <div class="digit-group">
+              <div class="digit">{{ currentTime.minutes }}</div>
+            </div>
+            <div class="separator">:</div>
+            <div class="digit-group">
+              <div class="digit">{{ currentTime.seconds }}</div>
+            </div>
+          </div>
+          
+          <div class="timer-controls">
+            <button class="pause-btn">
+              <i class="fas fa-pause"></i>
+            </button>
+            <button class="stop-btn" (click)="stopTimer()">
+              <i class="fas fa-stop"></i>
+              <span>Stop Timer</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Section - 4 columns -->
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">Total Punched</span>
+          <div class="stat-icon primary">
+            <i class="fas fa-clock"></i>
+          </div>
+        </div>
+        <div class="stat-value">
+          <span class="hours">07</span>
+          <span class="unit">h</span>
+          <span class="minutes">45</span>
+          <span class="unit">m</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon green">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <span class="stat-label right">Task Logged</span>
+        </div>
+        <div class="stat-value right">
+          <span class="hours">06</span>
+          <span class="unit">h</span>
+          <span class="minutes">20</span>
+          <span class="unit">m</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+    <!-- Favorites Section -->
+    <div class="favorites-panel">
+      <div class="panel-header">
+        <div class="header-title">
+          <div class="star-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <h3>Favorites</h3>
+        </div>
+        <button class="more-btn">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+      </div>
+      
+      <div class="favorite-items">
+        <div class="favorite-item">
+          <div class="favorite-icon orange">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="favorite-content">
+            <h4>Weekly Status</h4>
+            <div class="favorite-meta">
+              <span class="priority-dot red"></span>
+              <p>Due Fri • HOD</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="favorite-item">
+          <div class="favorite-icon purple">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="favorite-content">
+            <h4>Email Triage</h4>
+            <div class="favorite-meta">
+              <span class="priority-dot green"></span>
+              <p>Daily • Self</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="favorite-item">
+          <div class="favorite-icon blue">
+            <i class="fas fa-bug"></i>
+          </div>
+          <div class="favorite-content">
+            <h4>Bug Fix: Login</h4>
+            <div class="favorite-meta">
+              <span class="priority-dot red"></span>
+              <p>Urgent • Peer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="view-all-btn">View All Favorites</button>
+    </div>
+
+    <!-- Task Board Section -->
+    <div class="task-board-panel">
+      <div class="task-board-header">
+        <div class="board-title">
+          <h2>Task Board</h2>
+          <span class="total-count">{{ totalTasks }} Total</span>
+        </div>
+        
+        <div class="board-filters">
+          <button class="filter-btn">
+            <i class="fas fa-filter"></i>
+          </button>
+          <button class="sort-btn">
+            <i class="fas fa-sort"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="task-tabs">
+        <button 
+          *ngFor="let tab of tabs" 
+          class="tab-btn"
+          [class.active]="activeTab === tab"
+          (click)="setActiveTab(tab)">
+          {{ tab }}
+        </button>
+      </div>
+
+      <div class="task-columns">
+        <!-- Not Started Column -->
+        <div class="task-column">
+          <div class="column-header">
+            <span class="column-title">Not Started</span>
+            <span class="column-count">{{ notStartedCount }}</span>
+          </div>
+          
+          <div class="task-list">
+            <div class="task-card" *ngFor="let task of getTasksByStatus('NOT STARTED')">
+              <div class="task-priority" [class]="getPriorityClass(task.priority)"></div>
+              <div class="task-category-badge">{{ task.category }}</div>
+              <h4 class="task-title">{{ task.title }}</h4>
+              <div class="task-footer">
+                <img [src]="task.avatar" [alt]="task.assignedTo" class="assignee-avatar">
+                <div class="task-date">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span>{{ task.dueDate }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="task-column">
+          <div class="column-header">
+            <span class="column-title progress">In Progress</span>
+            <span class="column-count progress">{{ inProgressCount }}</span>
+          </div>
+          
+          <div class="task-list">
+            <div class="task-card" [class.running]="task.id === 2" *ngFor="let task of getTasksByStatus('IN PROGRESS')">
+              <div class="task-header">
+                <span class="task-category-badge" [class.active]="task.id === 2">{{ task.category }}</span>
+                <div class="active-timer" *ngIf="task.id === 2">
+                  <i class="fas fa-clock"></i>
+                  <span>01:24</span>
+                </div>
+              </div>
+              <h4 class="task-title">{{ task.title }}</h4>
+              <div class="task-footer">
+                <img [src]="task.avatar" [alt]="task.assignedTo" class="assignee-avatar">
+                <button class="pause-task-btn" *ngIf="task.id === 2">
+                  <i class="fas fa-pause"></i>
+                </button>
+                <span class="paused-status" *ngIf="task.id !== 2">Paused</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <!-- Create New Task Card -->
+      <div class="create-task-card">
+        <div class="create-background-icon">
+          <i class="fas fa-plus"></i>
+        </div>
+        <div class="create-header">
+          <div class="create-icon">
+            <i class="fas fa-plus"></i>
+          </div>
+          <div class="quick-action-badge">
+            <span>QUICK ACTION</span>
+          </div>
+        </div>
+        <div class="create-content">
+          <h3>Create New Task</h3>
+          <p>Organize your schedule & assign projects.</p>
+          <button class="start-now-btn" (click)="startNow()">
+            <span>Start Now</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Calendar Widget -->
+      <div class="calendar-widget">
+        <div class="calendar-header">
+          <h4>October 2023</h4>
+          <button class="calendar-nav">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="calendar-grid">
+          <div class="calendar-days">
+            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+          </div>
+          <div class="calendar-dates">
+            <span class="date prev">16</span>
+            <span class="date prev">17</span>
+            <span class="date prev">18</span>
+            <span class="date prev">19</span>
+            <span class="date">20</span>
+            <span class="date">21</span>
+            <span class="date">22</span>
+            <span class="date has-event">23</span>
+            <span class="date current">24</span>
+            <span class="date">25</span>
+            <span class="date">26</span>
+            <span class="date">27</span>
+            <span class="date">28</span>
+            <span class="date">29</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Missing Log Entry Alert -->
+      <div class="alert-card">
+        <div class="alert-icon">
+          <span>!</span>
+        </div>
+        <div class="alert-content">
+          <h4>Missing Log Entry</h4>
+          <p>You have 45 minutes of unallocated time from yesterday (Oct 23).</p>
+          <button class="fix-now-btn">Fix log now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Creation Modal -->
+<div *ngIf="showCreateTaskModal" class="modal-overlay" (click)="closeCreateTaskModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Create New Task</h3>
+        <p class="modal-subtitle">Fill in the details to schedule and track your work.</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeCreateTaskModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="modal-content">
+      <!-- Left Side - Form -->
+      <div class="modal-form">
+        <!-- Task Name -->
+        <div class="form-group">
+          <label for="task-name" class="form-label">
+            Task Name <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="task-name" 
+            class="form-input" 
+            [(ngModel)]="newTask.name"
+            placeholder="e.g. Redesign Homepage Hero Section"
+            required>
+        </div>
+
+        <!-- Assignee -->
+        <div class="form-group">
+          <label for="assignee" class="form-label">
+            Assignee <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select 
+              id="assignee" 
+              class="form-select" 
+              [(ngModel)]="newTask.assignee"
+              required>
+              <option value="" disabled>Select assignee</option>
+              <option *ngFor="let assignee of assignees" [value]="assignee.id">
+                {{ assignee.name }} ({{ assignee.role }})
+              </option>
+            </select>
+            <i class="fas fa-chevron-down select-icon"></i>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description" class="form-label">Description</label>
+          <textarea 
+            id="description" 
+            class="form-textarea" 
+            [(ngModel)]="newTask.description"
+            placeholder="Add detailed instructions, goals, or notes..."
+            rows="3"></textarea>
+        </div>
+
+        <!-- Task Type -->
+        <div class="form-group">
+          <label class="form-label">Task Type</label>
+          <div class="task-type-grid">
+            <label class="task-type-option" [class.selected]="newTask.type === 'single'">
+              <input 
+                type="radio" 
+                name="task-type" 
+                value="single" 
+                [(ngModel)]="newTask.type"
+                class="sr-only">
+              <div class="task-type-icon">
+                <i class="fas fa-calendar-day"></i>
+              </div>
+              <div class="task-type-content">
+                <span class="task-type-title">Single Day</span>
+                <span class="task-type-desc">One-time effort</span>
+              </div>
+              <i class="fas fa-check-circle task-type-check"></i>
+            </label>
+            
+            <label class="task-type-option" [class.selected]="newTask.type === 'continuous'">
+              <input 
+                type="radio" 
+                name="task-type" 
+                value="continuous" 
+                [(ngModel)]="newTask.type"
+                class="sr-only">
+              <div class="task-type-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="task-type-content">
+                <span class="task-type-title">Continuous</span>
+                <span class="task-type-desc">Span multiple days</span>
+              </div>
+              <i class="fas fa-check-circle task-type-check"></i>
+            </label>
+          </div>
+        </div>
+
+        <!-- Date and Hours -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date" class="form-label-small">Date</label>
+            <div class="input-with-icon">
+              <i class="fas fa-calendar-alt input-icon"></i>
+              <input 
+                type="date" 
+                id="date" 
+                class="form-input-small" 
+                [(ngModel)]="newTask.date">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="est-hours" class="form-label-small">Est. Hours</label>
+            <div class="input-with-icon">
+              <i class="fas fa-clock input-icon"></i>
+              <input 
+                type="number" 
+                id="est-hours" 
+                class="form-input-small" 
+                [(ngModel)]="newTask.estimatedHours"
+                placeholder="0.00"
+                step="0.25"
+                min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtasks -->
+        <div class="form-group">
+          <div class="subtasks-header">
+            <label class="form-label">Subtasks</label>
+            <button type="button" class="add-subtask-btn" (click)="addSubtask()">
+              <i class="fas fa-plus"></i>
+              Add New
+            </button>
+          </div>
+          
+          <div class="subtasks-list">
+            <!-- Existing Subtasks -->
+            <div *ngFor="let subtask of newTask.subtasks; let i = index" class="subtask-item">
+              <input type="checkbox" [(ngModel)]="subtask.completed" class="subtask-checkbox">
+              <input 
+                type="text" 
+                [(ngModel)]="subtask.name"
+                class="subtask-input"
+                placeholder="Subtask name">
+              <input 
+                type="number" 
+                [(ngModel)]="subtask.estimatedHours"
+                class="subtask-hours"
+                placeholder="0h"
+                step="0.25"
+                min="0">
+              
+              <!-- Subtask Timer Controls -->
+              <div class="subtask-timer-controls">
+                <button 
+                  type="button" 
+                  class="subtask-timer-btn start"
+                  [class.active]="subtask.isRunning"
+                  (click)="startSubtaskTimer(subtask.id)"
+                  [disabled]="subtask.isRunning">
+                  <i class="fas fa-play"></i>
+                </button>
+                <button 
+                  type="button" 
+                  class="subtask-timer-btn pause"
+                  (click)="pauseSubtaskTimer(subtask.id)"
+                  [disabled]="!subtask.isRunning">
+                  <i class="fas fa-pause"></i>
+                </button>
+                <button 
+                  type="button" 
+                  class="subtask-timer-btn stop"
+                  (click)="stopSubtaskTimer(subtask.id)"
+                  [disabled]="!subtask.isRunning && subtask.timeSpent === 0">
+                  <i class="fas fa-stop"></i>
+                </button>
+              </div>
+              
+              <button type="button" class="remove-subtask-btn" (click)="removeSubtask(i)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+            
+            <!-- Add New Subtask Row -->
+            <div class="subtask-item subtask-add">
+              <div class="subtask-checkbox-placeholder"></div>
+              <input 
+                type="text" 
+                class="subtask-input"
+                placeholder="Type subtask name..."
+                #newSubtaskInput>
+              <input 
+                type="text" 
+                class="subtask-hours"
+                placeholder="0h">
+              <div class="subtask-timer-placeholder"></div>
+              <div class="subtask-spacer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Timer & Summary -->
+      <div class="modal-sidebar">
+        <!-- Task Timer -->
+        <div class="timer-widget">
+          <div class="timer-header">
+            <h4 class="timer-title">Task Timer</h4>
+            <div class="timer-status-dot"></div>
+          </div>
+          
+          <div class="timer-display-widget">
+            <div class="timer-gradient-bg"></div>
+            <span class="timer-text">00:00:00</span>
+          </div>
+          
+          <div class="timer-controls-widget">
+            <button class="timer-start-btn" disabled>
+              <i class="fas fa-play"></i>
+              Start
+            </button>
+            <button class="timer-pause-btn" disabled>
+              <i class="fas fa-pause"></i>
+            </button>
+            <button class="timer-stop-btn" disabled>
+              <i class="fas fa-stop"></i>
+            </button>
+          </div>
+          
+          <p class="timer-note">
+            <i class="fas fa-info-circle"></i>
+            Create task to start tracking
+          </p>
+        </div>
+
+        <!-- Time Summary -->
+        <div class="time-summary-widget">
+          <h4 class="summary-title">Time Summary</h4>
+          
+          <div class="summary-items">
+            <div class="summary-item">
+              <div class="summary-icon estimated">
+                <i class="fas fa-clock"></i>
+              </div>
+              <span class="summary-label">Estimated</span>
+              <span class="summary-value">{{ newTask.estimatedHours || 0 }}.0h</span>
+            </div>
+            
+            <div class="summary-item">
+              <div class="summary-icon logged">
+                <i class="fas fa-history"></i>
+              </div>
+              <span class="summary-label">Logged</span>
+              <span class="summary-value logged-value">0.0h</span>
+            </div>
+            
+            <div class="summary-divider"></div>
+            
+            <div class="summary-item">
+              <div class="summary-icon remaining">
+                <i class="fas fa-hourglass-half"></i>
+              </div>
+              <span class="summary-label">Remaining</span>
+              <span class="summary-value remaining-value">--</span>
+            </div>
+          </div>
+          
+          <div class="budget-usage">
+            <div class="budget-header">
+              <span class="budget-label">Budget Usage</span>
+              <span class="budget-percentage">0%</span>
+            </div>
+            <div class="budget-bar">
+              <div class="budget-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="save-draft-btn" (click)="saveAsDraft()">
+        Save as Draft
+      </button>
+      
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="create-btn" 
+          (click)="createTask()"
+          [disabled]="!newTask.name || !newTask.assignee">
+          Create Task
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

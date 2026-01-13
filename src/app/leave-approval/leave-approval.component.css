@@ -33,7 +33,7 @@
 }
 
 .requests-table thead {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
 }
 
@@ -42,7 +42,7 @@
   text-align: left;
   font-weight: 600;
   font-size: 0.8rem;
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 2px solid #1B2A38;
   white-space: nowrap;
 }
 
@@ -75,7 +75,7 @@
 .id-cell {
   min-width: 90px;
   font-weight: 500;
-  color: var(--primary-color);
+  color: #1B2A38;
 }
 
 .name-cell {
@@ -228,7 +228,7 @@
 
 .request-id {
   font-weight: 600;
-  color: var(--primary-color);
+  color: #1B2A38;
   font-size: 0.9rem;
 }
 
@@ -285,17 +285,17 @@
 }
 
 .btn-view-table {
-  background: var(--primary-color);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
 }
 
 .btn-view-table:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, #138271, #1ABC9C);
   transform: translateY(-1px);
 }
 
 .btn-quick-approve-table {
-  background: #28a745;
+  background: var(--secondary-color);
   color: white;
 }
 
@@ -342,7 +342,7 @@
 
 /* Page Header */
 .page-header {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
@@ -440,7 +440,7 @@
 }
 
 .tab-button.active {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
   box-shadow: var(--shadow-md);
 }
@@ -457,7 +457,7 @@
 }
 
 .tab-button:not(.active) .tab-badge {
-  background: var(--primary-color);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
 }
 
@@ -1094,7 +1094,7 @@
 }
 
 .comprehensive-card.priority-low {
-  border-left: 4px solid #28a745;
+  border-left: 4px solid var(--secondary-color);
 }
 
 /* Request Summary */
@@ -1201,8 +1201,8 @@
 }
 
 .workflow-step.status-approved {
-  border-color: #28a745;
-  background: rgba(40, 167, 69, 0.05);
+  border-color: var(--secondary-color);
+  background: rgba(26, 188, 156, 0.05);
 }
 
 .workflow-step.status-rejected {
@@ -1229,9 +1229,9 @@
 }
 
 .workflow-step.status-approved .step-number {
-  background: #28a745;
+  background: var(--secondary-color);
   color: white;
-  border-color: #28a745;
+  border-color: var(--secondary-color);
 }
 
 .workflow-step.status-rejected .step-number {
@@ -1332,7 +1332,7 @@
 }
 
 .btn-approve {
-  background: #28a745;
+  background: var(--secondary-color);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1423,7 +1423,7 @@
 }
 
 .my-request-card.status-approved {
-  border-left-color: #28a745;
+  border-left-color: var(--secondary-color);
 }
 
 .my-request-card.status-rejected {
@@ -1596,7 +1596,7 @@
 }
 
 .btn-view-table {
-  background: #007bff;
+  background: linear-gradient(135deg, #1B2A38, #138271);
   color: white;
   border: none;
   padding: 6px 10px;
@@ -1607,7 +1607,7 @@
 }
 
 .btn-view-table:hover {
-  background: #0056b3;
+  background: linear-gradient(135deg, #138271, #1ABC9C);
   transform: translateY(-1px);
 }
 

@@ -2,21 +2,21 @@
   <div class="chat-content">
     <!-- Sidebar - Chat Groups -->
     <div class="chat-sidebar">
-      <!-- Chats Header -->
+      <!-- Sidebar Header with Modern Gradient -->
       <div class="sidebar-header">
         <div class="sidebar-title">
-          <h2>Chats</h2>
+          <h2><i class="fas fa-comments"></i> Chats</h2>
           <button class="new-chat-btn" (click)="createNewGroup()" title="Create new group">
-            <i class="fas fa-edit"></i>
+            <i class="fas fa-plus"></i>
           </button>
         </div>
         
-        <!-- Search -->
+        <!-- Enhanced Search with Modern Styling -->
         <div class="search-container">
           <i class="fas fa-search search-icon"></i>
           <input 
             type="text" 
-            placeholder="Search groups (Ctrl+K)" 
+            placeholder="Search conversations..." 
             [(ngModel)]="searchQuery"
             (input)="searchGroups()"
             class="search-input">
@@ -121,10 +121,10 @@
         </div>
       </div>
 
-      <!-- Create New Group Button -->
+      <!-- Create New Group Button with Modern Design -->
       <div class="sidebar-footer">
         <button class="create-group-btn" (click)="createNewGroup()">
-          <i class="fas fa-plus"></i>
+          <i class="fas fa-users"></i>
           Create New Group
         </button>
       </div>
@@ -251,7 +251,7 @@
             </button>
           </div>
 
-          <!-- Message Input -->
+          <!-- Enhanced Message Input with Modern Styling -->
           <div class="input-area">
             <button class="input-btn" title="Attach file">
               <i class="fas fa-paperclip"></i>
@@ -262,7 +262,7 @@
               #messageInput
               [(ngModel)]="newMessage"
               (keydown)="onKeyPress($event)"
-              placeholder="Type your message here..."
+              placeholder="Type your message..."
               class="message-textarea"
               rows="1"></textarea>
             
@@ -271,14 +271,14 @@
             </button>
             
             <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim()">
-              Send
               <i class="fas fa-paper-plane"></i>
+              Send
             </button>
           </div>
 
-          <!-- Footer -->
+          <!-- Enhanced Footer -->
           <div class="input-footer">
-            <span class="input-hint">Press Enter to send</span>
+            <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
           </div>
         </div>
 
@@ -295,12 +295,12 @@
       </div>
     </div>
 
-    <!-- Empty State -->
+    <!-- Enhanced Empty State -->
     <div class="chat-empty" *ngIf="!selectedGroup">
       <div class="empty-content">
         <i class="fas fa-comments"></i>
-        <h3>Select a conversation</h3>
-        <p>Choose from your existing conversations or start a new one</p>
+        <h3>Welcome to Chat</h3>
+        <p>Select a conversation to start messaging<br>or create a new group to get started</p>
       </div>
     </div>
   </div>

@@ -105,26 +105,8 @@
                     </span>
                   </div>
 
-                  <div class="form-group">
-                    <label for="hodName">HOD Name *</label>
-                    <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
-                      <option value="">{{ hodList.length === 0 ? 'Loading HODs...' : 'Select HOD' }}</option>
-                      <option *ngFor="let hod of hodList; trackBy: trackByHodId" [value]="hod.idValue">
-                        {{ hod.description }}
-                      </option>
-                    </select>
-                    <span class="error-message" *ngIf="isFieldInvalid('hodName')">
-                      {{ getFieldError('hodName') }}
-                    </span>
-                    <small style="color: #666; font-size: 12px;" *ngIf="hodList.length === 0">
-                      Loading HOD list...
-                    </small>
-                  </div>
-
-                  <!-- Planned Leave and Resignation Specific Fields -->
-
-
-                  <!-- Project Manager / Site Incharge Selection (Planned Leave and Resignation) -->
+                  
+                  
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="projectManagerName">Project Manager / Site Incharge *</label>
                     <div class="searchable-dropdown">
@@ -155,40 +137,29 @@
                       {{ getFieldError('projectManagerName') }}
                     </span>
                   </div>
-
-                  <div class="form-group hod-name-group" *ngIf="formType === 'P' || formType === 'R'">
-                    <label for="responsibilitiesHandedOverTo">Responsibilities Handed Over To *</label>
-                    <div class="searchable-dropdown">
-                      <input type="text" id="responsibilitiesHandedOverTo"
-                        [value]="getResponsibilitiesHandoverDisplayName()"
-                        [class.error]="isFieldInvalid('responsibilitiesHandedOverTo')"
-                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #plannedSearchInput
-                        (input)="onPlannedSearchInputChange($event)" (focus)="showPlannedDropdown()"
-                        (blur)="hidePlannedDropdown()" autocomplete="off">
-                       
-                      <div class="dropdown-icon">
-                        <i class="fas fa-chevron-down"></i>
-                      </div>
-                      <div class="dropdown-list planned-dropdown" *ngIf="isPlannedDropdownVisible()"
-                        [class.small-list]="shouldUseSmallDropdown(plannedSearchTerm)">
-                        <div class="dropdown-item" *ngFor="let employee of getFilteredEmployees(plannedSearchTerm)"
-                          (mousedown)="selectPlannedEmployee(employee)"
-                          [class.selected]="isPlannedEmployeeSelected(employee)">
-                          <div class="employee-info">
-                            <div class="employee-name">{{ getEmployeeNameFromDescription(employee.description || '') }}
-                            </div>
-                            <div class="employee-id">{{ employee.idValue || '' }}</div>
-                          </div>
-                        </div>
-                        <div class="no-results" *ngIf="getFilteredEmployees(plannedSearchTerm).length === 0">
-                          No employees found
-                        </div>
-                      </div>
-                    </div>
-                    <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverTo')">
-                      {{ getFieldError('responsibilitiesHandedOverTo') }}
+                  
+                  
+                  <div class="form-group">
+                    <label for="hodName">HOD Name *</label>
+                    <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
+                      <option value="">{{ hodList.length === 0 ? 'Loading HODs...' : 'Select HOD' }}</option>
+                      <option *ngFor="let hod of hodList; trackBy: trackByHodId" [value]="hod.idValue">
+                        {{ hod.description }}
+                      </option>
+                    </select>
+                    <span class="error-message" *ngIf="isFieldInvalid('hodName')">
+                      {{ getFieldError('hodName') }}
                     </span>
+                    <small style="color: #666; font-size: 12px;" *ngIf="hodList.length === 0">
+                      Loading HOD list...
+                    </small>
                   </div>
+
+                  <!-- Planned Leave and Resignation Specific Fields -->
+
+
+                  <!-- Project Manager / Site Incharge Selection (Planned Leave and Resignation) -->
+                  
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="responsibilitiesHandedOverToPhone">Phone Number *</label>
@@ -208,6 +179,7 @@
                     </span>
                   </div>
 
+
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label>Category *</label>
                     <div class="radio-group">
@@ -226,6 +198,7 @@
                       {{ getFieldError('category') }}
                     </span>
                   </div>
+
 
                 </div>
               </div>
@@ -331,8 +304,8 @@
                 <input formControlName="emailId">
                 <!-- Hidden controls for dropdown values -->
                 <input formControlName="projectManagerName">
+                <!-- Hidden controls for old single dropdown (kept for backward compatibility) -->
                 <input formControlName="responsibilitiesHandedOverTo">
-                <input formControlName="responsibilitiesHandedOverToId">
               </div>
             </div>
           </div>
@@ -414,8 +387,8 @@
             </div>
           </div>
 
-          <!-- Collapsible Responsibilities Section (Emergency Only) -->
-          <div class="form-section-card collapsible-section" *ngIf="formType === 'E'" [@fadeInUp]="'in'">
+          <!-- Collapsible Responsibilities Section (Emergency, Planned, and Resignation) -->
+          <div class="form-section-card collapsible-section" *ngIf="formType === 'E' || formType === 'P' || formType === 'R'" [@fadeInUp]="'in'">
             <div class="section-header collapsible-header" (click)="toggleResponsibilitiesSection()">
               <h3>
                 <i class="fas fa-handshake"></i>
@@ -547,7 +520,7 @@
                     <span *ngIf="formType === 'E'">I have handed over all my responsibilities to the designated
                       personnel</span>
                     <span *ngIf="formType === 'P' || formType === 'R'">I have properly handed over my responsibilities
-                      to {{ exitForm.get('responsibilitiesHandedOverTo')?.value || 'the designated person' }}</span>
+                      to the designated personnel</span>
                   </label>
 
                   <label class="checkbox-label">

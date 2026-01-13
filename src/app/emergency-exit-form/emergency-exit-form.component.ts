@@ -432,8 +432,8 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('URL params will be checked in setFormType()');
       console.log('=== END DEBUG ===');
 
-      // Add one default responsibility row for Emergency forms
-      if (this.formType === 'E') {
+      // Add one default responsibility row for all form types
+      if (this.formType === 'E' || this.formType === 'P' || this.formType === 'R') {
         this.addResponsibility();
       }
 
@@ -482,6 +482,11 @@ export class EmergencyExitFormComponent implements OnInit {
 
       // Setup date change listeners for auto-calculation
       this.setupDateChangeListeners();
+      
+      // Auto-fill phone and email fields after initialization
+      setTimeout(() => {
+        this.autoFillPhoneAndEmail();
+      }, 500);
     } catch (error) {
       console.error('Error initializing emergency exit form:', error);
     }
@@ -637,8 +642,14 @@ export class EmergencyExitFormComponent implements OnInit {
       }
 
       // Update form validations and steps when form type changes
-
       this.updateFormValidations();
+
+      // Auto-fill phone and email for planned and resignation forms after validation update
+      if ((this.formType === 'P' || this.formType === 'R') && !this.isApprovalMode && !this.isViewMode) {
+        setTimeout(() => {
+          this.autoFillPhoneAndEmail();
+        }, 200);
+      }
 
       // Check for exitID to load saved data (check multiple common names for better compatibility)
       const exitIdParam = params['exitID'] || params['exitId'] || params['requestId'];
@@ -862,10 +873,18 @@ export class EmergencyExitFormComponent implements OnInit {
             postOffice: profile.postOffice || '',
             nation: profile.nationality || profile.nation || '',
             telephoneMobile: profile.phone || '',
-            telephoneLandline: profile.telephoneNo || profile.telephone || ''
+            telephoneLandline: profile.telephoneNo || profile.telephone || '',
+            // Auto-fill phone and email for planned and resignation forms
+            responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (profile.phone || '') : '',
+            responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (profile.email || '') : ''
           });
 
           console.log('Employee details loaded by ID:', empId);
+          
+          // Auto-fill phone and email fields after details are loaded
+          setTimeout(() => {
+            this.autoFillPhoneAndEmail();
+          }, 100);
         }
       },
       error: (error) => {
@@ -901,8 +920,9 @@ export class EmergencyExitFormComponent implements OnInit {
 
       // Planned Leave specific fields
       category: [''], // Staff or Worker
-      responsibilitiesHandedOverTo: [''], // Text input for planned leave
-      responsibilitiesHandedOverToId: [''], // ID of the person for planned leave
+      responsibilitiesHandedOverTo: [''], // Keep for backward compatibility
+      responsibilitiesHandedOverToPhone: [''], // Phone number for planned/resignation
+      responsibilitiesHandedOverToEmail: [''], // Email for planned/resignation
 
       // HOD Information
       hodName: ['', Validators.required],
@@ -993,9 +1013,17 @@ export class EmergencyExitFormComponent implements OnInit {
               telephoneLandline: data.telephoneNo || data.telephone || '',
               emailId: data.email || this.currentUser.email || '',
               department: data.empDept || data.department || '',
+              // Auto-fill phone and email for planned and resignation forms
+              responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (data.phone || '') : '',
+              responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (data.email || this.currentUser.email || '') : ''
             });
 
             console.log('Employee profile loaded successfully');
+            
+            // Auto-fill phone and email fields after profile is loaded
+            setTimeout(() => {
+              this.autoFillPhoneAndEmail();
+            }, 100);
           }
         },
         error: (err) => {
@@ -1174,9 +1202,9 @@ export class EmergencyExitFormComponent implements OnInit {
   private prepareExitRequest(): EmployeeExitRequest {
     const formValue = this.exitForm.getRawValue(); // Use getRawValue to get disabled field values
 
-    // Prepare responsibilities array for Emergency forms only
+    // Prepare responsibilities array for all form types that use responsibilities
     const responsibilities: EmployeeExitResponsibility[] = [];
-    if (this.formType === 'E' && formValue.responsibilities) {
+    if ((this.formType === 'E' || this.formType === 'P' || this.formType === 'R') && formValue.responsibilities) {
       formValue.responsibilities.forEach((resp: any) => {
         responsibilities.push({
           activities: resp.activities || '',
@@ -1205,13 +1233,15 @@ export class EmergencyExitFormComponent implements OnInit {
       dateOfDeparture: formatDate(formValue.dateOfDeparture),
       dateArrival: formValue.dateOfArrival ? formatDate(formValue.dateOfArrival) : undefined,
       flightTime: formValue.flightTime || '',
-      responsibilitiesHanded: (this.formType === 'P' || this.formType === 'R') ? (formValue.responsibilitiesHandedOverToId || formValue.responsibilitiesHandedOverTo || '') : '',
+      responsibilitiesHanded: '', // No longer using single dropdown - using responsibilities array for all types
       noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
       depHod: formValue.hodName || '',
       projectSiteIncharge: formValue.projectManagerName || '', // Fix: use projectManagerName from form
       reasonForLeave: formValue.reasonForEmergency || '',
       approvalStatus: 'P',
       category: this.mapCategoryToBackend(formValue.category || ''), // Map Staff/Worker to S/W
+      responsibilitiesHandedOverToPhone: formValue.responsibilitiesHandedOverToPhone || '', // Phone number for P/R forms
+      responsibilitiesHandedOverToEmail: formValue.responsibilitiesHandedOverToEmail || '', // Email for P/R forms
       lastWorkingDate: this.formType === 'R' ? formatDate(formValue.dateOfDeparture) : undefined,
       NoticePeriod: this.formType === 'R' ? parseInt(formValue.noOfDaysApproved) || 0 : 0,
       declaration1: formValue.decInfoAccurate ? 'Y' : 'N',
@@ -1308,19 +1338,30 @@ export class EmergencyExitFormComponent implements OnInit {
       // Emergency form - only planned leave and resignation fields are not required
       this.exitForm.get('category')?.clearValidators();
       this.exitForm.get('projectManagerName')?.clearValidators();
+      // Remove old single dropdown validators (no longer used)
       this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
+      this.exitForm.get('responsibilitiesHandedOverToPhone')?.clearValidators();
+      this.exitForm.get('responsibilitiesHandedOverToEmail')?.clearValidators();
 
     } else if (this.formType === 'P') {
       // Planned leave specific fields are required
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
-      this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
+      // Add validators for phone and email fields
+      this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
+      this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.required, Validators.email]);
+      // Remove old single dropdown validators (now using responsibilities array)
+      this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
 
     } else if (this.formType === 'R') {
       // Resignation specific fields are required (reuse existing fields)
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
-      this.exitForm.get('responsibilitiesHandedOverTo')?.setValidators([Validators.required]);
+      // Add validators for phone and email fields
+      this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
+      this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.required, Validators.email]);
+      // Remove old single dropdown validators (now using responsibilities array)
+      this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
     }
 
     // Update validity after changing validators
@@ -1448,13 +1489,22 @@ export class EmergencyExitFormComponent implements OnInit {
       this.api.GetExitEmployeeDetails(empId).subscribe({
         next: (response: any) => {
           if (response && response.success && response.data) {
-            // Update form with employee details
+            // Update form with employee detailsALER
             this.exitForm.patchValue({
               employeeName: response.data.employeeName || '',
               employeeId: response.data.empId || '',
               department: response.data.department || '',
-              emailId: response.data.email || ''
+              emailId: response.data.email || '',
+              hodName: response.data.depHoD || '',
+              // Auto-fill phone and email for planned and resignation forms
+              responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (response.data.phone || '') : '',
+              responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (response.data.email || '') : ''
             });
+            
+            // Auto-fill phone and email fields after details are loaded
+            setTimeout(() => {
+              this.autoFillPhoneAndEmail();
+            }, 100);
           }
         },
         error: (error: any) => {
@@ -1492,8 +1542,8 @@ export class EmergencyExitFormComponent implements OnInit {
         hodName: request.depHod || request.hodName || '',
         projectManagerName: request.projectSiteIncharge || request.projectManagerName || '', // Store ID
         category: this.mapCategoryFromBackend(request.category || ''), // Map S/W to Staff/Worker
-        responsibilitiesHandedOverTo: request.responsibilitiesHanded || request.responsibilitiesHandedOverTo || '',
-        responsibilitiesHandedOverToId: request.responsibilitiesHandedToId || request.responsibilitiesHandedOverToId || '',
+        responsibilitiesHandedOverToPhone: request.responsibilitiesHandedOverToPhone || request.phoneNumber || '',
+        responsibilitiesHandedOverToEmail: request.responsibilitiesHandedOverToEmail || request.emailId || '',
         emailId: request.emailId || ''
       });
 
@@ -1539,6 +1589,40 @@ export class EmergencyExitFormComponent implements OnInit {
 
   updateFormValidations(): void {
     this.updateValidatorsForFormType();
+  }
+
+  /**
+   * Auto-fill phone and email fields for planned and resignation forms
+   */
+  autoFillPhoneAndEmail(): void {
+    if (this.formType === 'P' || this.formType === 'R') {
+      // Get current values from form or session
+      const currentPhone = this.exitForm.get('telephoneMobile')?.value || 
+                          this.currentUser?.phone || 
+                          this.exitForm.get('responsibilitiesHandedOverToPhone')?.value || '';
+      const currentEmail = this.exitForm.get('emailId')?.value || 
+                          this.currentUser?.email || 
+                          this.exitForm.get('responsibilitiesHandedOverToEmail')?.value || '';
+      
+      // Only update if fields are empty
+      if (!this.exitForm.get('responsibilitiesHandedOverToPhone')?.value && currentPhone) {
+        this.exitForm.patchValue({
+          responsibilitiesHandedOverToPhone: currentPhone
+        });
+      }
+      
+      if (!this.exitForm.get('responsibilitiesHandedOverToEmail')?.value && currentEmail) {
+        this.exitForm.patchValue({
+          responsibilitiesHandedOverToEmail: currentEmail
+        });
+      }
+      
+      console.log('Auto-filled phone and email fields:', {
+        formType: this.formType,
+        phone: currentPhone,
+        email: currentEmail
+      });
+    }
   }
 
 
@@ -1652,11 +1736,22 @@ export class EmergencyExitFormComponent implements OnInit {
         return false;
       }
       
-      // Check responsibilitiesHandedOverTo - should have a value (name or ID)
-      const responsibilitiesValue = formValue.responsibilitiesHandedOverTo || rawFormValue.responsibilitiesHandedOverTo;
-      if (!responsibilitiesValue) {
-        console.log('Validation failed: responsibilitiesHandedOverTo missing for P/R form');
-        console.log('responsibilitiesHandedOverTo value:', responsibilitiesValue);
+      // Check phone number
+      if (!formValue.responsibilitiesHandedOverToPhone) {
+        console.log('Validation failed: responsibilitiesHandedOverToPhone missing for P/R form');
+        return false;
+      }
+      
+      // Check email
+      if (!formValue.responsibilitiesHandedOverToEmail) {
+        console.log('Validation failed: responsibilitiesHandedOverToEmail missing for P/R form');
+        return false;
+      }
+      
+      // Validate responsibilities for planned and resignation forms
+      const responsibilitiesValid = this.validateResponsibilities();
+      if (!responsibilitiesValid) {
+        console.log('Validation failed: responsibilities invalid for P/R form');
         return false;
       }
     }
@@ -1681,8 +1776,8 @@ export class EmergencyExitFormComponent implements OnInit {
       this.exitForm.get(key)?.markAsTouched();
     });
 
-    // Mark all responsibility form controls as touched for Emergency forms
-    if (this.formType === 'E') {
+    // Mark all responsibility form controls as touched for all form types that use responsibilities
+    if (this.formType === 'E' || this.formType === 'P' || this.formType === 'R') {
       const responsibilities = this.responsibilitiesFormArray;
       responsibilities.controls.forEach(group => {
         const responsibilityGroup = group as FormGroup;
@@ -1704,7 +1799,7 @@ export class EmergencyExitFormComponent implements OnInit {
     const requiredFields = ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
     
     if (this.formType === 'P' || this.formType === 'R') {
-      requiredFields.push('category', 'projectManagerName', 'responsibilitiesHandedOverTo');
+      requiredFields.push('category', 'projectManagerName', 'responsibilitiesHandedOverToPhone', 'responsibilitiesHandedOverToEmail');
     }
     
     const missingFields: string[] = [];
@@ -1718,7 +1813,8 @@ export class EmergencyExitFormComponent implements OnInit {
       'hodName': 'HOD Name',
       'category': 'Category',
       'projectManagerName': 'Project Manager / Site Incharge',
-      'responsibilitiesHandedOverTo': 'Responsibilities Handed Over To'
+      'responsibilitiesHandedOverToPhone': 'Phone Number',
+      'responsibilitiesHandedOverToEmail': 'Email ID'
     };
     
     requiredFields.forEach(field => {
@@ -1734,8 +1830,8 @@ export class EmergencyExitFormComponent implements OnInit {
       }
     });
 
-    // Check responsibilities for Emergency forms
-    if (this.formType === 'E') {
+    // Check responsibilities for all form types that use them
+    if (this.formType === 'E' || this.formType === 'P' || this.formType === 'R') {
       const responsibilities = this.responsibilitiesFormArray;
       if (responsibilities.length === 0) {
         missingFields.push('At least one Responsibility');
@@ -1942,16 +2038,23 @@ export class EmergencyExitFormComponent implements OnInit {
       this.formType = newType;
       this.updateFormValidations();
       
+      // Auto-fill phone and email fields for planned and resignation forms
+      setTimeout(() => {
+        this.autoFillPhoneAndEmail();
+      }, 100);
+      
       // Setup date change listeners for the new form type
       this.setupDateChangeListeners();
       
-      // Initialize responsibilities section for Emergency forms
+      // Initialize responsibilities section for all form types that use it
       setTimeout(() => {
         this.ensureResponsibilitiesSectionInitialized();
       }, 100);
       
-      // Update URL without navigation
-      window.history.replaceState({}, '', `/exit-form?type=${newType}`);
+      // Update URL without navigation - preserve base URL in production
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('type', newType);
+      window.history.replaceState({}, '', currentUrl.pathname + currentUrl.search);
     }
   }
 
@@ -2101,12 +2204,6 @@ export class EmergencyExitFormComponent implements OnInit {
       if (pmInputElement) {
         pmInputElement.value = this.getProjectManagerDisplayName();
       }
-      
-      // Update Responsibilities input field
-      const respInputElement = document.getElementById('responsibilitiesHandedOverTo') as HTMLInputElement;
-      if (respInputElement) {
-        respInputElement.value = this.getResponsibilitiesHandoverDisplayName();
-      }
     }, 100);
   }
 
@@ -2133,65 +2230,17 @@ export class EmergencyExitFormComponent implements OnInit {
     return selectedId;
   }
 
-  /**
-   * Get the display name for responsibilities handed over to from the stored ID
-   */
-  getResponsibilitiesHandoverDisplayName(): string {
-    // First try to get from the ID field
-    const selectedId = this.exitForm.get('responsibilitiesHandedOverToId')?.value;
-    if (selectedId) {
-      const selectedEmp = this.employeeMasterList.find(emp => emp.idValue === selectedId);
-      if (selectedEmp) {
-        return selectedEmp.description || '';
-      }
-    }
-    
-    // Fallback to the text field - check if it's an ID or name
-    const textValue = this.exitForm.get('responsibilitiesHandedOverTo')?.value;
-    if (textValue) {
-      // Check if the text value is actually an ID by looking it up
-      const empById = this.employeeMasterList.find(emp => emp.idValue === textValue);
-      if (empById) {
-        return empById.description || '';
-      }
-      // If not found by ID, assume it's already a name
-      return textValue;
-    }
-    
-    return '';
-  }
 
-  // Planned Leave dropdown methods
-  plannedSearchTerm: string = '';
-  isPlannedDropdownOpen: boolean = false;
 
-  onPlannedSearchInputChange(event: any): void {
-    this.plannedSearchTerm = event.target?.value || '';
-    // Clear the selected value when user starts typing to search
-    if (this.plannedSearchTerm !== this.getResponsibilitiesHandoverDisplayName()) {
-      // User is typing something different, clear the selection
-      this.exitForm.patchValue({
-        responsibilitiesHandedOverTo: '', // Clear the stored name
-        responsibilitiesHandedOverToId: '' // Clear the stored ID
-      });
-    }
-  }
 
-  showPlannedDropdown(): void {
-    // Initialize search term with current display value for better UX
-    this.plannedSearchTerm = this.getResponsibilitiesHandoverDisplayName();
-    this.isPlannedDropdownOpen = true;
-  }
 
-  hidePlannedDropdown(): void {
-    setTimeout(() => {
-      this.isPlannedDropdownOpen = false;
-    }, 200);
-  }
 
-  isPlannedDropdownVisible(): boolean {
-    return this.isPlannedDropdownOpen;
-  }
+
+
+
+
+
+
 
   // Generic method for filtering employees (used by Responsibilities Handed Over To dropdown)
   getFilteredEmployees(searchTerm: string): DropdownOption[] {
@@ -2203,26 +2252,9 @@ export class EmergencyExitFormComponent implements OnInit {
     );
   }
 
-  selectPlannedEmployee(employee: DropdownOption): void {
-    this.exitForm.patchValue({
-      responsibilitiesHandedOverTo: employee.description, // Store the name for display
-      responsibilitiesHandedOverToId: employee.idValue    // Store the ID for backend
-    });
-    this.plannedSearchTerm = employee.description || ''; // Update search term to show selected name
-    this.isPlannedDropdownOpen = false;
-    
-    // Update the input field value immediately
-    const inputElement = document.getElementById('responsibilitiesHandedOverTo') as HTMLInputElement;
-    if (inputElement) {
-      inputElement.value = employee.description || '';
-    }
-  }
 
-  isPlannedEmployeeSelected(employee: DropdownOption): boolean {
-    const selectedName = this.exitForm.get('responsibilitiesHandedOverTo')?.value;
-    const selectedId = this.exitForm.get('responsibilitiesHandedOverToId')?.value;
-    return selectedName === employee.description || selectedId === employee.idValue;
-  }
+
+
 
   // Responsibility dropdown methods
   responsibilitySearchTerms: string[] = [];
@@ -2267,7 +2299,7 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   ensureResponsibilitiesSectionInitialized(): void {
-    if (this.formType === 'E') {
+    if (this.formType === 'E' || this.formType === 'P' || this.formType === 'R') {
       // Ensure section is open by default
       this.isResponsibilitiesSectionOpen = true;
       
@@ -2296,6 +2328,12 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   canUserTakeAction(): boolean {
+    // IMPORTANT: Only show "Your Action Required" when user comes with approvalID parameter
+    if (!this.approvalID) {
+      console.log('canUserTakeAction: No approvalID in query parameters - hiding action section');
+      return false;
+    }
+
     // Check if current user can take action based on GetEmployeeExitSavedInfo response
     if (!this.currentUser || !this.currentUser.empId) {
       console.log('canUserTakeAction: No current user or empId');
@@ -2304,6 +2342,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
     console.log('canUserTakeAction: Checking for user:', this.currentUser.empId);
     console.log('canUserTakeAction: Current stage:', this.currentStage);
+    console.log('canUserTakeAction: ApprovalID:', this.approvalID);
     console.log('canUserTakeAction: Approval workflow length:', this.approvalWorkflow?.length || 0);
 
     // If we have approval workflow data from GetEmployeeExitSavedInfo
@@ -2337,9 +2376,8 @@ export class EmergencyExitFormComponent implements OnInit {
     return fallbackResult;
   }
 
-  /**
-   * Check if the current user is the assigned approver for this step
-   */
+
+  
   isCurrentUserApprover(): boolean {
     if (!this.currentUser || !this.approvalWorkflow) {
       return false;

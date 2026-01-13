@@ -69,6 +69,8 @@ export interface EmployeeExitRequest {
   dateArrival?: string;
   flightTime?: string;
   responsibilitiesHanded?: string;
+  responsibilitiesHandedOverToPhone?: string; // Phone number for planned/resignation forms
+  responsibilitiesHandedOverToEmail?: string; // Email for planned/resignation forms
   noOfDaysApproved?: number;
   depHod?: string;
   projectSiteIncharge?: string;

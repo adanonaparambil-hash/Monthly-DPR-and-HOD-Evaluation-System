@@ -31,7 +31,7 @@
 }
 
 .bg-layer-1 {
-  background: radial-gradient(circle at 30% 40%, rgba(191, 169, 70, 0.08) 0%, transparent 50%);
+  background: radial-gradient(circle at 30% 40%, rgba(27, 42, 56, 0.08) 0%, transparent 50%);
   animation: float1 20s ease-in-out infinite;
 }
 
@@ -43,13 +43,13 @@
 .bg-layer-3 {
   background: 
     conic-gradient(from 0deg at 50% 50%, 
-      rgba(191, 169, 70, 0.04) 0deg, 
+      rgba(27, 42, 56, 0.04) 0deg, 
       transparent 60deg, 
-      rgba(72, 94, 43, 0.03) 120deg, 
+      rgba(19, 130, 113, 0.03) 120deg, 
       transparent 180deg, 
-      rgba(200, 220, 180, 0.02) 240deg, 
+      rgba(26, 188, 156, 0.02) 240deg, 
       transparent 300deg, 
-      rgba(191, 169, 70, 0.04) 360deg);
+      rgba(27, 42, 56, 0.04) 360deg);
   animation: float3 30s ease-in-out infinite;
 }
 
@@ -269,7 +269,10 @@
 }
 
 .stat-card:hover .stat-icon {
-  color: #3b82f6;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .stat-content {
@@ -308,8 +311,11 @@
 }
 
 .stat-change.positive {
-  color: #059669;
-  background: rgba(5, 150, 105, 0.1);
+  background: linear-gradient(135deg, #138271, #1ABC9C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background: rgba(19, 130, 113, 0.1);
 }
 
 .stat-change.negative {
@@ -458,12 +464,18 @@
 
 .chart-icon {
   font-size: 20px;
-  color: rgba(191, 169, 70, 0.7);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   transition: all 0.3s ease;
 }
 
 .gsap-chart:hover .chart-icon {
-  color: rgba(191, 169, 70, 1);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   transform: scale(1.1) rotate(5deg);
 }
 
@@ -500,11 +512,11 @@
 }
 
 .legend-color.completed {
-  background-color: rgba(204, 153, 51, 1);
+  background: linear-gradient(135deg, #1B2A38, #138271);
 }
 
 .legend-color.in-progress {
-  background-color: rgba(47, 79, 47, 1);
+  background: linear-gradient(135deg, #138271, #1ABC9C);
 }
 
 .legend-color.pending {
@@ -844,10 +856,10 @@
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(191, 169, 70, 0.2);
+    box-shadow: 0 0 20px rgba(27, 42, 56, 0.2);
   }
   50% {
-    box-shadow: 0 0 30px rgba(191, 169, 70, 0.4);
+    box-shadow: 0 0 30px rgba(27, 42, 56, 0.4);
   }
 }
 
@@ -871,9 +883,9 @@
 /* Counter Animation Enhancement */
 .counter {
   background: linear-gradient(90deg, 
-    rgba(191, 169, 70, 0.8) 0%, 
-    rgba(72, 94, 43, 0.6) 50%, 
-    rgba(191, 169, 70, 0.8) 100%);
+    rgba(27, 42, 56, 0.8) 0%, 
+    rgba(19, 130, 113, 0.6) 50%, 
+    rgba(27, 42, 56, 0.8) 100%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -897,12 +909,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: linear-gradient(135deg, #138271, #1ABC9C);
 }
 
 
@@ -1099,19 +1111,22 @@ html {
 .title-icon {
   width: 42px;
   height: 42px;
-  background: linear-gradient(135deg, rgba(191, 169, 70, 0.2), rgba(72, 94, 43, 0.15));
+  background: linear-gradient(135deg, rgba(27, 42, 56, 0.2), rgba(19, 130, 113, 0.15));
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(191, 169, 70, 0.2);
+  box-shadow: 0 2px 8px rgba(27, 42, 56, 0.2);
   transition: all 0.3s ease;
-  border: 1px solid rgba(191, 169, 70, 0.3);
+  border: 1px solid rgba(27, 42, 56, 0.3);
 }
 
 .title-icon i {
   font-size: 18px;
-  color: var(--primary-color);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   animation: iconFloat 3s ease-in-out infinite;
 }
 
@@ -1122,7 +1137,7 @@ html {
 
 .section-title:hover .title-icon {
   transform: scale(1.05) rotate(5deg);
-  box-shadow: 0 6px 16px rgba(191, 169, 70, 0.3);
+  box-shadow: 0 6px 16px rgba(27, 42, 56, 0.3);
 }
 
 .title-text h2 {
@@ -1131,7 +1146,7 @@ html {
   color: var(--text-primary);
   margin: 0 0 3px 0;
   letter-spacing: -0.3px;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-color) 100%);
+  background: linear-gradient(135deg, #1B2A38, #138271);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1214,7 +1229,10 @@ html {
 
 .selector-group label i {
   font-size: 12px;
-  color: var(--primary-color);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .select-container {
@@ -1241,16 +1259,16 @@ html {
 }
 
 .modern-select:hover {
-  border-color: var(--primary-color);
+  border-color: #1B2A38;
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 4px 12px rgba(191, 169, 70, 0.2);
+  box-shadow: 0 4px 12px rgba(27, 42, 56, 0.2);
   transform: translateY(-1px);
 }
 
 .modern-select:focus {
-  border-color: var(--primary-color);
+  border-color: #1B2A38;
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 0 0 4px rgba(191, 169, 70, 0.15);
+  box-shadow: 0 0 0 4px rgba(27, 42, 56, 0.15);
   transform: translateY(-1px);
 }
 

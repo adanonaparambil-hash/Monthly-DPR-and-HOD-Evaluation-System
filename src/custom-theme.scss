@@ -1,15 +1,54 @@
 // Import Angular Material theming functionality
 @use '@angular/material' as mat;
 
+// Define custom colors using Material 3 approach
+$custom-primary-palette: (
+  0: #000000,
+  10: #001d36,
+  20: #003258,
+  25: #003f6b,
+  30: #004c7f,
+  35: #005a94,
+  40: #0068a9,
+  50: #2C3E50,
+  60: #4682b4,
+  70: #6699cc,
+  80: #87ceeb,
+  90: #b0e0e6,
+  95: #e0f6ff,
+  98: #f0f8ff,
+  99: #fafcff,
+  100: #ffffff,
+);
+
+$custom-secondary-palette: (
+  0: #000000,
+  10: #002114,
+  20: #003828,
+  25: #004532,
+  30: #00513c,
+  35: #005d47,
+  40: #006a52,
+  50: #1ABC9C,
+  60: #26d0ce,
+  70: #4dd0e1,
+  80: #73e8ff,
+  90: #b2ebf2,
+  95: #e0f2f1,
+  98: #f0fdfa,
+  99: #f7fffd,
+  100: #ffffff,
+);
+
 html {
-  // Apply Material 3 theming with the required colors and typography
+  // Apply Material 3 theming with custom colors
   @include mat.theme((
     color: (
-      primary: mat.$magenta-palette,   // Primary color palette
-      tertiary: mat.$violet-palette,   // Tertiary color palette
+      primary: $custom-primary-palette,
+      secondary: $custom-secondary-palette,
     ),
-    typography: 'Roboto',  // Set the typography to Roboto
-    density: 0,  // Set the density level (0 is normal density)
+    typography: 'Roboto',
+    density: 0,
   ));
 }
 

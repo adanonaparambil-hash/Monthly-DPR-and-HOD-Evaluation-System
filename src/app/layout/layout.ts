@@ -40,6 +40,7 @@ export class layout implements OnInit, OnDestroy {
   currentRoute = '';
   isExitFormMenuOpen = false;
   isMPRMenuOpen = false;
+  isDPRMenuOpen = false;
   isApprovalsMenuOpen = false;
 
   notificationCount = 0;
@@ -204,7 +205,8 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard-new': 'CED Performance Dashboard',
       '/profile': 'My Profile',
       '/leave-approval': 'Leave Approval Management',
-      '/chat': 'Internal Communications'
+      '/chat': 'Internal Communications',
+      '/my-task': 'My Task Management'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';
@@ -351,6 +353,14 @@ export class layout implements OnInit, OnDestroy {
     return this.currentRoute.includes('/monthly-dpr') || this.currentRoute.includes('/past-reports');
   }
 
+  toggleDPRMenu() {
+    this.isDPRMenuOpen = !this.isDPRMenuOpen;
+  }
+
+  isDPRRouteActive(): boolean {
+    return this.currentRoute.includes('/my-task') || this.currentRoute.includes('/dpr');
+  }
+
   toggleApprovalsMenu() {
     this.isApprovalsMenuOpen = !this.isApprovalsMenuOpen;
   }
@@ -364,6 +374,11 @@ export class layout implements OnInit, OnDestroy {
     // Auto-open MPR menu if on MPR-related routes
     if (this.isMPRRouteActive()) {
       this.isMPRMenuOpen = true;
+    }
+    
+    // Auto-open DPR menu if on DPR-related routes
+    if (this.isDPRRouteActive()) {
+      this.isDPRMenuOpen = true;
     }
     
     // Auto-open Exit Form menu if on exit form routes

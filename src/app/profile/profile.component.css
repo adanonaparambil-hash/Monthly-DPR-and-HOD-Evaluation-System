@@ -13,12 +13,12 @@
   --color-surface-hover: #f1f5f9;
   --color-surface-glass: rgba(255, 255, 255, 0.8);
 
-  /* Brand Colors - Modern Green */
-  --color-primary: #10b981;
-  --color-primary-light: #34d399;
-  --color-primary-dark: #059669;
-  --color-primary-bg: #ecfdf5;
-  --color-primary-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.15);
+  /* Brand Colors - Updated to match new theme */
+  --color-primary: #2C3E50;
+  --color-primary-light: #34495e;
+  --color-primary-dark: #1a252f;
+  --color-primary-bg: #ecf0f1;
+  --color-primary-shadow: 0 4px 14px 0 rgba(44, 62, 80, 0.15);
 
   /* Glassmorphic Effects */
   --glass-bg: rgba(255, 255, 255, 0.25);
@@ -34,7 +34,7 @@
 
   /* Progress Colors */
   --progress-bg: #e5e7eb;
-  --progress-fill: linear-gradient(90deg, #10b981, #34d399);
+  --progress-fill: linear-gradient(90deg, #2C3E50, #1ABC9C);
 
   /* Motion */
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
