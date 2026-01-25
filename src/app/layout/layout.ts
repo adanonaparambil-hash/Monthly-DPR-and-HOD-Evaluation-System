@@ -154,20 +154,21 @@ export class layout implements OnInit, OnDestroy {
   }
 
   private initializeSidebarState() {
-    // Collapse sidebar on mobile by default
+    // Collapse sidebar on mobile by default, keep expanded on desktop
     if (window.innerWidth <= 768) {
       this.sidebarCollapsed = true;
+    } else {
+      this.sidebarCollapsed = false;
     }
   }
 
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
-    // Auto-collapse sidebar on mobile
+    // Auto-collapse sidebar on mobile, but don't auto-expand on desktop
     if (event.target.innerWidth <= 768) {
       this.sidebarCollapsed = true;
-    } else {
-      this.sidebarCollapsed = false;
     }
+    // On desktop, keep the user's preference (don't force expand)
   }
 
   ngOnDestroy() {
@@ -205,8 +206,10 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard-new': 'CED Performance Dashboard',
       '/profile': 'My Profile',
       '/leave-approval': 'Leave Approval Management',
+      '/dpr-approval': 'DPR Approval Management',
       '/chat': 'Internal Communications',
-      '/my-task': 'My Task Management'
+      '/my-task': 'My Task Management',
+      '/my-logged-hours': 'My Logged Hours'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';
@@ -358,7 +361,9 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isDPRRouteActive(): boolean {
-    return this.currentRoute.includes('/my-task') || this.currentRoute.includes('/dpr');
+    return this.currentRoute.includes('/my-task') || 
+           this.currentRoute.includes('/my-logged-hours') || 
+           this.currentRoute.includes('/dpr');
   }
 
   toggleApprovalsMenu() {
@@ -366,7 +371,9 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isApprovalsRouteActive(): boolean {
-    return this.currentRoute.includes('/leave-approval') || this.currentRoute.includes('/approvals');
+    return this.currentRoute.includes('/leave-approval') || 
+           this.currentRoute.includes('/dpr-approval') || 
+           this.currentRoute.includes('/approvals');
   }
 
   // Update menu states based on current route

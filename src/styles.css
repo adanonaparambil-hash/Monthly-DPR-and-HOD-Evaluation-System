@@ -6,10 +6,23 @@
 /* Global Font Family - Roboto for entire application (EXCLUDING ICONS) */
 
 /* First, preserve icon fonts */
-.fa, .fas, .far, .fal, .fab, .fad, .fat, .fass,
-[class^="fa-"], [class*=" fa-"],
-.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone,
-i[class^="fa"], i[class*=" fa"],
+.fa,
+.fas,
+.far,
+.fal,
+.fab,
+.fad,
+.fat,
+.fass,
+[class^="fa-"],
+[class*=" fa-"],
+.material-icons,
+.material-icons-outlined,
+.material-icons-round,
+.material-icons-sharp,
+.material-icons-two-tone,
+i[class^="fa"],
+i[class*=" fa"],
 i.material-icons {
   font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "Material Icons", inherit !important;
 }
@@ -21,22 +34,38 @@ i.material-icons {
   font-family: 'Roboto', sans-serif !important;
 }
 
-body, html {
+body,
+html {
   font-family: 'Roboto', sans-serif !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Ensure all text elements use Roboto (excluding icons) */
-h1, h2, h3, h4, h5, h6, p, 
-span:not([class^="fa"]):not([class*=" fa"]):not(.material-icons), 
-div:not([class^="fa"]):not([class*=" fa"]), 
-a:not([class^="fa"]):not([class*=" fa"]), 
-button, input, textarea, select, label {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span:not([class^="fa"]):not([class*=" fa"]):not(.material-icons),
+div:not([class^="fa"]):not([class*=" fa"]),
+a:not([class^="fa"]):not([class*=" fa"]),
+button,
+input,
+textarea,
+select,
+label {
   font-family: 'Roboto', sans-serif !important;
 }
 
 /* Apply gradient text to headings for better visibility */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   background: var(--text-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -46,14 +75,42 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Fallback for browsers that don't support background-clip */
 @supports not (-webkit-background-clip: text) {
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     color: var(--text-primary) !important;
     -webkit-text-fill-color: var(--text-primary) !important;
   }
 }
 
+/* CRITICAL FIX: Prevent buttons and their children from having transparent text */
+button,
+button *,
+.action-btn,
+.action-btn *,
+.btn,
+.btn *,
+button span,
+button i,
+.action-btn span,
+.action-btn i {
+  -webkit-text-fill-color: initial !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+}
+
 /* Override any component-specific font families (excluding icons) */
-.mat-typography, .mat-body, .mat-body-1, .mat-body-2, .mat-caption, .mat-button, .mat-input-element {
+.mat-typography,
+.mat-body,
+.mat-body-1,
+.mat-body-2,
+.mat-caption,
+.mat-button,
+.mat-input-element {
   font-family: 'Roboto', sans-serif !important;
 }
 
@@ -73,12 +130,12 @@ h1, h2, h3, h4, h5, h6 {
   --warning-color: #f59e0b;
   --error-color: #e74c3c;
   --info-color: #2C3E50;
-  
+
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, #1B2A38, #138271);
   --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
   --gradient-accent: linear-gradient(135deg, #10b981, #059669);
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -103,12 +160,12 @@ h1, h2, h3, h4, h5, h6 {
   --warning-color: #f59e0b;
   --error-color: #e74c3c;
   --info-color: #2C3E50;
-  
+
   /* Dark Gradients */
   --gradient-primary: linear-gradient(135deg, #1B2A38, #138271);
   --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
   --gradient-accent: linear-gradient(135deg, #10b981, #059669);
-  
+
   /* Dark Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
@@ -124,7 +181,8 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   font-family: 'Roboto', sans-serif !important;
   -webkit-font-smoothing: antialiased;
@@ -157,8 +215,15 @@ body {
   opacity: 1;
 }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: 'Roboto', sans-serif !important; }
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif !important;
+}
 
 
 .toast-error {
@@ -185,13 +250,38 @@ body { margin: 0; font-family: 'Roboto', sans-serif !important; }
 }
 
 /* CRITICAL: Ensure Font Awesome icons always work - HIGHEST PRIORITY */
-i.fa, i.fas, i.far, i.fal, i.fab, i.fad, i.fat, i.fass,
-i[class^="fa-"], i[class*=" fa-"],
-.fa, .fas, .far, .fal, .fab, .fad, .fat, .fass,
-[class^="fa-"], [class*=" fa-"],
-span.fa, span.fas, span.far, span.fal, span.fab,
-span[class^="fa-"], span[class*=" fa-"],
-.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone {
+i.fa,
+i.fas,
+i.far,
+i.fal,
+i.fab,
+i.fad,
+i.fat,
+i.fass,
+i[class^="fa-"],
+i[class*=" fa-"],
+.fa,
+.fas,
+.far,
+.fal,
+.fab,
+.fad,
+.fat,
+.fass,
+[class^="fa-"],
+[class*=" fa-"],
+span.fa,
+span.fas,
+span.far,
+span.fal,
+span.fab,
+span[class^="fa-"],
+span[class*=" fa-"],
+.material-icons,
+.material-icons-outlined,
+.material-icons-round,
+.material-icons-sharp,
+.material-icons-two-tone {
   font-family: "Font Awesome 6 Free" !important;
   font-weight: 900 !important;
   font-style: normal !important;
@@ -204,22 +294,26 @@ span[class^="fa-"], span[class*=" fa-"],
 }
 
 /* Specific Font Awesome styles with fallbacks */
-.fas, i.fas {
+.fas,
+i.fas {
   font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
   font-weight: 900 !important;
 }
 
-.far, i.far {
+.far,
+i.far {
   font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
   font-weight: 400 !important;
 }
 
-.fab, i.fab {
+.fab,
+i.fab {
   font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands", "FontAwesome" !important;
   font-weight: 400 !important;
 }
 
-.fa, i.fa {
+.fa,
+i.fa {
   font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
   font-weight: 900 !important;
 }
@@ -243,9 +337,9 @@ span[class^="fa-"], span[class*=" fa-"],
 }
 
 /* Enhanced Text Visibility - Dark Gradient Text */
-.enhanced-text, 
-.card-title, 
-.section-title, 
+.enhanced-text,
+.card-title,
+.section-title,
 .form-title,
 .page-header,
 .component-title {
@@ -258,9 +352,10 @@ span[class^="fa-"], span[class*=" fa-"],
 
 /* Fallback for enhanced text visibility */
 @supports not (-webkit-background-clip: text) {
-  .enhanced-text, 
-  .card-title, 
-  .section-title, 
+
+  .enhanced-text,
+  .card-title,
+  .section-title,
   .form-title,
   .page-header,
   .component-title {
@@ -270,9 +365,9 @@ span[class^="fa-"], span[class*=" fa-"],
 }
 
 /* Dark theme enhanced text */
-.dark-theme .enhanced-text, 
-.dark-theme .card-title, 
-.dark-theme .section-title, 
+.dark-theme .enhanced-text,
+.dark-theme .card-title,
+.dark-theme .section-title,
 .dark-theme .form-title,
 .dark-theme .page-header,
 .dark-theme .component-title {
@@ -284,9 +379,10 @@ span[class^="fa-"], span[class*=" fa-"],
 
 /* Dark theme fallback */
 @supports not (-webkit-background-clip: text) {
-  .dark-theme .enhanced-text, 
-  .dark-theme .card-title, 
-  .dark-theme .section-title, 
+
+  .dark-theme .enhanced-text,
+  .dark-theme .card-title,
+  .dark-theme .section-title,
   .dark-theme .form-title,
   .dark-theme .page-header,
   .dark-theme .component-title {

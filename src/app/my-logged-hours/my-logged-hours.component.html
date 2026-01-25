@@ -1,0 +1,197 @@
+<div class="logged-hours-container">
+  <!-- Header Section -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-clock animated-clock-title"></i>
+          My Logged Hours
+        </h1>
+        <!-- <p class="page-subtitle">PRODUCTIVITY DASHBOARD</p> -->
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="action-btn secondary" (click)="exportReport()">
+        <i class="fas fa-download"></i>
+        <span>Export Report</span>
+      </button>
+      <button class="action-btn primary" (click)="logNewHours()">
+        <i class="fas fa-plus"></i>
+        <span>Add New Hours</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label class="filter-label">From Date</label>
+        <div class="filter-input-wrapper">
+          <i class="fas fa-calendar-alt filter-icon"></i>
+          <input type="date" class="filter-date-input" [(ngModel)]="fromDate" placeholder="Select from date">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">To Date</label>
+        <div class="filter-input-wrapper">
+          <i class="fas fa-calendar-alt filter-icon"></i>
+          <input type="date" class="filter-date-input" [(ngModel)]="toDate" placeholder="Select to date">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Project</label>
+        <select class="filter-select" [(ngModel)]="selectedProject">
+          <option value="all">All Projects</option>
+          <option value="internal">Internal Tools</option>
+          <option value="client">Client Work</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Task Category</label>
+        <select class="filter-select" [(ngModel)]="selectedCategory">
+          <option value="all">All Categories</option>
+          <option value="development">Development</option>
+          <option value="design">Design</option>
+          <option value="meetings">Meetings</option>
+          <option value="testing">Testing</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button class="filter-btn">
+        <i class="fas fa-filter"></i>
+        <span>Add Filter</span>
+      </button>
+      <button class="filter-btn">
+        <i class="fas fa-columns"></i>
+        <span>Edit Columns</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="data-table">
+    <!-- Table Header -->
+    <div class="table-header">
+      <div class="header-col task-id">Task ID</div>
+      <div class="header-col description">Description</div>
+      <div class="header-col category">Category / Tags</div>
+      <div class="header-col duration">Duration</div>
+    </div>
+
+    <!-- Table Body -->
+    <div class="table-body">
+      <!-- Day Group: Today -->
+      <div class="day-group">
+        <div class="day-header">
+          <h3 class="day-title">Today</h3>
+          <span class="day-date">Oct 26, 2023</span>
+        </div>
+        <div class="day-records">
+          @for (record of getTodayRecords(); track record.id) {
+          <div class="record-row">
+            <div class="record-col task-id">
+              <span class="task-id-badge">{{ record.taskId }}</span>
+            </div>
+            <div class="record-col description">
+              <h4 class="task-title">{{ record.title }}</h4>
+              <p class="task-description">{{ record.description }}</p>
+            </div>
+            <div class="record-col category">
+              <span class="category-badge" [class]="getCategoryClass(record.category)">
+                {{ record.category }}
+              </span>
+              @if (record.priority) {
+              <span class="priority-badge" [class]="getPriorityClass(record.priority)">
+                {{ record.priority }}
+              </span>
+              }
+            </div>
+            <div class="record-col duration">
+              <span class="duration-text">{{ record.duration }}</span>
+              <button class="more-btn">
+                <i class="fas fa-ellipsis-h"></i>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Day Group: Yesterday -->
+      <div class="day-group">
+        <div class="day-header">
+          <h3 class="day-title">Yesterday</h3>
+          <span class="day-date">Oct 25, 2023</span>
+        </div>
+        <div class="day-records">
+          @for (record of getYesterdayRecords(); track record.id) {
+          <div class="record-row">
+            <div class="record-col task-id">
+              <span class="task-id-badge">{{ record.taskId }}</span>
+            </div>
+            <div class="record-col description">
+              <h4 class="task-title">{{ record.title }}</h4>
+              <p class="task-description">{{ record.description }}</p>
+            </div>
+            <div class="record-col category">
+              <span class="category-badge" [class]="getCategoryClass(record.category)">
+                {{ record.category }}
+              </span>
+            </div>
+            <div class="record-col duration">
+              <span class="duration-text">{{ record.duration }}</span>
+              <button class="more-btn">
+                <i class="fas fa-ellipsis-h"></i>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Day Group: Tuesday -->
+      <div class="day-group">
+        <div class="day-header">
+          <h3 class="day-title">Tuesday</h3>
+          <span class="day-date">Oct 24, 2023</span>
+        </div>
+        <div class="day-records">
+          @for (record of getTuesdayRecords(); track record.id) {
+          <div class="record-row">
+            <div class="record-col task-id">
+              <span class="task-id-badge">{{ record.taskId }}</span>
+            </div>
+            <div class="record-col description">
+              <h4 class="task-title">{{ record.title }}</h4>
+              <p class="task-description">{{ record.description }}</p>
+            </div>
+            <div class="record-col category">
+              <span class="category-badge" [class]="getCategoryClass(record.category)">
+                {{ record.category }}
+              </span>
+              @if (record.priority) {
+              <span class="priority-badge" [class]="getPriorityClass(record.priority)">
+                {{ record.priority }}
+              </span>
+              }
+            </div>
+            <div class="record-col duration">
+              <span class="duration-text">{{ record.duration }}</span>
+              <button class="more-btn">
+                <i class="fas fa-ellipsis-h"></i>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

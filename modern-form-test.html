@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Form Elements Test</title>
+    <link rel="stylesheet" href="src/styles.css">
+    <link rel="stylesheet" href="src/app/my-task/task-modal-glassmorphism.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 40px;
+            margin: 0;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .form-section {
+            margin-bottom: 40px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="text-align: center; color: #1e293b; margin-bottom: 40px;">Modern Form Elements Test</h1>
+        
+        <div class="form-section">
+            <h2 class="section-title">Text Inputs</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Standard Input</label>
+                    <input type="text" class="form-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Input</label>
+                    <input type="email" class="form-input" placeholder="Enter your email">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Number Input</label>
+                    <input type="number" class="form-input" placeholder="Enter a number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date Input</label>
+                    <input type="date" class="form-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">Select & Textarea</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Select Dropdown</label>
+                    <select class="form-select">
+                        <option>Choose an option</option>
+                        <option>Option 1</option>
+                        <option>Option 2</option>
+                        <option>Option 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Textarea</label>
+                    <textarea class="form-textarea" placeholder="Enter your message" rows="4"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">Checkboxes & Radio Buttons</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Checkboxes</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; text-transform: none; font-weight: 500;">
+                            <input type="checkbox" class="checkbox-input">
+                            Option 1
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; text-transform: none; font-weight: 500;">
+                            <input type="checkbox" class="checkbox-input" checked>
+                            Option 2 (Checked)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; text-transform: none; font-weight: 500;">
+                            <input type="checkbox" class="checkbox-input">
+                            Option 3
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Radio Buttons</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; text-transform: none; font-weight: 500;">
+                            <input type="radio" name="radio-test" class="radio-input">
+                            Choice A
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; text-transform: none; font-weight: 500;">
+                            <input type="radio" name="radio-test" class="radio-input" checked>
+                            Choice B (Selected)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; text-transform: none; font-weight: 500;">
+                            <input type="radio" name="radio-test" class="radio-input">
+                            Choice C
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">Buttons & Range</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Buttons</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-primary">Primary Button</button>
+                        <button class="btn-secondary">Secondary Button</button>
+                        <button class="modern-btn primary">Modern Primary</button>
+                        <button class="modern-btn secondary">Modern Secondary</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Range Slider</label>
+                    <input type="range" class="range-input" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">File Input & Progress</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">File Input</label>
+                    <input type="file" class="file-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Progress Bar</label>
+                    <progress value="70" max="100">70%</progress>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

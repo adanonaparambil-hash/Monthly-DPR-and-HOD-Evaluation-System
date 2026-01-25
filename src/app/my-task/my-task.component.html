@@ -1,309 +1,251 @@
-<div class="my-task-container">
-  <!-- Main Grid Layout -->
-  <div class="main-grid">
-    <!-- Header Section - 8 columns -->
-    <div class="header-card">
-      <div class="header-background-effects">
-        <div class="bg-blur-1"></div>
-      </div>
-      
-      <div class="header-content">
-        <div class="timer-info">
-          <div class="timer-status">
-            <div class="status-badge">
-              <div class="status-indicator"></div>
-              <span class="status-text">ACTIVE NOW</span>
-            </div>
-            <span class="start-time">Started at 9:00 AM</span>
-          </div>
-          
-          <h1 class="timer-title">
-            Designing UI System 
-            <span class="version-text">v2.0</span>
-          </h1>
-          
-          <p class="timer-description">
-            Updating the component library with fresh variant designs and improved
-            accessibility standards across the platform.
-          </p>
-          
-          <!-- <div class="timer-tags">
-            <span class="tag">#design-system</span>
-            <span class="tag">#ui-ux</span>
-            <span class="tag">#accessibility</span>
-          </div> -->
+﻿<div class="task-board-container">
+  <!-- Top Section with Active Task and Stats -->
+  <div class="top-section">
+    <!-- Active Task Card -->
+    <div class="active-task-card">
+      <div class="task-status">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span class="status-text">IN PROGRESS</span>
         </div>
-        
-        <div class="timer-display">
-          <div class="timer-digits">
-            <div class="digit-group">
-              <div class="digit">{{ currentTime.hours }}</div>
+
+        <!-- Ultra Modern Timer Control Section -->
+        <div class="timer-control-section">
+          <!-- Animated Bars -->
+          <div class="timer-bars">
+            <span class="bar bar-1"></span>
+            <span class="bar bar-2"></span>
+            <span class="bar bar-3"></span>
+            <span class="bar bar-4"></span>
+          </div>
+
+          <!-- Timer Display -->
+          <div class="timer-box">
+            <div class="timer-glow-bg"></div>
+            <div class="timer-digits">
+              <span class="digit-group">
+                <span class="digit">0</span>
+                <span class="digit">0</span>
+              </span>
+              <span class="separator">:</span>
+              <span class="digit-group">
+                <span class="digit">4</span>
+                <span class="digit">2</span>
+              </span>
+              <span class="separator">:</span>
+              <span class="digit-group">
+                <span class="digit">1</span>
+                <span class="digit">5</span>
+              </span>
             </div>
-            <div class="separator">:</div>
-            <div class="digit-group">
-              <div class="digit">{{ currentTime.minutes }}</div>
+            <div class="timer-label-modern">TIME ELAPSED</div>
+          </div>
+
+          <!-- Modern Control Buttons -->
+          <div class="modern-controls">
+            <button class="modern-control-btn pause-btn">
+              <div class="btn-glow"></div>
+              <i class="fas fa-pause"></i>
+              <span class="btn-label">Pause</span>
+            </button>
+            <button class="modern-control-btn stop-btn">
+              <div class="btn-glow"></div>
+              <i class="fas fa-stop"></i>
+              <span class="btn-label">Stop</span>
+            </button>
+          </div>
+
+          <!-- Animated Wave -->
+          <div class="timer-wave">
+            <svg viewBox="0 0 40 40" class="wave-svg">
+              <circle class="wave-circle wave-1" cx="20" cy="20" r="8" />
+              <circle class="wave-circle wave-2" cx="20" cy="20" r="8" />
+              <circle class="wave-circle wave-3" cx="20" cy="20" r="8" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-info">
+        <div class="task-header">
+          <span class="category-badge" [class]="getCategoryClass(activeTaskCategory)">
+            {{ activeTaskCategory }}
+          </span>
+          <h2 class="task-title">UI Design Refactor: Component Library v2.0</h2>
+        </div>
+
+        <!-- Modern Animated Progress Section -->
+        <div class="modern-progress-section">
+          <div class="progress-info">
+            <span class="progress-label">Task Completion</span>
+            <span class="progress-value">65%</span>
+          </div>
+          <div class="animated-progress-bar">
+            <div class="progress-track">
+              <div class="progress-fill" style="width: 65%">
+                <div class="progress-shimmer"></div>
+                <div class="progress-glow"></div>
+              </div>
             </div>
-            <div class="separator">:</div>
-            <div class="digit-group">
-              <div class="digit">{{ currentTime.seconds }}</div>
+            <div class="progress-particles">
+              <span class="particle"></span>
+              <span class="particle"></span>
+              <span class="particle"></span>
+              <span class="particle"></span>
+              <span class="particle"></span>
             </div>
           </div>
-          
-          <div class="timer-controls">
-            <button class="pause-btn">
-              <i class="fas fa-pause"></i>
-            </button>
-            <button class="stop-btn" (click)="stopTimer()">
-              <i class="fas fa-stop"></i>
-              <span>Stop Timer</span>
-            </button>
+        </div>
+
+        <div class="task-meta">
+          <div class="task-details">
+            <div class="task-detail-item">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Started: {{ activeTaskStartDate | date:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="task-detail-item">
+              <i class="fas fa-user"></i>
+              <span>Assigned by: {{ activeTaskAssignee }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Stats Section - 4 columns -->
-    <div class="stats-section">
-      <div class="stat-card">
-        <div class="stat-header">
-          <span class="stat-label">Total Punched</span>
-          <div class="stat-icon primary">
-            <i class="fas fa-clock"></i>
+    <!-- Right Side Section with New Task Button and Stats -->
+    <div class="right-section">
+      <!-- New Task Button -->
+      <button class="new-task-btn" (click)="openCreateTaskModal()">
+        <i class="fas fa-plus"></i>
+        New Task
+      </button>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card punched-hours">
+          <div class="stat-header">
+            <span class="stat-label">LAST PUNCHED TIME</span>
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
           </div>
+          <div class="stat-value">{{ punchedHours }}</div>
         </div>
-        <div class="stat-value">
-          <span class="hours">07</span>
-          <span class="unit">h</span>
-          <span class="minutes">45</span>
-          <span class="unit">m</span>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-header">
-          <div class="stat-icon green">
-            <i class="fas fa-check-circle"></i>
+
+        <div class="stat-card running-time">
+          <div class="stat-header">
+            <span class="stat-label">TOTAL DAY LOGGED</span>
+            <div class="stat-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
           </div>
-          <span class="stat-label right">Task Logged</span>
-        </div>
-        <div class="stat-value right">
-          <span class="hours">06</span>
-          <span class="unit">h</span>
-          <span class="minutes">20</span>
-          <span class="unit">m</span>
+          <div class="stat-value">{{ runningTime }}</div>
+          <div class="stat-sublabel">RUNNING TIME</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Content Grid -->
-  <div class="content-grid">
-    <!-- Favorites Section -->
-    <div class="favorites-panel">
-      <div class="panel-header">
-        <div class="header-title">
-          <div class="star-icon">
-            <i class="fas fa-star"></i>
-          </div>
-          <h3>Favorites</h3>
-        </div>
-        <button class="more-btn">
-          <i class="fas fa-ellipsis-h"></i>
+  <!-- Task Tabs and Table -->
+  <div class="task-section">
+    <div class="task-tabs">
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="activeTab === 'MY TASKS'" (click)="setActiveTab('MY TASKS')">
+          MY TASKS ({{ myTasksCount }})
         </button>
-      </div>
-      
-      <div class="favorite-items">
-        <div class="favorite-item">
-          <div class="favorite-icon orange">
-            <i class="fas fa-file-alt"></i>
-          </div>
-          <div class="favorite-content">
-            <h4>Weekly Status</h4>
-            <div class="favorite-meta">
-              <span class="priority-dot red"></span>
-              <p>Due Fri • HOD</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="favorite-item">
-          <div class="favorite-icon purple">
-            <i class="fas fa-envelope"></i>
-          </div>
-          <div class="favorite-content">
-            <h4>Email Triage</h4>
-            <div class="favorite-meta">
-              <span class="priority-dot green"></span>
-              <p>Daily • Self</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="favorite-item">
-          <div class="favorite-icon blue">
-            <i class="fas fa-bug"></i>
-          </div>
-          <div class="favorite-content">
-            <h4>Bug Fix: Login</h4>
-            <div class="favorite-meta">
-              <span class="priority-dot red"></span>
-              <p>Urgent • Peer</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <button class="view-all-btn">View All Favorites</button>
-    </div>
-
-    <!-- Task Board Section -->
-    <div class="task-board-panel">
-      <div class="task-board-header">
-        <div class="board-title">
-          <h2>Task Board</h2>
-          <span class="total-count">{{ totalTasks }} Total</span>
-        </div>
-        
-        <div class="board-filters">
-          <button class="filter-btn">
-            <i class="fas fa-filter"></i>
-          </button>
-          <button class="sort-btn">
-            <i class="fas fa-sort"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="task-tabs">
-        <button 
-          *ngFor="let tab of tabs" 
-          class="tab-btn"
-          [class.active]="activeTab === tab"
-          (click)="setActiveTab(tab)">
-          {{ tab }}
+        <button class="tab-btn" [class.active]="activeTab === 'ASSIGNED TO OTHERS'"
+          (click)="setActiveTab('ASSIGNED TO OTHERS')">
+          ASSIGNED TO OTHERS ({{ assignedToOthersCount }})
         </button>
       </div>
 
-      <div class="task-columns">
-        <!-- Not Started Column -->
-        <div class="task-column">
-          <div class="column-header">
-            <span class="column-title">Not Started</span>
-            <span class="column-count">{{ notStartedCount }}</span>
-          </div>
-          
-          <div class="task-list">
-            <div class="task-card" *ngFor="let task of getTasksByStatus('NOT STARTED')">
-              <div class="task-priority" [class]="getPriorityClass(task.priority)"></div>
-              <div class="task-category-badge">{{ task.category }}</div>
-              <h4 class="task-title">{{ task.title }}</h4>
-              <div class="task-footer">
-                <img [src]="task.avatar" [alt]="task.assignedTo" class="assignee-avatar">
-                <div class="task-date">
-                  <i class="fas fa-calendar-alt"></i>
-                  <span>{{ task.dueDate }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- In Progress Column -->
-        <div class="task-column">
-          <div class="column-header">
-            <span class="column-title progress">In Progress</span>
-            <span class="column-count progress">{{ inProgressCount }}</span>
-          </div>
-          
-          <div class="task-list">
-            <div class="task-card" [class.running]="task.id === 2" *ngFor="let task of getTasksByStatus('IN PROGRESS')">
-              <div class="task-header">
-                <span class="task-category-badge" [class.active]="task.id === 2">{{ task.category }}</span>
-                <div class="active-timer" *ngIf="task.id === 2">
-                  <i class="fas fa-clock"></i>
-                  <span>01:24</span>
-                </div>
-              </div>
-              <h4 class="task-title">{{ task.title }}</h4>
-              <div class="task-footer">
-                <img [src]="task.avatar" [alt]="task.assignedTo" class="assignee-avatar">
-                <button class="pause-task-btn" *ngIf="task.id === 2">
-                  <i class="fas fa-pause"></i>
-                </button>
-                <span class="paused-status" *ngIf="task.id !== 2">Paused</span>
-              </div>
-            </div>
-          </div>
+      <div class="tab-actions">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Filter tasks" [(ngModel)]="searchTerm">
         </div>
       </div>
     </div>
 
-    <!-- Right Panel -->
-    <div class="right-panel">
-      <!-- Create New Task Card -->
-      <div class="create-task-card">
-        <div class="create-background-icon">
-          <i class="fas fa-plus"></i>
-        </div>
-        <div class="create-header">
-          <div class="create-icon">
-            <i class="fas fa-plus"></i>
-          </div>
-          <div class="quick-action-badge">
-            <span>QUICK ACTION</span>
-          </div>
-        </div>
-        <div class="create-content">
-          <h3>Create New Task</h3>
-          <p>Organize your schedule & assign projects.</p>
-          <button class="start-now-btn" (click)="startNow()">
-            <span>Start Now</span>
-            <i class="fas fa-arrow-right"></i>
-          </button>
-        </div>
+    <!-- Task Table -->
+    <div class="task-table">
+      <div class="table-header">
+        <div class="header-cell category">TASK CATEGORY</div>
+        <div class="header-cell title">TASK TITLE</div>
+        <div class="header-cell start-date">START DATE</div>
+        <div class="header-cell assignee">ASSIGNEE</div>
+        <div class="header-cell logged">LOGGED HOURS</div>
+        <div class="header-cell total">TOTAL HOURS</div>
+        <div class="header-cell progress">PROGRESS</div>
+        <div class="header-cell status">STATUS</div>
+        <div class="header-cell action">ACTION</div>
       </div>
 
-      <!-- Calendar Widget -->
-      <div class="calendar-widget">
-        <div class="calendar-header">
-          <h4>October 2023</h4>
-          <button class="calendar-nav">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-        <div class="calendar-grid">
-          <div class="calendar-days">
-            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+      <div class="table-body">
+        @for (task of getFilteredTasks(); track task.id) {
+        <div class="table-row" (click)="openTaskDetailsModal(task)">
+          <div class="cell category">
+            <span class="category-badge" [class]="getCategoryClass(task.category)">
+              {{ task.category }}
+            </span>
           </div>
-          <div class="calendar-dates">
-            <span class="date prev">16</span>
-            <span class="date prev">17</span>
-            <span class="date prev">18</span>
-            <span class="date prev">19</span>
-            <span class="date">20</span>
-            <span class="date">21</span>
-            <span class="date">22</span>
-            <span class="date has-event">23</span>
-            <span class="date current">24</span>
-            <span class="date">25</span>
-            <span class="date">26</span>
-            <span class="date">27</span>
-            <span class="date">28</span>
-            <span class="date">29</span>
+          <div class="cell title">
+            <div class="task-title-cell">
+              <h4>{{ task.title }}</h4>
+              <p>{{ task.description }}</p>
+            </div>
+          </div>
+          <div class="cell start-date">{{ task.startDate | date:'MMM dd, yyyy' }}</div>
+          <div class="cell assignee">
+            <div class="assignee-info">
+              <div class="assignee-avatar">{{ task.assignee.charAt(0) }}</div>
+              <span>{{ task.assignee }}</span>
+            </div>
+          </div>
+          <div class="cell logged">{{ task.loggedHours }}</div>
+          <div class="cell total">{{ task.totalHours }}</div>
+          <div class="cell progress">
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="task.progress"></div>
+              </div>
+              <span class="progress-text">{{ task.progress }}%</span>
+            </div>
+          </div>
+          <div class="cell status">
+            <span class="status-badge" [class]="getStatusClass(task.status)">
+              {{ task.status }}
+            </span>
+          </div>
+          <div class="cell action" (click)="$event.stopPropagation()">
+            <div class="action-buttons">
+              @if (task.status !== 'IN PROGRESS') {
+              <button class="action-btn play" (click)="startTask(task.id)" title="Start/Resume Task">
+                <i class="fas fa-play"></i>
+              </button>
+              } @else {
+              <button class="action-btn pause" (click)="pauseTask(task.id)" title="Pause Task">
+                <i class="fas fa-pause"></i>
+              </button>
+              }
+              <button class="action-btn stop" (click)="stopTask(task.id)" title="Stop Task">
+                <i class="fas fa-stop"></i>
+              </button>
+            </div>
           </div>
         </div>
+        }
       </div>
+    </div>
 
-      <!-- Missing Log Entry Alert -->
-      <div class="alert-card">
-        <div class="alert-icon">
-          <span>!</span>
-        </div>
-        <div class="alert-content">
-          <h4>Missing Log Entry</h4>
-          <p>You have 45 minutes of unallocated time from yesterday (Oct 23).</p>
-          <button class="fix-now-btn">Fix log now</button>
-        </div>
+    <!-- Pagination -->
+    <div class="pagination">
+      <span class="pagination-info">Showing {{ currentPageTasks }} of {{ totalTasks }} active tasks</span>
+      <div class="pagination-controls">
+        <button class="pagination-btn" [disabled]="currentPage === 1">PREVIOUS</button>
+        <button class="pagination-btn active">{{ currentPage }}</button>
+        <button class="pagination-btn">{{ currentPage + 1 }}</button>
+        <button class="pagination-btn" [disabled]="currentPage >= totalPages">NEXT</button>
       </div>
     </div>
   </div>
@@ -332,13 +274,8 @@
           <label for="task-name" class="form-label">
             Task Name <span class="required">*</span>
           </label>
-          <input 
-            type="text" 
-            id="task-name" 
-            class="form-input" 
-            [(ngModel)]="newTask.name"
-            placeholder="e.g. Redesign Homepage Hero Section"
-            required>
+          <input type="text" id="task-name" class="form-input" [(ngModel)]="newTask.name"
+            placeholder="e.g. Redesign Homepage Hero Section" required>
         </div>
 
         <!-- Assignee -->
@@ -347,11 +284,7 @@
             Assignee <span class="required">*</span>
           </label>
           <div class="select-wrapper">
-            <select 
-              id="assignee" 
-              class="form-select" 
-              [(ngModel)]="newTask.assignee"
-              required>
+            <select id="assignee" class="form-select" [(ngModel)]="newTask.assignee" required>
               <option value="" disabled>Select assignee</option>
               <option *ngFor="let assignee of assignees" [value]="assignee.id">
                 {{ assignee.name }} ({{ assignee.role }})
@@ -364,12 +297,8 @@
         <!-- Description -->
         <div class="form-group">
           <label for="description" class="form-label">Description</label>
-          <textarea 
-            id="description" 
-            class="form-textarea" 
-            [(ngModel)]="newTask.description"
-            placeholder="Add detailed instructions, goals, or notes..."
-            rows="3"></textarea>
+          <textarea id="description" class="form-textarea" [(ngModel)]="newTask.description"
+            placeholder="Add detailed instructions, goals, or notes..." rows="3"></textarea>
         </div>
 
         <!-- Task Type -->
@@ -377,12 +306,7 @@
           <label class="form-label">Task Type</label>
           <div class="task-type-grid">
             <label class="task-type-option" [class.selected]="newTask.type === 'single'">
-              <input 
-                type="radio" 
-                name="task-type" 
-                value="single" 
-                [(ngModel)]="newTask.type"
-                class="sr-only">
+              <input type="radio" name="task-type" value="single" [(ngModel)]="newTask.type" class="sr-only">
               <div class="task-type-icon">
                 <i class="fas fa-calendar-day"></i>
               </div>
@@ -392,14 +316,9 @@
               </div>
               <i class="fas fa-check-circle task-type-check"></i>
             </label>
-            
+
             <label class="task-type-option" [class.selected]="newTask.type === 'continuous'">
-              <input 
-                type="radio" 
-                name="task-type" 
-                value="continuous" 
-                [(ngModel)]="newTask.type"
-                class="sr-only">
+              <input type="radio" name="task-type" value="continuous" [(ngModel)]="newTask.type" class="sr-only">
               <div class="task-type-icon">
                 <i class="fas fa-calendar-alt"></i>
               </div>
@@ -418,26 +337,16 @@
             <label for="date" class="form-label-small">Date</label>
             <div class="input-with-icon">
               <i class="fas fa-calendar-alt input-icon"></i>
-              <input 
-                type="date" 
-                id="date" 
-                class="form-input-small" 
-                [(ngModel)]="newTask.date">
+              <input type="date" id="date" class="form-input-small" [(ngModel)]="newTask.date">
             </div>
           </div>
-          
+
           <div class="form-group">
             <label for="est-hours" class="form-label-small">Est. Hours</label>
             <div class="input-with-icon">
               <i class="fas fa-clock input-icon"></i>
-              <input 
-                type="number" 
-                id="est-hours" 
-                class="form-input-small" 
-                [(ngModel)]="newTask.estimatedHours"
-                placeholder="0.00"
-                step="0.25"
-                min="0">
+              <input type="number" id="est-hours" class="form-input-small" [(ngModel)]="newTask.estimatedHours"
+                placeholder="0.00" step="0.25" min="0">
             </div>
           </div>
         </div>
@@ -451,67 +360,41 @@
               Add New
             </button>
           </div>
-          
+
           <div class="subtasks-list">
             <!-- Existing Subtasks -->
             <div *ngFor="let subtask of newTask.subtasks; let i = index" class="subtask-item">
               <input type="checkbox" [(ngModel)]="subtask.completed" class="subtask-checkbox">
-              <input 
-                type="text" 
-                [(ngModel)]="subtask.name"
-                class="subtask-input"
-                placeholder="Subtask name">
-              <input 
-                type="number" 
-                [(ngModel)]="subtask.estimatedHours"
-                class="subtask-hours"
-                placeholder="0h"
-                step="0.25"
-                min="0">
-              
+              <input type="text" [(ngModel)]="subtask.name" class="subtask-input" placeholder="Subtask name">
+              <input type="number" [(ngModel)]="subtask.estimatedHours" class="subtask-hours" placeholder="0h"
+                step="0.25" min="0">
+
               <!-- Subtask Timer Controls -->
               <div class="subtask-timer-controls">
-                <button 
-                  type="button" 
-                  class="subtask-timer-btn start"
-                  [class.active]="subtask.isRunning"
-                  (click)="startSubtaskTimer(subtask.id)"
-                  [disabled]="subtask.isRunning">
+                <button type="button" class="subtask-timer-btn start" [class.active]="subtask.isRunning"
+                  (click)="startSubtaskTimer(subtask.id)" [disabled]="subtask.isRunning">
                   <i class="fas fa-play"></i>
                 </button>
-                <button 
-                  type="button" 
-                  class="subtask-timer-btn pause"
-                  (click)="pauseSubtaskTimer(subtask.id)"
+                <button type="button" class="subtask-timer-btn pause" (click)="pauseSubtaskTimer(subtask.id)"
                   [disabled]="!subtask.isRunning">
                   <i class="fas fa-pause"></i>
                 </button>
-                <button 
-                  type="button" 
-                  class="subtask-timer-btn stop"
-                  (click)="stopSubtaskTimer(subtask.id)"
+                <button type="button" class="subtask-timer-btn stop" (click)="stopSubtaskTimer(subtask.id)"
                   [disabled]="!subtask.isRunning && subtask.timeSpent === 0">
                   <i class="fas fa-stop"></i>
                 </button>
               </div>
-              
+
               <button type="button" class="remove-subtask-btn" (click)="removeSubtask(i)">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
-            
+
             <!-- Add New Subtask Row -->
             <div class="subtask-item subtask-add">
               <div class="subtask-checkbox-placeholder"></div>
-              <input 
-                type="text" 
-                class="subtask-input"
-                placeholder="Type subtask name..."
-                #newSubtaskInput>
-              <input 
-                type="text" 
-                class="subtask-hours"
-                placeholder="0h">
+              <input type="text" class="subtask-input" placeholder="Type subtask name..." #newSubtaskInput>
+              <input type="text" class="subtask-hours" placeholder="0h">
               <div class="subtask-timer-placeholder"></div>
               <div class="subtask-spacer"></div>
             </div>
@@ -527,12 +410,12 @@
             <h4 class="timer-title">Task Timer</h4>
             <div class="timer-status-dot"></div>
           </div>
-          
+
           <div class="timer-display-widget">
             <div class="timer-gradient-bg"></div>
             <span class="timer-text">00:00:00</span>
           </div>
-          
+
           <div class="timer-controls-widget">
             <button class="timer-start-btn" disabled>
               <i class="fas fa-play"></i>
@@ -545,7 +428,7 @@
               <i class="fas fa-stop"></i>
             </button>
           </div>
-          
+
           <p class="timer-note">
             <i class="fas fa-info-circle"></i>
             Create task to start tracking
@@ -555,7 +438,7 @@
         <!-- Time Summary -->
         <div class="time-summary-widget">
           <h4 class="summary-title">Time Summary</h4>
-          
+
           <div class="summary-items">
             <div class="summary-item">
               <div class="summary-icon estimated">
@@ -564,7 +447,7 @@
               <span class="summary-label">Estimated</span>
               <span class="summary-value">{{ newTask.estimatedHours || 0 }}.0h</span>
             </div>
-            
+
             <div class="summary-item">
               <div class="summary-icon logged">
                 <i class="fas fa-history"></i>
@@ -572,9 +455,9 @@
               <span class="summary-label">Logged</span>
               <span class="summary-value logged-value">0.0h</span>
             </div>
-            
+
             <div class="summary-divider"></div>
-            
+
             <div class="summary-item">
               <div class="summary-icon remaining">
                 <i class="fas fa-hourglass-half"></i>
@@ -583,7 +466,7 @@
               <span class="summary-value remaining-value">--</span>
             </div>
           </div>
-          
+
           <div class="budget-usage">
             <div class="budget-header">
               <span class="budget-label">Budget Usage</span>
@@ -602,19 +485,2117 @@
       <button type="button" class="save-draft-btn" (click)="saveAsDraft()">
         Save as Draft
       </button>
-      
+
       <div class="modal-actions">
         <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
           Cancel
         </button>
-        <button 
-          type="button" 
-          class="create-btn" 
-          (click)="createTask()"
-          [disabled]="!newTask.name || !newTask.assignee">
+        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || !newTask.assignee">
           Create Task
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Task Creation Modal -->
+@if (showCreateTaskModal) {
+<div class="modal-overlay" (click)="closeCreateTaskModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Create New Task</h3>
+        <p class="modal-subtitle">Fill in the details to schedule and track your work.</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeCreateTaskModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="modal-content">
+      <!-- Left Side - Form -->
+      <div class="modal-form">
+        <!-- Task Name -->
+        <div class="form-group">
+          <label for="task-name" class="form-label">
+            Task Name <span class="required">*</span>
+          </label>
+          <input type="text" id="task-name" class="form-input" [(ngModel)]="newTask.name"
+            placeholder="e.g. Redesign Homepage Hero Section" required>
+        </div>
+
+        <!-- Assignee -->
+        <div class="form-group">
+          <label for="assignee" class="form-label">
+            Assignee <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select id="assignee" class="form-select" [(ngModel)]="newTask.assignee" required>
+              <option value="" disabled>Select assignee</option>
+              @for (assignee of assignees; track assignee.id) {
+              <option [value]="assignee.id">
+                {{ assignee.name }} ({{ assignee.role }})
+              </option>
+              }
+            </select>
+            <i class="fas fa-chevron-down select-icon"></i>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description" class="form-label">Description</label>
+          <textarea id="description" class="form-textarea" [(ngModel)]="newTask.description"
+            placeholder="Add detailed instructions, goals, or notes..." rows="3"></textarea>
+        </div>
+
+        <!-- Task Type -->
+        <div class="form-group">
+          <label class="form-label">Task Type</label>
+          <div class="task-type-grid">
+            <label class="task-type-option" [class.selected]="newTask.type === 'single'">
+              <input type="radio" name="task-type" value="single" [(ngModel)]="newTask.type" class="sr-only">
+              <div class="task-type-icon">
+                <i class="fas fa-calendar-day"></i>
+              </div>
+              <div class="task-type-content">
+                <span class="task-type-title">Single Day</span>
+                <span class="task-type-desc">One-time effort</span>
+              </div>
+              <i class="fas fa-check-circle task-type-check"></i>
+            </label>
+
+            <label class="task-type-option" [class.selected]="newTask.type === 'continuous'">
+              <input type="radio" name="task-type" value="continuous" [(ngModel)]="newTask.type" class="sr-only">
+              <div class="task-type-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="task-type-content">
+                <span class="task-type-title">Continuous</span>
+                <span class="task-type-desc">Span multiple days</span>
+              </div>
+              <i class="fas fa-check-circle task-type-check"></i>
+            </label>
+          </div>
+        </div>
+
+        <!-- Date and Hours -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date" class="form-label-small">Date</label>
+            <div class="input-with-icon">
+              <i class="fas fa-calendar-alt input-icon"></i>
+              <input type="date" id="date" class="form-input-small" [(ngModel)]="newTask.date">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="est-hours" class="form-label-small">Est. Hours</label>
+            <div class="input-with-icon">
+              <i class="fas fa-clock input-icon"></i>
+              <input type="number" id="est-hours" class="form-input-small" [(ngModel)]="newTask.estimatedHours"
+                placeholder="0.00" step="0.25" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtasks -->
+        <div class="form-group">
+          <div class="subtasks-header">
+            <label class="form-label">Subtasks</label>
+            <button type="button" class="add-subtask-btn" (click)="addSubtask()">
+              <i class="fas fa-plus"></i>
+              Add New
+            </button>
+          </div>
+
+          <div class="subtasks-list">
+            <!-- Existing Subtasks -->
+            @for (subtask of newTask.subtasks; track subtask.id; let i = $index) {
+            <div class="subtask-item">
+              <input type="checkbox" [(ngModel)]="subtask.completed" class="subtask-checkbox">
+              <input type="text" [(ngModel)]="subtask.name" class="subtask-input" placeholder="Subtask name">
+              <input type="number" [(ngModel)]="subtask.estimatedHours" class="subtask-hours" placeholder="0h"
+                step="0.25" min="0">
+
+              <!-- Subtask Timer Controls -->
+              <div class="subtask-timer-controls">
+                <button type="button" class="subtask-timer-btn start" [class.active]="subtask.isRunning"
+                  (click)="startSubtaskTimer(subtask.id)" [disabled]="subtask.isRunning">
+                  <i class="fas fa-play"></i>
+                </button>
+                <button type="button" class="subtask-timer-btn pause" (click)="pauseSubtaskTimer(subtask.id)"
+                  [disabled]="!subtask.isRunning">
+                  <i class="fas fa-pause"></i>
+                </button>
+                <button type="button" class="subtask-timer-btn stop" (click)="stopSubtaskTimer(subtask.id)"
+                  [disabled]="!subtask.isRunning && subtask.timeSpent === 0">
+                  <i class="fas fa-stop"></i>
+                </button>
+              </div>
+
+              <button type="button" class="remove-subtask-btn" (click)="removeSubtask(i)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+            }
+
+            <!-- Add New Subtask Row -->
+            <div class="subtask-item subtask-add">
+              <div class="subtask-checkbox-placeholder"></div>
+              <input type="text" class="subtask-input" placeholder="Type subtask name..." #newSubtaskInput>
+              <input type="text" class="subtask-hours" placeholder="0h">
+              <div class="subtask-timer-placeholder"></div>
+              <div class="subtask-spacer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Timer & Summary -->
+      <div class="modal-sidebar">
+        <!-- Task Timer -->
+        <div class="timer-widget">
+          <div class="timer-header">
+            <h4 class="timer-title">Task Timer</h4>
+            <div class="timer-status-dot"></div>
+          </div>
+
+          <div class="timer-display-widget">
+            <div class="timer-gradient-bg"></div>
+            <span class="timer-text">00:00:00</span>
+          </div>
+
+          <div class="timer-controls-widget">
+            <button class="timer-start-btn" disabled>
+              <i class="fas fa-play"></i>
+              Start
+            </button>
+            <button class="timer-pause-btn" disabled>
+              <i class="fas fa-pause"></i>
+            </button>
+            <button class="timer-stop-btn" disabled>
+              <i class="fas fa-stop"></i>
+            </button>
+          </div>
+
+          <p class="timer-note">
+            <i class="fas fa-info-circle"></i>
+            Create task to start tracking
+          </p>
+        </div>
+
+        <!-- Time Summary -->
+        <div class="time-summary-widget">
+          <h4 class="summary-title">Time Summary</h4>
+
+          <div class="summary-items">
+            <div class="summary-item">
+              <div class="summary-icon estimated">
+                <i class="fas fa-clock"></i>
+              </div>
+              <span class="summary-label">Estimated</span>
+              <span class="summary-value">{{ newTask.estimatedHours || 0 }}.0h</span>
+            </div>
+
+            <div class="summary-item">
+              <div class="summary-icon logged">
+                <i class="fas fa-history"></i>
+              </div>
+              <span class="summary-label">Logged</span>
+              <span class="summary-value logged-value">0.0h</span>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-item">
+              <div class="summary-icon remaining">
+                <i class="fas fa-hourglass-half"></i>
+              </div>
+              <span class="summary-label">Remaining</span>
+              <span class="summary-value remaining-value">--</span>
+            </div>
+          </div>
+
+          <div class="budget-usage">
+            <div class="budget-header">
+              <span class="budget-label">Budget Usage</span>
+              <span class="budget-percentage">0%</span>
+            </div>
+            <div class="budget-bar">
+              <div class="budget-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="save-draft-btn" (click)="saveAsDraft()">
+        Save as Draft
+      </button>
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
+          Cancel
+        </button>
+        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || !newTask.assignee">
+          Create Task
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+
+<!-- Select Task Modal -->
+@if (showSelectTaskModal) {
+<div class="modal-overlay" (click)="closeSelectTaskModal()">
+  <div class="select-task-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="select-modal-header">
+      <div>
+        <h3 class="select-modal-title">Select Task</h3>
+        <p class="select-modal-subtitle">Manage team workflow and initiate time tracking.</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeSelectTaskModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Search Box -->
+    <div class="select-search-box">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" placeholder="Search tasks, departments, or assignees..." class="select-search-input">
+    </div>
+
+    <!-- Tabs -->
+    <div class="select-tabs">
+      <button class="select-tab-btn" [class.active]="selectTaskActiveTab === 'favorites'"
+        (click)="setSelectTaskTab('favorites')">
+        <i class="fas fa-star"></i>
+        PINNED FAVORITES
+      </button>
+      <button class="select-tab-btn" [class.active]="selectTaskActiveTab === 'all'" (click)="setSelectTaskTab('all')">
+        <i class="fas fa-th-large"></i>
+        ALL DEPARTMENT TASKS
+        <span class="tab-count">128</span>
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="select-tab-content">
+      <!-- Pinned Favorites Tab -->
+      @if (selectTaskActiveTab === 'favorites') {
+      <div class="task-list-container">
+        <div class="task-list">
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">UX Research: User Interview Synthesis</h4>
+              <p class="task-item-dept">DESIGN DEPARTMENT</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Main Dashboard Refactoring</h4>
+              <p class="task-item-dept">ENGINEERING</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Mobile App Performance Optimization</h4>
+              <p class="task-item-dept">MOBILE DEVELOPMENT</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">API Documentation Update</h4>
+              <p class="task-item-dept">DOCUMENTATION</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Database Migration Planning</h4>
+              <p class="task-item-dept">DATABASE TEAM</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Customer Feedback Analysis</h4>
+              <p class="task-item-dept">PRODUCT MANAGEMENT</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Security Audit Report</h4>
+              <p class="task-item-dept">SECURITY</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Marketing Campaign Design</h4>
+              <p class="task-item-dept">MARKETING</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Code Review: Payment Module</h4>
+              <p class="task-item-dept">ENGINEERING</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">User Testing Session Preparation</h4>
+              <p class="task-item-dept">UX RESEARCH</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- All Department Tasks Tab -->
+      @if (selectTaskActiveTab === 'all') {
+      <div class="task-list-container">
+        <div class="task-list">
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Product Roadmap Review Q1</h4>
+              <p class="task-item-dept">PRODUCT MANAGEMENT</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Infrastructure Security Audit</h4>
+              <p class="task-item-dept">DEVOPS</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Client Presentation Deck: Project Phoenix</h4>
+              <p class="task-item-dept">MARKETING</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Backend API Development Sprint</h4>
+              <p class="task-item-dept">BACKEND TEAM</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">UI Component Library Update</h4>
+              <p class="task-item-dept">FRONTEND TEAM</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Quarterly Performance Review</h4>
+              <p class="task-item-dept">HR DEPARTMENT</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Cloud Infrastructure Optimization</h4>
+              <p class="task-item-dept">DEVOPS</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Email Campaign Analytics Report</h4>
+              <p class="task-item-dept">MARKETING</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Accessibility Compliance Testing</h4>
+              <p class="task-item-dept">QA TEAM</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+
+          <div class="task-item">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">Budget Planning FY2025</h4>
+              <p class="task-item-dept">FINANCE</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+              <div class="task-info-item scheduled">
+                <i class="fas fa-calendar"></i>
+                <span>Scheduled Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn secondary">
+              <i class="fas fa-play"></i>
+              ADD & START
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+
+    <!-- <div class="select-modal-footer">
+        <div class="footer-info">
+          <i class="fas fa-info-circle"></i>
+          <span>Missing a specific item? <a href="#" class="create-custom-link">Create custom task</a></span>
+        </div>
+        <div class="footer-actions">
+          <button class="cancel-btn" (click)="closeSelectTaskModal()">Cancel</button>
+          <button class="manual-entry-btn">Manual Time Entry</button>
+        </div>
+      </div> -->
+
+
+  </div>
+</div>
+}
+
+<!-- Minimized Task Details Modal -->
+@if (false && showTaskDetailsModal && selectedTask) {
+<div class="modal-overlay-enhanced" (click)="closeTaskDetailsModal()">
+  <div class="task-modal-compact" (click)="$event.stopPropagation()">
+
+    <!-- Compact Header -->
+    <div class="modal-header-compact">
+      <div class="header-left-compact">
+        <button class="back-btn-compact">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="task-id-compact">TSK-204</div>
+
+        <div class="timer-compact">
+          <div class="logged-hours-compact">
+            <span class="logged-hours-label">Total Logged</span>
+            <span class="logged-hours-value">{{ selectedTask.loggedHours }}</span>
+          </div>
+          <div class="timer-controls-compact">
+            <button class="timer-btn-compact">
+              <i class="fas fa-play"></i>
+            </button>
+            <span class="timer-display-compact">00:00:00</span>
+            <button class="timer-btn-compact">
+              <i class="fas fa-stop"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-right-compact">
+        <button class="save-btn-compact">
+          <i class="fas fa-save"></i>
+          Save
+        </button>
+        <div class="status-progress-compact">
+          <select class="status-select-compact" [(ngModel)]="selectedTask.status">
+            <option value="IN PROGRESS">In Progress</option>
+            <option value="PENDING">Review Required</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="ON HOLD">On Hold</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact Content -->
+    <div class="modal-content-compact">
+      <!-- Main Content -->
+      <main class="main-content-compact">
+
+        <!-- Task Title -->
+        <div class="task-title-section-compact">
+          <div class="title-row-compact">
+            <div class="title-left-compact">
+              <div class="category-compact">
+                <select class="category-select-compact" [(ngModel)]="selectedTask.category">
+                  <option value="SECURITY">Security Enhancement</option>
+                  <option value="DEVELOPMENT">Feature Development</option>
+                  <option value="QUALITY ASSURANCE">Bug Fix</option>
+                </select>
+              </div>
+              <input type="text" class="task-title-compact" [(ngModel)]="selectedTask.title"
+                placeholder="Enter task title...">
+            </div>
+
+            <!-- Progress Section - Enhanced design -->
+            <div class="progress-section-compact">
+              <div class="progress-header-compact">
+                <span class="progress-label-compact">Progress</span>
+                <span class="progress-value-compact">{{ selectedTask.progress }}%</span>
+              </div>
+              <div class="progress-slider-container">
+                <input type="range" min="0" max="100" [(ngModel)]="selectedTask.progress"
+                  class="progress-slider-compact" (input)="updateProgress($event)">
+                <div class="progress-track-bg">
+                  <div class="progress-fill-bg" [style.width.%]="selectedTask.progress"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="description-section-compact">
+          <label class="section-label-compact">Description</label>
+          <textarea class="description-textarea-compact" [(ngModel)]="selectedTask.description"
+            placeholder="Task description...">{{ selectedTask.description || 'Implement OAuth2 flow for the enterprise portal with OKTA integration.' }}</textarea>
+          <div class="description-footer-compact">
+            <button class="custom-fields-btn-compact" (click)="openCustomFieldsModal()">
+              <i class="fas fa-sliders-h"></i>
+              Manage Custom Fields
+            </button>
+          </div>
+        </div>
+
+        <!-- Task Details -->
+        <div class="details-section-compact">
+          <div class="detail-row-compact">
+            <div class="detail-item-compact">
+              <label>Assigned To</label>
+              <div class="assignee-compact">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXJ4hs07MaZCYd5LPTHGYP_7thFY_3FpYEqK4M6m3jbvjtVu1kYUsVWAR95AqlP3D6jZF1Eo4wkUOTR2eEEpljU9dtohh4m0MrMT05TGIN51WgCKGs9SuqAquZcBm58t8J77v9mOKG0i3bq9zwrqmCfHRVw_2RWh1aqX-h0zK7RWTTu3dZf6r0jejNRWFclWHbXCA7wXzfZDVxzWk0aLu5uneIDtUxBP5YoGTIYq2kzhAeYRyShmdy-DsYjJkb0eZoaB3iYZHEzls"
+                  alt="Marcus" class="assignee-avatar-compact">
+                <span>{{ selectedTask.assignee }}</span>
+              </div>
+            </div>
+            <div class="detail-item-compact">
+              <label>Project</label>
+              <select class="detail-select-compact" [(ngModel)]="selectedTaskProject">
+                <option value="identity-management">Identity Management v3</option>
+                <option value="cloud-infrastructure">Cloud Infrastructure</option>
+              </select>
+            </div>
+          </div>
+          <div class="detail-row-compact">
+            <div class="detail-item-compact">
+              <label>Start Date</label>
+              <input type="date" class="detail-input-compact" [(ngModel)]="selectedTask.startDate">
+            </div>
+            <div class="detail-item-compact">
+              <label>Target Date</label>
+              <input type="date" class="detail-input-compact" [(ngModel)]="selectedTaskEndDate">
+            </div>
+          </div>
+
+          <!-- Additional Fields Section -->
+          <div class="additional-fields-compact">
+            <div class="field-compact">
+              <label>Department</label>
+              <select [(ngModel)]="selectedTaskDepartment">
+                <option value="engineering">Engineering</option>
+                <option value="design">Design</option>
+                <option value="marketing">Marketing</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Custom Fields Section -->
+          <div class="custom-fields-section-compact" *ngIf="selectedCustomFields.length > 0">
+            <h4 class="custom-fields-title">Custom Fields</h4>
+            <div class="custom-fields-grid">
+              <div class="custom-field-item" *ngFor="let field of selectedCustomFields">
+                <label>{{ field.label }}</label>
+
+                <!-- Text Input -->
+                <input *ngIf="field.type === 'text'" type="text" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()">
+
+                <!-- Number Input -->
+                <input *ngIf="field.type === 'number'" type="number" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()">
+
+                <!-- Dropdown -->
+                <select *ngIf="field.type === 'dropdown'" [(ngModel)]="field.value">
+                  <option value="">Select {{ field.label }}</option>
+                  <option *ngFor="let option of field.options" [value]="option">{{ option }}</option>
+                </select>
+
+                <!-- Textarea -->
+                <textarea *ngIf="field.type === 'textarea'" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="3"></textarea>
+
+                <!-- Remove button -->
+                <button class="remove-custom-field-btn" (click)="removeCustomField(field.key)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtasks & Files Section -->
+        <div class="subtasks-section-compact">
+          <div class="subtasks-tabs-header">
+            <div class="subtasks-tabs">
+              <button class="subtask-tab-btn" [class.active]="activeSubtaskTab === 'subtasks'"
+                (click)="setActiveSubtaskTab('subtasks')">
+                <i class="fas fa-tasks"></i>
+                Subtasks (2)
+              </button>
+              <button class="subtask-tab-btn" [class.active]="activeSubtaskTab === 'files'"
+                (click)="setActiveSubtaskTab('files')">
+                <i class="fas fa-file-upload"></i>
+                Files ({{ uploadedFiles.length }})
+              </button>
+            </div>
+            <button class="add-item-btn-compact" *ngIf="activeSubtaskTab === 'subtasks'" (click)="addSubtask()">
+              <i class="fas fa-plus"></i>
+              Add Subtask
+            </button>
+            <button class="add-item-btn-compact" *ngIf="activeSubtaskTab === 'files'" (click)="triggerFileUpload()">
+              <i class="fas fa-upload"></i>
+              Upload File
+            </button>
+          </div>
+
+          <!-- Subtasks Tab Content -->
+          <div class="tab-content" *ngIf="activeSubtaskTab === 'subtasks'">
+            <div class="subtasks-table">
+              <div class="subtasks-table-header">
+                <div class="header-col task-name">Task Name</div>
+                <div class="header-col controls">Controls</div>
+                <div class="header-col hours">Hours</div>
+              </div>
+              <div class="subtasks-table-body">
+                <div class="subtask-row" *ngFor="let subtask of detailedSubtasks" [class.completed]="subtask.completed"
+                  [class.active]="subtask.isRunning">
+
+                  <div class="subtask-col task-name">
+                    <input type="checkbox" [checked]="subtask.completed" (change)="toggleSubtaskCompletion(subtask.id)"
+                      class="subtask-checkbox">
+                    <span class="task-text">{{ subtask.name }}</span>
+                  </div>
+
+                  <div class="subtask-col controls">
+                    <button class="control-btn start" (click)="startSubtaskDetailedTimer(subtask.id)"
+                      [disabled]="subtask.completed || subtask.isRunning" title="Start">
+                      <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn pause" (click)="pauseSubtaskDetailedTimer(subtask.id)"
+                      [disabled]="!subtask.isRunning" title="Pause">
+                      <i class="fas fa-pause"></i>
+                    </button>
+                    <button class="control-btn stop" (click)="stopSubtaskDetailedTimer(subtask.id)"
+                      [disabled]="!subtask.isRunning" title="Stop">
+                      <i class="fas fa-stop"></i>
+                    </button>
+                  </div>
+
+                  <div class="subtask-col hours">
+                    <span class="hours-logged">{{ formatHours(subtask.totalLoggedTime) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Files Tab Content -->
+          <div class="tab-content" *ngIf="activeSubtaskTab === 'files'">
+            <div class="files-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
+              (drop)="onFileDrop($event)">
+              <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+              </div>
+              <p class="upload-text">Click to upload or drag and drop files here</p>
+              <p class="upload-subtext">Supports: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB)</p>
+            </div>
+
+            <div class="uploaded-files-list" *ngIf="uploadedFiles.length > 0">
+              <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
+                <div class="file-icon">
+                  <i class="fas" [class]="getFileIcon(file.type)"></i>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">{{ file.name }}</div>
+                  <div class="file-meta">
+                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                    <span class="file-date">{{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                  </div>
+                </div>
+                <div class="file-actions">
+                  <button class="file-action-btn download" (click)="downloadFile(file)">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button class="file-action-btn delete" (click)="removeFile(i)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="no-files" *ngIf="uploadedFiles.length === 0">
+              <i class="fas fa-folder-open"></i>
+              <p>No files uploaded yet</p>
+            </div>
+          </div>
+
+          <!-- Hidden file input -->
+          <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+            (change)="onFileSelected($event)" style="display: none;">
+        </div>
+      </main>
+
+      <!-- Compact Sidebar -->
+      <aside class="sidebar-compact">
+        <div class="sidebar-header-compact">
+          <div class="sidebar-tabs-compact">
+            <button class="sidebar-tab-compact" [class.active]="activeSidebarTab === 'comments'"
+              (click)="setActiveSidebarTab('comments')">
+              Comments
+            </button>
+            <button class="sidebar-tab-compact" [class.active]="activeSidebarTab === 'history'"
+              (click)="setActiveSidebarTab('history')">
+              History
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-content-compact">
+          <!-- Comments Tab -->
+          <div *ngIf="activeSidebarTab === 'comments'">
+            <div class="comment-item-compact">
+              <div class="comment-avatar-compact">AC</div>
+              <div class="comment-content-compact">
+                <div class="comment-header-compact">
+                  <span class="comment-author-compact">Alex Chen</span>
+                  <span class="comment-time-compact">2h ago</span>
+                </div>
+                <p class="comment-text-compact">Working on the token introspection endpoints now. Should be ready for
+                  review by EOD.</p>
+              </div>
+            </div>
+
+            <div class="comment-item-compact">
+              <div class="comment-avatar-compact brand">MT</div>
+              <div class="comment-content-compact">
+                <div class="comment-header-compact">
+                  <span class="comment-author-compact">Marcus Thorne</span>
+                  <span class="comment-time-compact">45m ago</span>
+                </div>
+                <p class="comment-text-compact">Great progress. Ensure test coverage includes the Azure AD adapter.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity History Tab -->
+          <div *ngIf="activeSidebarTab === 'history'" class="activity-history">
+            <div class="activity-timeline">
+              <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
+                <div class="activity-icon-enhanced" [style.background-color]="getActivityColor(activity.type)">
+                  <i class="fas" [class]="getActivityIcon(activity.type)"></i>
+                </div>
+                <div class="activity-content-enhanced">
+                  <div class="activity-header-enhanced">
+                    <span class="activity-description">{{ activity.description }}</span>
+                    <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
+                  </div>
+                  <div class="activity-meta-enhanced">
+                    <span class="activity-user">{{ activity.user }}</span>
+                    <span class="activity-duration" *ngIf="activity.duration">{{ activity.duration }}</span>
+                  </div>
+                  <div class="activity-details" *ngIf="activity.details">
+                    <div *ngIf="activity.details.fileName" class="detail-item">
+                      <i class="fas fa-file"></i>
+                      <span>{{ activity.details.fileName }} ({{ activity.details.fileSize }})</span>
+                    </div>
+                    <div *ngIf="activity.details.subtaskName" class="detail-item">
+                      <i class="fas fa-tasks"></i>
+                      <span>{{ activity.details.subtaskName }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment-input-compact" *ngIf="activeSidebarTab === 'comments'">
+          <textarea placeholder="Type a message..."></textarea>
+          <button class="send-btn-compact">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Close Button -->
+    <button class="modal-close-compact" (click)="closeTaskDetailsModal()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+}
+
+<!-- Task Details Modal - Matches the Design from Image -->
+@if (false && showTaskDetailsModal && selectedTask) {
+<div class="modal-overlay" (click)="closeTaskDetailsModal()">
+  <div class="task-details-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="task-details-header">
+      <div class="header-left">
+        <button class="back-btn" (click)="closeTaskDetailsModal()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="task-id-badge">TSK-1024</div>
+        <div class="status-dropdown">
+          <button class="status-btn in-progress">
+            <span class="status-dot"></span>
+            IN PROGRESS
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="timer-section">
+          <div class="timer-label">RUNNING TIMER</div>
+          <div class="timer-display">00:42:18</div>
+        </div>
+        
+        <div class="total-hours">
+          <div class="hours-label">TOTAL HOURS</div>
+          <div class="hours-display">124.5h</div>
+        </div>
+        
+        <div class="header-actions">
+          <button class="action-icon-btn">
+            <i class="fas fa-pause"></i>
+          </button>
+          <button class="action-icon-btn stop">
+            <i class="fas fa-stop"></i>
+          </button>
+          <button class="more-btn">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+        </div>
+        
+        <button class="close-btn" (click)="closeTaskDetailsModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="task-details-content">
+      <!-- Left Panel - Main Content -->
+      <div class="task-main-panel">
+        <div class="category-tag feature-development">FEATURE DEVELOPMENT</div>
+        <h1 class="task-title-main">Initial Design Sprint: UI Component Library</h1>
+        
+        <div class="task-description-section">
+          <h3 class="section-title">TASK DESCRIPTION</h3>
+          <p class="task-description">
+            The primary goal of this phase is to establish a cohesive UI component library for the new marketing 
+            dashboard. This includes defining color tokens, typography scales, and building core components like 
+            buttons, inputs, and navigation patterns. All assets should be documented in Figma and exported for the 
+            frontend team.
+          </p>
+        </div>
+
+        <!-- Project Metadata - 3 Column Grid -->
+        <div class="project-metadata-section">
+          <h3 class="section-title">PROJECT METADATA</h3>
+          <div class="metadata-grid-3col">
+            <div class="metadata-field">
+              <div class="metadata-icon">
+                <i class="fas fa-briefcase"></i>
+              </div>
+              <div class="metadata-content">
+                <span class="metadata-label">DEPARTMENT</span>
+                <div class="metadata-dropdown">
+                  <select class="metadata-select">
+                    <option>Product & Design</option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="metadata-field">
+              <div class="metadata-icon">
+                <i class="fas fa-folder"></i>
+              </div>
+              <div class="metadata-content">
+                <span class="metadata-label">PROJECT</span>
+                <div class="metadata-dropdown">
+                  <select class="metadata-select">
+                    <option>Marketing Dashboard</option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="metadata-field">
+              <div class="metadata-icon">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="metadata-content">
+                <span class="metadata-label">ASSIGNED TO</span>
+                <div class="metadata-dropdown">
+                  <select class="metadata-select">
+                    <option>Jane Doe</option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Fields - 2 Column + Add Field Button -->
+          <div class="date-fields-grid">
+            <div class="date-field">
+              <div class="date-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="date-content">
+                <span class="date-label">START DATE</span>
+                <input type="date" class="date-input" value="2023-10-01">
+                <i class="fas fa-calendar-alt date-picker-icon"></i>
+              </div>
+            </div>
+
+            <div class="date-field">
+              <div class="date-icon">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="date-content">
+                <span class="date-label">TARGET DATE</span>
+                <input type="date" class="date-input" value="2023-10-24">
+                <i class="fas fa-calendar-alt date-picker-icon"></i>
+              </div>
+            </div>
+
+            <div class="add-field-container">
+              <button class="add-field-btn">
+                <i class="fas fa-plus"></i>
+                ADD FIELD
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtasks Section -->
+        <div class="subtasks-section">
+          <div class="section-header-with-tabs">
+            <div class="section-tabs">
+              <button class="section-tab active">
+                <span>SUBTASKS</span>
+                <span class="tab-count">5</span>
+              </button>
+              <button class="section-tab">
+                <span>ATTACHMENTS</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="subtasks-list-detailed">
+            <div class="subtask-item-detailed completed">
+              <div class="subtask-checkbox-container">
+                <input type="checkbox" class="subtask-checkbox-detailed" checked>
+                <i class="fas fa-check subtask-check-icon"></i>
+              </div>
+              <div class="subtask-content-detailed">
+                <span class="subtask-name-detailed">Define global color palette tokens</span>
+                <div class="subtask-time-detailed">2.5h</div>
+              </div>
+            </div>
+
+            <div class="subtask-item-detailed active">
+              <div class="subtask-checkbox-container">
+                <input type="checkbox" class="subtask-checkbox-detailed">
+              </div>
+              <div class="subtask-content-detailed">
+                <span class="subtask-name-detailed">Build responsive navigation sidebar component</span>
+                <div class="subtask-time-detailed">1.2h</div>
+              </div>
+              <div class="subtask-actions-detailed">
+                <button class="subtask-action-btn pause">
+                  <i class="fas fa-pause"></i>
+                </button>
+                <button class="subtask-action-btn more">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="add-subtask-section">
+            <button class="add-subtask-btn-detailed">
+              <i class="fas fa-plus"></i>
+              Add Subtask
+            </button>
+          </div>
+        </div>
+
+        <!-- Save Changes Button -->
+        <div class="save-section">
+          <button class="save-changes-btn">
+            <i class="fas fa-check"></i>
+            Save Changes
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Panel - Progress Circle + Comments/Activity -->
+      <div class="task-right-panel">
+        <!-- Progress Circle at Top -->
+        <div class="progress-circle-top">
+          <div class="progress-circle-container">
+            <svg class="progress-circle-svg" viewBox="0 0 120 120">
+              <circle class="progress-circle-bg" cx="60" cy="60" r="54"></circle>
+              <circle class="progress-circle-fill" cx="60" cy="60" r="54" 
+                      style="stroke-dasharray: 339.292; stroke-dashoffset: 118.752;"></circle>
+            </svg>
+            <div class="progress-percentage">75%</div>
+            <div class="progress-label">DONE</div>
+          </div>
+        </div>
+
+        
+        <div class="right-panel-tabs">
+          <button class="right-tab" [class.active]="activeSidebarTab === 'comments'" 
+                  (click)="setActiveSidebarTab('comments')">
+            COMMENTS
+          </button>
+          <button class="right-tab" [class.active]="activeSidebarTab === 'history'" 
+                  (click)="setActiveSidebarTab('history')">
+            ACTIVITY LOG
+          </button>
+        </div>
+
+        <div class="comments-section" *ngIf="activeSidebarTab === 'comments'">
+          <div class="comment-item">
+            <div class="comment-avatar">AC</div>
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-author">Alex Chen</span>
+                <span class="comment-time">2h ago</span>
+              </div>
+              <p class="comment-text">
+                Working on the token introspection endpoints now. Should be ready for 
+                review by EOD.
+              </p>
+            </div>
+          </div>
+
+          <div class="comment-item">
+            <div class="comment-avatar">MT</div>
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-author">Marcus Thorne</span>
+                <span class="comment-time">42m ago</span>
+              </div>
+              <p class="comment-text">
+                Great progress. Ensure test coverage includes the Azure AD adapter.
+              </p>
+            </div>
+          </div>
+
+          <div class="add-comment-section">
+            <textarea class="comment-input" placeholder="Add a comment..."></textarea>
+            <button class="send-comment-btn">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Activity Log Section -->
+        <div class="activity-log-section" *ngIf="activeSidebarTab === 'history'">
+          <div class="activity-item" *ngFor="let activity of activityLogs">
+            <div class="activity-icon" [style.background-color]="getActivityColor(activity.type)">
+              <i class="fas" [class]="getActivityIcon(activity.type)"></i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-description">{{ activity.description }}</div>
+              <div class="activity-meta">
+                <span class="activity-user">{{ activity.user }}</span>
+                <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
+                <span class="activity-duration" *ngIf="activity.duration">{{ activity.duration }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Task Details Modal - Exact Match to Provided HTML -->
+@if (showTaskDetailsModal && selectedTask) {
+<div class="modal-overlay" (click)="closeTaskDetailsModal()">
+  <div class="task-modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <header class="modal-task-header">
+      <div class="modal-header-left">
+        <button class="modal-back-button" (click)="closeTaskDetailsModal()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="modal-task-id-badge">TSK-1024</div>
+        <div class="status-dropdown-container">
+          <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
+            <option value="in-progress">IN PROGRESS</option>
+            <option value="pending">PENDING</option>
+            <option value="completed">COMPLETED</option>
+            <option value="on-hold">ON HOLD</option>
+            <option value="not-started">NOT STARTED</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="modal-header-right">
+        <div class="modal-timer-section">
+          <span class="timer-label">Running Timer</span>
+          <div class="timer-controls">
+            <div class="timer-display">
+              <i class="fas fa-clock"></i>
+              <span class="timer-text">00:42:18</span>
+            </div>
+            <div class="timer-buttons">
+              <button class="timer-btn pause-btn">
+                <i class="fas fa-pause"></i>
+              </button>
+              <button class="timer-btn stop-btn">
+                <i class="fas fa-stop"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="total-hours-section">
+          <span class="hours-label">Total Hours</span>
+          <div class="hours-display">
+            <i class="fas fa-clock"></i>
+            <span class="hours-text">124.5h</span>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <button class="action-btn">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+          <button class="action-btn" (click)="closeTaskDetailsModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="task-content">
+      <!-- Left Panel -->
+      <div class="task-main-panel">
+        <!-- Title Section with Progress Circle -->
+        <div class="title-section">
+          <div class="title-content">
+            <div class="task-meta">
+              <span class="modal-category-badge">Feature Development</span>
+            </div>
+            <input type="text" class="modal-task-title editable-title" 
+                   [(ngModel)]="editableTaskTitle" 
+                   placeholder="Enter task title...">
+          </div>
+          
+          <!-- Advanced 3D Circular Progress Indicator -->
+          <div class="progress-circle-3d" 
+               [class.dragging]="isDraggingProgress"
+               [class.animating]="isProgressAnimating"
+               (mousedown)="startProgressDrag($event)"
+               (mousemove)="onProgressDrag($event)"
+               (mouseup)="endProgressDrag()"
+               (mouseleave)="endProgressDrag()"
+               title="Click and drag to adjust progress">
+            
+            <!-- 3D Circle Container -->
+            <div class="circle-3d-container">
+              <!-- Background Rings -->
+              <div class="bg-ring ring-1"></div>
+              <div class="bg-ring ring-2"></div>
+              <div class="bg-ring ring-3"></div>
+              
+              <!-- Main Progress Circle -->
+              <div class="main-circle">
+                <!-- Animated Background -->
+                <div class="circle-bg-animated"></div>
+                
+                <!-- Progress Fill -->
+                <div class="progress-fill-3d" [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg)'">
+                  <div class="fill-segment"></div>
+                </div>
+                
+                <!-- Progress Track -->
+                <svg class="progress-svg-3d" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="progressGradient3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#06d6a0;stop-opacity:1" />
+                      <stop offset="30%" style="stop-color:#10b981;stop-opacity:1" />
+                      <stop offset="70%" style="stop-color:#34d399;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#6ee7b7;stop-opacity:1" />
+                    </linearGradient>
+                    <filter id="glow3D">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge> 
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  
+                  <!-- Background Circle -->
+                  <circle class="progress-bg-3d" cx="50" cy="50" r="40" 
+                          fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+                  
+                  <!-- Progress Circle -->
+                  <circle class="progress-stroke-3d" cx="50" cy="50" r="40" 
+                          fill="none" 
+                          stroke="url(#progressGradient3D)" 
+                          stroke-width="8" 
+                          stroke-linecap="round"
+                          filter="url(#glow3D)"
+                          [style.stroke-dasharray]="251.2"
+                          [style.stroke-dashoffset]="251.2 - (taskProgress / 100) * 251.2"
+                          transform="rotate(-90 50 50)"/>
+                  
+                  <!-- Animated Particles -->
+                  <g class="particles">
+                    <circle class="particle particle-1" r="2" fill="#10b981" opacity="0.8">
+                      <animateMotion dur="3s" repeatCount="indefinite">
+                        <mpath href="#progressPath"/>
+                      </animateMotion>
+                    </circle>
+                    <circle class="particle particle-2" r="1.5" fill="#34d399" opacity="0.6">
+                      <animateMotion dur="4s" repeatCount="indefinite" begin="1s">
+                        <mpath href="#progressPath"/>
+                      </animateMotion>
+                    </circle>
+                    <circle class="particle particle-3" r="1" fill="#6ee7b7" opacity="0.4">
+                      <animateMotion dur="5s" repeatCount="indefinite" begin="2s">
+                        <mpath href="#progressPath"/>
+                      </animateMotion>
+                    </circle>
+                  </g>
+                  
+                  <!-- Hidden path for particle animation -->
+                  <path id="progressPath" d="M 50,10 A 40,40 0 1,1 49.9,10" fill="none" opacity="0"/>
+                </svg>
+                
+                <!-- 3D Depth Layers -->
+                <div class="depth-layer layer-1"></div>
+                <div class="depth-layer layer-2"></div>
+                <div class="depth-layer layer-3"></div>
+                
+                <!-- Inner Glow -->
+                <div class="inner-glow"></div>
+              </div>
+              
+              <!-- Outer Glow Effects -->
+              <div class="outer-glow glow-1"></div>
+              <div class="outer-glow glow-2"></div>
+              <div class="outer-glow glow-3"></div>
+            </div>
+            
+            <!-- Progress Content -->
+            <div class="progress-content-3d">
+              <span class="progress-percentage-3d">{{ taskProgress }}%</span>
+              <span class="progress-label-3d">COMPLETE</span>
+            </div>
+            
+            <!-- Interactive Drag Handle -->
+            <div class="progress-handle-3d" 
+                 [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - taskProgress * 3.6) + 'deg)'">
+              <div class="handle-outer-ring"></div>
+              <div class="handle-inner-core"></div>
+              <div class="handle-pulse"></div>
+            </div>
+            
+            <!-- Progress Indicators -->
+            <div class="progress-indicators">
+              <div class="indicator" [class.active]="taskProgress >= 25" style="transform: rotate(0deg) translateX(55px)">25</div>
+              <div class="indicator" [class.active]="taskProgress >= 50" style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
+              <div class="indicator" [class.active]="taskProgress >= 75" style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
+              <div class="indicator" [class.active]="taskProgress >= 100" style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
+            </div>
+            
+            <!-- Floating Elements -->
+            <div class="floating-elements">
+              <div class="float-element element-1"></div>
+              <div class="float-element element-2"></div>
+              <div class="float-element element-3"></div>
+              <div class="float-element element-4"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Description -->
+        <div class="description-section">
+          <label class="section-label">Task Description</label>
+          <textarea class="description-card editable-description" 
+                    [(ngModel)]="editableTaskDescription"
+                    placeholder="Enter task description..."></textarea>
+        </div>
+
+        <!-- Project Metadata -->
+        <div class="metadata-section">
+          <div class="metadata-header">
+            <h3 class="section-label">Project Metadata</h3>
+          </div>
+          
+          <div class="metadata-grid">
+            <!-- Department -->
+            <div class="metadata-card">
+              <div class="metadata-icon">
+                <i class="fas fa-building"></i>
+              </div>
+              <div class="metadata-content">
+                <p class="metadata-label">Department</p>
+                <select class="metadata-select">
+                  <option>Product & Design</option>
+                  <option>Engineering</option>
+                  <option>Marketing</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Project -->
+            <div class="metadata-card">
+              <div class="metadata-icon">
+                <i class="fas fa-folder"></i>
+              </div>
+              <div class="metadata-content">
+                <p class="metadata-label">Project</p>
+                <select class="metadata-select">
+                  <option>Marketing Dashboard</option>
+                  <option>User Onboarding</option>
+                  <option>API Revamp</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Assigned To -->
+            <div class="metadata-card">
+              <div class="metadata-icon">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="metadata-content">
+                <p class="metadata-label">Assigned To</p>
+                <select class="metadata-select">
+                  <option>Jane Doe</option>
+                  <option>Alex Chen</option>
+                  <option>Marcus Thorne</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Start Date -->
+            <div class="metadata-card">
+              <div class="metadata-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="metadata-content">
+                <p class="metadata-label">Start Date</p>
+                <input type="date" class="metadata-input" value="2023-10-01">
+              </div>
+            </div>
+
+            <!-- Target Date -->
+            <div class="metadata-card target-date">
+              <div class="metadata-icon orange">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="metadata-content">
+                <p class="metadata-label">Target Date</p>
+                <input type="date" class="metadata-input" value="2023-10-24">
+              </div>
+            </div>
+
+            <!-- Added Custom Fields -->
+            @for (field of selectedCustomFields; track field.key) {
+            <div class="metadata-card custom-field-card">
+              <div class="metadata-icon">
+                <i class="fas" [ngClass]="'fa-' + getFieldIcon(field.type)"></i>
+              </div>
+              <div class="metadata-content">
+                <p class="metadata-label">{{ field.label }}</p>
+                @if (field.type === 'text') {
+                  <input type="text" class="metadata-input" [(ngModel)]="field.value" [placeholder]="'Enter ' + field.label.toLowerCase()">
+                } @else if (field.type === 'number') {
+                  <input type="number" class="metadata-input" [(ngModel)]="field.value" [placeholder]="'Enter ' + field.label.toLowerCase()">
+                } @else if (field.type === 'dropdown') {
+                  <select class="metadata-select" [(ngModel)]="field.value">
+                    <option value="">Select {{ field.label }}</option>
+                    @for (option of field.options; track option) {
+                      <option [value]="option">{{ option }}</option>
+                    }
+                  </select>
+                } @else if (field.type === 'textarea') {
+                  <textarea class="metadata-textarea" [(ngModel)]="field.value" [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
+                }
+              </div>
+              <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            }
+            
+            <!-- Add Field Button - Always at the end -->
+            <button class="add-field-card" (click)="openAddFieldModal()">
+              <i class="fas fa-plus-circle"></i>
+              <span class="add-field-text">Add Field</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Subtasks Section -->
+        <div class="subtasks-section">
+          <div class="subtasks-tabs">
+            <button class="subtask-tab" [class.active]="activeSubtaskTab === 'subtasks'" (click)="setActiveSubtaskTab('subtasks')">
+              SUBTASKS 
+              <span class="tab-badge">{{ detailedSubtasks.length }}</span>
+            </button>
+            <button class="subtask-tab" [class.active]="activeSubtaskTab === 'files'" (click)="setActiveSubtaskTab('files')">
+              ATTACHMENTS
+              @if (uploadedFiles.length > 0) {
+                <span class="tab-badge">{{ uploadedFiles.length }}</span>
+              }
+            </button>
+          </div>
+
+          <!-- Subtasks Tab Content -->
+          @if (activeSubtaskTab === 'subtasks') {
+          <div class="subtasks-list">
+            @for (subtask of detailedSubtasks; track subtask.id) {
+            <div class="subtask-item" [class.completed]="subtask.completed" [class.active]="subtask.isRunning">
+              <div class="subtask-left">
+                @if (subtask.completed) {
+                  <i class="fas fa-check-circle subtask-check"></i>
+                } @else {
+                  <div class="subtask-radio">
+                    <div class="radio-dot" [class.active]="subtask.isRunning"></div>
+                  </div>
+                }
+                <span class="subtask-text">{{ subtask.name }}</span>
+              </div>
+              <div class="subtask-right">
+                <span class="subtask-time" [class.active]="subtask.isRunning">
+                  <i class="fas fa-clock"></i>
+                  {{ formatHours(subtask.totalLoggedTime) }}
+                </span>
+                <div class="subtask-actions">
+                  @if (!subtask.completed) {
+                    @if (!subtask.isRunning) {
+                      <button class="subtask-action-btn" (click)="startSubtaskDetailedTimer(subtask.id)" title="Start">
+                        <i class="fas fa-play"></i>
+                      </button>
+                    } @else {
+                      <button class="subtask-action-btn active" (click)="pauseSubtaskDetailedTimer(subtask.id)" title="Pause">
+                        <i class="fas fa-pause"></i>
+                      </button>
+                    }
+                    <button class="subtask-action-btn" (click)="stopSubtaskDetailedTimer(subtask.id)" title="Stop">
+                      <i class="fas fa-stop"></i>
+                    </button>
+                  }
+                  <button class="subtask-action-btn" (click)="toggleSubtaskCompletion(subtask.id)" [title]="subtask.completed ? 'Reopen' : 'Complete'">
+                    <i class="fas" [ngClass]="subtask.completed ? 'fa-undo' : 'fa-check'"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="save-button">
+              <i class="fas fa-check"></i>
+              Save Changes
+            </button>
+            <button class="add-subtask-button">
+              <i class="fas fa-plus"></i>
+              Add Subtask
+            </button>
+          </div>
+          }
+          
+          <!-- Attachments Tab Content -->
+          @if (activeSubtaskTab === 'files') {
+          <div class="attachments-content">
+            <!-- File Upload Area -->
+            <div class="files-upload-area" 
+                 (click)="triggerFileUpload()" 
+                 (dragover)="onDragOver($event)"
+                 (drop)="onFileDrop($event)">
+              <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+              </div>
+              <p class="upload-text">Click to upload or drag and drop files here</p>
+              <p class="upload-subtext">Supports: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB)</p>
+            </div>
+
+            <!-- Uploaded Files List -->
+            @if (uploadedFiles.length > 0) {
+            <div class="uploaded-files-list">
+              <div class="files-list-header">
+                <span class="files-count">{{ uploadedFiles.length }} file(s) uploaded</span>
+              </div>
+              @for (file of uploadedFiles; track file.id; let i = $index) {
+              <div class="file-item">
+                <div class="file-icon">
+                  <i class="fas" [ngClass]="'fa-' + getFileIcon(file.type)"></i>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">{{ file.name }}</div>
+                  <div class="file-meta">
+                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                    <span class="file-separator">•</span>
+                    <span class="file-date">Submitted: {{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                  </div>
+                </div>
+                <div class="file-actions">
+                  <button class="file-action-btn download" (click)="downloadFile(file)" title="Download">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button class="file-action-btn delete" (click)="removeFile(i)" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              }
+            </div>
+            } @else {
+            <div class="no-files">
+              <i class="fas fa-folder-open"></i>
+              <p>No files uploaded yet</p>
+            </div>
+            }
+            
+            <!-- Hidden file input -->
+            <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+              (change)="onFileSelected($event)" style="display: none;">
+          </div>
+          }
+          
+          <!-- Activity Log Tab Content -->
+        </div>
+      </div>
+
+      <!-- Right Panel - Comments -->
+      <div class="comments-panel">
+        <div class="comments-tabs">
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'" (click)="setActiveSidebarTab('comments')">COMMENTS</button>
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'history'" (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
+        </div>
+
+        <!-- Comments Content -->
+        <div class="comments-content" *ngIf="activeSidebarTab === 'comments'">
+          <!-- Comment 1 -->
+          <div class="comment-item">
+            <div class="comment-avatar">AC</div>
+            <div class="comment-body">
+              <div class="comment-header">
+                <span class="comment-author">Alex Chen</span>
+                <span class="comment-time">2h ago</span>
+              </div>
+              <div class="comment-message">
+                Working on the token introspection endpoints now. Should be ready for review by EOD.
+              </div>
+            </div>
+          </div>
+
+          <!-- Comment 2 -->
+          <div class="comment-item">
+            <div class="comment-avatar green">MT</div>
+            <div class="comment-body">
+              <div class="comment-header">
+                <span class="comment-author">Marcus Thorne</span>
+                <span class="comment-time">45m ago</span>
+              </div>
+              <div class="comment-message">
+                Great progress. Ensure test coverage includes the Azure AD adapter.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Log Content -->
+        <div class="activity-log-content" *ngIf="activeSidebarTab === 'history'">
+          <div class="activity-timeline">
+            <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
+              <div class="activity-icon-enhanced" [style.background-color]="getActivityColor(activity.type)">
+                <i class="fas" [class]="getActivityIcon(activity.type)"></i>
+              </div>
+              <div class="activity-content-enhanced">
+                <div class="activity-header-enhanced">
+                  <span class="activity-description">{{ activity.description }}</span>
+                  <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
+                </div>
+                <div class="activity-meta-enhanced">
+                  <span class="activity-user">{{ activity.user }}</span>
+                  <span class="activity-duration" *ngIf="activity.duration">{{ activity.duration }}</span>
+                </div>
+                <div class="activity-details" *ngIf="activity.details">
+                  <div *ngIf="activity.details.fileName" class="detail-item">
+                    <i class="fas fa-file"></i>
+                    <span>{{ activity.details.fileName }} ({{ activity.details.fileSize }})</span>
+                  </div>
+                  <div *ngIf="activity.details.subtaskName" class="detail-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>{{ activity.details.subtaskName }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Comment (only show for comments tab) -->
+        <div class="add-comment" *ngIf="activeSidebarTab === 'comments'">
+          <div class="comment-input-container">
+            <input type="text" class="comment-input" placeholder="Add a comment..." 
+                   [(ngModel)]="newComment" 
+                   (keyup.enter)="addComment()">
+            <button class="send-button" (click)="addComment()" [disabled]="!newComment.trim()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Add Field Modal - Small Popup -->
+@if (showAddFieldModal) {
+<div class="modal-overlay" (click)="closeAddFieldModal()">
+  <div class="add-field-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="add-field-modal-header">
+      <h3 class="add-field-modal-title">Add Fields</h3>
+      <p class="add-field-modal-subtitle">Select fields to add to project metadata</p>
+      <button class="modal-close-btn" (click)="closeAddFieldModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Fields List with Checkboxes -->
+    <div class="add-field-modal-content">
+      <div class="fields-checklist">
+        @for (field of availableCustomFields; track field.key) {
+        <label class="field-checkbox-item" [class.disabled]="isFieldSelected(field.key)">
+          <input type="checkbox" 
+                 [checked]="isFieldChecked(field.key)" 
+                 [disabled]="isFieldSelected(field.key)"
+                 (change)="toggleFieldSelection(field.key)">
+          <div class="checkbox-custom-field">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="field-checkbox-content">
+            <div class="field-checkbox-header">
+              <span class="field-checkbox-name">{{ field.label }}</span>
+              <span class="field-type-badge" [ngClass]="'type-' + field.type">
+                @if (field.type === 'text') { Text Input }
+                @else if (field.type === 'number') { Number }
+                @else if (field.type === 'dropdown') { Dropdown }
+                @else if (field.type === 'textarea') { Text Area }
+              </span>
+            </div>
+            <span class="field-checkbox-description">{{ field.description }}</span>
+          </div>
+          @if (isFieldSelected(field.key)) {
+            <span class="field-already-added">
+              <i class="fas fa-check-circle"></i>
+              Added
+            </span>
+          }
+        </label>
+        }
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="add-field-modal-footer">
+      <div class="selected-count">
+        {{ tempSelectedFields.length }} field(s) selected
+      </div>
+      <div class="add-field-modal-actions">
+        <button class="cancel-btn" (click)="closeAddFieldModal()">Cancel</button>
+        <button class="apply-btn" (click)="applySelectedFields()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Custom Fields Modal -->
+@if (showCustomFieldsModal) {
+<div class="modal-overlay" (click)="closeCustomFieldsModal()">
+  <div class="custom-fields-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="custom-fields-header">
+      <h3 class="custom-fields-modal-title">Manage Custom Fields</h3>
+      <p class="custom-fields-subtitle">Select additional fields to add to your task</p>
+      <button class="modal-close-btn" (click)="closeCustomFieldsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Available Fields List -->
+    <div class="custom-fields-content">
+      <div class="available-fields-list">
+        <div class="field-option" *ngFor="let field of availableCustomFields"
+          [class.disabled]="isFieldSelected(field.key)"
+          (click)="!isFieldSelected(field.key) && selectCustomField(field)">
+
+          <div class="field-option-content">
+            <div class="field-option-header">
+              <span class="field-name">{{ field.label }}</span>
+              <span class="field-type-badge" [class]="'type-' + field.type">{{ field.type }}</span>
+            </div>
+            <span class="field-description">{{ field.description }}</span>
+          </div>
+
+          <div class="field-option-action">
+            <button class="add-field-btn" *ngIf="!isFieldSelected(field.key)"
+              (click)="selectCustomField(field); $event.stopPropagation()">
+              <i class="fas fa-plus"></i>
+              Add
+            </button>
+            <span class="field-selected" *ngIf="isFieldSelected(field.key)">
+              <i class="fas fa-check"></i>
+              Added
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="custom-fields-footer">
+      <div class="selected-count">
+        {{ selectedCustomFields.length }} field(s) selected
+      </div>
+      <div class="custom-fields-actions">
+        <button class="cancel-btn" (click)="closeCustomFieldsModal()">Cancel</button>
+        <button class="apply-btn" (click)="applyCustomFields()">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+}

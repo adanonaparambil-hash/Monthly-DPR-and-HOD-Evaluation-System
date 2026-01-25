@@ -1,0 +1,282 @@
+<div class="dpr-approval-container">
+  <div class="dpr-layout">
+    <!-- Sidebar - Pending Reviews -->
+    <aside class="pending-sidebar">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="header-title">
+          <h2>Pending Reviews</h2>
+          <span class="user-count-badge">{{ getTotalPendingUsers() }} Users</span>
+        </div>
+        
+        <!-- Search Input -->
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input 
+            class="search-input" 
+            placeholder="Search team member..." 
+            type="text"
+          />
+        </div>
+      </div>
+
+      <!-- Users List -->
+      <div class="users-list">
+        @for (user of pendingUsers; track trackByUserId($index, user)) {
+          <div 
+            class="user-item"
+            [class.selected]="user.isSelected"
+            (click)="selectUser(user)"
+          >
+            <div class="user-content">
+              <!-- Avatar or Initials -->
+              <div class="user-avatar">
+                @if (user.avatar) {
+                  <img 
+                    [alt]="user.name" 
+                    [src]="user.avatar"
+                    class="avatar-image"
+                  />
+                } @else {
+                  <div 
+                    class="avatar-initials"
+                    [class]="getInitialsClass(user.name)"
+                  >
+                    {{ user.initials || getUserInitials(user.name) }}
+                  </div>
+                }
+              </div>
+              
+              <!-- User Info -->
+              <div class="user-info">
+                <div class="user-header">
+                  <h3 class="user-name">{{ user.name }}</h3>
+                  <span class="last-activity">{{ user.lastActivity }}</span>
+                </div>
+                <p class="user-role">{{ user.role }}</p>
+                <div class="user-badges">
+                  <span 
+                    class="pending-badge"
+                    [class.high-count]="user.pendingLogs > 5"
+                  >
+                    {{ user.pendingLogs }} Pending Logs
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header Section -->
+      <div class="content-header">
+        <!-- Top Row: Employee Name Only -->
+        <div class="header-top-row">
+          <div class="selected-user-info">
+            <h1 class="user-title">{{ selectedUser?.name || 'Select a User' }}</h1>
+            <p class="user-subtitle">Reviewing pending logs for department approval</p>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Filters and Action Buttons -->
+        <div class="filters-container">
+          <div class="filters-section">
+            <!-- Date Filters -->
+            <div class="date-filters">
+              <div class="filter-group">
+                <label class="filter-label">From Date</label>
+                <div class="date-input-wrapper">
+                  <i class="fas fa-calendar-alt date-icon"></i>
+                  <input 
+                    class="filter-input date-input" 
+                    type="date" 
+                    [(ngModel)]="fromDate"
+                  />
+                </div>
+              </div>
+              
+              <div class="filter-group">
+                <label class="filter-label">To Date</label>
+                <div class="date-input-wrapper">
+                  <i class="fas fa-calendar-alt date-icon"></i>
+                  <input 
+                    class="filter-input date-input" 
+                    type="date" 
+                    [(ngModel)]="toDate"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="filter-divider"></div>
+
+            <!-- Dropdown Filters -->
+            <div class="dropdown-filters">
+              <!-- Project Filter Dropdown -->
+              <div class="filter-group">
+                <label class="filter-label">Project</label>
+                <div class="dropdown-wrapper">
+                  <select class="filter-dropdown" [(ngModel)]="selectedProject">
+                    <option value="all">All Projects</option>
+                    <option value="internal">Internal Tools</option>
+                    <option value="client">Client Work</option>
+                  </select>
+                  <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+              </div>
+
+              <!-- Task Types Filter Dropdown -->
+              <div class="filter-group">
+                <label class="filter-label">Task Type</label>
+                <div class="dropdown-wrapper">
+                  <select class="filter-dropdown" [(ngModel)]="selectedTaskTypes">
+                    <option value="all">All Types</option>
+                    <option value="security">Security</option>
+                    <option value="backend">Backend</option>
+                    <option value="feature">Feature</option>
+                    <option value="bugfix">Bug Fix</option>
+                  </select>
+                  <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons Near Input Fields -->
+            <div class="header-actions">
+              <button 
+                class="btn-cancel-header"
+                (click)="cancelSelection()"
+              >
+                Cancel
+              </button>
+              
+              <button 
+                class="btn-approve-header"
+                (click)="approveSelected()"
+                [disabled]="getSelectedLogsCount() === 0"
+              >
+                <i class="fas fa-check-double"></i>
+                <span>Approve All</span>
+                @if (getSelectedLogsCount() > 0) {
+                  <span class="selection-count">
+                    {{ getSelectedLogsCount() }}
+                  </span>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Section -->
+      <div class="table-section">
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table class="dpr-table">
+              <!-- Table Header -->
+              <thead>
+                <tr>
+                  <th class="checkbox-col">
+                    <input 
+                      class="table-checkbox" 
+                      type="checkbox"
+                      [checked]="selectAll"
+                      (change)="toggleSelectAll()"
+                    />
+                  </th>
+                  <th class="date-col">Date</th>
+                  <th class="project-col">Project</th>
+                  <th class="title-col">Task Title</th>
+                  <th class="description-col">Task Description</th>
+                  <th class="category-col">Category</th>
+                  <th class="hours-col">Hours</th>
+                  <th class="status-col">Status</th>
+                </tr>
+              </thead>
+
+              <!-- Table Body -->
+              <tbody>
+                @for (log of dprLogs; track trackByLogId($index, log)) {
+                  <tr class="table-row" [class.selected]="log.isSelected">
+                    <!-- Checkbox -->
+                    <td class="checkbox-col">
+                      <input 
+                        class="table-checkbox" 
+                        type="checkbox"
+                        [checked]="log.isSelected"
+                        (change)="toggleLogSelection(log)"
+                      />
+                    </td>
+
+                    <!-- Date -->
+                    <td class="date-cell">
+                      <span class="date-text">{{ log.date }}</span>
+                    </td>
+
+                    <!-- Project -->
+                    <td class="project-cell">
+                      <span 
+                        class="project-badge"
+                        [class]="getProjectBadgeClass(log.projectType)"
+                      >
+                        {{ log.project }}
+                      </span>
+                    </td>
+
+                    <!-- Task Title -->
+                    <td class="title-cell">
+                      <span class="task-title" [title]="log.taskTitle">{{ log.taskTitle }}</span>
+                    </td>
+
+                    <!-- Task Description -->
+                    <td class="description-cell">
+                      <span class="task-description" [title]="log.taskDescription">
+                        {{ log.taskDescription }}
+                      </span>
+                    </td>
+
+                    <!-- Category -->
+                    <td class="category-cell">
+                      <span 
+                        class="category-badge"
+                        [class]="getCategoryBadgeClass(log.categoryType)"
+                      >
+                        {{ log.category }}
+                      </span>
+                    </td>
+
+                    <!-- Hours -->
+                    <td class="hours-cell">
+                      <span class="hours-text">{{ log.hours }}</span>
+                    </td>
+
+                    <!-- Status -->
+                    <td class="status-cell">
+                      <span class="status-badge pending">Pending</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Records Count -->
+          <div class="table-footer">
+            <!-- Remove duplicate records count - it's now in the action footer -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer - Simplified -->
+      <div class="action-footer">
+        <span class="records-info">
+          Showing {{ dprLogs.length }} of {{ dprLogs.length }} pending records
+        </span>
+      </div>
+    </main>
+  </div>
+</div>

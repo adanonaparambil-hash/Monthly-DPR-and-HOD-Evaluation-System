@@ -54,6 +54,10 @@
             <i class="fas fa-list-check"></i>
             <span>My Task</span>
           </a>
+          <a routerLink="/my-logged-hours" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-clock"></i>
+            <span>My Logged Hours</span>
+          </a>
         </div>
       </div>
 
@@ -71,11 +75,15 @@
             <i class="fas fa-clipboard-check"></i>
             <span>Leave Approval</span>
           </a>
+          <a routerLink="/dpr-approval" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-tasks"></i>
+            <span>DPR Approval</span>
+          </a>
         </div>
       </div>
 
       <!-- Chat Menu - Single Item -->
-      <a routerLink="/chat" routerLinkActive="active"  (click)="closeSidebarOnMobile()">
+      <a routerLink="/chat" routerLinkActive="active" *ngIf="false" (click)="closeSidebarOnMobile()">
         <i class="fas fa-comments"></i> Chat
       </a>
 
@@ -92,8 +100,8 @@
 
     <div class="logout">
       <b><a (click)="logout()" [class.disabled]="isLoggingOut">
-        <i class="fas fa-sign-out-alt"></i>Logout
-      </a></b>
+          <i class="fas fa-sign-out-alt"></i>Logout
+        </a></b>
     </div>
   </aside>
 
@@ -108,29 +116,29 @@
         <div class="page-title-section">
           <h1 class="page-title">{{ getPageTitle() }}</h1>
           <p class="page-subtitle" *ngIf="getPageSubtitle()">{{ getPageSubtitle() }}</p>
-          <p class="welcome-text" *ngIf="isDashboardRoute()">Welcome, <strong>{{ userProfile.name }}</strong>. Wishing you a great day ahead.</p>
+          <p class="welcome-text" *ngIf="isDashboardRoute()">Welcome, <strong>{{ userProfile.name }}</strong>. Wishing
+            you a great day ahead.</p>
         </div>
       </div>
-      
+
       <div class="header-right">
-        <!-- Dark/Light Mode Toggle -->
-        <button class="theme-toggle" (click)="toggleTheme()" [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-          <i class="fas" [class.fa-sun]="isDarkMode" [class.fa-moon]="!isDarkMode"></i>
-        </button>
-        
+        <!-- Dark Mode Toggle -->
+        <div class="theme-toggle-wrapper">
+          <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+            <i class="fas" [class.fa-sun]="isDarkMode" [class.fa-moon]="!isDarkMode"></i>
+          </button>
+        </div>
+
         <!-- Notifications -->
         <div class="notification-wrapper">
-          <button class="notification-btn" 
-                  [class.has-notifications]="notificationCount > 0"
-                  [class.urgent-notifications]="notificationCount > 5"
-                  (click)="toggleNotifications()">
+          <button class="notification-btn" [class.has-notifications]="notificationCount > 0"
+            [class.urgent-notifications]="notificationCount > 5" (click)="toggleNotifications()">
             <i class="fas fa-bell"></i>
-            <span class="notification-badge" 
-                  [class.urgent]="notificationCount > 5"
-                  [class.new-notification]="hasNewNotifications"
-                  *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+            <span class="notification-badge" [class.urgent]="notificationCount > 5"
+              [class.new-notification]="hasNewNotifications" *ngIf="notificationCount > 0">{{ notificationCount
+              }}</span>
           </button>
-          
+
           <div class="notification-dropdown" *ngIf="showNotifications" [@slideDown]>
             <div class="notification-header">
               <h3>Notifications ({{ notificationCount }})</h3>
@@ -138,10 +146,12 @@
                 <button class="refresh-btn" (click)="refreshNotifications()" title="Refresh notifications">
                   <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingNotifications"></i>
                 </button>
-                <button class="mark-all-btn" (click)="markAllAsRead()" [disabled]="notificationCount === 0" title="Mark all as read">
+                <button class="mark-all-btn" (click)="markAllAsRead()" [disabled]="notificationCount === 0"
+                  title="Mark all as read">
                   <i class="fas fa-check-double"></i>
                 </button>
-                <button class="clear-all-btn" (click)="clearAllNotifications()" [disabled]="notifications.length === 0" title="Clear all notifications">
+                <button class="clear-all-btn" (click)="clearAllNotifications()" [disabled]="notifications.length === 0"
+                  title="Clear all notifications">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -152,12 +162,10 @@
                 <i class="fas fa-spinner fa-spin"></i>
                 <span>Loading notifications...</span>
               </div>
-              
+
               <!-- Notifications -->
-              <div class="notification-item" 
-                   *ngFor="let notification of notifications; trackBy: trackNotificationById"
-                   [class.unread]="!notification.isRead"
-                   [@slideDown]>
+              <div class="notification-item" *ngFor="let notification of notifications; trackBy: trackNotificationById"
+                [class.unread]="!notification.isRead" [@slideDown]>
                 <div class="notification-icon">
                   <i [class]="notification.icon"></i>
                 </div>
@@ -166,15 +174,12 @@
                   <span class="notification-time">{{ notification.time }}</span>
                 </div>
                 <div class="notification-actions-item">
-                  <button *ngIf="!notification.isRead" 
-                          class="mark-read-btn" 
-                          (click)="markNotificationAsRead(notification.id, $event)" 
-                          title="Mark as read">
+                  <button *ngIf="!notification.isRead" class="mark-read-btn"
+                    (click)="markNotificationAsRead(notification.id, $event)" title="Mark as read">
                     <i class="fas fa-check"></i>
                   </button>
-                  <button class="delete-btn" 
-                          (click)="clearNotification(notification.id, $event)" 
-                          title="Delete notification">
+                  <button class="delete-btn" (click)="clearNotification(notification.id, $event)"
+                    title="Delete notification">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -182,7 +187,7 @@
                   <div class="unread-dot"></div>
                 </div>
               </div>
-              
+
               <!-- Empty state -->
               <div class="notification-empty" *ngIf="!isLoadingNotifications && notifications.length === 0">
                 <i class="fas fa-bell-slash"></i>
@@ -191,7 +196,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Profile -->
         <div class="profile-wrapper">
           <button class="profile-btn" (click)="toggleProfile()">
@@ -199,7 +204,7 @@
             <span class="profile-name">{{ userProfile.name }}</span>
             <i class="fas fa-chevron-down"></i>
           </button>
-          
+
           <div class="profile-dropdown" *ngIf="showProfile" [@slideDown]>
             <div class="profile-info">
               <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar-large">

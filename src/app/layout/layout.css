@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 20px rgba(26, 32, 44, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   overflow: visible;
   -webkit-font-smoothing: antialiased;
@@ -27,6 +27,27 @@
   font-size: 16px;
   line-height: 1.6;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+/* Collapsed sidebar state - completely hidden */
+.layout-container.sidebar-collapsed .sidebar {
+  transform: translateX(-100%);
+}
+
+/* Adjust main area when sidebar is collapsed */
+.main-area {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.layout-container.sidebar-collapsed .main-area {
+  margin-left: 0;
+  width: 100%;
 }
 
 /* Ensure all sidebar text is fully visible */
@@ -105,6 +126,7 @@
   height: 100px;
   min-height: 100px;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-logo-image {
@@ -120,7 +142,7 @@
   padding: 0;
   position: relative;
   z-index: 2;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
@@ -142,7 +164,7 @@
   padding: 16px 24px;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-left: 3px solid transparent;
   font-weight: 500;
   line-height: 1.6;
@@ -182,7 +204,7 @@
   padding: 16px 24px;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-left: 3px solid transparent;
   font-weight: 500;
   line-height: 1.6;
@@ -365,6 +387,7 @@
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%);
   margin: 8px;
   border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logout a {
@@ -373,7 +396,7 @@
   gap: 12px;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   padding: 12px 16px;
   border-radius: 8px;
@@ -431,36 +454,34 @@
 /* Company Logo - Removed from header */
 
 .menu-toggle {
-  display: none;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
-  font-size: 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 24px;
+  color: #1B2A38;
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
   transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
 }
 
 .menu-toggle:hover {
   background: rgba(27, 42, 56, 0.1);
-  background: linear-gradient(135deg, #138271, #1ABC9C);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  transform: scale(1.05);
+  color: #138271;
+  transform: scale(1.1);
 }
 
 .dark-theme .menu-toggle {
-  color: var(--accent-color);
+  color: var(--text-primary);
 }
 
 .dark-theme .menu-toggle:hover {
-  background: rgba(255, 215, 0, 0.1);
-  color: var(--accent-color);
+  background: rgba(204, 153, 51, 0.1);
+  color: var(--primary-color);
 }
 
 .page-title-section {
@@ -570,6 +591,43 @@
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/* Theme Toggle */
+.theme-toggle-wrapper {
+  position: relative;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #1B2A38;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(27, 42, 56, 0.1);
+  color: #138271;
+  transform: rotate(180deg) scale(1.05);
+}
+
+.dark-theme .theme-toggle-btn {
+  color: #e2e8f0;
+}
+
+.dark-theme .theme-toggle-btn:hover {
+  background: rgba(226, 232, 240, 0.1);
+  color: #1ABC9C;
 }
 
 /* Theme Toggle */
