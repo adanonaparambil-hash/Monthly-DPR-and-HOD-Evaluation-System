@@ -128,6 +128,9 @@ export class EmergencyExitFormComponent implements OnInit {
   // Employee photo
   employeePhoto: string = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format';
 
+  // Employee designation
+  employeeDesignation: string = '';
+
   // Project Manager / Site Incharge approval
   pmRemarks: string = '';
   pmDaysAllowed: number = 0;
@@ -843,8 +846,18 @@ export class EmergencyExitFormComponent implements OnInit {
   loadEmployeeDetailsById(empId: string): void {
     this.api.GetExitEmployeeDetails(empId).subscribe({
       next: (response: any) => {
+        console.log('GetExitEmployeeDetails API Response (by ID):', response);
         if (response && response.success && response.data) {
           const profile = response.data;
+          console.log('Employee profile data:', profile);
+          console.log('actProfession value (by ID):', profile.actProfession);
+
+          // Capture designation from actProfession field
+          this.employeeDesignation = profile.actProfession || '';
+          console.log('employeeDesignation set to (by ID):', this.employeeDesignation);
+          
+          // Trigger change detection to update the UI
+          this.cdr.detectChanges();
 
           // Update photo using helper
           this.setEmployeePhotoFromData(profile);
@@ -860,11 +873,11 @@ export class EmergencyExitFormComponent implements OnInit {
             });
           }
 
-          // Patch profile info
+          // Patch profile info - using correct field names from API
           this.exitForm.patchValue({
             employeeName: profile.employeeName || profile.empName || profile.name || this.exitForm.get('employeeName')?.value || '',
             employeeId: profile.employeeId || profile.employeeID || profile.empId || this.exitForm.get('employeeId')?.value || '',
-            department: profile.empDept || profile.department || this.exitForm.get('department')?.value || '',
+            department: profile.empDept || profile.department || this.exitForm.get('department')?.value || '', // Use empDept from API
             emailId: profile.email || this.exitForm.get('emailId')?.value || '',
             address: profile.address || '',
             district: profile.district || '',
@@ -878,6 +891,9 @@ export class EmergencyExitFormComponent implements OnInit {
             responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (profile.phone || '') : '',
             responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (profile.email || '') : ''
           });
+
+          // Trigger change detection to update the UI
+          this.cdr.detectChanges();
 
           console.log('Employee details loaded by ID:', empId);
           
@@ -899,6 +915,7 @@ export class EmergencyExitFormComponent implements OnInit {
       employeeName: ['', Validators.required],
       employeeId: ['', Validators.required],
       department: ['', Validators.required],
+      designation: [''], // Display-only field for employee designation
       dateOfDeparture: ['', Validators.required],
       flightTime: [''],
       dateOfArrival: [''],
@@ -1262,12 +1279,14 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('Current form values before disabling:', {
       employeeName: this.exitForm.get('employeeName')?.value,
       employeeId: this.exitForm.get('employeeId')?.value,
-      department: this.exitForm.get('department')?.value
+      department: this.exitForm.get('department')?.value,
+      designation: this.exitForm.get('designation')?.value
     });
 
-    // Only disable employeeId and department - keep employeeName and emailId editable
+    // Only disable employeeId, department, and designation - keep employeeName and emailId editable
     this.exitForm.get('employeeId')?.disable();
     this.exitForm.get('department')?.disable();
+    this.exitForm.get('designation')?.disable();
 
     // Keep employeeName and emailId enabled for user input
     this.exitForm.get('employeeName')?.enable();
@@ -1276,11 +1295,13 @@ export class EmergencyExitFormComponent implements OnInit {
     // Mark disabled fields as valid even when disabled
     this.exitForm.get('employeeId')?.setErrors(null);
     this.exitForm.get('department')?.setErrors(null);
+    this.exitForm.get('designation')?.setErrors(null);
 
     console.log('Form values after disabling:', {
       employeeName: this.exitForm.get('employeeName')?.value,
       employeeId: this.exitForm.get('employeeId')?.value,
-      department: this.exitForm.get('department')?.value
+      department: this.exitForm.get('department')?.value,
+      designation: this.exitForm.get('designation')?.value
     });
   }
 
@@ -1346,7 +1367,7 @@ export class EmergencyExitFormComponent implements OnInit {
     } else if (this.formType === 'P') {
       // Planned leave specific fields are required
       this.exitForm.get('category')?.setValidators([Validators.required]);
-      this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
+      this.exitForm.get('projectManagerName')?.clearValidators(); // Remove required validation
       // Add validators for phone and email fields
       this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
       this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.required, Validators.email]);
@@ -1356,7 +1377,7 @@ export class EmergencyExitFormComponent implements OnInit {
     } else if (this.formType === 'R') {
       // Resignation specific fields are required (reuse existing fields)
       this.exitForm.get('category')?.setValidators([Validators.required]);
-      this.exitForm.get('projectManagerName')?.setValidators([Validators.required]);
+      this.exitForm.get('projectManagerName')?.clearValidators(); // Remove required validation
       // Add validators for phone and email fields
       this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
       this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.required, Validators.email]);
@@ -1488,18 +1509,43 @@ export class EmergencyExitFormComponent implements OnInit {
     if (empId) {
       this.api.GetExitEmployeeDetails(empId).subscribe({
         next: (response: any) => {
+          console.log('GetExitEmployeeDetails API Response:', response);
+          
+          // Handle different possible response structures
+          let data = null;
           if (response && response.success && response.data) {
-            // Update form with employee detailsALER
+            data = response.data;
+          } else if (response && !response.success && response) {
+            // Sometimes API might return data directly without success wrapper
+            data = response;
+          }
+          
+          if (data) {
+            console.log('Employee data:', data);
+            console.log('Available fields:', Object.keys(data));
+            console.log('actProfession value:', data.actProfession);
+            
+            // Capture designation from actProfession field
+            this.employeeDesignation = data.actProfession || '';
+            console.log('employeeDesignation set to:', this.employeeDesignation);
+            
+            // Trigger change detection to update the UI
+            this.cdr.detectChanges();
+            
+            // Update form with employee details - using correct field names from API
             this.exitForm.patchValue({
-              employeeName: response.data.employeeName || '',
-              employeeId: response.data.empId || '',
-              department: response.data.department || '',
-              emailId: response.data.email || '',
-              hodName: response.data.depHoD || '',
+              employeeName: data.employeeName || '',
+              employeeId: data.empId || '',
+              department: data.empDept || data.department || '', // Use empDept from API
+              emailId: data.email || '',
+              hodName: data.depHoD || '',
               // Auto-fill phone and email for planned and resignation forms
-              responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (response.data.phone || '') : '',
-              responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (response.data.email || '') : ''
+              responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (data.phone || '') : '',
+              responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (data.email || '') : ''
             });
+            
+            // Trigger change detection to update the UI
+            this.cdr.detectChanges();
             
             // Auto-fill phone and email fields after details are loaded
             setTimeout(() => {
@@ -1568,6 +1614,7 @@ export class EmergencyExitFormComponent implements OnInit {
     // Reset flags
     this.formSubmitted = false;
     this.employeePhoto = 'assets/images/default-avatar.png';
+    this.employeeDesignation = ''; // Reset designation
 
     // Reset responsibilities section to open state
     this.isResponsibilitiesSectionOpen = true;
@@ -1643,7 +1690,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Add planned leave and resignation specific validations
     if (this.formType === 'P' || this.formType === 'R') {
-      requiredFields.push('category', 'responsibilitiesHandedOverTo', 'projectManagerName');
+      requiredFields.push('category', 'responsibilitiesHandedOverTo'); // Removed projectManagerName
     }
 
     for (const field of requiredFields) {
@@ -1728,13 +1775,7 @@ export class EmergencyExitFormComponent implements OnInit {
         return false;
       }
       
-      // Check projectManagerName (stores ID) - should have a value
-      const projectManagerValue = formValue.projectManagerName || rawFormValue.projectManagerName;
-      if (!projectManagerValue) {
-        console.log('Validation failed: projectManagerName missing for P/R form');
-        console.log('projectManagerName value:', projectManagerValue);
-        return false;
-      }
+      // Project Manager is now optional - no validation needed
       
       // Check phone number
       if (!formValue.responsibilitiesHandedOverToPhone) {
@@ -1799,7 +1840,7 @@ export class EmergencyExitFormComponent implements OnInit {
     const requiredFields = ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
     
     if (this.formType === 'P' || this.formType === 'R') {
-      requiredFields.push('category', 'projectManagerName', 'responsibilitiesHandedOverToPhone', 'responsibilitiesHandedOverToEmail');
+      requiredFields.push('category', 'responsibilitiesHandedOverToPhone', 'responsibilitiesHandedOverToEmail'); // Removed projectManagerName
     }
     
     const missingFields: string[] = [];
@@ -1812,7 +1853,6 @@ export class EmergencyExitFormComponent implements OnInit {
       'reasonForEmergency': this.formType === 'E' ? 'Reason for Emergency' : (this.formType === 'R' ? 'Reason for Resignation' : 'Reason for Planned Leave'),
       'hodName': 'HOD Name',
       'category': 'Category',
-      'projectManagerName': 'Project Manager / Site Incharge',
       'responsibilitiesHandedOverToPhone': 'Phone Number',
       'responsibilitiesHandedOverToEmail': 'Email ID'
     };
@@ -2171,6 +2211,29 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   /**
+   * Get the display name for responsible person from the stored ID
+   */
+  getResponsiblePersonDisplayName(index: number): string {
+    const responsibilityGroup = this.responsibilitiesFormArray.at(index) as FormGroup;
+    const selectedId = responsibilityGroup.get('responsiblePersonName')?.value;
+    if (!selectedId) return '';
+    
+    // Try to find in employee master list
+    const selectedEmployee = this.employeeMasterList.find(emp => emp.idValue === selectedId);
+    if (selectedEmployee) {
+      return selectedEmployee.description || '';
+    }
+    
+    // If not found and it looks like an ID (not a name), return empty to show placeholder
+    if (selectedId && !selectedId.includes(' - ') && selectedId.length < 10) {
+      return '';
+    }
+    
+    // If it's already a name/description, return as is
+    return selectedId;
+  }
+
+  /**
    * Map category from backend format (S/W) to display format (Staff/Worker)
    */
   mapCategoryFromBackend(category: string): string {
@@ -2204,7 +2267,31 @@ export class EmergencyExitFormComponent implements OnInit {
       if (pmInputElement) {
         pmInputElement.value = this.getProjectManagerDisplayName();
       }
+
+      // Update Responsible Person Name input fields
+      this.syncResponsiblePersonDisplayNames();
     }, 100);
+  }
+
+  /**
+   * Sync all responsible person input fields to show names instead of IDs
+   */
+  syncResponsiblePersonDisplayNames(): void {
+    setTimeout(() => {
+      this.responsibilitiesFormArray.controls.forEach((responsibilityGroup, index) => {
+        const selectedId = responsibilityGroup.get('responsiblePersonName')?.value;
+        if (selectedId) {
+          // Find the employee in the master list
+          const selectedEmployee = this.employeeMasterList.find(emp => emp.idValue === selectedId);
+          if (selectedEmployee) {
+            // Update the form control with the display name
+            responsibilityGroup.patchValue({
+              responsiblePersonName: selectedEmployee.description
+            }, { emitEvent: false });
+          }
+        }
+      });
+    }, 200);
   }
 
   /**

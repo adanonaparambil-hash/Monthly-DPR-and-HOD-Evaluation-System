@@ -4446,7 +4446,7 @@ ced Approval Actions Column */
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: white;
   flex: 1;
 }
 

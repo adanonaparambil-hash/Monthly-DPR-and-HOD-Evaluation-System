@@ -97,10 +97,13 @@
 }
 
 @keyframes emergencyPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
   }
+
   50% {
     transform: scale(1.1);
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
@@ -108,10 +111,13 @@
 }
 
 @keyframes plannedGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(34, 197, 94, 0.6);
@@ -119,10 +125,13 @@
 }
 
 @keyframes resignationPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
@@ -451,7 +460,8 @@
 }
 
 .collapsible-section .collapsible-content.open {
-  max-height: 5000px; /* Large enough for all content */
+  max-height: 5000px;
+  /* Large enough for all content */
   opacity: 1;
   visibility: visible;
   transition: max-height 0.5s ease-in, opacity 0.3s ease;
@@ -3881,6 +3891,24 @@ yles to ensure proper layout */
   outline: none;
 }
 
+/* Designation display field styling */
+.designation-display {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  opacity: 0.8;
+  font-style: italic;
+}
+
 /* Responsive adjustments - BETTER ALIGNED */
 @media (max-width: 768px) {
   .personal-info-layout {
@@ -3899,17 +3927,17 @@ yles to ensure proper layout */
     width: 80px;
     height: 80px;
   }
-  
+
   .contact-details-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .travel-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .form-grid,
   .form-grid-planned {
     grid-template-columns: 1fr;
@@ -4303,7 +4331,9 @@ ced Approval Actions Column */
 
   .actions-header h3 {
     font-size: 16px;
-    color: white;
+    color: white !important;
+    background: none !important;
+    -webkit-text-fill-color: white !important;
   }
 
   .remarks-textarea {
@@ -4377,7 +4407,9 @@ ced Approval Actions Column */
 
   .actions-header h3 {
     font-size: 15px;
-    color: white;
+    color: white !important;
+    background: none !important;
+    -webkit-text-fill-color: white !important;
   }
 
   .required-badge {
@@ -4929,7 +4961,7 @@ ced Approval Actions Column */
 }
 
 .actions-header i {
-  color: #60a5fa;
+  color: white;
   font-size: 18px;
   margin-right: 8px;
 }
@@ -4939,6 +4971,8 @@ ced Approval Actions Column */
   font-size: 18px;
   font-weight: 700;
   color: white !important;
+  background: none !important;
+  -webkit-text-fill-color: white !important;
   flex: 1;
 }
 
@@ -5342,7 +5376,7 @@ ced Approval Actions Column */
     width: 400px !important;
     min-width: 400px !important;
   }
-  
+
   .form-layout.has-sidebar .form-content-column {
     max-width: calc(100% - 420px) !important;
   }
@@ -5354,7 +5388,7 @@ ced Approval Actions Column */
     width: 380px !important;
     min-width: 380px !important;
   }
-  
+
   .form-layout.has-sidebar .form-content-column {
     max-width: calc(100% - 400px) !important;
   }
@@ -5433,6 +5467,7 @@ ced Approval Actions Column */
 .form-content-column {
   border: none !important;
 }
+
 /* CLEAN IMPROVEMENTS FOR APPROVAL SECTIONS */
 
 /* Status badges - more visible */
@@ -5561,13 +5596,13 @@ ced Approval Actions Column */
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .approve-btn,
   .reject-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .workflow-sidebar {
     width: 100%;
     min-width: auto;
@@ -5576,6 +5611,7 @@ ced Approval Actions Column */
     padding: 16px;
   }
 }
+
 /* ENHANCED APPROVAL FLOW - ALL DATA VISIBLE AND PROPERLY STRUCTURED */
 
 /* Better step card layout - MORE COMPACT */
@@ -6080,64 +6116,64 @@ ced Approval Actions Column */
     align-items: flex-start;
     gap: 6px;
   }
-  
+
   .status-badge {
     align-self: flex-end;
   }
-  
+
   .approver-card {
     padding: 10px !important;
   }
-  
+
   .approver-main-info {
     flex-direction: row !important;
     align-items: center !important;
     gap: 8px !important;
   }
-  
+
   .approver-avatar {
     width: 36px;
     height: 36px;
   }
-  
+
   .approver-name {
     font-size: 13px !important;
   }
-  
+
   .detail-item {
     font-size: 10px !important;
   }
-  
+
   .comments-toggle {
     font-size: 10px !important;
     padding: 6px 8px !important;
   }
-  
+
   .comment-text {
     font-size: 11px !important;
   }
-  
+
   .department-comments-header {
     font-size: 11px !important;
   }
-  
+
   .comment-bubble.department-comment .comment-text {
     font-size: 12px !important;
   }
-  
+
   .comment-meta {
     font-size: 10px !important;
   }
-  
+
   .no-comments-text {
     font-size: 11px !important;
   }
-  
+
   .approval-date {
     font-size: 10px !important;
     padding: 5px 8px !important;
   }
-  
+
   .workflow-sidebar {
     width: 100% !important;
     min-width: auto !important;
@@ -6147,7 +6183,7 @@ ced Approval Actions Column */
     position: static !important;
     max-height: none !important;
   }
-  
+
   .form-layout.has-sidebar .form-content-column {
     max-width: 100% !important;
     padding-right: 0 !important;
@@ -6159,31 +6195,31 @@ ced Approval Actions Column */
     width: 24px;
     margin-right: 10px;
   }
-  
+
   .indicator-dot {
     width: 24px;
     height: 24px;
     font-size: 10px;
   }
-  
+
   .approver-avatar {
     width: 32px;
     height: 32px;
   }
-  
+
   .status-mini-dot {
     width: 10px;
     height: 10px;
   }
-  
+
   .approver-details-list {
     padding: 6px 0 !important;
   }
-  
+
   .step-title {
     font-size: 13px !important;
   }
-  
+
   .workflow-sidebar {
     padding: 12px !important;
   }
@@ -6195,6 +6231,7 @@ ced Approval Actions Column */
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -6202,9 +6239,12 @@ ced Approval Actions Column */
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
   }
+
   50% {
     box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
   }
@@ -6229,10 +6269,13 @@ ced Approval Actions Column */
 }
 
 @keyframes previewPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(99, 102, 241, 0.5);
@@ -6262,9 +6305,12 @@ ced Approval Actions Column */
 }
 
 @keyframes gradientShift {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -6354,15 +6400,15 @@ ced Approval Actions Column */
   .static-flow-notice {
     padding: 10px;
   }
-  
+
   .notice-content {
     gap: 8px;
   }
-  
+
   .notice-text p {
     font-size: 12px;
   }
-  
+
   .preview-badge {
     font-size: 9px;
     padding: 3px 6px;
@@ -6375,24 +6421,25 @@ ced Approval Actions Column */
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .preview-badge {
     align-self: flex-end;
   }
-  
+
   .static-flow-notice {
     padding: 8px;
   }
-  
+
   .notice-content {
     flex-direction: column;
     gap: 6px;
   }
-  
+
   .notice-content i {
     align-self: flex-start;
   }
 }
+
 /* Action Taken Success Card Styles */
 .action-taken-card {
   background: linear-gradient(135deg, #d4edda, #c3e6cb);
@@ -6409,6 +6456,7 @@ ced Approval Actions Column */
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -6454,10 +6502,13 @@ ced Approval Actions Column */
 }
 
 @keyframes successPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(40, 167, 69, 0.5);
@@ -6497,17 +6548,17 @@ ced Approval Actions Column */
   .action-taken-card {
     padding: 16px;
   }
-  
+
   .success-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .success-badge {
     align-self: flex-end;
   }
-  
+
   .success-message {
     flex-direction: column;
     text-align: center;
@@ -6519,15 +6570,16 @@ ced Approval Actions Column */
   .action-taken-card {
     padding: 12px;
   }
-  
+
   .success-message {
     padding: 8px;
   }
-  
+
   .success-message p {
     font-size: 13px;
   }
 }
+
 /* HOD Auto-Select Info Styles */
 .hod-auto-select-info {
   display: flex;
@@ -6554,6 +6606,7 @@ ced Approval Actions Column */
     padding: 3px 6px;
   }
 }
+
 /* IT Assets Section Styles */
 .it-assets-section {
   margin-bottom: 20px;
@@ -6775,33 +6828,33 @@ ced Approval Actions Column */
   .assets-header {
     padding: 12px 16px;
   }
-  
+
   .assets-title h4 {
     font-size: 14px;
   }
-  
+
   .asset-count-badge {
     font-size: 11px;
     padding: 3px 6px;
   }
-  
+
   .category-header {
     padding: 12px 16px;
   }
-  
+
   .asset-item {
     padding: 12px 16px;
   }
-  
+
   .asset-details {
     grid-template-columns: 1fr;
     gap: 6px;
   }
-  
+
   .asset-tag {
     font-size: 13px;
   }
-  
+
   .asset-date,
   .asset-model,
   .asset-manufacture,
@@ -6816,6 +6869,7 @@ ced Approval Actions Column */
     max-height: 0;
     opacity: 0;
   }
+
   to {
     max-height: 800px;
     opacity: 1;
@@ -6827,6 +6881,7 @@ ced Approval Actions Column */
     max-height: 800px;
     opacity: 1;
   }
+
   to {
     max-height: 0;
     opacity: 0;
@@ -6836,6 +6891,7 @@ ced Approval Actions Column */
 .assets-content.open {
   animation: slideDown 0.3s ease;
 }
+
 /* Loading Button Styles */
 .approve-btn:disabled,
 .reject-btn:disabled,
@@ -6852,8 +6908,13 @@ ced Approval Actions Column */
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Loading button text animation */
@@ -6876,6 +6937,13 @@ ced Approval Actions Column */
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }

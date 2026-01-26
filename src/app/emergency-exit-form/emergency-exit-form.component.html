@@ -105,17 +105,21 @@
                     </span>
                   </div>
 
-                  
-                  
+                  <div class="form-group">
+                    <label for="designation">Designation</label>
+                    <div class="contact-value designation-display">
+                      {{ employeeDesignation || 'Not provided' }}
+                    </div>
+                  </div>
+
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="projectManagerName">Project Manager / Site Incharge *</label>
                     <div class="searchable-dropdown">
-                      <input type="text" id="projectManagerName" 
-                        [value]="getProjectManagerDisplayName()"
+                      <input type="text" id="projectManagerName" [value]="getProjectManagerDisplayName()"
                         [class.error]="isFieldInvalid('projectManagerName')"
-                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select project manager...'" class="dropdown-input" #pmSearchInput
-                        (input)="onPMSearchInputChange($event)" (focus)="showPMDropdown()" (blur)="hidePMDropdown()"
-                        autocomplete="off">
+                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select project manager...'"
+                        class="dropdown-input" #pmSearchInput (input)="onPMSearchInputChange($event)"
+                        (focus)="showPMDropdown()" (blur)="hidePMDropdown()" autocomplete="off">
                       <div class="dropdown-icon">
                         <i class="fas fa-chevron-down"></i>
                       </div>
@@ -137,8 +141,8 @@
                       {{ getFieldError('projectManagerName') }}
                     </span>
                   </div>
-                  
-                  
+
+
                   <div class="form-group">
                     <label for="hodName">HOD Name *</label>
                     <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
@@ -159,12 +163,14 @@
 
 
                   <!-- Project Manager / Site Incharge Selection (Planned Leave and Resignation) -->
-                  
+
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="responsibilitiesHandedOverToPhone">Phone Number *</label>
-                    <input type="tel" id="responsibilitiesHandedOverToPhone" formControlName="responsibilitiesHandedOverToPhone"
-                      [class.error]="isFieldInvalid('responsibilitiesHandedOverToPhone')" placeholder="Contact phone number">
+                    <input type="tel" id="responsibilitiesHandedOverToPhone"
+                      formControlName="responsibilitiesHandedOverToPhone"
+                      [class.error]="isFieldInvalid('responsibilitiesHandedOverToPhone')"
+                      placeholder="Contact phone number">
                     <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverToPhone')">
                       {{ getFieldError('responsibilitiesHandedOverToPhone') }}
                     </span>
@@ -172,7 +178,8 @@
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="responsibilitiesHandedOverToEmail">Email ID *</label>
-                    <input type="email" id="responsibilitiesHandedOverToEmail" formControlName="responsibilitiesHandedOverToEmail"
+                    <input type="email" id="responsibilitiesHandedOverToEmail"
+                      formControlName="responsibilitiesHandedOverToEmail"
                       [class.error]="isFieldInvalid('responsibilitiesHandedOverToEmail')" placeholder="Email address">
                     <span class="error-message" *ngIf="isFieldInvalid('responsibilitiesHandedOverToEmail')">
                       {{ getFieldError('responsibilitiesHandedOverToEmail') }}
@@ -388,7 +395,8 @@
           </div>
 
           <!-- Collapsible Responsibilities Section (Emergency, Planned, and Resignation) -->
-          <div class="form-section-card collapsible-section" *ngIf="formType === 'E' || formType === 'P' || formType === 'R'" [@fadeInUp]="'in'">
+          <div class="form-section-card collapsible-section"
+            *ngIf="formType === 'E' || formType === 'P' || formType === 'R'" [@fadeInUp]="'in'">
             <div class="section-header collapsible-header" (click)="toggleResponsibilitiesSection()">
               <h3>
                 <i class="fas fa-handshake"></i>
@@ -421,7 +429,8 @@
                         <label>Project *</label>
                         <input type="text" formControlName="project" placeholder="Enter project name"
                           [class.error]="responsibility.get('project')?.invalid && responsibility.get('project')?.touched">
-                        <span class="error-message" *ngIf="responsibility.get('project')?.invalid && responsibility.get('project')?.touched">
+                        <span class="error-message"
+                          *ngIf="responsibility.get('project')?.invalid && responsibility.get('project')?.touched">
                           Project name is required
                         </span>
                       </div>
@@ -431,7 +440,8 @@
                         <textarea formControlName="activities" rows="4"
                           placeholder="Describe the activities and responsibilities being handed over"
                           [class.error]="responsibility.get('activities')?.invalid && responsibility.get('activities')?.touched"></textarea>
-                        <span class="error-message" *ngIf="responsibility.get('activities')?.invalid && responsibility.get('activities')?.touched">
+                        <span class="error-message"
+                          *ngIf="responsibility.get('activities')?.invalid && responsibility.get('activities')?.touched">
                           Activities description is required
                         </span>
                       </div>
@@ -440,9 +450,10 @@
                         <label>Responsible Person Name *</label>
                         <div class="searchable-dropdown">
                           <input type="text" formControlName="responsiblePersonName"
-                            [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'" class="dropdown-input" #searchInput
-                            (input)="onSearchInputChange($event, i)" (focus)="showDropdown(i)" (blur)="hideDropdown(i)"
-                            autocomplete="off"
+                            [value]="getResponsiblePersonDisplayName(i)"
+                            [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select employee...'"
+                            class="dropdown-input" #searchInput (input)="onSearchInputChange($event, i)"
+                            (focus)="showDropdown(i)" (blur)="hideDropdown(i)" autocomplete="off"
                             [class.error]="responsibility.get('responsiblePersonName')?.invalid && responsibility.get('responsiblePersonName')?.touched">
                           <div class="dropdown-icon">
                             <i class="fas fa-chevron-down"></i>
@@ -463,7 +474,8 @@
                             </div>
                           </div>
                         </div>
-                        <span class="error-message" *ngIf="responsibility.get('responsiblePersonName')?.invalid && responsibility.get('responsiblePersonName')?.touched">
+                        <span class="error-message"
+                          *ngIf="responsibility.get('responsiblePersonName')?.invalid && responsibility.get('responsiblePersonName')?.touched">
                           Responsible person name is required
                         </span>
                       </div>
@@ -472,9 +484,12 @@
                         <label>Phone Number *</label>
                         <input type="tel" formControlName="responsiblePersonPhone" placeholder="Contact phone number"
                           [class.error]="responsibility.get('responsiblePersonPhone')?.invalid && responsibility.get('responsiblePersonPhone')?.touched">
-                        <span class="error-message" *ngIf="responsibility.get('responsiblePersonPhone')?.invalid && responsibility.get('responsiblePersonPhone')?.touched">
-                          <span *ngIf="responsibility.get('responsiblePersonPhone')?.errors?.['required']">Phone number is required</span>
-                          <span *ngIf="responsibility.get('responsiblePersonPhone')?.errors?.['pattern']">Please enter a valid phone number</span>
+                        <span class="error-message"
+                          *ngIf="responsibility.get('responsiblePersonPhone')?.invalid && responsibility.get('responsiblePersonPhone')?.touched">
+                          <span *ngIf="responsibility.get('responsiblePersonPhone')?.errors?.['required']">Phone number
+                            is required</span>
+                          <span *ngIf="responsibility.get('responsiblePersonPhone')?.errors?.['pattern']">Please enter a
+                            valid phone number</span>
                         </span>
                       </div>
 
@@ -482,9 +497,12 @@
                         <label>Email ID *</label>
                         <input type="email" formControlName="responsiblePersonEmail" placeholder="Email address"
                           [class.error]="responsibility.get('responsiblePersonEmail')?.invalid && responsibility.get('responsiblePersonEmail')?.touched">
-                        <span class="error-message" *ngIf="responsibility.get('responsiblePersonEmail')?.invalid && responsibility.get('responsiblePersonEmail')?.touched">
-                          <span *ngIf="responsibility.get('responsiblePersonEmail')?.errors?.['required']">Email address is required</span>
-                          <span *ngIf="responsibility.get('responsiblePersonEmail')?.errors?.['email']">Please enter a valid email address</span>
+                        <span class="error-message"
+                          *ngIf="responsibility.get('responsiblePersonEmail')?.invalid && responsibility.get('responsiblePersonEmail')?.touched">
+                          <span *ngIf="responsibility.get('responsiblePersonEmail')?.errors?.['required']">Email address
+                            is required</span>
+                          <span *ngIf="responsibility.get('responsiblePersonEmail')?.errors?.['email']">Please enter a
+                            valid email address</span>
                         </span>
                       </div>
 
@@ -526,11 +544,14 @@
                   <label class="checkbox-label">
                     <input type="checkbox" formControlName="decReturnAssets">
                     <span class="checkmark"></span>
-                    <span *ngIf="formType === 'E'">I will return all company assets (laptop, phone, keys, etc.) before
+                    <span *ngIf="formType === 'E'">I will return all company assets (laptop, phone, keys, Tag, Vehicle,
+                      etc.) before
                       departure</span>
-                    <span *ngIf="formType === 'P'">I will return all company assets (laptop, phone, keys, etc.) before
+                    <span *ngIf="formType === 'P'">I will return all company assets (laptop, phone, keys, Tag, Vehicle,
+                      etc.) before
                       my planned departure</span>
-                    <span *ngIf="formType === 'R'">I will return all company assets (laptop, phone, keys, etc.) before
+                    <span *ngIf="formType === 'R'">I will return all company assets (laptop, phone, keys, Tag, Vehicle,
+                      etc.) before
                       my last working day</span>
                   </label>
 
@@ -590,12 +611,14 @@
 
       <!-- Right Column: Workflow Sidebar (Always visible) -->
       <div class="workflow-sidebar" *ngIf="shouldShowWorkflowSidebar()">
-        
+
         <!-- Your Actions Card - Only show when user is taking action from approval listing -->
         <div class="approval-actions-card" *ngIf="canUserTakeAction()">
           <div class="actions-header">
             <i class="fas fa-gavel"></i>
-            <h3>Your Action Required</h3>
+            <h3
+              style="color: white !important; background: none !important; -webkit-text-fill-color: white !important;">
+              Your Action Required</h3>
             <span class="required-badge">Action Required</span>
           </div>
 
@@ -665,30 +688,19 @@
           <div class="actions-content">
             <div class="remarks-section">
               <label for="approvalRemarks">Remarks</label>
-              <textarea 
-                id="approvalRemarks"
-                [(ngModel)]="approvalRemarks" 
-                placeholder="Enter your remarks (optional for approval, required for rejection)..." 
-                rows="4"
+              <textarea id="approvalRemarks" [(ngModel)]="approvalRemarks"
+                placeholder="Enter your remarks (optional for approval, required for rejection)..." rows="4"
                 class="remarks-textarea">
               </textarea>
             </div>
 
             <div class="action-buttons">
-              <button 
-                type="button"
-                class="reject-btn" 
-                (click)="rejectRequest()" 
-                [disabled]="isSubmitting">
+              <button type="button" class="reject-btn" (click)="rejectRequest()" [disabled]="isSubmitting">
                 <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
                 <i class="fas fa-times-circle" *ngIf="!isSubmitting"></i>
                 {{ isSubmitting ? 'Rejecting...' : 'Reject' }}
               </button>
-              <button 
-                type="button"
-                class="approve-btn" 
-                (click)="approveRequest()"
-                [disabled]="isSubmitting">
+              <button type="button" class="approve-btn" (click)="approveRequest()" [disabled]="isSubmitting">
                 <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
                 <i class="fas fa-check-circle" *ngIf="!isSubmitting"></i>
                 {{ isSubmitting ? 'Approving...' : 'Approve' }}
@@ -763,26 +775,26 @@
                   <!-- Approver Avatar and Info in Flex Layout -->
                   <div class="approver-main-info">
                     <div class="approver-avatar">
-                      <img *ngIf="getApproverImage(step) && !isShowingStaticFlow()"
-                        [src]="getApproverImage(step)"
+                      <img *ngIf="getApproverImage(step) && !isShowingStaticFlow()" [src]="getApproverImage(step)"
                         [alt]="step.approvedBy || step.approverNames[0] || 'Approver'"
-                        (error)="onApproverImageError($event, step)"
-                        (load)="onApproverImageLoad($event, step)"
+                        (error)="onApproverImageError($event, step)" (load)="onApproverImageLoad($event, step)"
                         class="approver-image">
                       <div *ngIf="!getApproverImage(step) || isShowingStaticFlow()" class="avatar-icon">
                         <i class="fas fa-user"></i>
                       </div>
                       <div class="status-mini-dot" [ngClass]="'dot-' + step.status.toLowerCase()"></div>
                     </div>
-                    
+
                     <div class="approver-info">
                       <div class="approver-name">
-                        <span *ngIf="!isShowingStaticFlow()">{{ step.approvedBy || step.approverNames[0] || 'Pending Assignment' }}</span>
+                        <span *ngIf="!isShowingStaticFlow()">{{ step.approvedBy || step.approverNames[0] || 'Pending
+                          Assignment' }}</span>
                         <span *ngIf="isShowingStaticFlow()" class="responsible-person">
                           <strong>Responsible Person</strong>
                         </span>
                       </div>
-                      <div class="approver-id" *ngIf="(step.approvedId || step.approverIds[0]) && !isShowingStaticFlow()">
+                      <div class="approver-id"
+                        *ngIf="(step.approvedId || step.approverIds[0]) && !isShowingStaticFlow()">
                         ID: {{ step.approvedId || step.approverIds[0] }}
                       </div>
                       <div class="static-flow-subtitle" *ngIf="isShowingStaticFlow()">
@@ -790,9 +802,10 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Contact Details - Only show for dynamic flow -->
-                  <div class="approver-details-list" *ngIf="(step.email || step.phoneNumber || step.department) && !isShowingStaticFlow()">
+                  <div class="approver-details-list"
+                    *ngIf="(step.email || step.phoneNumber || step.department) && !isShowingStaticFlow()">
                     <div class="detail-item" *ngIf="step.email">
                       <i class="fas fa-envelope"></i>
                       <span>{{ step.email }}</span>
@@ -814,11 +827,13 @@
                       <span>{{ step.stepName }}</span>
                     </div>
                   </div>
-                  
+
                   <!-- Approval Date - Only show for dynamic flow -->
-                  <div class="approval-date" *ngIf="step.approvedDate && step.status !== 'PENDING' && !isShowingStaticFlow()">
+                  <div class="approval-date"
+                    *ngIf="step.approvedDate && step.status !== 'PENDING' && !isShowingStaticFlow()">
                     <i class="fas fa-calendar-check"></i>
-                    <span>{{ step.status === 'APPROVED' ? 'Approved' : (step.status === 'REJECTED' ? 'Rejected' : 'Actioned') }} on {{ step.approvedDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                    <span>{{ step.status === 'APPROVED' ? 'Approved' : (step.status === 'REJECTED' ? 'Rejected' :
+                      'Actioned') }} on {{ step.approvedDate | date:'MMM dd, yyyy HH:mm' }}</span>
                   </div>
 
                   <!-- Comments/Remarks Section - Only show for dynamic flow with actual comments -->
@@ -827,9 +842,10 @@
                       <i class="fas fa-comment-alt"></i>
                       <span>{{ step.stepName }} Comments</span>
                     </div>
-                    
+
                     <!-- Show comments if available -->
-                    <div class="department-comments-content" *ngIf="step.comments && step.comments.trim(); else noComments">
+                    <div class="department-comments-content"
+                      *ngIf="step.comments && step.comments.trim(); else noComments">
                       <div class="comment-bubble department-comment">
                         <div class="comment-text">{{ step.comments }}</div>
                         <div class="comment-meta" *ngIf="step.approvedDate && step.status !== 'PENDING'">
@@ -838,7 +854,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <!-- No comments template -->
                     <ng-template #noComments>
                       <div class="no-comments-content">
@@ -849,7 +865,8 @@
                 </div>
 
                 <!-- Pending Status Message - Only show for dynamic flow -->
-                <div class="pending-status" *ngIf="step.status === 'PENDING' && (!step.approvedBy && !step.approverNames[0]) && !isShowingStaticFlow()">
+                <div class="pending-status"
+                  *ngIf="step.status === 'PENDING' && (!step.approvedBy && !step.approverNames[0]) && !isShowingStaticFlow()">
                   <i class="fas fa-clock"></i>
                   <span>Awaiting assignment to approver</span>
                 </div>

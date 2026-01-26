@@ -41,7 +41,7 @@
       </div>
 
       <!-- DPR Menu with Sub-items -->
-      <div class="menu-item-with-submenu">
+      <div class="menu-item-with-submenu" *ngIf="false">
         <a class="parent-menu" (click)="toggleDPRMenu()" [class.active]="isDPRRouteActive()">
           <div class="menu-content">
             <i class="fas fa-tasks"></i>
@@ -75,7 +75,7 @@
             <i class="fas fa-clipboard-check"></i>
             <span>Leave Approval</span>
           </a>
-          <a routerLink="/dpr-approval" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          <a routerLink="/dpr-approval" *ngIf="false" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="fas fa-tasks"></i>
             <span>DPR Approval</span>
           </a>
