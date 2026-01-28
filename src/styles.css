@@ -404,3 +404,81 @@ i.fa {
 .dark-theme .loading-text {
   background: linear-gradient(135deg, #f7fafc, #e2e8f0) !important;
 }
+/* Avatar Styles */
+.profile-avatar,
+.profile-avatar-large,
+.employee-photo,
+.avatar-container img,
+.current-avatar img,
+.performer-avatar img {
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  transition: opacity 0.3s ease;
+}
+
+/* Default avatar styling for SVG icons */
+img[src*="default-avatar.svg"] {
+  background-color: #667eea;
+  padding: 2px;
+}
+
+/* Dark theme avatar adjustments */
+.dark-theme img[src*="default-avatar.svg"] {
+  background-color: #4c63d2;
+}
+
+/* Avatar error state */
+.avatar-error {
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 1.2em;
+}
+
+.dark-theme .avatar-error {
+  background-color: #333;
+  color: #666;
+}
+/* Global Required Badge Styling - Optimally Sized Red for Urgency */
+.required-badge {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--error-color) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  padding: 3px 6px !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  max-width: fit-content !important;
+  line-height: 1.2 !important;
+}
+
+/* Dark theme required badge */
+.dark-theme .required-badge {
+  background: var(--error-color) !important;
+  color: white !important;
+  border: 1px solid var(--error-color) !important;
+}
+
+/* Compact icon for required badge */
+.required-badge::before {
+  content: '!';
+  font-size: 9px;
+  font-weight: 900;
+  margin-right: 2px;
+}
+
+/* Alternative with Font Awesome icon - well-sized */
+.required-badge.with-icon::before {
+  content: '\f071';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 9px;
+  margin-right: 2px;
+}

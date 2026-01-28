@@ -200,14 +200,14 @@
         <!-- Profile -->
         <div class="profile-wrapper">
           <button class="profile-btn" (click)="toggleProfile()">
-            <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar">
+            <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar" (error)="onAvatarError($event)">
             <span class="profile-name">{{ userProfile.name }}</span>
             <i class="fas fa-chevron-down"></i>
           </button>
 
           <div class="profile-dropdown" *ngIf="showProfile" [@slideDown]>
             <div class="profile-info">
-              <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar-large">
+              <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar-large" (error)="onAvatarError($event)">
               <div>
                 <h4>{{ userProfile.name }}</h4>
                 <p>{{ userProfile.role }}</p>

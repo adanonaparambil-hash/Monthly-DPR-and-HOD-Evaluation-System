@@ -41,7 +41,7 @@
             <div class="profile-overview-card">
               <div class="profile-photo-section">
                 <div class="avatar-container">
-                  <img [src]="userProfile.avatar" [alt]="userProfile.name">
+                  <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onAvatarError($event)">
                 </div>
               </div>
               

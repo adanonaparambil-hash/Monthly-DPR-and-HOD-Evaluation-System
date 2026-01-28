@@ -25,7 +25,7 @@
       </button> -->
       <button class="profile-btn" (click)="toggleProfile()">
         <div class="profile-avatar">
-          <img [src]="userProfile.avatar" [alt]="userProfile.name">
+          <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onAvatarError($event)">
         </div>
         <span class="profile-name">{{ userProfile.name }}</span>
         <i class="fas fa-chevron-down"></i>
@@ -211,7 +211,7 @@
         <div class="performer-card" *ngFor="let performer of topPerformers; let i = index" [@slideInLeft]
           [style.animation-delay]="(i * 0.1) + 's'">
           <div class="performer-avatar">
-            <img [src]="performer.avatar" [alt]="performer.name">
+            <img [src]="performer.avatar" [alt]="performer.name" (error)="onAvatarError($event)">
             <div class="performer-rank">{{ i + 1 }}</div>
           </div>
           <div class="performer-info">
@@ -309,7 +309,7 @@
         <!-- Profile Picture Section -->
         <div class="profile-picture-section">
           <div class="current-avatar">
-            <img [src]="userProfile.avatar" [alt]="userProfile.name">
+            <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onAvatarError($event)">
             <div class="avatar-overlay" (click)="triggerFileUpload()">
               <i class="fas fa-camera"></i>
               <span>Change Photo</span>

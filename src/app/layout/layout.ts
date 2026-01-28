@@ -7,6 +7,7 @@ import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
 import { SessionMonitorComponent } from '../components/session-monitor.component';
+import { AvatarUtil } from '../utils/avatar.util';
 
 @Component({
   selector: 'app-layout',
@@ -74,8 +75,9 @@ export class layout implements OnInit, OnDestroy {
   userProfile = {
     name: this.userSession.employeeName || '',
     role: this.userSession.designation || '',
-    avatar: this.userSession.profileImageBase64 ||
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
+    avatar: AvatarUtil.processProfileImage(
+      this.userSession.profileImageBase64
+    )
   };
 
   constructor(
@@ -798,6 +800,8 @@ export class layout implements OnInit, OnDestroy {
     }
   }
 
-
-
+  // Handle avatar image errors
+  onAvatarError(event: Event): void {
+    AvatarUtil.handleImageError(event);
+  }
 }

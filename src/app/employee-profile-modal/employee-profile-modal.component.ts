@@ -2,6 +2,7 @@ import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angu
 import { CommonModule } from '@angular/common';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
+import { AvatarUtil } from '../utils/avatar.util';
 
 @Component({
   selector: 'app-employee-profile-modal',
@@ -57,7 +58,7 @@ export class EmployeeProfileModalComponent implements OnInit, OnChanges {
     state: '',
     district: '',
     place: '',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+    avatar: AvatarUtil.DEFAULT_AVATAR
   };
 
   isLoading: boolean = false;
@@ -106,9 +107,7 @@ export class EmployeeProfileModalComponent implements OnInit, OnChanges {
             state: data.state || '',
             district: data.district || '',
             place: data.place || '',
-            avatar: data.profileImageBase64
-              ? `data:image/jpeg;base64,${data.profileImageBase64}`
-              : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+            avatar: AvatarUtil.processProfileImage(data.profileImageBase64)
           };
         } else {
           console.warn('No profile data found:', response.message);
@@ -159,5 +158,9 @@ export class EmployeeProfileModalComponent implements OnInit, OnChanges {
     if (event.target === event.currentTarget) {
       this.onCloseModal();
     }
+  }
+
+  onAvatarError(event: Event): void {
+    AvatarUtil.handleImageError(event);
   }
 }

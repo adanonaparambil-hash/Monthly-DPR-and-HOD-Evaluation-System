@@ -19,6 +19,7 @@ import {
 import { SessionService } from '../services/session.service';
 import { ToastrService } from 'ngx-toastr';
 import { ApprovalWorkflowService } from '../services/approval-workflow.service';
+import { AvatarUtil } from '../utils/avatar.util';
 import Swal from 'sweetalert2';
 
 interface Department {
@@ -126,7 +127,7 @@ export class EmergencyExitFormComponent implements OnInit {
   employeeProfileData: ExitEmpProfileDetails = {};
 
   // Employee photo
-  employeePhoto: string = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format';
+  employeePhoto: string = AvatarUtil.DEFAULT_AVATAR;
 
   // Employee designation
   employeeDesignation: string = '';
@@ -788,7 +789,8 @@ export class EmergencyExitFormComponent implements OnInit {
               order: history.approvalLevel || index + 1,
               // Add these properties for the new logic
               approverCode: history.approverCode,
-              approvalStatusCode: history.approvalStatusCode
+              approvalStatusCode: history.approvalStatusCode,
+              isHead : history.isHead
             }));
             this.updateWorkflowProgress();
             
@@ -1072,7 +1074,8 @@ export class EmergencyExitFormComponent implements OnInit {
   // Handle photo loading error
   onPhotoError(event: any): void {
     console.log('Photo loading failed, using default avatar');
-    this.employeePhoto = 'assets/images/default-avatar.png';
+    AvatarUtil.handleImageError(event);
+    this.employeePhoto = AvatarUtil.DEFAULT_AVATAR;
   }
 
   addResponsibility() {
@@ -1527,7 +1530,6 @@ export class EmergencyExitFormComponent implements OnInit {
             
             // Capture designation from actProfession field
             this.employeeDesignation = data.actProfession || '';
-            console.log('employeeDesignation set to:', this.employeeDesignation);
             
             // Trigger change detection to update the UI
             this.cdr.detectChanges();
@@ -1993,8 +1995,9 @@ export class EmergencyExitFormComponent implements OnInit {
 
   updateWorkflowProgress(): void {
     // Calculate workflow progress based on completed steps
-    const totalSteps = this.approvalWorkflow.length;
-    const completedSteps = this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
+    // Use complete workflow data (including hidden steps) for accurate progress calculation
+    const totalSteps = this.getAllApprovalWorkflowSteps().length;
+    const completedSteps = this.getAllApprovalWorkflowSteps().filter(step => step.status === 'APPROVED').length;
     this.workflowProgress = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
   }
 
@@ -2423,50 +2426,34 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Check if current user can take action based on GetEmployeeExitSavedInfo response
     if (!this.currentUser || !this.currentUser.empId) {
-      console.log('canUserTakeAction: No current user or empId');
       return false;
     }
 
-    console.log('canUserTakeAction: Checking for user:', this.currentUser.empId);
-    console.log('canUserTakeAction: Current stage:', this.currentStage);
-    console.log('canUserTakeAction: ApprovalID:', this.approvalID);
-    console.log('canUserTakeAction: Approval workflow length:', this.approvalWorkflow?.length || 0);
-
-    // If we have approval workflow data from GetEmployeeExitSavedInfo
-    if (this.approvalWorkflow && this.approvalWorkflow.length > 0) {
+    if (this.getAllApprovalWorkflowSteps() && this.getAllApprovalWorkflowSteps().length > 0) {
       // Find the current stage approval in the workflow
-      const currentStageApproval = this.approvalWorkflow.find(approval => {
+      const currentStageApproval = this.getAllApprovalWorkflowSteps().find(approval => {
         const matches = approval.approverCode === this.currentStage &&
                        approval.approvalStatusCode === 'P' && // Pending status
                        approval.approvedId === this.currentUser.empId; // Current user is the assigned approver
         
-        console.log('canUserTakeAction: Checking approval:', {
-          approverCode: approval.approverCode,
-          approvalStatusCode: approval.approvalStatusCode,
-          approvedId: approval.approvedId,
-          currentStage: this.currentStage,
-          currentUserEmpId: this.currentUser.empId,
-          matches: matches
-        });
+    
         
         return matches;
       });
 
       const canTakeAction = !!currentStageApproval;
-      console.log('canUserTakeAction: Result based on workflow:', canTakeAction);
       return canTakeAction;
     }
 
     // Fallback to original logic if no workflow data available
     const fallbackResult = this.isApprovalMode && !!this.approvalID && !this.isViewMode && !this.actionTaken;
-    console.log('canUserTakeAction: Fallback result:', fallbackResult);
     return fallbackResult;
   }
 
 
   
   isCurrentUserApprover(): boolean {
-    if (!this.currentUser || !this.approvalWorkflow) {
+    if (!this.currentUser || !this.getAllApprovalWorkflowSteps()) {
       return false;
     }
 
@@ -2766,8 +2753,8 @@ export class EmergencyExitFormComponent implements OnInit {
    */
   debugApprovalWorkflow(): void {
     console.log('=== APPROVAL WORKFLOW DEBUG ===');
-    console.log('Approval workflow length:', this.approvalWorkflow.length);
-    this.approvalWorkflow.forEach((step, index) => {
+    console.log('Approval workflow length:', this.getAllApprovalWorkflowSteps().length);
+    this.getAllApprovalWorkflowSteps().forEach((step, index) => {
       console.log(`Step ${index + 1}:`, {
         stepName: step.stepName,
         status: step.status,
@@ -2832,20 +2819,21 @@ export class EmergencyExitFormComponent implements OnInit {
       return 0;
     }
     
-    const approvedSteps = this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
-    return Math.round((approvedSteps / this.approvalWorkflow.length) * 100);
+    const approvedSteps = this.getAllApprovalWorkflowSteps().filter(step => step.status === 'APPROVED').length;
+    return Math.round((approvedSteps / this.getAllApprovalWorkflowSteps().length) * 100);
   }
 
   /**
    * Get line status for timeline
    */
   getLineStatus(index: number): string {
-    if (!this.approvalWorkflow || index >= this.approvalWorkflow.length - 1) {
+    const allSteps = this.getAllApprovalWorkflowSteps();
+    if (!allSteps || index >= allSteps.length - 1) {
       return 'pending';
     }
     
-    const currentStep = this.approvalWorkflow[index];
-    const nextStep = this.approvalWorkflow[index + 1];
+    const currentStep = allSteps[index];
+    const nextStep = allSteps[index + 1];
     
     if (currentStep.status === 'APPROVED') {
       return nextStep.status === 'APPROVED' ? 'completed' : 'active';
@@ -2858,12 +2846,13 @@ export class EmergencyExitFormComponent implements OnInit {
    * Get approved count for progress display
    */
   getApprovedCount(): number {
-    if (!this.approvalWorkflow) return 0;
-    return this.approvalWorkflow.filter(step => step.status === 'APPROVED').length;
+    if (!this.getAllApprovalWorkflowSteps()) return 0;
+    return this.getAllApprovalWorkflowSteps().filter(step => step.status === 'APPROVED').length;
   }
 
   /**
    * Get the approval workflow to display - static for new forms, dynamic for existing ones
+   * Filters based on isHead property when available
    */
   getDisplayApprovalWorkflow(): ApprovalStep[] {
     // Check if we have an ExitId (from URL parameters or loaded data)
@@ -2876,7 +2865,23 @@ export class EmergencyExitFormComponent implements OnInit {
       return this.staticApprovalFlow;
     }
     
-    // Otherwise show the dynamic approval workflow
+    
+    // Filter the dynamic approval workflow based on isHead property
+    // Only show steps where isHead === 'Y', but keep all data intact
+    if (this.approvalWorkflow && this.approvalWorkflow.length > 0) {
+      return this.approvalWorkflow.filter((step: any) => {
+        // If status is APPROVED, bypass isHead check and show the step
+        if (step.status === 'APPROVED') {
+          return true;
+        }
+        // For other statuses, check isHead property
+        // If isHead property exists, only show steps where isHead === 'Y'
+        // If isHead property doesn't exist, show all steps (backward compatibility)
+        return !step.hasOwnProperty('isHead') || step.isHead === 'Y';
+      });
+    }
+    
+    // Fallback to original workflow if no filtering needed
     return this.approvalWorkflow;
   }
 
@@ -2889,6 +2894,28 @@ export class EmergencyExitFormComponent implements OnInit {
                    this.route.snapshot.queryParams['requestId'];
     
     return !exitId && (!this.approvalWorkflow || this.approvalWorkflow.length === 0);
+  }
+
+  /**
+   * Get all approval workflow steps (including hidden ones)
+   * Use this for internal processing that needs complete data
+   */
+  getAllApprovalWorkflowSteps(): ApprovalStep[] {
+    return this.approvalWorkflow || [];
+  }
+
+  /**
+   * Get visible workflow steps count for UI display
+   */
+  getVisibleWorkflowStepsCount(): number {
+    return this.getDisplayApprovalWorkflow().length;
+  }
+
+  /**
+   * Get total workflow steps count (including hidden)
+   */
+  getTotalWorkflowStepsCount(): number {
+    return this.getAllApprovalWorkflowSteps().length;
   }
 
   /**
@@ -3065,13 +3092,11 @@ export class EmergencyExitFormComponent implements OnInit {
   shouldShowITAssetsSection(): boolean {
     // Check if current stage is IT or TRANSPORT
     if (this.currentStage !== 'IT' && this.currentStage !== 'TRANSPORT') {
-      console.log('shouldShowITAssetsSection: Wrong stage:', this.currentStage);
       return false;
-    }
+    } 
 
     // Check if current user can take action based on the approval workflow
     const canTakeAction = this.canUserTakeAction();
-    console.log('shouldShowITAssetsSection: Can take action:', canTakeAction);
     return canTakeAction;
   }
 

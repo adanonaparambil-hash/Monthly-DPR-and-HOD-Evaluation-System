@@ -17,7 +17,7 @@
   <div class="profile-overview-card" [@scaleIn] style="animation-delay: 0.2s">
     <div class="profile-photo-section">
       <div class="avatar-container" [class.editable]="isEditing">
-        <img [src]="userProfile.avatar" [alt]="userProfile.name">
+        <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onAvatarError($event)">
         @if (isEditing) {
         <div class="avatar-overlay" (click)="triggerFileUpload()">
           <i class="fas fa-camera"></i>

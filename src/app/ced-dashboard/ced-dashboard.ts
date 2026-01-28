@@ -5,6 +5,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { Chart, registerables } from 'chart.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { AvatarUtil } from '../utils/avatar.util';
 
 Chart.register(...registerables);
 gsap.registerPlugin(ScrollTrigger);
@@ -85,8 +86,7 @@ export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
     position: 'Chief Executive Director',
     phone: '+1 (555) 123-4567',
     bio: 'Experienced executive leader with over 15 years in strategic management and organizational development.',
-    avatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face&auto=format',
+    avatar: AvatarUtil.DEFAULT_AVATAR,
   };
 
   originalProfile = { ...this.userProfile };
@@ -134,8 +134,7 @@ export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
       name: 'Robert Taylor',
       department: 'Engineering',
       score: 91,
-      avatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face&auto=format',
+      avatar: AvatarUtil.DEFAULT_AVATAR,
     },
     {
       name: 'Lisa Anderson',
@@ -801,5 +800,9 @@ export class CedDashboard implements OnInit, AfterViewInit, OnDestroy {
 
   resetProfile() {
     this.userProfile = { ...this.originalProfile };
+  }
+
+  onAvatarError(event: Event): void {
+    AvatarUtil.handleImageError(event);
   }
 }

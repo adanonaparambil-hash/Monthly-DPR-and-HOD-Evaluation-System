@@ -29,6 +29,7 @@ export interface ApprovalStep {
   // Add these properties for the new logic
   approverCode?: string;
   approvalStatusCode?: string;
+  isHead ?: string;
 }
 
 export interface DepartmentApproval {

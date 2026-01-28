@@ -6,6 +6,7 @@ import { Api } from '../services/api';
 import { EmployeeProfileUpdateDto, EmployeeDocumentUpload } from '../models/common.model';
 import { ToasterService } from '../services/toaster.service';
 import { ToasterComponent } from '../components/toaster/toaster.component';
+import { AvatarUtil } from '../utils/avatar.util';
 
 @Component({
   selector: 'app-profile',
@@ -58,7 +59,7 @@ export class ProfileComponent implements OnInit {
     state: '',
     district: '',
     place: '',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+    avatar: AvatarUtil.DEFAULT_AVATAR
   };
   originalProfile: any = {};
 
@@ -113,9 +114,10 @@ export class ProfileComponent implements OnInit {
             state: data.state || '',  // Don't fallback to previous user data
             district: data.district || '',  // Don't fallback to previous user data
             place: data.place || '',  // Don't fallback to previous user data
-            avatar: data.profileImageBase64
-              ? `data:image/jpeg;base64,${data.profileImageBase64}`
-              : this.user.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+            avatar: AvatarUtil.processProfileImage(
+              data.profileImageBase64,
+              this.user.photo
+            )
           };
 
           // Store original profile for reset
@@ -159,7 +161,7 @@ export class ProfileComponent implements OnInit {
       state: '',
       district: '',
       place: '',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format'
+      avatar: AvatarUtil.DEFAULT_AVATAR
     };
   }
 
@@ -307,5 +309,9 @@ export class ProfileComponent implements OnInit {
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     }
     return 'N/A';
+  }
+
+  onAvatarError(event: Event): void {
+    AvatarUtil.handleImageError(event);
   }
 }

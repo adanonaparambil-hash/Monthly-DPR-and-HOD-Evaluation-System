@@ -749,8 +749,8 @@ textarea {
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
-  background: white !important;
-  border: 2px solid rgba(27, 42, 56, 0.2) !important;
+  background: var(--background-primary) !important;
+  border: 2px solid var(--border-color) !important;
   border-top: none !important;
   border-radius: 0 0 12px 12px !important;
   max-height: 200px !important;
@@ -877,8 +877,8 @@ textarea {
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(27, 42, 56, 0.1);
-  background: white;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--background-primary);
   min-height: 50px;
   width: 100%;
   box-sizing: border-box;
@@ -932,10 +932,10 @@ textarea {
 .no-results {
   padding: 16px;
   text-align: center;
-  color: rgba(27, 42, 56, 0.7);
+  color: var(--text-secondary);
   font-style: italic;
   font-size: 14px;
-  background: white;
+  background: var(--background-primary);
 }
 
 /* Buttons */
@@ -2134,7 +2134,7 @@ rehensive Approval Workflow Styles */
 }
 
 .approval-card {
-  background: white;
+  background: var(--background-primary);
   border-radius: 12px;
   border: 2px solid var(--border-color);
   overflow: hidden;
@@ -3804,9 +3804,9 @@ yles to ensure proper layout */
   height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid rgba(27, 42, 56, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: #f8f9fa;
+  border: 3px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  background: var(--background-secondary);
 }
 
 .employee-photo {
@@ -3906,7 +3906,6 @@ yles to ensure proper layout */
   align-items: center;
   box-sizing: border-box;
   opacity: 0.8;
-  font-style: italic;
 }
 
 /* Responsive adjustments - BETTER ALIGNED */
@@ -3975,8 +3974,8 @@ ced Approval Actions Column */
   width: 320px;
   /* Reduced from previous width */
   min-width: 320px;
-  background: #f8f9fa;
-  border-left: 1px solid rgba(27, 42, 56, 0.2);
+  background: var(--background-secondary);
+  border-left: 1px solid var(--border-color);
   padding: 16px;
   overflow-y: auto;
   max-height: calc(100vh - 200px);
@@ -3984,12 +3983,12 @@ ced Approval Actions Column */
 
 /* Approval Card Enhancements */
 .approval-card {
-  background: white;
+  background: var(--background-primary);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
 }
 
 .approval-card-header {
@@ -4021,12 +4020,13 @@ ced Approval Actions Column */
   margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .required-badge {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
@@ -4112,7 +4112,7 @@ ced Approval Actions Column */
 
 /* Enhanced Approval Flow Card */
 .approval-flow-card {
-  background: white;
+  background: var(--background-primary);
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -4140,7 +4140,7 @@ ced Approval Actions Column */
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 /* Timeline Styling */
@@ -4573,8 +4573,8 @@ ced Approval Actions Column */
 .workflow-sidebar {
   width: 300px !important;
   min-width: 300px !important;
-  background: #f8f9fa !important;
-  border-left: 1px solid #e9ecef !important;
+  background: var(--background-secondary) !important;
+  border-left: 1px solid var(--border-color) !important;
   padding: 20px !important;
   height: fit-content !important;
   position: sticky !important;
@@ -4585,7 +4585,7 @@ ced Approval Actions Column */
 
 /* Actions Card */
 .actions-card {
-  background: white;
+  background: var(--background-primary);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -4615,8 +4615,9 @@ ced Approval Actions Column */
 }
 
 .required-badge {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
@@ -4977,8 +4978,9 @@ ced Approval Actions Column */
 }
 
 .required-badge {
-  background: #dc2626;
+  background: var(--error-color);
   color: white;
+  border: 1px solid var(--error-color);
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 10px;
@@ -5319,7 +5321,7 @@ ced Approval Actions Column */
 
 .step-comments-bubble {
   margin-top: 8px;
-  background: white;
+  background: var(--background-primary);
   padding: 10px;
   border-radius: 8px;
   font-size: 13px;
@@ -5434,8 +5436,8 @@ ced Approval Actions Column */
   order: 2 !important;
   width: 430px !important;
   min-width: 430px !important;
-  background: #f8f9fa !important;
-  border-left: 1px solid #e9ecef !important;
+  background: var(--background-secondary) !important;
+  border-left: 1px solid var(--border-color) !important;
   padding: 20px !important;
   height: fit-content !important;
   position: sticky !important;
@@ -5583,7 +5585,7 @@ ced Approval Actions Column */
 }
 
 .flow-card {
-  background: white;
+  background: var(--background-primary);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -6646,6 +6648,7 @@ ced Approval Actions Column */
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  color: white;
 }
 
 .asset-count-badge {
@@ -6761,7 +6764,7 @@ ced Approval Actions Column */
 }
 
 .asset-item:hover {
-  background: #f8f9fa;
+  background: var(--background-secondary);
 }
 
 .asset-item:last-child {
@@ -6946,4 +6949,511 @@ ced Approval Actions Column */
   50% {
     opacity: 1;
   }
+}
+
+/* Dark Mode Specific Styles for Approval Workflow */
+.dark-theme .approval-actions-column {
+  background: var(--background-secondary);
+  border-left-color: var(--border-color);
+}
+
+.dark-theme .approval-card {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.dark-theme .approval-card-header {
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .approval-card-header h3 {
+  color: var(--text-primary);
+}
+
+.dark-theme .dropdown-list {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-theme .dropdown-item {
+  background: var(--background-primary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .dropdown-item:hover {
+  background: var(--background-secondary);
+}
+
+.dark-theme .no-results {
+  background: var(--background-primary);
+  color: var(--text-secondary);
+}
+
+.dark-theme .approval-flow-card {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .actions-card {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .step-comments-bubble {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .flow-card {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .workflow-sidebar {
+  background: var(--background-secondary) !important;
+  border-left-color: var(--border-color) !important;
+}
+
+.dark-theme .asset-item:hover {
+  background: var(--background-secondary);
+}
+
+/* Ensure approval workflow text is visible in dark mode */
+.dark-theme .approval-card .employee-name {
+  color: var(--text-primary);
+}
+
+.dark-theme .approval-card .employee-id {
+  color: var(--text-secondary);
+}
+
+.dark-theme .approval-textarea {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .approval-textarea:focus {
+  border-color: var(--primary-color);
+  background: var(--background-primary);
+}
+
+/* Ensure form labels are visible in dark mode */
+.dark-theme .approval-form label {
+  color: var(--text-primary);
+}
+
+.dark-theme .required-badge {
+  background: var(--error-color) !important;
+  color: white !important;
+  border: 1px solid var(--error-color) !important;
+}
+
+/* Header content in dark mode */
+.dark-theme .header-content h3 {
+  color: var(--text-primary);
+}
+
+.dark-theme .header-content p {
+  color: var(--text-secondary);
+}
+/* Override hardcoded colors for dark mode compatibility */
+.required-badge {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--error-color) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.dark-theme .required-badge {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Step header approval background for dark mode */
+.step-header-approval {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important;
+}
+
+.dark-theme .step-header-approval {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2)) !important;
+}
+
+/* Fix any remaining hardcoded backgrounds */
+.dark-theme .approval-card-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .approval-form .form-group {
+  color: var(--text-primary);
+}
+
+.dark-theme .approval-form label {
+  color: var(--text-primary) !important;
+}
+/* Comprehensive Dark Mode Support for Approval Workflow */
+
+/* Timeline Steps Dark Mode */
+.dark-theme .timeline-step {
+  color: var(--text-primary);
+}
+
+.dark-theme .timeline-step .step-content {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .timeline-step .step-title {
+  color: var(--text-primary);
+}
+
+.dark-theme .timeline-step .step-description {
+  color: var(--text-secondary);
+}
+
+/* Timeline Step Status Colors for Dark Mode */
+.dark-theme .timeline-step.approved .indicator-dot {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--success-color);
+}
+
+.dark-theme .timeline-step.approved .indicator-line {
+  background: var(--success-color);
+}
+
+.dark-theme .timeline-step.rejected .indicator-dot {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--error-color);
+}
+
+.dark-theme .timeline-step.in_progress .indicator-dot {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--warning-color);
+}
+
+.dark-theme .timeline-step.pending .indicator-dot {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+/* Approver Cards Dark Mode */
+.dark-theme .timeline-step.approved .approver-card {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--success-color);
+}
+
+.dark-theme .timeline-step.in_progress .approver-card {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: var(--warning-color);
+}
+
+.dark-theme .timeline-step.pending .approver-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .timeline-step.rejected .approver-card {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--error-color);
+}
+
+/* Actions Header Dark Mode */
+.dark-theme .actions-header {
+  color: var(--text-primary);
+}
+
+.dark-theme .actions-header h3 {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .actions-header i {
+  color: var(--primary-color);
+}
+
+/* Empty Flow Dark Mode */
+.dark-theme .empty-flow {
+  color: var(--text-secondary);
+}
+
+.dark-theme .empty-flow i {
+  color: var(--text-secondary);
+}
+
+/* Flow Header Dark Mode */
+.dark-theme .flow-header {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .flow-header h4 {
+  color: var(--text-primary);
+}
+
+/* Step Line Dark Mode */
+.dark-theme .timeline-step .step-line {
+  background: var(--border-color);
+}
+
+.dark-theme .timeline-step.completed .step-line {
+  background: var(--success-color);
+}
+
+.dark-theme .timeline-step.in-progress .step-line {
+  background: linear-gradient(to bottom, var(--warning-color) 50%, var(--border-color) 50%);
+}
+
+/* Approval Mode Specific Dark Mode */
+.dark-theme .timeline-step.pending.approval-mode .indicator-dot {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--info-color);
+}
+
+/* Step Comments Dark Mode */
+.dark-theme .step-comments {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .step-comments-bubble {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Approver Info Dark Mode */
+.dark-theme .approver-info {
+  color: var(--text-primary);
+}
+
+.dark-theme .approver-name {
+  color: var(--text-primary);
+}
+
+.dark-theme .approver-role {
+  color: var(--text-secondary);
+}
+
+/* Timeline Indicator Dark Mode */
+.dark-theme .timeline-indicator {
+  background: var(--background-primary);
+}
+
+.dark-theme .indicator-dot {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .indicator-dot i {
+  color: var(--text-secondary);
+}
+
+/* Workflow Status Dark Mode */
+.dark-theme .workflow-status {
+  color: var(--text-primary);
+}
+
+.dark-theme .status-text {
+  color: var(--text-primary);
+}
+
+/* Form Layout Dark Mode */
+.dark-theme .form-layout.has-sidebar {
+  background: var(--background-primary);
+}
+
+.dark-theme .form-content-column {
+  background: var(--background-primary);
+  border-right-color: var(--border-color);
+}
+
+/* Ensure all text in approval workflow is visible */
+.dark-theme .workflow-sidebar * {
+  color: var(--text-primary);
+}
+
+.dark-theme .workflow-sidebar h3,
+.dark-theme .workflow-sidebar h4,
+.dark-theme .workflow-sidebar h5 {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .workflow-sidebar p,
+.dark-theme .workflow-sidebar span {
+  color: var(--text-secondary);
+}
+
+/* Override any remaining hardcoded colors */
+.dark-theme .approval-actions-card * {
+  color: inherit;
+}
+
+.dark-theme .flow-card * {
+  color: inherit;
+}
+
+/* Ensure buttons in approval workflow work in dark mode */
+.dark-theme .btn-approve,
+.dark-theme .btn-reject {
+  color: white !important;
+}
+
+/* Fix any remaining white backgrounds */
+.dark-theme .approval-actions-card,
+.dark-theme .flow-card,
+.dark-theme .actions-card,
+.dark-theme .workflow-sidebar {
+  background: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+/* Fix hardcoded border colors for dark mode */
+.dark-theme .approval-card-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .actions-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .flow-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .step-comments-bubble {
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .step-comments-bubble::before {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.dark-theme .approver-card {
+  border: 2px solid var(--border-color) !important;
+}
+
+.dark-theme .timeline-indicator {
+  border: 2px solid var(--border-color) !important;
+  background: var(--background-secondary) !important;
+}
+
+.dark-theme .indicator-dot {
+  border: 2px solid var(--border-color) !important;
+  background: var(--background-secondary) !important;
+}
+
+/* Mobile responsive borders */
+@media (max-width: 768px) {
+  .dark-theme .workflow-sidebar {
+    border-left: none !important;
+    border-top: 1px solid var(--border-color) !important;
+  }
+}
+
+/* Override any remaining hardcoded borders */
+.dark-theme .approval-flow-card,
+.dark-theme .enhanced-approval-flow-card {
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-theme .step-content {
+  background: var(--background-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Ensure proper contrast for all workflow elements */
+.dark-theme .workflow-sidebar .card,
+.dark-theme .workflow-sidebar .flow-card,
+.dark-theme .workflow-sidebar .approval-card {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+/* Enhanced Action Required Badge - Optimally Sized */
+.required-badge.action-required {
+  background: var(--error-color) !important;
+  color: white !important;
+  border: 2px solid var(--error-color) !important;
+  padding: 4px 8px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+  animation: urgentPulse 2s infinite !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  max-width: fit-content !important;
+}
+
+.dark-theme .required-badge.action-required {
+  background: #ef4444 !important;
+  color: white !important;
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5) !important;
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+  }
+}
+
+/* Standard required badge - well-sized and readable */
+.required-badge:not(.action-required) {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  padding: 3px 6px !important;
+  font-size: 10px !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  max-width: fit-content !important;
+}
+
+.dark-theme .required-badge:not(.action-required) {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.5) !important;
+}
+/* Override all required badge styles to be optimally sized */
+.required-badge,
+.approval-card .required-badge,
+.approval-actions-card .required-badge,
+.workflow-sidebar .required-badge {
+  background: var(--error-color) !important;
+  color: white !important;
+  border: 1px solid var(--error-color) !important;
+  padding: 3px 6px !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  max-width: fit-content !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+.dark-theme .required-badge,
+.dark-theme .approval-card .required-badge,
+.dark-theme .approval-actions-card .required-badge,
+.dark-theme .workflow-sidebar .required-badge {
+  background: #ef4444 !important;
+  color: white !important;
+  border: 1px solid #ef4444 !important;
+}
+
+/* Extra compact version for tight spaces */
+.required-badge.compact {
+  padding: 2px 4px !important;
+  font-size: 9px !important;
+  border-radius: 6px !important;
 }

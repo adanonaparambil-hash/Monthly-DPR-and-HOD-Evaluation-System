@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Api } from '../services/api';
 import { EmployeeProfileModalComponent } from '../employee-profile-modal/employee-profile-modal.component';
+import { AvatarUtil } from '../utils/avatar.util';
 
 interface Department {
     department: string;
@@ -349,7 +350,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         {
             id: '11',
             name: 'Robert Kim',
-            profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face&auto=format',
+            profileImage: AvatarUtil.DEFAULT_AVATAR,
             month: 'October',
             year: '2024',
             status: 'submitted',
@@ -373,7 +374,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         {
             id: '13',
             name: 'Daniel Kim',
-            profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face&auto=format',
+            profileImage: AvatarUtil.DEFAULT_AVATAR,
             month: 'October',
             year: '2024',
             status: 'pending',

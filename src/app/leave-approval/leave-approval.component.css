@@ -28,7 +28,7 @@
   width: 100%;
   min-width: 1000px;
   border-collapse: collapse;
-  background: white;
+  background: var(--background-primary);
   font-size: 14px;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .request-row:hover {
-  background-color: #f8f9fa;
+  background-color: var(--background-secondary);
 }
 
 /* Removed colored left borders for cleaner appearance */
@@ -68,7 +68,7 @@
 }
 
 .request-row:hover {
-  background-color: #f8f9fa;
+  background-color: var(--background-secondary);
 }
 
 /* Table Cell Styles - Optimized for screen fit */
@@ -204,18 +204,21 @@
 }
 
 .priority-badge.priority-high {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .priority-badge.priority-medium {
-  background: #fff3cd;
-  color: #856404;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .priority-badge.priority-low {
-  background: #d4edda;
-  color: #155724;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .actions-cell {
@@ -326,8 +329,9 @@
 }
 
 .type-emergency {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .type-planned {
@@ -336,8 +340,9 @@
 }
 
 .type-resignation {
-  background: #fff3cd;
-  color: #856404;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 /* Page Header */
@@ -521,7 +526,7 @@
   padding: 10px 16px;
   border: 2px solid var(--border-color);
   border-radius: 10px;
-  background: white;
+  background: var(--background-primary);
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
@@ -539,7 +544,7 @@
 
 .filter-select:hover {
   border-color: var(--primary-color);
-  background-color: #fffaf0;
+  background-color: var(--background-secondary);
 }
 
 .filter-select:focus {
@@ -720,7 +725,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .detail-row .label {
@@ -740,7 +745,7 @@
 
 /* Reason Section */
 .reason-section {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--background-secondary);
   padding: 16px;
   border-radius: 12px;
   border: 1px solid var(--border-color);
@@ -1010,18 +1015,336 @@
   }
 }
 
-/* Dark Theme Support */
-:host-context(.dark-theme) .request-card {
+/* Comprehensive Dark Theme Support */
+.dark-theme .leave-approval-container {
+  background: var(--background-primary);
+  color: var(--text-primary);
+}
+
+.dark-theme .requests-table-container {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
 
-:host-context(.dark-theme) .reason-section {
-  background: rgba(255, 255, 255, 0.02);
+.dark-theme .requests-table {
+  background: var(--background-primary);
+  color: var(--text-primary);
 }
 
-:host-context(.dark-theme) .approval-details {
-  background: rgba(34, 197, 94, 0.1);
+.dark-theme .requests-table td {
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .request-row:hover {
+  background-color: var(--background-secondary);
+}
+
+.dark-theme .id-cell {
+  color: var(--text-primary);
+}
+
+.dark-theme .name-cell {
+  color: var(--text-primary);
+}
+
+.dark-theme .employee-name {
+  color: var(--text-primary);
+}
+
+.dark-theme .employee-details {
+  color: var(--text-secondary);
+}
+
+.dark-theme .dept-cell {
+  color: var(--text-secondary);
+}
+
+.dark-theme .date-cell {
+  color: var(--text-primary);
+}
+
+.dark-theme .duration-cell {
+  color: var(--text-primary);
+}
+
+.dark-theme .reason-text {
+  color: var(--text-secondary);
+}
+
+.dark-theme .current-step {
+  color: var(--text-primary);
+}
+
+.dark-theme .progress-text {
+  color: var(--text-secondary);
+}
+
+.dark-theme .request-id {
+  color: var(--text-primary);
+}
+
+.dark-theme .approver-name {
+  color: var(--text-primary);
+}
+
+.dark-theme .approval-date {
+  color: var(--text-secondary);
+}
+
+.dark-theme .pending-text {
+  color: var(--warning-color);
+}
+
+.dark-theme .tab-navigation {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .tab-content {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .panel-header {
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .panel-header h2 {
+  color: var(--text-primary);
+}
+
+.dark-theme .filter-label {
+  color: var(--text-secondary);
+}
+
+.dark-theme .filter-select {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .filter-select:hover {
+  background-color: var(--background-secondary);
+}
+
+.dark-theme .filter-select:focus {
+  border-color: var(--primary-color);
+  background: var(--background-primary);
+}
+
+.dark-theme .request-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .request-card:hover {
+  border-color: var(--primary-color);
+}
+
+.dark-theme .employee-info h3,
+.dark-theme .request-info h3 {
+  color: var(--text-primary);
+}
+
+.dark-theme .employee-details,
+.dark-theme .request-id {
+  color: var(--text-secondary);
+}
+
+.dark-theme .detail-row {
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .detail-row .label {
+  color: var(--text-secondary);
+}
+
+.dark-theme .detail-row .value {
+  color: var(--text-primary);
+}
+
+.dark-theme .reason-section {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .reason-section h4 {
+  color: var(--text-primary);
+}
+
+.dark-theme .reason-text {
+  color: var(--text-secondary);
+}
+
+.dark-theme .approval-details {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--success-color);
+}
+
+.dark-theme .approval-details h4 {
+  color: var(--text-primary);
+}
+
+.dark-theme .card-actions {
+  border-top-color: var(--border-color);
+}
+
+.dark-theme .empty-state {
+  color: var(--text-secondary);
+}
+
+.dark-theme .empty-icon {
+  color: var(--border-color);
+}
+
+.dark-theme .empty-state h3 {
+  color: var(--text-primary);
+}
+
+.dark-theme .stat-card {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .request-summary {
+  background: var(--background-secondary);
+}
+
+.dark-theme .detail-item .label {
+  color: var(--text-secondary);
+}
+
+.dark-theme .detail-item .value {
+  color: var(--text-primary);
+}
+
+.dark-theme .workflow-progress {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .progress-header h4 {
+  color: var(--text-primary);
+}
+
+.dark-theme .progress-stats {
+  color: var(--text-secondary);
+}
+
+.dark-theme .workflow-step {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .step-name {
+  color: var(--text-primary);
+}
+
+.dark-theme .step-approvers {
+  color: var(--text-secondary);
+}
+
+.dark-theme .step-details {
+  color: var(--text-secondary);
+}
+
+.dark-theme .approval-action {
+  background: var(--background-secondary);
+  border-color: var(--primary-color);
+}
+
+.dark-theme .action-header h4 {
+  color: var(--primary-color);
+}
+
+.dark-theme .action-header p {
+  color: var(--text-secondary);
+}
+
+.dark-theme .no-action {
+  background: var(--background-secondary);
+}
+
+.dark-theme .info-message {
+  color: var(--text-secondary);
+}
+
+/* Dark mode priority badges */
+.dark-theme .priority-badge.priority-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark-theme .priority-badge.priority-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.dark-theme .priority-badge.priority-low {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Dark mode status badges */
+.dark-theme .status-badge.status-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.dark-theme .status-badge.status-approved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.dark-theme .status-badge.status-rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Dark mode type badges */
+.dark-theme .type-emergency {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark-theme .type-planned {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.dark-theme .type-resignation {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* Dark mode step status */
+.dark-theme .step-status.status-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.dark-theme .step-status.status-approved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.dark-theme .step-status.status-rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+/* Ensure dropdown arrow is visible in dark mode */
+.dark-theme .filter-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 /* Print Styles */
@@ -1273,18 +1596,18 @@
 }
 
 .step-status.status-pending {
-  background: #fff3cd;
-  color: #856404;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
 }
 
 .step-status.status-approved {
-  background: #d4edda;
-  color: #155724;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
 }
 
 .step-status.status-rejected {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
 }
 
 .step-details {
@@ -1300,7 +1623,7 @@
 
 /* Approval Action */
 .approval-action {
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  background: var(--background-secondary);
   padding: 16px;
   border-radius: 8px;
   border: 2px dashed var(--primary-color);
@@ -1398,23 +1721,27 @@
 }
 
 .status-badge.status-pending {
-  background: #fff3cd;
-  color: #856404;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .status-badge.status-in-progress {
-  background: #d1ecf1;
-  color: #0c5460;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .status-badge.status-approved {
-  background: #d4edda;
-  color: #155724;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-badge.status-rejected {
-  background: #f8d7da;
-  color: #721c24;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* My Request Cards */
@@ -1625,4 +1952,119 @@
   text-align: center;
   display: inline-block;
   min-width: 50px;
+}
+/* Additional Dark Mode Improvements */
+.dark-theme .table-wrapper {
+  box-shadow: var(--shadow-md);
+}
+
+.dark-theme .requests-table th {
+  border-bottom-color: var(--primary-color);
+}
+
+.dark-theme .loading-spinner {
+  color: var(--text-secondary);
+}
+
+.dark-theme .loading-spinner i {
+  color: var(--primary-color);
+}
+
+.dark-theme .loading-spinner p {
+  color: var(--text-secondary);
+}
+
+/* Ensure all table text is visible in dark mode */
+.dark-theme .requests-table,
+.dark-theme .requests-table * {
+  color: var(--text-primary);
+}
+
+.dark-theme .requests-table .employee-details,
+.dark-theme .requests-table .dept-cell,
+.dark-theme .requests-table .reason-text,
+.dark-theme .requests-table .progress-text,
+.dark-theme .requests-table .approval-date,
+.dark-theme .requests-table .pending-text {
+  color: var(--text-secondary) !important;
+}
+
+/* Fix any remaining hardcoded text colors */
+.dark-theme .type-badge,
+.dark-theme .priority-badge,
+.dark-theme .status-badge {
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* Ensure buttons remain visible */
+.dark-theme .btn-view-table,
+.dark-theme .btn-quick-approve-table,
+.dark-theme .btn-quick-reject-table {
+  color: white !important;
+}
+
+/* Progress bars in dark mode */
+.dark-theme .progress-bar-mini {
+  background: var(--background-secondary);
+}
+
+.dark-theme .progress-fill-mini {
+  background: var(--primary-color);
+}
+
+/* Tab badges in dark mode */
+.dark-theme .tab-button:not(.active) .tab-badge {
+  background: var(--primary-color);
+  color: white;
+}
+
+.dark-theme .tab-button.active .tab-badge {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+/* Workflow step indicators in dark mode */
+.dark-theme .step-number {
+  background: var(--background-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .workflow-step.status-approved .step-number {
+  background: var(--success-color);
+  color: white;
+  border-color: var(--success-color);
+}
+
+.dark-theme .workflow-step.status-rejected .step-number {
+  background: var(--error-color);
+  color: white;
+  border-color: var(--error-color);
+}
+
+.dark-theme .workflow-step.current-step .step-number {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Ensure all card content is visible */
+.dark-theme .comprehensive-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .comprehensive-card:hover {
+  border-color: var(--primary-color);
+}
+
+/* Fix detail rows in dark mode */
+.dark-theme .detail-row:last-child {
+  border-bottom: none;
+}
+
+/* Ensure proper contrast for all elements */
+.dark-theme .leave-approval-container * {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
