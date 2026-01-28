@@ -3254,3 +3254,476 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+/* ===== DARK MODE STYLES FOR GLASSMORPHISM MODAL ===== */
+.task-board-container.dark-mode .modal-overlay-enhanced {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.task-board-container.dark-mode .task-modal-compact {
+  background: rgba(31, 41, 55, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .modal-header-compact {
+  background: rgba(55, 65, 81, 0.8);
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .back-btn-compact {
+  background: rgba(75, 85, 99, 0.6);
+  color: #d1d5db;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.task-board-container.dark-mode .back-btn-compact:hover {
+  background: rgba(107, 114, 128, 0.8);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .task-id-compact {
+  background: rgba(75, 85, 99, 0.6);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.task-board-container.dark-mode .logged-hours-compact {
+  color: #d1d5db;
+}
+
+.task-board-container.dark-mode .logged-hours-value {
+  color: #fbbf24;
+}
+
+.task-board-container.dark-mode .timer-display-compact {
+  color: #fbbf24;
+}
+
+.task-board-container.dark-mode .timer-btn-compact {
+  background: rgba(75, 85, 99, 0.6);
+  color: #d1d5db;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.task-board-container.dark-mode .timer-btn-compact:hover {
+  background: rgba(107, 114, 128, 0.8);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .save-btn-compact {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.8), rgba(245, 158, 11, 0.8));
+  color: #1f2937;
+  border: none;
+}
+
+.task-board-container.dark-mode .save-btn-compact:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9));
+}
+
+.task-board-container.dark-mode .status-select-compact {
+  background: rgba(75, 85, 99, 0.6);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .category-select-compact {
+  background: rgba(75, 85, 99, 0.6);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .task-title-compact {
+  background: rgba(75, 85, 99, 0.4);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .task-title-compact::placeholder {
+  color: #9ca3af;
+}
+
+.task-board-container.dark-mode .progress-label-compact {
+  color: #d1d5db;
+}
+
+.task-board-container.dark-mode .progress-value-compact {
+  color: #fbbf24;
+}
+
+.task-board-container.dark-mode .progress-slider-compact {
+  background: rgba(75, 85, 99, 0.6);
+}
+
+.task-board-container.dark-mode .progress-track-bg {
+  background: rgba(75, 85, 99, 0.4);
+}
+
+.task-board-container.dark-mode .progress-fill-bg {
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+.task-board-container.dark-mode .description-textarea-compact {
+  background: rgba(75, 85, 99, 0.4);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .description-textarea-compact::placeholder {
+  color: #9ca3af;
+}
+
+.task-board-container.dark-mode .custom-fields-btn-compact {
+  background: transparent;
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.task-board-container.dark-mode .custom-fields-btn-compact:hover {
+  background: rgba(251, 191, 36, 0.1);
+  color: #f59e0b;
+}
+
+.task-board-container.dark-mode .detail-select-compact,
+.task-board-container.dark-mode .detail-input-compact {
+  background: rgba(75, 85, 99, 0.6);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .assignee-compact {
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .subtasks-tabs-header {
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .subtask-tab-btn {
+  color: #d1d5db;
+  border-bottom: 2px solid transparent;
+}
+
+.task-board-container.dark-mode .subtask-tab-btn.active {
+  color: #fbbf24;
+  border-bottom-color: rgba(251, 191, 36, 0.6);
+}
+
+.task-board-container.dark-mode .subtask-tab-btn:hover {
+  color: #f9fafb;
+  background: rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .add-item-btn-compact {
+  background: transparent;
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.task-board-container.dark-mode .add-item-btn-compact:hover {
+  background: rgba(251, 191, 36, 0.1);
+  color: #f59e0b;
+}
+
+.task-board-container.dark-mode .subtasks-table-header {
+  background: rgba(75, 85, 99, 0.6);
+  border-bottom: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.task-board-container.dark-mode .header-col {
+  color: #d1d5db;
+}
+
+.task-board-container.dark-mode .subtask-row {
+  background: rgba(55, 65, 81, 0.4);
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .subtask-row:hover {
+  background: rgba(75, 85, 99, 0.6);
+}
+
+.task-board-container.dark-mode .subtask-row.completed {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.task-board-container.dark-mode .subtask-row.active {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.task-board-container.dark-mode .task-text {
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .hours-logged {
+  color: #fbbf24;
+}
+
+.task-board-container.dark-mode .control-btn {
+  background: rgba(75, 85, 99, 0.6);
+  color: #d1d5db;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.task-board-container.dark-mode .control-btn:hover {
+  background: rgba(107, 114, 128, 0.8);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .control-btn.start {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.task-board-container.dark-mode .control-btn.pause {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.task-board-container.dark-mode .control-btn.stop {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.task-board-container.dark-mode .sidebar-compact {
+  background: rgba(55, 65, 81, 0.8);
+  border-left: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .sidebar-tab-compact {
+  color: #d1d5db;
+  border-bottom: 2px solid transparent;
+}
+
+.task-board-container.dark-mode .sidebar-tab-compact.active {
+  color: #fbbf24;
+  border-bottom-color: rgba(251, 191, 36, 0.6);
+}
+
+.task-board-container.dark-mode .sidebar-tab-compact:hover {
+  color: #f9fafb;
+  background: rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .comment-item-compact {
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .comment-author-compact {
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .comment-time-compact {
+  color: #9ca3af;
+}
+
+.task-board-container.dark-mode .comment-text-compact {
+  color: #d1d5db;
+}
+
+.task-board-container.dark-mode .comment-input-compact textarea {
+  background: rgba(75, 85, 99, 0.6);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .comment-input-compact textarea::placeholder {
+  color: #9ca3af;
+}
+
+.task-board-container.dark-mode .send-btn-compact {
+  background: rgba(251, 191, 36, 0.8);
+  color: #1f2937;
+}
+
+.task-board-container.dark-mode .send-btn-compact:hover {
+  background: rgba(245, 158, 11, 0.9);
+}
+
+.task-board-container.dark-mode .modal-close-compact {
+  background: rgba(75, 85, 99, 0.6);
+  color: #d1d5db;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.task-board-container.dark-mode .modal-close-compact:hover {
+  background: rgba(107, 114, 128, 0.8);
+  color: #f9fafb;
+}
+/* ===== COMPACT ATTACHMENTS SECTION FOR GLASSMORPHISM MODAL ===== */
+/* Override existing styles for more compact design */
+.subtasks-section {
+  margin-bottom: 16px !important;
+  padding: 12px !important;
+}
+
+/* Compact files header */
+.files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.files-header .section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.files-header .section-title i {
+  font-size: 14px;
+}
+
+.add-item-btn-compact {
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  border-radius: 6px;
+}
+
+/* Compact tab content */
+.tab-content {
+  padding: 0;
+}
+
+/* Compact file upload area for glassmorphism */
+.files-upload-area {
+  padding: 18px 14px !important;
+  margin-bottom: 10px !important;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px);
+}
+
+.upload-icon {
+  font-size: 28px !important;
+  margin-bottom: 6px !important;
+}
+
+.upload-text {
+  font-size: 13px !important;
+  margin: 0 0 3px 0 !important;
+}
+
+.upload-subtext {
+  font-size: 11px !important;
+  margin: 0 !important;
+}
+
+/* Compact uploaded files list for glassmorphism */
+.uploaded-files-list {
+  margin-top: 10px !important;
+  gap: 6px !important;
+}
+
+/* Compact file items for glassmorphism */
+.file-item {
+  padding: 10px !important;
+  gap: 8px !important;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(8px);
+}
+
+.file-icon {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 14px !important;
+}
+
+.file-name {
+  font-size: 12px !important;
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.file-meta {
+  font-size: 10px !important;
+}
+
+.file-action-btn {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 10px !important;
+  padding: 0;
+  border-radius: 4px;
+}
+
+/* Compact no files state for glassmorphism */
+.no-files {
+  text-align: center;
+  padding: 14px !important;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+.no-files i {
+  font-size: 20px !important;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.no-files p {
+  font-size: 12px !important;
+  margin: 0;
+}
+
+/* Dark mode compact styles for glassmorphism */
+.task-board-container.dark-mode .files-header .section-title {
+  color: #f9fafb;
+}
+
+.task-board-container.dark-mode .files-upload-area {
+  background: rgba(31, 41, 55, 0.6) !important;
+  border-color: rgba(75, 85, 99, 0.4);
+}
+
+.task-board-container.dark-mode .file-item {
+  background: rgba(55, 65, 81, 0.6) !important;
+  border-color: rgba(75, 85, 99, 0.3);
+}
+
+.task-board-container.dark-mode .no-files {
+  background: rgba(31, 41, 55, 0.4);
+  color: #9ca3af;
+}
+
+/* Mobile responsive for glassmorphism compact */
+@media (max-width: 768px) {
+  .subtasks-section {
+    padding: 10px !important;
+  }
+  
+  .files-upload-area {
+    padding: 14px 10px !important;
+  }
+  
+  .upload-icon {
+    font-size: 24px !important;
+  }
+  
+  .file-item {
+    padding: 8px !important;
+  }
+  
+  .file-icon {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+  }
+  
+  .file-action-btn {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 9px !important;
+  }
+}

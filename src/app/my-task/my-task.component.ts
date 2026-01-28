@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Theme } from '../services/theme';
 
 interface Task {
   id: number;
@@ -88,6 +89,8 @@ interface SubtaskDetailed {
   styleUrls: ['./my-task.component.css', './task-modal-new.css', './task-details-modal.css', './task-modal-glassmorphism.css']
 })
 export class MyTaskComponent implements OnInit {
+  isDarkMode = false;
+  
   // Timer and stats
   activeTaskTimer = '00:42:15';
   punchedHours = '04:20:00';
@@ -119,8 +122,8 @@ export class MyTaskComponent implements OnInit {
   selectedTask: Task | null = null;
   selectTaskActiveTab: 'favorites' | 'all' = 'favorites';
   
-  // Subtasks and Files tabs
-  activeSubtaskTab: 'subtasks' | 'files' | 'activity' = 'subtasks';
+  // Files tab only (subtasks tab removed)
+  activeSubtaskTab: 'files' = 'files';
   uploadedFiles: UploadedFile[] = [];
   
   // Activity and History
@@ -328,7 +331,14 @@ export class MyTaskComponent implements OnInit {
   // Math functions for handle position
   Math = Math;
 
+  constructor(private themeService: Theme) {}
+
   ngOnInit() {
+    // Subscribe to theme changes
+    this.themeService.isDarkMode$.subscribe(isDark => {
+      this.isDarkMode = isDark;
+    });
+    
     // Initialize component
     this.initializeDetailedSubtasks();
     this.initializeActivityLogs();
@@ -759,8 +769,8 @@ export class MyTaskComponent implements OnInit {
     }
   }
 
-  // Subtasks, Files, and Activity Tab Methods
-  setActiveSubtaskTab(tab: 'subtasks' | 'files' | 'activity') {
+  // Files Tab Method (subtasks tab removed)
+  setActiveSubtaskTab(tab: 'files') {
     this.activeSubtaskTab = tab;
   }
 
@@ -1200,5 +1210,60 @@ export class MyTaskComponent implements OnInit {
       
       this.progressCircle3DElement = null;
     }
+  }
+
+  // Manual Progress Input Methods
+  onManualProgressChange(event: any) {
+    const value = parseInt(event.target.value);
+    if (!isNaN(value)) {
+      const oldProgress = this.taskProgress;
+      this.taskProgress = Math.max(0, Math.min(100, value));
+      
+      // Update the input field to reflect the clamped value
+      event.target.value = this.taskProgress;
+      
+      // Log progress change
+      if (Math.abs(this.taskProgress - oldProgress) >= 1) {
+        this.logTaskAction('progress_update', { 
+          oldProgress, 
+          progress: this.taskProgress,
+          taskTitle: this.selectedTask?.title || 'Current Task'
+        });
+      }
+      
+      // Update selected task progress if available
+      if (this.selectedTask) {
+        this.selectedTask.progress = this.taskProgress;
+      }
+      
+      // Add animation effect
+      this.isProgressAnimating = true;
+      setTimeout(() => {
+        this.isProgressAnimating = false;
+      }, 300);
+    }
+  }
+
+  setQuickProgress(value: number) {
+    const oldProgress = this.taskProgress;
+    this.taskProgress = value;
+    
+    // Log progress change
+    this.logTaskAction('progress_update', { 
+      oldProgress, 
+      progress: this.taskProgress,
+      taskTitle: this.selectedTask?.title || 'Current Task'
+    });
+    
+    // Update selected task progress if available
+    if (this.selectedTask) {
+      this.selectedTask.progress = this.taskProgress;
+    }
+    
+    // Add animation effect
+    this.isProgressAnimating = true;
+    setTimeout(() => {
+      this.isProgressAnimating = false;
+    }, 500);
   }
 }

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Theme } from '../services/theme';
 
 interface LoggedHour {
   id: string;
@@ -22,6 +23,8 @@ interface LoggedHour {
   styleUrls: ['./my-logged-hours.component.css']
 })
 export class MyLoggedHoursComponent implements OnInit {
+  isDarkMode = false;
+  
   // Filter properties
   fromDate = '2023-10-23';
   toDate = '2023-10-29';
@@ -96,7 +99,14 @@ export class MyLoggedHoursComponent implements OnInit {
     }
   ];
 
+  constructor(private themeService: Theme) {}
+
   ngOnInit() {
+    // Subscribe to theme changes
+    this.themeService.isDarkMode$.subscribe(isDark => {
+      this.isDarkMode = isDark;
+    });
+    
     // Initialize component
   }
 

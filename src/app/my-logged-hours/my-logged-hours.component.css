@@ -605,3 +605,253 @@
     display: inline;
   }
 }
+/* ===== DARK MODE STYLES ===== */
+.logged-hours-container.dark-mode {
+  background: #111827;
+  color: #f9fafb;
+}
+
+/* Dark mode - Header Section */
+.logged-hours-container.dark-mode .page-header {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .page-title {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .animated-clock-title {
+  color: #fbbf24;
+}
+
+.logged-hours-container.dark-mode .animated-clock-title:hover {
+  color: #f59e0b;
+}
+
+.logged-hours-container.dark-mode .page-subtitle {
+  color: #d1d5db;
+}
+
+/* Dark mode - Filter Section */
+.logged-hours-container.dark-mode .filter-section {
+  background: #1f2937;
+  border: 1px solid #374151;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .filter-group label {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .filter-input,
+.logged-hours-container.dark-mode .filter-select {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .filter-input::placeholder {
+  color: #9ca3af;
+}
+
+.logged-hours-container.dark-mode .filter-input:focus,
+.logged-hours-container.dark-mode .filter-select:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+/* Dark mode - Action Buttons */
+.logged-hours-container.dark-mode .action-btn {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .action-btn:hover {
+  background: #4b5563;
+  color: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .action-btn.primary {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+  border: none;
+}
+
+.logged-hours-container.dark-mode .action-btn.primary:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.3);
+}
+
+/* Dark mode - Data Table */
+.logged-hours-container.dark-mode .data-table {
+  background: #1f2937;
+  border: 1px solid #374151;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .table-header {
+  background: #374151;
+  border-bottom: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .header-cell {
+  color: #d1d5db;
+  border-right: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .table-row {
+  border-bottom: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .table-row:hover {
+  background: #374151;
+}
+
+.logged-hours-container.dark-mode .table-row:nth-child(even) {
+  background: rgba(55, 65, 81, 0.3);
+}
+
+.logged-hours-container.dark-mode .table-row:nth-child(even):hover {
+  background: #374151;
+}
+
+.logged-hours-container.dark-mode .table-cell {
+  color: #f9fafb;
+  border-right: 1px solid #374151;
+}
+
+/* Dark mode - Category Badges */
+.logged-hours-container.dark-mode .category-badge {
+  border: 1px solid transparent;
+}
+
+.logged-hours-container.dark-mode .category-badge.security {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.back-end {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.front-end {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.design {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c4b5fd;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.testing {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Dark mode - Duration Badges */
+.logged-hours-container.dark-mode .duration-badge {
+  background: #374151;
+  color: #fbbf24;
+  border: 1px solid #4b5563;
+}
+
+/* Dark mode - Project Badges */
+.logged-hours-container.dark-mode .project-badge {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .project-badge.internal {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.logged-hours-container.dark-mode .project-badge.client {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* Dark mode - Summary Cards */
+.logged-hours-container.dark-mode .summary-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .summary-card:hover {
+  background: #374151;
+  border-color: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.logged-hours-container.dark-mode .summary-value {
+  color: #fbbf24;
+}
+
+.logged-hours-container.dark-mode .summary-label {
+  color: #d1d5db;
+}
+
+/* Dark mode - Pagination */
+.logged-hours-container.dark-mode .pagination {
+  background: #1f2937;
+  border-top: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .pagination-info {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button.active {
+  background: #fbbf24;
+  color: #1f2937;
+  border-color: #fbbf24;
+}
+
+/* Dark mode - Scrollbars */
+.logged-hours-container.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.logged-hours-container.dark-mode ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.logged-hours-container.dark-mode ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.logged-hours-container.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

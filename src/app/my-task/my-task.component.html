@@ -1,4 +1,4 @@
-﻿<div class="task-board-container">
+﻿<div class="task-board-container" [class.dark-mode]="isDarkMode">
   <!-- Top Section with Active Task and Stats -->
   <div class="top-section">
     <!-- Active Task Card -->
@@ -1435,74 +1435,21 @@
           </div>
         </div>
 
-        <!-- Subtasks & Files Section -->
+        <!-- Files Section -->
         <div class="subtasks-section-compact">
-          <div class="subtasks-tabs-header">
-            <div class="subtasks-tabs">
-              <button class="subtask-tab-btn" [class.active]="activeSubtaskTab === 'subtasks'"
-                (click)="setActiveSubtaskTab('subtasks')">
-                <i class="fas fa-tasks"></i>
-                Subtasks (2)
-              </button>
-              <button class="subtask-tab-btn" [class.active]="activeSubtaskTab === 'files'"
-                (click)="setActiveSubtaskTab('files')">
-                <i class="fas fa-file-upload"></i>
-                Files ({{ uploadedFiles.length }})
-              </button>
+          <div class="files-header">
+            <div class="section-title">
+              <i class="fas fa-file-upload"></i>
+              Files ({{ uploadedFiles.length }})
             </div>
-            <button class="add-item-btn-compact" *ngIf="activeSubtaskTab === 'subtasks'" (click)="addSubtask()">
-              <i class="fas fa-plus"></i>
-              Add Subtask
-            </button>
-            <button class="add-item-btn-compact" *ngIf="activeSubtaskTab === 'files'" (click)="triggerFileUpload()">
+            <button class="add-item-btn-compact" (click)="triggerFileUpload()">
               <i class="fas fa-upload"></i>
               Upload File
             </button>
           </div>
 
-          <!-- Subtasks Tab Content -->
-          <div class="tab-content" *ngIf="activeSubtaskTab === 'subtasks'">
-            <div class="subtasks-table">
-              <div class="subtasks-table-header">
-                <div class="header-col task-name">Task Name</div>
-                <div class="header-col controls">Controls</div>
-                <div class="header-col hours">Hours</div>
-              </div>
-              <div class="subtasks-table-body">
-                <div class="subtask-row" *ngFor="let subtask of detailedSubtasks" [class.completed]="subtask.completed"
-                  [class.active]="subtask.isRunning">
-
-                  <div class="subtask-col task-name">
-                    <input type="checkbox" [checked]="subtask.completed" (change)="toggleSubtaskCompletion(subtask.id)"
-                      class="subtask-checkbox">
-                    <span class="task-text">{{ subtask.name }}</span>
-                  </div>
-
-                  <div class="subtask-col controls">
-                    <button class="control-btn start" (click)="startSubtaskDetailedTimer(subtask.id)"
-                      [disabled]="subtask.completed || subtask.isRunning" title="Start">
-                      <i class="fas fa-play"></i>
-                    </button>
-                    <button class="control-btn pause" (click)="pauseSubtaskDetailedTimer(subtask.id)"
-                      [disabled]="!subtask.isRunning" title="Pause">
-                      <i class="fas fa-pause"></i>
-                    </button>
-                    <button class="control-btn stop" (click)="stopSubtaskDetailedTimer(subtask.id)"
-                      [disabled]="!subtask.isRunning" title="Stop">
-                      <i class="fas fa-stop"></i>
-                    </button>
-                  </div>
-
-                  <div class="subtask-col hours">
-                    <span class="hours-logged">{{ formatHours(subtask.totalLoggedTime) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Files Tab Content -->
-          <div class="tab-content" *ngIf="activeSubtaskTab === 'files'">
+          <!-- Files Content -->
+          <div class="tab-content">
             <div class="files-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
               (drop)="onFileDrop($event)">
               <div class="upload-icon">
@@ -2140,6 +2087,26 @@
               <div class="float-element element-4"></div>
             </div>
           </div>
+          
+          <!-- Manual Progress Input -->
+          <div class="manual-progress-input">
+            <div class="progress-input-container">
+              <input type="number" 
+                     class="progress-input" 
+                     [(ngModel)]="taskProgress" 
+                     (input)="onManualProgressChange($event)"
+                     min="0" 
+                     max="100" 
+                     placeholder="0">
+              <span class="progress-input-suffix">%</span>
+              <div class="progress-quick-buttons">
+                <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(100)">✓</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Task Description -->
@@ -2261,99 +2228,40 @@
           </div>
         </div>
 
-        <!-- Subtasks Section -->
+        <!-- Attachments Section -->
         <div class="subtasks-section">
-          <div class="subtasks-tabs">
-            <button class="subtask-tab" [class.active]="activeSubtaskTab === 'subtasks'" (click)="setActiveSubtaskTab('subtasks')">
-              SUBTASKS 
-              <span class="tab-badge">{{ detailedSubtasks.length }}</span>
-            </button>
-            <button class="subtask-tab" [class.active]="activeSubtaskTab === 'files'" (click)="setActiveSubtaskTab('files')">
-              ATTACHMENTS
-              @if (uploadedFiles.length > 0) {
-                <span class="tab-badge">{{ uploadedFiles.length }}</span>
-              }
-            </button>
-          </div>
-
-          <!-- Subtasks Tab Content -->
-          @if (activeSubtaskTab === 'subtasks') {
-          <div class="subtasks-list">
-            @for (subtask of detailedSubtasks; track subtask.id) {
-            <div class="subtask-item" [class.completed]="subtask.completed" [class.active]="subtask.isRunning">
-              <div class="subtask-left">
-                @if (subtask.completed) {
-                  <i class="fas fa-check-circle subtask-check"></i>
-                } @else {
-                  <div class="subtask-radio">
-                    <div class="radio-dot" [class.active]="subtask.isRunning"></div>
-                  </div>
-                }
-                <span class="subtask-text">{{ subtask.name }}</span>
-              </div>
-              <div class="subtask-right">
-                <span class="subtask-time" [class.active]="subtask.isRunning">
-                  <i class="fas fa-clock"></i>
-                  {{ formatHours(subtask.totalLoggedTime) }}
-                </span>
-                <div class="subtask-actions">
-                  @if (!subtask.completed) {
-                    @if (!subtask.isRunning) {
-                      <button class="subtask-action-btn" (click)="startSubtaskDetailedTimer(subtask.id)" title="Start">
-                        <i class="fas fa-play"></i>
-                      </button>
-                    } @else {
-                      <button class="subtask-action-btn active" (click)="pauseSubtaskDetailedTimer(subtask.id)" title="Pause">
-                        <i class="fas fa-pause"></i>
-                      </button>
-                    }
-                    <button class="subtask-action-btn" (click)="stopSubtaskDetailedTimer(subtask.id)" title="Stop">
-                      <i class="fas fa-stop"></i>
-                    </button>
-                  }
-                  <button class="subtask-action-btn" (click)="toggleSubtaskCompletion(subtask.id)" [title]="subtask.completed ? 'Reopen' : 'Complete'">
-                    <i class="fas" [ngClass]="subtask.completed ? 'fa-undo' : 'fa-check'"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div class="section-header">
+            <h3 class="section-label">Attachments</h3>
+            @if (uploadedFiles.length > 0) {
+              <span class="section-badge">{{ uploadedFiles.length }}</span>
             }
           </div>
 
-          <!-- Action Buttons -->
-          <div class="action-buttons">
-            <button class="save-button">
-              <i class="fas fa-check"></i>
-              Save Changes
-            </button>
-            <button class="add-subtask-button">
-              <i class="fas fa-plus"></i>
-              Add Subtask
-            </button>
-          </div>
-          }
-          
-          <!-- Attachments Tab Content -->
-          @if (activeSubtaskTab === 'files') {
+          <!-- Attachments Content -->
           <div class="attachments-content">
-            <!-- File Upload Area -->
-            <div class="files-upload-area" 
+            <!-- Integrated Upload Area -->
+            <div class="integrated-upload-area" 
                  (click)="triggerFileUpload()" 
                  (dragover)="onDragOver($event)"
                  (drop)="onFileDrop($event)">
-              <div class="upload-icon">
-                <i class="fas fa-cloud-upload-alt"></i>
+              <div class="upload-area-content">
+                <div class="upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                  <span class="upload-primary">Drop files here or click to browse</span>
+                  <span class="upload-secondary">PDF, DOC, XLS, JPG, PNG (Max 10MB each)</span>
+                </div>
               </div>
-              <p class="upload-text">Click to upload or drag and drop files here</p>
-              <p class="upload-subtext">Supports: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB)</p>
+              <button class="upload-action-btn">
+                <i class="fas fa-plus"></i>
+                <span>Add Files</span>
+              </button>
             </div>
 
             <!-- Uploaded Files List -->
             @if (uploadedFiles.length > 0) {
             <div class="uploaded-files-list">
-              <div class="files-list-header">
-                <span class="files-count">{{ uploadedFiles.length }} file(s) uploaded</span>
-              </div>
               @for (file of uploadedFiles; track file.id; let i = $index) {
               <div class="file-item">
                 <div class="file-icon">
@@ -2364,7 +2272,7 @@
                   <div class="file-meta">
                     <span class="file-size">{{ formatFileSize(file.size) }}</span>
                     <span class="file-separator">•</span>
-                    <span class="file-date">Submitted: {{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                    <span class="file-date">{{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
                   </div>
                 </div>
                 <div class="file-actions">
@@ -2378,27 +2286,19 @@
               </div>
               }
             </div>
-            } @else {
-            <div class="no-files">
-              <i class="fas fa-folder-open"></i>
-              <p>No files uploaded yet</p>
-            </div>
             }
             
             <!-- Hidden file input -->
             <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
               (change)="onFileSelected($event)" style="display: none;">
           </div>
-          }
-          
-          <!-- Activity Log Tab Content -->
         </div>
       </div>
 
       <!-- Right Panel - Comments -->
       <div class="comments-panel">
         <div class="comments-tabs">
-          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'" (click)="setActiveSidebarTab('comments')">COMMENTS</button>
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'" (click)="setActiveSidebarTab('comments')">DAILY REMARKS</button>
           <button class="comment-tab" [class.active]="activeSidebarTab === 'history'" (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
         </div>
 

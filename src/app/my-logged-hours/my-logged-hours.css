@@ -1660,3 +1660,438 @@
   overflow: hidden;
   border-radius: 12px;
 }
+/* ===== DARK MODE STYLES ===== */
+.logged-hours-container.dark-mode {
+  background: #111827;
+  color: #f9fafb;
+}
+
+/* Dark mode - Header Section */
+.logged-hours-container.dark-mode .page-header {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .header-icon {
+  background: #374151;
+  color: #fbbf24;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .page-title {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .animated-clock-title {
+  color: #fbbf24;
+}
+
+.logged-hours-container.dark-mode .animated-clock-title:hover {
+  color: #f59e0b;
+}
+
+.logged-hours-container.dark-mode .page-subtitle {
+  color: #d1d5db;
+}
+
+/* Dark mode - Filter Section */
+.logged-hours-container.dark-mode .filter-section {
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .filter-group label {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .filter-input,
+.logged-hours-container.dark-mode .filter-select {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .filter-input::placeholder {
+  color: #9ca3af;
+}
+
+.logged-hours-container.dark-mode .filter-input:focus,
+.logged-hours-container.dark-mode .filter-select:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+/* Dark mode - Action Buttons */
+.logged-hours-container.dark-mode .action-btn {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .action-btn:hover {
+  background: #4b5563;
+  color: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .action-btn.primary {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+  border: none;
+}
+
+.logged-hours-container.dark-mode .action-btn.primary:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.3);
+}
+
+.logged-hours-container.dark-mode .action-btn.secondary {
+  background: transparent;
+  color: #fbbf24;
+  border: 1px solid #fbbf24;
+}
+
+.logged-hours-container.dark-mode .action-btn.secondary:hover {
+  background: #fbbf24;
+  color: #1f2937;
+}
+
+/* Dark mode - Data Table */
+.logged-hours-container.dark-mode .data-table {
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .table-header {
+  background: #374151;
+  border-bottom: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .header-cell {
+  color: #d1d5db;
+  border-right: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .header-cell:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .table-body {
+  background: #1f2937;
+}
+
+.logged-hours-container.dark-mode .table-row {
+  border-bottom: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .table-row:hover {
+  background: #374151;
+}
+
+.logged-hours-container.dark-mode .table-row:nth-child(even) {
+  background: rgba(55, 65, 81, 0.3);
+}
+
+.logged-hours-container.dark-mode .table-row:nth-child(even):hover {
+  background: #374151;
+}
+
+.logged-hours-container.dark-mode .table-cell {
+  color: #f9fafb;
+  border-right: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .table-cell input,
+.logged-hours-container.dark-mode .table-cell select,
+.logged-hours-container.dark-mode .table-cell textarea {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .table-cell input::placeholder,
+.logged-hours-container.dark-mode .table-cell textarea::placeholder {
+  color: #9ca3af;
+}
+
+.logged-hours-container.dark-mode .table-cell input:focus,
+.logged-hours-container.dark-mode .table-cell select:focus,
+.logged-hours-container.dark-mode .table-cell textarea:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+/* Dark mode - Category Badges */
+.logged-hours-container.dark-mode .category-badge {
+  border: 1px solid transparent;
+}
+
+.logged-hours-container.dark-mode .category-badge.development {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.security {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.quality-assurance {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.design {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c4b5fd;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.logged-hours-container.dark-mode .category-badge.testing {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Dark mode - Duration Badges */
+.logged-hours-container.dark-mode .duration-badge {
+  background: #374151;
+  color: #fbbf24;
+  border: 1px solid #4b5563;
+}
+
+/* Dark mode - Status Indicators */
+.logged-hours-container.dark-mode .status-indicator {
+  border: 1px solid transparent;
+}
+
+.logged-hours-container.dark-mode .status-indicator.completed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.logged-hours-container.dark-mode .status-indicator.in-progress {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.logged-hours-container.dark-mode .status-indicator.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Dark mode - Summary Cards */
+.logged-hours-container.dark-mode .summary-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .summary-card:hover {
+  background: #374151;
+  border-color: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.logged-hours-container.dark-mode .summary-value {
+  color: #fbbf24;
+}
+
+.logged-hours-container.dark-mode .summary-label {
+  color: #d1d5db;
+}
+
+/* Dark mode - Column Management Modal */
+.logged-hours-container.dark-mode .column-modal {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .column-modal-header {
+  border-bottom: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .column-modal-title {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .column-item {
+  background: #374151;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .column-item:hover {
+  background: #4b5563;
+}
+
+.logged-hours-container.dark-mode .column-item.required {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.logged-hours-container.dark-mode .column-label {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .column-type {
+  color: #9ca3af;
+}
+
+/* Dark mode - Pagination */
+.logged-hours-container.dark-mode .pagination {
+  background: #1f2937;
+  border-top: 1px solid #374151;
+}
+
+.logged-hours-container.dark-mode .pagination-info {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button.active {
+  background: #fbbf24;
+  color: #1f2937;
+  border-color: #fbbf24;
+}
+
+.logged-hours-container.dark-mode .pagination-controls button:disabled {
+  background: #374151;
+  color: #6b7280;
+  border-color: #4b5563;
+  cursor: not-allowed;
+}
+
+/* Dark mode - Loading States */
+.logged-hours-container.dark-mode .loading-spinner {
+  border-color: #374151;
+  border-top-color: #fbbf24;
+}
+
+.logged-hours-container.dark-mode .loading-text {
+  color: #d1d5db;
+}
+
+/* Dark mode - Empty States */
+.logged-hours-container.dark-mode .empty-state {
+  color: #9ca3af;
+}
+
+.logged-hours-container.dark-mode .empty-state i {
+  color: #6b7280;
+}
+
+/* Dark mode - Tooltips */
+.logged-hours-container.dark-mode .tooltip {
+  background: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+}
+
+.logged-hours-container.dark-mode .tooltip::after {
+  border-top-color: #374151;
+}
+
+/* Dark mode - Scrollbars */
+.logged-hours-container.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.logged-hours-container.dark-mode ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.logged-hours-container.dark-mode ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.logged-hours-container.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Dark mode - Form Elements */
+.logged-hours-container.dark-mode .form-group label {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .form-control {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .form-control:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.logged-hours-container.dark-mode .form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Dark mode - Dropdown Menus */
+.logged-hours-container.dark-mode .dropdown-menu {
+  background: #374151;
+  border: 1px solid #4b5563;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.logged-hours-container.dark-mode .dropdown-item {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .dropdown-item:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+/* Dark mode - Alerts and Messages */
+.logged-hours-container.dark-mode .alert {
+  border: 1px solid transparent;
+}
+
+.logged-hours-container.dark-mode .alert-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.logged-hours-container.dark-mode .alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.logged-hours-container.dark-mode .alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.logged-hours-container.dark-mode .alert-info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
