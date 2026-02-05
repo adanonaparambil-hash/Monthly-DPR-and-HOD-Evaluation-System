@@ -107,6 +107,7 @@
               <i class="fas fa-user"></i>
               <span>Assigned by: {{ activeTaskAssignee }}</span>
             </div>
+           
           </div>
         </div>
       </div>
@@ -122,16 +123,7 @@
 
       <!-- Stats Cards -->
       <div class="stats-grid">
-        <div class="stat-card punched-hours">
-          <div class="stat-header">
-            <span class="stat-label">LAST PUNCHED TIME</span>
-            <div class="stat-icon">
-              <i class="fas fa-clock"></i>
-            </div>
-          </div>
-          <div class="stat-value">{{ punchedHours }}</div>
-        </div>
-
+        
         <div class="stat-card running-time">
           <div class="stat-header">
             <span class="stat-label">TOTAL DAY LOGGED</span>
@@ -142,6 +134,17 @@
           <div class="stat-value">{{ runningTime }}</div>
           <div class="stat-sublabel">RUNNING TIME</div>
         </div>
+        
+        <div class="stat-card punched-hours">
+          <div class="stat-header">
+            <span class="stat-label">LAST PUNCHED TIME</span>
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+          </div>
+          <div class="stat-value">{{ punchedHours }}</div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -231,6 +234,11 @@
               <button class="action-btn stop" (click)="stopTask(task.id)" title="Stop Task">
                 <i class="fas fa-stop"></i>
               </button>
+              @if (task.status === 'NOT STARTED') {
+              <button class="action-btn delete" (click)="deleteTask(task.id)" title="Delete Task">
+                <i class="fas fa-trash"></i>
+              </button>
+              }
             </div>
           </div>
         </div>
@@ -804,10 +812,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn">
               <i class="fas fa-play"></i>
@@ -825,10 +829,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn">
@@ -848,10 +848,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn">
               <i class="fas fa-play"></i>
@@ -869,10 +865,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn">
@@ -892,10 +884,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn">
               <i class="fas fa-play"></i>
@@ -913,10 +901,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn">
@@ -936,10 +920,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn">
               <i class="fas fa-play"></i>
@@ -957,10 +937,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn">
@@ -980,10 +956,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn">
               <i class="fas fa-play"></i>
@@ -1001,10 +973,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn">
@@ -1031,10 +999,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn secondary">
               <i class="fas fa-play"></i>
@@ -1052,10 +1016,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn secondary">
@@ -1075,10 +1035,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn secondary">
               <i class="fas fa-play"></i>
@@ -1096,10 +1052,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn secondary">
@@ -1119,10 +1071,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn secondary">
               <i class="fas fa-play"></i>
@@ -1140,10 +1088,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn secondary">
@@ -1163,10 +1107,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn secondary">
               <i class="fas fa-play"></i>
@@ -1184,10 +1124,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn secondary">
@@ -1207,10 +1143,6 @@
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
               </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
-              </div>
             </div>
             <button class="add-start-btn secondary">
               <i class="fas fa-play"></i>
@@ -1228,10 +1160,6 @@
               <div class="task-info-item assigned">
                 <i class="fas fa-user-friends"></i>
                 <span>Assigned Task</span>
-              </div>
-              <div class="task-info-item scheduled">
-                <i class="fas fa-calendar"></i>
-                <span>Scheduled Task</span>
               </div>
             </div>
             <button class="add-start-btn secondary">
@@ -1895,11 +1823,10 @@
         <div class="modal-task-id-badge">TSK-1024</div>
         <div class="status-dropdown-container">
           <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
-            <option value="in-progress">IN PROGRESS</option>
-            <option value="pending">PENDING</option>
-            <option value="completed">COMPLETED</option>
-            <option value="on-hold">ON HOLD</option>
-            <option value="not-started">NOT STARTED</option>
+            <option value="not-started">Not Started</option>
+            <option value="running">Running</option>
+            <option value="completed">Completed</option>
+            <option value="pause">Pause</option>
           </select>
         </div>
       </div>
@@ -1934,6 +1861,9 @@
         </div>
         
         <div class="header-actions">
+          <button class="action-btn save-btn" (click)="saveTaskChanges()" title="Save Changes">
+            <i class="fas fa-save"></i>
+          </button>
           <button class="action-btn">
             <i class="fas fa-ellipsis-h"></i>
           </button>
@@ -2086,6 +2016,27 @@
               <div class="float-element element-3"></div>
               <div class="float-element element-4"></div>
             </div>
+          </div>
+          
+          <!-- Premium 3D Progress Bar -->
+          <div class="premium-3d-progress-container" 
+               (mousedown)="startProgressDrag($event)"
+               (mousemove)="onProgressDrag($event)"
+               (mouseup)="endProgressDrag()"
+               (mouseleave)="endProgressDrag()">
+            <div class="progress-3d-track"></div>
+            <div class="progress-3d-fill" 
+                 [style.width.%]="taskProgress"
+                 [class.value-changing]="isProgressChanging"></div>
+            <div class="progress-3d-particles">
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+            </div>
+            <div class="progress-3d-percentage">{{ taskProgress }}%</div>
           </div>
           
           <!-- Manual Progress Input -->

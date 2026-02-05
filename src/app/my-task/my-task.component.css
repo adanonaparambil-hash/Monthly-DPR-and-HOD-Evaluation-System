@@ -912,6 +912,16 @@
   -webkit-text-fill-color: #fbbf24;
 }
 
+.task-info .task-description {
+  font-size: 13px;
+  font-weight: 400;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.9;
+  text-align: left;
+}
+
 
 
 .task-info h2.task-title:hover {
@@ -1496,6 +1506,18 @@
   transform: scale(1.05);
 }
 
+.action-btn.delete {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.action-btn.delete:hover {
+  background: rgba(220, 38, 38, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -1860,7 +1882,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: #000000;
   margin-bottom: 8px;
 }
 
@@ -1868,7 +1890,7 @@
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #6b7280;
+  color: #000000;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -11774,6 +11796,10 @@
   color: #d1d5db;
 }
 
+.task-board-container.dark-mode .task-info .task-description {
+  color: rgba(209, 213, 219, 0.85);
+}
+
 /* Dark mode - Category Badges */
 .task-board-container.dark-mode .category-badge.development {
   background: rgba(59, 130, 246, 0.2);
@@ -11848,6 +11874,18 @@
   border-color: rgba(239, 68, 68, 0.3);
 }
 
+.task-board-container.dark-mode .action-btn.delete {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.task-board-container.dark-mode .action-btn.delete:hover {
+  background: rgba(220, 38, 38, 0.3);
+  color: #f87171;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
 /* Dark mode - Pagination */
 .task-board-container.dark-mode .pagination {
   background: #1f2937;
@@ -11913,7 +11951,7 @@
 }
 
 .task-board-container.dark-mode .form-label {
-  color: #d1d5db;
+  color: #f9fafb;
 }
 
 /* Dark mode - Attachments Section */
@@ -12000,7 +12038,7 @@
 .section-header h3.section-label {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: #000000;
   margin: 0;
 }
 

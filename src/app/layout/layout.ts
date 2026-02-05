@@ -43,6 +43,7 @@ export class layout implements OnInit, OnDestroy {
   isMPRMenuOpen = false;
   isDPRMenuOpen = false;
   isApprovalsMenuOpen = false;
+  isDPROnlyMode = false; // New property to control DPR-only mode
 
   notificationCount = 0;
   hasNewNotifications = false;
@@ -109,6 +110,14 @@ export class layout implements OnInit, OnDestroy {
     // Initialize current route immediately
     this.currentRoute = this.router.url;
     
+    // Check for DPR-only mode first
+    this.checkDPROnlyMode();
+    
+    // Also check again after a short delay to ensure everything is loaded
+    setTimeout(() => {
+      this.checkDPROnlyMode();
+    }, 100);
+    
     // Update menu states based on initial route
     this.updateMenuStatesBasedOnRoute();
 
@@ -120,6 +129,9 @@ export class layout implements OnInit, OnDestroy {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
+      
+      // Check for DPR-only mode on route changes
+      this.checkDPROnlyMode();
       
       // Auto-open relevant menus based on current route
       this.updateMenuStatesBasedOnRoute();
@@ -134,6 +146,13 @@ export class layout implements OnInit, OnDestroy {
           this.currentRoute = event.url;
         }, 100);
       }
+      
+      // Debug log for DPR-only mode
+      console.log('Route changed:', {
+        route: this.currentRoute,
+        isDPROnlyMode: this.isDPROnlyMode,
+        sessionStorage: sessionStorage.getItem('isDPROnlyMode')
+      });
     });
 
     // Listen for MPR month/year updates from the MPR component
@@ -181,6 +200,16 @@ export class layout implements OnInit, OnDestroy {
     
     // Clean up event listener
     window.removeEventListener('mprMonthYearUpdated', this.handleMPRMonthYearUpdate.bind(this));
+    
+    // Clear DPR-only mode from sessionStorage when component is destroyed
+    // (but only if we're not navigating to another DPR route)
+    const isDPRRoute = window.location.pathname.includes('/my-task') || 
+                       window.location.pathname.includes('/my-logged-hours') || 
+                       window.location.pathname.includes('/dpr-approval');
+    
+    if (!isDPRRoute) {
+      sessionStorage.removeItem('isDPROnlyMode');
+    }
   }
 
   getPageTitle(): string {
@@ -360,6 +389,16 @@ export class layout implements OnInit, OnDestroy {
 
   toggleDPRMenu() {
     this.isDPRMenuOpen = !this.isDPRMenuOpen;
+  }
+
+  // New method to open DPR in new tab
+  openDPRInNewTab() {
+    // Set a flag in localStorage that the new tab can read
+    localStorage.setItem('dprOnlyMode', 'true');
+    localStorage.setItem('dprModeTimestamp', Date.now().toString());
+    
+    // Open My Task page in new tab with URL parameter for immediate detection
+    window.open('/my-task?dprMode=true', '_blank');
   }
 
   isDPRRouteActive(): boolean {
@@ -803,5 +842,84 @@ export class layout implements OnInit, OnDestroy {
   // Handle avatar image errors
   onAvatarError(event: Event): void {
     AvatarUtil.handleImageError(event);
+  }
+
+  // Navigate to DPR route while maintaining DPR-only mode
+  navigateDPRRoute(route: string): void {
+    // Ensure DPR-only mode persists
+    sessionStorage.setItem('isDPROnlyMode', 'true');
+    
+    // Close sidebar on mobile
+    this.closeSidebarOnMobile();
+    
+    // Navigate to the route
+    this.router.navigate([route]);
+  }
+
+  // Check if we're in DPR-only mode - improved detection with URL parameters
+  private checkDPROnlyMode(): void {
+    // Check if we're on a DPR-related route (clean the route first)
+    const cleanRoute = this.currentRoute.split('?')[0].split('#')[0];
+    const isDPRRoute = cleanRoute === '/my-task' || 
+                       cleanRoute === '/my-logged-hours' || 
+                       cleanRoute === '/dpr-approval';
+    
+    if (isDPRRoute) {
+      // First check URL parameters for DPR mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const dprModeFromURL = urlParams.get('dprMode');
+      
+      if (dprModeFromURL === 'true') {
+        this.isDPROnlyMode = true;
+        sessionStorage.setItem('isDPROnlyMode', 'true');
+        // Clean up URL parameter
+        const url = new URL(window.location.href);
+        url.searchParams.delete('dprMode');
+        window.history.replaceState({}, '', url.toString());
+      }
+      // Check localStorage for DPR mode flag
+      else {
+        const dprFlag = localStorage.getItem('dprOnlyMode');
+        const timestamp = localStorage.getItem('dprModeTimestamp');
+        
+        if (dprFlag === 'true' && timestamp) {
+          // Check if the flag is recent (within last 30 seconds)
+          const isRecent = (Date.now() - parseInt(timestamp)) < 30000;
+          
+          if (isRecent) {
+            this.isDPROnlyMode = true;
+            // Move to sessionStorage for this session
+            sessionStorage.setItem('isDPROnlyMode', 'true');
+            // Clear localStorage flags
+            localStorage.removeItem('dprOnlyMode');
+            localStorage.removeItem('dprModeTimestamp');
+          }
+        }
+        
+        // Also check sessionStorage for existing session
+        if (sessionStorage.getItem('isDPROnlyMode') === 'true') {
+          this.isDPROnlyMode = true;
+        }
+      }
+    } else {
+      // If not on a DPR route, clear the DPR-only mode
+      this.isDPROnlyMode = false;
+      sessionStorage.removeItem('isDPROnlyMode');
+    }
+    
+    // If in DPR-only mode, auto-open DPR menu
+    if (this.isDPROnlyMode) {
+      this.isDPRMenuOpen = true;
+    }
+    
+    console.log('DPR-only mode check:', {
+      isDPRRoute,
+      cleanRoute,
+      currentRoute: this.currentRoute,
+      isDPROnlyMode: this.isDPROnlyMode,
+      urlParams: new URLSearchParams(window.location.search).get('dprMode'),
+      localStorage: localStorage.getItem('dprOnlyMode'),
+      sessionStorage: sessionStorage.getItem('isDPROnlyMode')
+    });
   }
 }

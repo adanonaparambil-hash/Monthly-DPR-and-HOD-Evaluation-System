@@ -111,7 +111,7 @@ export class HodDashboard implements OnInit, AfterViewInit, OnDestroy {
     { value: 12, name: 'December' }
   ];
 
-  years = [2025, 2024, 2023, 2022];
+  years = [2026, 2025, 2024, 2023, 2022];
 
   // Quote of the Day
   quoteOfTheDay = {

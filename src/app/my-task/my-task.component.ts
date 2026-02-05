@@ -96,6 +96,11 @@ export class MyTaskComponent implements OnInit {
   punchedHours = '04:20:00';
   runningTime = '02:15:45';
   
+  // Break management
+  isOnBreak = false;
+  breakStatus = 'Working';
+  nextBreakCountdown = '1:23:45';
+  
   // Active task info
   activeTaskStartDate = '2024-01-10';
   activeTaskAssignee = 'John Doe';
@@ -103,7 +108,7 @@ export class MyTaskComponent implements OnInit {
 
   // Tab management
   activeTab = 'MY TASKS';
-  myTasksCount = 12;
+  myTasksCount = 13;
   assignedToOthersCount = 8;
   searchTerm = '';
 
@@ -138,7 +143,7 @@ export class MyTaskComponent implements OnInit {
   selectedTaskStatus: 'continuous' | 'closed' = 'continuous';
   selectedTaskPriority = 'medium';
   selectedTaskEstimatedHours = 40;
-  selectedTaskDetailStatus = 'in-progress';
+  selectedTaskDetailStatus = 'running';
   selectedTaskDepartment = 'engineering';
   selectedTaskClient = 'Acme Corporation';
   editMode = false;
@@ -319,6 +324,18 @@ export class MyTaskComponent implements OnInit {
       startDate: '2024-01-09',
       assignee: 'Emily Davis',
       progress: 30
+    },
+    {
+      id: 6,
+      title: 'Code Review Guidelines',
+      description: 'Establish coding standards and review processes',
+      status: 'NOT STARTED',
+      category: 'DOCUMENTATION',
+      loggedHours: '0.0h',
+      totalHours: '6.0h',
+      startDate: '2024-01-20',
+      assignee: 'Sarah Wilson',
+      progress: 0
     }
   ];
 
@@ -326,6 +343,7 @@ export class MyTaskComponent implements OnInit {
   taskProgress = 75;
   isDraggingProgress = false;
   isProgressAnimating = false;
+  isProgressChanging = false;
   private progressCircle3DElement: HTMLElement | null = null;
   
   // Math functions for handle position
@@ -538,6 +556,36 @@ export class MyTaskComponent implements OnInit {
     }
   }
 
+  deleteTask(taskId: number) {
+    const task = this.tasks.find(t => t.id === taskId);
+    if (task && task.status === 'NOT STARTED') {
+      // Show confirmation dialog
+      if (confirm(`Are you sure you want to delete the task "${task.title}"? This action cannot be undone.`)) {
+        // Remove task from the array
+        this.tasks = this.tasks.filter(t => t.id !== taskId);
+        
+        // Update task counts
+        this.updateTaskCounts();
+        
+        // Log activity
+        this.logTaskAction('task_delete', { 
+          taskTitle: task.title,
+          taskId: taskId
+        });
+        
+        console.log(`Task "${task.title}" has been deleted.`);
+      }
+    }
+  }
+
+  updateTaskCounts() {
+    // Update the task counts based on current tasks
+    // For now, we'll assume all tasks in the list are "MY TASKS"
+    // In a real application, you might have a property to distinguish between "MY TASKS" and "ASSIGNED TO OTHERS"
+    this.myTasksCount = this.tasks.length;
+    // assignedToOthersCount would be calculated based on different criteria
+  }
+
   // Modal methods
   openCreateTaskModal() {
     this.showSelectTaskModal = true;
@@ -548,6 +596,33 @@ export class MyTaskComponent implements OnInit {
     this.showCreateTaskModal = false;
     document.body.style.overflow = 'auto';
     this.resetForm();
+  }
+
+  // Break management methods
+  toggleBreak() {
+    this.isOnBreak = !this.isOnBreak;
+    this.breakStatus = this.isOnBreak ? 'On Break' : 'Working';
+    
+    if (this.isOnBreak) {
+      // Start break timer
+      this.startBreakTimer();
+      console.log('Break started');
+    } else {
+      // End break and resume work
+      this.endBreakTimer();
+      console.log('Break ended, resuming work');
+    }
+  }
+
+  private startBreakTimer() {
+    // In a real application, you would start a break timer here
+    // For now, we'll just update the status
+    this.nextBreakCountdown = 'On Break';
+  }
+
+  private endBreakTimer() {
+    // Reset break countdown
+    this.nextBreakCountdown = '1:23:45';
   }
 
   closeSelectTaskModal() {
@@ -575,6 +650,28 @@ export class MyTaskComponent implements OnInit {
     document.body.style.overflow = 'auto';
     document.body.style.position = '';
     document.body.style.zIndex = '';
+  }
+
+  // Save task changes method
+  saveTaskChanges() {
+    if (this.selectedTask) {
+      // Update the selected task with current values
+      this.selectedTask.title = this.editableTaskTitle;
+      this.selectedTask.description = this.editableTaskDescription;
+      this.selectedTask.progress = this.taskProgress;
+      
+      // Log the save action
+      this.logTaskAction('task_saved', {
+        taskTitle: this.selectedTask.title,
+        progress: this.taskProgress
+      });
+      
+      // Show success feedback (you can add a toast notification here)
+      console.log('Task changes saved successfully:', this.selectedTask);
+      
+      // Optional: Close modal after saving
+      // this.closeTaskDetailsModal();
+    }
   }
 
   // Task timer controls for details modal
@@ -1186,11 +1283,13 @@ export class MyTaskComponent implements OnInit {
       delete (this.progressCircle3DElement as any)._boundOnDrag;
       delete (this.progressCircle3DElement as any)._boundEndDrag;
       
-      // Add completion animation
+      // Add completion animation for both progress circle and premium 3D bar
       this.isProgressAnimating = true;
+      this.isProgressChanging = true;
       setTimeout(() => {
         this.isProgressAnimating = false;
-      }, 400);
+        this.isProgressChanging = false;
+      }, 600);
       
       // Update selected task progress if available
       if (this.selectedTask) {
@@ -1236,11 +1335,13 @@ export class MyTaskComponent implements OnInit {
         this.selectedTask.progress = this.taskProgress;
       }
       
-      // Add animation effect
+      // Add animation effects for both progress circle and premium 3D bar
       this.isProgressAnimating = true;
+      this.isProgressChanging = true;
       setTimeout(() => {
         this.isProgressAnimating = false;
-      }, 300);
+        this.isProgressChanging = false;
+      }, 800);
     }
   }
 
@@ -1260,10 +1361,12 @@ export class MyTaskComponent implements OnInit {
       this.selectedTask.progress = this.taskProgress;
     }
     
-    // Add animation effect
+    // Add animation effects for both progress circle and premium 3D bar
     this.isProgressAnimating = true;
+    this.isProgressChanging = true;
     setTimeout(() => {
       this.isProgressAnimating = false;
-    }, 500);
+      this.isProgressChanging = false;
+    }, 1000);
   }
 }

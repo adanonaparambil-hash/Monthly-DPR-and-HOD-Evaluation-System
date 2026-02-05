@@ -8,19 +8,19 @@
     </div>
 
     <nav class="menu">
-      <!-- Dashboard Menu - Keep as is -->
-      <a *ngIf="isEmployee" routerLink="/employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <!-- Dashboard Menu - Keep as is (hidden in DPR-only mode) -->
+      <a *ngIf="!isDPROnlyMode && isEmployee" routerLink="/employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-chart-pie"></i> Employee Analytics
       </a>
-      <a *ngIf="isHod" routerLink="/hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <a *ngIf="!isDPROnlyMode && isHod" routerLink="/hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-users-cog"></i> HOD Dashboard
       </a>
-      <a *ngIf="isCed" routerLink="/ced-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <a *ngIf="!isDPROnlyMode && isCed" routerLink="/ced-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-chart-line"></i> Dashboard
       </a>
 
-      <!-- MPR Menu with Sub-items - HIDDEN FOR NOW -->
-      <div class="menu-item-with-submenu" *ngIf="false">
+      <!-- MPR Menu with Sub-items - HIDDEN FOR NOW (hidden in DPR-only mode) -->
+      <div class="menu-item-with-submenu" *ngIf="false && !isDPROnlyMode">
         <a class="parent-menu" (click)="toggleMPRMenu()" [class.active]="isMPRRouteActive()">
           <div class="menu-content">
             <i class="fas fa-file-alt"></i>
@@ -40,33 +40,42 @@
         </div>
       </div>
 
-      <!-- DPR Menu with Sub-items -->
+      <!-- DPR Menu - Modified behavior -->
       <div class="menu-item-with-submenu">
-        <a class="parent-menu" (click)="toggleDPRMenu()" [class.active]="isDPRRouteActive()">
+        <!-- In normal mode, show parent menu that opens new tab -->
+        <a *ngIf="!isDPROnlyMode" class="parent-menu" (click)="openDPRInNewTab()" [class.active]="isDPRRouteActive()">
           <div class="menu-content">
             <i class="fas fa-tasks"></i>
             <span>DPR</span>
           </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isDPRMenuOpen"></i>
+          <i class="fas fa-external-link-alt"></i>
         </a>
-        <div class="submenu" *ngIf="isDPRMenuOpen" [@slideDown]>
-          <a routerLink="/my-task" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-list-check"></i>
-            <span>My Task</span>
-          </a>
-          <a routerLink="/my-logged-hours" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-clock"></i>
-            <span>My Logged Hours</span>
-          </a>
-          <a routerLink="/dpr-approval"  routerLinkActive="active" (click)="closeSidebarOnMobile()">
+        
+        <!-- In DPR-only mode, show expanded menu items -->
+        <div *ngIf="isDPROnlyMode" class="dpr-only-menu">
+          <div class="dpr-only-header">
             <i class="fas fa-tasks"></i>
-            <span>DPR Approval</span>
-          </a>
+            <span>DPR Management</span>
+          </div>
+          <div class="dpr-menu-items">
+            <a routerLink="/my-task" routerLinkActive="active" (click)="navigateDPRRoute('/my-task')">
+              <i class="fas fa-list-check"></i>
+              <span>My Task</span>
+            </a>
+            <a routerLink="/my-logged-hours" routerLinkActive="active" (click)="navigateDPRRoute('/my-logged-hours')">
+              <i class="fas fa-clock"></i>
+              <span>My Logged Hours</span>
+            </a>
+            <a routerLink="/dpr-approval" routerLinkActive="active" (click)="navigateDPRRoute('/dpr-approval')">
+              <i class="fas fa-tasks"></i>
+              <span>DPR Approval</span>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- Approvals Menu (Empty for now, for future use) -->
-      <div class="menu-item-with-submenu">
+      <!-- Approvals Menu (Empty for now, for future use) (hidden in DPR-only mode) -->
+      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
         <a class="parent-menu" (click)="toggleApprovalsMenu()" [class.active]="isApprovalsRouteActive()">
           <div class="menu-content">
             <i class="fas fa-check-circle"></i>
@@ -82,18 +91,18 @@
         </div>
       </div>
 
-      <!-- Chat Menu - Single Item -->
-      <a routerLink="/chat" routerLinkActive="active" *ngIf="false" (click)="closeSidebarOnMobile()">
+      <!-- Chat Menu - Single Item (hidden in DPR-only mode) -->
+      <a routerLink="/chat" routerLinkActive="active" *ngIf="false && !isDPROnlyMode" (click)="closeSidebarOnMobile()">
         <i class="fas fa-comments"></i> Chat
       </a>
 
-      <!-- Exit Form Menu - Single Item -->
-      <a routerLink="/exit-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <!-- Exit Form Menu - Single Item (hidden in DPR-only mode) -->
+      <a routerLink="/exit-form" routerLinkActive="active" *ngIf="!isDPROnlyMode" (click)="closeSidebarOnMobile()">
         <i class="fas fa-plane-departure"></i> Exit Form
       </a>
 
-      <!-- Profile Menu - Keep as is -->
-      <a routerLink="/profile" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <!-- Profile Menu - Keep as is (hidden in DPR-only mode) -->
+      <a routerLink="/profile" routerLinkActive="active" *ngIf="!isDPROnlyMode" (click)="closeSidebarOnMobile()">
         <i class="fas fa-user"></i> My Profile
       </a>
     </nav>
