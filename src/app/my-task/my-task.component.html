@@ -2,7 +2,7 @@
   <!-- Top Section with Active Task and Stats -->
   <div class="top-section">
     <!-- Active Task Card -->
-    <div class="active-task-card">
+    <div class="active-task-card reduced-width">
       <div class="task-status">
         <div class="status-indicator">
           <div class="status-dot"></div>
@@ -107,8 +107,77 @@
               <i class="fas fa-user"></i>
               <span>Assigned by: {{ activeTaskAssignee }}</span>
             </div>
-           
+
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Break Tracker Section -->
+    <div class="break-tracker-section">
+      <div class="break-tracker-card">
+        <div class="break-tracker-header">
+          <div class="break-tracker-icon">
+            <i class="fas fa-mug-hot"></i>
+          </div>
+          <div class="break-tracker-title">Break Tracker</div>
+        </div>
+
+        <!-- Break Type Selection -->
+        <div class="break-type-selection">
+          <button class="break-type-btn" [class.active]="selectedBreakType === 'lunch'"
+            (click)="selectBreakType('lunch')">
+            <i class="fas fa-utensils"></i>
+            <span>Lunch</span>
+          </button>
+          <button class="break-type-btn" [class.active]="selectedBreakType === 'coffee'"
+            (click)="selectBreakType('coffee')">
+            <i class="fas fa-coffee"></i>
+            <span>Coffee</span>
+          </button>
+          <button class="break-type-btn" [class.active]="selectedBreakType === 'quick'"
+            (click)="selectBreakType('quick')">
+            <i class="fas fa-bolt"></i>
+            <span>Quick</span>
+          </button>
+        </div>
+
+        <!-- Running Timer Display -->
+        <div class="break-timer-display">
+          <div class="timer-value">{{ breakTimerDisplay }}</div>
+          <div class="timer-caption">{{ breakTimerCaption }}</div>
+        </div>
+
+        <!-- Remarks Field -->
+        <div class="break-remarks">
+          <input type="text" class="remarks-input" [(ngModel)]="breakRemarks" placeholder="Add notes (optional)..."
+            maxlength="50">
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="break-controls">
+          <button class="break-control-btn start" *ngIf="!isBreakRunning" (click)="startBreak()"
+            [disabled]="!selectedBreakType">
+            <i class="fas fa-play"></i>
+            <span>Start</span>
+          </button>
+          <button class="break-control-btn pause" *ngIf="isBreakRunning && !isBreakPaused" (click)="pauseBreak()">
+            <i class="fas fa-pause"></i>
+            <span>Pause</span>
+          </button>
+          <button class="break-control-btn resume" *ngIf="isBreakRunning && isBreakPaused" (click)="resumeBreak()">
+            <i class="fas fa-play"></i>
+            <span>Resume</span>
+          </button>
+          <button class="break-control-btn stop" *ngIf="isBreakRunning" (click)="stopBreak()">
+            <i class="fas fa-stop"></i>
+            <span>End</span>
+          </button>
+        </div>
+
+        <!-- Break Status Caption -->
+        <div class="break-status-caption">
+          {{ getBreakStatusCaption() }}
         </div>
       </div>
     </div>
@@ -123,7 +192,7 @@
 
       <!-- Stats Cards -->
       <div class="stats-grid">
-        
+
         <div class="stat-card running-time">
           <div class="stat-header">
             <span class="stat-label">TOTAL DAY LOGGED</span>
@@ -134,7 +203,7 @@
           <div class="stat-value">{{ runningTime }}</div>
           <div class="stat-sublabel">RUNNING TIME</div>
         </div>
-        
+
         <div class="stat-card punched-hours">
           <div class="stat-header">
             <span class="stat-label">LAST PUNCHED TIME</span>
@@ -1532,18 +1601,18 @@
           </button>
         </div>
       </div>
-      
+
       <div class="header-right">
         <div class="timer-section">
           <div class="timer-label">RUNNING TIMER</div>
           <div class="timer-display">00:42:18</div>
         </div>
-        
+
         <div class="total-hours">
           <div class="hours-label">TOTAL HOURS</div>
           <div class="hours-display">124.5h</div>
         </div>
-        
+
         <div class="header-actions">
           <button class="action-icon-btn">
             <i class="fas fa-pause"></i>
@@ -1555,7 +1624,7 @@
             <i class="fas fa-ellipsis-h"></i>
           </button>
         </div>
-        
+
         <button class="close-btn" (click)="closeTaskDetailsModal()">
           <i class="fas fa-times"></i>
         </button>
@@ -1568,13 +1637,13 @@
       <div class="task-main-panel">
         <div class="category-tag feature-development">FEATURE DEVELOPMENT</div>
         <h1 class="task-title-main">Initial Design Sprint: UI Component Library</h1>
-        
+
         <div class="task-description-section">
           <h3 class="section-title">TASK DESCRIPTION</h3>
           <p class="task-description">
-            The primary goal of this phase is to establish a cohesive UI component library for the new marketing 
-            dashboard. This includes defining color tokens, typography scales, and building core components like 
-            buttons, inputs, and navigation patterns. All assets should be documented in Figma and exported for the 
+            The primary goal of this phase is to establish a cohesive UI component library for the new marketing
+            dashboard. This includes defining color tokens, typography scales, and building core components like
+            buttons, inputs, and navigation patterns. All assets should be documented in Figma and exported for the
             frontend team.
           </p>
         </div>
@@ -1731,22 +1800,22 @@
           <div class="progress-circle-container">
             <svg class="progress-circle-svg" viewBox="0 0 120 120">
               <circle class="progress-circle-bg" cx="60" cy="60" r="54"></circle>
-              <circle class="progress-circle-fill" cx="60" cy="60" r="54" 
-                      style="stroke-dasharray: 339.292; stroke-dashoffset: 118.752;"></circle>
+              <circle class="progress-circle-fill" cx="60" cy="60" r="54"
+                style="stroke-dasharray: 339.292; stroke-dashoffset: 118.752;"></circle>
             </svg>
             <div class="progress-percentage">75%</div>
             <div class="progress-label">DONE</div>
           </div>
         </div>
 
-        
+
         <div class="right-panel-tabs">
-          <button class="right-tab" [class.active]="activeSidebarTab === 'comments'" 
-                  (click)="setActiveSidebarTab('comments')">
+          <button class="right-tab" [class.active]="activeSidebarTab === 'comments'"
+            (click)="setActiveSidebarTab('comments')">
             COMMENTS
           </button>
-          <button class="right-tab" [class.active]="activeSidebarTab === 'history'" 
-                  (click)="setActiveSidebarTab('history')">
+          <button class="right-tab" [class.active]="activeSidebarTab === 'history'"
+            (click)="setActiveSidebarTab('history')">
             ACTIVITY LOG
           </button>
         </div>
@@ -1760,7 +1829,7 @@
                 <span class="comment-time">2h ago</span>
               </div>
               <p class="comment-text">
-                Working on the token introspection endpoints now. Should be ready for 
+                Working on the token introspection endpoints now. Should be ready for
                 review by EOD.
               </p>
             </div>
@@ -1813,7 +1882,7 @@
 @if (showTaskDetailsModal && selectedTask) {
 <div class="modal-overlay" (click)="closeTaskDetailsModal()">
   <div class="task-modal-container" (click)="$event.stopPropagation()">
-    
+
     <!-- Header -->
     <header class="modal-task-header">
       <div class="modal-header-left">
@@ -1830,7 +1899,7 @@
           </select>
         </div>
       </div>
-      
+
       <div class="modal-header-right">
         <div class="modal-timer-section">
           <span class="timer-label">Running Timer</span>
@@ -1849,9 +1918,9 @@
             </div>
           </div>
         </div>
-        
+
         <div class="divider"></div>
-        
+
         <div class="total-hours-section">
           <span class="hours-label">Total Hours</span>
           <div class="hours-display">
@@ -1859,7 +1928,7 @@
             <span class="hours-text">124.5h</span>
           </div>
         </div>
-        
+
         <div class="header-actions">
           <button class="action-btn save-btn" (click)="saveTaskChanges()" title="Save Changes">
             <i class="fas fa-save"></i>
@@ -1884,38 +1953,32 @@
             <div class="task-meta">
               <span class="modal-category-badge">Feature Development</span>
             </div>
-            <input type="text" class="modal-task-title editable-title" 
-                   [(ngModel)]="editableTaskTitle" 
-                   placeholder="Enter task title...">
+            <input type="text" class="modal-task-title editable-title" [(ngModel)]="editableTaskTitle"
+              placeholder="Enter task title...">
           </div>
-          
+
           <!-- Advanced 3D Circular Progress Indicator -->
-          <div class="progress-circle-3d" 
-               [class.dragging]="isDraggingProgress"
-               [class.animating]="isProgressAnimating"
-               (mousedown)="startProgressDrag($event)"
-               (mousemove)="onProgressDrag($event)"
-               (mouseup)="endProgressDrag()"
-               (mouseleave)="endProgressDrag()"
-               title="Click and drag to adjust progress">
-            
+          <div class="progress-circle-3d" [class.dragging]="isDraggingProgress" [class.animating]="isProgressAnimating"
+            (mousedown)="startProgressDrag($event)" (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()"
+            (mouseleave)="endProgressDrag()" title="Click and drag to adjust progress">
+
             <!-- 3D Circle Container -->
             <div class="circle-3d-container">
               <!-- Background Rings -->
               <div class="bg-ring ring-1"></div>
               <div class="bg-ring ring-2"></div>
               <div class="bg-ring ring-3"></div>
-              
+
               <!-- Main Progress Circle -->
               <div class="main-circle">
                 <!-- Animated Background -->
                 <div class="circle-bg-animated"></div>
-                
+
                 <!-- Progress Fill -->
                 <div class="progress-fill-3d" [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg)'">
                   <div class="fill-segment"></div>
                 </div>
-                
+
                 <!-- Progress Track -->
                 <svg class="progress-svg-3d" viewBox="0 0 100 100">
                   <defs>
@@ -1926,89 +1989,88 @@
                       <stop offset="100%" style="stop-color:#6ee7b7;stop-opacity:1" />
                     </linearGradient>
                     <filter id="glow3D">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                      <feMerge> 
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
                       </feMerge>
                     </filter>
                   </defs>
-                  
+
                   <!-- Background Circle -->
-                  <circle class="progress-bg-3d" cx="50" cy="50" r="40" 
-                          fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
-                  
+                  <circle class="progress-bg-3d" cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)"
+                    stroke-width="8" />
+
                   <!-- Progress Circle -->
-                  <circle class="progress-stroke-3d" cx="50" cy="50" r="40" 
-                          fill="none" 
-                          stroke="url(#progressGradient3D)" 
-                          stroke-width="8" 
-                          stroke-linecap="round"
-                          filter="url(#glow3D)"
-                          [style.stroke-dasharray]="251.2"
-                          [style.stroke-dashoffset]="251.2 - (taskProgress / 100) * 251.2"
-                          transform="rotate(-90 50 50)"/>
-                  
+                  <circle class="progress-stroke-3d" cx="50" cy="50" r="40" fill="none"
+                    stroke="url(#progressGradient3D)" stroke-width="8" stroke-linecap="round" filter="url(#glow3D)"
+                    [style.stroke-dasharray]="251.2" [style.stroke-dashoffset]="251.2 - (taskProgress / 100) * 251.2"
+                    transform="rotate(-90 50 50)" />
+
                   <!-- Animated Particles -->
                   <g class="particles">
                     <circle class="particle particle-1" r="2" fill="#10b981" opacity="0.8">
                       <animateMotion dur="3s" repeatCount="indefinite">
-                        <mpath href="#progressPath"/>
+                        <mpath href="#progressPath" />
                       </animateMotion>
                     </circle>
                     <circle class="particle particle-2" r="1.5" fill="#34d399" opacity="0.6">
                       <animateMotion dur="4s" repeatCount="indefinite" begin="1s">
-                        <mpath href="#progressPath"/>
+                        <mpath href="#progressPath" />
                       </animateMotion>
                     </circle>
                     <circle class="particle particle-3" r="1" fill="#6ee7b7" opacity="0.4">
                       <animateMotion dur="5s" repeatCount="indefinite" begin="2s">
-                        <mpath href="#progressPath"/>
+                        <mpath href="#progressPath" />
                       </animateMotion>
                     </circle>
                   </g>
-                  
+
                   <!-- Hidden path for particle animation -->
-                  <path id="progressPath" d="M 50,10 A 40,40 0 1,1 49.9,10" fill="none" opacity="0"/>
+                  <path id="progressPath" d="M 50,10 A 40,40 0 1,1 49.9,10" fill="none" opacity="0" />
                 </svg>
-                
+
                 <!-- 3D Depth Layers -->
                 <div class="depth-layer layer-1"></div>
                 <div class="depth-layer layer-2"></div>
                 <div class="depth-layer layer-3"></div>
-                
+
                 <!-- Inner Glow -->
                 <div class="inner-glow"></div>
               </div>
-              
+
               <!-- Outer Glow Effects -->
               <div class="outer-glow glow-1"></div>
               <div class="outer-glow glow-2"></div>
               <div class="outer-glow glow-3"></div>
             </div>
-            
+
             <!-- Progress Content -->
             <div class="progress-content-3d">
               <span class="progress-percentage-3d">{{ taskProgress }}%</span>
               <span class="progress-label-3d">COMPLETE</span>
             </div>
-            
+
             <!-- Interactive Drag Handle -->
-            <div class="progress-handle-3d" 
-                 [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - taskProgress * 3.6) + 'deg)'">
+            <div class="progress-handle-3d"
+              [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - taskProgress * 3.6) + 'deg)'">
               <div class="handle-outer-ring"></div>
               <div class="handle-inner-core"></div>
               <div class="handle-pulse"></div>
             </div>
-            
+
             <!-- Progress Indicators -->
             <div class="progress-indicators">
-              <div class="indicator" [class.active]="taskProgress >= 25" style="transform: rotate(0deg) translateX(55px)">25</div>
-              <div class="indicator" [class.active]="taskProgress >= 50" style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
-              <div class="indicator" [class.active]="taskProgress >= 75" style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
-              <div class="indicator" [class.active]="taskProgress >= 100" style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
+              <div class="indicator" [class.active]="taskProgress >= 25"
+                style="transform: rotate(0deg) translateX(55px)">25</div>
+              <div class="indicator" [class.active]="taskProgress >= 50"
+                style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
+              <div class="indicator" [class.active]="taskProgress >= 75"
+                style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
+              <div class="indicator" [class.active]="taskProgress >= 100"
+                style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
             </div>
-            
+
             <!-- Floating Elements -->
             <div class="floating-elements">
               <div class="float-element element-1"></div>
@@ -2017,17 +2079,13 @@
               <div class="float-element element-4"></div>
             </div>
           </div>
-          
+
           <!-- Premium 3D Progress Bar -->
-          <div class="premium-3d-progress-container" 
-               (mousedown)="startProgressDrag($event)"
-               (mousemove)="onProgressDrag($event)"
-               (mouseup)="endProgressDrag()"
-               (mouseleave)="endProgressDrag()">
+          <div class="premium-3d-progress-container" (mousedown)="startProgressDrag($event)"
+            (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()" (mouseleave)="endProgressDrag()">
             <div class="progress-3d-track"></div>
-            <div class="progress-3d-fill" 
-                 [style.width.%]="taskProgress"
-                 [class.value-changing]="isProgressChanging"></div>
+            <div class="progress-3d-fill" [style.width.%]="taskProgress" [class.value-changing]="isProgressChanging">
+            </div>
             <div class="progress-3d-particles">
               <div class="progress-3d-particle"></div>
               <div class="progress-3d-particle"></div>
@@ -2038,17 +2096,12 @@
             </div>
             <div class="progress-3d-percentage">{{ taskProgress }}%</div>
           </div>
-          
+
           <!-- Manual Progress Input -->
           <div class="manual-progress-input">
             <div class="progress-input-container">
-              <input type="number" 
-                     class="progress-input" 
-                     [(ngModel)]="taskProgress" 
-                     (input)="onManualProgressChange($event)"
-                     min="0" 
-                     max="100" 
-                     placeholder="0">
+              <input type="number" class="progress-input" [(ngModel)]="taskProgress"
+                (input)="onManualProgressChange($event)" min="0" max="100" placeholder="0">
               <span class="progress-input-suffix">%</span>
               <div class="progress-quick-buttons">
                 <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
@@ -2063,9 +2116,8 @@
         <!-- Task Description -->
         <div class="description-section">
           <label class="section-label">Task Description</label>
-          <textarea class="description-card editable-description" 
-                    [(ngModel)]="editableTaskDescription"
-                    placeholder="Enter task description..."></textarea>
+          <textarea class="description-card editable-description" [(ngModel)]="editableTaskDescription"
+            placeholder="Enter task description..."></textarea>
         </div>
 
         <!-- Project Metadata -->
@@ -2073,7 +2125,7 @@
           <div class="metadata-header">
             <h3 class="section-label">Project Metadata</h3>
           </div>
-          
+
           <div class="metadata-grid">
             <!-- Department -->
             <div class="metadata-card">
@@ -2151,18 +2203,21 @@
               <div class="metadata-content">
                 <p class="metadata-label">{{ field.label }}</p>
                 @if (field.type === 'text') {
-                  <input type="text" class="metadata-input" [(ngModel)]="field.value" [placeholder]="'Enter ' + field.label.toLowerCase()">
+                <input type="text" class="metadata-input" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()">
                 } @else if (field.type === 'number') {
-                  <input type="number" class="metadata-input" [(ngModel)]="field.value" [placeholder]="'Enter ' + field.label.toLowerCase()">
+                <input type="number" class="metadata-input" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()">
                 } @else if (field.type === 'dropdown') {
-                  <select class="metadata-select" [(ngModel)]="field.value">
-                    <option value="">Select {{ field.label }}</option>
-                    @for (option of field.options; track option) {
-                      <option [value]="option">{{ option }}</option>
-                    }
-                  </select>
+                <select class="metadata-select" [(ngModel)]="field.value">
+                  <option value="">Select {{ field.label }}</option>
+                  @for (option of field.options; track option) {
+                  <option [value]="option">{{ option }}</option>
+                  }
+                </select>
                 } @else if (field.type === 'textarea') {
-                  <textarea class="metadata-textarea" [(ngModel)]="field.value" [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
+                <textarea class="metadata-textarea" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
                 }
               </div>
               <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
@@ -2170,7 +2225,7 @@
               </button>
             </div>
             }
-            
+
             <!-- Add Field Button - Always at the end -->
             <button class="add-field-card" (click)="openAddFieldModal()">
               <i class="fas fa-plus-circle"></i>
@@ -2184,17 +2239,15 @@
           <div class="section-header">
             <h3 class="section-label">Attachments</h3>
             @if (uploadedFiles.length > 0) {
-              <span class="section-badge">{{ uploadedFiles.length }}</span>
+            <span class="section-badge">{{ uploadedFiles.length }}</span>
             }
           </div>
 
           <!-- Attachments Content -->
           <div class="attachments-content">
             <!-- Integrated Upload Area -->
-            <div class="integrated-upload-area" 
-                 (click)="triggerFileUpload()" 
-                 (dragover)="onDragOver($event)"
-                 (drop)="onFileDrop($event)">
+            <div class="integrated-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
+              (drop)="onFileDrop($event)">
               <div class="upload-area-content">
                 <div class="upload-icon">
                   <i class="fas fa-cloud-upload-alt"></i>
@@ -2238,7 +2291,7 @@
               }
             </div>
             }
-            
+
             <!-- Hidden file input -->
             <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
               (change)="onFileSelected($event)" style="display: none;">
@@ -2249,8 +2302,10 @@
       <!-- Right Panel - Comments -->
       <div class="comments-panel">
         <div class="comments-tabs">
-          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'" (click)="setActiveSidebarTab('comments')">DAILY REMARKS</button>
-          <button class="comment-tab" [class.active]="activeSidebarTab === 'history'" (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'"
+            (click)="setActiveSidebarTab('comments')">DAILY REMARKS</button>
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'history'"
+            (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
         </div>
 
         <!-- Comments Content -->
@@ -2318,9 +2373,8 @@
         <!-- Add Comment (only show for comments tab) -->
         <div class="add-comment" *ngIf="activeSidebarTab === 'comments'">
           <div class="comment-input-container">
-            <input type="text" class="comment-input" placeholder="Add a comment..." 
-                   [(ngModel)]="newComment" 
-                   (keyup.enter)="addComment()">
+            <input type="text" class="comment-input" placeholder="Add a comment..." [(ngModel)]="newComment"
+              (keyup.enter)="addComment()">
             <button class="send-button" (click)="addComment()" [disabled]="!newComment.trim()">
               <i class="fas fa-paper-plane"></i>
             </button>
@@ -2350,10 +2404,8 @@
       <div class="fields-checklist">
         @for (field of availableCustomFields; track field.key) {
         <label class="field-checkbox-item" [class.disabled]="isFieldSelected(field.key)">
-          <input type="checkbox" 
-                 [checked]="isFieldChecked(field.key)" 
-                 [disabled]="isFieldSelected(field.key)"
-                 (change)="toggleFieldSelection(field.key)">
+          <input type="checkbox" [checked]="isFieldChecked(field.key)" [disabled]="isFieldSelected(field.key)"
+            (change)="toggleFieldSelection(field.key)">
           <div class="checkbox-custom-field">
             <i class="fas fa-check"></i>
           </div>
@@ -2370,10 +2422,10 @@
             <span class="field-checkbox-description">{{ field.description }}</span>
           </div>
           @if (isFieldSelected(field.key)) {
-            <span class="field-already-added">
-              <i class="fas fa-check-circle"></i>
-              Added
-            </span>
+          <span class="field-already-added">
+            <i class="fas fa-check-circle"></i>
+            Added
+          </span>
           }
         </label>
         }

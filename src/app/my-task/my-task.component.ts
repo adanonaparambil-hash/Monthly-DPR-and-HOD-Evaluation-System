@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Theme } from '../services/theme';
@@ -88,7 +88,7 @@ interface SubtaskDetailed {
   templateUrl: './my-task.component.html',
   styleUrls: ['./my-task.component.css', './task-modal-new.css', './task-details-modal.css', './task-modal-glassmorphism.css']
 })
-export class MyTaskComponent implements OnInit {
+export class MyTaskComponent implements OnInit, OnDestroy {
   isDarkMode = false;
   
   // Timer and stats
@@ -100,6 +100,17 @@ export class MyTaskComponent implements OnInit {
   isOnBreak = false;
   breakStatus = 'Working';
   nextBreakCountdown = '1:23:45';
+  
+  // Break Tracker
+  selectedBreakType: 'lunch' | 'coffee' | 'quick' | null = null;
+  breakRemarks = '';
+  isBreakRunning = false;
+  isBreakPaused = false;
+  breakTimerDisplay = '00:00:00';
+  breakTimerCaption = 'Select break type to start';
+  breakStartTime: Date | null = null;
+  breakElapsedSeconds = 0;
+  breakTimerInterval: any = null;
   
   // Active task info
   activeTaskStartDate = '2024-01-10';
@@ -623,6 +634,108 @@ export class MyTaskComponent implements OnInit {
   private endBreakTimer() {
     // Reset break countdown
     this.nextBreakCountdown = '1:23:45';
+  }
+
+  // Break Tracker Methods
+  selectBreakType(type: 'lunch' | 'coffee' | 'quick') {
+    this.selectedBreakType = type;
+    if (!this.isBreakRunning) {
+      this.updateBreakCaption();
+    }
+  }
+
+  startBreak() {
+    if (!this.selectedBreakType) return;
+    
+    this.isBreakRunning = true;
+    this.isBreakPaused = false;
+    this.breakStartTime = new Date();
+    this.breakElapsedSeconds = 0;
+    this.updateBreakCaption();
+    
+    this.breakTimerInterval = setInterval(() => {
+      if (!this.isBreakPaused) {
+        this.breakElapsedSeconds++;
+        this.updateBreakTimerDisplay();
+      }
+    }, 1000);
+  }
+
+  pauseBreak() {
+    this.isBreakPaused = true;
+    this.updateBreakCaption();
+  }
+
+  resumeBreak() {
+    this.isBreakPaused = false;
+    this.updateBreakCaption();
+  }
+
+  stopBreak() {
+    if (this.breakTimerInterval) {
+      clearInterval(this.breakTimerInterval);
+      this.breakTimerInterval = null;
+    }
+    
+    // Log the break (in real app, save to backend)
+    console.log('Break ended:', {
+      type: this.selectedBreakType,
+      duration: this.breakElapsedSeconds,
+      remarks: this.breakRemarks
+    });
+    
+    // Reset
+    this.isBreakRunning = false;
+    this.isBreakPaused = false;
+    this.breakElapsedSeconds = 0;
+    this.breakTimerDisplay = '00:00:00';
+    this.breakRemarks = '';
+    this.selectedBreakType = null;
+    this.updateBreakCaption();
+  }
+
+  private updateBreakTimerDisplay() {
+    const hours = Math.floor(this.breakElapsedSeconds / 3600);
+    const minutes = Math.floor((this.breakElapsedSeconds % 3600) / 60);
+    const seconds = this.breakElapsedSeconds % 60;
+    
+    this.breakTimerDisplay = 
+      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  private updateBreakCaption() {
+    if (!this.selectedBreakType && !this.isBreakRunning) {
+      this.breakTimerCaption = 'Select break type to start';
+    } else if (this.selectedBreakType && !this.isBreakRunning) {
+      const typeNames = {
+        lunch: 'Lunch Break',
+        coffee: 'Coffee Break',
+        quick: 'Quick Break'
+      };
+      this.breakTimerCaption = `Ready to start ${typeNames[this.selectedBreakType]}`;
+    } else if (this.isBreakRunning && this.isBreakPaused) {
+      this.breakTimerCaption = 'Break paused';
+    } else if (this.isBreakRunning) {
+      const typeNames = {
+        lunch: 'Lunch',
+        coffee: 'Coffee',
+        quick: 'Quick'
+      };
+      this.breakTimerCaption = `${typeNames[this.selectedBreakType!]} break in progress`;
+    }
+  }
+
+  getBreakStatusCaption(): string {
+    if (!this.selectedBreakType && !this.isBreakRunning) {
+      return 'Choose your break type above';
+    } else if (this.selectedBreakType && !this.isBreakRunning) {
+      return 'Click Start when ready';
+    } else if (this.isBreakRunning && this.isBreakPaused) {
+      return 'Break timer paused';
+    } else if (this.isBreakRunning) {
+      return 'Enjoy your break! 😊';
+    }
+    return '';
   }
 
   closeSelectTaskModal() {
@@ -1368,5 +1481,13 @@ export class MyTaskComponent implements OnInit {
       this.isProgressAnimating = false;
       this.isProgressChanging = false;
     }, 1000);
+  }
+
+  ngOnDestroy() {
+    // Clean up break timer interval
+    if (this.breakTimerInterval) {
+      clearInterval(this.breakTimerInterval);
+      this.breakTimerInterval = null;
+    }
   }
 }
