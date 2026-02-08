@@ -35,6 +35,86 @@
   max-width: 100%;
 }
 
+/* Empty Task State */
+.empty-task-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  min-height: 200px;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.empty-icon i {
+  font-size: 36px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.empty-message {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 24px;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+.start-task-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.start-task-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.start-task-btn i {
+  font-size: 16px;
+}
+
 .active-task-card::before {
   content: '';
   position: absolute;
@@ -12337,6 +12417,21 @@
 
 .task-board-container.dark-mode .active-task-card::before {
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Dark mode - Empty State */
+.task-board-container.dark-mode .empty-icon {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+}
+
+.task-board-container.dark-mode .start-task-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.task-board-container.dark-mode .start-task-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Dark mode - Break Tracker Section */

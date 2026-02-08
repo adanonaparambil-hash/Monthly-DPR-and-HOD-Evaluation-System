@@ -22,6 +22,18 @@
 
       <!-- Users List -->
       <div class="users-list">
+        <!-- Empty State for No Users -->
+        @if (pendingUsers.length === 0) {
+          <div class="users-empty-state">
+            <div class="users-empty-icon">
+              <i class="fas fa-user-check"></i>
+            </div>
+            <p class="users-empty-text">No pending reviews</p>
+            <span class="users-empty-subtext">All approvals are up to date</span>
+          </div>
+        }
+
+        <!-- Users List Items -->
         @for (user of pendingUsers; track trackByUserId($index, user)) {
           <div 
             class="user-item"
@@ -174,12 +186,34 @@
 
       <!-- Table Section -->
       <div class="table-section">
-        <div class="table-container">
-          <div class="table-wrapper">
-            <table class="dpr-table">
+        <!-- Empty State -->
+        @if (displayedLogs.length === 0 && totalRecords === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h3 class="empty-title">No Pending Approvals</h3>
+            <p class="empty-message">
+              All DPR logs have been reviewed! There are no pending approvals for {{ selectedUser?.name || 'this user' }} at the moment.
+            </p>
+            <div class="empty-stats">
+              <div class="empty-stat-item">
+                <i class="fas fa-check-circle"></i>
+                <span>All caught up!</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Table Container -->
+        @if (displayedLogs.length > 0 || totalRecords > 0) {
+          <div class="table-container">
+            <div class="table-wrapper">
+              <table class="dpr-table">
               <!-- Table Header -->
               <thead>
                 <tr>
+                  <th class="sl-no-col">Sl No</th>
                   <th class="checkbox-col">
                     <input 
                       class="table-checkbox" 
@@ -189,10 +223,10 @@
                     />
                   </th>
                   <th class="date-col">Date</th>
-                  <th class="project-col">Project</th>
-                  <th class="title-col">Task Title</th>
-                  <th class="description-col">Task Description</th>
                   <th class="category-col">Category</th>
+                  <th class="title-col">Task Title</th>
+                  <th class="description-col">Daily Remarks</th>
+                  <th class="project-col">Project</th>
                   <th class="hours-col">Hours</th>
                   <th class="status-col">Status</th>
                 </tr>
@@ -200,8 +234,13 @@
 
               <!-- Table Body -->
               <tbody>
-                @for (log of dprLogs; track trackByLogId($index, log)) {
+                @for (log of displayedLogs; track trackByLogId($index, log); let i = $index) {
                   <tr class="table-row" [class.selected]="log.isSelected">
+                    <!-- Serial Number -->
+                    <td class="sl-no-cell">
+                      <span class="sl-no-text">{{ getSerialNumber(i) }}</span>
+                    </td>
+
                     <!-- Checkbox -->
                     <td class="checkbox-col">
                       <input 
@@ -217,13 +256,13 @@
                       <span class="date-text">{{ log.date }}</span>
                     </td>
 
-                    <!-- Project -->
-                    <td class="project-cell">
+                    <!-- Category -->
+                    <td class="category-cell">
                       <span 
-                        class="project-badge"
-                        [class]="getProjectBadgeClass(log.projectType)"
+                        class="category-badge"
+                        [class]="getCategoryBadgeClass(log.categoryType)"
                       >
-                        {{ log.project }}
+                        {{ log.category }}
                       </span>
                     </td>
 
@@ -239,13 +278,13 @@
                       </span>
                     </td>
 
-                    <!-- Category -->
-                    <td class="category-cell">
+                    <!-- Project -->
+                    <td class="project-cell">
                       <span 
-                        class="category-badge"
-                        [class]="getCategoryBadgeClass(log.categoryType)"
+                        class="project-badge"
+                        [class]="getProjectBadgeClass(log.projectType)"
                       >
-                        {{ log.category }}
+                        {{ log.project }}
                       </span>
                     </td>
 
@@ -264,19 +303,80 @@
             </table>
           </div>
 
-          <!-- Records Count -->
-          <div class="table-footer">
-            <!-- Remove duplicate records count - it's now in the action footer -->
+            <!-- Records Count -->
+            <div class="table-footer">
+              <!-- Remove duplicate records count - it's now in the action footer -->
+            </div>
           </div>
-        </div>
+        }
       </div>
 
       <!-- Action Footer - Simplified -->
-      <div class="action-footer">
-        <span class="records-info">
-          Showing {{ dprLogs.length }} of {{ dprLogs.length }} pending records
-        </span>
-      </div>
+      @if (displayedLogs.length > 0 || totalRecords > 0) {
+        <div class="action-footer">
+          <span class="records-info">
+            Showing {{ getCurrentPageRange() }} of {{ totalRecords }} pending records
+          </span>
+          
+          <!-- Pagination Controls -->
+          <div class="pagination-controls">
+            <button 
+              class="pagination-btn first" 
+              (click)="firstPage()"
+              [disabled]="currentPage === 1"
+              title="First Page"
+            >
+              <i class="fas fa-angle-double-left"></i>
+            </button>
+            
+            <button 
+              class="pagination-btn prev" 
+              (click)="previousPage()"
+              [disabled]="currentPage === 1"
+              title="Previous Page"
+            >
+              <i class="fas fa-angle-left"></i>
+              <span>Previous</span>
+            </button>
+            
+            <!-- Page Numbers -->
+            <div class="page-numbers">
+              @for (page of getPageNumbers(); track page) {
+                <button 
+                  class="page-number-btn"
+                  [class.active]="page === currentPage"
+                  (click)="goToPage(page)"
+                >
+                  {{ page }}
+                </button>
+              }
+            </div>
+            
+            <button 
+              class="pagination-btn next" 
+              (click)="nextPage()"
+              [disabled]="currentPage === totalPages"
+              title="Next Page"
+            >
+              <span>Next</span>
+              <i class="fas fa-angle-right"></i>
+            </button>
+            
+            <button 
+              class="pagination-btn last" 
+              (click)="lastPage()"
+              [disabled]="currentPage === totalPages"
+              title="Last Page"
+            >
+              <i class="fas fa-angle-double-right"></i>
+            </button>
+          </div>
+          
+          <span class="page-info">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+        </div>
+      }
     </main>
   </div>
 </div>

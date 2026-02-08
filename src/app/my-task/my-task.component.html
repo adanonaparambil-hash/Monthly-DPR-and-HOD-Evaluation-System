@@ -3,6 +3,21 @@
   <div class="top-section">
     <!-- Active Task Card -->
     <div class="active-task-card reduced-width">
+      <!-- Empty State -->
+      <div class="empty-task-state" *ngIf="!hasActiveTask">
+        <div class="empty-icon">
+          <i class="fas fa-tasks"></i>
+        </div>
+        <h3 class="empty-title">No Active Task</h3>
+        <p class="empty-message">Start working on a task to track your progress and time</p>
+        <button class="start-task-btn" (click)="openCreateTaskModal()">
+          <i class="fas fa-play-circle"></i>
+          <span>Start a Task</span>
+        </button>
+      </div>
+
+      <!-- Active Task Content -->
+      <div *ngIf="hasActiveTask">
       <div class="task-status">
         <div class="status-indicator">
           <div class="status-dot"></div>
@@ -68,21 +83,21 @@
 
       <div class="task-info">
         <div class="task-header">
-          <span class="category-badge" [class]="getCategoryClass(activeTaskCategory)">
-            {{ activeTaskCategory }}
+          <span class="category-badge" [class]="getCategoryClass(activeTask?.category || '')">
+            {{ activeTask?.category || 'NO CATEGORY' }}
           </span>
-          <h2 class="task-title">UI Design Refactor: Component Library v2.0</h2>
+          <h2 class="task-title">{{ activeTask?.title || 'No Task Selected' }}</h2>
         </div>
 
         <!-- Modern Animated Progress Section -->
         <div class="modern-progress-section">
           <div class="progress-info">
             <span class="progress-label">Task Completion</span>
-            <span class="progress-value">65%</span>
+            <span class="progress-value">{{ activeTask?.progress || 0 }}%</span>
           </div>
           <div class="animated-progress-bar">
             <div class="progress-track">
-              <div class="progress-fill" style="width: 65%">
+              <div class="progress-fill" [style.width.%]="activeTask?.progress || 0">
                 <div class="progress-shimmer"></div>
                 <div class="progress-glow"></div>
               </div>
@@ -101,16 +116,18 @@
           <div class="task-details">
             <div class="task-detail-item">
               <i class="fas fa-calendar-alt"></i>
-              <span>Started: {{ activeTaskStartDate | date:'MMM dd, yyyy' }}</span>
+              <span>Started: {{ activeTask?.startDate | date:'MMM dd, yyyy' }}</span>
             </div>
             <div class="task-detail-item">
               <i class="fas fa-user"></i>
-              <span>Assigned by: {{ activeTaskAssignee }}</span>
+              <span>Assigned by: {{ activeTask?.assignee || 'N/A' }}</span>
             </div>
 
           </div>
         </div>
       </div>
+      </div>
+      <!-- End Active Task Content -->
     </div>
 
     <!-- Break Tracker Section -->

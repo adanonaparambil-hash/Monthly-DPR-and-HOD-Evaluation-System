@@ -42,6 +42,14 @@ export class DprApprovalComponent implements OnInit {
   selectedTaskTypes = 'all';
   selectAll = false;
 
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 100;
+  totalRecords = 0;
+  totalPages = 0;
+  displayedLogs: DPRLog[] = [];
+  allDprLogs: DPRLog[] = []; // Store all logs
+
   pendingUsers: PendingUser[] = [
     {
       id: '1',
@@ -134,6 +142,133 @@ export class DprApprovalComponent implements OnInit {
     if (this.pendingUsers.length > 0) {
       this.selectedUser = this.pendingUsers[0];
     }
+    
+    // Initialize all logs (simulating API data)
+    this.initializeAllLogs();
+    
+    // Load first page
+    this.loadPage(1);
+  }
+
+  // Initialize all logs - in real app, this would be from API
+  initializeAllLogs() {
+    // Store the initial logs
+    this.allDprLogs = [...this.dprLogs];
+    
+    // Simulate more records for pagination demo
+    // In real app, you would fetch from API with pagination params
+    const additionalLogs: DPRLog[] = [];
+    for (let i = 5; i <= 250; i++) {
+      additionalLogs.push({
+        id: i.toString(),
+        date: `Oct ${20 + (i % 10)}, 2023`,
+        project: i % 2 === 0 ? 'Internal Tools' : 'Client Work',
+        projectType: i % 2 === 0 ? 'internal' : 'client',
+        taskTitle: `Task ${i}: Development Work`,
+        taskDescription: `Description for task ${i} with various details.`,
+        category: ['Security', 'Back-end', 'Feature', 'Bug Fix'][i % 4],
+        categoryType: ['security', 'backend', 'feature', 'bugfix'][i % 4] as any,
+        hours: `0${Math.floor(Math.random() * 8) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
+        status: 'pending'
+      });
+    }
+    
+    this.allDprLogs = [...this.allDprLogs, ...additionalLogs];
+    this.totalRecords = this.allDprLogs.length;
+    this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+  }
+
+  // Load specific page
+  loadPage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
+    
+    this.currentPage = page;
+    const startIndex = (page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    
+    // Simulate API call delay
+    this.displayedLogs = this.allDprLogs.slice(startIndex, endIndex);
+    
+    // Reset selection when changing pages
+    this.selectAll = false;
+    this.displayedLogs.forEach(log => log.isSelected = false);
+    
+    // Scroll to top of table
+    const tableWrapper = document.querySelector('.table-wrapper');
+    if (tableWrapper) {
+      tableWrapper.scrollTop = 0;
+    }
+  }
+
+  // Navigate to next page
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.loadPage(this.currentPage + 1);
+    }
+  }
+
+  // Navigate to previous page
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.loadPage(this.currentPage - 1);
+    }
+  }
+
+  // Navigate to first page
+  firstPage() {
+    this.loadPage(1);
+  }
+
+  // Navigate to last page
+  lastPage() {
+    this.loadPage(this.totalPages);
+  }
+
+  // Go to specific page
+  goToPage(page: number) {
+    this.loadPage(page);
+  }
+
+  // Get page numbers to display
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+    
+    if (this.totalPages <= maxPagesToShow) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show current page and surrounding pages
+      let startPage = Math.max(1, this.currentPage - 2);
+      let endPage = Math.min(this.totalPages, this.currentPage + 2);
+      
+      // Adjust if at the beginning or end
+      if (this.currentPage <= 3) {
+        endPage = maxPagesToShow;
+      } else if (this.currentPage >= this.totalPages - 2) {
+        startPage = this.totalPages - maxPagesToShow + 1;
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  }
+
+  // Get current page range text
+  getCurrentPageRange(): string {
+    const startRecord = (this.currentPage - 1) * this.pageSize + 1;
+    const endRecord = Math.min(this.currentPage * this.pageSize, this.totalRecords);
+    return `${startRecord}-${endRecord}`;
+  }
+
+  // Get serial number for a row based on pagination
+  getSerialNumber(index: number): number {
+    return (this.currentPage - 1) * this.pageSize + index + 1;
   }
 
   // TrackBy functions for performance
@@ -156,18 +291,18 @@ export class DprApprovalComponent implements OnInit {
 
   toggleSelectAll() {
     this.selectAll = !this.selectAll;
-    this.dprLogs.forEach(log => log.isSelected = this.selectAll);
+    this.displayedLogs.forEach(log => log.isSelected = this.selectAll);
   }
 
   toggleLogSelection(log: DPRLog) {
     log.isSelected = !log.isSelected;
     
     // Update select all checkbox
-    this.selectAll = this.dprLogs.every(l => l.isSelected);
+    this.selectAll = this.displayedLogs.every(l => l.isSelected);
   }
 
   getSelectedLogsCount(): number {
-    return this.dprLogs.filter(log => log.isSelected).length;
+    return this.displayedLogs.filter(log => log.isSelected).length;
   }
 
   getTotalPendingUsers(): number {
@@ -193,7 +328,7 @@ export class DprApprovalComponent implements OnInit {
   }
 
   approveSelected() {
-    const selectedLogs = this.dprLogs.filter(log => log.isSelected);
+    const selectedLogs = this.displayedLogs.filter(log => log.isSelected);
     if (selectedLogs.length > 0) {
       console.log('Approving logs:', selectedLogs);
       // Implement approval logic here
@@ -202,11 +337,19 @@ export class DprApprovalComponent implements OnInit {
         log.isSelected = false;
       });
       this.selectAll = false;
+      
+      // Remove approved logs from allDprLogs
+      this.allDprLogs = this.allDprLogs.filter(log => log.status !== 'approved');
+      this.totalRecords = this.allDprLogs.length;
+      this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+      
+      // Reload current page
+      this.loadPage(Math.min(this.currentPage, this.totalPages || 1));
     }
   }
 
   cancelSelection() {
-    this.dprLogs.forEach(log => log.isSelected = false);
+    this.displayedLogs.forEach(log => log.isSelected = false);
     this.selectAll = false;
   }
 }

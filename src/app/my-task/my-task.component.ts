@@ -91,10 +91,19 @@ interface SubtaskDetailed {
 export class MyTaskComponent implements OnInit, OnDestroy {
   isDarkMode = false;
   
+  // Active task state
+  hasActiveTask = true; // Set to false when no active task
+  activeTask: Task | null = null; // Currently active task
+  
   // Timer and stats
   activeTaskTimer = '00:42:15';
   punchedHours = '04:20:00';
   runningTime = '02:15:45';
+  
+  // Legacy properties for backward compatibility
+  activeTaskCategory = 'DEVELOPMENT';
+  activeTaskStartDate = '2024-01-15';
+  activeTaskAssignee = 'John Doe';
   
   // Break management
   isOnBreak = false;
@@ -111,11 +120,6 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   breakStartTime: Date | null = null;
   breakElapsedSeconds = 0;
   breakTimerInterval: any = null;
-  
-  // Active task info
-  activeTaskStartDate = '2024-01-10';
-  activeTaskAssignee = 'John Doe';
-  activeTaskCategory = 'DEVELOPMENT';
 
   // Tab management
   activeTab = 'MY TASKS';
@@ -371,6 +375,16 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Initialize component
     this.initializeDetailedSubtasks();
     this.initializeActivityLogs();
+    
+    // Set active task if there's one in progress
+    const inProgressTask = this.tasks.find(t => t.status === 'IN PROGRESS');
+    if (inProgressTask) {
+      this.activeTask = inProgressTask;
+      this.hasActiveTask = true;
+    } else {
+      this.activeTask = null;
+      this.hasActiveTask = false;
+    }
   }
 
   initializeDetailedSubtasks() {
@@ -528,12 +542,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       const oldStatus = task.status;
       task.status = 'IN PROGRESS';
       
+      // Set as active task and show in header
+      this.activeTask = task;
+      this.hasActiveTask = true;
+      
       // Log activity
       this.logTaskAction('status_change', { 
         oldStatus, 
         newStatus: 'IN PROGRESS',
         taskTitle: task.title 
       });
+      
+      console.log('Task started and set as active:', task.title);
     }
   }
 
@@ -543,12 +563,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       const oldStatus = task.status;
       task.status = 'PENDING';
       
+      // Keep task in header but pause timer
+      // Don't clear activeTask - user can still see paused task details
+      
       // Log activity
       this.logTaskAction('status_change', { 
         oldStatus, 
         newStatus: 'PENDING',
         taskTitle: task.title 
       });
+      
+      console.log('Task paused:', task.title);
     }
   }
 
@@ -558,12 +583,20 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       const oldStatus = task.status;
       task.status = 'NOT STARTED';
       
+      // Clear active task from header
+      if (this.activeTask?.id === taskId) {
+        this.activeTask = null;
+        this.hasActiveTask = false;
+      }
+      
       // Log activity
       this.logTaskAction('status_change', { 
         oldStatus, 
         newStatus: 'NOT STARTED',
         taskTitle: task.title 
       });
+      
+      console.log('Task stopped and removed from header:', task.title);
     }
   }
 
