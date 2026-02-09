@@ -90,6 +90,7 @@ interface TaskCategory {
   categoryName: string;
   departmentId: number;
   departmentName?: string;
+  sequenceNumber?: number;
   isEditing?: boolean;
 }
 
@@ -170,13 +171,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   favouriteList: TaskCategory[] = [];
   departmentList: TaskCategory[] = [];
   allDepartmentList: TaskCategory[] = [];
-  newTaskCategory: TaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
+  newTaskCategory: TaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
   isAddingNewCategory = false;
   selectedDepartmentFilter = 'ALL'; // Department filter
   selectedCategoryId: number | null = null; // Store selected category ID for logging hours
 
-  // Get unique departments from task categories
+  // Department Master List from API
+  departmentMasterList: any[] = [];
+
+  // Get departments for filter dropdown
   getDepartments(): string[] {
+    if (this.departmentMasterList.length > 0) {
+      const deptNames = this.departmentMasterList.map(dept => dept.deptName);
+      return ['ALL', ...deptNames];
+    }
+    // Fallback to task categories if API hasn't loaded yet
     const departments = this.allDepartmentList.map(cat => cat.departmentName || 'Unknown');
     return ['ALL', ...Array.from(new Set(departments)).sort()];
   }
@@ -382,6 +391,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Load task categories from API
     this.loadTaskCategories();
 
+    // Load department list for filter dropdown
+    this.loadDepartmentList();
+
     // Set logged-in user as default assignee
     this.setLoggedInUserAsDefaultAssignee();
   }
@@ -517,26 +529,130 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.api.getUserTaskCategories(userId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
-          this.favouriteList = response.data.favouriteList || [];
-          this.departmentList = response.data.departmentList || [];
-          this.allDepartmentList = response.data.allDepartmentList || [];
+          // Map API response to TaskCategory interface with sequenceNumber
+          this.favouriteList = (response.data.favouriteList || []).map((cat: any) => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.categoryName,
+            departmentId: cat.departmentId,
+            departmentName: cat.departmentName,
+            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isEditing: false
+          }));
+          
+          this.departmentList = (response.data.departmentList || []).map((cat: any) => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.categoryName,
+            departmentId: cat.departmentId,
+            departmentName: cat.departmentName,
+            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isEditing: false
+          }));
+          
+          this.allDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.categoryName,
+            departmentId: cat.departmentId,
+            departmentName: cat.departmentName,
+            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isEditing: false
+          }));
+          
           this.taskCategories = [...this.allDepartmentList];
           console.log('Task Categories loaded for user:', userId, 
             'Favorites:', this.favouriteList.length, 
             'Department:', this.departmentList.length, 
             'All:', this.allDepartmentList.length);
+          
+          // Debug: Log first category to see structure
+          if (this.allDepartmentList.length > 0) {
+            console.log('Sample category with sequenceNumber:', this.allDepartmentList[0]);
+          }
         } else if (response && response.data) {
           // Handle direct data response
-          this.favouriteList = response.data.favouriteList || [];
-          this.departmentList = response.data.departmentList || [];
-          this.allDepartmentList = response.data.allDepartmentList || [];
+          this.favouriteList = (response.data.favouriteList || []).map((cat: any) => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.categoryName,
+            departmentId: cat.departmentId,
+            departmentName: cat.departmentName,
+            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isEditing: false
+          }));
+          
+          this.departmentList = (response.data.departmentList || []).map((cat: any) => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.categoryName,
+            departmentId: cat.departmentId,
+            departmentName: cat.departmentName,
+            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isEditing: false
+          }));
+          
+          this.allDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.categoryName,
+            departmentId: cat.departmentId,
+            departmentName: cat.departmentName,
+            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isEditing: false
+          }));
+          
           this.taskCategories = [...this.allDepartmentList];
           console.log('Task Categories loaded (direct data) for user:', userId, this.allDepartmentList.length);
+          
+          // Debug: Log first category to see structure
+          if (this.allDepartmentList.length > 0) {
+            console.log('Sample category with sequenceNumber:', this.allDepartmentList[0]);
+          }
         }
       },
       error: (error: any) => {
         console.error('Error loading task categories:', error);
         // Keep empty lists if API fails
+      }
+    });
+  }
+
+  // Load Department List from API for filter dropdown
+  loadDepartmentList(): void {
+    this.api.getDepartmentList().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.departmentMasterList = response.data.map((dept: any) => ({
+            departmentId: dept.departmentId || dept.DepartmentId || 0,
+            deptCode: dept.deptCode || dept.DeptCode || '',
+            deptName: dept.deptName || dept.DeptName || 'Unknown',
+            status: dept.status || dept.Status || 'Y',
+            createdBy: dept.createdBy || dept.CreatedBy || '',
+            createdOn: dept.createdOn || dept.CreatedOn || ''
+          }));
+          console.log('Department List loaded for filter:', this.departmentMasterList.length, 'departments');
+        } else if (response && Array.isArray(response)) {
+          // Handle direct array response
+          this.departmentMasterList = response.map((dept: any) => ({
+            departmentId: dept.departmentId || dept.DepartmentId || 0,
+            deptCode: dept.deptCode || dept.DeptCode || '',
+            deptName: dept.deptName || dept.DeptName || 'Unknown',
+            status: dept.status || dept.Status || 'Y',
+            createdBy: dept.createdBy || dept.CreatedBy || '',
+            createdOn: dept.createdOn || dept.CreatedOn || ''
+          }));
+          console.log('Department List loaded (direct array):', this.departmentMasterList.length, 'departments');
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Handle response.data as array
+          this.departmentMasterList = response.data.map((dept: any) => ({
+            departmentId: dept.departmentId || dept.DepartmentId || 0,
+            deptCode: dept.deptCode || dept.DeptCode || '',
+            deptName: dept.deptName || dept.DeptName || 'Unknown',
+            status: dept.status || dept.Status || 'Y',
+            createdBy: dept.createdBy || dept.CreatedBy || '',
+            createdOn: dept.createdOn || dept.CreatedOn || ''
+          }));
+          console.log('Department List loaded (response.data array):', this.departmentMasterList.length, 'departments');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading department list:', error);
+        // Keep empty list if API fails
       }
     });
   }
@@ -1084,21 +1200,60 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Cancel other edits first
     this.taskCategories.forEach(cat => cat.isEditing = false);
     category.isEditing = true;
+    
+    // Debug: Log the category being edited
+    console.log('Editing category:', {
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+      departmentId: category.departmentId,
+      departmentName: category.departmentName,
+      sequenceNumber: category.sequenceNumber
+    });
   }
 
   // Save edited category
   saveCategory(category: TaskCategory) {
-    if (category.categoryName.trim() && category.departmentName?.trim()) {
-      category.isEditing = false;
-      console.log('Category saved:', category);
-      // In real app, make API call to save
+    if (category.categoryName.trim() && category.departmentId) {
+      // Get current user
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      const userId = currentUser.empId || currentUser.employeeId || '1';
+
+      // Prepare API request
+      const request: any = {
+        categoryId: category.categoryId,
+        categoryName: category.categoryName.trim(),
+        departmentId: category.departmentId,
+        createdBy: userId,
+        estimatedHours: category.sequenceNumber || 0
+      };
+
+      // Call API to update category
+      this.api.saveTaskCategory(request).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            category.isEditing = false;
+            console.log('Category updated successfully:', response);
+            
+            // Reload task categories to get fresh data
+            this.loadTaskCategories();
+          } else {
+            console.error('Failed to update category:', response?.message);
+            alert('Failed to update category: ' + (response?.message || 'Unknown error'));
+          }
+        },
+        error: (error: any) => {
+          console.error('Error updating category:', error);
+          alert('Error updating category. Please try again.');
+        }
+      });
     }
   }
 
   // Cancel editing
   cancelEdit(category: TaskCategory) {
     category.isEditing = false;
-    // In real app, reload original data from API
+    // Reload original data from API to discard changes
+    this.loadTaskCategories();
   }
 
   // Cancel all edits
@@ -1126,24 +1281,56 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Cancel adding new category
   cancelAddCategory() {
     this.isAddingNewCategory = false;
-    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
+    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+  }
+
+  // Handle department dropdown change
+  onDepartmentChange(departmentId: number, category: TaskCategory): void {
+    const selectedDept = this.departmentMasterList.find(dept => dept.departmentId === departmentId);
+    if (selectedDept) {
+      category.departmentId = departmentId;
+      category.departmentName = selectedDept.deptName;
+      console.log('Department changed:', selectedDept.deptName);
+    }
   }
 
   // Save new category
   saveNewCategory() {
     if (this.newTaskCategory.categoryName.trim() && this.newTaskCategory.departmentId) {
-      const newCat: TaskCategory = {
-        categoryId: Math.max(...this.allDepartmentList.map(c => c.categoryId), 0) + 1,
+      // Get current user
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      const userId = currentUser.empId || currentUser.employeeId || '1';
+
+      // Prepare API request
+      const request: any = {
         categoryName: this.newTaskCategory.categoryName.trim(),
         departmentId: this.newTaskCategory.departmentId,
-        departmentName: this.newTaskCategory.departmentName || 'Unknown'
+        createdBy: userId,
+        estimatedHours: this.newTaskCategory.sequenceNumber || 0
       };
-      this.allDepartmentList.push(newCat);
-      this.taskCategories = [...this.allDepartmentList];
-      this.isAddingNewCategory = false;
-      this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
-      console.log('New category added:', newCat);
-      // In real app, make API call to create
+
+      // Call API to create category
+      this.api.saveTaskCategory(request).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            console.log('Category created successfully:', response);
+            
+            // Reset form
+            this.isAddingNewCategory = false;
+            this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+            
+            // Reload task categories to get fresh data
+            this.loadTaskCategories();
+          } else {
+            console.error('Failed to create category:', response?.message);
+            alert('Failed to create category: ' + (response?.message || 'Unknown error'));
+          }
+        },
+        error: (error: any) => {
+          console.error('Error creating category:', error);
+          alert('Error creating category. Please try again.');
+        }
+      });
     }
   }
 

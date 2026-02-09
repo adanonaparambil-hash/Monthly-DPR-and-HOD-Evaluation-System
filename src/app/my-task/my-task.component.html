@@ -2380,21 +2380,38 @@
         <div class="form-body">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Department</label>
-              <input 
-                type="text" 
-                class="form-input" 
-                [(ngModel)]="newTaskCategory.departmentName"
-                placeholder="e.g., ENGINEERING, DESIGN, MARKETING"
-              />
+              <label class="form-label">Department <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select 
+                  class="form-select" 
+                  [(ngModel)]="newTaskCategory.departmentId"
+                  (ngModelChange)="onDepartmentChange($event, newTaskCategory)"
+                >
+                  <option value="0" disabled>Select Department</option>
+                  @for (dept of departmentMasterList; track dept.departmentId) {
+                    <option [value]="dept.departmentId">{{ dept.deptName }}</option>
+                  }
+                </select>
+                <i class="fas fa-chevron-down select-icon"></i>
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Task Category Name</label>
+              <label class="form-label">Task Category Name <span class="required">*</span></label>
               <input 
                 type="text" 
                 class="form-input" 
                 [(ngModel)]="newTaskCategory.categoryName"
                 placeholder="e.g., API Development, UI Design"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estimated Hours</label>
+              <input 
+                type="number" 
+                class="form-input" 
+                [(ngModel)]="newTaskCategory.sequenceNumber"
+                placeholder="e.g., 1, 2, 3..."
+                min="0"
               />
             </div>
           </div>
@@ -2406,7 +2423,7 @@
             <button 
               class="btn-save" 
               (click)="saveNewCategory()"
-              [disabled]="!newTaskCategory.categoryName.trim() || !newTaskCategory.departmentName?.trim()"
+              [disabled]="!newTaskCategory.categoryName.trim() || newTaskCategory.departmentId === 0"
             >
               <i class="fas fa-check"></i>
               Save Category
@@ -2438,7 +2455,12 @@
               </div>
               <div class="category-content">
                 <h5 class="category-name">{{ category.categoryName }}</h5>
-                <p class="category-dept">{{ category.departmentName }}</p>
+                <p class="category-dept">
+                  {{ category.departmentName }}
+                  @if (category.sequenceNumber && category.sequenceNumber > 0) {
+                    <span class="category-hours"> • {{ category.sequenceNumber }}h</span>
+                  }
+                </p>
               </div>
               <div class="category-actions">
                 <button class="btn-edit" (click)="startEditCategory(category)" title="Edit">
@@ -2453,21 +2475,38 @@
               <div class="edit-form">
                 <div class="edit-form-row">
                   <div class="edit-form-group">
-                    <label class="edit-label">Department</label>
-                    <input 
-                      type="text" 
-                      class="edit-input" 
-                      [(ngModel)]="category.departmentName"
-                      placeholder="Department"
-                    />
+                    <label class="edit-label">Department <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                      <select 
+                        class="edit-select" 
+                        [(ngModel)]="category.departmentId"
+                        (ngModelChange)="onDepartmentChange($event, category)"
+                      >
+                        <option value="0" disabled>Select Department</option>
+                        @for (dept of departmentMasterList; track dept.departmentId) {
+                          <option [value]="dept.departmentId">{{ dept.deptName }}</option>
+                        }
+                      </select>
+                      <i class="fas fa-chevron-down select-icon"></i>
+                    </div>
                   </div>
                   <div class="edit-form-group">
-                    <label class="edit-label">Task Category Name</label>
+                    <label class="edit-label">Task Category Name <span class="required">*</span></label>
                     <input 
                       type="text" 
                       class="edit-input" 
                       [(ngModel)]="category.categoryName"
                       placeholder="Category Name"
+                    />
+                  </div>
+                  <div class="edit-form-group">
+                    <label class="edit-label">Estimated Hours</label>
+                    <input 
+                      type="number" 
+                      class="edit-input" 
+                      [(ngModel)]="category.sequenceNumber"
+                      placeholder="e.g., 1, 2, 3..."
+                      min="0"
                     />
                   </div>
                 </div>
@@ -2476,7 +2515,11 @@
                     <i class="fas fa-times"></i>
                     Cancel
                   </button>
-                  <button class="btn-save-edit" (click)="saveCategory(category)">
+                  <button 
+                    class="btn-save-edit" 
+                    (click)="saveCategory(category)"
+                    [disabled]="!category.categoryName.trim() || category.departmentId === 0"
+                  >
                     <i class="fas fa-check"></i>
                     Save
                   </button>
