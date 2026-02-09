@@ -908,7 +908,7 @@
         <div class="task-list">
           @for (task of getFavouriteTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
-            <i class="fas fa-star star-icon active"></i>
+            <i class="fas fa-star star-icon active" (click)="toggleFavourite(task, $event)" title="Remove from favorites"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
@@ -943,7 +943,9 @@
         <div class="task-list">
           @for (task of getDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
-            <i class="far fa-star star-icon"></i>
+            <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
+               (click)="toggleFavourite(task, $event)" 
+               [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
@@ -978,7 +980,9 @@
         <div class="task-list">
           @for (task of getAllDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
-            <i class="far fa-star star-icon"></i>
+            <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
+               (click)="toggleFavourite(task, $event)" 
+               [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>

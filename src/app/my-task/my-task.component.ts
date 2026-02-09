@@ -91,6 +91,7 @@ interface TaskCategory {
   departmentId: number;
   departmentName?: string;
   sequenceNumber?: number;
+  isFavourite?: 'Y' | 'N';
   isEditing?: boolean;
 }
 
@@ -536,6 +537,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             departmentId: cat.departmentId,
             departmentName: cat.departmentName,
             sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isFavourite: 'Y',  // Items in favouriteList are favorites
             isEditing: false
           }));
           
@@ -545,6 +547,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             departmentId: cat.departmentId,
             departmentName: cat.departmentName,
             sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isFavourite: cat.isFavourite || 'N',
             isEditing: false
           }));
           
@@ -554,6 +557,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             departmentId: cat.departmentId,
             departmentName: cat.departmentName,
             sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isFavourite: cat.isFavourite || 'N',
             isEditing: false
           }));
           
@@ -575,6 +579,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             departmentId: cat.departmentId,
             departmentName: cat.departmentName,
             sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isFavourite: 'Y',  // Items in favouriteList are favorites
             isEditing: false
           }));
           
@@ -584,6 +589,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             departmentId: cat.departmentId,
             departmentName: cat.departmentName,
             sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isFavourite: cat.isFavourite || 'N',
             isEditing: false
           }));
           
@@ -593,6 +599,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             departmentId: cat.departmentId,
             departmentName: cat.departmentName,
             sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
+            isFavourite: cat.isFavourite || 'N',
             isEditing: false
           }));
           
@@ -1366,6 +1373,55 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Get all department task categories
   getAllDepartmentTaskList(): TaskCategory[] {
     return this.allDepartmentList;
+  }
+
+  // Toggle favourite status of a task category
+  toggleFavourite(category: TaskCategory, event: Event): void {
+    event.stopPropagation(); // Prevent task selection when clicking star
+    
+    // Get current user
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || '1';
+    
+    // Determine new favourite status (toggle)
+    const newFavouriteStatus: 'Y' | 'N' = category.isFavourite === 'Y' ? 'N' : 'Y';
+    
+    // Prepare API request
+    const request: any = {
+      userId: userId,
+      categoryId: category.categoryId,
+      isFavourite: newFavouriteStatus
+    };
+    
+    console.log('Toggling favourite:', {
+      categoryName: category.categoryName,
+      currentStatus: category.isFavourite,
+      newStatus: newFavouriteStatus
+    });
+    
+    // Call API to toggle favourite
+    this.api.toggleFavouriteCategory(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          console.log('Favourite toggled successfully:', response);
+          
+          // Reload task categories to update all lists
+          this.loadTaskCategories();
+        } else {
+          console.error('Failed to toggle favourite:', response?.message);
+          alert('Failed to update favourite status: ' + (response?.message || 'Unknown error'));
+        }
+      },
+      error: (error: any) => {
+        console.error('Error toggling favourite:', error);
+        alert('Error updating favourite status. Please try again.');
+      }
+    });
+  }
+
+  // Check if a category is favourited
+  isFavourited(category: TaskCategory): boolean {
+    return category.isFavourite === 'Y';
   }
 
   // Select a task category
