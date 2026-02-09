@@ -870,7 +870,12 @@
     <!-- Search Box -->
     <div class="select-search-box">
       <i class="fas fa-search search-icon"></i>
-      <input type="text" placeholder="Search tasks, departments, or assignees..." class="select-search-input">
+      <input 
+        type="text" 
+        placeholder="Search tasks, departments, or assignees..." 
+        class="select-search-input"
+        [(ngModel)]="selectTaskSearchTerm"
+      >
     </div>
 
     <!-- Tabs -->
@@ -898,15 +903,20 @@
       <!-- Pinned Favorites Tab -->
       @if (selectTaskActiveTab === 'favorites') {
       <div class="task-list-container">
-        @if (getFavouriteTaskList().length === 0) {
+        @if (getFilteredFavouriteTaskList().length === 0) {
         <div class="empty-state">
           <i class="fas fa-star"></i>
-          <p>No favorite tasks yet</p>
-          <span>Star tasks to add them to your favorites</span>
+          @if (selectTaskSearchTerm) {
+            <p>No matching favorites found</p>
+            <span>Try a different search term</span>
+          } @else {
+            <p>No favorite tasks yet</p>
+            <span>Star tasks to add them to your favorites</span>
+          }
         </div>
         } @else {
         <div class="task-list">
-          @for (task of getFavouriteTaskList(); track task.categoryId) {
+          @for (task of getFilteredFavouriteTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
             <i class="fas fa-star star-icon active" (click)="toggleFavourite(task, $event)" title="Remove from favorites"></i>
             <div class="task-item-content">
@@ -933,15 +943,20 @@
       <!-- My Department Tasks Tab -->
       @if (selectTaskActiveTab === 'myDepartment') {
       <div class="task-list-container">
-        @if (getDepartmentTaskList().length === 0) {
+        @if (getFilteredDepartmentTaskList().length === 0) {
         <div class="empty-state">
           <i class="fas fa-users"></i>
-          <p>No department tasks available</p>
-          <span>Tasks from your department will appear here</span>
+          @if (selectTaskSearchTerm) {
+            <p>No matching department tasks found</p>
+            <span>Try a different search term</span>
+          } @else {
+            <p>No department tasks available</p>
+            <span>Tasks from your department will appear here</span>
+          }
         </div>
         } @else {
         <div class="task-list">
-          @for (task of getDepartmentTaskList(); track task.categoryId) {
+          @for (task of getFilteredDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
             <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
                (click)="toggleFavourite(task, $event)" 
@@ -970,15 +985,20 @@
       <!-- All Department Tasks Tab -->
       @if (selectTaskActiveTab === 'all') {
       <div class="task-list-container">
-        @if (getAllDepartmentTaskList().length === 0) {
+        @if (getFilteredAllDepartmentTaskList().length === 0) {
         <div class="empty-state">
           <i class="fas fa-th-large"></i>
-          <p>No tasks available</p>
-          <span>All department tasks will appear here</span>
+          @if (selectTaskSearchTerm) {
+            <p>No matching tasks found</p>
+            <span>Try a different search term</span>
+          } @else {
+            <p>No tasks available</p>
+            <span>All department tasks will appear here</span>
+          }
         </div>
         } @else {
         <div class="task-list">
-          @for (task of getAllDepartmentTaskList(); track task.categoryId) {
+          @for (task of getFilteredAllDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
             <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
                (click)="toggleFavourite(task, $event)" 

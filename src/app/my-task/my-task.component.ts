@@ -166,6 +166,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   showManageTasksModal = false; // New modal for managing task categories
   selectedTask: Task | null = null;
   selectTaskActiveTab: 'favorites' | 'myDepartment' | 'all' = 'favorites';
+  selectTaskSearchTerm = ''; // Search term for Select Task modal
 
   // Task Categories Management
   taskCategories: TaskCategory[] = [];
@@ -1046,6 +1047,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   openCreateTaskModal() {
     this.showSelectTaskModal = true;
     document.body.style.overflow = 'hidden';
+    
+    // Load task categories when modal opens
+    this.loadTaskCategories();
+    
+    // Clear search term
+    this.selectTaskSearchTerm = '';
   }
 
   closeCreateTaskModal() {
@@ -1365,14 +1372,53 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return this.favouriteList;
   }
 
+  // Get filtered favorite task categories based on search
+  getFilteredFavouriteTaskList(): TaskCategory[] {
+    if (!this.selectTaskSearchTerm || this.selectTaskSearchTerm.trim() === '') {
+      return this.favouriteList;
+    }
+    
+    const searchLower = this.selectTaskSearchTerm.toLowerCase().trim();
+    return this.favouriteList.filter(task => 
+      task.categoryName.toLowerCase().includes(searchLower) ||
+      task.departmentName?.toLowerCase().includes(searchLower)
+    );
+  }
+
   // Get department task categories
   getDepartmentTaskList(): TaskCategory[] {
     return this.departmentList;
   }
 
+  // Get filtered department task categories based on search
+  getFilteredDepartmentTaskList(): TaskCategory[] {
+    if (!this.selectTaskSearchTerm || this.selectTaskSearchTerm.trim() === '') {
+      return this.departmentList;
+    }
+    
+    const searchLower = this.selectTaskSearchTerm.toLowerCase().trim();
+    return this.departmentList.filter(task => 
+      task.categoryName.toLowerCase().includes(searchLower) ||
+      task.departmentName?.toLowerCase().includes(searchLower)
+    );
+  }
+
   // Get all department task categories
   getAllDepartmentTaskList(): TaskCategory[] {
     return this.allDepartmentList;
+  }
+
+  // Get filtered all department task categories based on search
+  getFilteredAllDepartmentTaskList(): TaskCategory[] {
+    if (!this.selectTaskSearchTerm || this.selectTaskSearchTerm.trim() === '') {
+      return this.allDepartmentList;
+    }
+    
+    const searchLower = this.selectTaskSearchTerm.toLowerCase().trim();
+    return this.allDepartmentList.filter(task => 
+      task.categoryName.toLowerCase().includes(searchLower) ||
+      task.departmentName?.toLowerCase().includes(searchLower)
+    );
   }
 
   // Toggle favourite status of a task category
