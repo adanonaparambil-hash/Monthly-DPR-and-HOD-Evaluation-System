@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Theme } from '../services/theme';
+import { Api } from '../services/api';
+import { AuthService } from '../services/auth.service';
 
 interface Task {
   id: number;
@@ -15,6 +17,7 @@ interface Task {
   assignee: string;
   progress: number;
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  isFavorite?: boolean;
 }
 
 interface NewTask {
@@ -45,10 +48,11 @@ interface Assignee {
 interface CustomField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'dropdown' | 'textarea';
+  type: 'text' | 'number' | 'dropdown' | 'textarea' | 'date';
   description: string;
   options?: string[];
   value?: any;
+  fieldId?: number;
 }
 
 interface UploadedFile {
@@ -81,6 +85,13 @@ interface SubtaskDetailed {
   totalLoggedTime: number;
 }
 
+interface TaskCategory {
+  id: number;
+  name: string;
+  department: string;
+  isEditing?: boolean;
+}
+
 @Component({
   selector: 'app-my-task',
   standalone: true,
@@ -90,26 +101,26 @@ interface SubtaskDetailed {
 })
 export class MyTaskComponent implements OnInit, OnDestroy {
   isDarkMode = false;
-  
+
   // Active task state
   hasActiveTask = true; // Set to false when no active task
   activeTask: Task | null = null; // Currently active task
-  
+
   // Timer and stats
   activeTaskTimer = '00:42:15';
   punchedHours = '04:20:00';
   runningTime = '02:15:45';
-  
+
   // Legacy properties for backward compatibility
   activeTaskCategory = 'DEVELOPMENT';
   activeTaskStartDate = '2024-01-15';
   activeTaskAssignee = 'John Doe';
-  
+
   // Break management
   isOnBreak = false;
   breakStatus = 'Working';
   nextBreakCountdown = '1:23:45';
-  
+
   // Break Tracker
   selectedBreakType: 'lunch' | 'coffee' | 'quick' | null = null;
   breakRemarks = '';
@@ -139,18 +150,48 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   showSelectTaskModal = false;
   showCustomFieldsModal = false;
   showAddFieldModal = false;
+  showManageTasksModal = false; // New modal for managing task categories
   selectedTask: Task | null = null;
-  selectTaskActiveTab: 'favorites' | 'all' = 'favorites';
-  
+  selectTaskActiveTab: 'favorites' | 'myDepartment' | 'all' = 'favorites';
+
+  // Task Categories Management
+  taskCategories: TaskCategory[] = [
+    { id: 1, name: 'UX Research: User Interview Synthesis', department: 'DESIGN DEPARTMENT' },
+    { id: 2, name: 'Main Dashboard Refactoring', department: 'ENGINEERING' },
+    { id: 3, name: 'API Security Audit', department: 'SECURITY' },
+    { id: 4, name: 'Database Optimization', department: 'ENGINEERING' },
+    { id: 5, name: 'Mobile App Testing', department: 'QUALITY ASSURANCE' },
+    { id: 6, name: 'Brand Identity Design', department: 'DESIGN DEPARTMENT' },
+    { id: 7, name: 'Marketing Campaign Analysis', department: 'MARKETING' },
+    { id: 8, name: 'Customer Support System', department: 'ENGINEERING' }
+  ];
+  newTaskCategory: TaskCategory = { id: 0, name: '', department: '' };
+  isAddingNewCategory = false;
+  selectedDepartmentFilter = 'ALL'; // Department filter
+
+  // Get unique departments from task categories
+  getDepartments(): string[] {
+    const departments = this.taskCategories.map(cat => cat.department);
+    return ['ALL', ...Array.from(new Set(departments)).sort()];
+  }
+
+  // Get filtered task categories based on selected department
+  getFilteredCategories(): TaskCategory[] {
+    if (this.selectedDepartmentFilter === 'ALL') {
+      return this.taskCategories;
+    }
+    return this.taskCategories.filter(cat => cat.department === this.selectedDepartmentFilter);
+  }
+
   // Files tab only (subtasks tab removed)
   activeSubtaskTab: 'files' = 'files';
   uploadedFiles: UploadedFile[] = [];
-  
+
   // Activity and History
   activeSidebarTab: 'comments' | 'history' = 'comments';
   activityLogs: ActivityLog[] = [];
   detailedSubtasks: SubtaskDetailed[] = [];
-  
+
   // Selected task additional properties
   selectedTaskProject = 'marketing-q4';
   selectedTaskBudget = 1250.00;
@@ -162,11 +203,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   selectedTaskDepartment = 'engineering';
   selectedTaskClient = 'Acme Corporation';
   editMode = false;
-  
+
   // Editable task fields
   editableTaskTitle = 'Initial Design Sprint: UI Component Library';
   editableTaskDescription = 'The primary goal of this phase is to establish a cohesive UI component library for the new marketing dashboard. This includes defining color tokens, typography scales, and building core components like buttons, inputs, and navigation patterns. All assets should be documented in Figma and exported for the frontend team.';
-  
+  dailyRemarks = ''; // Daily remarks field
+
   // New task form data
   newTask: NewTask = {
     name: '',
@@ -180,93 +222,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Custom Fields - Project Metadata Fields
   selectedCustomFields: CustomField[] = [];
-  availableCustomFields: CustomField[] = [
-    {
-      key: 'instruction',
-      label: 'Instruction',
-      type: 'text',
-      description: 'Detailed instructions for the task'
-    },
-    {
-      key: 'stage',
-      label: 'Stage',
-      type: 'dropdown',
-      description: 'Current stage of the task',
-      options: ['Planning', 'Development', 'Testing', 'Review', 'Deployment']
-    },
-    {
-      key: 'section',
-      label: 'Section',
-      type: 'dropdown',
-      description: 'Task section or category',
-      options: ['Frontend', 'Backend', 'Database', 'API', 'UI/UX', 'Documentation']
-    },
-    {
-      key: 'trade',
-      label: 'Trade',
-      type: 'dropdown',
-      description: 'Trade or specialization',
-      options: ['Development', 'Design', 'Testing', 'DevOps', 'Analysis', 'Management']
-    },
-    {
-      key: 'timeTaken',
-      label: 'Time Taken',
-      type: 'text',
-      description: 'Actual time taken for the task'
-    },
-    {
-      key: 'count',
-      label: 'Count',
-      type: 'number',
-      description: 'Quantity or count related to the task'
-    },
-    {
-      key: 'unit',
-      label: 'Unit',
-      type: 'dropdown',
-      description: 'Unit of measurement',
-      options: ['Hours', 'Days', 'Weeks', 'Items', 'Pages', 'Lines', 'Files']
-    },
-    {
-      key: 'remarks',
-      label: 'Remarks',
-      type: 'textarea',
-      description: 'Additional remarks or notes'
-    },
-    {
-      key: 'type',
-      label: 'Type',
-      type: 'dropdown',
-      description: 'Task type classification',
-      options: ['Bug Fix', 'Feature', 'Enhancement', 'Maintenance', 'Research', 'Documentation']
-    },
-    {
-      key: 'folderPath',
-      label: 'Folder Path',
-      type: 'text',
-      description: 'File system path or folder location'
-    },
-    {
-      key: 'documentLink',
-      label: 'Document Link',
-      type: 'text',
-      description: 'Link to related documents'
-    },
-    {
-      key: 'process',
-      label: 'Process',
-      type: 'text',
-      description: 'Process or workflow name'
-    },
-    {
-      key: 'workPlace',
-      label: 'Work Place',
-      type: 'dropdown',
-      description: 'Location or workplace',
-      options: ['Office', 'Remote', 'Client Site', 'Home', 'Co-working Space', 'Field']
-    }
-  ];
-  
+  availableCustomFields: CustomField[] = []; // Will be loaded from API
+
   // Temporary selection for the add field modal
   tempSelectedFields: string[] = [];
 
@@ -277,6 +234,22 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     { id: 'sarah', name: 'Sarah Smith', role: 'Designer' },
     { id: 'alex', name: 'Alex Johnson', role: 'HOD' }
   ];
+
+  // Employee Master List from API
+  employeeMasterList: any[] = [];
+  selectedAssigneeId: string = '';
+
+  // Projects List from API
+  projectsList: any[] = [];
+  selectedProjectId: string = '';
+
+  // Project dropdown state
+  projectSearchTerm: string = '';
+  isProjectDropdownVisible: boolean = false;
+
+  // Assignee dropdown state
+  assigneeSearchTerm: string = '';
+  isAssigneeDropdownVisible: boolean = false;
 
   // Sample tasks data
   tasks: Task[] = [
@@ -290,7 +263,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       totalHours: '12.5h',
       startDate: '2024-01-10',
       assignee: 'John Doe',
-      progress: 75
+      progress: 75,
+      isFavorite: true
     },
     {
       id: 2,
@@ -360,22 +334,26 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   isProgressAnimating = false;
   isProgressChanging = false;
   private progressCircle3DElement: HTMLElement | null = null;
-  
+
   // Math functions for handle position
   Math = Math;
 
-  constructor(private themeService: Theme) {}
+  constructor(
+    private themeService: Theme,
+    private api: Api,
+    private authService: AuthService
+  ) { }
 
   ngOnInit() {
     // Subscribe to theme changes
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
     });
-    
+
     // Initialize component
     this.initializeDetailedSubtasks();
     this.initializeActivityLogs();
-    
+
     // Set active task if there's one in progress
     const inProgressTask = this.tasks.find(t => t.status === 'IN PROGRESS');
     if (inProgressTask) {
@@ -384,6 +362,275 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     } else {
       this.activeTask = null;
       this.hasActiveTask = false;
+    }
+
+    // Load employee master list for assignee dropdown
+    this.loadEmployeeMasterList();
+
+    // Load projects list for project dropdown
+    this.loadProjectsList();
+
+    // Load custom fields from API
+    this.loadCustomFields();
+
+    // Set logged-in user as default assignee
+    this.setLoggedInUserAsDefaultAssignee();
+  }
+
+  // Load Employee Master List from API
+  loadEmployeeMasterList(): void {
+    this.api.GetEmployeeMasterList().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.employeeMasterList = response.data.map((emp: any) => ({
+            idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
+            description: emp.description || emp.employeeName || emp.name,
+            email: emp.email || emp.Email || emp.emailId || emp.EmailId,
+            phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone
+          }));
+          console.log('Employee Master List loaded for assignee dropdown:', this.employeeMasterList.length, 'employees');
+
+          // Set default assignee after list is loaded
+          this.setLoggedInUserAsDefaultAssignee();
+        } else if (response && Array.isArray(response)) {
+          // Handle direct array response
+          this.employeeMasterList = response.map((emp: any) => ({
+            idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
+            description: emp.description || emp.employeeName || emp.name,
+            email: emp.email || emp.Email || emp.emailId || emp.EmailId,
+            phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone
+          }));
+          console.log('Employee Master List loaded (direct array):', this.employeeMasterList.length, 'employees');
+
+          // Set default assignee after list is loaded
+          this.setLoggedInUserAsDefaultAssignee();
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading employee master list:', error);
+        // Keep using default assignees if API fails
+      }
+    });
+  }
+
+  // Load Projects List from API
+  loadProjectsList(): void {
+    this.api.getProjects().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.projectsList = response.data.map((project: any) => ({
+            projectId: project.projectId || project.ProjectId || project.id,
+            projectName: project.projectName || project.ProjectName || project.name,
+            departmentId: project.departmentId || project.DepartmentId,
+            isActive: project.isActive || project.IsActive
+          }));
+          console.log('Projects List loaded:', this.projectsList.length, 'projects');
+
+          // Auto-select first project if none selected
+          if (this.projectsList.length > 0 && !this.selectedProjectId) {
+            this.selectedProjectId = this.projectsList[0].projectId?.toString() || '';
+          }
+        } else if (response && Array.isArray(response)) {
+          // Handle direct array response
+          this.projectsList = response.map((project: any) => ({
+            projectId: project.projectId || project.ProjectId || project.id,
+            projectName: project.projectName || project.ProjectName || project.name,
+            departmentId: project.departmentId || project.DepartmentId,
+            isActive: project.isActive || project.IsActive
+          }));
+          console.log('Projects List loaded (direct array):', this.projectsList.length, 'projects');
+
+          // Auto-select first project if none selected
+          if (this.projectsList.length > 0 && !this.selectedProjectId) {
+            this.selectedProjectId = this.projectsList[0].projectId?.toString() || '';
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading projects list:', error);
+        // Keep empty list if API fails
+      }
+    });
+  }
+
+  // Load Custom Fields from API
+  loadCustomFields(): void {
+    this.api.getCustomFields().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.availableCustomFields = response.data.map((field: any) => ({
+            key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+            label: field.fieldName || 'Custom Field',
+            type: this.mapFieldType(field.fieldType),
+            description: `${field.fieldName} field`,
+            options: field.options || [],
+            fieldId: field.fieldId
+          }));
+          console.log('Custom Fields loaded:', this.availableCustomFields.length, 'fields');
+        } else if (response && Array.isArray(response)) {
+          // Handle direct array response
+          this.availableCustomFields = response.map((field: any) => ({
+            key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+            label: field.fieldName || 'Custom Field',
+            type: this.mapFieldType(field.fieldType),
+            description: `${field.fieldName} field`,
+            options: field.options || [],
+            fieldId: field.fieldId
+          }));
+          console.log('Custom Fields loaded (direct array):', this.availableCustomFields.length, 'fields');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading custom fields:', error);
+        // Keep default fields if API fails
+      }
+    });
+  }
+
+  // Map API field type to component field type
+  mapFieldType(apiFieldType: string): 'text' | 'number' | 'dropdown' | 'textarea' | 'date' {
+    const typeMap: { [key: string]: 'text' | 'number' | 'dropdown' | 'textarea' | 'date' } = {
+      'Text': 'text',
+      'Dropdown': 'dropdown',
+      'Number': 'number',
+      'Textarea': 'textarea',
+      'Date': 'date'
+    };
+    return typeMap[apiFieldType] || 'text';
+  }
+
+  // Assignee Searchable Dropdown Methods
+  showAssigneeDropdown(): void {
+    this.isAssigneeDropdownVisible = true;
+  }
+
+  hideAssigneeDropdown(): void {
+    setTimeout(() => {
+      this.isAssigneeDropdownVisible = false;
+    }, 200);
+  }
+
+  onAssigneeSearchInputChange(event: any): void {
+    this.assigneeSearchTerm = event.target?.value || '';
+  }
+
+  getFilteredAssignees(): any[] {
+    const list = this.employeeMasterList || [];
+    if (!this.assigneeSearchTerm || this.assigneeSearchTerm.trim() === '') {
+      return list;
+    }
+
+    const searchLower = this.assigneeSearchTerm.toLowerCase().trim();
+    return list.filter((employee: any) => {
+      const description = (employee.description || '').toLowerCase();
+      const idValue = (employee.idValue || '').toLowerCase();
+      return description.includes(searchLower) || idValue.includes(searchLower);
+    });
+  }
+
+  selectAssignee(employee: any): void {
+    this.selectedAssigneeId = employee.idValue || '';
+    this.assigneeSearchTerm = '';
+    this.isAssigneeDropdownVisible = false;
+  }
+
+  isAssigneeSelected(employee: any): boolean {
+    return this.selectedAssigneeId === employee.idValue;
+  }
+
+  getAssigneeDisplayName(): string {
+    if (!this.selectedAssigneeId) {
+      // If no selection and list is loaded, show first employee as default
+      if (this.employeeMasterList.length > 0) {
+        return this.employeeMasterList[0].description || 'Select assignee...';
+      }
+      return 'Select assignee...';
+    }
+    const selected = this.employeeMasterList.find(emp => emp.idValue === this.selectedAssigneeId);
+    return selected ? selected.description : 'Select assignee...';
+  }
+
+  // Project Searchable Dropdown Methods
+  showProjectDropdown(): void {
+    this.isProjectDropdownVisible = true;
+  }
+
+  hideProjectDropdown(): void {
+    setTimeout(() => {
+      this.isProjectDropdownVisible = false;
+    }, 200);
+  }
+
+  onProjectSearchInputChange(event: any): void {
+    this.projectSearchTerm = event.target?.value || '';
+  }
+
+  getFilteredProjects(): any[] {
+    const list = this.projectsList || [];
+    if (!this.projectSearchTerm || this.projectSearchTerm.trim() === '') {
+      return list;
+    }
+
+    const searchLower = this.projectSearchTerm.toLowerCase().trim();
+    return list.filter((project: any) => {
+      const projectName = (project.projectName || '').toLowerCase();
+      const projectId = (project.projectId || '').toString().toLowerCase();
+      return projectName.includes(searchLower) || projectId.includes(searchLower);
+    });
+  }
+
+  selectProject(project: any): void {
+    this.selectedProjectId = project.projectId ? project.projectId.toString() : '';
+    this.projectSearchTerm = '';
+    this.isProjectDropdownVisible = false;
+  }
+
+  isProjectSelected(project: any): boolean {
+    return this.selectedProjectId === project.projectId?.toString();
+  }
+
+  getProjectDisplayName(): string {
+    if (!this.selectedProjectId) {
+      // If no selection and list is loaded, show first project as default
+      if (this.projectsList.length > 0) {
+        return this.projectsList[0].projectName || 'Select project...';
+      }
+      return 'Select project...';
+    }
+    const selected = this.projectsList.find(proj => proj.projectId?.toString() === this.selectedProjectId);
+    return selected ? selected.projectName : 'Select project...';
+  }
+
+  // Set logged-in user as default assignee
+  setLoggedInUserAsDefaultAssignee(): void {
+    const currentUser = this.authService.getUser();
+
+    if (currentUser && this.employeeMasterList.length > 0) {
+      // Try to find the logged-in user in the employee master list
+      // Check various possible field names for employee ID
+      const userEmployeeId = currentUser.empId ||
+        currentUser.employeeId ||
+        currentUser.idValue ||
+        currentUser.id ||
+        currentUser.EmpId ||
+        currentUser.EmployeeId;
+
+      if (userEmployeeId) {
+        // Find the employee in the list
+        const loggedInEmployee = this.employeeMasterList.find(emp =>
+          emp.idValue === userEmployeeId ||
+          emp.idValue === String(userEmployeeId)
+        );
+
+        if (loggedInEmployee) {
+          this.selectedAssigneeId = loggedInEmployee.idValue;
+          console.log('Default assignee set to logged-in user:', loggedInEmployee.description);
+        } else {
+          console.log('Logged-in user not found in employee master list. User ID:', userEmployeeId);
+        }
+      } else {
+        console.log('Could not determine employee ID from current user:', currentUser);
+      }
     }
   }
 
@@ -502,7 +749,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (!this.searchTerm) {
       return this.tasks;
     }
-    return this.tasks.filter(task => 
+    return this.tasks.filter(task =>
       task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       task.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       task.category.toLowerCase().includes(this.searchTerm.toLowerCase())
@@ -541,18 +788,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (task) {
       const oldStatus = task.status;
       task.status = 'IN PROGRESS';
-      
+
       // Set as active task and show in header
       this.activeTask = task;
       this.hasActiveTask = true;
-      
+
       // Log activity
-      this.logTaskAction('status_change', { 
-        oldStatus, 
+      this.logTaskAction('status_change', {
+        oldStatus,
         newStatus: 'IN PROGRESS',
-        taskTitle: task.title 
+        taskTitle: task.title
       });
-      
+
       console.log('Task started and set as active:', task.title);
     }
   }
@@ -562,17 +809,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (task) {
       const oldStatus = task.status;
       task.status = 'PENDING';
-      
+
       // Keep task in header but pause timer
       // Don't clear activeTask - user can still see paused task details
-      
+
       // Log activity
-      this.logTaskAction('status_change', { 
-        oldStatus, 
+      this.logTaskAction('status_change', {
+        oldStatus,
         newStatus: 'PENDING',
-        taskTitle: task.title 
+        taskTitle: task.title
       });
-      
+
       console.log('Task paused:', task.title);
     }
   }
@@ -582,20 +829,20 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (task) {
       const oldStatus = task.status;
       task.status = 'NOT STARTED';
-      
+
       // Clear active task from header
       if (this.activeTask?.id === taskId) {
         this.activeTask = null;
         this.hasActiveTask = false;
       }
-      
+
       // Log activity
-      this.logTaskAction('status_change', { 
-        oldStatus, 
+      this.logTaskAction('status_change', {
+        oldStatus,
         newStatus: 'NOT STARTED',
-        taskTitle: task.title 
+        taskTitle: task.title
       });
-      
+
       console.log('Task stopped and removed from header:', task.title);
     }
   }
@@ -607,16 +854,16 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       if (confirm(`Are you sure you want to delete the task "${task.title}"? This action cannot be undone.`)) {
         // Remove task from the array
         this.tasks = this.tasks.filter(t => t.id !== taskId);
-        
+
         // Update task counts
         this.updateTaskCounts();
-        
+
         // Log activity
-        this.logTaskAction('task_delete', { 
+        this.logTaskAction('task_delete', {
           taskTitle: task.title,
           taskId: taskId
         });
-        
+
         console.log(`Task "${task.title}" has been deleted.`);
       }
     }
@@ -646,7 +893,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   toggleBreak() {
     this.isOnBreak = !this.isOnBreak;
     this.breakStatus = this.isOnBreak ? 'On Break' : 'Working';
-    
+
     if (this.isOnBreak) {
       // Start break timer
       this.startBreakTimer();
@@ -679,13 +926,13 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   startBreak() {
     if (!this.selectedBreakType) return;
-    
+
     this.isBreakRunning = true;
     this.isBreakPaused = false;
     this.breakStartTime = new Date();
     this.breakElapsedSeconds = 0;
     this.updateBreakCaption();
-    
+
     this.breakTimerInterval = setInterval(() => {
       if (!this.isBreakPaused) {
         this.breakElapsedSeconds++;
@@ -709,14 +956,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       clearInterval(this.breakTimerInterval);
       this.breakTimerInterval = null;
     }
-    
+
     // Log the break (in real app, save to backend)
     console.log('Break ended:', {
       type: this.selectedBreakType,
       duration: this.breakElapsedSeconds,
       remarks: this.breakRemarks
     });
-    
+
     // Reset
     this.isBreakRunning = false;
     this.isBreakPaused = false;
@@ -731,8 +978,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const hours = Math.floor(this.breakElapsedSeconds / 3600);
     const minutes = Math.floor((this.breakElapsedSeconds % 3600) / 60);
     const seconds = this.breakElapsedSeconds % 60;
-    
-    this.breakTimerDisplay = 
+
+    this.breakTimerDisplay =
       `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
@@ -776,8 +1023,129 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     document.body.style.overflow = 'auto';
   }
 
-  setSelectTaskTab(tab: 'favorites' | 'all') {
+  // Manage Tasks Modal Methods
+  openManageTasksModal() {
+    this.showManageTasksModal = true;
+    this.isAddingNewCategory = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeManageTasksModal() {
+    this.showManageTasksModal = false;
+    this.isAddingNewCategory = false;
+    this.cancelAllEdits();
+    document.body.style.overflow = 'auto';
+  }
+
+  // Start editing a task category
+  startEditCategory(category: TaskCategory) {
+    // Cancel other edits first
+    this.taskCategories.forEach(cat => cat.isEditing = false);
+    category.isEditing = true;
+  }
+
+  // Save edited category
+  saveCategory(category: TaskCategory) {
+    if (category.name.trim() && category.department.trim()) {
+      category.isEditing = false;
+      console.log('Category saved:', category);
+      // In real app, make API call to save
+    }
+  }
+
+  // Cancel editing
+  cancelEdit(category: TaskCategory) {
+    category.isEditing = false;
+    // In real app, reload original data from API
+  }
+
+  // Cancel all edits
+  cancelAllEdits() {
+    this.taskCategories.forEach(cat => cat.isEditing = false);
+  }
+
+  // Delete category
+  deleteCategory(categoryId: number) {
+    if (confirm('Are you sure you want to delete this task category?')) {
+      this.taskCategories = this.taskCategories.filter(cat => cat.id !== categoryId);
+      console.log('Category deleted:', categoryId);
+      // In real app, make API call to delete
+    }
+  }
+
+  // Show add new category form
+  showAddCategoryForm() {
+    this.isAddingNewCategory = true;
+    this.newTaskCategory = { id: 0, name: '', department: '' };
+    this.cancelAllEdits();
+  }
+
+  // Cancel adding new category
+  cancelAddCategory() {
+    this.isAddingNewCategory = false;
+    this.newTaskCategory = { id: 0, name: '', department: '' };
+  }
+
+  // Save new category
+  saveNewCategory() {
+    if (this.newTaskCategory.name.trim() && this.newTaskCategory.department.trim()) {
+      const newCat: TaskCategory = {
+        id: Math.max(...this.taskCategories.map(c => c.id), 0) + 1,
+        name: this.newTaskCategory.name.trim(),
+        department: this.newTaskCategory.department.trim()
+      };
+      this.taskCategories.push(newCat);
+      this.isAddingNewCategory = false;
+      this.newTaskCategory = { id: 0, name: '', department: '' };
+      console.log('New category added:', newCat);
+      // In real app, make API call to create
+    }
+  }
+
+  setSelectTaskTab(tab: 'favorites' | 'myDepartment' | 'all') {
     this.selectTaskActiveTab = tab;
+  }
+
+  // Get count of favorite/pinned tasks
+  getFavoritesCount(): number {
+    // This would come from your actual data
+    // For now, returning a sample count
+    return 5;
+  }
+
+  // Get count of tasks in user's department
+  getMyDepartmentTasksCount(): number {
+    // This would filter tasks by the logged-in user's department
+    // For now, returning a sample count
+    return 12;
+  }
+
+  // Get count of all department tasks
+  getAllDepartmentTasksCount(): number {
+    // This would return count of all department tasks
+    // For now, returning a sample count
+    return 20;
+  }
+
+  // Get favorite task categories
+  getFavouriteTaskList(): TaskCategory[] {
+    return this.taskCategories.filter(cat => cat.name.includes('UI') || cat.name.includes('Design') || cat.isEditing);
+  }
+
+  // Get department task categories
+  getDepartmentTaskList(): TaskCategory[] {
+    return this.taskCategories.filter(cat => cat.department === 'ENGINEERING');
+  }
+
+  // Get all department task categories
+  getAllDepartmentTaskList(): TaskCategory[] {
+    return this.taskCategories;
+  }
+
+  // Select a task category
+  selectTask(category: TaskCategory): void {
+    this.newTaskCategory = category;
+    console.log('Selected task category:', category);
   }
 
   openTaskDetailsModal(task: Task) {
@@ -805,16 +1173,16 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       this.selectedTask.title = this.editableTaskTitle;
       this.selectedTask.description = this.editableTaskDescription;
       this.selectedTask.progress = this.taskProgress;
-      
+
       // Log the save action
       this.logTaskAction('task_saved', {
         taskTitle: this.selectedTask.title,
         progress: this.taskProgress
       });
-      
+
       // Show success feedback (you can add a toast notification here)
       console.log('Task changes saved successfully:', this.selectedTask);
-      
+
       // Optional: Close modal after saving
       // this.closeTaskDetailsModal();
     }
@@ -977,7 +1345,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     });
 
     // Remove unselected fields
-    this.selectedCustomFields = this.selectedCustomFields.filter(field => 
+    this.selectedCustomFields = this.selectedCustomFields.filter(field =>
       this.tempSelectedFields.includes(field.key)
     );
 
@@ -1001,9 +1369,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Custom fields are already added to selectedCustomFields array
     console.log('Applied custom fields:', this.selectedCustomFields);
   }
-  
+
   getFieldIcon(type: string): string {
-    switch(type) {
+    switch (type) {
       case 'text': return 'font';
       case 'number': return 'hashtag';
       case 'dropdown': return 'list';
@@ -1035,7 +1403,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
       subtask.isRunning = true;
       subtask.startTime = new Date();
-      
+
       // Add activity log
       this.addActivityLog({
         type: 'timer_start',
@@ -1053,7 +1421,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       subtask.isRunning = false;
       subtask.timeSpent += duration;
       subtask.totalLoggedTime += duration;
-      
+
       // Add activity log
       this.addActivityLog({
         type: 'timer_pause',
@@ -1062,7 +1430,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         duration: this.formatDuration(duration),
         details: { subtaskId: subtask.id, subtaskName: subtask.name }
       });
-      
+
       subtask.startTime = undefined;
     }
   }
@@ -1074,11 +1442,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         const duration = (new Date().getTime() - subtask.startTime.getTime()) / (1000 * 60 * 60); // hours
         subtask.totalLoggedTime += duration;
       }
-      
+
       subtask.isRunning = false;
       subtask.timeSpent = 0;
       subtask.startTime = undefined;
-      
+
       // Add activity log
       this.addActivityLog({
         type: 'timer_stop',
@@ -1093,11 +1461,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const subtask = this.detailedSubtasks.find(s => s.id === subtaskId);
     if (subtask) {
       subtask.completed = !subtask.completed;
-      
+
       if (subtask.completed && subtask.isRunning) {
         this.stopSubtaskDetailedTimer(subtaskId);
       }
-      
+
       // Add activity log
       this.addActivityLog({
         type: 'subtask_complete',
@@ -1111,15 +1479,15 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Comment Methods
   newComment = '';
-  
+
   addComment() {
     if (this.newComment.trim()) {
       // Log the comment activity
-      this.logTaskAction('comment_added', { 
+      this.logTaskAction('comment_added', {
         comment: this.newComment.trim(),
-        taskTitle: this.selectedTask?.title 
+        taskTitle: this.selectedTask?.title
       });
-      
+
       // Clear the input
       this.newComment = '';
     }
@@ -1132,7 +1500,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       timestamp: new Date()
     };
-    
+
     this.activityLogs.unshift(newActivity);
   }
 
@@ -1140,7 +1508,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   logTaskAction(action: string, details?: any) {
     let description = '';
     let type: ActivityLog['type'] = 'task_update';
-    
+
     switch (action) {
       case 'status_change':
         description = `Changed task status to "${details.newStatus}"`;
@@ -1169,7 +1537,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       default:
         description = `Performed action: ${action}`;
     }
-    
+
     this.addActivityLog({
       type,
       description,
@@ -1182,7 +1550,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const totalMinutes = Math.round(hours * 60);
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
-    
+
     if (h === 0) {
       return `${m}m`;
     } else if (m === 0) {
@@ -1235,7 +1603,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return timestamp.toLocaleDateString();
   }
 
@@ -1264,7 +1632,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   onFileDrop(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       this.handleFiles(files);
@@ -1274,7 +1642,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   private handleFiles(files: FileList) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
         alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
@@ -1346,59 +1714,64 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.uploadedFiles.splice(index, 1);
   }
 
+  // Getter for favorite tasks for the HTML template
+  get favouriteTaskList(): Task[] {
+    return this.tasks.filter(t => t.isFavorite);
+  }
+
   // Progress Circle 3D Methods - Circular Drag Functionality
   startProgressDrag(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
     this.isDraggingProgress = true;
     this.isProgressAnimating = false;
-    
+
     // Store the progress circle element
     this.progressCircle3DElement = (event.currentTarget as HTMLElement);
-    
+
     // Add global mouse event listeners
     const boundOnDrag = this.onProgressDrag.bind(this);
     const boundEndDrag = this.endProgressDrag.bind(this);
-    
+
     document.addEventListener('mousemove', boundOnDrag);
     document.addEventListener('mouseup', boundEndDrag);
-    
+
     // Store bound functions for cleanup
     (this.progressCircle3DElement as any)._boundOnDrag = boundOnDrag;
     (this.progressCircle3DElement as any)._boundEndDrag = boundEndDrag;
-    
+
     // Update progress immediately on click
     this.updateProgressFromEvent(event);
   }
 
   onProgressDrag(event: MouseEvent) {
     if (!this.isDraggingProgress || !this.progressCircle3DElement) return;
-    
+
     this.updateProgressFromEvent(event);
   }
 
   private updateProgressFromEvent(event: MouseEvent) {
     if (!this.progressCircle3DElement) return;
-    
+
     const rect = this.progressCircle3DElement.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     // Calculate angle from center
     const deltaX = event.clientX - centerX;
     const deltaY = event.clientY - centerY;
     let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-    
+
     // Normalize angle to 0-360 degrees, starting from top (-90 degrees offset)
     angle = (angle + 90 + 360) % 360;
-    
+
     // Convert angle to percentage
     const newProgress = Math.round((angle / 360) * 100);
-    
+
     // Clamp between 0 and 100
     const oldProgress = this.taskProgress;
     this.taskProgress = Math.max(0, Math.min(100, newProgress));
-    
+
     // Always animate when dragging to show smooth value changes
     if (this.isDraggingProgress) {
       this.isProgressAnimating = true;
@@ -1413,22 +1786,22 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   endProgressDrag() {
     if (this.isDraggingProgress && this.progressCircle3DElement) {
       this.isDraggingProgress = false;
-      
+
       // Remove global event listeners using stored bound functions
       const boundOnDrag = (this.progressCircle3DElement as any)._boundOnDrag;
       const boundEndDrag = (this.progressCircle3DElement as any)._boundEndDrag;
-      
+
       if (boundOnDrag) {
         document.removeEventListener('mousemove', boundOnDrag);
       }
       if (boundEndDrag) {
         document.removeEventListener('mouseup', boundEndDrag);
       }
-      
+
       // Clean up stored functions
       delete (this.progressCircle3DElement as any)._boundOnDrag;
       delete (this.progressCircle3DElement as any)._boundEndDrag;
-      
+
       // Add completion animation for both progress circle and premium 3D bar
       this.isProgressAnimating = true;
       this.isProgressChanging = true;
@@ -1436,23 +1809,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         this.isProgressAnimating = false;
         this.isProgressChanging = false;
       }, 600);
-      
+
       // Update selected task progress if available
       if (this.selectedTask) {
         const oldProgress = this.selectedTask.progress;
         this.selectedTask.progress = this.taskProgress;
-        
+
         // Log progress update activity
-        this.logTaskAction('progress_update', { 
-          oldProgress, 
+        this.logTaskAction('progress_update', {
+          oldProgress,
           progress: this.taskProgress,
-          taskTitle: this.selectedTask.title 
+          taskTitle: this.selectedTask.title
         });
       }
-      
+
       // Here you could emit an event or call an API to save the progress
       console.log('Progress updated to:', this.taskProgress + '%');
-      
+
       this.progressCircle3DElement = null;
     }
   }
@@ -1463,24 +1836,24 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (!isNaN(value)) {
       const oldProgress = this.taskProgress;
       this.taskProgress = Math.max(0, Math.min(100, value));
-      
+
       // Update the input field to reflect the clamped value
       event.target.value = this.taskProgress;
-      
+
       // Log progress change
       if (Math.abs(this.taskProgress - oldProgress) >= 1) {
-        this.logTaskAction('progress_update', { 
-          oldProgress, 
+        this.logTaskAction('progress_update', {
+          oldProgress,
           progress: this.taskProgress,
           taskTitle: this.selectedTask?.title || 'Current Task'
         });
       }
-      
+
       // Update selected task progress if available
       if (this.selectedTask) {
         this.selectedTask.progress = this.taskProgress;
       }
-      
+
       // Add animation effects for both progress circle and premium 3D bar
       this.isProgressAnimating = true;
       this.isProgressChanging = true;
@@ -1494,19 +1867,19 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   setQuickProgress(value: number) {
     const oldProgress = this.taskProgress;
     this.taskProgress = value;
-    
+
     // Log progress change
-    this.logTaskAction('progress_update', { 
-      oldProgress, 
+    this.logTaskAction('progress_update', {
+      oldProgress,
       progress: this.taskProgress,
       taskTitle: this.selectedTask?.title || 'Current Task'
     });
-    
+
     // Update selected task progress if available
     if (this.selectedTask) {
       this.selectedTask.progress = this.taskProgress;
     }
-    
+
     // Add animation effects for both progress circle and premium 3D bar
     this.isProgressAnimating = true;
     this.isProgressChanging = true;

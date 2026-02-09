@@ -1,4 +1,4 @@
-﻿<div class="task-board-container" [class.dark-mode]="isDarkMode">
+<div class="task-board-container" [class.dark-mode]="isDarkMode">
   <!-- Top Section with Active Task and Stats -->
   <div class="top-section">
     <!-- Active Task Card -->
@@ -856,9 +856,15 @@
         <h3 class="select-modal-title">Select Task</h3>
         <p class="select-modal-subtitle">Manage team workflow and initiate time tracking.</p>
       </div>
-      <button class="modal-close-btn" (click)="closeSelectTaskModal()">
-        <i class="fas fa-times"></i>
-      </button>
+      <div class="header-actions">
+        <button class="manage-tasks-btn" (click)="openManageTasksModal()">
+          <i class="fas fa-cog"></i>
+          <span>Manage Tasks</span>
+        </button>
+        <button class="modal-close-btn" (click)="closeSelectTaskModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Search Box -->
@@ -873,11 +879,17 @@
         (click)="setSelectTaskTab('favorites')">
         <i class="fas fa-star"></i>
         PINNED FAVORITES
+        <span class="tab-count">{{ getFavoritesCount() }}</span>
+      </button>
+      <button class="select-tab-btn" [class.active]="selectTaskActiveTab === 'myDepartment'" (click)="setSelectTaskTab('myDepartment')">
+        <i class="fas fa-users"></i>
+        MY DEPARTMENT TASKS
+        <span class="tab-count">{{ getMyDepartmentTasksCount() }}</span>
       </button>
       <button class="select-tab-btn" [class.active]="selectTaskActiveTab === 'all'" (click)="setSelectTaskTab('all')">
         <i class="fas fa-th-large"></i>
         ALL DEPARTMENT TASKS
-        <span class="tab-count">128</span>
+        <span class="tab-count">{{ getAllDepartmentTasksCount() }}</span>
       </button>
     </div>
 
@@ -886,376 +898,108 @@
       <!-- Pinned Favorites Tab -->
       @if (selectTaskActiveTab === 'favorites') {
       <div class="task-list-container">
-        <div class="task-list">
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">UX Research: User Interview Synthesis</h4>
-              <p class="task-item-dept">DESIGN DEPARTMENT</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Main Dashboard Refactoring</h4>
-              <p class="task-item-dept">ENGINEERING</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Mobile App Performance Optimization</h4>
-              <p class="task-item-dept">MOBILE DEVELOPMENT</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">API Documentation Update</h4>
-              <p class="task-item-dept">DOCUMENTATION</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Database Migration Planning</h4>
-              <p class="task-item-dept">DATABASE TEAM</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Customer Feedback Analysis</h4>
-              <p class="task-item-dept">PRODUCT MANAGEMENT</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Security Audit Report</h4>
-              <p class="task-item-dept">SECURITY</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Marketing Campaign Design</h4>
-              <p class="task-item-dept">MARKETING</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Code Review: Payment Module</h4>
-              <p class="task-item-dept">ENGINEERING</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="fas fa-star star-icon active"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">User Testing Session Preparation</h4>
-              <p class="task-item-dept">UX RESEARCH</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn">
-              <i class="fas fa-play"></i>
-              Add & Start
-            </button>
-          </div>
+        @if (getFavouriteTaskList().length === 0) {
+        <div class="empty-state">
+          <i class="fas fa-star"></i>
+          <p>No favorite tasks yet</p>
+          <span>Star tasks to add them to your favorites</span>
         </div>
+        } @else {
+        <div class="task-list">
+          @for (task of getFavouriteTaskList(); track task.id) {
+          <div class="task-item" (click)="selectTask(task)">
+            <i class="fas fa-star star-icon active"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">{{ task.name }}</h4>
+              <p class="task-item-dept">DEPARTMENT: {{ task.department }}</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn" (click)="selectTask(task); $event.stopPropagation()">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+
+      <!-- My Department Tasks Tab -->
+      @if (selectTaskActiveTab === 'myDepartment') {
+      <div class="task-list-container">
+        @if (getDepartmentTaskList().length === 0) {
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <p>No department tasks available</p>
+          <span>Tasks from your department will appear here</span>
+        </div>
+        } @else {
+        <div class="task-list">
+          @for (task of getDepartmentTaskList(); track task.id) {
+          <div class="task-item" (click)="selectTask(task)">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">{{ task.name }}</h4>
+              <p class="task-item-dept">DEPARTMENT: {{ task.department }}</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn" (click)="selectTask(task); $event.stopPropagation()">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+          }
+        </div>
+        }
       </div>
       }
 
       <!-- All Department Tasks Tab -->
       @if (selectTaskActiveTab === 'all') {
       <div class="task-list-container">
-        <div class="task-list">
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Product Roadmap Review Q1</h4>
-              <p class="task-item-dept">PRODUCT MANAGEMENT</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Infrastructure Security Audit</h4>
-              <p class="task-item-dept">DEVOPS</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Client Presentation Deck: Project Phoenix</h4>
-              <p class="task-item-dept">MARKETING</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Backend API Development Sprint</h4>
-              <p class="task-item-dept">BACKEND TEAM</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">UI Component Library Update</h4>
-              <p class="task-item-dept">FRONTEND TEAM</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Quarterly Performance Review</h4>
-              <p class="task-item-dept">HR DEPARTMENT</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Cloud Infrastructure Optimization</h4>
-              <p class="task-item-dept">DEVOPS</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Email Campaign Analytics Report</h4>
-              <p class="task-item-dept">MARKETING</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Accessibility Compliance Testing</h4>
-              <p class="task-item-dept">QA TEAM</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
-
-          <div class="task-item">
-            <i class="far fa-star star-icon"></i>
-            <div class="task-item-content">
-              <h4 class="task-item-title">Budget Planning FY2025</h4>
-              <p class="task-item-dept">FINANCE</p>
-            </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
-            </div>
-            <button class="add-start-btn secondary">
-              <i class="fas fa-play"></i>
-              ADD & START
-            </button>
-          </div>
+        @if (getAllDepartmentTaskList().length === 0) {
+        <div class="empty-state">
+          <i class="fas fa-th-large"></i>
+          <p>No tasks available</p>
+          <span>All department tasks will appear here</span>
         </div>
+        } @else {
+        <div class="task-list">
+          @for (task of getAllDepartmentTaskList(); track task.id) {
+          <div class="task-item" (click)="selectTask(task)">
+            <i class="far fa-star star-icon"></i>
+            <div class="task-item-content">
+              <h4 class="task-item-title">{{ task.name }}</h4>
+              <p class="task-item-dept">DEPARTMENT: {{ task.department }}</p>
+            </div>
+            <div class="task-item-info">
+              <div class="task-info-item assigned">
+                <i class="fas fa-user-friends"></i>
+                <span>Assigned Task</span>
+              </div>
+            </div>
+            <button class="add-start-btn" (click)="selectTask(task); $event.stopPropagation()">
+              <i class="fas fa-play"></i>
+              Add & Start
+            </button>
+          </div>
+          }
+        </div>
+        }
       </div>
       }
+
     </div>
 
     <!-- Modal Footer -->
@@ -1910,6 +1654,7 @@
         <div class="status-dropdown-container">
           <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
             <option value="not-started">Not Started</option>
+            <option value="not-closed">Closed</option>
             <option value="running">Running</option>
             <option value="completed">Completed</option>
             <option value="pause">Pause</option>
@@ -1921,8 +1666,7 @@
         <div class="modal-timer-section">
           <span class="timer-label">Running Timer</span>
           <div class="timer-controls">
-            <div class="timer-display">
-              <i class="fas fa-clock"></i>
+            <div class="timer-display centered-timer">
               <span class="timer-text">00:42:18</span>
             </div>
             <div class="timer-buttons">
@@ -1935,6 +1679,12 @@
             </div>
           </div>
         </div>
+        
+        <!-- Save Button next to Running Timer -->
+        <button class="save-task-btn" (click)="saveTaskChanges()" title="Save Changes">
+          <i class="fas fa-save"></i>
+          <span>Save</span>
+        </button>
 
         <div class="divider"></div>
 
@@ -1947,12 +1697,6 @@
         </div>
 
         <div class="header-actions">
-          <button class="action-btn save-btn" (click)="saveTaskChanges()" title="Save Changes">
-            <i class="fas fa-save"></i>
-          </button>
-          <button class="action-btn">
-            <i class="fas fa-ellipsis-h"></i>
-          </button>
           <button class="action-btn" (click)="closeTaskDetailsModal()">
             <i class="fas fa-times"></i>
           </button>
@@ -2124,7 +1868,7 @@
                 <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
                 <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
                 <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(100)">✓</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(100)">?</button>
               </div>
             </div>
           </div>
@@ -2137,6 +1881,21 @@
             placeholder="Enter task description..."></textarea>
         </div>
 
+        <!-- Daily Remarks - Compact -->
+        <div class="daily-remarks-compact">
+          <label class="remarks-label">
+            <i class="fas fa-comment-dots"></i>
+            Daily Remarks
+          </label>
+          <input 
+            type="text" 
+            class="remarks-input" 
+            [(ngModel)]="dailyRemarks"
+            placeholder="Add today's progress notes or updates..."
+            maxlength="200"
+          />
+        </div>
+
         <!-- Project Metadata -->
         <div class="metadata-section">
           <div class="metadata-header">
@@ -2144,81 +1903,126 @@
           </div>
 
           <div class="metadata-grid">
-            <!-- Department -->
-            <div class="metadata-card">
-              <div class="metadata-icon">
-                <i class="fas fa-building"></i>
-              </div>
-              <div class="metadata-content">
-                <p class="metadata-label">Department</p>
-                <select class="metadata-select">
-                  <option>Product & Design</option>
-                  <option>Engineering</option>
-                  <option>Marketing</option>
-                </select>
-              </div>
-            </div>
-
             <!-- Project -->
-            <div class="metadata-card">
-              <div class="metadata-icon">
-                <i class="fas fa-folder"></i>
-              </div>
+            <div class="metadata-card project-dropdown-card">
               <div class="metadata-content">
-                <p class="metadata-label">Project</p>
-                <select class="metadata-select">
-                  <option>Marketing Dashboard</option>
-                  <option>User Onboarding</option>
-                  <option>API Revamp</option>
-                </select>
+                <p class="metadata-label">
+                  <i class="fas fa-folder label-icon"></i>
+                  Project
+                </p>
+                <div class="searchable-dropdown">
+                  <input 
+                    type="text" 
+                    [value]="getProjectDisplayName()"
+                    [placeholder]="projectsList.length === 0 ? 'Loading projects...' : 'Search and select project...'"
+                    class="dropdown-input"
+                    (input)="onProjectSearchInputChange($event)"
+                    (focus)="showProjectDropdown()"
+                    (blur)="hideProjectDropdown()"
+                    autocomplete="off">
+                  <div class="dropdown-icon">
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                  <div class="dropdown-list project-dropdown" *ngIf="isProjectDropdownVisible">
+                    <div 
+                      class="dropdown-item" 
+                      *ngFor="let project of getFilteredProjects()"
+                      (mousedown)="selectProject(project)"
+                      [class.selected]="isProjectSelected(project)">
+                      <div class="project-name-only">{{ project.projectName || '' }}</div>
+                    </div>
+                    <div class="no-results" *ngIf="getFilteredProjects().length === 0">
+                      No projects found
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Assigned To -->
-            <div class="metadata-card">
-              <div class="metadata-icon">
-                <i class="fas fa-user"></i>
-              </div>
+            <div class="metadata-card assignee-dropdown-card">
               <div class="metadata-content">
-                <p class="metadata-label">Assigned To</p>
-                <select class="metadata-select">
-                  <option>Jane Doe</option>
-                  <option>Alex Chen</option>
-                  <option>Marcus Thorne</option>
-                </select>
+                <p class="metadata-label">
+                  <i class="fas fa-user label-icon"></i>
+                  Assigned To
+                </p>
+                <div class="searchable-dropdown">
+                  <input 
+                    type="text" 
+                    [value]="getAssigneeDisplayName()"
+                    [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select assignee...'"
+                    class="dropdown-input"
+                    (input)="onAssigneeSearchInputChange($event)"
+                    (focus)="showAssigneeDropdown()"
+                    (blur)="hideAssigneeDropdown()"
+                    autocomplete="off">
+                  <div class="dropdown-icon">
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                  <div class="dropdown-list assignee-dropdown" *ngIf="isAssigneeDropdownVisible">
+                    <div 
+                      class="dropdown-item" 
+                      *ngFor="let employee of getFilteredAssignees()"
+                      (mousedown)="selectAssignee(employee)"
+                      [class.selected]="isAssigneeSelected(employee)">
+                      <div class="employee-name-only">{{ employee.description || '' }}</div>
+                    </div>
+                    <div class="no-results" *ngIf="getFilteredAssignees().length === 0">
+                      No employees found
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Start Date -->
             <div class="metadata-card">
-              <div class="metadata-icon">
-                <i class="fas fa-calendar-alt"></i>
-              </div>
               <div class="metadata-content">
-                <p class="metadata-label">Start Date</p>
+                <p class="metadata-label">
+                  <i class="fas fa-calendar-alt label-icon"></i>
+                  Start Date
+                </p>
                 <input type="date" class="metadata-input" value="2023-10-01">
               </div>
             </div>
 
             <!-- Target Date -->
             <div class="metadata-card target-date">
-              <div class="metadata-icon orange">
-                <i class="fas fa-calendar-check"></i>
-              </div>
               <div class="metadata-content">
-                <p class="metadata-label">Target Date</p>
+                <p class="metadata-label">
+                  <i class="fas fa-calendar-check label-icon orange"></i>
+                  Target Date
+                </p>
                 <input type="date" class="metadata-input" value="2023-10-24">
+              </div>
+            </div>
+
+            <!-- Estimated Hours -->
+            <div class="metadata-card estimated-hours">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-clock label-icon blue"></i>
+                  Estimated Hours
+                </p>
+                <input 
+                  type="number" 
+                  class="metadata-input" 
+                  [(ngModel)]="selectedTaskEstimatedHours"
+                  placeholder="0.00"
+                  step="0.5"
+                  min="0"
+                >
               </div>
             </div>
 
             <!-- Added Custom Fields -->
             @for (field of selectedCustomFields; track field.key) {
             <div class="metadata-card custom-field-card">
-              <div class="metadata-icon">
-                <i class="fas" [ngClass]="'fa-' + getFieldIcon(field.type)"></i>
-              </div>
               <div class="metadata-content">
-                <p class="metadata-label">{{ field.label }}</p>
+                <p class="metadata-label">
+                  <i class="fas label-icon" [ngClass]="'fa-' + getFieldIcon(field.type)"></i>
+                  {{ field.label }}
+                </p>
                 @if (field.type === 'text') {
                 <input type="text" class="metadata-input" [(ngModel)]="field.value"
                   [placeholder]="'Enter ' + field.label.toLowerCase()">
@@ -2235,6 +2039,8 @@
                 } @else if (field.type === 'textarea') {
                 <textarea class="metadata-textarea" [(ngModel)]="field.value"
                   [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
+                } @else if (field.type === 'date') {
+                <input type="date" class="metadata-input" [(ngModel)]="field.value">
                 }
               </div>
               <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
@@ -2292,7 +2098,7 @@
                   <div class="file-name">{{ file.name }}</div>
                   <div class="file-meta">
                     <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                    <span class="file-separator">•</span>
+                    <span class="file-separator">�</span>
                     <span class="file-date">{{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
                   </div>
                 </div>
@@ -2515,6 +2321,186 @@
         <button class="cancel-btn" (click)="closeCustomFieldsModal()">Cancel</button>
         <button class="apply-btn" (click)="applyCustomFields()">Apply Changes</button>
       </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Manage Tasks Modal -->
+@if (showManageTasksModal) {
+<div class="modal-overlay" (click)="closeManageTasksModal()">
+  <div class="manage-tasks-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="manage-modal-header">
+      <div>
+        <h3 class="manage-modal-title">Manage Task Categories</h3>
+        <p class="manage-modal-subtitle">Add, edit, or remove task categories for your organization</p>
+      </div>
+      <button class="modal-close-btn" (click)="closeManageTasksModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Add New Category Button and Department Filter -->
+    <div class="manage-actions">
+      <div class="manage-actions-left">
+        <button class="add-category-btn" (click)="showAddCategoryForm()" *ngIf="!isAddingNewCategory">
+          <i class="fas fa-plus-circle"></i>
+          <span>Add New Category</span>
+        </button>
+      </div>
+      
+      <div class="manage-actions-right">
+        <div class="department-filter">
+          <label class="filter-label">
+            <i class="fas fa-filter"></i>
+            Filter by Department
+          </label>
+          <div class="filter-dropdown-wrapper">
+            <select class="filter-dropdown" [(ngModel)]="selectedDepartmentFilter">
+              @for (dept of getDepartments(); track dept) {
+                <option [value]="dept">{{ dept }}</option>
+              }
+            </select>
+            <i class="fas fa-chevron-down dropdown-icon"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Category Form -->
+    @if (isAddingNewCategory) {
+      <div class="category-form new-category-form">
+        <div class="form-header">
+          <h4 class="form-title">
+            <i class="fas fa-plus-circle"></i>
+            New Task Category
+          </h4>
+        </div>
+        <div class="form-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <input 
+                type="text" 
+                class="form-input" 
+                [(ngModel)]="newTaskCategory.department"
+                placeholder="e.g., ENGINEERING, DESIGN, MARKETING"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Task Category Name</label>
+              <input 
+                type="text" 
+                class="form-input" 
+                [(ngModel)]="newTaskCategory.name"
+                placeholder="e.g., API Development, UI Design"
+              />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-cancel" (click)="cancelAddCategory()">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
+            <button 
+              class="btn-save" 
+              (click)="saveNewCategory()"
+              [disabled]="!newTaskCategory.name.trim() || !newTaskCategory.department.trim()"
+            >
+              <i class="fas fa-check"></i>
+              Save Category
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Task Categories List -->
+    <div class="categories-list">
+      <div class="list-header">
+        <h4 class="list-title">
+          @if (selectedDepartmentFilter === 'ALL') {
+            Existing Task Categories ({{ taskCategories.length }})
+          } @else {
+            {{ selectedDepartmentFilter }} - Task Categories ({{ getFilteredCategories().length }})
+          }
+        </h4>
+      </div>
+
+      @for (category of getFilteredCategories(); track category.id) {
+        <div class="category-item" [class.editing]="category.isEditing">
+          @if (!category.isEditing) {
+            <!-- View Mode -->
+            <div class="category-view">
+              <div class="category-icon">
+                <i class="fas fa-tasks"></i>
+              </div>
+              <div class="category-content">
+                <h5 class="category-name">{{ category.name }}</h5>
+                <p class="category-dept">{{ category.department }}</p>
+              </div>
+              <div class="category-actions">
+                <button class="btn-edit" (click)="startEditCategory(category)" title="Edit">
+                  <i class="fas fa-edit"></i>
+                  <span>Edit</span>
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- Edit Mode -->
+            <div class="category-edit">
+              <div class="edit-form">
+                <div class="edit-form-row">
+                  <div class="edit-form-group">
+                    <label class="edit-label">Department</label>
+                    <input 
+                      type="text" 
+                      class="edit-input" 
+                      [(ngModel)]="category.department"
+                      placeholder="Department"
+                    />
+                  </div>
+                  <div class="edit-form-group">
+                    <label class="edit-label">Task Category Name</label>
+                    <input 
+                      type="text" 
+                      class="edit-input" 
+                      [(ngModel)]="category.name"
+                      placeholder="Category Name"
+                    />
+                  </div>
+                </div>
+                <div class="edit-actions">
+                  <button class="btn-cancel-edit" (click)="cancelEdit(category)">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                  </button>
+                  <button class="btn-save-edit" (click)="saveCategory(category)">
+                    <i class="fas fa-check"></i>
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (getFilteredCategories().length === 0) {
+        <div class="empty-categories">
+          <div class="empty-icon">
+            <i class="fas fa-folder-open"></i>
+          </div>
+          @if (selectedDepartmentFilter === 'ALL') {
+            <p class="empty-text">No task categories yet</p>
+            <p class="empty-subtext">Click "Add New Category" to create your first task category</p>
+          } @else {
+            <p class="empty-text">No categories in {{ selectedDepartmentFilter }}</p>
+            <p class="empty-subtext">Select "ALL" to view all categories or add a new one for this department</p>
+          }
+        </div>
+      }
     </div>
   </div>
 </div>

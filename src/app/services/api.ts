@@ -7,6 +7,8 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
+import { TaskSaveDto,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest } from '../models/TimeSheetDPR.model';
+
 
 @Injectable({
   providedIn: 'root'
@@ -236,6 +238,112 @@ export class Api {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetIssuedAssets/${empId}`);
   }
 
+
+  //-------------------------------- TimeSheet --------------------------------
+
+
+   /* ===================== CUSTOM FIELDS ===================== */
+
+  getCustomFields(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetCustomFields`);
+  }
+
+  /* ===================== TASK ===================== */
+
+  saveTaskBulk(request: TaskSaveDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveTaskBulk`, request);
+  }
+
+  executeTimer(request: TaskTimerActionDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExecuteTimer`, request);
+  }
+
+  /* ===================== COMMENTS ===================== */
+
+  saveComment(request: TaskCommentDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveComment`, request);
+  }
+
+  getComments(taskId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetComments/${taskId}`);
+  }
+
+  /* ===================== ACTIVITY ===================== */
+
+  getActivity(taskId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetActivity/${taskId}`);
+  }
+
+  /* ===================== FILE UPLOAD ===================== */
+
+  uploadTimeSheetFile(
+    taskId: number,
+    userId: string,
+    file: File
+  ): Observable<any> {
+
+    const formData = new FormData();
+    formData.append('taskId', taskId.toString());
+    formData.append('userId', userId);
+    formData.append('file', file);
+
+    return this.http.post(
+      `${this.apiUrl}/DailyTimeSheet/UploadFileTimeSheetFile`,
+      formData
+    );
+  }
+
+  getTaskFiles(taskId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetTaskFiles/${taskId}`);
+  }
+
+  /* ===================== TASK CATEGORY ===================== */
+
+  getUserTaskCategories(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetUserTaskCategories/${userId}`);
+  }
+
+  toggleFavouriteCategory(request: ToggleFavouriteCategoryRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/ToggleFavourite`, request);
+  }
+
+  saveTaskCategory(request: TaskCategoryRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveTaskCategory`, request);
+  }
+
+  /* ===================== MASTER DATA ===================== */
+
+  getDepartmentList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetDepartmentList`);
+  }
+
+  getProjects(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetProjects`);
+  }
+
+  /* ===================== BREAK ===================== */
+
+  userBreak(request: UserBreakRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/UserBreak`, request);
+  }
+
+  /* ===================== ACTIVE TASKS ===================== */
+
+  getActiveTaskList(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/ActiveTaskList/${userId}`);
+  }
+
+  /* ===================== APPROVAL ===================== */
+
+  getPendingApprovalUsers(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/PendingApprovalUsers/${userId}`);
+  }
+
+  /* ===================== FIELD MAPPING ===================== */
+
+  saveTaskFieldMapping(request: TaskFieldMappingRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveMapping`, request);
+  }
 
 
 }
