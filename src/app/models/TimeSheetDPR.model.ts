@@ -112,6 +112,7 @@ export interface TaskCategoryDto {
   categoryName: string;
   departmentId: number;
   eSTIMATEDHOURS : number;
+  departmentName: string;
 }
 
 export interface UserTaskCategoriesDto {

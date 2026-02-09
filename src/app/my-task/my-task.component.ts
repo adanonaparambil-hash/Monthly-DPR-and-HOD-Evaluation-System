@@ -86,10 +86,21 @@ interface SubtaskDetailed {
 }
 
 interface TaskCategory {
-  id: number;
-  name: string;
-  department: string;
+  categoryId: number;
+  categoryName: string;
+  departmentId: number;
+  departmentName?: string;
   isEditing?: boolean;
+}
+
+interface TaskCategoryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    favouriteList: TaskCategory[];
+    departmentList: TaskCategory[];
+    allDepartmentList: TaskCategory[];
+  };
 }
 
 @Component({
@@ -155,32 +166,27 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   selectTaskActiveTab: 'favorites' | 'myDepartment' | 'all' = 'favorites';
 
   // Task Categories Management
-  taskCategories: TaskCategory[] = [
-    { id: 1, name: 'UX Research: User Interview Synthesis', department: 'DESIGN DEPARTMENT' },
-    { id: 2, name: 'Main Dashboard Refactoring', department: 'ENGINEERING' },
-    { id: 3, name: 'API Security Audit', department: 'SECURITY' },
-    { id: 4, name: 'Database Optimization', department: 'ENGINEERING' },
-    { id: 5, name: 'Mobile App Testing', department: 'QUALITY ASSURANCE' },
-    { id: 6, name: 'Brand Identity Design', department: 'DESIGN DEPARTMENT' },
-    { id: 7, name: 'Marketing Campaign Analysis', department: 'MARKETING' },
-    { id: 8, name: 'Customer Support System', department: 'ENGINEERING' }
-  ];
-  newTaskCategory: TaskCategory = { id: 0, name: '', department: '' };
+  taskCategories: TaskCategory[] = [];
+  favouriteList: TaskCategory[] = [];
+  departmentList: TaskCategory[] = [];
+  allDepartmentList: TaskCategory[] = [];
+  newTaskCategory: TaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
   isAddingNewCategory = false;
   selectedDepartmentFilter = 'ALL'; // Department filter
+  selectedCategoryId: number | null = null; // Store selected category ID for logging hours
 
   // Get unique departments from task categories
   getDepartments(): string[] {
-    const departments = this.taskCategories.map(cat => cat.department);
+    const departments = this.allDepartmentList.map(cat => cat.departmentName || 'Unknown');
     return ['ALL', ...Array.from(new Set(departments)).sort()];
   }
 
   // Get filtered task categories based on selected department
   getFilteredCategories(): TaskCategory[] {
     if (this.selectedDepartmentFilter === 'ALL') {
-      return this.taskCategories;
+      return this.allDepartmentList;
     }
-    return this.taskCategories.filter(cat => cat.department === this.selectedDepartmentFilter);
+    return this.allDepartmentList.filter(cat => cat.departmentName === this.selectedDepartmentFilter);
   }
 
   // Files tab only (subtasks tab removed)
@@ -373,6 +379,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Load custom fields from API
     this.loadCustomFields();
 
+    // Load task categories from API
+    this.loadTaskCategories();
+
     // Set logged-in user as default assignee
     this.setLoggedInUserAsDefaultAssignee();
   }
@@ -497,6 +506,39 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       'Date': 'date'
     };
     return typeMap[apiFieldType] || 'text';
+  }
+
+  // Load Task Categories from API
+  loadTaskCategories(): void {
+    // Get user ID from session/localStorage
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || '1';
+    
+    this.api.getUserTaskCategories(userId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.favouriteList = response.data.favouriteList || [];
+          this.departmentList = response.data.departmentList || [];
+          this.allDepartmentList = response.data.allDepartmentList || [];
+          this.taskCategories = [...this.allDepartmentList];
+          console.log('Task Categories loaded for user:', userId, 
+            'Favorites:', this.favouriteList.length, 
+            'Department:', this.departmentList.length, 
+            'All:', this.allDepartmentList.length);
+        } else if (response && response.data) {
+          // Handle direct data response
+          this.favouriteList = response.data.favouriteList || [];
+          this.departmentList = response.data.departmentList || [];
+          this.allDepartmentList = response.data.allDepartmentList || [];
+          this.taskCategories = [...this.allDepartmentList];
+          console.log('Task Categories loaded (direct data) for user:', userId, this.allDepartmentList.length);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading task categories:', error);
+        // Keep empty lists if API fails
+      }
+    });
   }
 
   // Assignee Searchable Dropdown Methods
@@ -1046,7 +1088,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Save edited category
   saveCategory(category: TaskCategory) {
-    if (category.name.trim() && category.department.trim()) {
+    if (category.categoryName.trim() && category.departmentName?.trim()) {
       category.isEditing = false;
       console.log('Category saved:', category);
       // In real app, make API call to save
@@ -1067,7 +1109,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Delete category
   deleteCategory(categoryId: number) {
     if (confirm('Are you sure you want to delete this task category?')) {
-      this.taskCategories = this.taskCategories.filter(cat => cat.id !== categoryId);
+      this.allDepartmentList = this.allDepartmentList.filter(cat => cat.categoryId !== categoryId);
+      this.taskCategories = [...this.allDepartmentList];
       console.log('Category deleted:', categoryId);
       // In real app, make API call to delete
     }
@@ -1076,27 +1119,29 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Show add new category form
   showAddCategoryForm() {
     this.isAddingNewCategory = true;
-    this.newTaskCategory = { id: 0, name: '', department: '' };
+    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
     this.cancelAllEdits();
   }
 
   // Cancel adding new category
   cancelAddCategory() {
     this.isAddingNewCategory = false;
-    this.newTaskCategory = { id: 0, name: '', department: '' };
+    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
   }
 
   // Save new category
   saveNewCategory() {
-    if (this.newTaskCategory.name.trim() && this.newTaskCategory.department.trim()) {
+    if (this.newTaskCategory.categoryName.trim() && this.newTaskCategory.departmentId) {
       const newCat: TaskCategory = {
-        id: Math.max(...this.taskCategories.map(c => c.id), 0) + 1,
-        name: this.newTaskCategory.name.trim(),
-        department: this.newTaskCategory.department.trim()
+        categoryId: Math.max(...this.allDepartmentList.map(c => c.categoryId), 0) + 1,
+        categoryName: this.newTaskCategory.categoryName.trim(),
+        departmentId: this.newTaskCategory.departmentId,
+        departmentName: this.newTaskCategory.departmentName || 'Unknown'
       };
-      this.taskCategories.push(newCat);
+      this.allDepartmentList.push(newCat);
+      this.taskCategories = [...this.allDepartmentList];
       this.isAddingNewCategory = false;
-      this.newTaskCategory = { id: 0, name: '', department: '' };
+      this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
       console.log('New category added:', newCat);
       // In real app, make API call to create
     }
@@ -1108,43 +1153,38 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Get count of favorite/pinned tasks
   getFavoritesCount(): number {
-    // This would come from your actual data
-    // For now, returning a sample count
-    return 5;
+    return this.favouriteList.length;
   }
 
   // Get count of tasks in user's department
   getMyDepartmentTasksCount(): number {
-    // This would filter tasks by the logged-in user's department
-    // For now, returning a sample count
-    return 12;
+    return this.departmentList.length;
   }
 
   // Get count of all department tasks
   getAllDepartmentTasksCount(): number {
-    // This would return count of all department tasks
-    // For now, returning a sample count
-    return 20;
+    return this.allDepartmentList.length;
   }
 
   // Get favorite task categories
   getFavouriteTaskList(): TaskCategory[] {
-    return this.taskCategories.filter(cat => cat.name.includes('UI') || cat.name.includes('Design') || cat.isEditing);
+    return this.favouriteList;
   }
 
   // Get department task categories
   getDepartmentTaskList(): TaskCategory[] {
-    return this.taskCategories.filter(cat => cat.department === 'ENGINEERING');
+    return this.departmentList;
   }
 
   // Get all department task categories
   getAllDepartmentTaskList(): TaskCategory[] {
-    return this.taskCategories;
+    return this.allDepartmentList;
   }
 
   // Select a task category
   selectTask(category: TaskCategory): void {
     this.newTaskCategory = category;
+    this.selectedCategoryId = category.categoryId;
     console.log('Selected task category:', category);
   }
 

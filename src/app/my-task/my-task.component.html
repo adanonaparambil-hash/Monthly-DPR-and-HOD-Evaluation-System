@@ -906,12 +906,12 @@
         </div>
         } @else {
         <div class="task-list">
-          @for (task of getFavouriteTaskList(); track task.id) {
+          @for (task of getFavouriteTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
             <i class="fas fa-star star-icon active"></i>
             <div class="task-item-content">
-              <h4 class="task-item-title">{{ task.name }}</h4>
-              <p class="task-item-dept">DEPARTMENT: {{ task.department }}</p>
+              <h4 class="task-item-title">{{ task.categoryName }}</h4>
+              <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
             </div>
             <div class="task-item-info">
               <div class="task-info-item assigned">
@@ -941,12 +941,12 @@
         </div>
         } @else {
         <div class="task-list">
-          @for (task of getDepartmentTaskList(); track task.id) {
+          @for (task of getDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
             <i class="far fa-star star-icon"></i>
             <div class="task-item-content">
-              <h4 class="task-item-title">{{ task.name }}</h4>
-              <p class="task-item-dept">DEPARTMENT: {{ task.department }}</p>
+              <h4 class="task-item-title">{{ task.categoryName }}</h4>
+              <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
             </div>
             <div class="task-item-info">
               <div class="task-info-item assigned">
@@ -976,12 +976,12 @@
         </div>
         } @else {
         <div class="task-list">
-          @for (task of getAllDepartmentTaskList(); track task.id) {
+          @for (task of getAllDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" (click)="selectTask(task)">
             <i class="far fa-star star-icon"></i>
             <div class="task-item-content">
-              <h4 class="task-item-title">{{ task.name }}</h4>
-              <p class="task-item-dept">DEPARTMENT: {{ task.department }}</p>
+              <h4 class="task-item-title">{{ task.categoryName }}</h4>
+              <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
             </div>
             <div class="task-item-info">
               <div class="task-info-item assigned">
@@ -2384,7 +2384,7 @@
               <input 
                 type="text" 
                 class="form-input" 
-                [(ngModel)]="newTaskCategory.department"
+                [(ngModel)]="newTaskCategory.departmentName"
                 placeholder="e.g., ENGINEERING, DESIGN, MARKETING"
               />
             </div>
@@ -2393,7 +2393,7 @@
               <input 
                 type="text" 
                 class="form-input" 
-                [(ngModel)]="newTaskCategory.name"
+                [(ngModel)]="newTaskCategory.categoryName"
                 placeholder="e.g., API Development, UI Design"
               />
             </div>
@@ -2406,7 +2406,7 @@
             <button 
               class="btn-save" 
               (click)="saveNewCategory()"
-              [disabled]="!newTaskCategory.name.trim() || !newTaskCategory.department.trim()"
+              [disabled]="!newTaskCategory.categoryName.trim() || !newTaskCategory.departmentName?.trim()"
             >
               <i class="fas fa-check"></i>
               Save Category
@@ -2428,7 +2428,7 @@
         </h4>
       </div>
 
-      @for (category of getFilteredCategories(); track category.id) {
+      @for (category of getFilteredCategories(); track category.categoryId) {
         <div class="category-item" [class.editing]="category.isEditing">
           @if (!category.isEditing) {
             <!-- View Mode -->
@@ -2437,8 +2437,8 @@
                 <i class="fas fa-tasks"></i>
               </div>
               <div class="category-content">
-                <h5 class="category-name">{{ category.name }}</h5>
-                <p class="category-dept">{{ category.department }}</p>
+                <h5 class="category-name">{{ category.categoryName }}</h5>
+                <p class="category-dept">{{ category.departmentName }}</p>
               </div>
               <div class="category-actions">
                 <button class="btn-edit" (click)="startEditCategory(category)" title="Edit">
@@ -2457,7 +2457,7 @@
                     <input 
                       type="text" 
                       class="edit-input" 
-                      [(ngModel)]="category.department"
+                      [(ngModel)]="category.departmentName"
                       placeholder="Department"
                     />
                   </div>
@@ -2466,7 +2466,7 @@
                     <input 
                       type="text" 
                       class="edit-input" 
-                      [(ngModel)]="category.name"
+                      [(ngModel)]="category.categoryName"
                       placeholder="Category Name"
                     />
                   </div>
