@@ -723,16 +723,34 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
           
-          // Find and set the active (running) task
+          // Find and set the active task - Priority: RUNNING > PAUSED > CLOSED > Any task > None
           const runningTask = this.tasks.find(t => t.status === 'RUNNING');
           if (runningTask) {
             this.activeTask = runningTask;
             this.hasActiveTask = true;
-            console.log('Active running task found:', runningTask.title || runningTask.category);
+            console.log('Active RUNNING task found:', runningTask.title || runningTask.category);
           } else {
-            this.activeTask = null;
-            this.hasActiveTask = false;
-            console.log('No running task found');
+            const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
+            if (pausedTask) {
+              this.activeTask = pausedTask;
+              this.hasActiveTask = true;
+              console.log('Active PAUSED task found:', pausedTask.title || pausedTask.category);
+            } else {
+              const closedTask = this.tasks.find(t => t.status === 'CLOSED');
+              if (closedTask) {
+                this.activeTask = closedTask;
+                this.hasActiveTask = true;
+                console.log('Active CLOSED task found:', closedTask.title || closedTask.category);
+              } else if (this.tasks.length > 0) {
+                this.activeTask = this.tasks[0];
+                this.hasActiveTask = true;
+                console.log('Showing first available task:', this.activeTask.title || this.activeTask.category);
+              } else {
+                this.activeTask = null;
+                this.hasActiveTask = false;
+                console.log('No tasks found in list');
+              }
+            }
           }
           
           console.log('Active tasks loaded:', 
@@ -768,16 +786,34 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
           
-          // Find and set the active (running) task
+          // Find and set the active task - Priority: RUNNING > PAUSED > CLOSED > Any task > None
           const runningTask = this.tasks.find(t => t.status === 'RUNNING');
           if (runningTask) {
             this.activeTask = runningTask;
             this.hasActiveTask = true;
-            console.log('Active running task found:', runningTask.title || runningTask.category);
+            console.log('Active RUNNING task found:', runningTask.title || runningTask.category);
           } else {
-            this.activeTask = null;
-            this.hasActiveTask = false;
-            console.log('No running task found');
+            const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
+            if (pausedTask) {
+              this.activeTask = pausedTask;
+              this.hasActiveTask = true;
+              console.log('Active PAUSED task found:', pausedTask.title || pausedTask.category);
+            } else {
+              const closedTask = this.tasks.find(t => t.status === 'CLOSED');
+              if (closedTask) {
+                this.activeTask = closedTask;
+                this.hasActiveTask = true;
+                console.log('Active CLOSED task found:', closedTask.title || closedTask.category);
+              } else if (this.tasks.length > 0) {
+                this.activeTask = this.tasks[0];
+                this.hasActiveTask = true;
+                console.log('Showing first available task:', this.activeTask.title || this.activeTask.category);
+              } else {
+                this.activeTask = null;
+                this.hasActiveTask = false;
+                console.log('No tasks found in list');
+              }
+            }
           }
           
           console.log('Active tasks loaded (direct response):', 
