@@ -5,19 +5,23 @@ import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
 import { ToasterService } from '../services/toaster.service';
+import { ToasterComponent } from '../components/toaster/toaster.component';
 import { SessionService } from '../services/session.service';
-import { TaskSaveDto } from '../models/TimeSheetDPR.model';
+import { TaskSaveDto, ActiveTaskListResponse, ActiveTaskDto } from '../models/TimeSheetDPR.model';
+import { AvatarUtil } from '../utils/avatar.util';
+import Swal from 'sweetalert2';
 
 interface Task {
   id: number;
   title: string;
   description: string;
-  status: 'NOT STARTED' | 'IN PROGRESS' | 'COMPLETED' | 'PENDING' | 'ON HOLD';
+  status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED';
   category: string;
   loggedHours: string;
   totalHours: string;
   startDate: string;
   assignee: string;
+  assigneeImage?: string;
   progress: number;
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
   isFavorite?: boolean;
@@ -112,35 +116,36 @@ interface TaskCategoryResponse {
 @Component({
   selector: 'app-my-task',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, ToasterComponent],
   templateUrl: './my-task.component.html',
   styleUrls: ['./my-task.component.css', './task-modal-new.css', './task-details-modal.css', './task-modal-glassmorphism.css']
 })
 export class MyTaskComponent implements OnInit, OnDestroy {
   isDarkMode = false;
+  
+  // Avatar utility for template access
+  AvatarUtil = AvatarUtil;
 
   // Active task state
-  hasActiveTask = true; // Set to false when no active task
-  activeTask: Task | null = null; // Currently active task
+  hasActiveTask = false;
+  activeTask: Task | null = null;
 
-  // Timer and stats
-  activeTaskTimer = '00:42:15';
-  punchedHours = '04:20:00';
-  runningTime = '02:15:45';
-
-  // Legacy properties for backward compatibility
-  activeTaskCategory = 'DEVELOPMENT';
-  activeTaskStartDate = '2024-01-15';
-  activeTaskAssignee = 'John Doe';
+  // Timer and stats - will be updated from API
+  activeTaskTimer = '00:00:00';
+  punchedHours = '00:00:00';
+  runningTime = '00:00:00';
+  todayTotalHours = 0;
+  lastPunchTime = '';
 
   // Break management
   isOnBreak = false;
-  breakStatus = 'Working';
-  nextBreakCountdown = '1:23:45';
-
+  breakStatus = 'NONE';
+  breakReason: string | null = null;
+  breakRemarks = '';
+  breakId: number | null = null;
+  
   // Break Tracker
   selectedBreakType: 'lunch' | 'coffee' | 'quick' | null = null;
-  breakRemarks = '';
   isBreakRunning = false;
   isBreakPaused = false;
   breakTimerDisplay = '00:00:00';
@@ -148,6 +153,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   breakStartTime: Date | null = null;
   breakElapsedSeconds = 0;
   breakTimerInterval: any = null;
+
+  // Task lists from API
+  myTasksList: ActiveTaskDto[] = [];
+  assignedByMeList: ActiveTaskDto[] = [];
 
   // Tab management
   activeTab = 'MY TASKS';
@@ -279,7 +288,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       id: 1,
       title: 'UI Design Refactor',
       description: 'Updating the component library with fresh variant designs',
-      status: 'IN PROGRESS',
+      status: 'RUNNING',
       category: 'DEVELOPMENT',
       loggedHours: '12h',
       totalHours: '12.5h',
@@ -292,7 +301,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       id: 2,
       title: 'Backend API Audit',
       description: 'Security review of authentication endpoints',
-      status: 'PENDING',
+      status: 'PAUSED',
       category: 'SECURITY',
       loggedHours: '0.0h',
       totalHours: '0.0h',
@@ -304,7 +313,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       id: 3,
       title: 'QA Testing Sprint',
       description: 'Manual testing for mobile responsiveness',
-      status: 'ON HOLD',
+      status: 'PAUSED',
       category: 'QUALITY ASSURANCE',
       loggedHours: '21h',
       totalHours: '4.2h',
@@ -328,7 +337,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       id: 5,
       title: 'User Documentation',
       description: 'Create comprehensive user guides and API documentation',
-      status: 'IN PROGRESS',
+      status: 'RUNNING',
       category: 'DOCUMENTATION',
       loggedHours: '6.5h',
       totalHours: '15.0h',
@@ -378,15 +387,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.initializeDetailedSubtasks();
     this.initializeActivityLogs();
 
-    // Set active task if there's one in progress
-    const inProgressTask = this.tasks.find(t => t.status === 'IN PROGRESS');
-    if (inProgressTask) {
-      this.activeTask = inProgressTask;
-      this.hasActiveTask = true;
-    } else {
-      this.activeTask = null;
-      this.hasActiveTask = false;
-    }
+    // Initialize with no active task - will be set by loadActiveTasks()
+    this.activeTask = null;
+    this.hasActiveTask = false;
 
     // Load employee master list for assignee dropdown
     this.loadEmployeeMasterList();
@@ -405,6 +408,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
     // Set logged-in user as default assignee
     this.setLoggedInUserAsDefaultAssignee();
+
+    // Load active tasks from API - this will set the active task if one is running
+    this.loadActiveTasks();
   }
 
   // Load Employee Master List from API
@@ -670,6 +676,200 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         // Keep empty list if API fails
       }
     });
+  }
+
+  // Load Active Tasks from API
+  loadActiveTasks(): void {
+    // Get user ID from session/localStorage
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '1';
+    
+    this.api.getActiveTaskList(userId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          const data = response.data;
+          
+          // Update stats from API
+          this.todayTotalHours = data.todayTotalHours || 0;
+          this.lastPunchTime = data.lastPunchTime || '';
+          this.punchedHours = this.formatHours(this.todayTotalHours);
+          
+          // Update break info from API
+          this.breakStatus = data.breakStatus || 'NONE';
+          this.breakReason = data.breakReason || null;
+          this.breakRemarks = data.breakRemarks || '';
+          this.breakId = data.breakId || null;
+          
+          // Set selected break type based on breakReason
+          if (this.breakReason) {
+            const reasonLower = this.breakReason.toLowerCase();
+            if (reasonLower.includes('lunch')) {
+              this.selectedBreakType = 'lunch';
+            } else if (reasonLower.includes('coffee')) {
+              this.selectedBreakType = 'coffee';
+            } else if (reasonLower.includes('quick')) {
+              this.selectedBreakType = 'quick';
+            }
+          }
+          
+          // Update myTasksList from API
+          this.myTasksList = data.myTasks || [];
+          this.assignedByMeList = data.assignedByMe || [];
+          
+          // Update task counts
+          this.myTasksCount = this.myTasksList.length;
+          this.assignedToOthersCount = this.assignedByMeList.length;
+          
+          // Convert ActiveTaskDto to Task format for display
+          this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
+          
+          // Find and set the active (running) task
+          const runningTask = this.tasks.find(t => t.status === 'RUNNING');
+          if (runningTask) {
+            this.activeTask = runningTask;
+            this.hasActiveTask = true;
+            console.log('Active running task found:', runningTask.title || runningTask.category);
+          } else {
+            this.activeTask = null;
+            this.hasActiveTask = false;
+            console.log('No running task found');
+          }
+          
+          console.log('Active tasks loaded:', 
+            'My Tasks:', this.myTasksList.length, 
+            'Assigned By Me:', this.assignedByMeList.length,
+            'Break Status:', this.breakStatus,
+            'Break Reason:', this.breakReason,
+            'Break Id:', this.breakId,
+            'Has Active Task:', this.hasActiveTask);
+        } else if (response && response.data) {
+          // Handle direct data response
+          const data = response.data;
+          
+          // Update stats from API
+          this.todayTotalHours = data.todayTotalHours || 0;
+          this.lastPunchTime = data.lastPunchTime || '';
+          this.punchedHours = this.formatHours(this.todayTotalHours);
+          
+          // Update break info from API
+          this.breakStatus = data.breakStatus || 'NONE';
+          this.breakReason = data.breakReason || null;
+          this.breakRemarks = data.breakRemarks || '';
+          this.breakId = data.breakId || null;
+          
+          // Update task lists from API
+          this.myTasksList = data.myTasks || [];
+          this.assignedByMeList = data.assignedByMe || [];
+          
+          // Update task counts
+          this.myTasksCount = this.myTasksList.length;
+          this.assignedToOthersCount = this.assignedByMeList.length;
+          
+          // Convert ActiveTaskDto to Task format for display
+          this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
+          
+          // Find and set the active (running) task
+          const runningTask = this.tasks.find(t => t.status === 'RUNNING');
+          if (runningTask) {
+            this.activeTask = runningTask;
+            this.hasActiveTask = true;
+            console.log('Active running task found:', runningTask.title || runningTask.category);
+          } else {
+            this.activeTask = null;
+            this.hasActiveTask = false;
+            console.log('No running task found');
+          }
+          
+          console.log('Active tasks loaded (direct response):', 
+            'My Tasks:', this.myTasksList.length, 
+            'Assigned By Me:', this.assignedByMeList.length,
+            'Has Active Task:', this.hasActiveTask);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading active tasks:', error);
+        // Keep existing data if API fails
+      }
+    });
+  }
+
+  // Convert ActiveTaskDto to Task interface for display
+  convertActiveTasksToTasks(activeTasks: ActiveTaskDto[]): Task[] {
+    console.log('Converting active tasks to display format. Total tasks:', activeTasks.length);
+    
+    return activeTasks.map((task, index) => {
+      // Use API status directly
+      
+      // Log first 3 tasks for debugging
+      if (index < 3) {
+        console.log(`Task ${index + 1}:`, {
+          taskId: task.taskId,
+          title: task.taskTitle,
+          apiStatus: task.status,
+          mappedstatus: task.status as any,
+          category: task.taskCategory
+        });
+      }
+      
+      return {
+        id: task.taskId,
+        title: task.taskTitle || '',
+        description: task.description || '',
+        status: task.status as any,
+        category: task.taskCategory || 'General',
+        loggedHours: this.formatHours(task.todayLoggedHours),
+        totalHours: this.formatHours(task.totalLoggedHours),
+        startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
+        assignee: task.assignedByName || 'Unassigned',
+        assigneeImage: task.assignedByImageBase64 || undefined,
+        progress: task.progress || 0,
+        isFavorite: false
+      };
+    });
+  }
+
+  // Map API status to Task status
+  mapApiStatusToTaskStatus(apiStatus: string): 'NOT STARTED' | 'IN PROGRESS' | 'COMPLETED' | 'PENDING' | 'ON HOLD' {
+    if (!apiStatus) {
+      console.warn('Empty status received from API, defaulting to NOT STARTED');
+      return 'NOT STARTED';
+    }
+    
+    const normalizedStatus = apiStatus.toUpperCase().trim();
+    
+    const statusMap: { [key: string]: 'NOT STARTED' | 'IN PROGRESS' | 'COMPLETED' | 'PENDING' | 'ON HOLD' } = {
+      'NOT STARTED': 'NOT STARTED',
+      'NOTSTARTED': 'NOT STARTED',
+      'NOT_STARTED': 'NOT STARTED',
+      'IN PROGRESS': 'IN PROGRESS',
+      'INPROGRESS': 'IN PROGRESS',
+      'IN_PROGRESS': 'IN PROGRESS',
+      'PROGRESS': 'IN PROGRESS',
+      'RUNNING': 'IN PROGRESS',
+      'STARTED': 'IN PROGRESS',
+      'COMPLETED': 'COMPLETED',
+      'COMPLETE': 'COMPLETED',
+      'PENDING': 'PENDING',
+      'PAUSED': 'PENDING',
+      'PAUSE': 'PENDING',
+      'ON HOLD': 'ON HOLD',
+      'ONHOLD': 'ON HOLD',
+      'ON_HOLD': 'ON HOLD',
+      'HOLD': 'ON HOLD',
+      'CLOSED': 'COMPLETED',
+      'STOPPED': 'NOT STARTED',
+      'STOP': 'NOT STARTED'
+    };
+    
+    const mappedStatus = statusMap[normalizedStatus];
+    
+    if (!mappedStatus) {
+      console.warn(`Unknown status received from API: "${apiStatus}", defaulting to NOT STARTED`);
+      return 'NOT STARTED';
+    }
+    
+    console.log(`Status mapping: "${apiStatus}" -> "${mappedStatus}"`);
+    return mappedStatus;
   }
 
   // Assignee Searchable Dropdown Methods
@@ -984,9 +1184,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   getStatusClass(status: string): string {
     switch (status) {
       case 'NOT STARTED': return 'not-started';
-      case 'IN PROGRESS': return 'in-progress';
-      case 'PENDING': return 'pending';
-      case 'ON HOLD': return 'on-hold';
+      case 'RUNNING': return 'in-progress';
+      case 'PAUSED': return 'pending';
+      case 'CLOSED': return 'on-hold';
       case 'COMPLETED': return 'completed';
       default: return 'default';
     }
@@ -998,89 +1198,196 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   startTask(taskId: number) {
-    const task = this.tasks.find(t => t.id === taskId);
-    if (task) {
-      const oldStatus = task.status;
-      task.status = 'IN PROGRESS';
-
-      // Set as active task and show in header
-      this.activeTask = task;
-      this.hasActiveTask = true;
-
-      // Log activity
-      this.logTaskAction('status_change', {
-        oldStatus,
-        newStatus: 'IN PROGRESS',
-        taskTitle: task.title
-      });
-
-      console.log('Task started and set as active:', task.title);
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
     }
+    
+    // Prepare timer action request
+    const timerRequest: any = {
+      taskId: taskId,
+      userId: userId,
+      action: 'START'
+    };
+    
+    console.log('Starting task with request:', timerRequest);
+    
+    // Call API to start timer
+    this.api.executeTimer(timerRequest).subscribe({
+      next: (response: any) => {
+        console.log('Start task API response:', response);
+        
+        if (response && response.success) {
+          console.log('Task started successfully');
+          
+          // Show success toaster
+          this.toasterService.showSuccess('Task Started', 'Task timer has been started successfully!');
+          
+          // Reload active tasks to get latest updates
+          this.loadActiveTasks();
+        } else {
+          console.error('Failed to start task:', response?.message);
+          this.toasterService.showError('Start Failed', response?.message || 'Failed to start task. Please try again.');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error starting task:', error);
+        const errorMessage = error?.error?.message || error?.message || 'An error occurred while starting the task.';
+        this.toasterService.showError('Error', errorMessage);
+      }
+    });
   }
 
   pauseTask(taskId: number) {
-    const task = this.tasks.find(t => t.id === taskId);
-    if (task) {
-      const oldStatus = task.status;
-      task.status = 'PENDING';
-
-      // Keep task in header but pause timer
-      // Don't clear activeTask - user can still see paused task details
-
-      // Log activity
-      this.logTaskAction('status_change', {
-        oldStatus,
-        newStatus: 'PENDING',
-        taskTitle: task.title
-      });
-
-      console.log('Task paused:', task.title);
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
     }
+    
+    // Prepare timer action request
+    const timerRequest: any = {
+      taskId: taskId,
+      userId: userId,
+      action: 'PAUSE'
+    };
+    
+    console.log('Pausing task with request:', timerRequest);
+    
+    // Call API to pause timer
+    this.api.executeTimer(timerRequest).subscribe({
+      next: (response: any) => {
+        console.log('Pause task API response:', response);
+        
+        if (response && response.success) {
+          console.log('Task paused successfully');
+          
+          // Show success toaster
+          this.toasterService.showSuccess('Task Paused', 'Task timer has been paused successfully!');
+          
+          // Reload active tasks to get latest updates
+          this.loadActiveTasks();
+        } else {
+          console.error('Failed to pause task:', response?.message);
+          this.toasterService.showError('Pause Failed', response?.message || 'Failed to pause task. Please try again.');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error pausing task:', error);
+        const errorMessage = error?.error?.message || error?.message || 'An error occurred while pausing the task.';
+        this.toasterService.showError('Error', errorMessage);
+      }
+    });
   }
 
   stopTask(taskId: number) {
-    const task = this.tasks.find(t => t.id === taskId);
-    if (task) {
-      const oldStatus = task.status;
-      task.status = 'NOT STARTED';
-
-      // Clear active task from header
-      if (this.activeTask?.id === taskId) {
-        this.activeTask = null;
-        this.hasActiveTask = false;
-      }
-
-      // Log activity
-      this.logTaskAction('status_change', {
-        oldStatus,
-        newStatus: 'NOT STARTED',
-        taskTitle: task.title
-      });
-
-      console.log('Task stopped and removed from header:', task.title);
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
     }
+    
+    // Prepare timer action request
+    const timerRequest: any = {
+      taskId: taskId,
+      userId: userId,
+      action: 'STOP'
+    };
+    
+    console.log('Stopping task with request:', timerRequest);
+    
+    // Call API to stop timer
+    this.api.executeTimer(timerRequest).subscribe({
+      next: (response: any) => {
+        console.log('Stop task API response:', response);
+        
+        if (response && response.success) {
+          console.log('Task stopped successfully');
+          
+          // Show success toaster
+          this.toasterService.showSuccess('Task Stopped', 'Task timer has been stopped successfully!');
+          
+          // Reload active tasks to get latest updates
+          this.loadActiveTasks();
+        } else {
+          console.error('Failed to stop task:', response?.message);
+          this.toasterService.showError('Stop Failed', response?.message || 'Failed to stop task. Please try again.');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error stopping task:', error);
+        const errorMessage = error?.error?.message || error?.message || 'An error occurred while stopping the task.';
+        this.toasterService.showError('Error', errorMessage);
+      }
+    });
   }
 
   deleteTask(taskId: number) {
-    const task = this.tasks.find(t => t.id === taskId);
-    if (task && task.status === 'NOT STARTED') {
-      // Show confirmation dialog
-      if (confirm(`Are you sure you want to delete the task "${task.title}"? This action cannot be undone.`)) {
-        // Remove task from the array
-        this.tasks = this.tasks.filter(t => t.id !== taskId);
-
-        // Update task counts
-        this.updateTaskCounts();
-
-        // Log activity
-        this.logTaskAction('task_delete', {
-          taskTitle: task.title,
-          taskId: taskId
+    // Show SweetAlert confirmation dialog
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to delete this task? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Get current user
+        const currentUser = this.sessionService.getCurrentUser();
+        const userId = currentUser?.empId || currentUser?.employeeId || '';
+        
+        if (!userId) {
+          this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+          return;
+        }
+        
+        // Prepare delete request
+        const deleteRequest: any = {
+          taskId: taskId,
+          userId: userId
+        };
+        
+        console.log('Deleting task with request:', deleteRequest);
+        
+        // Call API to delete task
+        this.api.deleteTask(deleteRequest).subscribe({
+          next: (response: any) => {
+            console.log('Delete task API response:', response);
+            
+            if (response && response.success) {
+              console.log('Task deleted successfully');
+              
+              // Show success toaster
+              this.toasterService.showSuccess('Task Deleted', 'Task has been deleted successfully!');
+              
+              // Reload active tasks to refresh the list
+              this.loadActiveTasks();
+            } else {
+              console.error('Failed to delete task:', response?.message);
+              this.toasterService.showError('Delete Failed', response?.message || 'Failed to delete task. Please try again.');
+            }
+          },
+          error: (error: any) => {
+            console.error('Error deleting task:', error);
+            const errorMessage = error?.error?.message || error?.message || 'An error occurred while deleting the task.';
+            this.toasterService.showError('Error', errorMessage);
+          }
         });
-
-        console.log(`Task "${task.title}" has been deleted.`);
       }
-    }
+    });
   }
 
   updateTaskCounts() {
@@ -1128,12 +1435,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   private startBreakTimer() {
     // In a real application, you would start a break timer here
     // For now, we'll just update the status
-    this.nextBreakCountdown = 'On Break';
+    this.breakTimerDisplay = '00:00:00';
+    this.breakTimerCaption = 'Break started';
   }
 
   private endBreakTimer() {
     // Reset break countdown
-    this.nextBreakCountdown = '1:23:45';
+    this.breakTimerDisplay = '00:00:00';
+    this.breakTimerCaption = 'Break ended';
   }
 
   // Break Tracker Methods
@@ -1177,8 +1486,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       this.breakTimerInterval = null;
     }
 
-    // Log the break (in real app, save to backend)
+    // Log the break with breakId
     console.log('Break ended:', {
+      breakId: this.breakId,
       type: this.selectedBreakType,
       duration: this.breakElapsedSeconds,
       remarks: this.breakRemarks
@@ -1191,6 +1501,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.breakTimerDisplay = '00:00:00';
     this.breakRemarks = '';
     this.selectedBreakType = null;
+    this.breakId = null;
+    this.breakReason = null;
     this.updateBreakCaption();
   }
 
@@ -1499,16 +1811,43 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         if (response && response.success) {
           console.log('Favourite toggled successfully:', response);
           
+          // Check if the message indicates it's already in favourites (even with success: true)
+          const message = response?.message || '';
+          if (message.toLowerCase().includes('already') && message.toLowerCase().includes('favourite')) {
+            this.toasterService.showWarning('Already Added', `${category.categoryName} is already in your favourites!`);
+          } else {
+            // Show success toaster based on action
+            if (newFavouriteStatus === 'Y') {
+              this.toasterService.showSuccess('Success', `${category.categoryName} added to favourites!`);
+            } else {
+              this.toasterService.showSuccess('Success', `${category.categoryName} removed from favourites!`);
+            }
+          }
+          
           // Reload task categories to update all lists
           this.loadTaskCategories();
         } else {
           console.error('Failed to toggle favourite:', response?.message);
-          alert('Failed to update favourite status: ' + (response?.message || 'Unknown error'));
+          
+          // Check if the message indicates it's already in favourites
+          const message = response?.message || '';
+          if (message.toLowerCase().includes('already') && message.toLowerCase().includes('favourite')) {
+            this.toasterService.showWarning('Already Added', `${category.categoryName} is already in your favourites!`);
+          } else {
+            this.toasterService.showError('Error', 'Failed to update favourite status: ' + (message || 'Unknown error'));
+          }
         }
       },
       error: (error: any) => {
         console.error('Error toggling favourite:', error);
-        alert('Error updating favourite status. Please try again.');
+        
+        // Check if error response contains "already in favourites" message
+        const errorMessage = error?.error?.message || error?.message || '';
+        if (errorMessage.toLowerCase().includes('already') && errorMessage.toLowerCase().includes('favourite')) {
+          this.toasterService.showWarning('Already Added', `${category.categoryName} is already in your favourites!`);
+        } else {
+          this.toasterService.showError('Error', 'Error updating favourite status. Please try again.');
+        }
       }
     });
   }
@@ -1542,7 +1881,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const taskSaveRequest: TaskSaveDto = {
       taskId: 0, // New task
       categoryId: category.categoryId,
-      taskTitle: category.categoryName,
+      taskTitle: '',
       description: '', // Empty description for new task from category
       projectId: 0, // Default project
       departmentId: category.departmentId || 0,
@@ -1570,7 +1909,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         // If the API returns the created task, use that; otherwise create a local task
         const newTask: Task = {
           id: response?.taskId || Date.now(),
-          title: category.categoryName,
+          title: '',
           description: '',
           status: 'NOT STARTED',
           category: category.categoryName,
@@ -1648,7 +1987,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Task timer controls for details modal
   pauseSelectedTask() {
     if (this.selectedTask) {
-      this.selectedTask.status = 'PENDING';
+      this.selectedTask.status = 'PAUSED';
     }
   }
 
@@ -1667,7 +2006,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   setTaskStatus(status: 'continuous' | 'closed') {
     this.selectedTaskStatus = status;
     if (this.selectedTask) {
-      this.selectedTask.status = status === 'continuous' ? 'IN PROGRESS' : 'COMPLETED';
+      this.selectedTask.status = status === 'continuous' ? 'RUNNING' : 'COMPLETED';
     }
   }
 
@@ -2033,7 +2372,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   formatHours(hours: number): string {
-    return `${hours.toFixed(2)}h`;
+    // Always display in hours format (e.g., 0.5h, 1.5h, 2.0h)
+    return hours.toFixed(1) + 'h';
   }
 
   getActivityIcon(type: string): string {

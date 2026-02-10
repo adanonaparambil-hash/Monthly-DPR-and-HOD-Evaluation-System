@@ -41,9 +41,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 20px;
   text-align: center;
-  min-height: 200px;
+  min-height: 120px;
 }
 
 .empty-icon {
@@ -1971,6 +1971,8 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .assignee-info span {

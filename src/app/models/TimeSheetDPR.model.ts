@@ -166,6 +166,7 @@ export interface ActiveTaskDto {
   taskTitle: string;
   description: string;
   startDate?: string | Date;
+  LastStartTime?: string | Date;
 
   todayLoggedHours: number;
   totalLoggedHours: number;
@@ -216,3 +217,7 @@ export interface TaskFieldMappingRequest {
   userId: string;
 }
 
+export interface DeleteTaskRequest {
+  taskId: number;
+  userId: string;
+}

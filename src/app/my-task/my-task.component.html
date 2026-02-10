@@ -1,3 +1,6 @@
+<!-- Toaster Component -->
+<app-toaster></app-toaster>
+
 <div class="task-board-container" [class.dark-mode]="isDarkMode">
   <!-- Top Section with Active Task and Stats -->
   <div class="top-section">
@@ -21,7 +24,7 @@
       <div class="task-status">
         <div class="status-indicator">
           <div class="status-dot"></div>
-          <span class="status-text">IN PROGRESS</span>
+          <span class="status-text">{{ activeTask?.status || 'NO STATUS' }}</span>
         </div>
 
         <!-- Ultra Modern Timer Control Section -->
@@ -287,7 +290,8 @@
           <div class="cell start-date">{{ task.startDate | date:'MMM dd, yyyy' }}</div>
           <div class="cell assignee">
             <div class="assignee-info">
-              <div class="assignee-avatar">{{ task.assignee.charAt(0) }}</div>
+              <div class="assignee-avatar" *ngIf="!task.assigneeImage">{{ task.assignee.charAt(0) }}</div>
+              <img *ngIf="task.assigneeImage" [src]="task.assigneeImage" alt="{{ task.assignee }}" class="assignee-avatar" />
               <span>{{ task.assignee }}</span>
             </div>
           </div>
@@ -308,7 +312,7 @@
           </div>
           <div class="cell action" (click)="$event.stopPropagation()">
             <div class="action-buttons">
-              @if (task.status !== 'IN PROGRESS') {
+              @if (task.status !== 'RUNNING') {
               <button class="action-btn play" (click)="startTask(task.id)" title="Start/Resume Task">
                 <i class="fas fa-play"></i>
               </button>
@@ -1159,10 +1163,11 @@
         </button>
         <div class="status-progress-compact">
           <select class="status-select-compact" [(ngModel)]="selectedTask.status">
-            <option value="IN PROGRESS">In Progress</option>
-            <option value="PENDING">Review Required</option>
+            <option value="NOT STARTED">Not Started</option>
+            <option value="RUNNING">Running</option>
+            <option value="PAUSED">Paused</option>
             <option value="COMPLETED">Completed</option>
-            <option value="ON HOLD">On Hold</option>
+            <option value="CLOSED">Closed</option>
           </select>
         </div>
       </div>
@@ -1457,9 +1462,9 @@
         </button>
         <div class="task-id-badge">TSK-1024</div>
         <div class="status-dropdown">
-          <button class="status-btn in-progress">
+          <button class="status-btn" [class]="getStatusClass(selectedTask?.status || 'NOT STARTED')">
             <span class="status-dot"></span>
-            IN PROGRESS
+            {{ selectedTask?.status || 'NOT STARTED' }}
             <i class="fas fa-chevron-down"></i>
           </button>
         </div>

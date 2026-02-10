@@ -7,7 +7,7 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
-import { TaskSaveDto,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest } from '../models/TimeSheetDPR.model';
+import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest } from '../models/TimeSheetDPR.model';
 
 
 @Injectable({
@@ -353,7 +353,9 @@ export class Api {
     );
   }
 
-  
+  deleteTask(request: DeleteTaskRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/DeleteTask`, request);
+  }
 
 
 }
