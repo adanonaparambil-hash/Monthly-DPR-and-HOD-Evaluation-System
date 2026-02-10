@@ -1,9 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
+import { ToasterService } from '../services/toaster.service';
+import { SessionService } from '../services/session.service';
+import { TaskSaveDto } from '../models/TimeSheetDPR.model';
 
 interface Task {
   id: number;
@@ -24,6 +27,7 @@ interface NewTask {
   name: string;
   description: string;
   assignee: string;
+  assignees: string[]; // Multiple assignees
   type: 'single' | 'continuous';
   date: string;
   estimatedHours: number;
@@ -231,6 +235,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     name: '',
     description: '',
     assignee: '',
+    assignees: [], // Multiple assignees
     type: 'single',
     date: '',
     estimatedHours: 0,
@@ -358,7 +363,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   constructor(
     private themeService: Theme,
     private api: Api,
-    private authService: AuthService
+    private authService: AuthService,
+    private sessionService: SessionService,
+    private toasterService: ToasterService
   ) { }
 
   ngOnInit() {
@@ -714,6 +721,47 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     }
     const selected = this.employeeMasterList.find(emp => emp.idValue === this.selectedAssigneeId);
     return selected ? selected.description : 'Select assignee...';
+  }
+
+  // Get employee name by ID for display
+  getEmployeeName(employeeId: string): string {
+    const emp = this.employeeMasterList.find(e => e.idValue === employeeId);
+    return emp ? emp.description : employeeId;
+  }
+
+  // Multi-Select Assignee Methods
+  toggleAssigneeSelection(employeeId: string): void {
+    const index = this.newTask.assignees.indexOf(employeeId);
+    if (index > -1) {
+      // Remove if already selected
+      this.newTask.assignees.splice(index, 1);
+    } else {
+      // Add if not selected
+      this.newTask.assignees.push(employeeId);
+    }
+    console.log('Selected assignees:', this.newTask.assignees);
+  }
+
+  isAssigneeSelectedInMulti(employeeId: string): boolean {
+    return this.newTask.assignees.includes(employeeId);
+  }
+
+  getSelectedAssigneesDisplay(): string {
+    if (this.newTask.assignees.length === 0) {
+      return 'Select assignees...';
+    }
+    if (this.newTask.assignees.length === 1) {
+      const emp = this.employeeMasterList.find(e => e.idValue === this.newTask.assignees[0]);
+      return emp ? emp.description : '1 selected';
+    }
+    return `${this.newTask.assignees.length} assignees selected`;
+  }
+
+  removeAssignee(employeeId: string): void {
+    const index = this.newTask.assignees.indexOf(employeeId);
+    if (index > -1) {
+      this.newTask.assignees.splice(index, 1);
+    }
   }
 
   // Project Searchable Dropdown Methods
@@ -1477,6 +1525,86 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     console.log('Selected task category:', category);
   }
 
+  // Add task to My Tasks list
+  addTaskToMyList(category: TaskCategory): void {
+    console.log('Adding task to My Tasks:', category.categoryName);
+    
+    // Get current user from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const createdBy = currentUser?.empId || currentUser?.id || currentUser?.employeeId || '';
+    
+    if (!createdBy) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
+    }
+    
+    // Create the task save request payload
+    const taskSaveRequest: TaskSaveDto = {
+      taskId: 0, // New task
+      categoryId: category.categoryId,
+      taskTitle: category.categoryName,
+      description: '', // Empty description for new task from category
+      projectId: 0, // Default project
+      departmentId: category.departmentId || 0,
+      targetDate: undefined,
+      startDate: undefined, // No start date, will be set when user starts the task
+      progress: 0, // Not started
+      status: 'NOT STARTED', // Initial status
+      createdBy: createdBy,
+      assignees: [createdBy], // Assign to self by default
+      customFields: [] // Empty custom fields
+    };
+    
+    // Call the API to save the task
+    this.api.saveTaskBulk(taskSaveRequest).subscribe({
+      next: (response: any) => {
+        console.log('Task saved successfully:', response);
+        
+        // Show success toaster message at top right
+        this.toasterService.showSuccess(
+          'Task Added',
+          `"${category.categoryName}" has been successfully added to your tasks!`
+        );
+        
+        // Add the new task to the My Tasks list
+        // If the API returns the created task, use that; otherwise create a local task
+        const newTask: Task = {
+          id: response?.taskId || Date.now(),
+          title: category.categoryName,
+          description: '',
+          status: 'NOT STARTED',
+          category: category.categoryName,
+          loggedHours: '0.0h',
+          totalHours: '0.0h',
+          startDate: '', // Empty start date
+          assignee: currentUser?.employeeName || currentUser?.name || 'Myself',
+          progress: 0,
+          isFavorite: false
+        };
+        
+        // Add to the beginning of the tasks array
+        this.tasks.unshift(newTask);
+        
+        // Update task counts
+        this.myTasksCount = this.tasks.filter(t => t.status !== 'COMPLETED').length;
+        
+        // Refresh the task list
+        this.tasks = [...this.tasks];
+        
+        console.log('Task added to My Tasks list:', newTask);
+        
+        // NOTE: Modal stays open to allow adding more tasks
+      },
+      error: (error: any) => {
+        console.error('Error saving task:', error);
+        this.toasterService.showError(
+          'Error',
+          'Failed to add task. Please try again.'
+        );
+      }
+    });
+  }
+
   openTaskDetailsModal(task: Task) {
     this.selectedTask = task;
     this.showTaskDetailsModal = true;
@@ -1553,6 +1681,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       name: '',
       description: '',
       assignee: '',
+      assignees: [], // Clear multi-select assignees
       type: 'single',
       date: '',
       estimatedHours: 0,
@@ -1609,7 +1738,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   createTask() {
-    console.log('Create task:', this.newTask);
+    // Validate required fields
+    if (!this.newTask.name || this.newTask.assignees.length === 0) {
+      alert('Please fill in all required fields (Task Name and at least one Assignee)');
+      return;
+    }
+
+    console.log('Create task with multiple assignees:', {
+      ...this.newTask,
+      assigneeCount: this.newTask.assignees.length,
+      assigneeIds: this.newTask.assignees
+    });
+
+    // TODO: Implement API call to create task with multiple assignees
+    // The backend should handle creating task entries for each assignee
+    
     this.closeCreateTaskModal();
   }
 
@@ -2223,6 +2366,28 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (this.breakTimerInterval) {
       clearInterval(this.breakTimerInterval);
       this.breakTimerInterval = null;
+    }
+  }
+
+  // Close dropdowns when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    
+    // Check if click is outside assignee dropdown
+    if (this.isAssigneeDropdownVisible) {
+      const assigneeWrapper = target.closest('.multi-select-wrapper');
+      if (!assigneeWrapper) {
+        this.isAssigneeDropdownVisible = false;
+      }
+    }
+    
+    // Check if click is outside project dropdown
+    if (this.isProjectDropdownVisible) {
+      const projectWrapper = target.closest('.searchable-dropdown-wrapper');
+      if (!projectWrapper) {
+        this.isProjectDropdownVisible = false;
+      }
     }
   }
 }

@@ -346,4 +346,14 @@ export class Api {
   }
 
 
+
+  getTaskById(taskId: number, userId: string, categoryId: number): Observable<any> {
+    return this.http.get(
+      `${this.apiUrl}/DailyTimeSheet/GetTaskById/${taskId}/${userId}/${categoryId}`
+    );
+  }
+
+  
+
+
 }

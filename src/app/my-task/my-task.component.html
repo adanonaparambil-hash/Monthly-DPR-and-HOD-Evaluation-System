@@ -372,19 +372,59 @@
             placeholder="e.g. Redesign Homepage Hero Section" required>
         </div>
 
-        <!-- Assignee -->
+        <!-- Assignee (Multi-Select) -->
         <div class="form-group">
           <label for="assignee" class="form-label">
-            Assignee <span class="required">*</span>
+            Assigned To <span class="required">*</span>
           </label>
-          <div class="select-wrapper">
-            <select id="assignee" class="form-select" [(ngModel)]="newTask.assignee" required>
-              <option value="" disabled>Select assignee</option>
-              <option *ngFor="let assignee of assignees" [value]="assignee.id">
-                {{ assignee.name }} ({{ assignee.role }})
-              </option>
-            </select>
-            <i class="fas fa-chevron-down select-icon"></i>
+          <div class="multi-select-wrapper">
+            <div class="multi-select-display" (click)="showAssigneeDropdown()">
+              <span class="multi-select-text">{{ getSelectedAssigneesDisplay() }}</span>
+              <i class="fas fa-chevron-down select-icon"></i>
+            </div>
+            
+            <!-- Selected Assignees Tags -->
+            @if (newTask.assignees.length > 0) {
+              <div class="selected-tags">
+                @for (assigneeId of newTask.assignees; track assigneeId) {
+                  <span class="tag">
+                    {{ getEmployeeName(assigneeId) }}
+                      <i class="fas fa-times" (click)="removeAssignee(assigneeId)"></i>
+                    </span>
+                }
+              </div>
+            }
+            
+            <!-- Dropdown List -->
+            @if (isAssigneeDropdownVisible) {
+              <div class="multi-select-dropdown">
+                <div class="dropdown-search">
+                  <i class="fas fa-search"></i>
+                  <input 
+                    type="text" 
+                    placeholder="Search assignees..." 
+                    [(ngModel)]="assigneeSearchTerm"
+                    (input)="onAssigneeSearchInputChange($event)"
+                    (click)="$event.stopPropagation()"
+                  >
+                </div>
+                <div class="dropdown-options">
+                  @for (employee of getFilteredAssignees(); track employee.idValue) {
+                    <div class="dropdown-option" (click)="toggleAssigneeSelection(employee.idValue); $event.stopPropagation()">
+                      <input 
+                        type="checkbox" 
+                        [checked]="isAssigneeSelectedInMulti(employee.idValue)"
+                        (click)="$event.stopPropagation()"
+                      >
+                      <span class="option-text">{{ employee.description }}</span>
+                    </div>
+                  }
+                  @if (getFilteredAssignees().length === 0) {
+                    <div class="no-options">No assignees found</div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </div>
 
@@ -584,7 +624,7 @@
         <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
           Cancel
         </button>
-        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || !newTask.assignee">
+        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || newTask.assignees.length === 0">
           Create Task
         </button>
       </div>
@@ -620,21 +660,59 @@
             placeholder="e.g. Redesign Homepage Hero Section" required>
         </div>
 
-        <!-- Assignee -->
+        <!-- Assignee (Multi-Select) -->
         <div class="form-group">
           <label for="assignee" class="form-label">
-            Assignee <span class="required">*</span>
+            Assigned To <span class="required">*</span>
           </label>
-          <div class="select-wrapper">
-            <select id="assignee" class="form-select" [(ngModel)]="newTask.assignee" required>
-              <option value="" disabled>Select assignee</option>
-              @for (assignee of assignees; track assignee.id) {
-              <option [value]="assignee.id">
-                {{ assignee.name }} ({{ assignee.role }})
-              </option>
-              }
-            </select>
-            <i class="fas fa-chevron-down select-icon"></i>
+          <div class="multi-select-wrapper">
+            <div class="multi-select-display" (click)="showAssigneeDropdown()">
+              <span class="multi-select-text">{{ getSelectedAssigneesDisplay() }}</span>
+              <i class="fas fa-chevron-down select-icon"></i>
+            </div>
+            
+            <!-- Selected Assignees Tags -->
+            @if (newTask.assignees.length > 0) {
+              <div class="selected-tags">
+                @for (assigneeId of newTask.assignees; track assigneeId) {
+                  <span class="tag">
+                    {{ getEmployeeName(assigneeId) }}
+                      <i class="fas fa-times" (click)="removeAssignee(assigneeId)"></i>
+                    </span>
+                }
+              </div>
+            }
+            
+            <!-- Dropdown List -->
+            @if (isAssigneeDropdownVisible) {
+              <div class="multi-select-dropdown">
+                <div class="dropdown-search">
+                  <i class="fas fa-search"></i>
+                  <input 
+                    type="text" 
+                    placeholder="Search assignees..." 
+                    [(ngModel)]="assigneeSearchTerm"
+                    (input)="onAssigneeSearchInputChange($event)"
+                    (click)="$event.stopPropagation()"
+                  >
+                </div>
+                <div class="dropdown-options">
+                  @for (employee of getFilteredAssignees(); track employee.idValue) {
+                    <div class="dropdown-option" (click)="toggleAssigneeSelection(employee.idValue); $event.stopPropagation()">
+                      <input 
+                        type="checkbox" 
+                        [checked]="isAssigneeSelectedInMulti(employee.idValue)"
+                        (click)="$event.stopPropagation()"
+                      >
+                      <span class="option-text">{{ employee.description }}</span>
+                    </div>
+                  }
+                  @if (getFilteredAssignees().length === 0) {
+                    <div class="no-options">No assignees found</div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </div>
 
@@ -836,7 +914,7 @@
         <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
           Cancel
         </button>
-        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || !newTask.assignee">
+        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || newTask.assignees.length === 0">
           Create Task
         </button>
       </div>
@@ -929,9 +1007,9 @@
                 <span>Assigned Task</span>
               </div>
             </div>
-            <button class="add-start-btn" (click)="selectTask(task); $event.stopPropagation()">
-              <i class="fas fa-play"></i>
-              Add & Start
+            <button class="add-start-btn" (click)="addTaskToMyList(task); $event.stopPropagation()">
+              <i class="fas fa-plus"></i>
+              Add
             </button>
           </div>
           }
@@ -971,9 +1049,9 @@
                 <span>Assigned Task</span>
               </div>
             </div>
-            <button class="add-start-btn" (click)="selectTask(task); $event.stopPropagation()">
-              <i class="fas fa-play"></i>
-              Add & Start
+            <button class="add-start-btn" (click)="addTaskToMyList(task); $event.stopPropagation()">
+              <i class="fas fa-plus"></i>
+              Add
             </button>
           </div>
           }
@@ -1013,9 +1091,9 @@
                 <span>Assigned Task</span>
               </div>
             </div>
-            <button class="add-start-btn" (click)="selectTask(task); $event.stopPropagation()">
-              <i class="fas fa-play"></i>
-              Add & Start
+            <button class="add-start-btn" (click)="addTaskToMyList(task); $event.stopPropagation()">
+              <i class="fas fa-plus"></i>
+              Add
             </button>
           </div>
           }
