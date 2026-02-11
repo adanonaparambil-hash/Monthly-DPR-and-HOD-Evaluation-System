@@ -1435,54 +1435,223 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   startBreak() {
     if (!this.selectedBreakType) return;
 
-    this.isBreakRunning = true;
-    this.isBreakPaused = false;
-    this.breakStartTime = new Date();
-    this.breakElapsedSeconds = 0;
-    this.updateBreakCaption();
+    // Get userId from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId;
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'User session not found');
+      return;
+    }
 
-    this.breakTimerInterval = setInterval(() => {
-      if (!this.isBreakPaused) {
-        this.breakElapsedSeconds++;
-        this.updateBreakTimerDisplay();
+    // Step 1: Find all RUNNING tasks and pause them first
+    const runningTasks = this.tasks.filter(t => t.status === 'RUNNING');
+    
+    if (runningTasks.length > 0) {
+      console.log(`Found ${runningTasks.length} running task(s). Pausing them before starting break...`);
+      
+      // Pause all running tasks
+      const pausePromises = runningTasks.map(task => {
+        const timerRequest = {
+          taskId: task.id,
+          userId: userId,
+          action: 'PAUSE'
+        };
+        return this.api.executeTimer(timerRequest).toPromise();
+      });
+
+      // Wait for all tasks to be paused
+      Promise.all(pausePromises)
+        .then(() => {
+          console.log('All running tasks paused successfully');
+          // Now start the break
+          this.proceedWithBreakStart(userId);
+        })
+        .catch((error) => {
+          console.error('Error pausing tasks:', error);
+          this.toasterService.showError('Error', 'Failed to pause running tasks. Please try again.');
+        });
+    } else {
+      // No running tasks, proceed directly with break
+      this.proceedWithBreakStart(userId);
+    }
+  }
+
+  // Helper method to start break after tasks are paused
+  private proceedWithBreakStart(userId: string) {
+    // Map break type to reason
+    const reasonMap: { [key: string]: string } = {
+      'lunch': 'Lunch Break',
+      'coffee': 'Coffee Break',
+      'quick': 'Quick Break'
+    };
+    
+    const reason = reasonMap[this.selectedBreakType!];
+
+    // Call API to start break
+    const request = {
+      userId: userId,
+      action: 'START',
+      reason: reason,
+      remarks: this.breakRemarks || ''
+    };
+
+    this.api.userBreak(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.isBreakRunning = true;
+          this.isBreakPaused = false;
+          this.breakStartTime = new Date();
+          this.breakElapsedSeconds = 0;
+          this.updateBreakCaption();
+
+          // Start local timer for display
+          this.breakTimerInterval = setInterval(() => {
+            if (!this.isBreakPaused) {
+              this.breakElapsedSeconds++;
+              this.updateBreakTimerDisplay();
+            }
+          }, 1000);
+
+          this.toasterService.showSuccess('Break Started', `${reason} started successfully`);
+          
+          // Reload tasks to reflect paused status
+          this.loadActiveTasks();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to start break');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error starting break:', error);
+        this.toasterService.showError('Error', 'Failed to start break. Please try again.');
       }
-    }, 1000);
+    });
   }
 
   pauseBreak() {
-    this.isBreakPaused = true;
-    this.updateBreakCaption();
+    // Get userId from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId;
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'User session not found');
+      return;
+    }
+
+    // Call API to pause break
+    const request = {
+      userId: userId,
+      action: 'PAUSE',
+      remarks: this.breakRemarks || ''
+    };
+
+    this.api.userBreak(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.isBreakPaused = true;
+          this.updateBreakCaption();
+          this.toasterService.showSuccess('Break Paused', 'Break timer paused');
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to pause break');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error pausing break:', error);
+        this.toasterService.showError('Error', 'Failed to pause break. Please try again.');
+      }
+    });
   }
 
   resumeBreak() {
-    this.isBreakPaused = false;
-    this.updateBreakCaption();
+    // Get userId from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId;
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'User session not found');
+      return;
+    }
+
+    // Call API to resume break
+    const request = {
+      userId: userId,
+      action: 'RESUME',
+      remarks: this.breakRemarks || ''
+    };
+
+    this.api.userBreak(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.isBreakPaused = false;
+          this.updateBreakCaption();
+          this.toasterService.showSuccess('Break Resumed', 'Break timer resumed');
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to resume break');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error resuming break:', error);
+        this.toasterService.showError('Error', 'Failed to resume break. Please try again.');
+      }
+    });
   }
 
   stopBreak() {
-    if (this.breakTimerInterval) {
-      clearInterval(this.breakTimerInterval);
-      this.breakTimerInterval = null;
+    // Get userId from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId;
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'User session not found');
+      return;
     }
 
-    // Log the break with breakId
-    console.log('Break ended:', {
-      breakId: this.breakId,
-      type: this.selectedBreakType,
-      duration: this.breakElapsedSeconds,
-      remarks: this.breakRemarks
-    });
+    // Call API to stop break
+    const request = {
+      userId: userId,
+      action: 'STOP',
+      remarks: this.breakRemarks || ''
+    };
 
-    // Reset
-    this.isBreakRunning = false;
-    this.isBreakPaused = false;
-    this.breakElapsedSeconds = 0;
-    this.breakTimerDisplay = '00:00:00';
-    this.breakRemarks = '';
-    this.selectedBreakType = null;
-    this.breakId = null;
-    this.breakReason = null;
-    this.updateBreakCaption();
+    this.api.userBreak(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          // Clear timer
+          if (this.breakTimerInterval) {
+            clearInterval(this.breakTimerInterval);
+            this.breakTimerInterval = null;
+          }
+
+          // Log the break completion
+          console.log('Break ended:', {
+            breakId: this.breakId,
+            type: this.selectedBreakType,
+            duration: this.breakElapsedSeconds,
+            remarks: this.breakRemarks
+          });
+
+          // Reset break state
+          this.isBreakRunning = false;
+          this.isBreakPaused = false;
+          this.breakElapsedSeconds = 0;
+          this.breakTimerDisplay = '00:00:00';
+          this.selectedBreakType = null;
+          this.breakRemarks = '';
+          this.updateBreakCaption();
+
+          this.toasterService.showSuccess('Break Ended', 'Break completed successfully');
+          
+          // Reload active tasks to get updated data
+          this.loadActiveTasks();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to stop break');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error stopping break:', error);
+        this.toasterService.showError('Error', 'Failed to stop break. Please try again.');
+      }
+    });
   }
 
   private updateBreakTimerDisplay() {

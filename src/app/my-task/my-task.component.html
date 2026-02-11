@@ -61,12 +61,15 @@
 
           <!-- Modern Control Buttons -->
           <div class="modern-controls">
-            <button class="modern-control-btn pause-btn">
+            <button class="modern-control-btn pause-btn" 
+                    *ngIf="activeTask?.status === 'RUNNING'" 
+                    (click)="pauseActiveTask()">
               <div class="btn-glow"></div>
               <i class="fas fa-pause"></i>
               <span class="btn-label">Pause</span>
             </button>
-            <button class="modern-control-btn stop-btn">
+            <button class="modern-control-btn stop-btn" 
+                    (click)="stopActiveTask()">
               <div class="btn-glow"></div>
               <i class="fas fa-stop"></i>
               <span class="btn-label">Stop</span>
