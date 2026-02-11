@@ -692,7 +692,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Update stats from API
           this.todayTotalHours = data.todayTotalHours || 0;
           this.lastPunchTime = data.lastPunchTime || '';
-          this.punchedHours = this.formatHours(this.todayTotalHours);
+          
+          // Format times for display
+          this.punchedHours = this.formatMinutesToTime(this.todayTotalHours);
+          this.runningTime = this.formatMinutesToTime(this.todayTotalHours);
           
           // Update break info from API
           this.breakStatus = data.breakStatus || 'NONE';
@@ -767,7 +770,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Update stats from API
           this.todayTotalHours = data.todayTotalHours || 0;
           this.lastPunchTime = data.lastPunchTime || '';
-          this.punchedHours = this.formatHours(this.todayTotalHours);
+          
+          // Format times for display
+          this.punchedHours = this.formatMinutesToTime(this.todayTotalHours);
+          this.runningTime = this.formatMinutesToTime(this.todayTotalHours);
           
           // Update break info from API
           this.breakStatus = data.breakStatus || 'NONE';
@@ -853,8 +859,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         description: task.description || '',
         status: task.status as any,
         category: task.taskCategory || 'General',
-        loggedHours: this.formatHours(task.todayLoggedHours),
-        totalHours: this.formatHours(task.totalLoggedHours),
+        loggedHours: this.formatMinutesToTime(task.todayLoggedHours),
+        totalHours: this.formatMinutesToTime(task.totalLoggedHours),
         startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
         assignee: task.assignedByName || 'Unassigned',
         assigneeImage: task.assignedByImageBase64 || undefined,
@@ -2411,7 +2417,40 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Always display in hours format (e.g., 0.5h, 1.5h, 2.0h)
     return hours.toFixed(1) + 'h';
   }
+  // Format minutes from backend - if < 60 show as minutes, else convert to HH:MM
+  formatMinutesToTime(minutes: number): string {
+    if (!minutes || minutes === 0) {
+      return '0m';
+    }
+    
+    if (minutes < 60) {
+      return Math.round(minutes) + 'm';
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return `${hours}:${mins.toString().padStart(2, '0')}`;
+  }
 
+  // Get formatted timer for active task (HH:MM:SS format for display)
+  getActiveTaskTimer(): string {
+    if (!this.activeTask) {
+      return '00:00:00';
+    }
+    
+    // Find the original task data to get todayLoggedHours
+    const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
+    if (!taskData || !taskData.todayLoggedHours) {
+      return '00:00:00';
+    }
+    
+    const totalMinutes = taskData.todayLoggedHours;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = Math.floor(totalMinutes % 60);
+    const seconds = Math.floor((totalMinutes % 1) * 60);
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
   getActivityIcon(type: string): string {
     switch (type) {
       case 'timer_start': return 'fa-play-circle';

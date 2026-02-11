@@ -42,18 +42,18 @@
             <div class="timer-glow-bg"></div>
             <div class="timer-digits">
               <span class="digit-group">
-                <span class="digit">0</span>
-                <span class="digit">0</span>
+                <span class="digit">{{ getActiveTaskTimer().substring(0, 1) }}</span>
+                <span class="digit">{{ getActiveTaskTimer().substring(1, 2) }}</span>
               </span>
               <span class="separator">:</span>
               <span class="digit-group">
-                <span class="digit">4</span>
-                <span class="digit">2</span>
+                <span class="digit">{{ getActiveTaskTimer().substring(3, 4) }}</span>
+                <span class="digit">{{ getActiveTaskTimer().substring(4, 5) }}</span>
               </span>
               <span class="separator">:</span>
               <span class="digit-group">
-                <span class="digit">1</span>
-                <span class="digit">5</span>
+                <span class="digit">{{ getActiveTaskTimer().substring(6, 7) }}</span>
+                <span class="digit">{{ getActiveTaskTimer().substring(7, 8) }}</span>
               </span>
             </div>
             <div class="timer-label-modern">TIME ELAPSED</div>
@@ -231,7 +231,7 @@
               <i class="fas fa-clock"></i>
             </div>
           </div>
-          <div class="stat-value">{{ punchedHours }}</div>
+          <div class="stat-value">{{ lastPunchTime || 'N/A' }}</div>
         </div>
 
       </div>
