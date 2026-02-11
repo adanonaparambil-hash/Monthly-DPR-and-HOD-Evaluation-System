@@ -1760,7 +1760,7 @@
         <button class="modal-back-button" (click)="closeTaskDetailsModal()">
           <i class="fas fa-arrow-left"></i>
         </button>
-        <div class="modal-task-id-badge">TSK-1024</div>
+        <div class="modal-task-id-badge">{{ selectedTaskId }}</div>
         <div class="status-dropdown-container">
           <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
             <option value="not-started">Not Started</option>
@@ -1777,7 +1777,7 @@
           <span class="timer-label">Running Timer</span>
           <div class="timer-controls">
             <div class="timer-display centered-timer">
-              <span class="timer-text">00:42:18</span>
+              <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
             </div>
             <div class="timer-buttons">
               <button class="timer-btn pause-btn">
@@ -1802,7 +1802,7 @@
           <span class="hours-label">Total Hours</span>
           <div class="hours-display">
             <i class="fas fa-clock"></i>
-            <span class="hours-text">124.5h</span>
+            <span class="hours-text">{{ selectedTaskTotalHours }}</span>
           </div>
         </div>
 
@@ -1822,7 +1822,7 @@
         <div class="title-section">
           <div class="title-content">
             <div class="task-meta">
-              <span class="modal-category-badge">Feature Development</span>
+              <span class="modal-category-badge">{{ selectedTaskCategory }}</span>
             </div>
             <input type="text" class="modal-task-title editable-title" [(ngModel)]="editableTaskTitle"
               placeholder="Enter task title...">
@@ -1846,7 +1846,7 @@
                 <div class="circle-bg-animated"></div>
 
                 <!-- Progress Fill -->
-                <div class="progress-fill-3d" [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg)'">
+                <div class="progress-fill-3d" [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg)'">
                   <div class="fill-segment"></div>
                 </div>
 
@@ -1875,7 +1875,7 @@
                   <!-- Progress Circle -->
                   <circle class="progress-stroke-3d" cx="50" cy="50" r="40" fill="none"
                     stroke="url(#progressGradient3D)" stroke-width="8" stroke-linecap="round" filter="url(#glow3D)"
-                    [style.stroke-dasharray]="251.2" [style.stroke-dashoffset]="251.2 - (taskProgress / 100) * 251.2"
+                    [style.stroke-dasharray]="251.2" [style.stroke-dashoffset]="251.2 - (selectedTaskProgress / 100) * 251.2"
                     transform="rotate(-90 50 50)" />
 
                   <!-- Animated Particles -->
@@ -1918,13 +1918,13 @@
 
             <!-- Progress Content -->
             <div class="progress-content-3d">
-              <span class="progress-percentage-3d">{{ taskProgress }}%</span>
+              <span class="progress-percentage-3d">{{ selectedTaskProgress }}%</span>
               <span class="progress-label-3d">COMPLETE</span>
             </div>
 
             <!-- Interactive Drag Handle -->
             <div class="progress-handle-3d"
-              [style.transform]="'rotate(' + (taskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - taskProgress * 3.6) + 'deg)'">
+              [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - selectedTaskProgress * 3.6) + 'deg)'">
               <div class="handle-outer-ring"></div>
               <div class="handle-inner-core"></div>
               <div class="handle-pulse"></div>
@@ -1932,13 +1932,13 @@
 
             <!-- Progress Indicators -->
             <div class="progress-indicators">
-              <div class="indicator" [class.active]="taskProgress >= 25"
+              <div class="indicator" [class.active]="selectedTaskProgress >= 25"
                 style="transform: rotate(0deg) translateX(55px)">25</div>
-              <div class="indicator" [class.active]="taskProgress >= 50"
+              <div class="indicator" [class.active]="selectedTaskProgress >= 50"
                 style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
-              <div class="indicator" [class.active]="taskProgress >= 75"
+              <div class="indicator" [class.active]="selectedTaskProgress >= 75"
                 style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
-              <div class="indicator" [class.active]="taskProgress >= 100"
+              <div class="indicator" [class.active]="selectedTaskProgress >= 100"
                 style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
             </div>
 
