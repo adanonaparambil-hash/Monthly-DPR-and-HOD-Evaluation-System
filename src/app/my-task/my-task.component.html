@@ -1577,7 +1577,7 @@
               </div>
               <div class="date-content">
                 <span class="date-label">START DATE</span>
-                <input type="date" class="date-input" value="2023-10-01">
+                <input type="date" class="date-input" [(ngModel)]="selectedTaskStartDate">
                 <i class="fas fa-calendar-alt date-picker-icon"></i>
               </div>
             </div>
@@ -1588,7 +1588,7 @@
               </div>
               <div class="date-content">
                 <span class="date-label">TARGET DATE</span>
-                <input type="date" class="date-input" value="2023-10-24">
+                <input type="date" class="date-input" [(ngModel)]="selectedTaskEndDate">
                 <i class="fas fa-calendar-alt date-picker-icon"></i>
               </div>
             </div>
@@ -2092,7 +2092,7 @@
                   <i class="fas fa-calendar-alt label-icon"></i>
                   Start Date
                 </p>
-                <input type="date" class="metadata-input" value="2023-10-01">
+                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskStartDate">
               </div>
             </div>
 
@@ -2103,7 +2103,7 @@
                   <i class="fas fa-calendar-check label-icon orange"></i>
                   Target Date
                 </p>
-                <input type="date" class="metadata-input" value="2023-10-24">
+                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskEndDate">
               </div>
             </div>
 

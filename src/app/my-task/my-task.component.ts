@@ -230,6 +230,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Selected task additional properties
   selectedTaskProject = 'marketing-q4';
   selectedTaskBudget = 1250.00;
+  selectedTaskStartDate = '';
   selectedTaskEndDate = '2023-11-05';
   selectedTaskStatus: 'continuous' | 'closed' = 'continuous';
   selectedTaskPriority = 'medium';
@@ -400,11 +401,6 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             isActive: project.isActive || project.IsActive
           }));
           console.log('Projects List loaded:', this.projectsList.length, 'projects');
-
-          // Auto-select first project if none selected
-          if (this.projectsList.length > 0 && !this.selectedProjectId) {
-            this.selectedProjectId = this.projectsList[0].projectId?.toString() || '';
-          }
         } else if (response && Array.isArray(response)) {
           // Handle direct array response
           this.projectsList = response.map((project: any) => ({
@@ -414,11 +410,6 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             isActive: project.isActive || project.IsActive
           }));
           console.log('Projects List loaded (direct array):', this.projectsList.length, 'projects');
-
-          // Auto-select first project if none selected
-          if (this.projectsList.length > 0 && !this.selectedProjectId) {
-            this.selectedProjectId = this.projectsList[0].projectId?.toString() || '';
-          }
         }
       },
       error: (error: any) => {
@@ -2007,10 +1998,121 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   openTaskDetailsModal(task: Task) {
     this.selectedTask = task;
     this.showTaskDetailsModal = true;
+    
     // Prevent body scroll and ensure modal appears above everything
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'relative';
     document.body.style.zIndex = '1';
+    
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    // Get category ID from the task
+    const categoryId = this.getCategoryIdFromTask(task);
+    
+    if (!userId || !categoryId) {
+      console.error('Missing userId or categoryId for getTaskById API call');
+      // Fallback to binding from task list data
+      this.bindTaskListData(task);
+      return;
+    }
+    
+    // Call API to get full task details
+    console.log('Fetching task details:', { taskId: task.id, userId, categoryId });
+    this.api.getTaskById(task.id, userId, categoryId).subscribe({
+      next: (response: any) => {
+        console.log('Task details API response:', response);
+        
+        if (response && response.success && response.data) {
+          const taskDetails = response.data;
+          
+          // Bind all values from API response
+          this.selectedTaskId = taskDetails.taskId || `TSK-}{task.id}`;
+          this.selectedTaskCategory = taskDetails.categoryName || task.category;
+          this.editableTaskTitle = taskDetails.taskTitle || task.title;
+          this.editableTaskDescription = taskDetails.taskDescription || task.description || '';
+          this.selectedTaskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
+          this.taskProgress = this.selectedTaskProgress;
+          
+          // Format timers
+          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayLoggedHours || 0);
+          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalLoggedHours || 0);
+          
+          // Set other properties if available
+          this.selectedTaskStatus = taskDetails.status === 'CLOSED' ? 'closed' : 'continuous';
+          this.selectedTaskDetailStatus = taskDetails.status?.toLowerCase() || 'not started';
+          this.dailyRemarks = taskDetails.dailyRemarks || '';
+          
+          // Update selected task object
+          if (this.selectedTask) {
+            this.selectedTask.progress = this.selectedTaskProgress;
+            this.selectedTask.status = taskDetails.status || this.selectedTask.status;
+          }
+          
+          console.log('Task details bound:', {
+            id: this.selectedTaskId,
+            category: this.selectedTaskCategory,
+            title: this.editableTaskTitle,
+            progress: this.selectedTaskProgress,
+            runningTimer: this.selectedTaskRunningTimer,
+            totalHours: this.selectedTaskTotalHours
+          });
+        } else {
+          console.warn('API returned no data, using task list data');
+          this.bindTaskListData(task);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error fetching task details:', error);
+        // Fallback to binding from task list data
+        this.bindTaskListData(task);
+      }
+    });
+  }
+  
+  // Helper method to get category ID from task
+  private getCategoryIdFromTask(task: Task): number {
+    // Try to find the category ID from the task categories list
+    const category = this.allDepartmentList.find(cat => cat.categoryName === task.category);
+    if (category) {
+      return category.categoryId;
+    }
+    
+    // Try from favourites list
+    const favCategory = this.favouriteList.find(cat => cat.categoryName === task.category);
+    if (favCategory) {
+      return favCategory.categoryId;
+    }
+    
+    // Try from department list
+    const deptCategory = this.departmentList.find(cat => cat.categoryName === task.category);
+    if (deptCategory) {
+      return deptCategory.categoryId;
+    }
+    
+    // Try to find from myTasksList or assignedByMeList
+    const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === task.id);
+    if (taskData && taskData.taskCategory) {
+      // Find category ID by category name
+      const cat = this.allDepartmentList.find(c => c.categoryName === taskData.taskCategory);
+      if (cat) return cat.categoryId;
+    }
+    
+    console.warn('Could not find category ID for task:', task.category);
+    return 0;
+  }
+  
+  // Helper method to bind data from task list when API fails
+  private bindTaskListData(task: Task) {
+    this.selectedTaskId = `TSK-}{task.id}`;
+    this.selectedTaskCategory = task.category;
+    this.editableTaskTitle = task.title;
+    this.editableTaskDescription = task.description || '';
+    this.selectedTaskProgress = task.progress || 0;
+    this.taskProgress = this.selectedTaskProgress;
+    this.selectedTaskRunningTimer = task.loggedHours;
+    this.selectedTaskTotalHours = task.totalHours;
   }
 
   closeTaskDetailsModal() {
