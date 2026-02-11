@@ -166,9 +166,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Pagination
   currentPage = 1;
-  totalPages = 2;
-  currentPageTasks = 3;
-  totalTasks = 12;
+  totalPages = 1;
+  currentPageTasks = 0;
+  totalTasks = 0;
 
   // Modal state
   showCreateTaskModal = false;
@@ -283,81 +283,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   isAssigneeDropdownVisible: boolean = false;
 
   // Sample tasks data
-  tasks: Task[] = [
-    {
-      id: 1,
-      title: 'UI Design Refactor',
-      description: 'Updating the component library with fresh variant designs',
-      status: 'RUNNING',
-      category: 'DEVELOPMENT',
-      loggedHours: '12h',
-      totalHours: '12.5h',
-      startDate: '2024-01-10',
-      assignee: 'John Doe',
-      progress: 75,
-      isFavorite: true
-    },
-    {
-      id: 2,
-      title: 'Backend API Audit',
-      description: 'Security review of authentication endpoints',
-      status: 'PAUSED',
-      category: 'SECURITY',
-      loggedHours: '0.0h',
-      totalHours: '0.0h',
-      startDate: '2024-01-12',
-      assignee: 'Sarah Wilson',
-      progress: 0
-    },
-    {
-      id: 3,
-      title: 'QA Testing Sprint',
-      description: 'Manual testing for mobile responsiveness',
-      status: 'PAUSED',
-      category: 'QUALITY ASSURANCE',
-      loggedHours: '21h',
-      totalHours: '4.2h',
-      startDate: '2024-01-08',
-      assignee: 'Mike Johnson',
-      progress: 45
-    },
-    {
-      id: 4,
-      title: 'Database Optimization',
-      description: 'Optimize query performance and indexing',
-      status: 'NOT STARTED',
-      category: 'DEVELOPMENT',
-      loggedHours: '0.0h',
-      totalHours: '8.0h',
-      startDate: '2024-01-15',
-      assignee: 'Alex Brown',
-      progress: 0
-    },
-    {
-      id: 5,
-      title: 'User Documentation',
-      description: 'Create comprehensive user guides and API documentation',
-      status: 'RUNNING',
-      category: 'DOCUMENTATION',
-      loggedHours: '6.5h',
-      totalHours: '15.0h',
-      startDate: '2024-01-09',
-      assignee: 'Emily Davis',
-      progress: 30
-    },
-    {
-      id: 6,
-      title: 'Code Review Guidelines',
-      description: 'Establish coding standards and review processes',
-      status: 'NOT STARTED',
-      category: 'DOCUMENTATION',
-      loggedHours: '0.0h',
-      totalHours: '6.0h',
-      startDate: '2024-01-20',
-      assignee: 'Sarah Wilson',
-      progress: 0
-    }
-  ];
+  // Sample tasks data - will be populated from API
+  tasks: Task[] = [];
 
   // Progress Circle 3D Properties
   taskProgress = 75;
@@ -723,6 +650,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.myTasksCount = this.myTasksList.length;
           this.assignedToOthersCount = this.assignedByMeList.length;
           
+          // Update pagination based on actual data
+          this.totalTasks = this.tasks.length;
+          this.currentPageTasks = this.tasks.length;
+          this.totalPages = Math.ceil(this.totalTasks / 10) || 1;
+          
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
           
@@ -788,6 +720,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Update task counts
           this.myTasksCount = this.myTasksList.length;
           this.assignedToOthersCount = this.assignedByMeList.length;
+          
+          // Update pagination based on actual data
+          this.totalTasks = this.tasks.length;
+          this.currentPageTasks = this.tasks.length;
+          this.totalPages = Math.ceil(this.totalTasks / 10) || 1;
           
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
