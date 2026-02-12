@@ -2107,9 +2107,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.selectedTaskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
           this.taskProgress = this.selectedTaskProgress;
           
-          // Format timers
-          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayLoggedHours || 0);
-          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalLoggedHours || 0);
+          // Format timers - use correct field names from API
+          // todayTotalMinutes = today's logged time (Running Timer)
+          // totalTimeMinutes = total logged time across all days (Total Hours)
+          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayTotalMinutes || 0);
+          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalTimeMinutes || 0);
           
           // Set status - handle various status formats from API
           const apiStatus = taskDetails.status?.toUpperCase() || '';
@@ -2790,7 +2792,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     
     const hours = Math.floor(minutes / 60);
     const mins = Math.round(minutes % 60);
-    return `${hours}:${mins.toString().padStart(2, '0')}`;
+    
+    // Format as "Xh Ym" (e.g., "14h 54m")
+    if (mins === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h ${mins}m`;
   }
 
   // Format date string for input field (YYYY-MM-DD format)
@@ -3290,5 +3297,55 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
     // Call the existing stopTask method
     this.stopTask(this.activeTask.id);
+  }
+
+  // Pause task from modal
+  pauseTaskFromModal() {
+    if (!this.selectedTask) {
+      this.toasterService.showError('Error', 'No task selected');
+      return;
+    }
+
+    console.log('Pausing task from modal:', this.selectedTask.id);
+    
+    // Update local status immediately for UI feedback
+    this.selectedTaskDetailStatus = 'pause';
+    
+    // Call the existing pauseTask method
+    this.pauseTask(this.selectedTask.id);
+  }
+
+  // Resume task from modal
+  resumeTaskFromModal() {
+    if (!this.selectedTask) {
+      this.toasterService.showError('Error', 'No task selected');
+      return;
+    }
+
+    console.log('Resuming task from modal:', this.selectedTask.id);
+    
+    // Update local status immediately for UI feedback
+    this.selectedTaskDetailStatus = 'running';
+    
+    // Call the existing startTask method (which resumes paused tasks)
+    this.startTask(this.selectedTask.id);
+  }
+
+  // Stop task from modal
+  stopTaskFromModal() {
+    if (!this.selectedTask) {
+      this.toasterService.showError('Error', 'No task selected');
+      return;
+    }
+
+    console.log('Stopping task from modal:', this.selectedTask.id);
+    
+    // Call the existing stopTask method
+    this.stopTask(this.selectedTask.id);
+    
+    // Close the modal after stopping
+    setTimeout(() => {
+      this.closeTaskDetailsModal();
+    }, 1000);
   }
 }

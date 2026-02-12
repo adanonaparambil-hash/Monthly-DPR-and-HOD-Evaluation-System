@@ -269,7 +269,7 @@
         <div class="header-cell title">TASK TITLE</div>
         <div class="header-cell start-date">START DATE</div>
         <div class="header-cell assignee">ASSIGNEE</div>
-        <div class="header-cell logged">LOGGED HOURS</div>
+        <div class="header-cell logged">TODAY LOGGED HOURS</div>
         <div class="header-cell total">TOTAL HOURS</div>
         <div class="header-cell progress">PROGRESS</div>
         <div class="header-cell status">STATUS</div>
@@ -1775,10 +1775,21 @@
               <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
             </div>
             <div class="timer-buttons">
-              <button class="timer-btn pause-btn">
+              <!-- Show Pause button when task is RUNNING -->
+              <button class="timer-btn pause-btn" 
+                      *ngIf="selectedTaskDetailStatus === 'running'"
+                      (click)="pauseTaskFromModal()">
                 <i class="fas fa-pause"></i>
               </button>
-              <button class="timer-btn stop-btn">
+              <!-- Show Resume button when task is PAUSED -->
+              <button class="timer-btn resume-btn" 
+                      *ngIf="selectedTaskDetailStatus === 'pause'"
+                      (click)="resumeTaskFromModal()">
+                <i class="fas fa-play"></i>
+              </button>
+              <!-- Always show Stop button -->
+              <button class="timer-btn stop-btn"
+                      (click)="stopTaskFromModal()">
                 <i class="fas fa-stop"></i>
               </button>
             </div>

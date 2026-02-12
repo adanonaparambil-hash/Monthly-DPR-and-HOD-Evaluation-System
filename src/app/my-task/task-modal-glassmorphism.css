@@ -239,6 +239,14 @@
   background: #f1f5f9;
 }
 
+.timer-btn.resume-btn {
+  color: #10b981;
+}
+
+.timer-btn.resume-btn:hover {
+  background: #ecfdf5;
+}
+
 .timer-btn.stop-btn {
   color: #ef4444;
 }
