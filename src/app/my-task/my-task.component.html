@@ -1406,29 +1406,24 @@
           <div *ngIf="activeSidebarTab === 'history'" class="activity-history">
             <div class="activity-timeline">
               <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
-                <div class="activity-icon-enhanced" [style.background-color]="getActivityColor(activity.type)">
-                  <i class="fas" [class]="getActivityIcon(activity.type)"></i>
+                <div class="activity-icon-enhanced" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
+                  <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
                 </div>
                 <div class="activity-content-enhanced">
                   <div class="activity-header-enhanced">
                     <span class="activity-description">{{ activity.description }}</span>
-                    <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
+                    <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
                   </div>
                   <div class="activity-meta-enhanced">
-                    <span class="activity-user">{{ activity.user }}</span>
-                    <span class="activity-duration" *ngIf="activity.duration">{{ activity.duration }}</span>
-                  </div>
-                  <div class="activity-details" *ngIf="activity.details">
-                    <div *ngIf="activity.details.fileName" class="detail-item">
-                      <i class="fas fa-file"></i>
-                      <span>{{ activity.details.fileName }} ({{ activity.details.fileSize }})</span>
-                    </div>
-                    <div *ngIf="activity.details.subtaskName" class="detail-item">
-                      <i class="fas fa-tasks"></i>
-                      <span>{{ activity.details.subtaskName }}</span>
-                    </div>
+                    <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
                   </div>
                 </div>
+              </div>
+              
+              <!-- Empty state when no activity -->
+              <div class="no-activity" *ngIf="activityLogs.length === 0">
+                <i class="fas fa-history"></i>
+                <p>No activity yet</p>
               </div>
             </div>
           </div>
@@ -1725,17 +1720,22 @@
         <!-- Activity Log Section -->
         <div class="activity-log-section" *ngIf="activeSidebarTab === 'history'">
           <div class="activity-item" *ngFor="let activity of activityLogs">
-            <div class="activity-icon" [style.background-color]="getActivityColor(activity.type)">
-              <i class="fas" [class]="getActivityIcon(activity.type)"></i>
+            <div class="activity-icon" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
+              <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
             </div>
             <div class="activity-content">
               <div class="activity-description">{{ activity.description }}</div>
               <div class="activity-meta">
-                <span class="activity-user">{{ activity.user }}</span>
-                <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
-                <span class="activity-duration" *ngIf="activity.duration">{{ activity.duration }}</span>
+                <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
+                <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
               </div>
             </div>
+          </div>
+          
+          <!-- Empty state when no activity -->
+          <div class="no-activity" *ngIf="activityLogs.length === 0">
+            <i class="fas fa-history"></i>
+            <p>No activity yet</p>
           </div>
         </div>
       </div>
@@ -2266,29 +2266,24 @@
         <div class="activity-log-content" *ngIf="activeSidebarTab === 'history'">
           <div class="activity-timeline">
             <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
-              <div class="activity-icon-enhanced" [style.background-color]="getActivityColor(activity.type)">
-                <i class="fas" [class]="getActivityIcon(activity.type)"></i>
+              <div class="activity-icon-enhanced" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
+                <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
               </div>
               <div class="activity-content-enhanced">
                 <div class="activity-header-enhanced">
                   <span class="activity-description">{{ activity.description }}</span>
-                  <span class="activity-time">{{ getRelativeTime(activity.timestamp) }}</span>
+                  <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
                 </div>
                 <div class="activity-meta-enhanced">
-                  <span class="activity-user">{{ activity.user }}</span>
-                  <span class="activity-duration" *ngIf="activity.duration">{{ activity.duration }}</span>
-                </div>
-                <div class="activity-details" *ngIf="activity.details">
-                  <div *ngIf="activity.details.fileName" class="detail-item">
-                    <i class="fas fa-file"></i>
-                    <span>{{ activity.details.fileName }} ({{ activity.details.fileSize }})</span>
-                  </div>
-                  <div *ngIf="activity.details.subtaskName" class="detail-item">
-                    <i class="fas fa-tasks"></i>
-                    <span>{{ activity.details.subtaskName }}</span>
-                  </div>
+                  <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
                 </div>
               </div>
+            </div>
+            
+            <!-- Empty state when no activity -->
+            <div class="no-activity" *ngIf="activityLogs.length === 0">
+              <i class="fas fa-history"></i>
+              <p>No activity yet</p>
             </div>
           </div>
         </div>

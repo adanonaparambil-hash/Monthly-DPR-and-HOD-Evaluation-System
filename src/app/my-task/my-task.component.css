@@ -9255,10 +9255,14 @@
 }
 
 .activity-time {
-  font-size: 11px;
-  color: #9ca3af;
+  font-size: 12px; /* Slightly larger */
+  color: #1e293b; /* Much darker for better visibility */
   white-space: nowrap;
   flex-shrink: 0;
+  font-weight: 600; /* Bolder */
+  background: rgba(255, 255, 255, 0.8); /* Light background for contrast */
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .activity-meta-enhanced {
@@ -14672,4 +14676,36 @@
 
 :host-context(.dark-theme) .manage-modal-header .modal-close-btn:hover {
   background: var(--background-primary);
+}
+
+
+/* No Activity Empty State */
+.no-activity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.no-activity i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.no-activity p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Fix activity time visibility in dark mode */
+.task-board-container.dark-mode .activity-time {
+  color: #f1f5f9; /* Much lighter color for dark mode */
+  font-weight: 600;
+  background: rgba(30, 41, 59, 0.8); /* Dark background for contrast */
+  padding: 2px 8px;
+  border-radius: 4px;
 }

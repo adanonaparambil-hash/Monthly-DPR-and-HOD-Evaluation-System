@@ -7,7 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { ToasterService } from '../services/toaster.service';
 import { ToasterComponent } from '../components/toaster/toaster.component';
 import { SessionService } from '../services/session.service';
-import { TaskSaveDto, ActiveTaskListResponse, ActiveTaskDto, TaskCommentDto } from '../models/TimeSheetDPR.model';
+import { TaskSaveDto, ActiveTaskListResponse, ActiveTaskDto, TaskCommentDto, TaskActivityDto } from '../models/TimeSheetDPR.model';
 import { AvatarUtil } from '../utils/avatar.util';
 import Swal from 'sweetalert2';
 
@@ -225,7 +225,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Activity and History
   activeSidebarTab: 'comments' | 'history' = 'comments';
-  activityLogs: ActivityLog[] = [];
+  activityLogs: TaskActivityDto[] = []; // Activity logs from API
   detailedSubtasks: SubtaskDetailed[] = [];
   taskComments: TaskCommentDto[] = []; // Comments from API
 
@@ -327,7 +327,6 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
     // Initialize component
     this.initializeDetailedSubtasks();
-    this.initializeActivityLogs();
 
     // Initialize with no active task - will be set by loadActiveTasks()
     this.activeTask = null;
@@ -543,6 +542,64 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         console.error('Error loading task comments:', error);
         // Keep empty array if API fails
         this.taskComments = [];
+      }
+    });
+  }
+
+  // Load Task Activity from API
+  loadActivity(taskId: number): void {
+    // Clear existing activity logs
+    this.activityLogs = [];
+    
+    this.api.getActivity(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.activityLogs = response.data.map((activity: any) => {
+            // Get employee name from ID if available
+            const employeeName = activity.actionBy ? this.getEmployeeName(activity.actionBy) : '';
+            
+            return {
+              activityId: activity.activityId || 0,
+              taskId: activity.taskId || taskId,
+              moduleName: activity.moduleName || '',
+              recordId: activity.recordId || undefined,
+              actionType: activity.actionType || '',
+              actionBy: employeeName || activity.actionBy || '',
+              actionDate: activity.actionDate || new Date().toISOString(),
+              fieldName: activity.fieldName || undefined,
+              oldValue: activity.oldValue || undefined,
+              newValue: activity.newValue || undefined,
+              description: activity.description || ''
+            };
+          });
+          console.log('Task activity loaded:', this.activityLogs.length, 'activities for task', taskId);
+        } else if (response && Array.isArray(response.data)) {
+          // Handle direct array response
+          this.activityLogs = response.data.map((activity: any) => {
+            // Get employee name from ID if available
+            const employeeName = activity.actionBy ? this.getEmployeeName(activity.actionBy) : '';
+            
+            return {
+              activityId: activity.activityId || 0,
+              taskId: activity.taskId || taskId,
+              moduleName: activity.moduleName || '',
+              recordId: activity.recordId || undefined,
+              actionType: activity.actionType || '',
+              actionBy: employeeName || activity.actionBy || '',
+              actionDate: activity.actionDate || new Date().toISOString(),
+              fieldName: activity.fieldName || undefined,
+              oldValue: activity.oldValue || undefined,
+              newValue: activity.newValue || undefined,
+              description: activity.description || ''
+            };
+          });
+          console.log('Task activity loaded (direct array):', this.activityLogs.length, 'activities');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading task activity:', error);
+        // Keep empty array if API fails
+        this.activityLogs = [];
       }
     });
   }
@@ -1132,89 +1189,6 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         timeSpent: 0,
         startTime: new Date(),
         totalLoggedTime: 2.25
-      }
-    ];
-  }
-
-  initializeActivityLogs() {
-    this.activityLogs = [
-      {
-        id: '1',
-        type: 'timer_start',
-        description: 'Started working on "Implement PKCE logic for Mobile Flow"',
-        timestamp: new Date('2024-01-20T10:00:00'),
-        user: 'Alex Chen',
-        details: { subtaskId: 2, subtaskName: 'Implement PKCE logic for Mobile Flow' }
-      },
-      {
-        id: '2',
-        type: 'status_change',
-        description: 'Changed task status from "Pending" to "In Progress"',
-        timestamp: new Date('2024-01-20T09:45:00'),
-        user: 'Marcus Thorne'
-      },
-      {
-        id: '3',
-        type: 'subtask_complete',
-        description: 'Completed subtask "Database Schema Migration"',
-        timestamp: new Date('2024-01-20T08:30:00'),
-        user: 'Alex Chen',
-        duration: '4h 20m',
-        details: { subtaskId: 1, subtaskName: 'Database Schema Migration' }
-      },
-      {
-        id: '4',
-        type: 'timer_stop',
-        description: 'Stopped timer for "Database Schema Migration"',
-        timestamp: new Date('2024-01-19T17:30:00'),
-        user: 'Alex Chen',
-        duration: '1h 50m',
-        details: { subtaskId: 1, subtaskName: 'Database Schema Migration' }
-      },
-      {
-        id: '5',
-        type: 'comment',
-        description: 'Added comment: "Working on the token introspection endpoints now. Should be ready for review by EOD."',
-        timestamp: new Date('2024-01-19T15:20:00'),
-        user: 'Alex Chen'
-      },
-      {
-        id: '6',
-        type: 'file_upload',
-        description: 'Uploaded file "oauth2-flow-diagram.pdf"',
-        timestamp: new Date('2024-01-19T14:15:00'),
-        user: 'Alex Chen',
-        details: { fileName: 'oauth2-flow-diagram.pdf', fileSize: '2.4 MB' }
-      },
-      {
-        id: '7',
-        type: 'timer_start',
-        description: 'Started working on "Database Schema Migration"',
-        timestamp: new Date('2024-01-19T14:00:00'),
-        user: 'Alex Chen',
-        details: { subtaskId: 1, subtaskName: 'Database Schema Migration' }
-      },
-      {
-        id: '8',
-        type: 'task_update',
-        description: 'Updated task description and added custom fields',
-        timestamp: new Date('2024-01-19T09:30:00'),
-        user: 'Marcus Thorne'
-      },
-      {
-        id: '9',
-        type: 'timer_pause',
-        description: 'Paused timer for current task',
-        timestamp: new Date('2024-01-18T16:45:00'),
-        user: 'Alex Chen',
-        duration: '2h 15m'
-      },
-      {
-        id: '10',
-        type: 'status_change',
-        description: 'Changed task priority from "Medium" to "High"',
-        timestamp: new Date('2024-01-18T14:20:00'),
-        user: 'Marcus Thorne'
       }
     ];
   }
@@ -2246,6 +2220,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.uploadedFiles = [];
     // Clear comments
     this.taskComments = [];
+    // Clear activity logs
+    this.activityLogs = [];
     // Restore body scroll
     document.body.style.overflow = 'auto';
     document.body.style.position = '';
@@ -2516,6 +2492,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Sidebar Tab Methods
   setActiveSidebarTab(tab: 'comments' | 'history') {
     this.activeSidebarTab = tab;
+    
+    // Load activity when switching to history tab
+    if (tab === 'history' && this.selectedTask) {
+      this.loadActivity(this.selectedTask.id);
+    }
   }
 
   // Detailed Subtask Timer Methods
@@ -2702,15 +2683,39 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return commentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // Activity Log Methods
-  addActivityLog(activity: Omit<ActivityLog, 'id' | 'timestamp'>) {
-    const newActivity: ActivityLog = {
-      ...activity,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      timestamp: new Date()
-    };
+  // Helper method to get activity icon based on description
+  getActivityIconFromDescription(description: string): string {
+    const desc = description.toLowerCase();
+    if (desc.includes('timer started') || desc.includes('timer start')) return 'fa-play';
+    if (desc.includes('timer paused') || desc.includes('timer pause')) return 'fa-pause';
+    if (desc.includes('timer stopped') || desc.includes('timer stop')) return 'fa-stop';
+    if (desc.includes('file uploaded') || desc.includes('file upload')) return 'fa-file-upload';
+    if (desc.includes('comment added') || desc.includes('comment')) return 'fa-comment';
+    if (desc.includes('task created') || desc.includes('created')) return 'fa-plus-circle';
+    if (desc.includes('auto-paused')) return 'fa-pause-circle';
+    if (desc.includes('status change') || desc.includes('updated')) return 'fa-edit';
+    return 'fa-circle';
+  }
 
-    this.activityLogs.unshift(newActivity);
+  // Helper method to get activity color based on description
+  getActivityColorFromDescription(description: string): string {
+    const desc = description.toLowerCase();
+    if (desc.includes('timer started') || desc.includes('timer start')) return '#10b981'; // green
+    if (desc.includes('timer paused') || desc.includes('timer pause')) return '#f59e0b'; // orange
+    if (desc.includes('timer stopped') || desc.includes('timer stop')) return '#ef4444'; // red
+    if (desc.includes('file uploaded') || desc.includes('file upload')) return '#3b82f6'; // blue
+    if (desc.includes('comment added') || desc.includes('comment')) return '#8b5cf6'; // purple
+    if (desc.includes('task created') || desc.includes('created')) return '#10b981'; // green
+    if (desc.includes('auto-paused')) return '#f59e0b'; // orange
+    if (desc.includes('status change') || desc.includes('updated')) return '#6366f1'; // indigo
+    return '#6b7280'; // gray
+  }
+
+  // Activity Log Methods
+  addActivityLog(activity: any) {
+    // Activity logs are now loaded from API via loadActivity()
+    // This method is kept for backward compatibility but does nothing
+    console.log('Activity log action (will be synced from API):', activity);
   }
 
   // Enhanced activity logging for task actions
