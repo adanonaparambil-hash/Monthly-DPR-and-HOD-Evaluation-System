@@ -1343,7 +1343,7 @@
                   <button class="file-action-btn download" (click)="downloadFile(file)">
                     <i class="fas fa-download"></i>
                   </button>
-                  <button class="file-action-btn delete" (click)="removeFile(i)">
+                  <button class="file-action-btn delete" (click)="deleteFile(file)">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -1380,27 +1380,25 @@
         <div class="sidebar-content-compact">
           <!-- Comments Tab -->
           <div *ngIf="activeSidebarTab === 'comments'">
-            <div class="comment-item-compact">
-              <div class="comment-avatar-compact">AC</div>
+            <!-- Display comments from API -->
+            <div class="comment-item-compact" *ngFor="let comment of taskComments">
+              <div class="comment-avatar-compact" *ngIf="!comment.profileImageBase64">
+                {{ getInitials(comment.empName) }}
+              </div>
+              <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar-compact" />
               <div class="comment-content-compact">
                 <div class="comment-header-compact">
-                  <span class="comment-author-compact">Alex Chen</span>
-                  <span class="comment-time-compact">2h ago</span>
+                  <span class="comment-author-compact">{{ comment.empName }}</span>
+                  <span class="comment-time-compact">{{ getTimeAgo(comment.submittedOn) }}</span>
                 </div>
-                <p class="comment-text-compact">Working on the token introspection endpoints now. Should be ready for
-                  review by EOD.</p>
+                <p class="comment-text-compact">{{ comment.comments }}</p>
               </div>
             </div>
-
-            <div class="comment-item-compact">
-              <div class="comment-avatar-compact brand">MT</div>
-              <div class="comment-content-compact">
-                <div class="comment-header-compact">
-                  <span class="comment-author-compact">Marcus Thorne</span>
-                  <span class="comment-time-compact">45m ago</span>
-                </div>
-                <p class="comment-text-compact">Great progress. Ensure test coverage includes the Azure AD adapter.</p>
-              </div>
+            
+            <!-- Empty state when no comments -->
+            <div class="no-comments-compact" *ngIf="taskComments.length === 0">
+              <i class="fas fa-comments"></i>
+              <p>No comments yet</p>
             </div>
           </div>
 
@@ -1437,8 +1435,8 @@
         </div>
 
         <div class="comment-input-compact" *ngIf="activeSidebarTab === 'comments'">
-          <textarea placeholder="Type a message..."></textarea>
-          <button class="send-btn-compact">
+          <textarea placeholder="Type a message..." [(ngModel)]="newComment" (keyup.enter)="addComment()"></textarea>
+          <button class="send-btn-compact" (click)="addComment()" [disabled]="!newComment.trim()">
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>
@@ -1693,36 +1691,32 @@
         </div>
 
         <div class="comments-section" *ngIf="activeSidebarTab === 'comments'">
-          <div class="comment-item">
-            <div class="comment-avatar">AC</div>
+          <!-- Display comments from API -->
+          <div class="comment-item" *ngFor="let comment of taskComments">
+            <div class="comment-avatar" *ngIf="!comment.profileImageBase64">
+              {{ getInitials(comment.empName) }}
+            </div>
+            <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar" />
             <div class="comment-content">
               <div class="comment-header">
-                <span class="comment-author">Alex Chen</span>
-                <span class="comment-time">2h ago</span>
+                <span class="comment-author">{{ comment.empName }}</span>
+                <span class="comment-time">{{ getTimeAgo(comment.submittedOn) }}</span>
               </div>
               <p class="comment-text">
-                Working on the token introspection endpoints now. Should be ready for
-                review by EOD.
+                {{ comment.comments }}
               </p>
             </div>
           </div>
-
-          <div class="comment-item">
-            <div class="comment-avatar">MT</div>
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">Marcus Thorne</span>
-                <span class="comment-time">42m ago</span>
-              </div>
-              <p class="comment-text">
-                Great progress. Ensure test coverage includes the Azure AD adapter.
-              </p>
-            </div>
+          
+          <!-- Empty state when no comments -->
+          <div class="no-comments" *ngIf="taskComments.length === 0">
+            <i class="fas fa-comments"></i>
+            <p>No comments yet</p>
           </div>
 
           <div class="add-comment-section">
-            <textarea class="comment-input" placeholder="Add a comment..."></textarea>
-            <button class="send-comment-btn">
+            <textarea class="comment-input" placeholder="Add a comment..." [(ngModel)]="newComment" (keyup.enter)="addComment()"></textarea>
+            <button class="send-comment-btn" (click)="addComment()" [disabled]="!newComment.trim()">
               <i class="fas fa-paper-plane"></i>
             </button>
           </div>
@@ -2217,7 +2211,7 @@
                   <button class="file-action-btn download" (click)="downloadFile(file)" title="Download">
                     <i class="fas fa-download"></i>
                   </button>
-                  <button class="file-action-btn delete" (click)="removeFile(i)" title="Delete">
+                  <button class="file-action-btn delete" (click)="deleteFile(file)" title="Delete">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -2244,32 +2238,27 @@
 
         <!-- Comments Content -->
         <div class="comments-content" *ngIf="activeSidebarTab === 'comments'">
-          <!-- Comment 1 -->
-          <div class="comment-item">
-            <div class="comment-avatar">AC</div>
+          <!-- Display comments from API -->
+          <div class="comment-item" *ngFor="let comment of taskComments">
+            <div class="comment-avatar" *ngIf="!comment.profileImageBase64">
+              {{ getInitials(comment.empName) }}
+            </div>
+            <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar" />
             <div class="comment-body">
               <div class="comment-header">
-                <span class="comment-author">Alex Chen</span>
-                <span class="comment-time">2h ago</span>
+                <span class="comment-author">{{ comment.empName }}</span>
+                <span class="comment-time">{{ getTimeAgo(comment.submittedOn) }}</span>
               </div>
               <div class="comment-message">
-                Working on the token introspection endpoints now. Should be ready for review by EOD.
+                {{ comment.comments }}
               </div>
             </div>
           </div>
-
-          <!-- Comment 2 -->
-          <div class="comment-item">
-            <div class="comment-avatar green">MT</div>
-            <div class="comment-body">
-              <div class="comment-header">
-                <span class="comment-author">Marcus Thorne</span>
-                <span class="comment-time">45m ago</span>
-              </div>
-              <div class="comment-message">
-                Great progress. Ensure test coverage includes the Azure AD adapter.
-              </div>
-            </div>
+          
+          <!-- Empty state when no comments -->
+          <div class="no-comments" *ngIf="taskComments.length === 0">
+            <i class="fas fa-comments"></i>
+            <p>No comments yet. Be the first to comment!</p>
           </div>
         </div>
 

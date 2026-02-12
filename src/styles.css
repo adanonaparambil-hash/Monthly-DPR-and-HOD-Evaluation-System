@@ -482,3 +482,17 @@ img[src*="default-avatar.svg"] {
   font-size: 9px;
   margin-right: 2px;
 }
+
+
+/* SweetAlert2 z-index fix - Ensure it appears above modals */
+.swal-high-z-index {
+  z-index: 100005 !important;
+}
+
+.swal2-container {
+  z-index: 100005 !important;
+}
+
+.swal2-backdrop-show {
+  z-index: 100004 !important;
+}

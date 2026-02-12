@@ -7,7 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { ToasterService } from '../services/toaster.service';
 import { ToasterComponent } from '../components/toaster/toaster.component';
 import { SessionService } from '../services/session.service';
-import { TaskSaveDto, ActiveTaskListResponse, ActiveTaskDto } from '../models/TimeSheetDPR.model';
+import { TaskSaveDto, ActiveTaskListResponse, ActiveTaskDto, TaskCommentDto } from '../models/TimeSheetDPR.model';
 import { AvatarUtil } from '../utils/avatar.util';
 import Swal from 'sweetalert2';
 
@@ -227,6 +227,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   activeSidebarTab: 'comments' | 'history' = 'comments';
   activityLogs: ActivityLog[] = [];
   detailedSubtasks: SubtaskDetailed[] = [];
+  taskComments: TaskCommentDto[] = []; // Comments from API
 
   // Selected task additional properties
   selectedTaskProject = 'marketing-q4';
@@ -500,6 +501,48 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         console.error('Error loading task files:', error);
         // Keep empty array if API fails
         this.uploadedFiles = [];
+      }
+    });
+  }
+
+  // Load Task Comments from API
+  loadComments(taskId: number): void {
+    // Clear existing comments
+    this.taskComments = [];
+    
+    this.api.getComments(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.taskComments = response.data.map((comment: any) => ({
+            commentId: comment.commentId || 0,
+            taskId: comment.taskId || taskId,
+            userId: comment.userId || '',
+            comments: comment.comments || '',
+            submittedOn: comment.submittedOn || new Date().toISOString(),
+            empName: comment.empName || 'Unknown User',
+            profileImage: comment.profileImage || undefined,
+            profileImageBase64: comment.profileImageBase64 || undefined
+          }));
+          console.log('Task comments loaded:', this.taskComments.length, 'comments for task', taskId);
+        } else if (response && Array.isArray(response.data)) {
+          // Handle direct array response
+          this.taskComments = response.data.map((comment: any) => ({
+            commentId: comment.commentId || 0,
+            taskId: comment.taskId || taskId,
+            userId: comment.userId || '',
+            comments: comment.comments || '',
+            submittedOn: comment.submittedOn || new Date().toISOString(),
+            empName: comment.empName || 'Unknown User',
+            profileImage: comment.profileImage || undefined,
+            profileImageBase64: comment.profileImageBase64 || undefined
+          }));
+          console.log('Task comments loaded (direct array):', this.taskComments.length, 'comments');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading task comments:', error);
+        // Keep empty array if API fails
+        this.taskComments = [];
       }
     });
   }
@@ -2071,6 +2114,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Load task files
     this.loadTaskFiles(task.id);
     
+    // Load task comments
+    this.loadComments(task.id);
+    
     // Always call API to get full task details
     this.api.getTaskById(task.id, userId, categoryId || 0).subscribe({
       next: (response: any) => {
@@ -2198,6 +2244,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.selectedTask = null;
     // Clear uploaded files
     this.uploadedFiles = [];
+    // Clear comments
+    this.taskComments = [];
     // Restore body scroll
     document.body.style.overflow = 'auto';
     document.body.style.position = '';
@@ -2561,16 +2609,97 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   newComment = '';
 
   addComment() {
-    if (this.newComment.trim()) {
-      // Log the comment activity
-      this.logTaskAction('comment_added', {
-        comment: this.newComment.trim(),
-        taskTitle: this.selectedTask?.title
-      });
-
-      // Clear the input
-      this.newComment = '';
+    if (!this.newComment.trim()) {
+      return;
     }
+
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
+    }
+
+    // Get task ID from selected task
+    const taskId = this.selectedTask?.id;
+    if (!taskId) {
+      this.toasterService.showError('Error', 'No task selected');
+      return;
+    }
+
+    // Prepare comment DTO
+    const commentDto: TaskCommentDto = {
+      commentId: 0, // 0 for new comment
+      taskId: taskId,
+      userId: userId,
+      comments: this.newComment.trim(),
+      submittedOn: new Date().toISOString(),
+      empName: currentUser?.employeeName || currentUser?.name || '',
+      profileImage: currentUser?.profileImage || undefined,
+      profileImageBase64: currentUser?.profileImageBase64 || undefined
+    };
+
+    // Call API to save comment
+    this.api.saveComment(commentDto).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          // Log the comment activity
+          this.logTaskAction('comment_added', {
+            comment: this.newComment.trim(),
+            taskTitle: this.selectedTask?.title
+          });
+
+          // Clear the input
+          this.newComment = '';
+          
+          // Show success message
+          this.toasterService.showSuccess('Comment Added', 'Your comment has been saved successfully');
+          
+          // Reload comments to show the new comment
+          if (taskId) {
+            this.loadComments(taskId);
+          }
+          
+          console.log('Comment saved successfully:', response);
+        } else {
+          this.toasterService.showError('Failed', response?.message || 'Failed to save comment');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error saving comment:', error);
+        this.toasterService.showError('Error', 'Failed to save comment. Please try again.');
+      }
+    });
+  }
+
+  // Helper method to get initials from name
+  getInitials(name: string): string {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  // Helper method to get relative time (e.g., "2h ago", "45m ago")
+  getTimeAgo(date: string | Date): string {
+    const now = new Date();
+    const commentDate = new Date(date);
+    const diffMs = now.getTime() - commentDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    // Format as date if older than 7 days
+    return commentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   // Activity Log Methods
@@ -2858,6 +2987,63 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       link.click();
       document.body.removeChild(link);
     }
+  }
+
+  deleteFile(file: UploadedFile) {
+    // Show confirmation dialog with higher z-index to appear above modal
+    Swal.fire({
+      title: 'Delete File?',
+      text: `Are you sure you want to delete "${file.name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      backdrop: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Get current user
+        const currentUser = this.sessionService.getCurrentUser();
+        const userId = currentUser?.empId || currentUser?.employeeId || '';
+        
+        // Convert file.id to number
+        const fileId = parseInt(file.id, 10);
+        
+        if (!fileId || isNaN(fileId)) {
+          this.toasterService.showError('Error', 'Invalid file ID');
+          return;
+        }
+        
+        // Call API to delete file
+        this.api.deleteTaskFile(fileId, userId).subscribe({
+          next: (response: any) => {
+            if (response && response.success) {
+              // Remove file from local array
+              const index = this.uploadedFiles.findIndex(f => f.id === file.id);
+              if (index > -1) {
+                if (this.uploadedFiles[index].url) {
+                  URL.revokeObjectURL(this.uploadedFiles[index].url);
+                }
+                this.uploadedFiles.splice(index, 1);
+              }
+              
+              this.toasterService.showSuccess('File Deleted', 'File deleted successfully');
+              console.log('File deleted:', file.name);
+            } else {
+              this.toasterService.showError('Delete Failed', response?.message || 'Failed to delete file');
+            }
+          },
+          error: (error: any) => {
+            console.error('Error deleting file:', error);
+            this.toasterService.showError('Error', 'Failed to delete file. Please try again.');
+          }
+        });
+      }
+    });
   }
 
   removeFile(index: number) {
