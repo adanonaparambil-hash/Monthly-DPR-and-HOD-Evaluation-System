@@ -9256,13 +9256,15 @@
 
 .activity-time {
   font-size: 12px; /* Slightly larger */
-  color: #1e293b; /* Much darker for better visibility */
+  color: #0f172a; /* Even darker for maximum visibility */
   white-space: nowrap;
   flex-shrink: 0;
-  font-weight: 600; /* Bolder */
-  background: rgba(255, 255, 255, 0.8); /* Light background for contrast */
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-weight: 700; /* Extra bold */
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  border: 1px solid rgba(0, 0, 0, 0.05); /* Subtle border */
 }
 
 .activity-meta-enhanced {
@@ -14704,8 +14706,11 @@
 /* Fix activity time visibility in dark mode */
 .task-board-container.dark-mode .activity-time {
   color: #f1f5f9; /* Much lighter color for dark mode */
-  font-weight: 600;
-  background: rgba(30, 41, 59, 0.8); /* Dark background for contrast */
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-weight: 700; /* Extra bold */
+  background: rgba(30, 41, 59, 0.95); /* Almost opaque dark background for contrast */
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* Stronger shadow for dark mode */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle light border */
+}
 }

@@ -2915,7 +2915,11 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   max-height: 500px;
   overflow-y: auto;
   /* Remove extra bottom space */
-  padding-bottom: 0;
+  padding-bottom: 0 !important;
+  /* Ensure no background overlays */
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
 }
 
 .activity-timeline {
@@ -2925,7 +2929,9 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   position: relative;
   padding-left: 8px;
   /* Remove extra bottom padding */
-  padding-bottom: 0;
+  padding-bottom: 0 !important;
+  /* Ensure no background overlays */
+  background: transparent !important;
 }
 
 .activity-item-enhanced {
@@ -2981,13 +2987,15 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
 
 .activity-time {
   font-size: 12px; /* Slightly larger */
-  color: #1e293b; /* Much darker for better visibility */
+  color: #0f172a; /* Even darker for maximum visibility */
   white-space: nowrap;
-  font-weight: 600; /* Bolder */
+  font-weight: 700; /* Extra bold */
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.8); /* Light background for contrast */
-  padding: 2px 8px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.95); /* Almost opaque white background */
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  border: 1px solid rgba(0, 0, 0, 0.05); /* Subtle border */
 }
 
 .activity-meta-enhanced {
@@ -3252,6 +3260,8 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   display: flex;
   flex-direction: column;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden; /* Prevent any overflow that might cause colored areas */
 }
 
 .comments-tabs {
@@ -3285,9 +3295,13 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   flex-direction: column;
   gap: 20px;
   /* Remove extra bottom padding */
-  padding-bottom: 16px;
+  padding-bottom: 16px !important;
   /* Ensure content fits properly */
   max-height: calc(100% - 60px);
+  /* Ensure no background overlays */
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
 }
 
 .comment-item {
@@ -4367,4 +4381,80 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
 .no-activity p {
   font-size: 14px;
   margin: 0;
+}
+
+
+/* Custom scrollbar for activity log and comments */
+.activity-log-content::-webkit-scrollbar,
+.comments-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.activity-log-content::-webkit-scrollbar-track,
+.comments-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.activity-log-content::-webkit-scrollbar-thumb,
+.comments-content::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.5);
+  border-radius: 3px;
+}
+
+.activity-log-content::-webkit-scrollbar-thumb:hover,
+.comments-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.7);
+}
+
+/* Ensure no overlay on the panel */
+.comments-panel {
+  position: relative;
+  z-index: 1;
+}
+
+/* Remove any pseudo-elements that might create overlays */
+.comments-panel::before,
+.comments-panel::after {
+  display: none !important;
+}
+
+/* Ensure activity timeline doesn't have overlays */
+.activity-timeline::before,
+.activity-timeline::after {
+  content: none !important;
+}
+
+/* Fix for bottom padding to ensure all content is visible */
+.activity-log-content {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.comments-content {
+  padding-bottom: 16px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Remove any potential gradient overlays from parent containers */
+.comments-panel > *::before,
+.comments-panel > *::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Ensure activity items are fully visible */
+.activity-item-enhanced:last-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Remove any background gradients that might appear as colored overlays */
+.activity-log-content::before,
+.activity-log-content::after,
+.comments-content::before,
+.comments-content::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
 }
