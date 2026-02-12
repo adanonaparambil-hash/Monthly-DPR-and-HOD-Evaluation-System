@@ -358,4 +358,17 @@ export class Api {
   }
 
 
+  deleteTaskFile(fileId: number, userId: string) {
+  const body = {
+    fileId: fileId,
+    userId: userId
+  };
+
+  return this.http.post<any>(
+    `${this.apiUrl}/DailyTimeSheet/DeleteTaskFile`,
+    body
+  );
+}
+
+
 }

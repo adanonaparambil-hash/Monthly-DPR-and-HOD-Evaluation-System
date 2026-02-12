@@ -2226,7 +2226,7 @@
   align-items: center;
 }
 
-/* Ultra-Modern Input Fields */
+/* Ultra-Modern Input Fields - Always Editable */
 .metadata-select,
 .metadata-input {
   background: transparent;
@@ -2240,6 +2240,48 @@
   padding: 4px 0;
   border-radius: 6px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+  appearance: auto !important;
+}
+
+/* Ensure metadata content allows pointer events */
+.metadata-content {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
+/* Ensure metadata cards allow pointer events */
+.metadata-card {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
+/* Ensure metadata section allows pointer events */
+.metadata-section,
+.project-metadata-section {
+  pointer-events: auto !important;
+}
+
+/* Ensure metadata grid allows pointer events */
+.metadata-grid,
+.metadata-grid-3col {
+  pointer-events: auto !important;
+}
+
+/* Ensure input can receive focus */
+.metadata-input:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Enable date picker icon click */
+input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
+  pointer-events: auto !important;
+  cursor: pointer;
 }
 
 .metadata-select:focus,

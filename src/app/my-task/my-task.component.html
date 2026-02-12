@@ -1672,9 +1672,10 @@
             <svg class="progress-circle-svg" viewBox="0 0 120 120">
               <circle class="progress-circle-bg" cx="60" cy="60" r="54"></circle>
               <circle class="progress-circle-fill" cx="60" cy="60" r="54"
-                style="stroke-dasharray: 339.292; stroke-dashoffset: 118.752;"></circle>
+                [attr.stroke-dasharray]="getTopProgressDasharray()"
+                [attr.stroke-dashoffset]="getTopProgressOffset()"></circle>
             </svg>
-            <div class="progress-percentage">75%</div>
+            <div class="progress-percentage">{{ taskProgress }}%</div>
             <div class="progress-label">DONE</div>
           </div>
         </div>
@@ -1760,7 +1761,7 @@
         <button class="modal-back-button" (click)="closeTaskDetailsModal()">
           <i class="fas fa-arrow-left"></i>
         </button>
-        <div class="modal-task-id-badge">{{ selectedTaskId }}</div>
+        <div class="modal-task-id-badge">TSK-{{ selectedTaskId }}</div>
         <div class="status-dropdown-container">
           <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
             <option value="not-started">Not Started</option>

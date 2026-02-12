@@ -20,6 +20,7 @@ export interface TaskSaveDto {
   targetDate?: string | Date;
   startDate?: string | Date;
   progress: number;
+  estimatedHours: number;
   status: string;
   createdBy: string;
   assignees: string[];

@@ -17,6 +17,7 @@ interface Task {
   description: string;
   status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED';
   category: string;
+  categoryId?: number; // Add categoryId property
   loggedHours: string;
   totalHours: string;
   startDate: string;
@@ -463,6 +464,44 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       'Date': 'date'
     };
     return typeMap[apiFieldType] || 'text';
+  }
+
+  // Load Task Files from API
+  loadTaskFiles(taskId: number): void {
+    // Clear existing files
+    this.uploadedFiles = [];
+    
+    this.api.getTaskFiles(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.uploadedFiles = response.data.map((file: any) => ({
+            id: file.fileId?.toString() || '',
+            name: file.fileName || 'Unknown File',
+            size: file.fileSizeKb ? file.fileSizeKb * 1024 : 0, // Convert KB to bytes
+            type: file.fileType || 'application/octet-stream',
+            uploadDate: file.uploadedOn ? new Date(file.uploadedOn) : new Date(),
+            url: file.fileContentBase64 || file.fileContent || undefined
+          }));
+          console.log('Task files loaded:', this.uploadedFiles.length, 'files for task', taskId);
+        } else if (response && Array.isArray(response.data)) {
+          // Handle direct array response
+          this.uploadedFiles = response.data.map((file: any) => ({
+            id: file.fileId?.toString() || '',
+            name: file.fileName || 'Unknown File',
+            size: file.fileSizeKb ? file.fileSizeKb * 1024 : 0,
+            type: file.fileType || 'application/octet-stream',
+            uploadDate: file.uploadedOn ? new Date(file.uploadedOn) : new Date(),
+            url: file.fileContentBase64 || file.fileContent || undefined
+          }));
+          console.log('Task files loaded (direct array):', this.uploadedFiles.length, 'files');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading task files:', error);
+        // Keep empty array if API fails
+        this.uploadedFiles = [];
+      }
+    });
   }
 
   // Load Task Categories from API
@@ -1177,6 +1216,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   getProgressOffset(percentage: number): number {
     const circumference = 2 * Math.PI * 16; // radius is 16
     return circumference - (percentage / 100) * circumference;
+  }
+  
+  // Get progress offset for top progress circle (radius 54)
+  getTopProgressOffset(): number {
+    const circumference = 2 * Math.PI * 54; // radius is 54
+    return circumference - (this.taskProgress / 100) * circumference;
+  }
+  
+  // Get stroke-dasharray for top progress circle
+  getTopProgressDasharray(): number {
+    return 2 * Math.PI * 54; // circumference = 2 * π * r
   }
 
   startTask(taskId: number) {
@@ -1942,7 +1992,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       status: 'NOT STARTED', // Initial status
       createdBy: createdBy,
       assignees: [createdBy], // Assign to self by default
-      customFields: [] // Empty custom fields
+      customFields: [], // Empty custom fields
+      estimatedHours: 0
     };
     
     // Call the API to save the task
@@ -2008,19 +2059,20 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const currentUser = this.sessionService.getCurrentUser();
     const userId = currentUser?.empId || currentUser?.employeeId || '';
     
-    // Get category ID from the task
-    const categoryId = this.getCategoryIdFromTask(task);
+    // Get category ID from the task directly or from lookup
+    let categoryId = task.categoryId || this.getCategoryIdFromTask(task);
     
-    if (!userId || !categoryId) {
-      console.error('Missing userId or categoryId for getTaskById API call');
-      // Fallback to binding from task list data
-      this.bindTaskListData(task);
-      return;
-    }
+    console.log('Task details modal opened:', {
+      taskId: task.id,
+      userId: userId || '(empty - using default)',
+      categoryId: categoryId || '(not found - will use 0)'
+    });
     
-    // Call API to get full task details
-    console.log('Fetching task details:', { taskId: task.id, userId, categoryId });
-    this.api.getTaskById(task.id, userId, categoryId).subscribe({
+    // Load task files
+    this.loadTaskFiles(task.id);
+    
+    // Always call API to get full task details
+    this.api.getTaskById(task.id, userId, categoryId || 0).subscribe({
       next: (response: any) => {
         console.log('Task details API response:', response);
         
@@ -2028,7 +2080,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           const taskDetails = response.data;
           
           // Bind all values from API response
-          this.selectedTaskId = taskDetails.taskId || `TSK-}{task.id}`;
+          this.selectedTaskId = taskDetails.taskId?.toString() || task.id?.toString() || '';
           this.selectedTaskCategory = taskDetails.categoryName || task.category;
           this.editableTaskTitle = taskDetails.taskTitle || task.title;
           this.editableTaskDescription = taskDetails.taskDescription || task.description || '';
@@ -2039,10 +2091,28 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayLoggedHours || 0);
           this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalLoggedHours || 0);
           
-          // Set other properties if available
-          this.selectedTaskStatus = taskDetails.status === 'CLOSED' ? 'closed' : 'continuous';
-          this.selectedTaskDetailStatus = taskDetails.status?.toLowerCase() || 'not started';
+          // Set status - handle various status formats from API
+          const apiStatus = taskDetails.status?.toUpperCase() || '';
+          if (apiStatus === 'NOT STARTED' || apiStatus === 'NOTSTARTED') {
+            this.selectedTaskDetailStatus = 'not-started';
+          } else if (apiStatus === 'CLOSED' || apiStatus === 'NOT CLOSED') {
+            this.selectedTaskDetailStatus = 'not-closed';
+          } else if (apiStatus === 'RUNNING') {
+            this.selectedTaskDetailStatus = 'running';
+          } else if (apiStatus === 'COMPLETED') {
+            this.selectedTaskDetailStatus = 'completed';
+          } else if (apiStatus === 'PAUSED') {
+            this.selectedTaskDetailStatus = 'pause';
+          } else {
+            this.selectedTaskDetailStatus = taskDetails.status?.toLowerCase() || 'not-started';
+          }
           this.dailyRemarks = taskDetails.dailyRemarks || '';
+          
+          // Bind Project Metadata fields from API response
+          this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
+          this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
+          this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
+          this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
           
           // Update selected task object
           if (this.selectedTask) {
@@ -2050,16 +2120,16 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             this.selectedTask.status = taskDetails.status || this.selectedTask.status;
           }
           
-          console.log('Task details bound:', {
+          console.log('Task details bound successfully:', {
             id: this.selectedTaskId,
             category: this.selectedTaskCategory,
             title: this.editableTaskTitle,
-            progress: this.selectedTaskProgress,
-            runningTimer: this.selectedTaskRunningTimer,
-            totalHours: this.selectedTaskTotalHours
+            startDate: this.selectedTaskStartDate,
+            targetDate: this.selectedTaskEndDate,
+            projectId: this.selectedProjectId
           });
         } else {
-          console.warn('API returned no data, using task list data');
+          console.warn('API returned no data or success=false, using task list data');
           this.bindTaskListData(task);
         }
       },
@@ -2105,7 +2175,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   
   // Helper method to bind data from task list when API fails
   private bindTaskListData(task: Task) {
-    this.selectedTaskId = `TSK-}{task.id}`;
+    this.selectedTaskId = task.id?.toString() || '';
     this.selectedTaskCategory = task.category;
     this.editableTaskTitle = task.title;
     this.editableTaskDescription = task.description || '';
@@ -2113,11 +2183,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.taskProgress = this.selectedTaskProgress;
     this.selectedTaskRunningTimer = task.loggedHours;
     this.selectedTaskTotalHours = task.totalHours;
+    
+    // Bind metadata fields from task object
+    this.selectedTaskStartDate = task.startDate || '';
+    this.selectedTaskEndDate = ''; // Not available in task list
+    this.selectedProjectId = ''; // Not available in task list
+    this.selectedTaskEstimatedHours = 0; // Not available in task list
+    
+    console.log('Fallback: Bound task data from task list');
   }
 
   closeTaskDetailsModal() {
     this.showTaskDetailsModal = false;
     this.selectedTask = null;
+    // Clear uploaded files
+    this.uploadedFiles = [];
     // Restore body scroll
     document.body.style.overflow = 'auto';
     document.body.style.position = '';
@@ -2127,22 +2207,49 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Save task changes method
   saveTaskChanges() {
     if (this.selectedTask) {
-      // Update the selected task with current values
-      this.selectedTask.title = this.editableTaskTitle;
-      this.selectedTask.description = this.editableTaskDescription;
-      this.selectedTask.progress = this.taskProgress;
-
-      // Log the save action
-      this.logTaskAction('task_saved', {
-        taskTitle: this.selectedTask.title,
-        progress: this.taskProgress
+      // Get current user
+      const currentUser = this.sessionService.getCurrentUser();
+      const userId = currentUser?.empId || currentUser?.employeeId || '';
+      
+      // Build the save request with all fields including estimatedHours
+      const saveRequest: TaskSaveDto = {
+        taskId: parseInt(this.selectedTaskId) || this.selectedTask?.id,
+        categoryId: this.selectedTask?.categoryId || 0,
+        taskTitle: this.editableTaskTitle,
+        description: this.editableTaskDescription,
+        projectId: parseInt(this.selectedProjectId) || 0,
+        departmentId: 0,
+        targetDate: this.selectedTaskEndDate || undefined,
+        startDate: this.selectedTaskStartDate || undefined,
+        progress: this.taskProgress,
+        estimatedHours: this.selectedTaskEstimatedHours,
+        status: this.selectedTaskDetailStatus?.toUpperCase() || 'NOT STARTED',
+        createdBy: currentUser?.employeeName || currentUser?.name || userId,
+        assignees: [this.selectedTask?.assignee || ''],
+        customFields: []
+      };
+      
+      console.log('Saving task changes:', saveRequest);
+      
+      // Call SaveTaskBulk API
+      this.api.saveTaskBulk(saveRequest).subscribe({
+        next: (response: any) => {
+          console.log('Task saved successfully:', response);
+          this.toasterService.showSuccess('Task saved successfully!', 'Your changes have been saved.');
+          
+          // Update local task object
+          this.selectedTask!.title = this.editableTaskTitle;
+          this.selectedTask!.description = this.editableTaskDescription;
+          this.selectedTask!.progress = this.taskProgress;
+          
+          // Optionally close modal or refresh data
+          // this.closeTaskDetailsModal();
+        },
+        error: (error: any) => {
+          console.error('Error saving task:', error);
+          this.toasterService.showError('Failed to save task', 'Please try again.');
+        }
       });
-
-      // Show success feedback (you can add a toast notification here)
-      console.log('Task changes saved successfully:', this.selectedTask);
-
-      // Optional: Close modal after saving
-      // this.closeTaskDetailsModal();
     }
   }
 
@@ -2552,6 +2659,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return `${hours}:${mins.toString().padStart(2, '0')}`;
   }
 
+  // Format date string for input field (YYYY-MM-DD format)
+  formatDateForInput(dateString: string): string {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch (e) {
+      return '';
+    }
+  }
+
   // Get formatted timer for active task (HH:MM:SS format for display)
   getActiveTaskTimer(): string {
     if (!this.activeTask) {
@@ -2647,12 +2766,24 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   private handleFiles(files: FileList) {
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    // Get taskId from selected task
+    const taskId = this.selectedTask ? parseInt(this.selectedTaskId) || this.selectedTask.id : 0;
+    
+    if (!taskId) {
+      this.toasterService.showError('Cannot upload file', 'No task selected');
+      return;
+    }
+    
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        this.toasterService.showError('File too large', `File "${file.name}" exceeds 10MB limit`);
         continue;
       }
 
@@ -2669,20 +2800,36 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        alert(`File "${file.name}" is not supported. Please upload PDF, DOC, DOCX, XLS, XLSX, JPG, or PNG files.`);
+        this.toasterService.showError('Invalid file type', `File "${file.name}" is not supported`);
         continue;
       }
 
-      const uploadedFile: UploadedFile = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadDate: new Date(),
-        url: URL.createObjectURL(file)
-      };
+      // Show uploading status
+      this.toasterService.showSuccess('Uploading', `Uploading ${file.name}...`);
 
-      this.uploadedFiles.push(uploadedFile);
+      // Call upload API
+      this.api.uploadTimeSheetFile(taskId, userId, file).subscribe({
+        next: (response: any) => {
+          console.log('File uploaded successfully:', response);
+          
+          // Add to uploaded files list
+          const uploadedFile: UploadedFile = {
+            id: response.fileId || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploadDate: new Date(),
+            url: response.fileUrl || URL.createObjectURL(file)
+          };
+          
+          this.uploadedFiles.push(uploadedFile);
+          this.toasterService.showSuccess('Upload complete', `${file.name} uploaded successfully`);
+        },
+        error: (error: any) => {
+          console.error('Error uploading file:', error);
+          this.toasterService.showError('Upload failed', `Failed to upload ${file.name}`);
+        }
+      });
     }
   }
 
