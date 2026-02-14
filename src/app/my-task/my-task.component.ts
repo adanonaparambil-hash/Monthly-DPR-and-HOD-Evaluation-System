@@ -1303,6 +1303,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         if (response && response.success) {
           console.log('Task started successfully');
           
+          // Reset break tracker when starting a task
+          this.resetBreakTracker();
+          
           // Show success toaster
           this.toasterService.showSuccess('Task Started', 'Task timer has been started successfully!');
           
@@ -1697,6 +1700,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Helper method to get break reason from selected break type
+  private getBreakReasonFromType(): string {
+    if (!this.selectedBreakType) {
+      return '';
+    }
+    
+    const breakReasons: { [key: string]: string } = {
+      lunch: 'Lunch Break',
+      coffee: 'Coffee Break',
+      quick: 'Quick Break'
+    };
+    
+    return breakReasons[this.selectedBreakType] || '';
+  }
+
   startBreak() {
     if (!this.selectedBreakType) return;
 
@@ -1780,10 +1798,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Prepare break request
+    // Prepare break request with remarks and reason
     const breakRequest: any = {
       userId: userId,
-      action: 'PAUSED'
+      action: 'PAUSED',
+      remarks: this.breakRemarks || '',
+      reason: this.getBreakReasonFromType()
     };
 
     console.log('Pausing break with request:', breakRequest);
@@ -1828,10 +1848,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Prepare break request
+    // Prepare break request with remarks and reason
     const breakRequest: any = {
       userId: userId,
-      action: 'RESUME'
+      action: 'RESUME',
+      remarks: this.breakRemarks || '',
+      reason: this.getBreakReasonFromType()
     };
 
     console.log('Resuming break with request:', breakRequest);
@@ -1876,10 +1898,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Prepare break request
+    // Prepare break request with remarks and reason
     const breakRequest: any = {
       userId: userId,
-      action: 'STOP'
+      action: 'STOP',
+      remarks: this.breakRemarks || '',
+      reason: this.getBreakReasonFromType()
     };
 
     console.log('Stopping break with request:', breakRequest);
@@ -1925,6 +1949,33 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         this.toasterService.showError('Error', errorMessage);
       }
     });
+  }
+
+  // Helper method to reset break tracker state
+  private resetBreakTracker() {
+    console.log('Resetting break tracker');
+    
+    // Clear timer interval if running
+    if (this.breakTimerInterval) {
+      clearInterval(this.breakTimerInterval);
+      this.breakTimerInterval = null;
+    }
+
+    // Reset all break state variables
+    this.isBreakRunning = false;
+    this.isBreakPaused = false;
+    this.breakElapsedSeconds = 0;
+    this.breakTimerDisplay = '00:00:00';
+    this.breakRemarks = '';
+    this.selectedBreakType = null;
+    this.breakId = null;
+    this.breakReason = null;
+    this.breakStartTime = null;
+    this.isOnBreak = false;
+    this.breakStatus = 'NONE';
+    
+    // Update caption to default
+    this.updateBreakCaption();
   }
 
   private updateBreakTimerDisplay() {
@@ -3913,6 +3964,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         if (response && response.success) {
           console.log('Active task resumed successfully');
           
+          // Reset break tracker when resuming a task
+          this.resetBreakTracker();
+          
           // Show success toaster
           this.toasterService.showSuccess('Task Resumed', 'Task timer has been resumed successfully!');
           
@@ -4158,6 +4212,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         
         if (response && response.success) {
           console.log('Task resumed successfully');
+          
+          // Reset break tracker when resuming a task
+          this.resetBreakTracker();
           
           // Update local status immediately for UI feedback
           this.selectedTaskDetailStatus = 'running';

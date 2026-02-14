@@ -191,14 +191,6 @@
             <i class="fas fa-play"></i>
             <span>Start</span>
           </button>
-          <button class="break-control-btn pause" *ngIf="isBreakRunning && !isBreakPaused" (click)="pauseBreak()">
-            <i class="fas fa-pause"></i>
-            <span>Pause</span>
-          </button>
-          <button class="break-control-btn resume" *ngIf="isBreakRunning && isBreakPaused" (click)="resumeBreak()">
-            <i class="fas fa-play"></i>
-            <span>Resume</span>
-          </button>
           <button class="break-control-btn stop" *ngIf="isBreakRunning" (click)="stopBreak()">
             <i class="fas fa-stop"></i>
             <span>End</span>
