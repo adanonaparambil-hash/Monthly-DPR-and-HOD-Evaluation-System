@@ -68,6 +68,13 @@
               <i class="fas fa-pause"></i>
               <span class="btn-label">Pause</span>
             </button>
+            <button class="modern-control-btn resume-btn" 
+                    *ngIf="activeTask?.status === 'PAUSED'" 
+                    (click)="resumeActiveTask()">
+              <div class="btn-glow"></div>
+              <i class="fas fa-play"></i>
+              <span class="btn-label">Resume</span>
+            </button>
             <button class="modern-control-btn stop-btn" 
                     (click)="stopActiveTask()">
               <div class="btn-glow"></div>
@@ -324,7 +331,7 @@
                 <i class="fas fa-pause"></i>
               </button>
               }
-              <button class="action-btn stop" (click)="stopTask(task.id)" title="Stop Task">
+              <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
                 <i class="fas fa-stop"></i>
               </button>
               @if (task.status === 'NOT STARTED') {
@@ -1778,18 +1785,23 @@
               <!-- Show Pause button when task is RUNNING -->
               <button class="timer-btn pause-btn" 
                       *ngIf="selectedTaskDetailStatus === 'running'"
-                      (click)="pauseTaskFromModal()">
+                      (click)="pauseTaskFromModal()"
+                      title="Pause Task">
                 <i class="fas fa-pause"></i>
               </button>
+              
               <!-- Show Resume button when task is PAUSED -->
               <button class="timer-btn resume-btn" 
-                      *ngIf="selectedTaskDetailStatus === 'pause'"
-                      (click)="resumeTaskFromModal()">
+                      *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
+                      (click)="resumeTaskFromModal()"
+                      title="Resume Task">
                 <i class="fas fa-play"></i>
               </button>
+              
               <!-- Always show Stop button -->
               <button class="timer-btn stop-btn"
-                      (click)="stopTaskFromModal()">
+                      (click)="stopTaskFromModal()"
+                      title="Stop Task">
                 <i class="fas fa-stop"></i>
               </button>
             </div>

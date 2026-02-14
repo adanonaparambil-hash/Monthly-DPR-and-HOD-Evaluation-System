@@ -387,6 +387,27 @@
   background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%);
 }
 
+.resume-btn {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.resume-btn:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.15));
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow:
+    0 6px 20px rgba(34, 197, 94, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.resume-btn .btn-glow {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, transparent 70%);
+}
+
+.resume-btn:hover i {
+  color: #22c55e;
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.8));
+}
+
 .stop-btn {
   border-color: rgba(239, 68, 68, 0.4);
 }
@@ -434,6 +455,10 @@
 
 .pause-btn:hover .btn-label {
   color: #fbbf24;
+}
+
+.resume-btn:hover .btn-label {
+  color: #22c55e;
 }
 
 .stop-btn:hover .btn-label {
@@ -1761,7 +1786,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 1fr 120px 140px 100px 120px 100px 120px 120px;
+  grid-template-columns: 220px 280px 120px 200px 110px 110px 100px 120px 120px;
   gap: 16px;
   padding: 20px 32px;
   background: linear-gradient(135deg, #1B2A38, #138271);
@@ -1775,6 +1800,8 @@
   color: white;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .table-body {
@@ -1784,13 +1811,14 @@
 
 .table-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 120px 140px 100px 120px 100px 120px 120px;
+  grid-template-columns: 220px 280px 120px 200px 110px 110px 100px 120px 120px;
   gap: 16px;
   padding: 16px 32px;
   border-bottom: 1px solid #f1f5f9;
   transition: all 0.2s ease;
-  align-items: center;
+  align-items: start;
   cursor: pointer;
+  min-height: 60px;
 }
 
 .table-row:hover {
@@ -1799,6 +1827,15 @@
 
 .table-row:last-child {
   border-bottom: none;
+}
+
+/* Enable text wrapping for all cells */
+.cell {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.5;
+  padding-top: 4px;
 }
 
 /* Category Badge */
@@ -1820,6 +1857,10 @@
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   transform: perspective(400px) rotateX(3deg);
   backdrop-filter: blur(8px);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .category-badge::before {
@@ -1911,11 +1952,17 @@
 }
 
 /* Task Title Cell */
+.task-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .task-title-cell h4 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #0f172a;
-  margin: 0 0 4px 0;
+  margin: 0;
   position: relative;
   background: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #0f172a 100%);
   background-size: 200% 200%;
@@ -1926,6 +1973,10 @@
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
 }
 
 .task-title-cell h4:hover {
@@ -1946,10 +1997,13 @@
 }
 
 .task-title-cell p {
-  font-size: 14px;
+  font-size: 12px;
   color: #64748b;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Assignee Info */
@@ -1957,6 +2011,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  width: 100%;
 }
 
 .assignee-avatar {
@@ -1979,6 +2035,11 @@
   font-size: 14px;
   font-weight: 500;
   color: #374151;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Progress Bar */
@@ -2021,6 +2082,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .status-badge.in-progress {
@@ -2184,7 +2249,7 @@
 
   .table-header,
   .table-row {
-    grid-template-columns: 0.8fr 0.8fr 100px 120px 80px 100px 80px 100px 100px;
+    grid-template-columns: 200px 250px 110px 180px 100px 100px 90px 110px 110px;
     gap: 12px;
   }
 }
@@ -14712,5 +14777,4 @@
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* Stronger shadow for dark mode */
   border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle light border */
-}
 }
