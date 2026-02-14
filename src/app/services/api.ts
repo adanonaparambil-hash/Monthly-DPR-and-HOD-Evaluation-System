@@ -359,16 +359,20 @@ export class Api {
 
 
   deleteTaskFile(fileId: number, userId: string) {
-  const body = {
-    fileId: fileId,
-    userId: userId
-  };
+    const body = {
+      fileId: fileId,
+      userId: userId
+    };
 
-  return this.http.post<any>(
-    `${this.apiUrl}/DailyTimeSheet/DeleteTaskFile`,
-    body
-  );
-}
+    return this.http.post<any>(
+      `${this.apiUrl}/DailyTimeSheet/DeleteTaskFile`,
+      body
+    );
+  }
 
+
+  getCustomMappedFields(userId: string, categoryId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetCustomMappedFields/${categoryId}/${userId}`);
+  }
 
 }

@@ -1294,7 +1294,7 @@
                 <!-- Dropdown -->
                 <select *ngIf="field.type === 'dropdown'" [(ngModel)]="field.value">
                   <option value="">Select {{ field.label }}</option>
-                  <option *ngFor="let option of field.options" [value]="option">{{ option }}</option>
+                  <option *ngFor="let option of field.options; let i = index" [value]="i">{{ option }}</option>
                 </select>
 
                 <!-- Textarea -->
@@ -2160,8 +2160,8 @@
                 } @else if (field.type === 'dropdown') {
                 <select class="metadata-select" [(ngModel)]="field.value">
                   <option value="">Select {{ field.label }}</option>
-                  @for (option of field.options; track option) {
-                  <option [value]="option">{{ option }}</option>
+                  @for (option of field.options; track option; let i = $index) {
+                  <option [value]="i">{{ option }}</option>
                   }
                 </select>
                 } @else if (field.type === 'textarea') {
@@ -2171,9 +2171,12 @@
                 <input type="date" class="metadata-input" [(ngModel)]="field.value">
                 }
               </div>
+              <!-- Only show remove button for fields that are NOT mapped (manually added fields) -->
+              @if (field.isMapped !== 'Y') {
               <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
                 <i class="fas fa-times"></i>
               </button>
+              }
             </div>
             }
 
@@ -2344,8 +2347,8 @@
     <div class="add-field-modal-content">
       <div class="fields-checklist">
         @for (field of availableCustomFields; track field.key) {
-        <label class="field-checkbox-item" [class.disabled]="isFieldSelected(field.key)">
-          <input type="checkbox" [checked]="isFieldChecked(field.key)" [disabled]="isFieldSelected(field.key)"
+        <label class="field-checkbox-item" [class.disabled]="isFieldMapped(field.key)">
+          <input type="checkbox" [checked]="isFieldChecked(field.key)" [disabled]="isFieldMapped(field.key)"
             (change)="toggleFieldSelection(field.key)">
           <div class="checkbox-custom-field">
             <i class="fas fa-check"></i>
@@ -2362,10 +2365,10 @@
             </div>
             <span class="field-checkbox-description">{{ field.description }}</span>
           </div>
-          @if (isFieldSelected(field.key)) {
+          @if (isFieldMapped(field.key)) {
           <span class="field-already-added">
             <i class="fas fa-check-circle"></i>
-            Added
+            Already Mapped
           </span>
           }
         </label>

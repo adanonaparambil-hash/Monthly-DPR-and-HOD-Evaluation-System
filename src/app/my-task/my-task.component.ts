@@ -63,6 +63,7 @@ interface CustomField {
   options?: string[];
   value?: any;
   fieldId?: number;
+  isMapped?: 'Y' | 'N';
 }
 
 interface UploadedFile {
@@ -2438,6 +2439,36 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
           this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
           
+          // Load and bind custom fields from API response
+          if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
+            this.selectedCustomFields = taskDetails.customFields
+              .filter((field: any) => field.isMapped === 'Y')
+              .map((field: any) => {
+                // Parse options string to array
+                let optionsArray: string[] = [];
+                if (field.options && typeof field.options === 'string') {
+                  optionsArray = field.options.split(',').map((opt: string) => opt.trim());
+                } else if (Array.isArray(field.options)) {
+                  optionsArray = field.options;
+                }
+                
+                return {
+                  key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+                  label: field.fieldName || 'Custom Field',
+                  type: this.mapFieldType(field.fieldType),
+                  description: `${field.fieldName} field`,
+                  options: optionsArray,
+                  fieldId: field.fieldId,
+                  isMapped: field.isMapped,
+                  value: field.savedValue || ''
+                };
+              });
+            
+            console.log('Custom fields loaded from task:', this.selectedCustomFields.length, 'fields');
+          } else {
+            this.selectedCustomFields = [];
+          }
+          
           // Update selected task object
           if (this.selectedTask) {
             this.selectedTask.progress = this.selectedTaskProgress;
@@ -2495,6 +2526,30 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     
     console.warn('Could not find category ID for task:', task.category);
     return 0;
+  }
+  
+  // Helper method to map UI status values to backend status values
+  private mapUIStatusToBackendStatus(uiStatus: string): string {
+    const statusMap: { [key: string]: string } = {
+      'pause': 'PAUSED',
+      'running': 'RUNNING',
+      'not-started': 'NOT STARTED',
+      'not-closed': 'NOT CLOSED',
+      'completed': 'COMPLETED',
+      'closed': 'CLOSED'
+    };
+    
+    const normalizedStatus = uiStatus?.toLowerCase().trim() || 'not-started';
+    const mappedStatus = statusMap[normalizedStatus];
+    
+    if (mappedStatus) {
+      console.log(`Status mapping: UI "${uiStatus}" -> Backend "${mappedStatus}"`);
+      return mappedStatus;
+    }
+    
+    // If no mapping found, uppercase the status
+    console.warn(`No status mapping found for "${uiStatus}", using uppercase`);
+    return uiStatus?.toUpperCase() || 'NOT STARTED';
   }
   
   // Helper method to bind data from task list when API fails
@@ -2578,13 +2633,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       startDate: this.selectedTaskStartDate || undefined,
       progress: this.taskProgress,
       estimatedHours: estimatedHoursValue,
-      status: this.selectedTaskDetailStatus?.toUpperCase() || 'NOT STARTED',
+      status: this.mapUIStatusToBackendStatus(this.selectedTaskDetailStatus),
       createdBy: userId,
       assignees: [this.selectedTask.assigneeId || userId],
-      customFields: this.selectedCustomFields.map(field => ({
-        fieldId: field.fieldId || 0,
-        value: field.value?.toString() || ''
-      }))
+      customFields: this.selectedCustomFields.map(field => {
+        let fieldValue = field.value?.toString() || '';
+        
+        // For dropdown fields, ensure we're sending the selected value
+        if (field.type === 'dropdown' && field.value) {
+          // The value is already the selected option from the dropdown
+          fieldValue = field.value.toString();
+        }
+        
+        return {
+          fieldId: field.fieldId || 0,
+          value: fieldValue
+        };
+      })
     };
     
     console.log('Saving task changes:', saveRequest);
@@ -2763,10 +2828,82 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Add Field Modal Methods
   openAddFieldModal() {
-    // Initialize temp selection with already selected fields
-    this.tempSelectedFields = this.selectedCustomFields.map(f => f.key);
-    this.showAddFieldModal = true;
-    document.body.style.overflow = 'hidden';
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
+    }
+
+    // Get category ID from selected task
+    if (!this.selectedTask) {
+      this.toasterService.showError('Error', 'No task selected');
+      return;
+    }
+    
+    const categoryId = this.selectedTask.categoryId || this.getCategoryIdFromTask(this.selectedTask);
+    
+    if (!categoryId) {
+      this.toasterService.showError('Error', 'No task category selected');
+      return;
+    }
+
+    // Load custom mapped fields from API
+    this.api.getCustomMappedFields(userId, categoryId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.availableCustomFields = response.data.map((field: any) => ({
+            key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+            label: field.fieldName || 'Custom Field',
+            type: this.mapFieldType(field.fieldType),
+            description: `${field.fieldName} field`,
+            options: field.options || [],
+            fieldId: field.fieldId,
+            isMapped: field.isMapped || 'N'
+          }));
+          
+          // Initialize temp selection with already mapped fields (isMapped: 'Y')
+          this.tempSelectedFields = this.availableCustomFields
+            .filter(f => f.isMapped === 'Y')
+            .map(f => f.key);
+          
+          console.log('Custom Mapped Fields loaded:', this.availableCustomFields.length, 'fields');
+          console.log('Already mapped fields:', this.tempSelectedFields);
+          
+          // Show modal
+          this.showAddFieldModal = true;
+          document.body.style.overflow = 'hidden';
+        } else if (response && Array.isArray(response)) {
+          // Handle direct array response
+          this.availableCustomFields = response.map((field: any) => ({
+            key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+            label: field.fieldName || 'Custom Field',
+            type: this.mapFieldType(field.fieldType),
+            description: `${field.fieldName} field`,
+            options: field.options || [],
+            fieldId: field.fieldId,
+            isMapped: field.isMapped || 'N'
+          }));
+          
+          // Initialize temp selection with already mapped fields
+          this.tempSelectedFields = this.availableCustomFields
+            .filter(f => f.isMapped === 'Y')
+            .map(f => f.key);
+          
+          console.log('Custom Mapped Fields loaded (direct array):', this.availableCustomFields.length, 'fields');
+          
+          // Show modal
+          this.showAddFieldModal = true;
+          document.body.style.overflow = 'hidden';
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading custom mapped fields:', error);
+        this.toasterService.showError('Error', 'Failed to load custom fields. Please try again.');
+      }
+    });
   }
 
   closeAddFieldModal() {
@@ -2777,6 +2914,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   isFieldSelected(fieldKey: string): boolean {
     return this.selectedCustomFields.some(field => field.key === fieldKey);
+  }
+
+  isFieldMapped(fieldKey: string): boolean {
+    const field = this.availableCustomFields.find(f => f.key === fieldKey);
+    return field?.isMapped === 'Y';
   }
 
   toggleFieldSelection(fieldKey: string) {
@@ -2793,24 +2935,93 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   applySelectedFields() {
-    // Add newly selected fields
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
+    }
+
+    // Get category ID from selected task
+    if (!this.selectedTask) {
+      this.toasterService.showError('Error', 'No task selected');
+      return;
+    }
+    
+    const categoryId = this.selectedTask.categoryId || this.getCategoryIdFromTask(this.selectedTask);
+    
+    if (!categoryId) {
+      this.toasterService.showError('Error', 'No task category selected');
+      return;
+    }
+
+    // Get field IDs from temp selected fields
+    const fieldIds: number[] = [];
     this.tempSelectedFields.forEach(fieldKey => {
-      if (!this.isFieldSelected(fieldKey)) {
-        const field = this.availableCustomFields.find(f => f.key === fieldKey);
-        if (field) {
-          const newField = { ...field, value: field.type === 'number' ? 0 : '' };
-          this.selectedCustomFields.push(newField);
-        }
+      const field = this.availableCustomFields.find(f => f.key === fieldKey);
+      if (field && field.fieldId) {
+        fieldIds.push(field.fieldId);
       }
     });
 
-    // Remove unselected fields
-    this.selectedCustomFields = this.selectedCustomFields.filter(field =>
-      this.tempSelectedFields.includes(field.key)
-    );
+    if (fieldIds.length === 0) {
+      this.toasterService.showError('Error', 'No fields selected');
+      return;
+    }
 
-    this.closeAddFieldModal();
-    console.log('Applied fields:', this.selectedCustomFields);
+    // Prepare request
+    const request: any = {
+      categoryId: categoryId,
+      fieldIds: fieldIds,
+      userId: userId
+    };
+
+    console.log('Saving task field mapping with request:', request);
+
+    // Call API to save field mapping
+    this.api.saveTaskFieldMapping(request).subscribe({
+      next: (response: any) => {
+        console.log('Save task field mapping API response:', response);
+        
+        if (response && response.success) {
+          console.log('Task field mapping saved successfully');
+          
+          // Add newly selected fields to UI
+          this.tempSelectedFields.forEach(fieldKey => {
+            if (!this.isFieldSelected(fieldKey)) {
+              const field = this.availableCustomFields.find(f => f.key === fieldKey);
+              if (field) {
+                const newField = { ...field, value: field.type === 'number' ? 0 : '' };
+                this.selectedCustomFields.push(newField);
+              }
+            }
+          });
+
+          // Remove unselected fields from UI
+          this.selectedCustomFields = this.selectedCustomFields.filter(field =>
+            this.tempSelectedFields.includes(field.key)
+          );
+
+          // Show success toaster
+          this.toasterService.showSuccess('Fields Updated', 'Task field mapping saved successfully!');
+          
+          // Close modal
+          this.closeAddFieldModal();
+          
+          console.log('Applied fields:', this.selectedCustomFields);
+        } else {
+          console.error('Failed to save task field mapping:', response?.message);
+          this.toasterService.showError('Save Failed', response?.message || 'Failed to save field mapping. Please try again.');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error saving task field mapping:', error);
+        const errorMessage = error?.error?.message || error?.message || 'An error occurred while saving field mapping.';
+        this.toasterService.showError('Error', errorMessage);
+      }
+    });
   }
 
   selectCustomField(field: CustomField) {
@@ -3780,6 +3991,36 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
           this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
           this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
+          
+          // Load and bind custom fields from API response
+          if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
+            this.selectedCustomFields = taskDetails.customFields
+              .filter((field: any) => field.isMapped === 'Y')
+              .map((field: any) => {
+                // Parse options string to array
+                let optionsArray: string[] = [];
+                if (field.options && typeof field.options === 'string') {
+                  optionsArray = field.options.split(',').map((opt: string) => opt.trim());
+                } else if (Array.isArray(field.options)) {
+                  optionsArray = field.options;
+                }
+                
+                return {
+                  key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+                  label: field.fieldName || 'Custom Field',
+                  type: this.mapFieldType(field.fieldType),
+                  description: `${field.fieldName} field`,
+                  options: optionsArray,
+                  fieldId: field.fieldId,
+                  isMapped: field.isMapped,
+                  value: field.savedValue || ''
+                };
+              });
+            
+            console.log('Custom fields loaded from stopped task:', this.selectedCustomFields.length, 'fields');
+          } else {
+            this.selectedCustomFields = [];
+          }
           
           // Update selected task object
           if (this.selectedTask) {

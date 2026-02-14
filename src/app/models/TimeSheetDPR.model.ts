@@ -5,6 +5,14 @@ export interface CustomFieldDto {
   options: string[];
 }
 
+export interface CustomMappedFieldDto {
+  fieldId: number;
+  fieldName: string;
+  fieldType: string;
+  isMapped: 'Y' | 'N';
+  options: string[];
+}
+
 export interface CustomFieldInputDto {
   fieldId: number;
   value: string;
@@ -214,7 +222,7 @@ export interface PendingApprovalUserDto {
 
 export interface TaskFieldMappingRequest {
   categoryId: number;
-  fieldId: number;
+  fieldIds: number[];
   userId: string;
 }
 
