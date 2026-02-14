@@ -1211,10 +1211,26 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   getFilteredTasks(): Task[] {
-    if (!this.searchTerm) {
-      return this.tasks;
+    // First filter by active tab
+    let tasksToFilter: Task[] = [];
+    
+    if (this.activeTab === 'MY TASKS') {
+      // Convert myTasksList to Task format
+      tasksToFilter = this.convertActiveTasksToTasks(this.myTasksList);
+    } else if (this.activeTab === 'ASSIGNED TO OTHERS') {
+      // Convert assignedByMeList to Task format
+      tasksToFilter = this.convertActiveTasksToTasks(this.assignedByMeList);
+    } else {
+      // Fallback to all tasks
+      tasksToFilter = this.tasks;
     }
-    return this.tasks.filter(task =>
+    
+    // Then apply search filter if search term exists
+    if (!this.searchTerm) {
+      return tasksToFilter;
+    }
+    
+    return tasksToFilter.filter(task =>
       task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       task.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       task.category.toLowerCase().includes(this.searchTerm.toLowerCase())
