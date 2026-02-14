@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Api } from '../services/api';
 
 interface PendingUser {
   id: string;
@@ -11,6 +12,16 @@ interface PendingUser {
   pendingLogs: number;
   lastActivity: string;
   isSelected?: boolean;
+}
+
+interface PendingApprovalUserResponse {
+  employeeId: string;
+  employeeName: string;
+  designation: string;
+  pendingLogCount: number;
+  lastActivityDate: string;
+  employeeImage: string | null;
+  employeeImageBase64: string | null;
 }
 
 interface DPRLog {
@@ -50,41 +61,9 @@ export class DprApprovalComponent implements OnInit {
   displayedLogs: DPRLog[] = [];
   allDprLogs: DPRLog[] = []; // Store all logs
 
-  pendingUsers: PendingUser[] = [
-    {
-      id: '1',
-      name: 'Sarah Miller',
-      role: 'Front-end Developer',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5_s6ycPEg7DHhmJ1VyqXY0Phb_qLONHqfeyKjAcW7NGcquu1lVCxyIQZi7se1eEB_J3DBduHaZGjy3OGJ_cXgLjDCoYDS_h3p07rnnSceQya5CrmhjvYDjqi35JniOlzoFJ-PhBcd2p_mvcA2UNs1peISG1MAlmMlTgG0_D1VqKT-_6mvpvUsz7-GqE6lI11cuMVa7jfp7lJ_Xzg3h7U_jwuxyn6fVGig92BW3lM5S4cO8QyEU4YzOSmNs-CCxgWma8PkdYrj0409',
-      pendingLogs: 8,
-      lastActivity: '2h ago',
-      isSelected: true
-    },
-    {
-      id: '2',
-      name: 'David Chen',
-      role: 'Backend Engineer',
-      initials: 'DC',
-      pendingLogs: 5,
-      lastActivity: '4h ago'
-    },
-    {
-      id: '3',
-      name: 'Alex Johnson',
-      role: 'Product Designer',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbgcr89zuRQM5tEBF4nOOC_Ufk-L6BFr_7mjbCil0oUrkHz4X6jyLZUJMa01HnXIbS8FeSrPa7uH9M63izeT79w-f5fS2s2AIU3vxDbt6j4ChexuqUzEjXymAkdn-8NQ1DZHqs5bKDhP1MZdSS86XQ5aHnMBXaQ_3dx-xgqPAwlcHY4STDOyXE8a6t-Dl--fOMBUkXZVtDYsZjvGisn6IUUVxTL_m37uKRqMouq4Qdx1vkOe9N55ggfOWHd6LZMqx8FzNyQM5ilFrw',
-      pendingLogs: 12,
-      lastActivity: '1d ago'
-    },
-    {
-      id: '4',
-      name: 'Maria Rodriguez',
-      role: 'QA Engineer',
-      initials: 'MR',
-      pendingLogs: 3,
-      lastActivity: '1d ago'
-    }
-  ];
+  pendingUsers: PendingUser[] = [];
+
+  constructor(private api: Api) {}
 
   dprLogs: DPRLog[] = [
     {
@@ -138,16 +117,80 @@ export class DprApprovalComponent implements OnInit {
   ];
 
   ngOnInit() {
-    // Set the first user as selected by default
-    if (this.pendingUsers.length > 0) {
-      this.selectedUser = this.pendingUsers[0];
-    }
+    // Load pending approval users from API
+    this.loadPendingApprovalUsers();
     
     // Initialize all logs (simulating API data)
     this.initializeAllLogs();
     
     // Load first page
     this.loadPage(1);
+  }
+
+  loadPendingApprovalUsers() {
+    // Get current user ID from local storage
+    const currentUser = localStorage.getItem('current_user');
+    if (!currentUser) {
+      console.error('No user session found');
+      return;
+    }
+
+    const userData = JSON.parse(currentUser);
+    const userId = userData.employeeId;
+
+    console.log('Calling getPendingApprovalUsers API with userId:', userId);
+
+    this.api.getPendingApprovalUsers(userId).subscribe({
+      next: (response) => {
+        console.log('getPendingApprovalUsers API Response:', response);
+        
+        if (response.success && response.data) {
+          this.pendingUsers = response.data.map((user: PendingApprovalUserResponse, index: number) => ({
+            id: user.employeeId,
+            name: user.employeeName,
+            role: user.designation,
+            avatar: user.employeeImageBase64 || user.employeeImage || undefined,
+            initials: this.getUserInitials(user.employeeName),
+            pendingLogs: user.pendingLogCount,
+            lastActivity: this.formatLastActivity(user.lastActivityDate),
+            isSelected: index === 0 // Select first user by default
+          }));
+
+          console.log('Mapped pending users:', this.pendingUsers);
+
+          // Set the first user as selected by default
+          if (this.pendingUsers.length > 0) {
+            this.selectedUser = this.pendingUsers[0];
+          }
+        } else {
+          console.warn('API response success is false or no data:', response);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading pending approval users:', error);
+      }
+    });
+  }
+
+  formatLastActivity(dateString: string): string {
+    if (!dateString) return 'N/A';
+    
+    const activityDate = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - activityDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return diffMins <= 1 ? '1m ago' : `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+      return diffHours === 1 ? '1h ago' : `${diffHours}h ago`;
+    } else if (diffDays < 7) {
+      return diffDays === 1 ? '1d ago' : `${diffDays}d ago`;
+    } else {
+      return activityDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
   }
 
   // Initialize all logs - in real app, this would be from API
