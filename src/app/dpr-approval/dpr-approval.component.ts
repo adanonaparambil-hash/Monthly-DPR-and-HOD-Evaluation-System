@@ -93,6 +93,10 @@ export class DprApprovalComponent implements OnInit {
   departments: Department[] = [];
   taskCategories: TaskCategory[] = [];
 
+  // Task details modal properties
+  showTaskDetailsModal = false;
+  selectedTask: any = null;
+
   constructor(private api: Api) {}
 
   dprLogs: DPRLog[] = [
@@ -734,5 +738,63 @@ export class DprApprovalComponent implements OnInit {
   cancelSelection() {
     this.displayedLogs.forEach(log => log.isSelected = false);
     this.selectAll = false;
+  }
+
+  onRowClick(log: DPRLog, event: MouseEvent) {
+    // Don't open modal if clicking on checkbox
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.closest('.checkbox-col')) {
+      return;
+    }
+
+    // Show task details
+    this.showTaskDetails(log);
+  }
+
+  showTaskDetails(log: DPRLog) {
+    if (!log.taskId) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Task Details',
+        html: `
+          <div style="text-align: left;">
+            <p><strong>Date:</strong> ${log.date}</p>
+            <p><strong>Project:</strong> ${log.project}</p>
+            <p><strong>Category:</strong> ${log.category}</p>
+            <p><strong>Task Title:</strong> ${log.taskTitle}</p>
+            <p><strong>Description:</strong> ${log.taskDescription}</p>
+            <p><strong>Hours:</strong> ${log.hours}</p>
+            <p><strong>Status:</strong> ${log.status}</p>
+          </div>
+        `,
+        confirmButtonColor: '#3b82f6',
+        width: '600px'
+      });
+      return;
+    }
+
+    // TODO: Implement full task modal
+    // For now, show basic details
+    Swal.fire({
+      icon: 'info',
+      title: 'Task Details',
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Task ID:</strong> ${log.taskId}</p>
+          <p><strong>Date:</strong> ${log.date}</p>
+          <p><strong>Project:</strong> ${log.project}</p>
+          <p><strong>Category:</strong> ${log.category}</p>
+          <p><strong>Task Title:</strong> ${log.taskTitle}</p>
+          <p><strong>Description:</strong> ${log.taskDescription}</p>
+          <p><strong>Hours:</strong> ${log.hours}</p>
+          <p><strong>Status:</strong> ${log.status}</p>
+        </div>
+        <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+          Full task modal integration coming soon...
+        </p>
+      `,
+      confirmButtonColor: '#3b82f6',
+      width: '600px'
+    });
   }
 }
