@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
+import { TaskBulkApprovalRequest } from '../models/TimeSheetDPR.model';
 
 interface PendingUser {
   id: string;
@@ -22,6 +23,29 @@ interface PendingApprovalUserResponse {
   lastActivityDate: string;
   employeeImage: string | null;
   employeeImageBase64: string | null;
+}
+
+interface Project {
+  projectId: number;
+  projectName: string;
+  projectCode?: string;
+}
+
+interface Department {
+  departmentId: number;
+  deptCode: string;
+  deptName: string;
+  status: string;
+  createdBy: string;
+  createdOn: string;
+}
+
+interface TaskCategory {
+  categoryId: number;
+  categoryName: string;
+  departmentId: number;
+  estimatedhours: number;
+  departmentName: string;
 }
 
 interface DPRLog {
@@ -49,8 +73,9 @@ export class DprApprovalComponent implements OnInit {
   selectedUser: PendingUser | null = null;
   fromDate = '2023-10-23';
   toDate = '2023-10-29';
-  selectedProject = 'all';
-  selectedTaskTypes = 'all';
+  selectedProject: string | number = 'all';
+  selectedDepartment: string | number = 'all';
+  selectedTaskCategory: string | number = 'all';
   selectAll = false;
 
   // Pagination properties
@@ -62,6 +87,9 @@ export class DprApprovalComponent implements OnInit {
   allDprLogs: DPRLog[] = []; // Store all logs
 
   pendingUsers: PendingUser[] = [];
+  projects: Project[] = [];
+  departments: Department[] = [];
+  taskCategories: TaskCategory[] = [];
 
   constructor(private api: Api) {}
 
@@ -120,11 +148,39 @@ export class DprApprovalComponent implements OnInit {
     // Load pending approval users from API
     this.loadPendingApprovalUsers();
     
-    // Initialize all logs (simulating API data)
-    this.initializeAllLogs();
+    // Load projects for dropdown
+    this.loadProjects();
     
-    // Load first page
-    this.loadPage(1);
+    // Load departments for dropdown
+    this.loadDepartments();
+    
+    // Set default dates (last 7 days)
+    this.setDefaultDates();
+    
+    // Load approval list
+    this.loadApprovalList();
+  }
+
+  setDefaultDates() {
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+    
+    this.toDate = this.formatDateForInput(today);
+    this.fromDate = this.formatDateForInput(lastWeek);
+  }
+
+  formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  formatDateForAPI(dateString: string): string {
+    if (!dateString) return '';
+    // Convert YYYY-MM-DD to format expected by API
+    return dateString;
   }
 
   loadPendingApprovalUsers() {
@@ -193,32 +249,192 @@ export class DprApprovalComponent implements OnInit {
     }
   }
 
-  // Initialize all logs - in real app, this would be from API
-  initializeAllLogs() {
-    // Store the initial logs
-    this.allDprLogs = [...this.dprLogs];
+  loadProjects() {
+    console.log('Calling getProjects API');
     
-    // Simulate more records for pagination demo
-    // In real app, you would fetch from API with pagination params
-    const additionalLogs: DPRLog[] = [];
-    for (let i = 5; i <= 250; i++) {
-      additionalLogs.push({
-        id: i.toString(),
-        date: `Oct ${20 + (i % 10)}, 2023`,
-        project: i % 2 === 0 ? 'Internal Tools' : 'Client Work',
-        projectType: i % 2 === 0 ? 'internal' : 'client',
-        taskTitle: `Task ${i}: Development Work`,
-        taskDescription: `Description for task ${i} with various details.`,
-        category: ['Security', 'Back-end', 'Feature', 'Bug Fix'][i % 4],
-        categoryType: ['security', 'backend', 'feature', 'bugfix'][i % 4] as any,
-        hours: `0${Math.floor(Math.random() * 8) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
-        status: 'pending'
-      });
+    this.api.getProjects().subscribe({
+      next: (response) => {
+        console.log('getProjects API Response:', response);
+        
+        if (response.success && response.data) {
+          this.projects = response.data;
+          console.log('Loaded projects:', this.projects);
+        } else {
+          console.warn('API response success is false or no data:', response);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading projects:', error);
+      }
+    });
+  }
+
+  loadDepartments() {
+    console.log('Calling getDepartmentList API');
+    
+    this.api.getDepartmentList().subscribe({
+      next: (response) => {
+        console.log('getDepartmentList API Response:', response);
+        
+        if (response.success && response.data) {
+          // Filter only active departments (status === 'Y')
+          this.departments = response.data.filter((dept: Department) => dept.status === 'Y');
+          console.log('Loaded departments:', this.departments);
+        } else {
+          console.warn('API response success is false or no data:', response);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading departments:', error);
+      }
+    });
+  }
+
+  onDepartmentChange() {
+    console.log('Department changed to:', this.selectedDepartment);
+    
+    // Reset task category selection
+    this.selectedTaskCategory = 'all';
+    this.taskCategories = [];
+    
+    // If "All Departments" is selected, don't load categories
+    if (this.selectedDepartment === 'all') {
+      return;
     }
     
-    this.allDprLogs = [...this.allDprLogs, ...additionalLogs];
-    this.totalRecords = this.allDprLogs.length;
-    this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+    // Load task categories for the selected department
+    this.loadDepartmentTaskCategories(Number(this.selectedDepartment));
+  }
+
+  loadDepartmentTaskCategories(departmentId: number) {
+    console.log('Calling getDepartmentTaskCategories API with departmentId:', departmentId);
+    
+    this.api.getDepartmentTaskCategories(departmentId).subscribe({
+      next: (response) => {
+        console.log('getDepartmentTaskCategories API Response:', response);
+        
+        if (response.success && response.data) {
+          // Combine all categories from favouriteList, departmentList, and allDepartmentList
+          const allCategories = [
+            ...(response.data.favouriteList || []),
+            ...(response.data.departmentList || []),
+            ...(response.data.allDepartmentList || [])
+          ];
+          
+          // Remove duplicates based on categoryId
+          const uniqueCategories = allCategories.filter((category, index, self) =>
+            index === self.findIndex((c) => c.categoryId === category.categoryId)
+          );
+          
+          this.taskCategories = uniqueCategories;
+          console.log('Loaded task categories:', this.taskCategories);
+        } else {
+          console.warn('API response success is false or no data:', response);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading task categories:', error);
+      }
+    });
+  }
+
+  loadApprovalList() {
+    if (!this.selectedUser) {
+      console.warn('No user selected');
+      return;
+    }
+
+    const employeeId = this.selectedUser.id;
+    const fromDateFormatted = this.formatDateForAPI(this.fromDate);
+    const toDateFormatted = this.formatDateForAPI(this.toDate);
+    const projectId = this.selectedProject === 'all' ? 0 : Number(this.selectedProject);
+    const categoryId = this.selectedTaskCategory === 'all' ? 0 : Number(this.selectedTaskCategory);
+
+    console.log('Calling GetEmployeeApprovalListPaged API with params:', {
+      employeeId,
+      pageNo: this.currentPage,
+      pageSize: this.pageSize,
+      fromDate: fromDateFormatted,
+      toDate: toDateFormatted,
+      projectId,
+      categoryId
+    });
+
+    this.api.GetEmployeeApprovalListPaged(
+      employeeId,
+      this.currentPage,
+      this.pageSize,
+      fromDateFormatted,
+      toDateFormatted,
+      projectId,
+      categoryId
+    ).subscribe({
+      next: (response) => {
+        console.log('GetEmployeeApprovalListPaged API Response:', response);
+        
+        if (response.success && response.data) {
+          // Map the API response to DPRLog format
+          this.displayedLogs = response.data.items?.map((item: any) => ({
+            id: item.taskId?.toString() || item.id,
+            date: this.formatDisplayDate(item.taskDate || item.date),
+            project: item.projectName || item.project,
+            projectType: item.projectType || 'internal',
+            taskTitle: item.taskTitle || item.title,
+            taskDescription: item.dailyRemarks || item.taskDescription || item.description,
+            category: item.categoryName || item.category,
+            categoryType: item.categoryType || 'feature',
+            hours: this.formatHours(item.totalHours || item.hours),
+            status: 'pending',
+            isSelected: false
+          })) || [];
+
+          this.totalRecords = response.data.totalRecords || 0;
+          this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+          
+          console.log('Loaded approval logs:', this.displayedLogs);
+          console.log('Total records:', this.totalRecords);
+        } else {
+          console.warn('API response success is false or no data:', response);
+          this.displayedLogs = [];
+          this.totalRecords = 0;
+          this.totalPages = 0;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading approval list:', error);
+        this.displayedLogs = [];
+        this.totalRecords = 0;
+        this.totalPages = 0;
+      }
+    });
+  }
+
+  formatDisplayDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  formatHours(hours: number | string): string {
+    if (typeof hours === 'string') return hours;
+    if (!hours) return '00:00';
+    
+    const totalMinutes = Math.round(hours * 60);
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+
+  applyFilters() {
+    // Reset to first page when applying filters
+    this.currentPage = 1;
+    this.loadApprovalList();
+  }
+
+  // Initialize all logs - in real app, this would be from API
+  initializeAllLogs() {
+    // This method is no longer needed as we're using real API data
+    // Keeping it for backward compatibility but it won't be called
   }
 
   // Load specific page
@@ -226,15 +442,12 @@ export class DprApprovalComponent implements OnInit {
     if (page < 1 || page > this.totalPages) return;
     
     this.currentPage = page;
-    const startIndex = (page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
     
-    // Simulate API call delay
-    this.displayedLogs = this.allDprLogs.slice(startIndex, endIndex);
+    // Load data from API with new page number
+    this.loadApprovalList();
     
     // Reset selection when changing pages
     this.selectAll = false;
-    this.displayedLogs.forEach(log => log.isSelected = false);
     
     // Scroll to top of table
     const tableWrapper = document.querySelector('.table-wrapper');
@@ -330,6 +543,10 @@ export class DprApprovalComponent implements OnInit {
     // Set new selection
     user.isSelected = true;
     this.selectedUser = user;
+    
+    // Load approval list for the selected user
+    this.currentPage = 1;
+    this.loadApprovalList();
   }
 
   toggleSelectAll() {
@@ -372,23 +589,73 @@ export class DprApprovalComponent implements OnInit {
 
   approveSelected() {
     const selectedLogs = this.displayedLogs.filter(log => log.isSelected);
-    if (selectedLogs.length > 0) {
-      console.log('Approving logs:', selectedLogs);
-      // Implement approval logic here
-      selectedLogs.forEach(log => {
-        log.status = 'approved';
-        log.isSelected = false;
-      });
-      this.selectAll = false;
-      
-      // Remove approved logs from allDprLogs
-      this.allDprLogs = this.allDprLogs.filter(log => log.status !== 'approved');
-      this.totalRecords = this.allDprLogs.length;
-      this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
-      
-      // Reload current page
-      this.loadPage(Math.min(this.currentPage, this.totalPages || 1));
+    if (selectedLogs.length === 0) {
+      console.warn('No logs selected for approval');
+      return;
     }
+
+    // Get current user (approver) from localStorage
+    const currentUser = localStorage.getItem('current_user');
+    if (!currentUser) {
+      console.error('No user session found');
+      return;
+    }
+
+    const approverData = JSON.parse(currentUser);
+    const approverId = approverData.employeeId;
+
+    // Get the selected user (whose logs are being approved)
+    if (!this.selectedUser) {
+      console.error('No user selected');
+      return;
+    }
+
+    const userId = this.selectedUser.id;
+
+    // Extract approval IDs from selected logs
+    const approvalIds = selectedLogs.map(log => Number(log.id));
+
+    // Determine if this is a full approval (all displayed logs are selected)
+    const fullApprove = this.selectAll && selectedLogs.length === this.displayedLogs.length;
+
+    // Create the approval request
+    const approvalRequest: TaskBulkApprovalRequest = {
+      taskId: 0, // Not used for bulk approval
+      userId: userId,
+      approverId: approverId,
+      approvalIds: approvalIds,
+      action: 'APPROVAL',
+      fullApprove: fullApprove
+    };
+
+    console.log('Calling BulkTaskApproval API with request:', approvalRequest);
+
+    this.api.bulkTaskApproval(approvalRequest).subscribe({
+      next: (response: any) => {
+        console.log('BulkTaskApproval API Response:', response);
+        
+        if (response.success) {
+          console.log('Approval successful:', response.message);
+          
+          // Reset selections
+          this.selectAll = false;
+          this.displayedLogs.forEach(log => log.isSelected = false);
+          
+          // Reload the approval list to reflect changes
+          this.loadApprovalList();
+          
+          // Show success message (you can integrate a toaster service here)
+          alert(response.message || 'Tasks approved successfully');
+        } else {
+          console.error('Approval failed:', response.message);
+          alert(response.message || 'Failed to approve tasks');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error approving tasks:', error);
+        alert('An error occurred while approving tasks');
+      }
+    });
   }
 
   cancelSelection() {

@@ -134,23 +134,37 @@
                 <div class="dropdown-wrapper">
                   <select class="filter-dropdown" [(ngModel)]="selectedProject">
                     <option value="all">All Projects</option>
-                    <option value="internal">Internal Tools</option>
-                    <option value="client">Client Work</option>
+                    @for (project of projects; track project.projectId) {
+                      <option [value]="project.projectId">{{ project.projectName }}</option>
+                    }
                   </select>
                   <i class="fas fa-chevron-down dropdown-icon"></i>
                 </div>
               </div>
 
-              <!-- Task Types Filter Dropdown -->
+              <!-- Department Filter Dropdown -->
               <div class="filter-group">
-                <label class="filter-label">Task Type</label>
+                <label class="filter-label">Department</label>
                 <div class="dropdown-wrapper">
-                  <select class="filter-dropdown" [(ngModel)]="selectedTaskTypes">
-                    <option value="all">All Types</option>
-                    <option value="security">Security</option>
-                    <option value="backend">Backend</option>
-                    <option value="feature">Feature</option>
-                    <option value="bugfix">Bug Fix</option>
+                  <select class="filter-dropdown" [(ngModel)]="selectedDepartment" (ngModelChange)="onDepartmentChange()">
+                    <option value="all">All Departments</option>
+                    @for (department of departments; track department.departmentId) {
+                      <option [value]="department.departmentId">{{ department.deptName }}</option>
+                    }
+                  </select>
+                  <i class="fas fa-chevron-down dropdown-icon"></i>
+                </div>
+              </div>
+
+              <!-- Task Category Filter Dropdown -->
+              <div class="filter-group">
+                <label class="filter-label">Task Category</label>
+                <div class="dropdown-wrapper">
+                  <select class="filter-dropdown" [(ngModel)]="selectedTaskCategory">
+                    <option value="all">All Categories</option>
+                    @for (category of taskCategories; track category.categoryId) {
+                      <option [value]="category.categoryId">{{ category.categoryName }}</option>
+                    }
                   </select>
                   <i class="fas fa-chevron-down dropdown-icon"></i>
                 </div>
@@ -161,9 +175,11 @@
             <div class="header-actions">
               <button 
                 class="btn-cancel-header"
-                (click)="cancelSelection()"
+                (click)="applyFilters()"
+                style="background: #3b82f6; color: white;"
               >
-                Cancel
+                <i class="fas fa-search"></i>
+                <span>Search</span>
               </button>
               
               <button 

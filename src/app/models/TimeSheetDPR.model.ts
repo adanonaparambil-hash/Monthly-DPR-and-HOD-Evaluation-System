@@ -230,3 +230,12 @@ export interface DeleteTaskRequest {
   taskId: number;
   userId: string;
 }
+
+export interface TaskBulkApprovalRequest {
+  taskId: number;
+  userId: string;
+  approverId: string;
+  approvalIds: number[];
+  action: string;
+  fullApprove: boolean;
+}

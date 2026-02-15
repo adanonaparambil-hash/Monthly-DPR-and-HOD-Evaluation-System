@@ -196,3 +196,18 @@ export interface HoursLoggedEstimateGraph {
 export interface MonthlyPerformanceTrend {
   Performance?: number;
 }
+
+
+export interface EmployeeApprovalDto {
+  approvalId: number;
+  taskId: number;
+  logDate: string;
+  project: string;
+  taskTitle: string;
+  taskDescription: string;
+  category: string;
+  hours: number;
+  status: string;
+  dailyRemarks: string;
+}
+

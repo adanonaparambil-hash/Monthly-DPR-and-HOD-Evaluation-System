@@ -1457,9 +1457,9 @@
         </button>
         <div class="task-id-badge">TSK-1024</div>
         <div class="status-dropdown">
-          <button class="status-btn" [class]="getStatusClass(selectedTask?.status || 'NOT STARTED')">
+          <button class="status-btn" [class]="getStatusClass(selectedTask ? selectedTask.status : 'NOT STARTED')">
             <span class="status-dot"></span>
-            {{ selectedTask?.status || 'NOT STARTED' }}
+            {{ selectedTask ? selectedTask.status : 'NOT STARTED' }}
             <i class="fas fa-chevron-down"></i>
           </button>
         </div>
