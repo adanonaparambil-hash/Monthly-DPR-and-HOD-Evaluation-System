@@ -7,7 +7,7 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
-import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest, } from '../models/TimeSheetDPR.model';
+import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest } from '../models/TimeSheetDPR.model';
 
 
 @Injectable({
@@ -379,16 +379,12 @@ export class Api {
   getDepartmentTaskCategories(department: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetDepartmentTaskCategories/${department}`);
   }
+
   bulkTaskApproval(request: TaskBulkApprovalRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/BulkTaskApproval`, request);
   }
 
-
-
-
-  
-  GetEmployeeApprovalListPaged( employeeId: string, pageNo: number, pageSize: number , fromDate: string | null, toDate: string | null,projectId: number,categoryId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetEmployeeApprovalListPaged/${employeeId}/${pageNo}/${pageSize}/${fromDate ?? 'null'}/${toDate ?? 'null'}/${projectId}/${categoryId}`);
+  GetEmployeeApprovalListPaged(employeeId: string, pageNo: number, pageSize: number, fromDate: string | null, toDate: string | null, projectId: number, categoryId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetEmployeeApprovalListPaged/${employeeId}/${pageNo}/${pageSize}/${fromDate ?? ''}/${toDate ?? ''}/${projectId ?? 0}/${categoryId}`);
   }
-
 }
