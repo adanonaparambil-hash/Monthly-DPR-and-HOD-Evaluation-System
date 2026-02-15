@@ -237,5 +237,5 @@ export interface TaskBulkApprovalRequest {
   approverId: string;
   approvalIds: number[];
   action: string;
-  fullApprove: boolean;
+  fullApprove: string;
 }

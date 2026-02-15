@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
 import { TaskBulkApprovalRequest } from '../models/TimeSheetDPR.model';
+import Swal from 'sweetalert2';
 
 interface PendingUser {
   id: string;
@@ -50,6 +51,7 @@ interface TaskCategory {
 
 interface DPRLog {
   id: string;
+  taskId?: number;
   date: string;
   project: string;
   projectType: 'internal' | 'client';
@@ -192,7 +194,12 @@ export class DprApprovalComponent implements OnInit {
     }
 
     const userData = JSON.parse(currentUser);
-    const userId = userData.employeeId;
+    const userId = userData.empId || userData.employeeId;
+
+    if (!userId) {
+      console.error('Employee ID not found in session');
+      return;
+    }
 
     console.log('Calling getPendingApprovalUsers API with userId:', userId);
 
@@ -369,26 +376,28 @@ export class DprApprovalComponent implements OnInit {
       projectId,
       categoryId
     ).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('GetEmployeeApprovalListPaged API Response:', response);
         
         if (response.success && response.data) {
           // Map the API response to DPRLog format
-          this.displayedLogs = response.data.items?.map((item: any) => ({
-            id: item.taskId?.toString() || item.id,
-            date: this.formatDisplayDate(item.taskDate || item.date),
-            project: item.projectName || item.project,
-            projectType: item.projectType || 'internal',
-            taskTitle: item.taskTitle || item.title,
-            taskDescription: item.dailyRemarks || item.taskDescription || item.description,
-            category: item.categoryName || item.category,
-            categoryType: item.categoryType || 'feature',
-            hours: this.formatHours(item.totalHours || item.hours),
-            status: 'pending',
+          // API returns: data.records (array) and data.totalCount (number)
+          this.displayedLogs = response.data.records?.map((item: any) => ({
+            id: item.approvalId?.toString() || item.taskId?.toString(),
+            taskId: item.taskId, // Store taskId separately for approval
+            date: this.formatDisplayDate(item.logDate),
+            project: item.project || 'N/A',
+            projectType: 'internal',
+            taskTitle: item.taskTitle || 'No Title',
+            taskDescription: item.dailyRemarks || item.taskDescription || 'No Description',
+            category: item.category || 'N/A',
+            categoryType: 'feature',
+            hours: this.formatHours(item.hours),
+            status: item.status?.toLowerCase() || 'pending',
             isSelected: false
           })) || [];
 
-          this.totalRecords = response.data.totalRecords || 0;
+          this.totalRecords = response.data.totalCount || 0;
           this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
           
           console.log('Loaded approval logs:', this.displayedLogs);
@@ -400,7 +409,7 @@ export class DprApprovalComponent implements OnInit {
           this.totalPages = 0;
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading approval list:', error);
         this.displayedLogs = [];
         this.totalRecords = 0;
@@ -590,41 +599,92 @@ export class DprApprovalComponent implements OnInit {
   approveSelected() {
     const selectedLogs = this.displayedLogs.filter(log => log.isSelected);
     if (selectedLogs.length === 0) {
-      console.warn('No logs selected for approval');
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Selection',
+        text: 'Please select at least one record to approve',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
+    // Show confirmation dialog
+    Swal.fire({
+      title: 'Confirm Approval',
+      text: `Do you want to approve ${selectedLogs.length} selected record(s)?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performApproval(selectedLogs);
+      }
+    });
+  }
+
+  performApproval(selectedLogs: DPRLog[]) {
     // Get current user (approver) from localStorage
     const currentUser = localStorage.getItem('current_user');
     if (!currentUser) {
-      console.error('No user session found');
+      Swal.fire({
+        icon: 'error',
+        title: 'Session Error',
+        text: 'No user session found. Please login again.',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
     const approverData = JSON.parse(currentUser);
-    const approverId = approverData.employeeId;
+    const approverId = approverData.empId || approverData.employeeId;
+
+    if (!approverId) {
+      console.error('User session data:', approverData);
+      Swal.fire({
+        icon: 'error',
+        title: 'Session Error',
+        text: 'Employee ID not found in session. Please login again.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    console.log('Approver ID:', approverId);
 
     // Get the selected user (whose logs are being approved)
     if (!this.selectedUser) {
-      console.error('No user selected');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No user selected',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
     const userId = this.selectedUser.id;
 
-    // Extract approval IDs from selected logs
+    // Get the first selected log's taskId (or use 0 if not available)
+    const taskId = selectedLogs[0]?.taskId || 0;
+
+    // Extract approval IDs from selected logs (using the 'id' which is approvalId)
     const approvalIds = selectedLogs.map(log => Number(log.id));
 
-    // Determine if this is a full approval (all displayed logs are selected)
-    const fullApprove = this.selectAll && selectedLogs.length === this.displayedLogs.length;
+    // Determine fullApprove based on whether "Select All" checkbox was used
+    // fullApprove = 'Y' if header checkbox is checked and all displayed logs are selected
+    // fullApprove = 'N' if only individual checkboxes are selected
+    const fullApprove = (this.selectAll && selectedLogs.length === this.displayedLogs.length) ? 'Y' : 'N';
 
     // Create the approval request
     const approvalRequest: TaskBulkApprovalRequest = {
-      taskId: 0, // Not used for bulk approval
+      taskId: taskId,
       userId: userId,
       approverId: approverId,
       approvalIds: approvalIds,
-      action: 'APPROVAL',
+      action: 'A',
       fullApprove: fullApprove
     };
 
@@ -635,8 +695,6 @@ export class DprApprovalComponent implements OnInit {
         console.log('BulkTaskApproval API Response:', response);
         
         if (response.success) {
-          console.log('Approval successful:', response.message);
-          
           // Reset selections
           this.selectAll = false;
           this.displayedLogs.forEach(log => log.isSelected = false);
@@ -644,16 +702,31 @@ export class DprApprovalComponent implements OnInit {
           // Reload the approval list to reflect changes
           this.loadApprovalList();
           
-          // Show success message (you can integrate a toaster service here)
-          alert(response.message || 'Tasks approved successfully');
+          // Show success message with SweetAlert
+          Swal.fire({
+            icon: 'success',
+            title: 'Approval Successful',
+            text: response.message || 'Tasks approved successfully',
+            confirmButtonColor: '#10b981',
+            timer: 3000
+          });
         } else {
-          console.error('Approval failed:', response.message);
-          alert(response.message || 'Failed to approve tasks');
+          Swal.fire({
+            icon: 'error',
+            title: 'Approval Failed',
+            text: response.message || 'Failed to approve tasks',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       },
       error: (error: any) => {
         console.error('Error approving tasks:', error);
-        alert('An error occurred while approving tasks');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while approving tasks',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     });
   }
