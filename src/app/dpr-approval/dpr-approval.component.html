@@ -251,7 +251,7 @@
               <!-- Table Body -->
               <tbody>
                 @for (log of displayedLogs; track trackByLogId($index, log); let i = $index) {
-                  <tr class="table-row" [class.selected]="log.isSelected">
+                  <tr class="table-row" [class.selected]="log.isSelected" (click)="onRowClick(log, $event)" style="cursor: pointer;">
                     <!-- Serial Number -->
                     <td class="sl-no-cell">
                       <span class="sl-no-text">{{ getSerialNumber(i) }}</span>
@@ -396,3 +396,16 @@
     </main>
   </div>
 </div>
+
+<!-- Task Details Modal -->
+<app-task-details-modal
+  *ngIf="showTaskDetailsModal"
+  [taskId]="selectedTaskIdForModal"
+  [userId]="selectedUserIdForModal"
+  [categoryId]="selectedCategoryIdForModal"
+  (closeModal)="closeTaskDetailsModal()"
+  (taskUpdated)="onTaskUpdated($event)"
+  (taskPaused)="onTaskPaused($event)"
+  (taskResumed)="onTaskResumed($event)"
+  (taskStopped)="onTaskStopped($event)">
+</app-task-details-modal>

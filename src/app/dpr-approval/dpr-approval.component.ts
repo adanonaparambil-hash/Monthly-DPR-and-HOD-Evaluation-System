@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
 import { TaskBulkApprovalRequest } from '../models/TimeSheetDPR.model';
+import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
+import { SessionService } from '../services/session.service';
 import Swal from 'sweetalert2';
 
 interface PendingUser {
@@ -52,6 +54,7 @@ interface TaskCategory {
 interface DPRLog {
   id: string;
   taskId?: number;
+  categoryId?: number;
   date: string;
   project: string;
   projectType: 'internal' | 'client';
@@ -67,7 +70,7 @@ interface DPRLog {
 @Component({
   selector: 'app-dpr-approval',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TaskDetailsModalComponent],
   templateUrl: './dpr-approval.component.html',
   styleUrls: ['./dpr-approval.component.css']
 })
@@ -95,9 +98,14 @@ export class DprApprovalComponent implements OnInit {
 
   // Task details modal properties
   showTaskDetailsModal = false;
-  selectedTask: any = null;
+  selectedTaskIdForModal: number = 0;
+  selectedUserIdForModal: string = '';
+  selectedCategoryIdForModal: number = 0;
 
-  constructor(private api: Api) {}
+  constructor(
+    private api: Api,
+    private sessionService: SessionService
+  ) {}
 
   dprLogs: DPRLog[] = [
     {
@@ -389,6 +397,7 @@ export class DprApprovalComponent implements OnInit {
           this.displayedLogs = response.data.records?.map((item: any) => ({
             id: item.approvalId?.toString() || item.taskId?.toString(),
             taskId: item.taskId, // Store taskId separately for approval
+            categoryId: item.categoryID || item.categoryId, // Store categoryId from API
             date: this.formatDisplayDate(item.logDate),
             project: item.project || 'N/A',
             projectType: 'internal',
@@ -747,54 +756,97 @@ export class DprApprovalComponent implements OnInit {
       return;
     }
 
-    // Show task details
-    this.showTaskDetails(log);
+    // Open task details modal
+    this.openTaskDetailsModal(log);
   }
 
   showTaskDetails(log: DPRLog) {
-    if (!log.taskId) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Task Details',
-        html: `
-          <div style="text-align: left;">
-            <p><strong>Date:</strong> ${log.date}</p>
-            <p><strong>Project:</strong> ${log.project}</p>
-            <p><strong>Category:</strong> ${log.category}</p>
-            <p><strong>Task Title:</strong> ${log.taskTitle}</p>
-            <p><strong>Description:</strong> ${log.taskDescription}</p>
-            <p><strong>Hours:</strong> ${log.hours}</p>
-            <p><strong>Status:</strong> ${log.status}</p>
-          </div>
-        `,
-        confirmButtonColor: '#3b82f6',
-        width: '600px'
-      });
+    // Open task details modal instead of SweetAlert
+    this.openTaskDetailsModal(log);
+  }
+
+  // Open task details modal when clicking on a DPR log
+  openTaskDetailsModal(log: DPRLog) {
+    const taskId = log.taskId || 0;
+    
+    if (!taskId) {
+      console.error('Invalid task ID for log:', log);
       return;
     }
 
-    // TODO: Implement full task modal
-    // For now, show basic details
-    Swal.fire({
-      icon: 'info',
-      title: 'Task Details',
-      html: `
-        <div style="text-align: left;">
-          <p><strong>Task ID:</strong> ${log.taskId}</p>
-          <p><strong>Date:</strong> ${log.date}</p>
-          <p><strong>Project:</strong> ${log.project}</p>
-          <p><strong>Category:</strong> ${log.category}</p>
-          <p><strong>Task Title:</strong> ${log.taskTitle}</p>
-          <p><strong>Description:</strong> ${log.taskDescription}</p>
-          <p><strong>Hours:</strong> ${log.hours}</p>
-          <p><strong>Status:</strong> ${log.status}</p>
-        </div>
-        <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
-          Full task modal integration coming soon...
-        </p>
-      `,
-      confirmButtonColor: '#3b82f6',
-      width: '600px'
+    // Get current user
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    // Use categoryId directly from the log (from API response)
+    // Fallback to looking it up by name if not available
+    const categoryId = log.categoryId || this.getCategoryIdFromName(log.category);
+    
+    console.log('Opening task details modal from DPR Approval:', {
+      taskId: taskId,
+      userId: userId,
+      categoryId: categoryId,
+      categoryIdFromLog: log.categoryId,
+      category: log.category
     });
+    
+    // Set properties for standalone modal component
+    this.selectedTaskIdForModal = taskId;
+    this.selectedUserIdForModal = userId;
+    this.selectedCategoryIdForModal = categoryId || 0;
+    
+    // Show the modal
+    this.showTaskDetailsModal = true;
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Helper method to get category ID from category name (fallback)
+  private getCategoryIdFromName(categoryName: string): number {
+    // Try to find the category ID from the task categories list
+    const category = this.taskCategories.find(cat => cat.categoryName === categoryName);
+    if (category) {
+      return category.categoryId;
+    }
+    
+    // If not found, return 0 (will need to be handled by the modal)
+    console.warn('Category ID not found for:', categoryName);
+    return 0;
+  }
+
+  // Close task details modal
+  closeTaskDetailsModal() {
+    this.showTaskDetailsModal = false;
+    
+    // Restore body scroll
+    document.body.style.overflow = '';
+    
+    // Reload approval list to reflect any changes
+    this.loadApprovalList();
+  }
+
+  // Handle task updated event from modal
+  onTaskUpdated(task: any) {
+    console.log('Task updated from modal:', task);
+    // Reload approval list to reflect changes
+    this.loadApprovalList();
+  }
+
+  // Handle task paused event from modal
+  onTaskPaused(taskId: number) {
+    console.log('Task paused from modal:', taskId);
+  }
+
+  // Handle task resumed event from modal
+  onTaskResumed(taskId: number) {
+    console.log('Task resumed from modal:', taskId);
+  }
+
+  // Handle task stopped event from modal
+  onTaskStopped(taskId: number) {
+    console.log('Task stopped from modal:', taskId);
+    // Reload approval list to reflect changes
+    this.loadApprovalList();
   }
 }

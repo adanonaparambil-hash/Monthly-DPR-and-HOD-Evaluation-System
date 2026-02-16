@@ -1128,1198 +1128,19 @@
 </div>
 }
 
-<!-- Minimized Task Details Modal -->
-@if (false && showTaskDetailsModal && selectedTask) {
-<div class="modal-overlay-enhanced" (click)="closeTaskDetailsModal()">
-  <div class="task-modal-compact" (click)="$event.stopPropagation()">
 
-    <!-- Compact Header -->
-    <div class="modal-header-compact">
-      <div class="header-left-compact">
-        <button class="back-btn-compact">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-        <div class="task-id-compact">TSK-204</div>
-
-        <div class="timer-compact">
-          <div class="logged-hours-compact">
-            <span class="logged-hours-label">Total Logged</span>
-            <span class="logged-hours-value">{{ selectedTask.loggedHours }}</span>
-          </div>
-          <div class="timer-controls-compact">
-            <button class="timer-btn-compact">
-              <i class="fas fa-play"></i>
-            </button>
-            <span class="timer-display-compact">00:00:00</span>
-            <button class="timer-btn-compact">
-              <i class="fas fa-stop"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="header-right-compact">
-        <button class="save-btn-compact">
-          <i class="fas fa-save"></i>
-          Save
-        </button>
-        <div class="status-progress-compact">
-          <select class="status-select-compact" [(ngModel)]="selectedTask.status">
-            <option value="NOT STARTED">Not Started</option>
-            <option value="RUNNING">Running</option>
-            <option value="PAUSED">Paused</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CLOSED">Closed</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Compact Content -->
-    <div class="modal-content-compact">
-      <!-- Main Content -->
-      <main class="main-content-compact">
-
-        <!-- Task Title -->
-        <div class="task-title-section-compact">
-          <div class="title-row-compact">
-            <div class="title-left-compact">
-              <div class="category-compact">
-                <select class="category-select-compact" [(ngModel)]="selectedTask.category">
-                  <option value="SECURITY">Security Enhancement</option>
-                  <option value="DEVELOPMENT">Feature Development</option>
-                  <option value="QUALITY ASSURANCE">Bug Fix</option>
-                </select>
-              </div>
-              <input type="text" class="task-title-compact" [(ngModel)]="selectedTask.title"
-                placeholder="Enter task title...">
-            </div>
-
-            <!-- Progress Section - Enhanced design -->
-            <div class="progress-section-compact">
-              <div class="progress-header-compact">
-                <span class="progress-label-compact">Progress</span>
-                <span class="progress-value-compact">{{ selectedTask.progress }}%</span>
-              </div>
-              <div class="progress-slider-container">
-                <input type="range" min="0" max="100" [(ngModel)]="selectedTask.progress"
-                  class="progress-slider-compact" (input)="updateProgress($event)">
-                <div class="progress-track-bg">
-                  <div class="progress-fill-bg" [style.width.%]="selectedTask.progress"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Description -->
-        <div class="description-section-compact">
-          <label class="section-label-compact">Description</label>
-          <textarea class="description-textarea-compact" [(ngModel)]="selectedTask.description"
-            placeholder="Task description...">{{ selectedTask.description || 'Implement OAuth2 flow for the enterprise portal with OKTA integration.' }}</textarea>
-          <div class="description-footer-compact">
-            <button class="custom-fields-btn-compact" (click)="openCustomFieldsModal()">
-              <i class="fas fa-sliders-h"></i>
-              Manage Custom Fields
-            </button>
-          </div>
-        </div>
-
-        <!-- Task Details -->
-        <div class="details-section-compact">
-          <div class="detail-row-compact">
-            <div class="detail-item-compact">
-              <label>Assigned To</label>
-              <div class="assignee-compact">
-                <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXJ4hs07MaZCYd5LPTHGYP_7thFY_3FpYEqK4M6m3jbvjtVu1kYUsVWAR95AqlP3D6jZF1Eo4wkUOTR2eEEpljU9dtohh4m0MrMT05TGIN51WgCKGs9SuqAquZcBm58t8J77v9mOKG0i3bq9zwrqmCfHRVw_2RWh1aqX-h0zK7RWTTu3dZf6r0jejNRWFclWHbXCA7wXzfZDVxzWk0aLu5uneIDtUxBP5YoGTIYq2kzhAeYRyShmdy-DsYjJkb0eZoaB3iYZHEzls"
-                  alt="Marcus" class="assignee-avatar-compact">
-                <span>{{ selectedTask.assignee }}</span>
-              </div>
-            </div>
-            <div class="detail-item-compact">
-              <label>Project</label>
-              <select class="detail-select-compact" [(ngModel)]="selectedTaskProject">
-                <option value="identity-management">Identity Management v3</option>
-                <option value="cloud-infrastructure">Cloud Infrastructure</option>
-              </select>
-            </div>
-          </div>
-          <div class="detail-row-compact">
-            <div class="detail-item-compact">
-              <label>Start Date</label>
-              <input type="date" class="detail-input-compact" [(ngModel)]="selectedTask.startDate">
-            </div>
-            <div class="detail-item-compact">
-              <label>Target Date</label>
-              <input type="date" class="detail-input-compact" [(ngModel)]="selectedTaskEndDate">
-            </div>
-          </div>
-
-          <!-- Additional Fields Section -->
-          <div class="additional-fields-compact">
-            <div class="field-compact">
-              <label>Department</label>
-              <select [(ngModel)]="selectedTaskDepartment">
-                <option value="engineering">Engineering</option>
-                <option value="design">Design</option>
-                <option value="marketing">Marketing</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Custom Fields Section -->
-          <div class="custom-fields-section-compact" *ngIf="selectedCustomFields.length > 0">
-            <h4 class="custom-fields-title">Custom Fields</h4>
-            <div class="custom-fields-grid">
-              <div class="custom-field-item" *ngFor="let field of selectedCustomFields">
-                <label>{{ field.label }}</label>
-
-                <!-- Text Input -->
-                <input *ngIf="field.type === 'text'" type="text" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()">
-
-                <!-- Number Input -->
-                <input *ngIf="field.type === 'number'" type="number" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()">
-
-                <!-- Dropdown -->
-                <select *ngIf="field.type === 'dropdown'" [(ngModel)]="field.value">
-                  <option value="">Select {{ field.label }}</option>
-                  <option *ngFor="let option of field.options; let i = index" [value]="i">{{ option }}</option>
-                </select>
-
-                <!-- Textarea -->
-                <textarea *ngIf="field.type === 'textarea'" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="3"></textarea>
-
-                <!-- Remove button -->
-                <button class="remove-custom-field-btn" (click)="removeCustomField(field.key)">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Files Section -->
-        <div class="subtasks-section-compact">
-          <div class="files-header">
-            <div class="section-title">
-              <i class="fas fa-file-upload"></i>
-              Files ({{ uploadedFiles.length }})
-            </div>
-            <button class="add-item-btn-compact" (click)="triggerFileUpload()">
-              <i class="fas fa-upload"></i>
-              Upload File
-            </button>
-          </div>
-
-          <!-- Files Content -->
-          <div class="tab-content">
-            <div class="files-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
-              (drop)="onFileDrop($event)">
-              <div class="upload-icon">
-                <i class="fas fa-cloud-upload-alt"></i>
-              </div>
-              <p class="upload-text">Click to upload or drag and drop files here</p>
-              <p class="upload-subtext">Supports: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB)</p>
-            </div>
-
-            <div class="uploaded-files-list" *ngIf="uploadedFiles.length > 0">
-              <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
-                <div class="file-icon">
-                  <i class="fas" [class]="getFileIcon(file.type)"></i>
-                </div>
-                <div class="file-info">
-                  <div class="file-name">{{ file.name }}</div>
-                  <div class="file-meta">
-                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                    <span class="file-date">{{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
-                  </div>
-                </div>
-                <div class="file-actions">
-                  <button class="file-action-btn download" (click)="downloadFile(file)">
-                    <i class="fas fa-download"></i>
-                  </button>
-                  <button class="file-action-btn delete" (click)="deleteFile(file)">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="no-files" *ngIf="uploadedFiles.length === 0">
-              <i class="fas fa-folder-open"></i>
-              <p>No files uploaded yet</p>
-            </div>
-          </div>
-
-          <!-- Hidden file input -->
-          <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-            (change)="onFileSelected($event)" style="display: none;">
-        </div>
-      </main>
-
-      <!-- Compact Sidebar -->
-      <aside class="sidebar-compact">
-        <div class="sidebar-header-compact">
-          <div class="sidebar-tabs-compact">
-            <button class="sidebar-tab-compact" [class.active]="activeSidebarTab === 'comments'"
-              (click)="setActiveSidebarTab('comments')">
-              Comments
-            </button>
-            <button class="sidebar-tab-compact" [class.active]="activeSidebarTab === 'history'"
-              (click)="setActiveSidebarTab('history')">
-              History
-            </button>
-          </div>
-        </div>
-
-        <div class="sidebar-content-compact">
-          <!-- Comments Tab -->
-          <div *ngIf="activeSidebarTab === 'comments'">
-            <!-- Display comments from API -->
-            <div class="comment-item-compact" *ngFor="let comment of taskComments">
-              <div class="comment-avatar-compact" *ngIf="!comment.profileImageBase64">
-                {{ getInitials(comment.empName) }}
-              </div>
-              <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar-compact" />
-              <div class="comment-content-compact">
-                <div class="comment-header-compact">
-                  <span class="comment-author-compact">{{ comment.empName }}</span>
-                  <span class="comment-time-compact">{{ getTimeAgo(comment.submittedOn) }}</span>
-                </div>
-                <p class="comment-text-compact">{{ comment.comments }}</p>
-              </div>
-            </div>
-            
-            <!-- Empty state when no comments -->
-            <div class="no-comments-compact" *ngIf="taskComments.length === 0">
-              <i class="fas fa-comments"></i>
-              <p>No comments yet</p>
-            </div>
-          </div>
-
-          <!-- Activity History Tab -->
-          <div *ngIf="activeSidebarTab === 'history'" class="activity-history">
-            <div class="activity-timeline">
-              <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
-                <div class="activity-icon-enhanced" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
-                  <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
-                </div>
-                <div class="activity-content-enhanced">
-                  <div class="activity-header-enhanced">
-                    <span class="activity-description">{{ activity.description }}</span>
-                    <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
-                  </div>
-                  <div class="activity-meta-enhanced">
-                    <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Empty state when no activity -->
-              <div class="no-activity" *ngIf="activityLogs.length === 0">
-                <i class="fas fa-history"></i>
-                <p>No activity yet</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="comment-input-compact" *ngIf="activeSidebarTab === 'comments'">
-          <textarea placeholder="Type a message..." [(ngModel)]="newComment" (keyup.enter)="addComment()"></textarea>
-          <button class="send-btn-compact" (click)="addComment()" [disabled]="!newComment.trim()">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-      </aside>
-    </div>
-
-    <!-- Close Button -->
-    <button class="modal-close-compact" (click)="closeTaskDetailsModal()">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-</div>
-}
-
-<!-- Task Details Modal - Matches the Design from Image -->
-@if (false && showTaskDetailsModal && selectedTask) {
-<div class="modal-overlay" (click)="closeTaskDetailsModal()">
-  <div class="task-details-modal" (click)="$event.stopPropagation()">
-    <!-- Modal Header -->
-    <div class="task-details-header">
-      <div class="header-left">
-        <button class="back-btn" (click)="closeTaskDetailsModal()">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-        <div class="task-id-badge">TSK-1024</div>
-        <div class="status-dropdown">
-          <button class="status-btn" [class]="getStatusClass(selectedTask ? selectedTask.status : 'NOT STARTED')">
-            <span class="status-dot"></span>
-            {{ selectedTask ? selectedTask.status : 'NOT STARTED' }}
-            <i class="fas fa-chevron-down"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="header-right">
-        <div class="timer-section">
-          <div class="timer-label">RUNNING TIMER</div>
-          <div class="timer-display">00:42:18</div>
-        </div>
-
-        <div class="total-hours">
-          <div class="hours-label">TOTAL HOURS</div>
-          <div class="hours-display">124.5h</div>
-        </div>
-
-        <div class="header-actions">
-          <button class="action-icon-btn">
-            <i class="fas fa-pause"></i>
-          </button>
-          <button class="action-icon-btn stop">
-            <i class="fas fa-stop"></i>
-          </button>
-          <button class="more-btn">
-            <i class="fas fa-ellipsis-h"></i>
-          </button>
-        </div>
-
-        <button class="close-btn" (click)="closeTaskDetailsModal()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Modal Content -->
-    <div class="task-details-content">
-      <!-- Left Panel - Main Content -->
-      <div class="task-main-panel">
-        <div class="category-tag feature-development">FEATURE DEVELOPMENT</div>
-        <h1 class="task-title-main">Initial Design Sprint: UI Component Library</h1>
-
-        <div class="task-description-section">
-          <h3 class="section-title">TASK DESCRIPTION</h3>
-          <p class="task-description">
-            The primary goal of this phase is to establish a cohesive UI component library for the new marketing
-            dashboard. This includes defining color tokens, typography scales, and building core components like
-            buttons, inputs, and navigation patterns. All assets should be documented in Figma and exported for the
-            frontend team.
-          </p>
-        </div>
-
-        <!-- Project Metadata - 3 Column Grid -->
-        <div class="project-metadata-section">
-          <h3 class="section-title">PROJECT METADATA</h3>
-          <div class="metadata-grid-3col">
-            <div class="metadata-field">
-              <div class="metadata-icon">
-                <i class="fas fa-briefcase"></i>
-              </div>
-              <div class="metadata-content">
-                <span class="metadata-label">DEPARTMENT</span>
-                <div class="metadata-dropdown">
-                  <select class="metadata-select">
-                    <option>Product & Design</option>
-                  </select>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
-            </div>
-
-            <div class="metadata-field">
-              <div class="metadata-icon">
-                <i class="fas fa-folder"></i>
-              </div>
-              <div class="metadata-content">
-                <span class="metadata-label">PROJECT</span>
-                <div class="metadata-dropdown">
-                  <select class="metadata-select">
-                    <option>Marketing Dashboard</option>
-                  </select>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
-            </div>
-
-            <div class="metadata-field">
-              <div class="metadata-icon">
-                <i class="fas fa-user"></i>
-              </div>
-              <div class="metadata-content">
-                <span class="metadata-label">ASSIGNED TO</span>
-                <div class="metadata-dropdown">
-                  <select class="metadata-select">
-                    <option>Jane Doe</option>
-                  </select>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Date Fields - 2 Column + Add Field Button -->
-          <div class="date-fields-grid">
-            <div class="date-field">
-              <div class="date-icon">
-                <i class="fas fa-calendar-alt"></i>
-              </div>
-              <div class="date-content">
-                <span class="date-label">START DATE</span>
-                <input type="date" class="date-input" [(ngModel)]="selectedTaskStartDate">
-                <i class="fas fa-calendar-alt date-picker-icon"></i>
-              </div>
-            </div>
-
-            <div class="date-field">
-              <div class="date-icon">
-                <i class="fas fa-calendar-check"></i>
-              </div>
-              <div class="date-content">
-                <span class="date-label">TARGET DATE</span>
-                <input type="date" class="date-input" [(ngModel)]="selectedTaskEndDate">
-                <i class="fas fa-calendar-alt date-picker-icon"></i>
-              </div>
-            </div>
-
-            <div class="add-field-container">
-              <button class="add-field-btn">
-                <i class="fas fa-plus"></i>
-                ADD FIELD
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Subtasks Section -->
-        <div class="subtasks-section">
-          <div class="section-header-with-tabs">
-            <div class="section-tabs">
-              <button class="section-tab active">
-                <span>SUBTASKS</span>
-                <span class="tab-count">5</span>
-              </button>
-              <button class="section-tab">
-                <span>ATTACHMENTS</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="subtasks-list-detailed">
-            <div class="subtask-item-detailed completed">
-              <div class="subtask-checkbox-container">
-                <input type="checkbox" class="subtask-checkbox-detailed" checked>
-                <i class="fas fa-check subtask-check-icon"></i>
-              </div>
-              <div class="subtask-content-detailed">
-                <span class="subtask-name-detailed">Define global color palette tokens</span>
-                <div class="subtask-time-detailed">2.5h</div>
-              </div>
-            </div>
-
-            <div class="subtask-item-detailed active">
-              <div class="subtask-checkbox-container">
-                <input type="checkbox" class="subtask-checkbox-detailed">
-              </div>
-              <div class="subtask-content-detailed">
-                <span class="subtask-name-detailed">Build responsive navigation sidebar component</span>
-                <div class="subtask-time-detailed">1.2h</div>
-              </div>
-              <div class="subtask-actions-detailed">
-                <button class="subtask-action-btn pause">
-                  <i class="fas fa-pause"></i>
-                </button>
-                <button class="subtask-action-btn more">
-                  <i class="fas fa-ellipsis-h"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="add-subtask-section">
-            <button class="add-subtask-btn-detailed">
-              <i class="fas fa-plus"></i>
-              Add Subtask
-            </button>
-          </div>
-        </div>
-
-        <!-- Save Changes Button -->
-        <div class="save-section">
-          <button class="save-changes-btn">
-            <i class="fas fa-check"></i>
-            Save Changes
-          </button>
-        </div>
-      </div>
-
-      <!-- Right Panel - Progress Circle + Comments/Activity -->
-      <div class="task-right-panel">
-        <!-- Progress Circle at Top -->
-        <div class="progress-circle-top">
-          <div class="progress-circle-container">
-            <svg class="progress-circle-svg" viewBox="0 0 120 120">
-              <circle class="progress-circle-bg" cx="60" cy="60" r="54"></circle>
-              <circle class="progress-circle-fill" cx="60" cy="60" r="54"
-                [attr.stroke-dasharray]="getTopProgressDasharray()"
-                [attr.stroke-dashoffset]="getTopProgressOffset()"></circle>
-            </svg>
-            <div class="progress-percentage">{{ taskProgress }}%</div>
-            <div class="progress-label">DONE</div>
-          </div>
-        </div>
-
-
-        <div class="right-panel-tabs">
-          <button class="right-tab" [class.active]="activeSidebarTab === 'comments'"
-            (click)="setActiveSidebarTab('comments')">
-            COMMENTS
-          </button>
-          <button class="right-tab" [class.active]="activeSidebarTab === 'history'"
-            (click)="setActiveSidebarTab('history')">
-            ACTIVITY LOG
-          </button>
-        </div>
-
-        <div class="comments-section" *ngIf="activeSidebarTab === 'comments'">
-          <!-- Display comments from API -->
-          <div class="comment-item" *ngFor="let comment of taskComments">
-            <div class="comment-avatar" *ngIf="!comment.profileImageBase64">
-              {{ getInitials(comment.empName) }}
-            </div>
-            <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar" />
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">{{ comment.empName }}</span>
-                <span class="comment-time">{{ getTimeAgo(comment.submittedOn) }}</span>
-              </div>
-              <p class="comment-text">
-                {{ comment.comments }}
-              </p>
-            </div>
-          </div>
-          
-          <!-- Empty state when no comments -->
-          <div class="no-comments" *ngIf="taskComments.length === 0">
-            <i class="fas fa-comments"></i>
-            <p>No comments yet</p>
-          </div>
-
-          <div class="add-comment-section">
-            <textarea class="comment-input" placeholder="Add a comment..." [(ngModel)]="newComment" (keyup.enter)="addComment()"></textarea>
-            <button class="send-comment-btn" (click)="addComment()" [disabled]="!newComment.trim()">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Activity Log Section -->
-        <div class="activity-log-section" *ngIf="activeSidebarTab === 'history'">
-          <div class="activity-item" *ngFor="let activity of activityLogs">
-            <div class="activity-icon" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
-              <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
-            </div>
-            <div class="activity-content">
-              <div class="activity-description">{{ activity.description }}</div>
-              <div class="activity-meta">
-                <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
-                <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Empty state when no activity -->
-          <div class="no-activity" *ngIf="activityLogs.length === 0">
-            <i class="fas fa-history"></i>
-            <p>No activity yet</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-}
-
-<!-- Task Details Modal - Exact Match to Provided HTML -->
-@if (showTaskDetailsModal && selectedTask) {
-<div class="modal-overlay" (click)="closeTaskDetailsModal()">
-  <div class="task-modal-container" (click)="$event.stopPropagation()">
-
-    <!-- Header -->
-    <header class="modal-task-header">
-      <div class="modal-header-left">
-        <button class="modal-back-button" (click)="closeTaskDetailsModal()">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-        <div class="modal-task-id-badge">TSK-{{ selectedTaskId }}</div>
-        <div class="status-dropdown-container">
-          <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
-            <option value="not-started">Not Started</option>
-            <option value="not-closed">Closed</option>
-            <option value="running">Running</option>
-            <option value="completed">Completed</option>
-            <option value="pause">Pause</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-header-right">
-        <div class="modal-timer-section">
-          <span class="timer-label">Running Timer</span>
-          <div class="timer-controls">
-            <div class="timer-display centered-timer">
-              <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
-            </div>
-            <div class="timer-buttons">
-              <!-- Show Pause button when task is RUNNING -->
-              <button class="timer-btn pause-btn" 
-                      *ngIf="selectedTaskDetailStatus === 'running'"
-                      (click)="pauseTaskFromModal()"
-                      title="Pause Task">
-                <i class="fas fa-pause"></i>
-              </button>
-              
-              <!-- Show Resume button when task is PAUSED -->
-              <button class="timer-btn resume-btn" 
-                      *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
-                      (click)="resumeTaskFromModal()"
-                      title="Resume Task">
-                <i class="fas fa-play"></i>
-              </button>
-              
-              <!-- Always show Stop button -->
-              <button class="timer-btn stop-btn"
-                      (click)="stopTaskFromModal()"
-                      title="Stop Task">
-                <i class="fas fa-stop"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Save Button next to Running Timer -->
-        <button class="save-task-btn" (click)="saveTaskChanges()" title="Save Changes">
-          <i class="fas fa-save"></i>
-          <span>Save</span>
-        </button>
-
-        <div class="divider"></div>
-
-        <div class="total-hours-section">
-          <span class="hours-label">Total Hours</span>
-          <div class="hours-display">
-            <i class="fas fa-clock"></i>
-            <span class="hours-text">{{ selectedTaskTotalHours }}</span>
-          </div>
-        </div>
-
-        <div class="header-actions">
-          <button class="action-btn" (click)="closeTaskDetailsModal()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Main Content -->
-    <div class="task-content">
-      <!-- Left Panel -->
-      <div class="task-main-panel">
-        <!-- Title Section with Progress Circle -->
-        <div class="title-section">
-          <div class="title-content">
-            <div class="task-meta">
-              <span class="modal-category-badge">{{ selectedTaskCategory }}</span>
-            </div>
-            <input type="text" class="modal-task-title editable-title" [(ngModel)]="editableTaskTitle"
-              placeholder="Enter task title...">
-          </div>
-
-          <!-- Advanced 3D Circular Progress Indicator -->
-          <div class="progress-circle-3d" [class.dragging]="isDraggingProgress" [class.animating]="isProgressAnimating"
-            (mousedown)="startProgressDrag($event)" (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()"
-            (mouseleave)="endProgressDrag()" title="Click and drag to adjust progress">
-
-            <!-- 3D Circle Container -->
-            <div class="circle-3d-container">
-              <!-- Background Rings -->
-              <div class="bg-ring ring-1"></div>
-              <div class="bg-ring ring-2"></div>
-              <div class="bg-ring ring-3"></div>
-
-              <!-- Main Progress Circle -->
-              <div class="main-circle">
-                <!-- Animated Background -->
-                <div class="circle-bg-animated"></div>
-
-                <!-- Progress Fill -->
-                <div class="progress-fill-3d" [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg)'">
-                  <div class="fill-segment"></div>
-                </div>
-
-                <!-- Progress Track -->
-                <svg class="progress-svg-3d" viewBox="0 0 100 100">
-                  <defs>
-                    <linearGradient id="progressGradient3D" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style="stop-color:#06d6a0;stop-opacity:1" />
-                      <stop offset="30%" style="stop-color:#10b981;stop-opacity:1" />
-                      <stop offset="70%" style="stop-color:#34d399;stop-opacity:1" />
-                      <stop offset="100%" style="stop-color:#6ee7b7;stop-opacity:1" />
-                    </linearGradient>
-                    <filter id="glow3D">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-
-                  <!-- Background Circle -->
-                  <circle class="progress-bg-3d" cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)"
-                    stroke-width="8" />
-
-                  <!-- Progress Circle -->
-                  <circle class="progress-stroke-3d" cx="50" cy="50" r="40" fill="none"
-                    stroke="url(#progressGradient3D)" stroke-width="8" stroke-linecap="round" filter="url(#glow3D)"
-                    [style.stroke-dasharray]="251.2" [style.stroke-dashoffset]="251.2 - (selectedTaskProgress / 100) * 251.2"
-                    transform="rotate(-90 50 50)" />
-
-                  <!-- Animated Particles -->
-                  <g class="particles">
-                    <circle class="particle particle-1" r="2" fill="#10b981" opacity="0.8">
-                      <animateMotion dur="3s" repeatCount="indefinite">
-                        <mpath href="#progressPath" />
-                      </animateMotion>
-                    </circle>
-                    <circle class="particle particle-2" r="1.5" fill="#34d399" opacity="0.6">
-                      <animateMotion dur="4s" repeatCount="indefinite" begin="1s">
-                        <mpath href="#progressPath" />
-                      </animateMotion>
-                    </circle>
-                    <circle class="particle particle-3" r="1" fill="#6ee7b7" opacity="0.4">
-                      <animateMotion dur="5s" repeatCount="indefinite" begin="2s">
-                        <mpath href="#progressPath" />
-                      </animateMotion>
-                    </circle>
-                  </g>
-
-                  <!-- Hidden path for particle animation -->
-                  <path id="progressPath" d="M 50,10 A 40,40 0 1,1 49.9,10" fill="none" opacity="0" />
-                </svg>
-
-                <!-- 3D Depth Layers -->
-                <div class="depth-layer layer-1"></div>
-                <div class="depth-layer layer-2"></div>
-                <div class="depth-layer layer-3"></div>
-
-                <!-- Inner Glow -->
-                <div class="inner-glow"></div>
-              </div>
-
-              <!-- Outer Glow Effects -->
-              <div class="outer-glow glow-1"></div>
-              <div class="outer-glow glow-2"></div>
-              <div class="outer-glow glow-3"></div>
-            </div>
-
-            <!-- Progress Content -->
-            <div class="progress-content-3d">
-              <span class="progress-percentage-3d">{{ selectedTaskProgress }}%</span>
-              <span class="progress-label-3d">COMPLETE</span>
-            </div>
-
-            <!-- Interactive Drag Handle -->
-            <div class="progress-handle-3d"
-              [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - selectedTaskProgress * 3.6) + 'deg)'">
-              <div class="handle-outer-ring"></div>
-              <div class="handle-inner-core"></div>
-              <div class="handle-pulse"></div>
-            </div>
-
-            <!-- Progress Indicators -->
-            <div class="progress-indicators">
-              <div class="indicator" [class.active]="selectedTaskProgress >= 25"
-                style="transform: rotate(0deg) translateX(55px)">25</div>
-              <div class="indicator" [class.active]="selectedTaskProgress >= 50"
-                style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
-              <div class="indicator" [class.active]="selectedTaskProgress >= 75"
-                style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
-              <div class="indicator" [class.active]="selectedTaskProgress >= 100"
-                style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
-            </div>
-
-            <!-- Floating Elements -->
-            <div class="floating-elements">
-              <div class="float-element element-1"></div>
-              <div class="float-element element-2"></div>
-              <div class="float-element element-3"></div>
-              <div class="float-element element-4"></div>
-            </div>
-          </div>
-
-          <!-- Premium 3D Progress Bar -->
-          <div class="premium-3d-progress-container" (mousedown)="startProgressDrag($event)"
-            (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()" (mouseleave)="endProgressDrag()">
-            <div class="progress-3d-track"></div>
-            <div class="progress-3d-fill" [style.width.%]="taskProgress" [class.value-changing]="isProgressChanging">
-            </div>
-            <div class="progress-3d-particles">
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-            </div>
-            <div class="progress-3d-percentage">{{ taskProgress }}%</div>
-          </div>
-
-          <!-- Manual Progress Input -->
-          <div class="manual-progress-input">
-            <div class="progress-input-container">
-              <input type="number" class="progress-input" [(ngModel)]="taskProgress"
-                (input)="onManualProgressChange($event)" min="0" max="100" placeholder="0">
-              <span class="progress-input-suffix">%</span>
-              <div class="progress-quick-buttons">
-                <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(100)">?</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Task Description -->
-        <div class="description-section">
-          <label class="section-label">Task Description</label>
-          <textarea class="description-card editable-description" [(ngModel)]="editableTaskDescription"
-            placeholder="Enter task description..."></textarea>
-        </div>
-
-        <!-- Daily Remarks - Compact -->
-        <div class="daily-remarks-compact">
-          <label class="remarks-label">
-            <i class="fas fa-comment-dots"></i>
-            Daily Remarks
-          </label>
-          <input 
-            type="text" 
-            class="remarks-input" 
-            [(ngModel)]="dailyRemarks"
-            placeholder="Add today's progress notes or updates..."
-            maxlength="200"
-          />
-        </div>
-
-        <!-- Project Metadata -->
-        <div class="metadata-section">
-          <div class="metadata-header">
-            <h3 class="section-label">Project Metadata</h3>
-          </div>
-
-          <div class="metadata-grid">
-            <!-- Project -->
-            <div class="metadata-card project-dropdown-card">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas fa-folder label-icon"></i>
-                  Project
-                </p>
-                <div class="searchable-dropdown">
-                  <input 
-                    type="text" 
-                    [value]="getProjectDisplayName()"
-                    [placeholder]="projectsList.length === 0 ? 'Loading projects...' : 'Search and select project...'"
-                    class="dropdown-input"
-                    (input)="onProjectSearchInputChange($event)"
-                    (focus)="showProjectDropdown()"
-                    (blur)="hideProjectDropdown()"
-                    autocomplete="off">
-                  <div class="dropdown-icon">
-                    <i class="fas fa-chevron-down"></i>
-                  </div>
-                  <div class="dropdown-list project-dropdown" *ngIf="isProjectDropdownVisible">
-                    <div 
-                      class="dropdown-item" 
-                      *ngFor="let project of getFilteredProjects()"
-                      (mousedown)="selectProject(project)"
-                      [class.selected]="isProjectSelected(project)">
-                      <div class="project-name-only">{{ project.projectName || '' }}</div>
-                    </div>
-                    <div class="no-results" *ngIf="getFilteredProjects().length === 0">
-                      No projects found
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Assigned To -->
-            <div class="metadata-card assignee-dropdown-card">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas fa-user label-icon"></i>
-                  Assigned To
-                </p>
-                <div class="searchable-dropdown">
-                  <input 
-                    type="text" 
-                    [value]="getAssigneeDisplayName()"
-                    [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select assignee...'"
-                    class="dropdown-input"
-                    (input)="onAssigneeSearchInputChange($event)"
-                    (focus)="showAssigneeDropdown()"
-                    (blur)="hideAssigneeDropdown()"
-                    autocomplete="off">
-                  <div class="dropdown-icon">
-                    <i class="fas fa-chevron-down"></i>
-                  </div>
-                  <div class="dropdown-list assignee-dropdown" *ngIf="isAssigneeDropdownVisible">
-                    <div 
-                      class="dropdown-item" 
-                      *ngFor="let employee of getFilteredAssignees()"
-                      (mousedown)="selectAssignee(employee)"
-                      [class.selected]="isAssigneeSelected(employee)">
-                      <div class="employee-name-only">{{ employee.description || '' }}</div>
-                    </div>
-                    <div class="no-results" *ngIf="getFilteredAssignees().length === 0">
-                      No employees found
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Start Date -->
-            <div class="metadata-card">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas fa-calendar-alt label-icon"></i>
-                  Start Date
-                </p>
-                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskStartDate">
-              </div>
-            </div>
-
-            <!-- Target Date -->
-            <div class="metadata-card target-date">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas fa-calendar-check label-icon orange"></i>
-                  Target Date
-                </p>
-                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskEndDate">
-              </div>
-            </div>
-
-            <!-- Estimated Hours -->
-            <div class="metadata-card estimated-hours">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas fa-clock label-icon blue"></i>
-                  Estimated Hours
-                </p>
-                <input 
-                  type="number" 
-                  class="metadata-input" 
-                  [(ngModel)]="selectedTaskEstimatedHours"
-                  placeholder="0.00"
-                  step="0.5"
-                  min="0"
-                >
-              </div>
-            </div>
-
-            <!-- Added Custom Fields -->
-            @for (field of selectedCustomFields; track field.key) {
-            <div class="metadata-card custom-field-card">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas label-icon" [ngClass]="'fa-' + getFieldIcon(field.type)"></i>
-                  {{ field.label }}
-                </p>
-                @if (field.type === 'text') {
-                <input type="text" class="metadata-input" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()">
-                } @else if (field.type === 'number') {
-                <input type="number" class="metadata-input" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()">
-                } @else if (field.type === 'dropdown') {
-                <select class="metadata-select" [(ngModel)]="field.value">
-                  <option value="">Select {{ field.label }}</option>
-                  @for (option of field.options; track option; let i = $index) {
-                  <option [value]="i">{{ option }}</option>
-                  }
-                </select>
-                } @else if (field.type === 'textarea') {
-                <textarea class="metadata-textarea" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
-                } @else if (field.type === 'date') {
-                <input type="date" class="metadata-input" [(ngModel)]="field.value">
-                }
-              </div>
-              <!-- Only show remove button for fields that are NOT mapped (manually added fields) -->
-              @if (field.isMapped !== 'Y') {
-              <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
-                <i class="fas fa-times"></i>
-              </button>
-              }
-            </div>
-            }
-
-            <!-- Add Field Button - Always at the end -->
-            <button class="add-field-card" (click)="openAddFieldModal()">
-              <i class="fas fa-plus-circle"></i>
-              <span class="add-field-text">Add Field</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Attachments Section -->
-        <div class="subtasks-section">
-          <div class="section-header">
-            <h3 class="section-label">Attachments</h3>
-            @if (uploadedFiles.length > 0) {
-            <span class="section-badge">{{ uploadedFiles.length }}</span>
-            }
-          </div>
-
-          <!-- Attachments Content -->
-          <div class="attachments-content">
-            <!-- Integrated Upload Area -->
-            <div class="integrated-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
-              (drop)="onFileDrop($event)">
-              <div class="upload-area-content">
-                <div class="upload-icon">
-                  <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                <div class="upload-text">
-                  <span class="upload-primary">Drop files here or click to browse</span>
-                  <span class="upload-secondary">PDF, DOC, XLS, JPG, PNG (Max 10MB each)</span>
-                </div>
-              </div>
-              <button class="upload-action-btn">
-                <i class="fas fa-plus"></i>
-                <span>Add Files</span>
-              </button>
-            </div>
-
-            <!-- Uploaded Files List -->
-            @if (uploadedFiles.length > 0) {
-            <div class="uploaded-files-list">
-              @for (file of uploadedFiles; track file.id; let i = $index) {
-              <div class="file-item">
-                <div class="file-icon">
-                  <i class="fas" [ngClass]="'fa-' + getFileIcon(file.type)"></i>
-                </div>
-                <div class="file-info">
-                  <div class="file-name">{{ file.name }}</div>
-                  <div class="file-meta">
-                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                    <span class="file-separator">�</span>
-                    <span class="file-date">{{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
-                  </div>
-                </div>
-                <div class="file-actions">
-                  <button class="file-action-btn download" (click)="downloadFile(file)" title="Download">
-                    <i class="fas fa-download"></i>
-                  </button>
-                  <button class="file-action-btn delete" (click)="deleteFile(file)" title="Delete">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-              }
-            </div>
-            }
-
-            <!-- Hidden file input -->
-            <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-              (change)="onFileSelected($event)" style="display: none;">
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Panel - Comments -->
-      <div class="comments-panel">
-        <div class="comments-tabs">
-          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'"
-            (click)="setActiveSidebarTab('comments')">DAILY REMARKS</button>
-          <button class="comment-tab" [class.active]="activeSidebarTab === 'history'"
-            (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
-        </div>
-
-        <!-- Comments Content -->
-        <div class="comments-content" *ngIf="activeSidebarTab === 'comments'">
-          <!-- Display comments from API -->
-          <div class="comment-item" *ngFor="let comment of taskComments">
-            <div class="comment-avatar" *ngIf="!comment.profileImageBase64">
-              {{ getInitials(comment.empName) }}
-            </div>
-            <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar" />
-            <div class="comment-body">
-              <div class="comment-header">
-                <span class="comment-author">{{ comment.empName }}</span>
-                <span class="comment-time">{{ getTimeAgo(comment.submittedOn) }}</span>
-              </div>
-              <div class="comment-message">
-                {{ comment.comments }}
-              </div>
-            </div>
-          </div>
-          
-          <!-- Empty state when no comments -->
-          <div class="no-comments" *ngIf="taskComments.length === 0">
-            <i class="fas fa-comments"></i>
-            <p>No comments yet. Be the first to comment!</p>
-          </div>
-        </div>
-
-        <!-- Activity Log Content -->
-        <div class="activity-log-content" *ngIf="activeSidebarTab === 'history'">
-          <div class="activity-timeline">
-            <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
-              <div class="activity-icon-enhanced" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
-                <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
-              </div>
-              <div class="activity-content-enhanced">
-                <div class="activity-header-enhanced">
-                  <span class="activity-description">{{ activity.description }}</span>
-                  <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
-                </div>
-                <div class="activity-meta-enhanced">
-                  <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Empty state when no activity -->
-            <div class="no-activity" *ngIf="activityLogs.length === 0">
-              <i class="fas fa-history"></i>
-              <p>No activity yet</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Add Comment (only show for comments tab) -->
-        <div class="add-comment" *ngIf="activeSidebarTab === 'comments'">
-          <div class="comment-input-container">
-            <input type="text" class="comment-input" placeholder="Add a comment..." [(ngModel)]="newComment"
-              (keyup.enter)="addComment()">
-            <button class="send-button" (click)="addComment()" [disabled]="!newComment.trim()">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Task Details Modal - Using Standalone Component -->
+@if (showTaskDetailsModal) {
+  <app-task-details-modal
+    [taskId]="selectedTaskIdForModal"
+    [userId]="selectedUserIdForModal"
+    [categoryId]="selectedCategoryIdForModal"
+    (closeModal)="closeTaskDetailsModal()"
+    (taskUpdated)="onTaskUpdatedFromModal($event)"
+    (taskPaused)="onTaskPausedFromModal($event)"
+    (taskResumed)="onTaskResumedFromModal($event)"
+    (taskStopped)="onTaskStoppedFromModal($event)">
+  </app-task-details-modal>
 }
 
 <!-- Add Field Modal - Small Popup -->
@@ -2398,28 +1219,17 @@
     <!-- Available Fields List -->
     <div class="custom-fields-content">
       <div class="available-fields-list">
-        <div class="field-option" *ngFor="let field of availableCustomFields"
-          [class.disabled]="isFieldSelected(field.key)"
-          (click)="!isFieldSelected(field.key) && selectCustomField(field)">
-
-          <div class="field-option-content">
-            <div class="field-option-header">
-              <span class="field-name">{{ field.label }}</span>
-              <span class="field-type-badge" [class]="'type-' + field.type">{{ field.type }}</span>
-            </div>
-            <span class="field-description">{{ field.description }}</span>
-          </div>
-
-          <div class="field-option-action">
-            <button class="add-field-btn" *ngIf="!isFieldSelected(field.key)"
-              (click)="selectCustomField(field); $event.stopPropagation()">
-              <i class="fas fa-plus"></i>
-              Add
-            </button>
-            <span class="field-selected" *ngIf="isFieldSelected(field.key)">
-              <i class="fas fa-check"></i>
-              Added
-            </span>
+        <div class="field-option" *ngFor="let field of availableCustomFields">
+          <div class="field-checkbox">
+            <input type="checkbox" [id]="'field-' + field.key" [checked]="isFieldSelected(field.key)"
+              (change)="selectCustomField(field)">
+            <label [for]="'field-' + field.key">
+              <div class="field-info">
+                <span class="field-name">{{ field.label }}</span>
+                <span class="field-type">{{ field.type }}</span>
+              </div>
+              <span class="field-description">{{ field.description }}</span>
+            </label>
           </div>
         </div>
       </div>
@@ -2427,13 +1237,8 @@
 
     <!-- Modal Footer -->
     <div class="custom-fields-footer">
-      <div class="selected-count">
-        {{ selectedCustomFields.length }} field(s) selected
-      </div>
-      <div class="custom-fields-actions">
-        <button class="cancel-btn" (click)="closeCustomFieldsModal()">Cancel</button>
-        <button class="apply-btn" (click)="applyCustomFields()">Apply Changes</button>
-      </div>
+      <button class="cancel-btn" (click)="closeCustomFieldsModal()">Cancel</button>
+      <button class="apply-btn" (click)="applyCustomFields()">Apply</button>
     </div>
   </div>
 </div>
@@ -2445,7 +1250,7 @@
   <div class="manage-tasks-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="manage-modal-header">
-      <div>
+      <div class="header-content">
         <h3 class="manage-modal-title">Manage Task Categories</h3>
         <p class="manage-modal-subtitle">Add, edit, or remove task categories for your organization</p>
       </div>
@@ -2454,209 +1259,126 @@
       </button>
     </div>
 
-    <!-- Add New Category Button and Department Filter -->
-    <div class="manage-actions">
-      <div class="manage-actions-left">
-        <button class="add-category-btn" (click)="showAddCategoryForm()" *ngIf="!isAddingNewCategory">
-          <i class="fas fa-plus-circle"></i>
-          <span>Add New Category</span>
-        </button>
-      </div>
+    <!-- Action Bar -->
+    <div class="manage-action-bar">
+      <button class="add-new-category-btn" (click)="showAddCategoryForm()">
+        <i class="fas fa-plus-circle"></i>
+        Add New Category
+      </button>
       
-      <div class="manage-actions-right">
-        <div class="department-filter">
-          <label class="filter-label">
-            <i class="fas fa-filter"></i>
-            Filter by Department
-          </label>
-          <div class="filter-dropdown-wrapper">
-            <select class="filter-dropdown" [(ngModel)]="selectedDepartmentFilter">
-              @for (dept of getDepartments(); track dept) {
-                <option [value]="dept">{{ dept }}</option>
-              }
-            </select>
-            <i class="fas fa-chevron-down dropdown-icon"></i>
-          </div>
-        </div>
+      <div class="filter-department">
+        <label class="filter-dept-label">
+          <i class="fas fa-filter"></i>
+          FILTER BY DEPARTMENT
+        </label>
+        <select class="filter-dept-select" [(ngModel)]="selectedDepartmentFilter">
+          @for (dept of getDepartments(); track dept) {
+            <option [value]="dept">{{ dept }}</option>
+          }
+        </select>
       </div>
     </div>
 
-    <!-- Add New Category Form -->
-    @if (isAddingNewCategory) {
-      <div class="category-form new-category-form">
-        <div class="form-header">
-          <h4 class="form-title">
-            <i class="fas fa-plus-circle"></i>
-            New Task Category
-          </h4>
-        </div>
-        <div class="form-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Department <span class="required">*</span></label>
-              <div class="select-wrapper">
-                <select 
-                  class="form-select" 
-                  [(ngModel)]="newTaskCategory.departmentId"
-                  (ngModelChange)="onDepartmentChange($event, newTaskCategory)"
-                >
-                  <option value="0" disabled>Select Department</option>
-                  @for (dept of departmentMasterList; track dept.departmentId) {
-                    <option [value]="dept.departmentId">{{ dept.deptName }}</option>
-                  }
-                </select>
-                <i class="fas fa-chevron-down select-icon"></i>
-              </div>
+    <!-- Categories Content -->
+    <div class="manage-categories-content">
+      <!-- Section Title -->
+      <h4 class="categories-section-title">EXISTING TASK CATEGORIES ({{ getFilteredCategories().length }})</h4>
+
+      <!-- Add/Edit Form -->
+      @if (isAddingNewCategory) {
+        <div class="category-edit-form">
+          <div class="form-fields-row">
+            <div class="form-field">
+              <label class="field-label">DEPARTMENT <span class="required">*</span></label>
+              <select class="field-input" [(ngModel)]="newTaskCategory.departmentId">
+                <option value="0">Select Department</option>
+                @for (dept of departmentMasterList; track dept.departmentId) {
+                  <option [value]="dept.departmentId">{{ dept.deptName }}</option>
+                }
+              </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">Task Category Name <span class="required">*</span></label>
-              <input 
-                type="text" 
-                class="form-input" 
-                [(ngModel)]="newTaskCategory.categoryName"
-                placeholder="e.g., API Development, UI Design"
-              />
+            
+            <div class="form-field">
+              <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
+              <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName" placeholder="Enter category name">
             </div>
-            <div class="form-group">
-              <label class="form-label">Estimated Hours</label>
-              <input 
-                type="number" 
-                class="form-input" 
-                [(ngModel)]="newTaskCategory.sequenceNumber"
-                placeholder="e.g., 1, 2, 3..."
-                min="0"
-              />
+            
+            <div class="form-field">
+              <label class="field-label">ESTIMATED HOURS</label>
+              <input type="number" class="field-input" [(ngModel)]="newTaskCategory.sequenceNumber" placeholder="0">
             </div>
           </div>
-          <div class="form-actions">
-            <button class="btn-cancel" (click)="cancelAddCategory()">
+          
+          <div class="form-actions-row">
+            <button class="btn-form-cancel" (click)="cancelAddCategory()">
               <i class="fas fa-times"></i>
               Cancel
             </button>
-            <button 
-              class="btn-save" 
-              (click)="saveNewCategory()"
-              [disabled]="!newTaskCategory.categoryName.trim() || newTaskCategory.departmentId === 0"
-            >
+            <button class="btn-form-save" (click)="saveNewCategory()">
               <i class="fas fa-check"></i>
-              Save Category
+              Save
             </button>
           </div>
         </div>
-      </div>
-    }
+      }
 
-    <!-- Task Categories List -->
-    <div class="categories-list">
-      <div class="list-header">
-        <h4 class="list-title">
-          @if (selectedDepartmentFilter === 'ALL') {
-            Existing Task Categories ({{ taskCategories.length }})
-          } @else {
-            {{ selectedDepartmentFilter }} - Task Categories ({{ getFilteredCategories().length }})
-          }
-        </h4>
-      </div>
-
-      @for (category of getFilteredCategories(); track category.categoryId) {
-        <div class="category-item" [class.editing]="category.isEditing">
-          @if (!category.isEditing) {
-            <!-- View Mode -->
-            <div class="category-view">
-              <div class="category-icon">
-                <i class="fas fa-tasks"></i>
+      <!-- Categories List -->
+      <div class="categories-items-list">
+        @for (category of getFilteredCategories(); track category.categoryId) {
+          @if (category.isEditing) {
+            <!-- Edit Form for this category -->
+            <div class="category-edit-form">
+              <div class="form-fields-row">
+                <div class="form-field">
+                  <label class="field-label">DEPARTMENT <span class="required">*</span></label>
+                  <select class="field-input" [(ngModel)]="category.departmentId" (change)="onDepartmentChange(category.departmentId, category)">
+                    <option value="0">Select Department</option>
+                    @for (dept of departmentMasterList; track dept.departmentId) {
+                      <option [value]="dept.departmentId">{{ dept.deptName }}</option>
+                    }
+                  </select>
+                </div>
+                
+                <div class="form-field">
+                  <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
+                  <input type="text" class="field-input" [(ngModel)]="category.categoryName" placeholder="Enter category name">
+                </div>
+                
+                <div class="form-field">
+                  <label class="field-label">ESTIMATED HOURS</label>
+                  <input type="number" class="field-input" [(ngModel)]="category.sequenceNumber" placeholder="0">
+                </div>
               </div>
-              <div class="category-content">
-                <h5 class="category-name">{{ category.categoryName }}</h5>
-                <p class="category-dept">
-                  {{ category.departmentName }}
-                  @if (category.sequenceNumber && category.sequenceNumber > 0) {
-                    <span class="category-hours"> • {{ category.sequenceNumber }}h</span>
-                  }
-                </p>
-              </div>
-              <div class="category-actions">
-                <button class="btn-edit" (click)="startEditCategory(category)" title="Edit">
-                  <i class="fas fa-edit"></i>
-                  <span>Edit</span>
+              
+              <div class="form-actions-row">
+                <button class="btn-form-cancel" (click)="cancelEdit(category)">
+                  <i class="fas fa-times"></i>
+                  Cancel
+                </button>
+                <button class="btn-form-save" (click)="saveCategory(category)">
+                  <i class="fas fa-check"></i>
+                  Save
                 </button>
               </div>
             </div>
           } @else {
-            <!-- Edit Mode -->
-            <div class="category-edit">
-              <div class="edit-form">
-                <div class="edit-form-row">
-                  <div class="edit-form-group">
-                    <label class="edit-label">Department <span class="required">*</span></label>
-                    <div class="select-wrapper">
-                      <select 
-                        class="edit-select" 
-                        [(ngModel)]="category.departmentId"
-                        (ngModelChange)="onDepartmentChange($event, category)"
-                      >
-                        <option value="0" disabled>Select Department</option>
-                        @for (dept of departmentMasterList; track dept.departmentId) {
-                          <option [value]="dept.departmentId">{{ dept.deptName }}</option>
-                        }
-                      </select>
-                      <i class="fas fa-chevron-down select-icon"></i>
-                    </div>
-                  </div>
-                  <div class="edit-form-group">
-                    <label class="edit-label">Task Category Name <span class="required">*</span></label>
-                    <input 
-                      type="text" 
-                      class="edit-input" 
-                      [(ngModel)]="category.categoryName"
-                      placeholder="Category Name"
-                    />
-                  </div>
-                  <div class="edit-form-group">
-                    <label class="edit-label">Estimated Hours</label>
-                    <input 
-                      type="number" 
-                      class="edit-input" 
-                      [(ngModel)]="category.sequenceNumber"
-                      placeholder="e.g., 1, 2, 3..."
-                      min="0"
-                    />
-                  </div>
-                </div>
-                <div class="edit-actions">
-                  <button class="btn-cancel-edit" (click)="cancelEdit(category)">
-                    <i class="fas fa-times"></i>
-                    Cancel
-                  </button>
-                  <button 
-                    class="btn-save-edit" 
-                    (click)="saveCategory(category)"
-                    [disabled]="!category.categoryName.trim() || category.departmentId === 0"
-                  >
-                    <i class="fas fa-check"></i>
-                    Save
-                  </button>
-                </div>
+            <!-- Category List Item -->
+            <div class="category-list-item">
+              <div class="category-item-icon">
+                <i class="fas fa-list"></i>
               </div>
+              <div class="category-item-content">
+                <h5 class="category-item-title">{{ category.categoryName }}</h5>
+                <p class="category-item-dept">{{ category.departmentName }}</p>
+              </div>
+              <button class="category-edit-btn" (click)="startEditCategory(category)">
+                <i class="fas fa-edit"></i>
+                Edit
+              </button>
             </div>
           }
-        </div>
-      }
-
-      @if (getFilteredCategories().length === 0) {
-        <div class="empty-categories">
-          <div class="empty-icon">
-            <i class="fas fa-folder-open"></i>
-          </div>
-          @if (selectedDepartmentFilter === 'ALL') {
-            <p class="empty-text">No task categories yet</p>
-            <p class="empty-subtext">Click "Add New Category" to create your first task category</p>
-          } @else {
-            <p class="empty-text">No categories in {{ selectedDepartmentFilter }}</p>
-            <p class="empty-subtext">Select "ALL" to view all categories or add a new one for this department</p>
-          }
-        </div>
-      }
+        }
+      </div>
     </div>
   </div>
 </div>

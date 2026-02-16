@@ -239,3 +239,24 @@ export interface TaskBulkApprovalRequest {
   action: string;
   fullApprove: string;
 }
+
+export interface UserDailyLogHistoryRequest {
+  userId: string;
+  fromDate?: string;      
+  toDate?: string;        
+  projectId?: number;
+  categoryId?: number;
+}
+
+export interface UserDailyLogHistoryResponse {
+  taskId: number;
+  taskTitle: string;
+  description: string;
+  categoryName: string;
+  projectName: string;
+  userId: string;
+  loggedBy: string;
+  logDate: string;
+  duration: string;
+  dailyComment: string;
+}

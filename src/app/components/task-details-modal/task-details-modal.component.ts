@@ -1,0 +1,924 @@
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Api } from '../../services/api';
+import { ToasterService } from '../../services/toaster.service';
+import { TaskCommentDto, TaskActivityDto, TaskSaveDto } from '../../models/TimeSheetDPR.model';
+import Swal from 'sweetalert2';
+
+interface CustomField {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'dropdown' | 'textarea' | 'date';
+  description: string;
+  options?: string[];
+  value?: any;
+  fieldId?: number;
+  isMapped?: 'Y' | 'N';
+}
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadDate: Date;
+  url?: string;
+}
+
+@Component({
+  selector: 'app-task-details-modal',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './task-details-modal.component.html',
+  styleUrls: ['./task-details-modal.component.css']
+})
+export class TaskDetailsModalComponent implements OnInit, OnDestroy {
+  // Input properties
+  @Input() taskId!: number;
+  @Input() userId!: string;
+  @Input() categoryId!: number;
+  
+  // Output events
+  @Output() closeModal = new EventEmitter<void>();
+  @Output() taskUpdated = new EventEmitter<any>();
+  @Output() taskPaused = new EventEmitter<number>();
+  @Output() taskResumed = new EventEmitter<number>();
+  @Output() taskStopped = new EventEmitter<number>();
+  
+  // Task data
+  selectedTaskId = '';
+  selectedTaskCategory = '';
+  selectedTaskRunningTimer = '00:00:00';
+  selectedTaskTotalHours = '0h';
+  selectedTaskProgress = 0;
+  selectedTaskDetailStatus = 'not-started';
+  
+  // Editable fields
+  editableTaskTitle = '';
+  editableTaskDescription = '';
+  dailyRemarks = '';
+  
+  // Metadata fields
+  selectedTaskStartDate = '';
+  selectedTaskEndDate = '';
+  selectedTaskEstimatedHours: number = 0;
+  selectedProjectId: string = '';
+  selectedAssigneeId: string = '';
+  
+  // Custom fields
+  selectedCustomFields: CustomField[] = [];
+  availableCustomFields: CustomField[] = [];
+  tempSelectedFields: string[] = [];
+  showAddFieldModal = false;
+  
+  // Files
+  uploadedFiles: UploadedFile[] = [];
+  
+  // Comments and Activity
+  activeSidebarTab: 'comments' | 'history' = 'comments';
+  taskComments: TaskCommentDto[] = [];
+  activityLogs: TaskActivityDto[] = [];
+  newComment = '';
+  
+  // Dropdowns
+  projectsList: any[] = [];
+  employeeMasterList: any[] = [];
+  projectSearchTerm: string = '';
+  assigneeSearchTerm: string = '';
+  isProjectDropdownVisible: boolean = false;
+  isAssigneeDropdownVisible: boolean = false;
+  
+  // Progress control
+  taskProgress = 0;
+  isDraggingProgress = false;
+  isProgressAnimating = false;
+  isProgressChanging = false;
+  
+  // Timer management
+  private timerInterval: any = null;
+  private timerStartTime: Date | null = null;
+  private timerElapsedSeconds = 0;
+
+  constructor(
+    private api: Api,
+    private toasterService: ToasterService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    console.log('TaskDetailsModalComponent ngOnInit called with:', {
+      taskId: this.taskId,
+      userId: this.userId,
+      categoryId: this.categoryId
+    });
+    
+    if (this.taskId && this.userId && this.categoryId) {
+      console.log('All required inputs present, loading task details...');
+      this.loadTaskDetails();
+      this.loadCustomFields();
+      this.loadProjectsList();
+      this.loadEmployeeMasterList();
+      this.loadTaskFiles(this.taskId);
+      this.loadComments(this.taskId);
+      this.loadActivity(this.taskId);
+    } else {
+      console.error('Missing required inputs:', {
+        hasTaskId: !!this.taskId,
+        hasUserId: !!this.userId,
+        hasCategoryId: !!this.categoryId
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    this.stopTimer();
+  }
+
+  // Load task details from API
+  loadTaskDetails() {
+    console.log('=== loadTaskDetails START ===');
+    console.log('Loading task details for:', { taskId: this.taskId, userId: this.userId, categoryId: this.categoryId });
+    console.log('Calling API: getTaskById');
+    
+    this.api.getTaskById(this.taskId, this.userId, this.categoryId).subscribe({
+      next: (response: any) => {
+        console.log('=== getTaskById API Response ===');
+        console.log('Full response:', response);
+        console.log('Response success:', response?.success);
+        console.log('Response data:', response?.data);
+        
+        if (response && response.success && response.data) {
+          const taskDetails = response.data;
+          console.log('Task details data:', taskDetails);
+          
+          // Map task data with correct field names from API
+          this.selectedTaskId = taskDetails.taskId?.toString() || '';
+          this.selectedTaskCategory = taskDetails.categoryName || '';
+          this.editableTaskTitle = taskDetails.taskTitle || '';
+          this.editableTaskDescription = taskDetails.taskDescription || taskDetails.description || '';
+          
+          console.log('Bound description:', this.editableTaskDescription);
+          
+          this.selectedTaskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
+          this.taskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
+          
+          // Format timers - API returns minutes
+          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayTotalMinutes || 0);
+          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalTimeMinutes || 0);
+          
+          // Bind Project Metadata fields
+          this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
+          this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
+          this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
+          this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
+          
+          // Bind assignee - API returns 'assignee' field (could be userId or employeeId)
+          // Convert to string to match employeeMasterList idValue format
+          const assigneeValue = taskDetails.assignee || taskDetails.assigneeId || taskDetails.userId || '';
+          this.selectedAssigneeId = assigneeValue ? assigneeValue.toString() : '';
+          
+          this.dailyRemarks = taskDetails.dailyRemarks || '';
+          
+          console.log('Assignee binding:', {
+            apiAssignee: taskDetails.assignee,
+            apiAssigneeId: taskDetails.assigneeId,
+            apiUserId: taskDetails.userId,
+            selectedAssigneeId: this.selectedAssigneeId,
+            employeeMasterListLength: this.employeeMasterList.length,
+            displayName: this.getAssigneeDisplayName()
+          });
+          
+          // Trigger change detection after employee list loads
+          if (this.employeeMasterList.length > 0) {
+            this.cdr.detectChanges();
+          }
+          
+          // Map status
+          this.selectedTaskDetailStatus = this.mapTaskStatus(taskDetails.status);
+          
+          // Map custom fields if available
+          if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
+            this.selectedCustomFields = taskDetails.customFields
+              .filter((field: any) => field.isMapped === 'Y')
+              .map((field: any) => {
+                // Parse options string to array
+                let optionsArray: string[] = [];
+                if (field.options && typeof field.options === 'string') {
+                  optionsArray = field.options.split(',').map((opt: string) => opt.trim());
+                } else if (Array.isArray(field.options)) {
+                  optionsArray = field.options;
+                }
+                
+                return {
+                  key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+                  label: field.fieldName || 'Custom Field',
+                  type: this.mapFieldType(field.fieldType),
+                  description: `${field.fieldName} field`,
+                  options: optionsArray,
+                  value: field.savedValue || field.value || '',
+                  fieldId: field.fieldId,
+                  isMapped: field.isMapped || 'N'
+                };
+              });
+          }
+          
+          // Start timer if task is running
+          if (this.selectedTaskDetailStatus === 'running') {
+            const runningSeconds = (taskDetails.todayTotalMinutes || 0) * 60;
+            this.startTimer(runningSeconds);
+          }
+          
+          console.log('=== Task details loaded successfully ===');
+          this.cdr.detectChanges();
+        } else {
+          console.error('API response invalid:', {
+            hasResponse: !!response,
+            hasSuccess: response?.success,
+            hasData: !!response?.data
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('=== getTaskById API ERROR ===');
+        console.error('Error loading task details:', error);
+        console.error('Error status:', error?.status);
+        console.error('Error message:', error?.message);
+        this.toasterService.showError('Error', 'Failed to load task details');
+      }
+    });
+  }
+
+  // Load custom fields from API
+  loadCustomFields() {
+    this.api.getCustomFields().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.availableCustomFields = response.data.map((field: any) => ({
+            key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
+            label: field.fieldName || 'Custom Field',
+            type: this.mapFieldType(field.fieldType),
+            description: `${field.fieldName} field`,
+            options: field.options || [],
+            fieldId: field.fieldId,
+            isMapped: field.isMapped || 'N'
+          }));
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading custom fields:', error);
+      }
+    });
+  }
+
+  // Load projects list
+  loadProjectsList() {
+    this.api.getProjects().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.projectsList = response.data;
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading projects:', error);
+      }
+    });
+  }
+
+  // Load employee master list
+  loadEmployeeMasterList() {
+    this.api.GetEmployeeMasterList().subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.employeeMasterList = response.data;
+          console.log('Employee master list loaded:', this.employeeMasterList.length, 'employees');
+          console.log('Current selectedAssigneeId:', this.selectedAssigneeId);
+          
+          // Log sample employee data to verify idValue format
+          if (this.employeeMasterList.length > 0) {
+            console.log('Sample employee data:', this.employeeMasterList[0]);
+            
+            // Try to find the matching employee
+            if (this.selectedAssigneeId) {
+              const matchedEmployee = this.employeeMasterList.find(emp => 
+                emp.idValue?.toString() === this.selectedAssigneeId?.toString()
+              );
+              console.log('Matched employee for assignee:', matchedEmployee);
+              
+              if (!matchedEmployee) {
+                console.warn('No matching employee found for assigneeId:', this.selectedAssigneeId);
+                console.log('Available idValues:', this.employeeMasterList.slice(0, 5).map(e => e.idValue));
+              }
+            }
+          }
+          
+          console.log('Assignee display name after list load:', this.getAssigneeDisplayName());
+          
+          // Force change detection to update the display
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading employees:', error);
+      }
+    });
+  }
+
+  // Load task files
+  loadTaskFiles(taskId: number) {
+    this.uploadedFiles = [];
+    
+    this.api.getTaskFiles(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.uploadedFiles = response.data.map((file: any) => ({
+            id: file.fileId?.toString() || '',
+            name: file.fileName || 'Unknown File',
+            size: file.fileSizeKb ? file.fileSizeKb * 1024 : 0,
+            type: file.fileType || 'application/octet-stream',
+            uploadDate: file.uploadedOn ? new Date(file.uploadedOn) : new Date(),
+            url: file.fileContentBase64 || file.fileContent || undefined
+          }));
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading task files:', error);
+      }
+    });
+  }
+
+  // Load comments
+  loadComments(taskId: number) {
+    this.taskComments = [];
+    
+    this.api.getComments(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.taskComments = response.data;
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading comments:', error);
+      }
+    });
+  }
+
+  // Load activity
+  loadActivity(taskId: number) {
+    this.activityLogs = [];
+    
+    this.api.getActivity(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.activityLogs = response.data;
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading activity:', error);
+      }
+    });
+  }
+
+  // Save task changes
+  saveTaskChanges() {
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || this.userId;
+    
+    const taskSaveRequest: TaskSaveDto = {
+      taskId: this.taskId,
+      categoryId: this.categoryId,
+      taskTitle: this.editableTaskTitle,
+      description: this.editableTaskDescription,
+      projectId: parseInt(this.selectedProjectId) || 0,
+      departmentId: 0, // Will be set by backend based on category
+      targetDate: this.selectedTaskEndDate,
+      startDate: this.selectedTaskStartDate,
+      progress: this.taskProgress,
+      estimatedHours: this.selectedTaskEstimatedHours,
+      status: this.selectedTaskDetailStatus.toUpperCase(),
+      createdBy: userId,
+      assignees: [this.selectedAssigneeId],
+      customFields: this.selectedCustomFields.map(field => ({
+        fieldId: field.fieldId || 0,
+        value: field.value?.toString() || ''
+      }))
+    };
+
+    this.api.saveTaskBulk(taskSaveRequest).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Task updated successfully');
+          this.taskUpdated.emit(taskSaveRequest);
+        } else {
+          this.toasterService.showError('Error', 'Failed to update task');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error updating task:', error);
+        this.toasterService.showError('Error', 'Failed to update task');
+      }
+    });
+  }
+
+  // Timer management
+  startTimer(initialSeconds: number = 0) {
+    this.timerElapsedSeconds = initialSeconds;
+    this.timerStartTime = new Date();
+    
+    this.timerInterval = setInterval(() => {
+      this.timerElapsedSeconds++;
+      this.selectedTaskRunningTimer = this.formatTime(this.timerElapsedSeconds);
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  // Task control methods
+  pauseTaskFromModal() {
+    this.stopTimer();
+    this.selectedTaskDetailStatus = 'pause';
+    this.taskPaused.emit(this.taskId);
+  }
+
+  resumeTaskFromModal() {
+    this.startTimer(this.timerElapsedSeconds);
+    this.selectedTaskDetailStatus = 'running';
+    this.taskResumed.emit(this.taskId);
+  }
+
+  stopTaskFromModal() {
+    Swal.fire({
+      title: 'Stop Task?',
+      text: 'Are you sure you want to stop this task?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, stop it',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.stopTimer();
+        this.selectedTaskDetailStatus = 'not-closed';
+        this.taskStopped.emit(this.taskId);
+        this.close();
+      }
+    });
+  }
+
+  // Add comment
+  addComment() {
+    if (!this.newComment.trim()) return;
+
+    const commentData: TaskCommentDto = {
+      commentId: 0,
+      taskId: this.taskId,
+      userId: this.userId,
+      comments: this.newComment,
+      submittedOn: new Date().toISOString(),
+      empName: '',
+      profileImage: undefined,
+      profileImageBase64: undefined
+    };
+
+    this.api.saveComment(commentData).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Comment added');
+          this.newComment = '';
+          this.loadComments(this.taskId);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error adding comment:', error);
+        this.toasterService.showError('Error', 'Failed to add comment');
+      }
+    });
+  }
+
+  // File upload methods
+  triggerFileUpload() {
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  onFileSelected(event: any) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      this.uploadFiles(files);
+    }
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onFileDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.uploadFiles(files);
+    }
+  }
+
+  uploadFiles(files: FileList) {
+    // Upload each file to the API
+    Array.from(files).forEach(file => {
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      const userId = currentUser.empId || currentUser.employeeId || this.userId;
+      
+      this.api.uploadTimeSheetFile(this.taskId, userId, file).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            this.toasterService.showSuccess('Success', `File "${file.name}" uploaded successfully`);
+            // Reload the files list
+            this.loadTaskFiles(this.taskId);
+          } else {
+            this.toasterService.showError('Error', `Failed to upload file "${file.name}"`);
+          }
+        },
+        error: (error: any) => {
+          console.error('Error uploading file:', error);
+          this.toasterService.showError('Error', `Failed to upload file "${file.name}"`);
+        }
+      });
+    });
+  }
+
+  downloadFile(file: UploadedFile) {
+    // Download file using the base64 content or URL
+    if (file.url) {
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.name;
+      link.click();
+      this.toasterService.showSuccess('Success', 'File download started');
+    } else {
+      this.toasterService.showError('Error', 'File content not available');
+    }
+  }
+
+  deleteFile(file: UploadedFile) {
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || this.userId;
+    
+    // Show confirmation dialog
+    if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
+      this.api.deleteTaskFile(parseInt(file.id), userId).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            this.toasterService.showSuccess('Success', 'File deleted successfully');
+            // Reload the files list
+            this.loadTaskFiles(this.taskId);
+          } else {
+            this.toasterService.showError('Error', 'Failed to delete file');
+          }
+        },
+        error: (error: any) => {
+          console.error('Error deleting file:', error);
+          this.toasterService.showError('Error', 'Failed to delete file');
+        }
+      });
+    }
+  }
+
+  // Progress control
+  startProgressDrag(event: MouseEvent) {
+    this.isDraggingProgress = true;
+  }
+
+  onProgressDrag(event: MouseEvent) {
+    if (this.isDraggingProgress) {
+      // Calculate progress based on mouse position
+      // Implementation here
+    }
+  }
+
+  endProgressDrag() {
+    this.isDraggingProgress = false;
+  }
+
+  onManualProgressChange(event: any) {
+    this.selectedTaskProgress = this.taskProgress;
+    this.isProgressChanging = true;
+    setTimeout(() => {
+      this.isProgressChanging = false;
+    }, 300);
+  }
+
+  setQuickProgress(value: number) {
+    this.taskProgress = value;
+    this.selectedTaskProgress = value;
+  }
+
+  // Custom fields management
+  openAddFieldModal() {
+    this.showAddFieldModal = true;
+    this.tempSelectedFields = [];
+  }
+
+  closeAddFieldModal() {
+    this.showAddFieldModal = false;
+    this.tempSelectedFields = [];
+  }
+
+  toggleFieldSelection(fieldKey: string) {
+    const index = this.tempSelectedFields.indexOf(fieldKey);
+    if (index > -1) {
+      this.tempSelectedFields.splice(index, 1);
+    } else {
+      this.tempSelectedFields.push(fieldKey);
+    }
+  }
+
+  isFieldChecked(fieldKey: string): boolean {
+    return this.tempSelectedFields.includes(fieldKey);
+  }
+
+  isFieldMapped(fieldKey: string): boolean {
+    return this.selectedCustomFields.some(f => f.key === fieldKey && f.isMapped === 'Y');
+  }
+
+  applySelectedFields() {
+    // Get the field IDs of the newly selected fields
+    const newFieldIds: number[] = [];
+    
+    this.tempSelectedFields.forEach(fieldKey => {
+      const field = this.availableCustomFields.find(f => f.key === fieldKey);
+      if (field && !this.selectedCustomFields.some(f => f.key === fieldKey)) {
+        // Add to local array
+        this.selectedCustomFields.push({ ...field, value: '', isMapped: 'Y' });
+        // Collect field ID for API call
+        if (field.fieldId) {
+          newFieldIds.push(field.fieldId);
+        }
+      }
+    });
+    
+    // If there are new fields to map, call the API
+    if (newFieldIds.length > 0) {
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      const userId = currentUser.empId || currentUser.employeeId || this.userId;
+      
+      const request = {
+        categoryId: this.categoryId,
+        fieldIds: newFieldIds,
+        userId: userId
+      };
+      
+      this.api.saveTaskFieldMapping(request).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            this.toasterService.showSuccess('Success', 'Fields added successfully');
+            // Reload custom fields to get updated mapping
+            this.loadCustomFields();
+          } else {
+            this.toasterService.showError('Error', 'Failed to add fields');
+          }
+        },
+        error: (error: any) => {
+          console.error('Error saving field mapping:', error);
+          this.toasterService.showError('Error', 'Failed to add fields');
+        }
+      });
+    }
+    
+    this.closeAddFieldModal();
+  }
+
+  removeCustomField(fieldKey: string) {
+    // Remove from local array
+    this.selectedCustomFields = this.selectedCustomFields.filter(f => f.key !== fieldKey);
+    
+    // Note: If you want to remove the mapping from the API as well,
+    // you would need to call an API endpoint here
+    // For now, this just removes it from the current view
+  }
+
+  // Dropdown methods
+  showProjectDropdown() {
+    this.isProjectDropdownVisible = true;
+  }
+
+  hideProjectDropdown() {
+    setTimeout(() => {
+      this.isProjectDropdownVisible = false;
+    }, 200);
+  }
+
+  showAssigneeDropdown() {
+    this.isAssigneeDropdownVisible = true;
+  }
+
+  hideAssigneeDropdown() {
+    setTimeout(() => {
+      this.isAssigneeDropdownVisible = false;
+    }, 200);
+  }
+
+  onProjectSearchInputChange(event: any) {
+    this.projectSearchTerm = event.target.value;
+  }
+
+  onAssigneeSearchInputChange(event: any) {
+    this.assigneeSearchTerm = event.target.value;
+  }
+
+  getFilteredProjects() {
+    if (!this.projectSearchTerm) return this.projectsList;
+    return this.projectsList.filter(p => 
+      p.projectName?.toLowerCase().includes(this.projectSearchTerm.toLowerCase())
+    );
+  }
+
+  getFilteredAssignees() {
+    if (!this.assigneeSearchTerm) return this.employeeMasterList;
+    return this.employeeMasterList.filter(e => 
+      e.description?.toLowerCase().includes(this.assigneeSearchTerm.toLowerCase())
+    );
+  }
+
+  selectProject(project: any) {
+    this.selectedProjectId = project.projectId?.toString() || '';
+    this.projectSearchTerm = '';
+    this.isProjectDropdownVisible = false;
+  }
+
+  selectAssignee(employee: any) {
+    this.selectedAssigneeId = employee.idValue?.toString() || '';
+    this.assigneeSearchTerm = '';
+    this.isAssigneeDropdownVisible = false;
+  }
+
+  isProjectSelected(project: any): boolean {
+    return this.selectedProjectId === project.projectId?.toString();
+  }
+
+  isAssigneeSelected(employee: any): boolean {
+    return this.selectedAssigneeId?.toString() === employee.idValue?.toString();
+  }
+
+  getProjectDisplayName(): string {
+    const project = this.projectsList.find(p => p.projectId?.toString() === this.selectedProjectId);
+    return project?.projectName || '';
+  }
+
+  getAssigneeDisplayName(): string {
+    if (!this.selectedAssigneeId) {
+      return 'Select assignee...';
+    }
+    const selected = this.employeeMasterList.find(emp => emp.idValue?.toString() === this.selectedAssigneeId?.toString());
+    return selected ? selected.description : 'Select assignee...';
+  }
+
+  // Sidebar tab management
+  setActiveSidebarTab(tab: 'comments' | 'history') {
+    this.activeSidebarTab = tab;
+  }
+
+  // Utility methods
+  mapTaskStatus(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'NOT STARTED': 'not-started',
+      'RUNNING': 'running',
+      'PAUSED': 'pause',
+      'COMPLETED': 'completed',
+      'CLOSED': 'not-closed'
+    };
+    return statusMap[status] || 'not-started';
+  }
+
+  mapFieldType(apiFieldType: string): 'text' | 'number' | 'dropdown' | 'textarea' | 'date' {
+    const typeMap: { [key: string]: 'text' | 'number' | 'dropdown' | 'textarea' | 'date' } = {
+      'Text': 'text',
+      'Dropdown': 'dropdown',
+      'Number': 'number',
+      'Textarea': 'textarea',
+      'Date': 'date'
+    };
+    return typeMap[apiFieldType] || 'text';
+  }
+
+  formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  formatHours(hours: number): string {
+    return `${hours.toFixed(1)}h`;
+  }
+
+  // Format minutes to time display (e.g., "14h 54m" or "45m")
+  formatMinutesToTime(minutes: number): string {
+    if (!minutes || minutes === 0) {
+      return '0m';
+    }
+    
+    if (minutes < 60) {
+      return Math.round(minutes) + 'm';
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    
+    // Format as "Xh Ym" (e.g., "14h 54m")
+    if (mins === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h ${mins}m`;
+  }
+
+  // Format date string for input field (YYYY-MM-DD format)
+  formatDateForInput(dateString: string): string {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch (e) {
+      return '';
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  getFileIcon(fileType: string): string {
+    if (fileType.includes('pdf')) return 'file-pdf';
+    if (fileType.includes('word') || fileType.includes('doc')) return 'file-word';
+    if (fileType.includes('excel') || fileType.includes('sheet')) return 'file-excel';
+    if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('png')) return 'file-image';
+    return 'file';
+  }
+
+  getFieldIcon(fieldType: string): string {
+    const iconMap: { [key: string]: string } = {
+      'text': 'font',
+      'number': 'hashtag',
+      'dropdown': 'list',
+      'textarea': 'align-left',
+      'date': 'calendar'
+    };
+    return iconMap[fieldType] || 'question';
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  getTimeAgo(dateString: string | Date): string {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  }
+
+  getActivityIconFromDescription(description: string): string {
+    if (description.includes('started') || description.includes('play')) return 'fa-play';
+    if (description.includes('paused')) return 'fa-pause';
+    if (description.includes('stopped') || description.includes('completed')) return 'fa-stop';
+    if (description.includes('comment')) return 'fa-comment';
+    if (description.includes('file') || description.includes('upload')) return 'fa-file';
+    if (description.includes('updated') || description.includes('changed')) return 'fa-edit';
+    return 'fa-circle';
+  }
+
+  getActivityColorFromDescription(description: string): string {
+    if (description.includes('started') || description.includes('play')) return '#10b981';
+    if (description.includes('paused')) return '#f59e0b';
+    if (description.includes('stopped') || description.includes('completed')) return '#ef4444';
+    if (description.includes('comment')) return '#3b82f6';
+    if (description.includes('file') || description.includes('upload')) return '#8b5cf6';
+    return '#6b7280';
+  }
+
+  // Close modal
+  close() {
+    this.closeModal.emit();
+  }
+}

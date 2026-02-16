@@ -1,0 +1,636 @@
+<!-- Task Details Modal -->
+<div class="modal-overlay" (click)="close()">
+  <div class="task-modal-container" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <header class="modal-task-header">
+      <div class="modal-header-left">
+        <button class="modal-back-button" (click)="close()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="modal-task-id-badge">TSK-{{ selectedTaskId }}</div>
+        <div class="status-dropdown-container">
+          <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
+            <option value="not-started">Not Started</option>
+            <option value="not-closed">Closed</option>
+            <option value="running">Running</option>
+            <option value="completed">Completed</option>
+            <option value="pause">Pause</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-header-right">
+        <div class="modal-timer-section">
+          <span class="timer-label">Running Timer</span>
+          <div class="timer-controls">
+            <div class="timer-display centered-timer">
+              <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
+            </div>
+            <div class="timer-buttons">
+              <!-- Show Pause button when task is RUNNING -->
+              <button class="timer-btn pause-btn" 
+                      *ngIf="selectedTaskDetailStatus === 'running'"
+                      (click)="pauseTaskFromModal()"
+                      title="Pause Task">
+                <i class="fas fa-pause"></i>
+              </button>
+              
+              <!-- Show Resume button when task is PAUSED -->
+              <button class="timer-btn resume-btn" 
+                      *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
+                      (click)="resumeTaskFromModal()"
+                      title="Resume Task">
+                <i class="fas fa-play"></i>
+              </button>
+              
+              <!-- Always show Stop button -->
+              <button class="timer-btn stop-btn"
+                      (click)="stopTaskFromModal()"
+                      title="Stop Task">
+                <i class="fas fa-stop"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Save Button next to Running Timer -->
+        <button class="save-task-btn" (click)="saveTaskChanges()" title="Save Changes">
+          <i class="fas fa-save"></i>
+          <span>Save</span>
+        </button>
+
+        <div class="divider"></div>
+
+        <div class="total-hours-section">
+          <span class="hours-label">Total Hours</span>
+          <div class="hours-display">
+            <i class="fas fa-clock"></i>
+            <span class="hours-text">{{ selectedTaskTotalHours }}</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="action-btn" (click)="close()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="task-content">
+      <!-- Left Panel -->
+      <div class="task-main-panel">
+        <!-- Title Section with Progress Circle -->
+        <div class="title-section">
+          <div class="title-content">
+            <div class="task-meta">
+              <span class="modal-category-badge">{{ selectedTaskCategory }}</span>
+            </div>
+            <input type="text" class="modal-task-title editable-title" [(ngModel)]="editableTaskTitle"
+              placeholder="Enter task title...">
+          </div>
+
+          <!-- Advanced 3D Circular Progress Indicator -->
+          <div class="progress-circle-3d" [class.dragging]="isDraggingProgress" [class.animating]="isProgressAnimating"
+            (mousedown)="startProgressDrag($event)" (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()"
+            (mouseleave)="endProgressDrag()" title="Click and drag to adjust progress">
+
+            <!-- 3D Circle Container -->
+            <div class="circle-3d-container">
+              <!-- Background Rings -->
+              <div class="bg-ring ring-1"></div>
+              <div class="bg-ring ring-2"></div>
+              <div class="bg-ring ring-3"></div>
+
+              <!-- Main Progress Circle -->
+              <div class="main-circle">
+                <!-- Animated Background -->
+                <div class="circle-bg-animated"></div>
+
+                <!-- Progress Fill -->
+                <div class="progress-fill-3d" [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg)'">
+                  <div class="fill-segment"></div>
+                </div>
+
+                <!-- Progress Track -->
+                <svg class="progress-svg-3d" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="progressGradient3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#06d6a0;stop-opacity:1" />
+                      <stop offset="30%" style="stop-color:#10b981;stop-opacity:1" />
+                      <stop offset="70%" style="stop-color:#34d399;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#6ee7b7;stop-opacity:1" />
+                    </linearGradient>
+                    <filter id="glow3D">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Background Circle -->
+                  <circle class="progress-bg-3d" cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)"
+                    stroke-width="8" />
+
+                  <!-- Progress Circle -->
+                  <circle class="progress-stroke-3d" cx="50" cy="50" r="40" fill="none"
+                    stroke="url(#progressGradient3D)" stroke-width="8" stroke-linecap="round" filter="url(#glow3D)"
+                    [style.stroke-dasharray]="251.2" [style.stroke-dashoffset]="251.2 - (selectedTaskProgress / 100) * 251.2"
+                    transform="rotate(-90 50 50)" />
+
+                  <!-- Animated Particles -->
+                  <g class="particles">
+                    <circle class="particle particle-1" r="2" fill="#10b981" opacity="0.8">
+                      <animateMotion dur="3s" repeatCount="indefinite">
+                        <mpath href="#progressPath" />
+                      </animateMotion>
+                    </circle>
+                    <circle class="particle particle-2" r="1.5" fill="#34d399" opacity="0.6">
+                      <animateMotion dur="4s" repeatCount="indefinite" begin="1s">
+                        <mpath href="#progressPath" />
+                      </animateMotion>
+                    </circle>
+                    <circle class="particle particle-3" r="1" fill="#6ee7b7" opacity="0.4">
+                      <animateMotion dur="5s" repeatCount="indefinite" begin="2s">
+                        <mpath href="#progressPath" />
+                      </animateMotion>
+                    </circle>
+                  </g>
+
+                  <!-- Hidden path for particle animation -->
+                  <path id="progressPath" d="M 50,10 A 40,40 0 1,1 49.9,10" fill="none" opacity="0" />
+                </svg>
+
+                <!-- 3D Depth Layers -->
+                <div class="depth-layer layer-1"></div>
+                <div class="depth-layer layer-2"></div>
+                <div class="depth-layer layer-3"></div>
+
+                <!-- Inner Glow -->
+                <div class="inner-glow"></div>
+              </div>
+
+              <!-- Outer Glow Effects -->
+              <div class="outer-glow glow-1"></div>
+              <div class="outer-glow glow-2"></div>
+              <div class="outer-glow glow-3"></div>
+            </div>
+
+            <!-- Progress Content -->
+            <div class="progress-content-3d">
+              <span class="progress-percentage-3d">{{ selectedTaskProgress }}%</span>
+              <span class="progress-label-3d">COMPLETE</span>
+            </div>
+
+            <!-- Interactive Drag Handle -->
+            <div class="progress-handle-3d"
+              [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - selectedTaskProgress * 3.6) + 'deg)'">
+              <div class="handle-outer-ring"></div>
+              <div class="handle-inner-core"></div>
+              <div class="handle-pulse"></div>
+            </div>
+
+            <!-- Progress Indicators -->
+            <div class="progress-indicators">
+              <div class="indicator" [class.active]="selectedTaskProgress >= 25"
+                style="transform: rotate(0deg) translateX(55px)">25</div>
+              <div class="indicator" [class.active]="selectedTaskProgress >= 50"
+                style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
+              <div class="indicator" [class.active]="selectedTaskProgress >= 75"
+                style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
+              <div class="indicator" [class.active]="selectedTaskProgress >= 100"
+                style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
+            </div>
+
+            <!-- Floating Elements -->
+            <div class="floating-elements">
+              <div class="float-element element-1"></div>
+              <div class="float-element element-2"></div>
+              <div class="float-element element-3"></div>
+              <div class="float-element element-4"></div>
+            </div>
+          </div>
+
+          <!-- Premium 3D Progress Bar -->
+          <div class="premium-3d-progress-container" (mousedown)="startProgressDrag($event)"
+            (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()" (mouseleave)="endProgressDrag()">
+            <div class="progress-3d-track"></div>
+            <div class="progress-3d-fill" [style.width.%]="taskProgress" [class.value-changing]="isProgressChanging">
+            </div>
+            <div class="progress-3d-particles">
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+              <div class="progress-3d-particle"></div>
+            </div>
+            <div class="progress-3d-percentage">{{ taskProgress }}%</div>
+          </div>
+
+          <!-- Manual Progress Input -->
+          <div class="manual-progress-input">
+            <div class="progress-input-container">
+              <input type="number" class="progress-input" [(ngModel)]="taskProgress"
+                (input)="onManualProgressChange($event)" min="0" max="100" placeholder="0">
+              <span class="progress-input-suffix">%</span>
+              <div class="progress-quick-buttons">
+                <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
+                <button class="progress-quick-btn" (click)="setQuickProgress(100)">✓</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Description -->
+        <div class="description-section">
+          <label class="section-label">Task Description</label>
+          <textarea class="description-card editable-description" [(ngModel)]="editableTaskDescription"
+            placeholder="Enter task description..."></textarea>
+        </div>
+
+        <!-- Daily Remarks - Compact -->
+        <div class="daily-remarks-compact">
+          <label class="remarks-label">
+            <i class="fas fa-comment-dots"></i>
+            Daily Remarks
+          </label>
+          <input 
+            type="text" 
+            class="remarks-input" 
+            [(ngModel)]="dailyRemarks"
+            placeholder="Add today's progress notes or updates..."
+            maxlength="200"
+          />
+        </div>
+
+        <!-- Project Metadata -->
+        <div class="metadata-section">
+          <div class="metadata-header">
+            <h3 class="section-label">Project Metadata</h3>
+          </div>
+
+          <div class="metadata-grid">
+            <!-- Project -->
+            <div class="metadata-card project-dropdown-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-folder label-icon"></i>
+                  Project
+                </p>
+                <div class="searchable-dropdown">
+                  <input 
+                    type="text" 
+                    [value]="getProjectDisplayName()"
+                    [placeholder]="projectsList.length === 0 ? 'Loading projects...' : 'Search and select project...'"
+                    class="dropdown-input"
+                    (input)="onProjectSearchInputChange($event)"
+                    (focus)="showProjectDropdown()"
+                    (blur)="hideProjectDropdown()"
+                    autocomplete="off">
+                  <div class="dropdown-icon">
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                  <div class="dropdown-list project-dropdown" *ngIf="isProjectDropdownVisible">
+                    <div 
+                      class="dropdown-item" 
+                      *ngFor="let project of getFilteredProjects()"
+                      (mousedown)="selectProject(project)"
+                      [class.selected]="isProjectSelected(project)">
+                      <div class="project-name-only">{{ project.projectName || '' }}</div>
+                    </div>
+                    <div class="no-results" *ngIf="getFilteredProjects().length === 0">
+                      No projects found
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assigned To -->
+            <div class="metadata-card assignee-dropdown-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-user label-icon"></i>
+                  Assigned To
+                </p>
+                <div class="searchable-dropdown">
+                  <input 
+                    type="text" 
+                    [value]="getAssigneeDisplayName()"
+                    [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select assignee...'"
+                    class="dropdown-input"
+                    (input)="onAssigneeSearchInputChange($event)"
+                    (focus)="showAssigneeDropdown()"
+                    (blur)="hideAssigneeDropdown()"
+                    autocomplete="off">
+                  <div class="dropdown-icon">
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                  <div class="dropdown-list assignee-dropdown" *ngIf="isAssigneeDropdownVisible">
+                    <div 
+                      class="dropdown-item" 
+                      *ngFor="let employee of getFilteredAssignees()"
+                      (mousedown)="selectAssignee(employee)"
+                      [class.selected]="isAssigneeSelected(employee)">
+                      <div class="employee-name-only">{{ employee.description || '' }}</div>
+                    </div>
+                    <div class="no-results" *ngIf="getFilteredAssignees().length === 0">
+                      No employees found
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Start Date -->
+            <div class="metadata-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-calendar-alt label-icon"></i>
+                  Start Date
+                </p>
+                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskStartDate">
+              </div>
+            </div>
+
+            <!-- Target Date -->
+            <div class="metadata-card target-date">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-calendar-check label-icon orange"></i>
+                  Target Date
+                </p>
+                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskEndDate">
+              </div>
+            </div>
+
+            <!-- Estimated Hours -->
+            <div class="metadata-card estimated-hours">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-clock label-icon blue"></i>
+                  Estimated Hours
+                </p>
+                <input 
+                  type="number" 
+                  class="metadata-input" 
+                  [(ngModel)]="selectedTaskEstimatedHours"
+                  placeholder="0.00"
+                  step="0.5"
+                  min="0"
+                >
+              </div>
+            </div>
+
+            <!-- Added Custom Fields -->
+            @for (field of selectedCustomFields; track field.key) {
+            <div class="metadata-card custom-field-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas label-icon" [ngClass]="'fa-' + getFieldIcon(field.type)"></i>
+                  {{ field.label }}
+                </p>
+                @if (field.type === 'text') {
+                <input type="text" class="metadata-input" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()">
+                } @else if (field.type === 'number') {
+                <input type="number" class="metadata-input" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()">
+                } @else if (field.type === 'dropdown') {
+                <select class="metadata-select" [(ngModel)]="field.value">
+                  <option value="">Select {{ field.label }}</option>
+                  @for (option of field.options; track option; let i = $index) {
+                  <option [value]="i">{{ option }}</option>
+                  }
+                </select>
+                } @else if (field.type === 'textarea') {
+                <textarea class="metadata-textarea" [(ngModel)]="field.value"
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
+                } @else if (field.type === 'date') {
+                <input type="date" class="metadata-input" [(ngModel)]="field.value">
+                }
+              </div>
+              <!-- Only show remove button for fields that are NOT mapped (manually added fields) -->
+              @if (field.isMapped !== 'Y') {
+              <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
+                <i class="fas fa-times"></i>
+              </button>
+              }
+            </div>
+            }
+
+            <!-- Add Field Button - Always at the end -->
+            <button class="add-field-card" (click)="openAddFieldModal()">
+              <i class="fas fa-plus-circle"></i>
+              <span class="add-field-text">Add Field</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Attachments Section -->
+        <div class="subtasks-section">
+          <div class="section-header">
+            <h3 class="section-label">Attachments</h3>
+            @if (uploadedFiles.length > 0) {
+            <span class="section-badge">{{ uploadedFiles.length }}</span>
+            }
+          </div>
+
+          <!-- Attachments Content -->
+          <div class="attachments-content">
+            <!-- Integrated Upload Area -->
+            <div class="integrated-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
+              (drop)="onFileDrop($event)">
+              <div class="upload-area-content">
+                <div class="upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                  <span class="upload-primary">Drop files here or click to browse</span>
+                  <span class="upload-secondary">PDF, DOC, XLS, JPG, PNG (Max 10MB each)</span>
+                </div>
+              </div>
+              <button class="upload-action-btn">
+                <i class="fas fa-plus"></i>
+                <span>Add Files</span>
+              </button>
+            </div>
+
+            <!-- Uploaded Files List -->
+            @if (uploadedFiles.length > 0) {
+            <div class="uploaded-files-list">
+              @for (file of uploadedFiles; track file.id; let i = $index) {
+              <div class="file-item">
+                <div class="file-icon">
+                  <i class="fas" [ngClass]="'fa-' + getFileIcon(file.type)"></i>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">{{ file.name }}</div>
+                  <div class="file-meta">
+                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                    <span class="file-separator">•</span>
+                    <span class="file-date">{{ file.uploadDate | date:'MMM dd, yyyy HH:mm' }}</span>
+                  </div>
+                </div>
+                <div class="file-actions">
+                  <button class="file-action-btn download" (click)="downloadFile(file)" title="Download">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button class="file-action-btn delete" (click)="deleteFile(file)" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              }
+            </div>
+            }
+
+            <!-- Hidden file input -->
+            <input type="file" #fileInput multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+              (change)="onFileSelected($event)" style="display: none;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Comments -->
+      <div class="comments-panel">
+        <div class="comments-tabs">
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'"
+            (click)="setActiveSidebarTab('comments')">DAILY REMARKS</button>
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'history'"
+            (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
+        </div>
+
+        <!-- Comments Content -->
+        <div class="comments-content" *ngIf="activeSidebarTab === 'comments'">
+          <!-- Display comments from API -->
+          <div class="comment-item" *ngFor="let comment of taskComments">
+            <div class="comment-avatar" *ngIf="!comment.profileImageBase64">
+              {{ getInitials(comment.empName) }}
+            </div>
+            <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar" />
+            <div class="comment-body">
+              <div class="comment-header">
+                <span class="comment-author">{{ comment.empName }}</span>
+                <span class="comment-time">{{ getTimeAgo(comment.submittedOn) }}</span>
+              </div>
+              <div class="comment-message">
+                {{ comment.comments }}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Empty state when no comments -->
+          <div class="no-comments" *ngIf="taskComments.length === 0">
+            <i class="fas fa-comments"></i>
+            <p>No comments yet. Be the first to comment!</p>
+          </div>
+        </div>
+
+        <!-- Activity Log Content -->
+        <div class="activity-log-content" *ngIf="activeSidebarTab === 'history'">
+          <div class="activity-timeline">
+            <div class="activity-item-enhanced" *ngFor="let activity of activityLogs">
+              <div class="activity-icon-enhanced" [style.background-color]="getActivityColorFromDescription(activity.description || '')">
+                <i class="fas" [class]="getActivityIconFromDescription(activity.description || '')"></i>
+              </div>
+              <div class="activity-content-enhanced">
+                <div class="activity-header-enhanced">
+                  <span class="activity-description">{{ activity.description }}</span>
+                  <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
+                </div>
+                <div class="activity-meta-enhanced">
+                  <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Empty state when no activity -->
+            <div class="no-activity" *ngIf="activityLogs.length === 0">
+              <i class="fas fa-history"></i>
+              <p>No activity yet</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Comment (only show for comments tab) -->
+        <div class="add-comment" *ngIf="activeSidebarTab === 'comments'">
+          <div class="comment-input-container">
+            <input type="text" class="comment-input" placeholder="Add a comment..." [(ngModel)]="newComment"
+              (keyup.enter)="addComment()">
+            <button class="send-button" (click)="addComment()" [disabled]="!newComment.trim()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Field Modal - Small Popup -->
+@if (showAddFieldModal) {
+<div class="modal-overlay" (click)="closeAddFieldModal()">
+  <div class="add-field-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="add-field-modal-header">
+      <h3 class="add-field-modal-title">Add Fields</h3>
+      <p class="add-field-modal-subtitle">Select fields to add to project metadata</p>
+      <button class="modal-close-btn" (click)="closeAddFieldModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Fields List with Checkboxes -->
+    <div class="add-field-modal-content">
+      <div class="fields-checklist">
+        @for (field of availableCustomFields; track field.key) {
+        <label class="field-checkbox-item" [class.disabled]="isFieldMapped(field.key)">
+          <input type="checkbox" [checked]="isFieldChecked(field.key)" [disabled]="isFieldMapped(field.key)"
+            (change)="toggleFieldSelection(field.key)">
+          <div class="checkbox-custom-field">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="field-checkbox-content">
+            <div class="field-checkbox-header">
+              <span class="field-checkbox-name">{{ field.label }}</span>
+              <span class="field-type-badge" [ngClass]="'type-' + field.type">
+                @if (field.type === 'text') { Text Input }
+                @else if (field.type === 'number') { Number }
+                @else if (field.type === 'dropdown') { Dropdown }
+                @else if (field.type === 'textarea') { Text Area }
+              </span>
+            </div>
+            <span class="field-checkbox-description">{{ field.description }}</span>
+          </div>
+          @if (isFieldMapped(field.key)) {
+          <span class="field-already-added">
+            <i class="fas fa-check-circle"></i>
+            Already Mapped
+          </span>
+          }
+        </label>
+        }
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="add-field-modal-footer">
+      <div class="selected-count">
+        {{ tempSelectedFields.length }} field(s) selected
+      </div>
+      <div class="add-field-modal-actions">
+        <button class="cancel-btn" (click)="closeAddFieldModal()">Cancel</button>
+        <button class="apply-btn" (click)="applySelectedFields()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+}

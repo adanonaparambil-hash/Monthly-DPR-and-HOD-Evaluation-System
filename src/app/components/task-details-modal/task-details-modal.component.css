@@ -1,0 +1,6 @@
+/* Import existing task modal styles from my-task component */
+@import '../../my-task/task-modal-new.css';
+@import '../../my-task/task-details-modal.css';
+@import '../../my-task/task-modal-glassmorphism.css';
+
+/* Additional component-specific styles can be added here if needed */

@@ -6,6 +6,7 @@ import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
 import { ToasterService } from '../services/toaster.service';
 import { ToasterComponent } from '../components/toaster/toaster.component';
+import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
 import { SessionService } from '../services/session.service';
 import { TaskSaveDto, ActiveTaskListResponse, ActiveTaskDto, TaskCommentDto, TaskActivityDto } from '../models/TimeSheetDPR.model';
 import { AvatarUtil } from '../utils/avatar.util';
@@ -119,7 +120,7 @@ interface TaskCategoryResponse {
 @Component({
   selector: 'app-my-task',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, ToasterComponent],
+  imports: [CommonModule, FormsModule, DatePipe, ToasterComponent, TaskDetailsModalComponent],
   templateUrl: './my-task.component.html',
   styleUrls: ['./my-task.component.css', './task-modal-new.css', './task-details-modal.css', './task-modal-glassmorphism.css']
 })
@@ -186,6 +187,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   showAddFieldModal = false;
   showManageTasksModal = false; // New modal for managing task categories
   selectedTask: Task | null = null;
+  
+  // Properties for standalone task details modal
+  selectedTaskIdForModal: number = 0;
+  selectedUserIdForModal: string = '';
+  selectedCategoryIdForModal: number = 0;
+  
   selectTaskActiveTab: 'favorites' | 'myDepartment' | 'all' = 'favorites';
   selectTaskSearchTerm = ''; // Search term for Select Task modal
 
@@ -809,6 +816,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             this.activeTask = runningTask;
             this.hasActiveTask = true;
             console.log('Active RUNNING task found:', runningTask.title || runningTask.category);
+            // Start the timer for the running task
+            this.startActiveTaskTimer();
           } else {
             const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
             if (pausedTask) {
@@ -880,6 +889,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             this.activeTask = runningTask;
             this.hasActiveTask = true;
             console.log('Active RUNNING task found:', runningTask.title || runningTask.category);
+            // Start the timer for the running task
+            this.startActiveTaskTimer();
           } else {
             const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
             if (pausedTask) {
@@ -1676,7 +1687,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const seconds = this.activeTaskElapsedSeconds % 60;
 
     this.activeTaskTimer =
-      "${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}";
+      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Trigger change detection to update the view
+    this.cdr.detectChanges();
   }
 
   private startBreakTimer() {
@@ -2045,6 +2059,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   startEditCategory(category: TaskCategory) {
     // Cancel other edits first
     this.taskCategories.forEach(cat => cat.isEditing = false);
+    this.favouriteList.forEach(cat => cat.isEditing = false);
+    this.departmentList.forEach(cat => cat.isEditing = false);
+    this.allDepartmentList.forEach(cat => cat.isEditing = false);
+    
+    // Close add form if open
+    this.isAddingNewCategory = false;
+    
+    // Enable editing for this category
     category.isEditing = true;
     
     // Debug: Log the category being edited
@@ -2418,14 +2440,6 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   openTaskDetailsModal(task: Task) {
-    this.selectedTask = task;
-    this.showTaskDetailsModal = true;
-    
-    // Prevent body scroll and ensure modal appears above everything
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'relative';
-    document.body.style.zIndex = '1';
-    
     // Get current user
     const currentUser = this.sessionService.getCurrentUser();
     const userId = currentUser?.empId || currentUser?.employeeId || '';
@@ -2433,118 +2447,22 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Get category ID from the task directly or from lookup
     let categoryId = task.categoryId || this.getCategoryIdFromTask(task);
     
-    console.log('Task details modal opened:', {
+    console.log('Opening task details modal:', {
       taskId: task.id,
-      userId: userId || '(empty - using default)',
-      categoryId: categoryId || '(not found - will use 0)'
+      userId: userId,
+      categoryId: categoryId
     });
     
-    // Load task files
-    this.loadTaskFiles(task.id);
+    // Set properties for standalone modal component
+    this.selectedTaskIdForModal = task.id;
+    this.selectedUserIdForModal = userId;
+    this.selectedCategoryIdForModal = categoryId || 0;
     
-    // Load task comments
-    this.loadComments(task.id);
+    // Show the modal
+    this.showTaskDetailsModal = true;
     
-    // Always call API to get full task details
-    this.api.getTaskById(task.id, userId, categoryId || 0).subscribe({
-      next: (response: any) => {
-        console.log('Task details API response:', response);
-        
-        if (response && response.success && response.data) {
-          const taskDetails = response.data;
-          
-          // Bind all values from API response
-          this.selectedTaskId = taskDetails.taskId?.toString() || task.id?.toString() || '';
-          this.selectedTaskCategory = taskDetails.categoryName || task.category;
-          this.editableTaskTitle = taskDetails.taskTitle || task.title;
-          this.editableTaskDescription = taskDetails.taskDescription || task.description || '';
-          this.selectedTaskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
-          this.taskProgress = this.selectedTaskProgress;
-          
-          // Format timers - use correct field names from API
-          // todayTotalMinutes = today's logged time (Running Timer)
-          // totalTimeMinutes = total logged time across all days (Total Hours)
-          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayTotalMinutes || 0);
-          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalTimeMinutes || 0);
-          
-          // Set status - handle various status formats from API
-          const apiStatus = taskDetails.status?.toUpperCase() || '';
-          if (apiStatus === 'NOT STARTED' || apiStatus === 'NOTSTARTED') {
-            this.selectedTaskDetailStatus = 'not-started';
-          } else if (apiStatus === 'CLOSED' || apiStatus === 'NOT CLOSED') {
-            this.selectedTaskDetailStatus = 'not-closed';
-          } else if (apiStatus === 'RUNNING') {
-            this.selectedTaskDetailStatus = 'running';
-          } else if (apiStatus === 'COMPLETED') {
-            this.selectedTaskDetailStatus = 'completed';
-          } else if (apiStatus === 'PAUSED') {
-            this.selectedTaskDetailStatus = 'pause';
-          } else {
-            this.selectedTaskDetailStatus = taskDetails.status?.toLowerCase() || 'not-started';
-          }
-          this.dailyRemarks = taskDetails.dailyRemarks || '';
-          
-          // Bind Project Metadata fields from API response
-          this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
-          this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
-          this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
-          this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
-          
-          // Load and bind custom fields from API response
-          if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
-            this.selectedCustomFields = taskDetails.customFields
-              .filter((field: any) => field.isMapped === 'Y')
-              .map((field: any) => {
-                // Parse options string to array
-                let optionsArray: string[] = [];
-                if (field.options && typeof field.options === 'string') {
-                  optionsArray = field.options.split(',').map((opt: string) => opt.trim());
-                } else if (Array.isArray(field.options)) {
-                  optionsArray = field.options;
-                }
-                
-                return {
-                  key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
-                  label: field.fieldName || 'Custom Field',
-                  type: this.mapFieldType(field.fieldType),
-                  description: `${field.fieldName} field`,
-                  options: optionsArray,
-                  fieldId: field.fieldId,
-                  isMapped: field.isMapped,
-                  value: field.savedValue || ''
-                };
-              });
-            
-            console.log('Custom fields loaded from task:', this.selectedCustomFields.length, 'fields');
-          } else {
-            this.selectedCustomFields = [];
-          }
-          
-          // Update selected task object
-          if (this.selectedTask) {
-            this.selectedTask.progress = this.selectedTaskProgress;
-            this.selectedTask.status = taskDetails.status || this.selectedTask.status;
-          }
-          
-          console.log('Task details bound successfully:', {
-            id: this.selectedTaskId,
-            category: this.selectedTaskCategory,
-            title: this.editableTaskTitle,
-            startDate: this.selectedTaskStartDate,
-            targetDate: this.selectedTaskEndDate,
-            projectId: this.selectedProjectId
-          });
-        } else {
-          console.warn('API returned no data or success=false, using task list data');
-          this.bindTaskListData(task);
-        }
-      },
-      error: (error: any) => {
-        console.error('Error fetching task details:', error);
-        // Fallback to binding from task list data
-        this.bindTaskListData(task);
-      }
-    });
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
   }
   
   // Helper method to get category ID from task
@@ -2625,17 +2543,37 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   closeTaskDetailsModal() {
     this.showTaskDetailsModal = false;
-    this.selectedTask = null;
-    // Clear uploaded files
-    this.uploadedFiles = [];
-    // Clear comments
-    this.taskComments = [];
-    // Clear activity logs
-    this.activityLogs = [];
     // Restore body scroll
     document.body.style.overflow = 'auto';
-    document.body.style.position = '';
-    document.body.style.zIndex = '';
+  }
+  
+  // Handle task updated event from modal
+  onTaskUpdatedFromModal(taskData: any) {
+    console.log('Task updated from modal:', taskData);
+    // Reload active tasks to refresh the list
+    this.loadActiveTasks();
+  }
+  
+  // Handle task paused event from modal
+  onTaskPausedFromModal(taskId: number) {
+    console.log('Task paused from modal:', taskId);
+    // Reload active tasks
+    this.loadActiveTasks();
+  }
+  
+  // Handle task resumed event from modal
+  onTaskResumedFromModal(taskId: number) {
+    console.log('Task resumed from modal:', taskId);
+    // Reload active tasks
+    this.loadActiveTasks();
+  }
+  
+  // Handle task stopped event from modal
+  onTaskStoppedFromModal(taskId: number) {
+    console.log('Task stopped from modal:', taskId);
+    // Reload active tasks and close modal
+    this.loadActiveTasks();
+    this.closeTaskDetailsModal();
   }
 
   // Save task changes method
@@ -3430,23 +3368,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Get formatted timer for active task (HH:MM:SS format for display)
   getActiveTaskTimer(): string {
-    if (!this.activeTask) {
-      return '00:00:00';
-    }
-    
-    // Find the original task data to get todayLoggedHours
-    const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
-    if (!taskData || !taskData.todayLoggedHours) {
-      return '00:00:00';
-    }
-    
-    const totalMinutes = taskData.todayLoggedHours;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = Math.floor(totalMinutes % 60);
-    const seconds = Math.floor((totalMinutes % 1) * 60);
-    
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    // Return the live timer value that's being updated by the interval
+    return this.activeTaskTimer;
   }
+  
   getActivityIcon(type: string): string {
     switch (type) {
       case 'timer_start': return 'fa-play-circle';

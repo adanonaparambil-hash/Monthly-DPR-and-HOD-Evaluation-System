@@ -29,7 +29,7 @@
         <label class="filter-label">From Date</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-calendar-alt filter-icon"></i>
-          <input type="date" class="filter-date-input" [(ngModel)]="fromDate" placeholder="Select from date">
+          <input type="date" class="filter-date-input" [(ngModel)]="fromDate" (change)="onDateChange()" placeholder="Select from date">
         </div>
       </div>
 
@@ -37,28 +37,37 @@
         <label class="filter-label">To Date</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-calendar-alt filter-icon"></i>
-          <input type="date" class="filter-date-input" [(ngModel)]="toDate" placeholder="Select to date">
+          <input type="date" class="filter-date-input" [(ngModel)]="toDate" (change)="onDateChange()" placeholder="Select to date">
         </div>
       </div>
 
       <div class="filter-group">
         <label class="filter-label">Project</label>
-        <select class="filter-select" [(ngModel)]="selectedProject">
+        <select class="filter-select" [(ngModel)]="selectedProject" (change)="onProjectChange()">
           <option value="all">All Projects</option>
-          <option value="internal">Internal Tools</option>
-          <option value="client">Client Work</option>
-          <option value="maintenance">Maintenance</option>
+          <option *ngFor="let project of projects" [value]="project.projectId">
+            {{ project.projectName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Department</label>
+        <select class="filter-select" [(ngModel)]="selectedDepartment" (change)="onDepartmentChange()">
+          <option value="all">All Departments</option>
+          <option *ngFor="let dept of departments" [value]="dept.departmentId">
+            {{ dept.deptName }}
+          </option>
         </select>
       </div>
 
       <div class="filter-group">
         <label class="filter-label">Task Category</label>
-        <select class="filter-select" [(ngModel)]="selectedCategory">
-          <option value="all">All Categories</option>
-          <option value="development">Development</option>
-          <option value="design">Design</option>
-          <option value="meetings">Meetings</option>
-          <option value="testing">Testing</option>
+        <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()" [disabled]="selectedDepartment === 'all'">
+          <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Categories' }}</option>
+          <option *ngFor="let category of taskCategories" [value]="category.categoryId">
+            {{ category.categoryName }}
+          </option>
         </select>
       </div>
     </div>
@@ -87,199 +96,96 @@
 
     <!-- Table Body -->
     <div class="table-body">
-      <!-- Day Group: Today -->
-      <div class="day-group">
-        <div class="day-header">
-          <h3 class="day-title">Today</h3>
-          <span class="day-date">Oct 26, 2023</span>
+      <!-- Loading State -->
+      @if (isLoadingData) {
+        <div class="loading-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading logged hours...</p>
         </div>
-        <div class="day-records">
-          @for (record of getTodayRecords(); track record.id) {
-          <div class="record-row" [style.grid-template-columns]="getGridTemplateColumns()">
-            @for (column of getVisibleColumns(); track column.key) {
-              <div class="record-col" [class]="column.key">
-                @switch (column.key) {
-                  @case ('title') {
-                    <div class="title-column-content">
-                      <h4 class="task-title" [title]="record.title">{{ record.title }}</h4>
-                      @if (!isDescriptionColumnVisible()) {
-                        <p class="task-description" [title]="record.description">{{ record.description }}</p>
-                      }
-                    </div>
-                  }
-                  @case ('description') {
-                    <span class="column-value" [title]="record.description">{{ record.description }}</span>
-                  }
-                  @case ('category') {
-                    <span class="category-badge" [class]="getCategoryClass(record.category)">
-                      {{ record.category }}
-                    </span>
-                    @if (record.priority) {
-                    <span class="priority-badge" [class]="getPriorityClass(record.priority)">
-                      {{ record.priority }}
-                    </span>
-                    }
-                  }
-                  @case ('loggedBy') {
-                    <span class="logged-by-name">{{ record.loggedBy }}</span>
-                  }
-                  @case ('duration') {
-                    <span class="duration-text">{{ record.duration }}</span>
-                    <button class="more-btn">
-                      <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                  }
-                  @case ('progress') {
-                    <div class="progress-container">
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="getColumnValue(record, column.key)"></div>
-                      </div>
-                      <span class="progress-text">{{ formatColumnValue(getColumnValue(record, column.key), column) }}</span>
-                    </div>
-                  }
-                  @default {
-                    <span class="column-value" 
-                          [title]="getTooltipText(record, column.key)">
-                      {{ formatColumnValue(getColumnValue(record, column.key), column) }}
-                    </span>
-                  }
-                }
-              </div>
-            }
-          </div>
-          }
-        </div>
-      </div>
+      }
 
-      <!-- Day Group: Yesterday -->
-      <div class="day-group">
-        <div class="day-header">
-          <h3 class="day-title">Yesterday</h3>
-          <span class="day-date">Oct 25, 2023</span>
+      <!-- Empty State -->
+      @if (!isLoadingData && loggedHours.length === 0) {
+        <div class="empty-state">
+          <i class="fas fa-clock"></i>
+          <p>No logged hours found for the selected filters</p>
         </div>
-        <div class="day-records">
-          @for (record of getYesterdayRecords(); track record.id) {
-          <div class="record-row" [style.grid-template-columns]="getGridTemplateColumns()">
-            @for (column of getVisibleColumns(); track column.key) {
-              <div class="record-col" [class]="column.key">
-                @switch (column.key) {
-                  @case ('title') {
-                    <div class="title-column-content">
-                      <h4 class="task-title" [title]="record.title">{{ record.title }}</h4>
-                      @if (!isDescriptionColumnVisible()) {
-                        <p class="task-description" [title]="record.description">{{ record.description }}</p>
-                      }
-                    </div>
-                  }
-                  @case ('description') {
-                    <span class="column-value" [title]="record.description">{{ record.description }}</span>
-                  }
-                  @case ('category') {
-                    <span class="category-badge" [class]="getCategoryClass(record.category)">
-                      {{ record.category }}
-                    </span>
-                  }
-                  @case ('loggedBy') {
-                    <span class="logged-by-name">{{ record.loggedBy }}</span>
-                  }
-                  @case ('duration') {
-                    <span class="duration-text">{{ record.duration }}</span>
-                    <button class="more-btn">
-                      <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                  }
-                  @case ('progress') {
-                    <div class="progress-container">
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="getColumnValue(record, column.key)"></div>
-                      </div>
-                      <span class="progress-text">{{ formatColumnValue(getColumnValue(record, column.key), column) }}</span>
-                    </div>
-                  }
-                  @default {
-                    <span class="column-value" 
-                          [title]="getTooltipText(record, column.key)">
-                      {{ formatColumnValue(getColumnValue(record, column.key), column) }}
-                    </span>
-                  }
-                }
-              </div>
-            }
-          </div>
-          }
-        </div>
-      </div>
+      }
 
-      <!-- Day Group: Tuesday -->
-      <div class="day-group">
-        <div class="day-header">
-          <h3 class="day-title">Tuesday</h3>
-          <span class="day-date">Oct 24, 2023</span>
-        </div>
-        <div class="day-records">
-          @for (record of getTuesdayRecords(); track record.id) {
-          <div class="record-row" [style.grid-template-columns]="getGridTemplateColumns()">
-            @for (column of getVisibleColumns(); track column.key) {
-              <div class="record-col" [class]="column.key">
-                @switch (column.key) {
-                  @case ('title') {
-                    <div class="title-column-content">
-                      <h4 class="task-title" [title]="record.title">{{ record.title }}</h4>
-                      @if (!isDescriptionColumnVisible()) {
-                        <p class="task-description" [title]="record.description">{{ record.description }}</p>
+      <!-- Dynamic Day Groups -->
+      @if (!isLoadingData && loggedHours.length > 0) {
+        @for (dayGroup of getGroupedLoggedHours(); track dayGroup.date) {
+          <div class="day-group">
+            <div class="day-header">
+              <h3 class="day-title">{{ dayGroup.displayDay }}</h3>
+              <span class="day-date">{{ dayGroup.displayDate }}</span>
+            </div>
+            <div class="day-records">
+              @for (record of dayGroup.records; track record.id) {
+                <div class="record-row" [style.grid-template-columns]="getGridTemplateColumns()" (click)="openTaskModal(record)" style="cursor: pointer;">
+                  @for (column of getVisibleColumns(); track column.key) {
+                    <div class="record-col" [class]="column.key">
+                      @switch (column.key) {
+                        @case ('title') {
+                          <div class="title-column-content">
+                            <h4 class="task-title" [title]="record.title">{{ record.title }}</h4>
+                            @if (!isDescriptionColumnVisible()) {
+                              <p class="task-description" [title]="record.description">{{ record.description }}</p>
+                            }
+                          </div>
+                        }
+                        @case ('description') {
+                          <span class="column-value" [title]="record.description">{{ record.description }}</span>
+                        }
+                        @case ('category') {
+                          <span class="category-badge" [class]="getCategoryClass(record.category)">
+                            {{ record.category }}
+                          </span>
+                          @if (record.priority) {
+                            <span class="priority-badge" [class]="getPriorityClass(record.priority)">
+                              {{ record.priority }}
+                            </span>
+                          }
+                        }
+                        @case ('loggedBy') {
+                          <span class="logged-by-name">{{ record.loggedBy }}</span>
+                        }
+                        @case ('duration') {
+                          <span class="duration-text">{{ record.duration }}</span>
+                          <button class="more-btn" (click)="$event.stopPropagation()">
+                            <i class="fas fa-ellipsis-h"></i>
+                          </button>
+                        }
+                        @case ('progress') {
+                          <div class="progress-container">
+                            <div class="progress-bar">
+                              <div class="progress-fill" [style.width.%]="getColumnValue(record, column.key)"></div>
+                            </div>
+                            <span class="progress-text">{{ formatColumnValue(getColumnValue(record, column.key), column) }}</span>
+                          </div>
+                        }
+                        @default {
+                          <span class="column-value" 
+                                [title]="getTooltipText(record, column.key)">
+                            {{ formatColumnValue(getColumnValue(record, column.key), column) }}
+                          </span>
+                        }
                       }
                     </div>
                   }
-                  @case ('description') {
-                    <span class="column-value" [title]="record.description">{{ record.description }}</span>
-                  }
-                  @case ('category') {
-                    <span class="category-badge" [class]="getCategoryClass(record.category)">
-                      {{ record.category }}
-                    </span>
-                    @if (record.priority) {
-                    <span class="priority-badge" [class]="getPriorityClass(record.priority)">
-                      {{ record.priority }}
-                    </span>
-                    }
-                  }
-                  @case ('loggedBy') {
-                    <span class="logged-by-name">{{ record.loggedBy }}</span>
-                  }
-                  @case ('duration') {
-                    <span class="duration-text">{{ record.duration }}</span>
-                    <button class="more-btn">
-                      <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                  }
-                  @case ('progress') {
-                    <div class="progress-container">
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="getColumnValue(record, column.key)"></div>
-                      </div>
-                      <span class="progress-text">{{ formatColumnValue(getColumnValue(record, column.key), column) }}</span>
-                    </div>
-                  }
-                  @default {
-                    <span class="column-value" 
-                          [title]="getTooltipText(record, column.key)">
-                      {{ formatColumnValue(getColumnValue(record, column.key), column) }}
-                    </span>
-                  }
-                }
-              </div>
-            }
+                </div>
+              }
+            </div>
           </div>
-          }
-        </div>
-      </div>
-      
-      <!-- Scroll Hint -->
-      @if (getVisibleColumns().length > 4) {
-        <div class="scroll-hint">
-          <i class="fas fa-arrows-alt-h"></i>
-          Scroll horizontally to see more columns
-        </div>
+        }
+        
+        <!-- Scroll Hint -->
+        @if (getVisibleColumns().length > 4) {
+          <div class="scroll-hint">
+            <i class="fas fa-arrows-alt-h"></i>
+            Scroll horizontally to see more columns
+          </div>
+        }
       }
     </div>
   </div>
@@ -388,4 +294,14 @@
       </div>
     </div>
   </div>
+}
+
+<!-- Task Details Modal -->
+@if (showTaskModal) {
+  <app-task-details-modal
+    [taskId]="selectedTaskId"
+    [userId]="currentUserId"
+    [categoryId]="selectedTaskCategoryId"
+    (closeModal)="closeTaskModal()">
+  </app-task-details-modal>
 }
