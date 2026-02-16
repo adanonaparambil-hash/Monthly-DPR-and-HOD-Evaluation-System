@@ -321,7 +321,7 @@ export class MyLoggedHoursComponent implements OnInit {
             title: log.taskTitle || 'Untitled Task',
             description: log.description || log.dailyComment || 'No description',
             category: log.categoryName || 'Uncategorized',
-            categoryId: log.categoryId || 0,
+            categoryId: log.categoryId ?? 0,
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
@@ -338,7 +338,7 @@ export class MyLoggedHoursComponent implements OnInit {
             title: log.taskTitle || 'Untitled Task',
             description: log.description || log.dailyComment || 'No description',
             category: log.categoryName || 'Uncategorized',
-            categoryId: log.categoryId || 0,
+            categoryId: log.categoryId ?? 0,
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
@@ -476,15 +476,15 @@ export class MyLoggedHoursComponent implements OnInit {
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userId = currentUser.empId || currentUser.employeeId || '';
     
-    // For categoryId, we need to find it from the taskCategories array
-    // If not found, we'll use 0 as default
-    const category = this.taskCategories.find(cat => cat.categoryName === record.category);
-    this.selectedTaskCategoryId = category?.categoryId || 0;
+    // Use categoryId directly from the API response (GetUserDailyLogHistory)
+    // This is the correct source of truth - each record has its own categoryId
+    this.selectedTaskCategoryId = record.categoryId ?? 0;
     
     console.log('Opening task modal:', {
       taskId: this.selectedTaskId,
       categoryId: this.selectedTaskCategoryId,
-      userId: userId
+      userId: userId,
+      recordCategoryId: record.categoryId
     });
     
     this.showTaskModal = true;
