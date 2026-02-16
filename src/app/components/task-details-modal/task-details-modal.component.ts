@@ -572,24 +572,35 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userId = currentUser.empId || currentUser.employeeId || this.userId;
     
-    // Show confirmation dialog
-    if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
-      this.api.deleteTaskFile(parseInt(file.id), userId).subscribe({
-        next: (response: any) => {
-          if (response && response.success) {
-            this.toasterService.showSuccess('Success', 'File deleted successfully');
-            // Reload the files list
-            this.loadTaskFiles(this.taskId);
-          } else {
+    // Show SweetAlert confirmation dialog
+    Swal.fire({
+      title: 'Delete File?',
+      text: `Are you sure you want to delete "${file.name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.api.deleteTaskFile(parseInt(file.id), userId).subscribe({
+          next: (response: any) => {
+            if (response && response.success) {
+              this.toasterService.showSuccess('Success', 'File deleted successfully');
+              // Reload the files list
+              this.loadTaskFiles(this.taskId);
+            } else {
+              this.toasterService.showError('Error', 'Failed to delete file');
+            }
+          },
+          error: (error: any) => {
+            console.error('Error deleting file:', error);
             this.toasterService.showError('Error', 'Failed to delete file');
           }
-        },
-        error: (error: any) => {
-          console.error('Error deleting file:', error);
-          this.toasterService.showError('Error', 'Failed to delete file');
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   // Progress control

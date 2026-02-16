@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
+import { ToasterComponent } from '../components/toaster/toaster.component';
 
 interface LoggedHour {
   id: string;
@@ -73,7 +74,7 @@ interface ColumnDefinition {
 @Component({
   selector: 'app-my-logged-hours',
   standalone: true,
-  imports: [CommonModule, FormsModule, TaskDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent],
   templateUrl: './my-logged-hours.html',
   styleUrls: ['./my-logged-hours.css']
 })
