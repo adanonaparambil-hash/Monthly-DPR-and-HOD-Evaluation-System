@@ -304,6 +304,10 @@
     [taskId]="selectedTaskId"
     [userId]="currentUserId"
     [categoryId]="selectedTaskCategoryId"
-    (closeModal)="closeTaskModal()">
+    (closeModal)="closeTaskModal()"
+    (taskUpdated)="onTaskUpdated($event)"
+    (taskPaused)="onTaskPaused($event)"
+    (taskResumed)="onTaskResumed($event)"
+    (taskStopped)="onTaskStopped($event)">
   </app-task-details-modal>
 }

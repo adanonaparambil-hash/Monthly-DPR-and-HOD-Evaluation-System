@@ -162,6 +162,7 @@ export class MyLoggedHoursComponent implements OnInit {
     // Load dropdown data from API
     this.loadProjects();
     this.loadDepartments();
+    this.loadAllTaskCategories();
     
     // Load logged hours data
     this.loadLoggedHours();
@@ -211,6 +212,45 @@ export class MyLoggedHoursComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading departments:', error);
+      }
+    });
+  }
+
+  loadAllTaskCategories() {
+    console.log('Loading all task categories for My Logged Hours');
+    
+    // Use current user ID to load their categories
+    const userId = this.currentUserId;
+    if (!userId) {
+      console.warn('No user ID available to load task categories');
+      return;
+    }
+    
+    this.api.getUserTaskCategories(userId).subscribe({
+      next: (response: any) => {
+        console.log('getUserTaskCategories API Response:', response);
+        
+        if (response.success && response.data) {
+          // Combine all categories from different lists
+          const allCategories = [
+            ...(response.data.favouriteList || []),
+            ...(response.data.departmentList || []),
+            ...(response.data.allDepartmentList || [])
+          ];
+          
+          // Remove duplicates based on categoryId
+          const uniqueCategories = allCategories.filter((category: any, index: number, self: any[]) =>
+            index === self.findIndex((c: any) => c.categoryId === category.categoryId)
+          );
+          
+          this.taskCategories = uniqueCategories;
+          console.log('Loaded task categories:', this.taskCategories.length);
+        } else {
+          console.warn('API response success is false or no data:', response);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading task categories:', error);
       }
     });
   }
@@ -477,9 +517,15 @@ export class MyLoggedHoursComponent implements OnInit {
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userId = currentUser.empId || currentUser.employeeId || '';
     
-    // Use categoryId directly from the API response (GetUserDailyLogHistory)
-    // This is the correct source of truth - each record has its own categoryId
-    this.selectedTaskCategoryId = record.categoryId ?? 0;
+    // Use categoryId from API response if valid (not 0, null, undefined)
+    // Otherwise fall back to finding it from taskCategories array
+    let categoryId = record.categoryId;
+    if (!categoryId || categoryId === 0) {
+      // Try to find categoryId from taskCategories array by matching category name
+      const category = this.taskCategories.find(cat => cat.categoryName === record.category);
+      categoryId = category?.categoryId || 0;
+    }
+    this.selectedTaskCategoryId = categoryId;
     
     console.log('Opening task modal:', {
       taskId: this.selectedTaskId,
@@ -497,6 +543,30 @@ export class MyLoggedHoursComponent implements OnInit {
     document.body.style.overflow = 'auto';
     
     // Reload logged hours to reflect any changes made in the modal
+    this.loadLoggedHours();
+  }
+
+  // Handle task updated event from modal
+  onTaskUpdated(task: any) {
+    console.log('Task updated from modal:', task);
+    // Reload logged hours to reflect changes
+    this.loadLoggedHours();
+  }
+
+  // Handle task paused event from modal
+  onTaskPaused(taskId: number) {
+    console.log('Task paused from modal:', taskId);
+  }
+
+  // Handle task resumed event from modal
+  onTaskResumed(taskId: number) {
+    console.log('Task resumed from modal:', taskId);
+  }
+
+  // Handle task stopped event from modal
+  onTaskStopped(taskId: number) {
+    console.log('Task stopped from modal:', taskId);
+    // Reload logged hours to reflect changes
     this.loadLoggedHours();
   }
 

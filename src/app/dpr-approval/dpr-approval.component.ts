@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
 import { TaskBulkApprovalRequest } from '../models/TimeSheetDPR.model';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
+import { ToasterComponent } from '../components/toaster/toaster.component';
 import { SessionService } from '../services/session.service';
 import Swal from 'sweetalert2';
 
@@ -70,7 +71,7 @@ interface DPRLog {
 @Component({
   selector: 'app-dpr-approval',
   standalone: true,
-  imports: [CommonModule, FormsModule, TaskDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent],
   templateUrl: './dpr-approval.component.html',
   styleUrls: ['./dpr-approval.component.css']
 })

@@ -113,15 +113,27 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       categoryId: this.categoryId
     });
     
-    if (this.taskId && this.userId && this.categoryId) {
-      console.log('All required inputs present, loading task details...');
+    // Load common data regardless of taskId
+    this.loadCustomFields();
+    this.loadProjectsList();
+    this.loadEmployeeMasterList();
+    
+    // If taskId is provided and not 0, load existing task details
+    if (this.taskId && this.taskId > 0 && this.userId && this.categoryId) {
+      console.log('Loading existing task details...');
       this.loadTaskDetails();
-      this.loadCustomFields();
-      this.loadProjectsList();
-      this.loadEmployeeMasterList();
       this.loadTaskFiles(this.taskId);
       this.loadComments(this.taskId);
       this.loadActivity(this.taskId);
+    } else if (this.categoryId && this.userId) {
+      // New task - just show empty form with category info
+      console.log('New task mode - showing empty form for categoryId:', this.categoryId);
+      this.selectedTaskDetailStatus = 'not-started';
+      this.editableTaskTitle = '';
+      this.editableTaskDescription = '';
+      this.dailyRemarks = '';
+      this.selectedTaskProgress = 0;
+      this.taskProgress = 0;
     } else {
       console.error('Missing required inputs:', {
         hasTaskId: !!this.taskId,
@@ -381,41 +393,75 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Save task changes
   saveTaskChanges() {
+    console.log('=== saveTaskChanges START ===');
+    
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userId = currentUser.empId || currentUser.employeeId || this.userId;
+    
+    console.log('Current user:', { userId, currentUser });
+    
+    // Map status from component format to API format
+    const statusMap: { [key: string]: string } = {
+      'not-started': 'NOT STARTED',
+      'running': 'RUNNING',
+      'pause': 'PAUSED',
+      'paused': 'PAUSED',
+      'completed': 'COMPLETED',
+      'not-closed': 'CLOSED'
+    };
+    
+    const apiStatus = statusMap[this.selectedTaskDetailStatus] || 'NOT STARTED';
+    
+    // Prepare assignees array - filter out empty values
+    const assignees = this.selectedAssigneeId ? [this.selectedAssigneeId] : [];
     
     const taskSaveRequest: TaskSaveDto = {
       taskId: this.taskId,
       categoryId: this.categoryId,
-      taskTitle: this.editableTaskTitle,
-      description: this.editableTaskDescription,
+      taskTitle: this.editableTaskTitle?.trim() || '',
+      description: this.editableTaskDescription?.trim() || '',
       projectId: parseInt(this.selectedProjectId) || 0,
       departmentId: 0, // Will be set by backend based on category
-      targetDate: this.selectedTaskEndDate,
-      startDate: this.selectedTaskStartDate,
-      progress: this.taskProgress,
-      estimatedHours: this.selectedTaskEstimatedHours,
-      status: this.selectedTaskDetailStatus.toUpperCase(),
+      targetDate: this.selectedTaskEndDate || undefined,
+      startDate: this.selectedTaskStartDate || undefined,
+      progress: this.taskProgress || 0,
+      estimatedHours: this.selectedTaskEstimatedHours || 0,
+      status: apiStatus,
       createdBy: userId,
-      assignees: [this.selectedAssigneeId],
+      assignees: assignees,
       customFields: this.selectedCustomFields.map(field => ({
         fieldId: field.fieldId || 0,
         value: field.value?.toString() || ''
       }))
     };
+    
+    console.log('Task save request:', taskSaveRequest);
+    console.log('Calling saveTaskBulk API...');
 
     this.api.saveTaskBulk(taskSaveRequest).subscribe({
       next: (response: any) => {
+        console.log('=== saveTaskBulk API Response ===');
+        console.log('Response:', response);
+        
         if (response && response.success) {
           this.toasterService.showSuccess('Success', 'Task updated successfully');
           this.taskUpdated.emit(taskSaveRequest);
+          console.log('Task saved successfully');
         } else {
-          this.toasterService.showError('Error', 'Failed to update task');
+          const errorMessage = response?.message || 'Failed to update task';
+          this.toasterService.showError('Error', errorMessage);
+          console.error('Save failed:', errorMessage);
         }
       },
       error: (error: any) => {
-        console.error('Error updating task:', error);
-        this.toasterService.showError('Error', 'Failed to update task');
+        console.error('=== saveTaskBulk API ERROR ===');
+        console.error('Error details:', error);
+        console.error('Error status:', error?.status);
+        console.error('Error message:', error?.message);
+        console.error('Error response:', error?.error);
+        
+        const errorMessage = error?.error?.message || error?.message || 'Failed to update task';
+        this.toasterService.showError('Error', errorMessage);
       }
     });
   }

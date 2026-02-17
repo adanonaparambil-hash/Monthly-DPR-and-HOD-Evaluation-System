@@ -2351,11 +2351,51 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return category.isFavourite === 'Y';
   }
 
-  // Select a task category
+  // Select a task category - opens task details modal
   selectTask(category: TaskCategory): void {
     this.newTaskCategory = category;
     this.selectedCategoryId = category.categoryId;
     console.log('Selected task category:', category);
+    
+    // Get current user from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
+      return;
+    }
+    
+    // Check if there's an existing task for this category in myTasksList
+    // Match by taskCategory name since ActiveTaskDto doesn't have categoryId
+    const existingTask = this.myTasksList.find(t => t.taskCategory === category.categoryName);
+    
+    if (existingTask) {
+      // Open task details modal for existing task
+      console.log('Found existing task for category, opening modal with taskId:', existingTask.taskId);
+      
+      // Set properties for standalone modal component
+      this.selectedTaskIdForModal = existingTask.taskId;
+      this.selectedUserIdForModal = userId;
+      this.selectedCategoryIdForModal = category.categoryId;
+    } else {
+      // No existing task - pass taskId as 0 to indicate new task
+      console.log('No existing task found, opening modal for new task with categoryId:', category.categoryId);
+      
+      // Set properties for standalone modal component
+      this.selectedTaskIdForModal = 0; // 0 indicates new task
+      this.selectedUserIdForModal = userId;
+      this.selectedCategoryIdForModal = category.categoryId;
+    }
+    
+    // Hide the Select Task modal
+    this.showSelectTaskModal = false;
+    
+    // Show the task details modal
+    this.showTaskDetailsModal = true;
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
   }
 
   // Add task to My Tasks list
