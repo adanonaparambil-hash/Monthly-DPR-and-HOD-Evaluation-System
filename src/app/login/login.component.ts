@@ -264,12 +264,17 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.api.login(this.username(), this.password()).subscribe({
       next: (res) => {
         console.log('Login response:', res);
+        console.log('User data from login:', res?.data);
 
         if (res?.success === true && res?.data) {
           const token = res?.token || res?.access_token;
           if (token) {
             // Use AuthService for proper session management
             this.authService.login(token, res.data);
+            
+            // Debug: Log what's being stored
+            console.log('Storing user data:', res.data);
+            console.log('Department ID from login:', res.data.departmentId || res.data.deptId || res.data.department);
           }
           
           const code = (res?.data?.isHOD || '').toString().toUpperCase();

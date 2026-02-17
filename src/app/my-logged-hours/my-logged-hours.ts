@@ -5,6 +5,8 @@ import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
 import { ToasterComponent } from '../components/toaster/toaster.component';
+import { ToasterService } from '../services/toaster.service';
+import Swal from 'sweetalert2';
 
 interface LoggedHour {
   id: string;
@@ -55,6 +57,14 @@ interface Department {
   status: string;
 }
 
+interface Employee {
+  employeeId: number;
+  employeeCode: string;
+  employeeName: string;
+  departmentId: number;
+  departmentName: string;
+}
+
 interface TaskCategory {
   categoryId: number;
   categoryName: string;
@@ -86,11 +96,13 @@ export class MyLoggedHoursComponent implements OnInit {
   toDate = '';
   selectedProject: string | number = 'all';
   selectedDepartment: string | number = 'all';
+  selectedEmployee: string | number = 'all';
   selectedCategory: string | number = 'all';
 
   // API data
   projects: Project[] = [];
   departments: Department[] = [];
+  employees: Employee[] = [];
   taskCategories: TaskCategory[] = [];
   
   // Loading state
@@ -106,6 +118,17 @@ export class MyLoggedHoursComponent implements OnInit {
   showBreakHistoryModal = false;
   openBreaks: any[] = [];
   isLoadingBreaks = false;
+
+  // Manage Fields Modal
+  showManageFieldsModal = false;
+  customFields: any[] = [];
+  isLoadingFields = false;
+  newField: any = {
+    fieldName: '',
+    fieldType: '',
+    options: ''
+  };
+  originalFieldData: any = null;
 
   // Column management
   showColumnModal = false;
@@ -144,7 +167,8 @@ export class MyLoggedHoursComponent implements OnInit {
 
   constructor(
     private themeService: Theme,
-    private api: Api
+    private api: Api,
+    private toasterService: ToasterService
   ) {}
 
   ngOnInit() {
@@ -153,9 +177,17 @@ export class MyLoggedHoursComponent implements OnInit {
       this.isDarkMode = isDark;
     });
     
-    // Get current user ID for modal
+    // Get current user data from session
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     this.currentUserId = currentUser.empId || currentUser.employeeId || '';
+    
+    // Debug: Log the entire user object to see what fields are available
+    console.log('Current user from session:', currentUser);
+    console.log('Available department fields:', {
+      deptId: currentUser.deptId,
+      department: currentUser.department,
+      departmentID: currentUser.departmentID
+    });
     
     // Set default date range (1st of current month to today)
     const today = new Date();
@@ -167,7 +199,29 @@ export class MyLoggedHoursComponent implements OnInit {
     // Load dropdown data from API
     this.loadProjects();
     this.loadDepartments();
-    this.loadAllTaskCategories();
+    
+    // Set department from session after departments are loaded
+    // Check multiple possible field names for department ID
+    const userDepartmentId = currentUser.departmentID;
+    
+    if (userDepartmentId) {
+      console.log('Found department ID in session:', userDepartmentId);
+      // Wait for departments to load, then set the selected department
+      setTimeout(() => {
+        this.selectedDepartment = userDepartmentId;
+        console.log('Auto-selected department:', userDepartmentId);
+        
+        // Load employees for the selected department
+        this.loadEmployeesByDepartment(Number(userDepartmentId));
+        
+        // Load task categories for the selected department
+        this.loadDepartmentTaskCategories(Number(userDepartmentId));
+      }, 500);
+    } else {
+      console.log('No department ID found in session, loading all categories');
+      // If no department in session, load all categories
+      this.loadAllTaskCategories();
+    }
     
     // Load logged hours data
     this.loadLoggedHours();
@@ -221,6 +275,47 @@ export class MyLoggedHoursComponent implements OnInit {
     });
   }
 
+  loadEmployeesByDepartment(departmentId: number) {
+    console.log('Loading employees for department:', departmentId);
+    
+    this.api.getEmployeesByDepartment(departmentId).subscribe({
+      next: (response) => {
+        console.log('getEmployeesByDepartment API Response:', response);
+        
+        if (response.success && response.data) {
+          this.employees = response.data;
+          console.log('Loaded employees:', this.employees.length);
+          
+          // Auto-select current user's employee code (empId)
+          const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+          const currentEmpId = currentUser.empId || currentUser.employeeId;
+          
+          if (currentEmpId) {
+            // Find the employee in the list by matching employeeCode with empId
+            const currentEmployee = this.employees.find(emp => 
+              emp.employeeCode === currentEmpId || 
+              emp.employeeCode === String(currentEmpId)
+            );
+            
+            if (currentEmployee) {
+              this.selectedEmployee = currentEmployee.employeeCode;
+              console.log('Auto-selected employee:', currentEmployee.employeeName, 'Code:', currentEmployee.employeeCode);
+            } else {
+              console.log('Current user not found in employee list. EmpId:', currentEmpId);
+            }
+          }
+        } else {
+          console.warn('API response success is false or no data:', response);
+          this.employees = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading employees:', error);
+        this.employees = [];
+      }
+    });
+  }
+
   loadAllTaskCategories() {
     console.log('Loading all task categories for My Logged Hours');
     
@@ -263,20 +358,31 @@ export class MyLoggedHoursComponent implements OnInit {
   onDepartmentChange() {
     console.log('Department changed to:', this.selectedDepartment);
     
-    // Reset task category selection
+    // Reset employee and task category selections
+    this.selectedEmployee = 'all';
     this.selectedCategory = 'all';
+    this.employees = [];
     this.taskCategories = [];
     
-    // If "All Departments" is selected, don't load categories
+    // If "All Departments" is selected, don't load employees or categories
     if (this.selectedDepartment === 'all') {
       // Reload logged hours with updated filter
       this.loadLoggedHours();
       return;
     }
     
+    // Load employees for the selected department
+    this.loadEmployeesByDepartment(Number(this.selectedDepartment));
+    
     // Load task categories for the selected department
     this.loadDepartmentTaskCategories(Number(this.selectedDepartment));
     
+    // Reload logged hours with updated filter
+    this.loadLoggedHours();
+  }
+
+  onEmployeeChange() {
+    console.log('Employee changed to:', this.selectedEmployee);
     // Reload logged hours with updated filter
     this.loadLoggedHours();
   }
@@ -337,7 +443,14 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // Get current user
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const userId = currentUser.empId || currentUser.employeeId || '';
+    const currentUserId = currentUser.empId || currentUser.employeeId || '';
+    
+    // Use selected employee code if one is chosen, otherwise use current user
+    let userId = currentUserId;
+    if (this.selectedEmployee !== 'all') {
+      userId = this.selectedEmployee; // selectedEmployee is already the employeeCode
+      console.log('Filtering by selected employee code:', userId);
+    }
     
     if (!userId) {
       console.error('No user ID found');
@@ -826,5 +939,207 @@ export class MyLoggedHoursComponent implements OnInit {
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
+  }
+
+  // Manage Fields Modal Methods
+  openManageFieldsModal() {
+    console.log('Opening Manage Fields modal...');
+    this.showManageFieldsModal = true;
+    this.loadCustomFields();
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeManageFieldsModal() {
+    this.showManageFieldsModal = false;
+    this.clearNewField();
+    document.body.style.overflow = '';
+  }
+
+  loadCustomFields() {
+    this.isLoadingFields = true;
+    
+    this.api.getCustomFields().subscribe({
+      next: (response: any) => {
+        console.log('Custom fields response:', response);
+        
+        if (response && response.success && response.data) {
+          this.customFields = response.data.map((field: any) => ({
+            ...field,
+            isEditing: false
+          }));
+          console.log('Loaded custom fields:', this.customFields.length);
+        } else {
+          this.customFields = [];
+        }
+        
+        this.isLoadingFields = false;
+      },
+      error: (error: any) => {
+        console.error('Error loading custom fields:', error);
+        this.customFields = [];
+        this.isLoadingFields = false;
+      }
+    });
+  }
+
+  isNewFieldValid(): boolean {
+    if (!this.newField.fieldName || !this.newField.fieldType) {
+      return false;
+    }
+    
+    if (this.newField.fieldType === 'Dropdown' && !this.newField.options) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  createField() {
+    if (!this.isNewFieldValid()) {
+      this.toasterService.showError('Validation Error', 'Please fill in all required fields');
+      return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || '';
+
+    const fieldData = {
+      fieldName: this.newField.fieldName.trim(),
+      fieldType: this.newField.fieldType,
+      options: this.newField.fieldType === 'Dropdown' ? this.newField.options : '',
+      createdBy: userId
+    };
+
+    console.log('Creating field:', fieldData);
+
+    this.api.saveCustomField(fieldData).subscribe({
+      next: (response: any) => {
+        console.log('Field created:', response);
+        
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Custom field created successfully');
+          this.clearNewField();
+          this.loadCustomFields();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to create field');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error creating field:', error);
+        this.toasterService.showError('Error', 'Failed to create custom field');
+      }
+    });
+  }
+
+  clearNewField() {
+    this.newField = {
+      fieldName: '',
+      fieldType: '',
+      options: ''
+    };
+  }
+
+  editField(field: any) {
+    // Store original data for cancel
+    this.originalFieldData = { ...field };
+    field.isEditing = true;
+  }
+
+  cancelEdit(field: any) {
+    if (this.originalFieldData) {
+      // Restore original data
+      Object.assign(field, this.originalFieldData);
+      this.originalFieldData = null;
+    }
+    field.isEditing = false;
+  }
+
+  saveField(field: any) {
+    if (!field.fieldName || !field.fieldType) {
+      this.toasterService.showError('Validation Error', 'Field name and type are required');
+      return;
+    }
+
+    if (field.fieldType === 'Dropdown' && !field.options) {
+      this.toasterService.showError('Validation Error', 'Dropdown options are required');
+      return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || '';
+
+    const fieldData = {
+      fieldId: field.fieldId,
+      fieldName: field.fieldName.trim(),
+      fieldType: field.fieldType,
+      options: field.fieldType === 'Dropdown' ? field.options : '',
+      createdBy: userId
+    };
+
+    console.log('Updating field:', fieldData);
+
+    this.api.updateCustomField(fieldData).subscribe({
+      next: (response: any) => {
+        console.log('Field updated:', response);
+        
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Field updated successfully');
+          field.isEditing = false;
+          this.originalFieldData = null;
+          this.loadCustomFields();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to update field');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error updating field:', error);
+        this.toasterService.showError('Error', 'Failed to update field');
+      }
+    });
+  }
+
+  deleteField(field: any) {
+    Swal.fire({
+      title: 'Delete Field?',
+      text: `Are you sure you want to delete "${field.fieldName}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+        const userId = currentUser.empId || currentUser.employeeId || '';
+
+        this.api.deleteCustomField(field.fieldId, userId).subscribe({
+          next: (response: any) => {
+            console.log('Field deleted:', response);
+            
+            if (response && response.success) {
+              this.toasterService.showSuccess('Success', 'Field deleted successfully');
+              this.loadCustomFields();
+            } else {
+              this.toasterService.showError('Error', response?.message || 'Failed to delete field');
+            }
+          },
+          error: (error: any) => {
+            console.error('Error deleting field:', error);
+            this.toasterService.showError('Error', 'Failed to delete field');
+          }
+        });
+      }
+    });
+  }
+
+  getFieldTypeIcon(fieldType: string): string {
+    const iconMap: { [key: string]: string } = {
+      'Text': 'fas fa-font',
+      'Number': 'fas fa-hashtag',
+      'Date': 'fas fa-calendar',
+      'Dropdown': 'fas fa-list'
+    };
+    return iconMap[fieldType] || 'fas fa-question';
   }
 }

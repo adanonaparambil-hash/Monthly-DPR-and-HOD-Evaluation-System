@@ -321,6 +321,10 @@ export class Api {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetProjects`);
   }
 
+  getEmployeesByDepartment(departmentId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetByDepartment/${departmentId}`);
+  }
+
   /* ===================== BREAK ===================== */
 
   userBreak(request: UserBreakRequest): Observable<any> {
@@ -395,11 +399,33 @@ export class Api {
     );
  }
 
-
  
-  getOpenBreaks(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`);
+ getOpenBreaks(): Observable<any> {
+   return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`);
   }
- 
+  
+
+  getByDepartment(departmentId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetByDepartment/${departmentId}`);
+  }
+
+
+
+
+  saveCustomField(fieldData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveCustomField`, fieldData);
+  }
+
+  updateCustomField(fieldData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/UpdateCustomField`, fieldData);
+  }
+
+  deleteCustomField(fieldId: number, userId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/DeleteCustomField`, { fieldId, userId });
+  }
+
+  
+
+
 
 }
