@@ -17,9 +17,9 @@
         <i class="fas fa-download"></i>
         <span>Export Report</span>
       </button>
-      <button class="action-btn primary" (click)="logNewHours()">
-        <i class="fas fa-plus"></i>
-        <span>Add New Hours</span>
+      <button class="action-btn primary" (click)="openBreakHistoryModal()">
+        <i class="fas fa-coffee"></i>
+        <span>Break History</span>
       </button>
     </div>
   </header>
@@ -109,8 +109,19 @@
       <!-- Empty State -->
       @if (!isLoadingData && loggedHours.length === 0) {
         <div class="empty-state">
-          <i class="fas fa-clock"></i>
-          <p>No logged hours found for the selected filters</p>
+          <div class="empty-state-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <h3 class="empty-state-title">No Logged Hours Found</h3>
+          <p class="empty-state-message">You don't have any logged hours for the selected date range and filters.</p>
+          <div class="empty-state-suggestions">
+            <p class="suggestion-title">Try the following:</p>
+            <ul class="suggestion-list">
+              <li><i class="fas fa-calendar-alt"></i> Adjust your date range</li>
+              <li><i class="fas fa-filter"></i> Clear or modify your filters</li>
+              <li><i class="fas fa-tasks"></i> Start working on a task to log hours</li>
+            </ul>
+          </div>
         </div>
       }
 
@@ -310,4 +321,141 @@
     (taskResumed)="onTaskResumed($event)"
     (taskStopped)="onTaskStopped($event)">
   </app-task-details-modal>
+}
+
+<!-- Break History Modal - Large Table Design -->
+@if (showBreakHistoryModal) {
+  <div class="modal-overlay-large" (click)="closeBreakHistoryModal()">
+    <div class="break-history-modal-large" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header-large">
+        <div class="modal-title-section-large">
+          <i class="fas fa-coffee modal-icon-large"></i>
+          <div>
+            <h2 class="modal-title-large">Break History</h2>
+            <p class="modal-subtitle-large">Active break sessions across the organization</p>
+          </div>
+        </div>
+        <button class="close-btn-large" (click)="closeBreakHistoryModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body with Table -->
+      <div class="modal-body-large">
+        <!-- Loading State -->
+        @if (isLoadingBreaks) {
+          <div class="loading-state-large">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading break history...</p>
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (!isLoadingBreaks && openBreaks.length === 0) {
+          <div class="empty-state-large">
+            <i class="fas fa-coffee"></i>
+            <p>No Active Breaks</p>
+            <span>All employees are currently working</span>
+          </div>
+        }
+
+        <!-- Break History Table -->
+        @if (!isLoadingBreaks && openBreaks.length > 0) {
+          <div class="break-table-container">
+            <table class="break-table">
+              <thead>
+                <tr>
+                  <th class="th-employee">Employee</th>
+                  <th class="th-department">Department</th>
+                  <th class="th-reason">Break Reason</th>
+                  <th class="th-start">Start Time</th>
+                  <th class="th-duration">Duration</th>
+                  <th class="th-remarks">Remarks</th>
+                  <th class="th-status">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (breakRecord of openBreaks; track breakRecord.employeeId) {
+                  <tr class="break-row">
+                    <td class="td-employee">
+                      <div class="employee-cell">
+                        <div class="employee-avatar-small">
+                          @if (breakRecord.profilePicture) {
+                            <img [src]="'data:image/jpeg;base64,' + breakRecord.profilePicture" 
+                                 [alt]="breakRecord.employeeName"
+                                 class="avatar-img-small">
+                          } @else {
+                            <div class="avatar-placeholder-small">
+                              {{ getInitials(breakRecord.employeeName) }}
+                            </div>
+                          }
+                        </div>
+                        <div class="employee-info-small">
+                          <span class="employee-name-small">{{ breakRecord.employeeName }}</span>
+                          <span class="employee-id-small">{{ breakRecord.employeeId }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="td-department">
+                      <div class="department-cell">
+                        <span class="department-name">{{ breakRecord.department }}</span>
+                        <span class="designation-name">{{ breakRecord.designation }}</span>
+                      </div>
+                    </td>
+                    <td class="td-reason">
+                      <span class="break-reason-badge">
+                        <i class="fas fa-mug-hot"></i>
+                        {{ breakRecord.breakReason }}
+                      </span>
+                    </td>
+                    <td class="td-start">
+                      <span class="start-time">{{ formatBreakTime(breakRecord.breakStartTime) }}</span>
+                    </td>
+                    <td class="td-duration">
+                      <span class="duration-badge">
+                        <i class="fas fa-clock"></i>
+                        {{ formatDuration(breakRecord.breakDurationMinutes) }}
+                      </span>
+                    </td>
+                    <td class="td-remarks">
+                      @if (breakRecord.remarks) {
+                        <span class="remarks-text">{{ breakRecord.remarks }}</span>
+                      } @else {
+                        <span class="no-remarks">—</span>
+                      }
+                    </td>
+                    <td class="td-status">
+                      <span class="status-badge-active">
+                        <i class="fas fa-circle pulse-dot"></i>
+                        On Break
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-large">
+        <div class="footer-info">
+          <i class="fas fa-info-circle"></i>
+          <span>Showing {{ openBreaks.length }} active break(s)</span>
+        </div>
+        <div class="footer-actions">
+          <button class="btn-secondary-large" (click)="closeBreakHistoryModal()">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+          <button class="btn-primary-large" (click)="refreshBreakHistory()">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 }

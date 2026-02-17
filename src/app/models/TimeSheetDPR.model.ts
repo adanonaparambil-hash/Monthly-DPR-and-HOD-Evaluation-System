@@ -260,3 +260,15 @@ export interface UserDailyLogHistoryResponse {
   duration: string;
   dailyComment: string;
 }
+
+export interface OpenBreakDto {
+  employeeId: string;
+  breakReason: string;
+  department: string;
+  designation: string;
+  remarks: string | null;
+  employeeName: string;
+  profilePicture: string;
+  breakStartTime: string | Date;
+  breakDurationMinutes: number;
+}

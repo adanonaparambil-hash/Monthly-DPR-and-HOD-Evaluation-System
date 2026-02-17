@@ -102,6 +102,11 @@ export class MyLoggedHoursComponent implements OnInit {
   selectedTaskCategoryId: number = 0;
   currentUserId: string = '';
 
+  // Break History Modal
+  showBreakHistoryModal = false;
+  openBreaks: any[] = [];
+  isLoadingBreaks = false;
+
   // Column management
   showColumnModal = false;
   availableColumns: ColumnDefinition[] = [
@@ -477,15 +482,22 @@ export class MyLoggedHoursComponent implements OnInit {
   }
 
   getCategoryClass(category: string): string {
-    const categoryMap: { [key: string]: string } = {
-      'Security Enhancement': 'security',
-      'Back-end': 'backend',
-      'Meeting': 'meeting',
-      'Feature Development': 'feature',
-      'Code Review': 'review',
-      'Bug Fix': 'bug'
-    };
-    return categoryMap[category] || 'default';
+    // Generate a consistent color class based on category name
+    return `category-color-${this.getCategoryColorIndex(category)}`;
+  }
+
+  // Generate a consistent color index (0-11) based on category name
+  getCategoryColorIndex(category: string): number {
+    if (!category) return 0;
+    
+    // Simple hash function to generate consistent index
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Return a number between 0 and 11 (12 different colors)
+    return Math.abs(hash) % 12;
   }
 
   getPriorityClass(priority: string): string {
@@ -736,5 +748,83 @@ export class MyLoggedHoursComponent implements OnInit {
   // Helper method to check if description column is visible
   isDescriptionColumnVisible(): boolean {
     return this.getVisibleColumns().some(col => col.key === 'description');
+  }
+
+  // Break History Modal Methods
+  openBreakHistoryModal() {
+    console.log('Opening Break History modal...');
+    this.showBreakHistoryModal = true;
+    this.loadBreakHistory();
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeBreakHistoryModal() {
+    this.showBreakHistoryModal = false;
+    
+    // Restore body scroll
+    document.body.style.overflow = '';
+  }
+
+  loadBreakHistory() {
+    this.isLoadingBreaks = true;
+    
+    this.api.getOpenBreaks().subscribe({
+      next: (response: any) => {
+        console.log('Break history response:', response);
+        
+        if (response && response.success && response.data) {
+          this.openBreaks = response.data;
+          console.log('Loaded open breaks:', this.openBreaks.length);
+        } else {
+          this.openBreaks = [];
+        }
+        
+        this.isLoadingBreaks = false;
+      },
+      error: (error: any) => {
+        console.error('Error loading break history:', error);
+        this.openBreaks = [];
+        this.isLoadingBreaks = false;
+      }
+    });
+  }
+
+  refreshBreakHistory() {
+    console.log('Refreshing break history...');
+    this.loadBreakHistory();
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  formatBreakTime(dateTime: string | Date): string {
+    const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  }
+
+  formatDuration(minutes: number): string {
+    if (minutes < 1) {
+      return 'Just started';
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
   }
 }
