@@ -395,6 +395,11 @@ export class Api {
     );
  }
 
+
+ 
+  getOpenBreaks(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`);
+  }
  
 
 }
