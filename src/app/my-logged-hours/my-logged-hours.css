@@ -2435,14 +2435,16 @@
 .modal-title-large {
   font-size: 26px;
   font-weight: 700;
-  color: white;
+  color: #ffffff;
   margin: 0 0 4px 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .modal-subtitle-large {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   margin: 0;
+  opacity: 0.85;
 }
 
 .close-btn-large {

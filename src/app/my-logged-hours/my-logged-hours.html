@@ -487,208 +487,268 @@
 }
 
 
-<!-- Manage Fields Modal -->
+<!-- Manage Fields Modal - Modern Clean Design -->
 @if (showManageFieldsModal) {
-  <div class="modal-overlay-large" (click)="closeManageFieldsModal()">
-    <div class="manage-fields-modal" (click)="$event.stopPropagation()">
+  <div class="modal-overlay-fields" (click)="closeManageFieldsModal()">
+    <div class="manage-fields-modal-ultra" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
-      <div class="modal-header-large">
-        <div class="modal-title-section-large">
-          <i class="fas fa-cog modal-icon-large"></i>
-          <div>
-            <h2 class="modal-title-large">Manage Custom Fields</h2>
-            <p class="modal-subtitle-large">Create and manage custom fields for your tasks</p>
-          </div>
+      <div class="fields-modal-header">
+        <div class="header-content">
+          <h2 class="modal-title-ultra">Manage Custom Fields</h2>
+          <p class="modal-subtitle-ultra">Configure and manage your custom field attributes</p>
         </div>
-        <button class="close-btn-large" (click)="closeManageFieldsModal()">
+        <div class="header-actions-ultra">
+          <button class="btn-add-new-field" (click)="openAddFieldModal()">
+            <i class="fas fa-plus-circle"></i>
+            <span>Add New Field</span>
+          </button>
+          <button class="close-btn-ultra" (click)="closeManageFieldsModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="fields-modal-body">
+        <!-- Loading State -->
+        @if (isLoadingFields) {
+          <div class="loading-state-ultra">
+            <div class="spinner-ultra"></div>
+            <p>Loading fields...</p>
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (!isLoadingFields && customFields.length === 0) {
+          <div class="empty-state-ultra">
+            <div class="empty-icon-ultra">
+              <i class="fas fa-inbox"></i>
+            </div>
+            <h3>No Custom Fields Yet</h3>
+            <p>Get started by adding your first custom field</p>
+            <button class="btn-primary-ultra" (click)="openAddFieldModal()">
+              <i class="fas fa-plus-circle"></i>
+              Add Your First Field
+            </button>
+          </div>
+        }
+
+        <!-- Fields Table -->
+        @if (!isLoadingFields && customFields.length > 0) {
+          <div class="fields-table-ultra">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-name">FIELD NAME</th>
+                  <th class="col-type">TYPE</th>
+                  <th class="col-active">ACTIVE</th>
+                  <th class="col-mandatory">MANDATORY</th>
+                  <th class="col-actions">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (field of customFields; track field.fieldId) {
+                  <tr class="field-row-ultra">
+                    <td class="col-name">
+                      <div class="field-name-wrapper">
+                        <span class="field-name-main">{{ field.fieldName }}</span>
+                      </div>
+                    </td>
+                    <td class="col-type">
+                      <span class="type-badge-ultra" [class]="'type-' + field.fieldType.toLowerCase()">
+                        {{ field.fieldType }}
+                      </span>
+                    </td>
+                    <td class="col-active">
+                      <label class="switch-ultra">
+                        <input type="checkbox" [checked]="field.isActive === true" disabled>
+                        <span class="slider-ultra"></span>
+                      </label>
+                    </td>
+                    <td class="col-mandatory">
+                      <label class="switch-ultra">
+                        <input type="checkbox" [checked]="field.isMandatory === true" disabled>
+                        <span class="slider-ultra"></span>
+                      </label>
+                    </td>
+                    <td class="col-actions">
+                      <div class="action-btns-ultra">
+                        <button class="btn-icon-ultra btn-edit" (click)="editFieldInModal(field)" title="Edit">
+                          <i class="fas fa-pencil-alt"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-ultra">
+            <span class="pagination-info">Showing 1 to {{ customFields.length }} of {{ customFields.length }} fields</span>
+            <div class="pagination-btns">
+              <button class="page-btn-ultra" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="page-btn-ultra active">1</button>
+              <button class="page-btn-ultra">2</button>
+              <button class="page-btn-ultra">3</button>
+              <button class="page-btn-ultra">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add/Edit Field Modal - Separate Modal -->
+@if (showAddFieldModal) {
+  <div class="modal-overlay-add-field" (click)="closeAddFieldModal()">
+    <div class="add-field-modal-ultra" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="add-field-header">
+        <div>
+          <h2 class="add-field-title">{{ editingField ? 'Edit' : 'Add' }} Custom Field</h2>
+          <p class="add-field-subtitle">Configure a new attribute for your data.</p>
+        </div>
+        <button class="close-btn-circle" (click)="closeAddFieldModal()">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
       <!-- Modal Body -->
-      <div class="modal-body-large">
-        <div class="fields-container">
-          <!-- Add New Field Section -->
-          <div class="add-field-section">
-            <h3 class="section-title">
-              <i class="fas fa-plus-circle"></i>
-              Create New Field
-            </h3>
-            <div class="field-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Field Name <span class="required">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-input" 
-                    [(ngModel)]="newField.fieldName"
-                    placeholder="Enter field name"
-                    maxlength="50">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Field Type <span class="required">*</span></label>
-                  <select class="form-select" [(ngModel)]="newField.fieldType">
-                    <option value="">Select type</option>
-                    <option value="Text">Text</option>
-                    <option value="Number">Number</option>
-                    <option value="Date">Date</option>
-                    <option value="Dropdown">Dropdown</option>
-                  </select>
-                </div>
-              </div>
+      <div class="add-field-body">
+        <!-- Field Name -->
+        <div class="form-field-ultra">
+          <label class="field-label-ultra">Field Name</label>
+          <input 
+            type="text" 
+            class="field-input-ultra" 
+            [(ngModel)]="currentField.fieldName"
+            placeholder="Priority Level"
+            maxlength="50">
+          <small class="field-hint-ultra">This name will be displayed in the project forms.</small>
+        </div>
 
-              @if (newField.fieldType === 'Dropdown') {
-                <div class="form-group">
-                  <label class="form-label">Dropdown Options <span class="required">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-input" 
-                    [(ngModel)]="newField.options"
-                    placeholder="Enter options separated by commas (e.g., Option1, Option2, Option3)">
-                  <small class="form-hint">Separate multiple options with commas</small>
-                </div>
-              }
-
-              <div class="form-actions">
-                <button class="btn-create" (click)="createField()" [disabled]="!isNewFieldValid()">
-                  <i class="fas fa-plus"></i>
-                  Create Field
-                </button>
-                <button class="btn-clear" (click)="clearNewField()">
-                  <i class="fas fa-times"></i>
-                  Clear
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Existing Fields Section -->
-          <div class="existing-fields-section">
-            <h3 class="section-title">
+        <!-- Field Type Selector -->
+        <div class="form-field-ultra">
+          <label class="field-label-ultra">Field Type</label>
+          <div class="type-selector-ultra">
+            <button 
+              type="button"
+              class="type-btn-ultra" 
+              [class.active]="currentField.fieldType === 'Text'"
+              [disabled]="editingField"
+              (click)="!editingField && (currentField.fieldType = 'Text')">
+              <i class="fas fa-align-left"></i>
+              <span>TEXT</span>
+            </button>
+            <button 
+              type="button"
+              class="type-btn-ultra" 
+              [class.active]="currentField.fieldType === 'Number'"
+              [disabled]="editingField"
+              (click)="!editingField && (currentField.fieldType = 'Number')">
+              <i class="fas fa-hashtag"></i>
+              <span>NUMBER</span>
+            </button>
+            <button 
+              type="button"
+              class="type-btn-ultra" 
+              [class.active]="currentField.fieldType === 'Dropdown'"
+              [disabled]="editingField"
+              (click)="!editingField && (currentField.fieldType = 'Dropdown')">
               <i class="fas fa-list"></i>
-              Existing Fields ({{ customFields.length }})
-            </h3>
-
-            <!-- Loading State -->
-            @if (isLoadingFields) {
-              <div class="loading-state-small">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Loading fields...</p>
-              </div>
-            }
-
-            <!-- Empty State -->
-            @if (!isLoadingFields && customFields.length === 0) {
-              <div class="empty-state-small">
-                <i class="fas fa-inbox"></i>
-                <p>No custom fields yet</p>
-                <span>Create your first custom field above</span>
-              </div>
-            }
-
-            <!-- Fields List -->
-            @if (!isLoadingFields && customFields.length > 0) {
-              <div class="fields-list">
-                @for (field of customFields; track field.fieldId) {
-                  <div class="field-card">
-                    @if (field.isEditing) {
-                      <!-- Edit Mode -->
-                      <div class="field-edit-mode">
-                        <div class="form-row">
-                          <div class="form-group">
-                            <label class="form-label-small">Field Name</label>
-                            <input 
-                              type="text" 
-                              class="form-input-small" 
-                              [(ngModel)]="field.fieldName"
-                              maxlength="50">
-                          </div>
-                          <div class="form-group">
-                            <label class="form-label-small">Field Type</label>
-                            <select class="form-select-small" [(ngModel)]="field.fieldType">
-                              <option value="Text">Text</option>
-                              <option value="Number">Number</option>
-                              <option value="Date">Date</option>
-                              <option value="Dropdown">Dropdown</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        @if (field.fieldType === 'Dropdown') {
-                          <div class="form-group">
-                            <label class="form-label-small">Options</label>
-                            <input 
-                              type="text" 
-                              class="form-input-small" 
-                              [(ngModel)]="field.options"
-                              placeholder="Comma-separated options">
-                          </div>
-                        }
-
-                        <div class="field-actions">
-                          <button class="btn-save-small" (click)="saveField(field)">
-                            <i class="fas fa-check"></i>
-                            Save
-                          </button>
-                          <button class="btn-cancel-small" (click)="cancelEdit(field)">
-                            <i class="fas fa-times"></i>
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    } @else {
-                      <!-- View Mode -->
-                      <div class="field-view-mode">
-                        <div class="field-info">
-                          <div class="field-header">
-                            <h4 class="field-name">{{ field.fieldName }}</h4>
-                            <span class="field-type-badge" [class]="'type-' + field.fieldType.toLowerCase()">
-                              <i [class]="getFieldTypeIcon(field.fieldType)"></i>
-                              {{ field.fieldType }}
-                            </span>
-                          </div>
-                          @if (field.fieldType === 'Dropdown' && field.options) {
-                            <div class="field-options">
-                              <span class="options-label">Options:</span>
-                              <span class="options-value">{{ field.options }}</span>
-                            </div>
-                          }
-                          <div class="field-meta">
-                            <span class="field-id">ID: {{ field.fieldId }}</span>
-                          </div>
-                        </div>
-                        <div class="field-actions">
-                          <button class="btn-edit-small" (click)="editField(field)">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                          </button>
-                          <button class="btn-delete-small" (click)="deleteField(field)">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            }
+              <span>DROPDOWN</span>
+            </button>
+            <button 
+              type="button"
+              class="type-btn-ultra" 
+              [class.active]="currentField.fieldType === 'Date'"
+              [disabled]="editingField"
+              (click)="!editingField && (currentField.fieldType = 'Date')">
+              <i class="fas fa-calendar"></i>
+              <span>DATE</span>
+            </button>
           </div>
         </div>
+
+        <!-- Active Toggle -->
+        <div class="form-field-ultra toggle-field">
+          <div class="toggle-info">
+            <span class="toggle-title">Active</span>
+            <small class="toggle-desc">Enable or disable this field.</small>
+          </div>
+          <label class="switch-ultra-large">
+            <input type="checkbox" [(ngModel)]="currentField.isActive">
+            <span class="slider-ultra-large"></span>
+          </label>
+        </div>
+
+        <!-- Mandatory Toggle -->
+        <div class="form-field-ultra toggle-field">
+          <div class="toggle-info">
+            <span class="toggle-title">Mandatory</span>
+            <small class="toggle-desc">Users must fill this field to save.</small>
+          </div>
+          <label class="switch-ultra-large">
+            <input type="checkbox" [(ngModel)]="currentField.isMandatory">
+            <span class="slider-ultra-large"></span>
+          </label>
+        </div>
+
+        <!-- Dropdown Options (only if Dropdown type) -->
+        @if (currentField.fieldType === 'Dropdown') {
+          <div class="form-field-ultra">
+            <label class="field-label-ultra">Dropdown Options <span class="options-count">{{ getOptionsCount() }} Options</span></label>
+            
+            <!-- Options List -->
+            <div class="options-list-ultra">
+              @for (option of currentFieldOptions; track $index; let i = $index) {
+                <div class="option-item-ultra">
+                  <i class="fas fa-grip-vertical drag-handle"></i>
+                  <input 
+                    type="text" 
+                    class="option-input-ultra" 
+                    [(ngModel)]="option.optionValue"
+                    placeholder="Option name">
+                  <label class="option-checkbox-container">
+                    <input 
+                      type="checkbox" 
+                      [(ngModel)]="option.isActive"
+                      class="option-checkbox">
+                    <span class="option-checkbox-label">Active</span>
+                  </label>
+                </div>
+              }
+            </div>
+
+            <!-- Add Option Button -->
+            <button type="button" class="btn-add-option-ultra" (click)="addOption()">
+              <i class="fas fa-plus-circle"></i>
+              Add Option
+            </button>
+          </div>
+        }
       </div>
 
       <!-- Modal Footer -->
-      <div class="modal-footer-large">
-        <div class="footer-info">
-          <i class="fas fa-info-circle"></i>
-          <span>Custom fields can be used in task details</span>
-        </div>
-        <div class="footer-actions">
-          <button class="btn-secondary-large" (click)="closeManageFieldsModal()">
-            <i class="fas fa-times"></i>
-            Close
-          </button>
-        </div>
+      <div class="add-field-footer">
+        <button type="button" class="btn-cancel-ultra" (click)="closeAddFieldModal()">
+          Cancel
+        </button>
+        <button 
+          type="button"
+          class="btn-save-ultra" 
+          (click)="saveCurrentField()" 
+          [disabled]="!isCurrentFieldValid()">
+          <i class="fas fa-check"></i>
+          Save Changes
+        </button>
       </div>
     </div>
   </div>

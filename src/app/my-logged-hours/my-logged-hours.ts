@@ -86,7 +86,7 @@ interface ColumnDefinition {
   standalone: true,
   imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent],
   templateUrl: './my-logged-hours.html',
-  styleUrls: ['./my-logged-hours.css']
+  styleUrls: ['./my-logged-hours.css', './manage-fields-ultra.css']
 })
 export class MyLoggedHoursComponent implements OnInit {
   isDarkMode = false;
@@ -123,10 +123,26 @@ export class MyLoggedHoursComponent implements OnInit {
   showManageFieldsModal = false;
   customFields: any[] = [];
   isLoadingFields = false;
+  
+  // Add Field Modal (Separate)
+  showAddFieldModal = false;
+  editingField = false;
+  currentField: any = {
+    fieldName: '',
+    fieldType: '',
+    isActive: true,
+    isMandatory: false
+  };
+  currentFieldOptions: any[] = [{ optionValue: '', isActive: true }];
+  
+  // Legacy properties (kept for compatibility)
+  showAddFieldForm = false;
   newField: any = {
     fieldName: '',
     fieldType: '',
-    options: ''
+    options: '',
+    isRequired: false,
+    isSearchable: false
   };
   originalFieldData: any = null;
 
@@ -958,13 +974,25 @@ export class MyLoggedHoursComponent implements OnInit {
   loadCustomFields() {
     this.isLoadingFields = true;
     
-    this.api.getCustomFields().subscribe({
+    this.api.getAllFieldsAsync().subscribe({
       next: (response: any) => {
         console.log('Custom fields response:', response);
         
         if (response && response.success && response.data) {
+          // Map the API response to our field structure
           this.customFields = response.data.map((field: any) => ({
-            ...field,
+            fieldId: field.fieldId,
+            fieldName: field.fieldName,
+            fieldType: field.fieldType,
+            isActive: field.isActive === 'Y',
+            isMandatory: field.isMandatory?.trim() === 'Y',
+            options: field.options && field.options.length > 0 
+              ? field.options
+                  .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+                  .map((opt: any) => opt.optionValue)
+                  .join(', ')
+              : '',
+            optionsArray: field.options || [],
             isEditing: false
           }));
           console.log('Loaded custom fields:', this.customFields.length);
@@ -1035,8 +1063,169 @@ export class MyLoggedHoursComponent implements OnInit {
     this.newField = {
       fieldName: '',
       fieldType: '',
-      options: ''
+      options: '',
+      isRequired: false,
+      isSearchable: false
     };
+  }
+
+  toggleAddFieldForm() {
+    this.showAddFieldForm = !this.showAddFieldForm;
+    if (!this.showAddFieldForm) {
+      this.clearNewField();
+    }
+  }
+
+  // New Add Field Modal Methods
+  openAddFieldModal() {
+    this.editingField = false;
+    this.currentField = {
+      fieldName: '',
+      fieldType: '',
+      isActive: true,
+      isMandatory: false
+    };
+    this.currentFieldOptions = [{ optionValue: '', isActive: true }];
+    this.showAddFieldModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeAddFieldModal() {
+    this.showAddFieldModal = false;
+    this.editingField = false;
+    this.currentField = {
+      fieldName: '',
+      fieldType: '',
+      isActive: true,
+      isMandatory: false
+    };
+    this.currentFieldOptions = [{ optionValue: '', isActive: true }];
+    document.body.style.overflow = '';
+  }
+
+  editFieldInModal(field: any) {
+    this.editingField = true;
+    this.currentField = { 
+      ...field,
+      // Store the original optionsArray for editing
+      optionsArray: field.optionsArray || []
+    };
+    
+    // Parse options for dropdown
+    if (field.fieldType === 'Dropdown') {
+      if (field.optionsArray && field.optionsArray.length > 0) {
+        // Use the optionsArray from API response
+        this.currentFieldOptions = field.optionsArray
+          .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0))
+          .map((opt: any) => ({
+            optionId: opt.optionId,
+            optionValue: opt.optionValue,
+            isActive: opt.isActive === 'Y',
+            sortOrder: opt.sortOrder
+          }));
+      } else if (field.options) {
+        // Fallback to parsing the comma-separated string
+        this.currentFieldOptions = field.options.split(',').map((opt: string, index: number) => ({
+          optionValue: opt.trim(),
+          isActive: true,
+          sortOrder: index + 1
+        }));
+      } else {
+        this.currentFieldOptions = [{ optionValue: '', isActive: true }];
+      }
+    } else {
+      this.currentFieldOptions = [{ optionValue: '', isActive: true }];
+    }
+    
+    this.showAddFieldModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  isCurrentFieldValid(): boolean {
+    if (!this.currentField.fieldName || !this.currentField.fieldType) {
+      return false;
+    }
+    
+    if (this.currentField.fieldType === 'Dropdown') {
+      const validOptions = this.currentFieldOptions.filter(opt => opt.optionValue && opt.optionValue.trim());
+      if (validOptions.length === 0) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  saveCurrentField() {
+    if (!this.isCurrentFieldValid()) {
+      this.toasterService.showError('Validation Error', 'Please fill in all required fields');
+      return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userId = currentUser.empId || currentUser.employeeId || '';
+
+    // Prepare options array for dropdown
+    let optionsData: any[] = [];
+    if (this.currentField.fieldType === 'Dropdown') {
+      optionsData = this.currentFieldOptions
+        .filter(opt => opt.optionValue && opt.optionValue.trim())
+        .map((opt, index) => ({
+          optionId: opt.optionId || undefined,
+          optionValue: opt.optionValue.trim(),
+          isActive: opt.isActive ? 'Y' : 'N',
+          sortOrder: opt.sortOrder || (index + 1)
+        }));
+    }
+
+    const fieldData = {
+      fieldId: this.editingField ? this.currentField.fieldId : undefined,
+      fieldName: this.currentField.fieldName.trim(),
+      fieldType: this.currentField.fieldType,
+      isActive: this.currentField.isActive ? 'Y' : 'N',
+      isMandatory: this.currentField.isMandatory ? 'Y' : 'N',
+      options: optionsData,
+      createdBy: userId
+    };
+
+    console.log(this.editingField ? 'Updating field:' : 'Creating field:', fieldData);
+
+    const apiCall = this.editingField 
+      ? this.api.updateCustomField(fieldData)
+      : this.api.saveCustomField(fieldData);
+
+    apiCall.subscribe({
+      next: (response: any) => {
+        console.log('Field saved:', response);
+        
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 
+            this.editingField ? 'Field updated successfully' : 'Field created successfully');
+          this.closeAddFieldModal();
+          this.loadCustomFields();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to save field');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error saving field:', error);
+        this.toasterService.showError('Error', 'Failed to save field');
+      }
+    });
+  }
+
+  addOption() {
+    this.currentFieldOptions.push({ optionValue: '', isActive: true });
+  }
+
+  removeOption(index: number) {
+    if (this.currentFieldOptions.length > 1) {
+      this.currentFieldOptions.splice(index, 1);
+    }
+  }
+
+  getOptionsCount(): number {
+    return this.currentFieldOptions.filter(opt => opt.optionValue && opt.optionValue.trim()).length;
   }
 
   editField(field: any) {

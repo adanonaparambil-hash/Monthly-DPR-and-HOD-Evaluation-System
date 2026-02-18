@@ -411,6 +411,12 @@ export class Api {
 
 
 
+  
+  getAllFieldsAsync(): Observable<any> {
+   return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAllFieldsAsync`);
+  }
+
+
 
   saveCustomField(fieldData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveCustomField`, fieldData);
