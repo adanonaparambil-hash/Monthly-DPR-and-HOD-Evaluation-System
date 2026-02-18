@@ -108,6 +108,12 @@ export class MyLoggedHoursComponent implements OnInit {
   // Loading state
   isLoadingData = false;
 
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 500;
+  totalRecords = 0;
+  hasMoreRecords = false;
+
   // Task Details Modal
   showTaskModal = false;
   selectedTaskId: number = 0;
@@ -382,8 +388,6 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // If "All Departments" is selected, don't load employees or categories
     if (this.selectedDepartment === 'all') {
-      // Reload logged hours with updated filter
-      this.loadLoggedHours();
       return;
     }
     
@@ -392,15 +396,12 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // Load task categories for the selected department
     this.loadDepartmentTaskCategories(Number(this.selectedDepartment));
-    
-    // Reload logged hours with updated filter
-    this.loadLoggedHours();
   }
 
-  onEmployeeChange() {
-    console.log('Employee changed to:', this.selectedEmployee);
-    // Reload logged hours with updated filter
-    this.loadLoggedHours();
+  // Apply filters - called when user clicks Apply button
+  applyFilters() {
+    console.log('Applying filters...');
+    this.resetAndReload();
   }
 
   loadDepartmentTaskCategories(departmentId: number) {
@@ -435,24 +436,6 @@ export class MyLoggedHoursComponent implements OnInit {
     });
   }
 
-  onProjectChange() {
-    console.log('Project changed to:', this.selectedProject);
-    // Reload logged hours with updated filter
-    this.loadLoggedHours();
-  }
-
-  onCategoryChange() {
-    console.log('Category changed to:', this.selectedCategory);
-    // Reload logged hours with updated filter
-    this.loadLoggedHours();
-  }
-
-  onDateChange() {
-    console.log('Date range changed:', this.fromDate, 'to', this.toDate);
-    // Reload logged hours with updated filter
-    this.loadLoggedHours();
-  }
-
   loadLoggedHours() {
     console.log('Loading logged hours from API');
     this.isLoadingData = true;
@@ -461,26 +444,43 @@ export class MyLoggedHoursComponent implements OnInit {
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const currentUserId = currentUser.empId || currentUser.employeeId || '';
     
-    // Use selected employee code if one is chosen, otherwise use current user
-    let userId = currentUserId;
-    if (this.selectedEmployee !== 'all') {
-      userId = this.selectedEmployee; // selectedEmployee is already the employeeCode
+    // Determine userId based on employee and department selection
+    let userId = undefined;
+    
+    // Only set userId if a specific employee is selected AND department is not "all"
+    if (this.selectedEmployee !== 'all' && this.selectedDepartment !== 'all') {
+      userId = this.selectedEmployee; // selectedEmployee is the employeeCode
       console.log('Filtering by selected employee code:', userId);
+    } else if (this.selectedDepartment === 'all' || this.selectedEmployee === 'all') {
+      // If "All Departments" or "All Employees" is selected, userId should be null
+      userId = undefined;
+      console.log('All Departments or All Employees selected - userId is null');
     }
     
-    if (!userId) {
-      console.error('No user ID found');
-      this.isLoadingData = false;
-      return;
-    }
-    
-    const request = {
-      userId: userId,
+    // Build request object
+    const request: any = {
       fromDate: this.fromDate || undefined,
       toDate: this.toDate || undefined,
       projectId: this.selectedProject !== 'all' ? Number(this.selectedProject) : undefined,
-      categoryId: this.selectedCategory !== 'all' ? Number(this.selectedCategory) : undefined
+      categoryId: this.selectedCategory !== 'all' ? Number(this.selectedCategory) : undefined,
+      pageNumber: this.currentPage,
+      pageSize: this.pageSize
     };
+    
+    // Only add userId if it's defined (specific employee selected)
+    if (userId) {
+      request.userId = userId;
+    }
+    
+    // Only add departmentId if a specific department is selected
+    if (this.selectedDepartment !== 'all') {
+      request.departmentId = Number(this.selectedDepartment);
+    }
+    
+    // Only add employeeId if a specific employee is selected (not "All Employees")
+    if (this.selectedEmployee !== 'all') {
+      request.employeeId = this.selectedEmployee;
+    }
     
     console.log('getUserDailyLogHistory request:', request);
     
@@ -490,7 +490,7 @@ export class MyLoggedHoursComponent implements OnInit {
         
         if (response && response.success && response.data) {
           // Map API response to LoggedHour interface
-          this.loggedHours = response.data.map((log: any, index: number) => ({
+          const newRecords = response.data.map((log: any, index: number) => ({
             id: `${log.taskId}-${index}`,
             taskId: `TSK-${log.taskId}`,
             title: log.taskTitle || 'Untitled Task',
@@ -504,10 +504,21 @@ export class MyLoggedHoursComponent implements OnInit {
             dailyComment: log.dailyComment || ''
           }));
           
-          console.log('Loaded logged hours:', this.loggedHours.length, 'records');
+          // If it's the first page, replace the data; otherwise, append
+          if (this.currentPage === 1) {
+            this.loggedHours = newRecords;
+          } else {
+            this.loggedHours = [...this.loggedHours, ...newRecords];
+          }
+          
+          // Update pagination info
+          this.totalRecords = response.totalRecords || this.loggedHours.length;
+          this.hasMoreRecords = newRecords.length === this.pageSize;
+          
+          console.log('Loaded logged hours:', this.loggedHours.length, 'records, Page:', this.currentPage);
         } else if (response && Array.isArray(response.data)) {
           // Handle direct array response
-          this.loggedHours = response.data.map((log: any, index: number) => ({
+          const newRecords = response.data.map((log: any, index: number) => ({
             id: `${log.taskId}-${index}`,
             taskId: `TSK-${log.taskId}`,
             title: log.taskTitle || 'Untitled Task',
@@ -520,21 +531,53 @@ export class MyLoggedHoursComponent implements OnInit {
             loggedBy: log.loggedBy || '',
             dailyComment: log.dailyComment || ''
           }));
+          
+          // If it's the first page, replace the data; otherwise, append
+          if (this.currentPage === 1) {
+            this.loggedHours = newRecords;
+          } else {
+            this.loggedHours = [...this.loggedHours, ...newRecords];
+          }
+          
+          this.hasMoreRecords = newRecords.length === this.pageSize;
           
           console.log('Loaded logged hours (direct array):', this.loggedHours.length, 'records');
         } else {
           console.warn('No logged hours data found');
-          this.loggedHours = [];
+          if (this.currentPage === 1) {
+            this.loggedHours = [];
+          }
+          this.hasMoreRecords = false;
         }
         
         this.isLoadingData = false;
       },
       error: (error) => {
         console.error('Error loading logged hours:', error);
-        this.loggedHours = [];
+        if (this.currentPage === 1) {
+          this.loggedHours = [];
+        }
+        this.hasMoreRecords = false;
         this.isLoadingData = false;
       }
     });
+  }
+
+  // Load next page of records
+  loadNextPage() {
+    if (!this.hasMoreRecords || this.isLoadingData) {
+      return;
+    }
+    
+    this.currentPage++;
+    this.loadLoggedHours();
+  }
+
+  // Reset pagination and reload
+  resetAndReload() {
+    this.currentPage = 1;
+    this.hasMoreRecords = false;
+    this.loadLoggedHours();
   }
 
   // Group logged hours by date

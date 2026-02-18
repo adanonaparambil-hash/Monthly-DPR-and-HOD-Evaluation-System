@@ -241,11 +241,14 @@ export interface TaskBulkApprovalRequest {
 }
 
 export interface UserDailyLogHistoryRequest {
-  userId: string;
+  userId?: string;
   fromDate?: string;      
   toDate?: string;        
   projectId?: number;
   categoryId?: number;
+  departmentId?:number;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface UserDailyLogHistoryResponse {

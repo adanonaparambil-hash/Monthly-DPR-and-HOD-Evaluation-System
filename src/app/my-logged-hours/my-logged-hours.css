@@ -3439,3 +3439,94 @@
     justify-content: center;
   }
 }
+
+
+/* ==================== LOAD MORE BUTTON ==================== */
+
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  padding: 32px 20px;
+  margin-top: 20px;
+}
+
+.btn-load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #145d56 0%, #1a7a70 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(20, 93, 86, 0.3);
+}
+
+.btn-load-more:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 93, 86, 0.4);
+  background: linear-gradient(135deg, #1a7a70 0%, #145d56 100%);
+}
+
+.btn-load-more:active {
+  transform: translateY(0);
+}
+
+.btn-load-more i {
+  font-size: 18px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.load-more-hint {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.loading-more-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loading-more-indicator i {
+  font-size: 18px;
+  color: #145d56;
+}
+
+/* Dark Mode */
+.logged-hours-container.dark-mode .btn-load-more {
+  background: linear-gradient(135deg, #1a7a70 0%, #145d56 100%);
+  box-shadow: 0 4px 12px rgba(26, 122, 112, 0.3);
+}
+
+.logged-hours-container.dark-mode .btn-load-more:hover {
+  box-shadow: 0 6px 20px rgba(26, 122, 112, 0.4);
+}
+
+.logged-hours-container.dark-mode .loading-more-indicator {
+  color: #94a3b8;
+}
+
+.logged-hours-container.dark-mode .loading-more-indicator i {
+  color: #1a7a70;
+}

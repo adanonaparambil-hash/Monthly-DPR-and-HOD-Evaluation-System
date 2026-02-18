@@ -35,7 +35,7 @@
         <label class="filter-label">From Date</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-calendar-alt filter-icon"></i>
-          <input type="date" class="filter-date-input" [(ngModel)]="fromDate" (change)="onDateChange()" placeholder="Select from date">
+          <input type="date" class="filter-date-input" [(ngModel)]="fromDate" placeholder="Select from date">
         </div>
       </div>
 
@@ -43,7 +43,7 @@
         <label class="filter-label">To Date</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-calendar-alt filter-icon"></i>
-          <input type="date" class="filter-date-input" [(ngModel)]="toDate" (change)="onDateChange()" placeholder="Select to date">
+          <input type="date" class="filter-date-input" [(ngModel)]="toDate" placeholder="Select to date">
         </div>
       </div>
 
@@ -51,7 +51,7 @@
         <label class="filter-label">Project</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-project-diagram filter-icon"></i>
-          <select class="filter-select" [(ngModel)]="selectedProject" (change)="onProjectChange()">
+          <select class="filter-select" [(ngModel)]="selectedProject">
             <option value="all">All Projects</option>
             <option *ngFor="let project of projects" [value]="project.projectId">
               {{ project.projectName }}
@@ -77,7 +77,7 @@
         <label class="filter-label">Employee</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-user filter-icon"></i>
-          <select class="filter-select" [(ngModel)]="selectedEmployee" (change)="onEmployeeChange()" [disabled]="selectedDepartment === 'all'">
+          <select class="filter-select" [(ngModel)]="selectedEmployee" [disabled]="selectedDepartment === 'all'">
             <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Employees' }}</option>
             <option *ngFor="let employee of employees" [value]="employee.employeeCode">
               {{ employee.employeeName }}
@@ -90,7 +90,7 @@
         <label class="filter-label">Task Category</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-tags filter-icon"></i>
-          <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()" [disabled]="selectedDepartment === 'all'">
+          <select class="filter-select" [(ngModel)]="selectedCategory" [disabled]="selectedDepartment === 'all'">
             <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Categories' }}</option>
             <option *ngFor="let category of taskCategories" [value]="category.categoryId">
               {{ category.categoryName }}
@@ -101,7 +101,7 @@
     </div>
 
     <div class="filter-actions">
-      <button class="filter-btn apply-filter-btn" (click)="loadLoggedHours()">
+      <button class="filter-btn apply-filter-btn" (click)="applyFilters()">
         <i class="fas fa-check-circle"></i>
         <span>Apply Filter</span>
       </button>
@@ -215,6 +215,25 @@
                 </div>
               }
             </div>
+          </div>
+        }
+        
+        <!-- Load More Button -->
+        @if (hasMoreRecords && !isLoadingData) {
+          <div class="load-more-container">
+            <button class="btn-load-more" (click)="loadNextPage()">
+              <i class="fas fa-arrow-down"></i>
+              Load More Records
+              <span class="load-more-hint">({{ loggedHours.length }} of {{ totalRecords > 0 ? totalRecords : 'many' }} loaded)</span>
+            </button>
+          </div>
+        }
+        
+        <!-- Loading More Indicator -->
+        @if (isLoadingData && loggedHours.length > 0) {
+          <div class="loading-more-indicator">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading more records...</span>
           </div>
         }
         
