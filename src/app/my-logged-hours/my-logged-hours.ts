@@ -218,35 +218,75 @@ export class MyLoggedHoursComponent implements OnInit {
     this.fromDate = this.formatDateForInput(firstDayOfMonth);
     this.toDate = this.formatDateForInput(today);
     
-    // Load dropdown data from API
-    this.loadProjects();
-    this.loadDepartments();
-    
-    // Set department from session after departments are loaded
-    // Check multiple possible field names for department ID
+    // Load dropdown data from API first
+    this.initializeDropdowns();
+  }
+
+  // Initialize all dropdowns before loading data
+  initializeDropdowns() {
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userDepartmentId = currentUser.departmentID;
+    const userEmployeeCode = currentUser.empId || currentUser.employeeId || currentUser.employeeCode;
     
-    if (userDepartmentId) {
-      console.log('Found department ID in session:', userDepartmentId);
-      // Wait for departments to load, then set the selected department
-      setTimeout(() => {
+    console.log('Initializing with session values:', {
+      departmentId: userDepartmentId,
+      employeeCode: userEmployeeCode
+    });
+    
+    // Load projects and departments
+    Promise.all([
+      this.loadProjectsAsync(),
+      this.loadDepartmentsAsync()
+    ]).then(() => {
+      console.log('Dropdowns loaded successfully');
+      
+      // Set department from session after departments are loaded
+      if (userDepartmentId) {
+        console.log('Setting department from session:', userDepartmentId);
         this.selectedDepartment = userDepartmentId;
-        console.log('Auto-selected department:', userDepartmentId);
         
-        // Load employees for the selected department
-        this.loadEmployeesByDepartment(Number(userDepartmentId));
-        
-        // Load task categories for the selected department
-        this.loadDepartmentTaskCategories(Number(userDepartmentId));
-      }, 500);
-    } else {
-      console.log('No department ID found in session, loading all categories');
-      // If no department in session, load all categories
-      this.loadAllTaskCategories();
-    }
-    
-    // Load logged hours data
-    this.loadLoggedHours();
+        // Load employees and categories for the selected department
+        Promise.all([
+          this.loadEmployeesByDepartmentAsync(Number(userDepartmentId)),
+          this.loadDepartmentTaskCategoriesAsync(Number(userDepartmentId))
+        ]).then(() => {
+          console.log('Department-specific dropdowns loaded');
+          
+          // Set employee from session after employees are loaded
+          if (userEmployeeCode) {
+            // Find the employee in the loaded list
+            const employee = this.employees.find(emp => 
+              emp.employeeCode === userEmployeeCode || 
+              emp.employeeId === userEmployeeCode
+            );
+            
+            if (employee) {
+              this.selectedEmployee = employee.employeeCode;
+              console.log('Auto-selected employee from session:', employee.employeeCode);
+            } else {
+              console.log('Employee not found in department list, using employeeCode:', userEmployeeCode);
+              this.selectedEmployee = userEmployeeCode;
+            }
+          }
+          
+          // Now load the logged hours data with the selected filters
+          this.loadLoggedHours();
+        });
+      } else {
+        console.log('No department ID found in session');
+        // If no department in session, load all categories
+        this.loadAllTaskCategoriesAsync().then(() => {
+          // Set employee from session if available
+          if (userEmployeeCode) {
+            this.selectedEmployee = userEmployeeCode;
+            console.log('Set employee from session (no department):', userEmployeeCode);
+          }
+          
+          // Now load the logged hours data
+          this.loadLoggedHours();
+        });
+      }
+    });
   }
 
   formatDateForInput(date: Date): string {
@@ -402,6 +442,120 @@ export class MyLoggedHoursComponent implements OnInit {
   applyFilters() {
     console.log('Applying filters...');
     this.resetAndReload();
+  }
+
+  // Async versions of dropdown loading methods that return Promises
+  loadProjectsAsync(): Promise<void> {
+    return new Promise((resolve) => {
+      this.api.getProjects().subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.projects = response.data;
+            console.log('Loaded projects:', this.projects.length);
+          }
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading projects:', error);
+          resolve();
+        }
+      });
+    });
+  }
+
+  loadDepartmentsAsync(): Promise<void> {
+    return new Promise((resolve) => {
+      this.api.getDepartmentList().subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.departments = response.data.filter((dept: Department) => dept.status === 'Y');
+            console.log('Loaded departments:', this.departments.length);
+          }
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading departments:', error);
+          resolve();
+        }
+      });
+    });
+  }
+
+  loadEmployeesByDepartmentAsync(departmentId: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.api.getEmployeesByDepartment(departmentId).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.employees = response.data;
+            console.log('Loaded employees:', this.employees.length);
+          }
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading employees:', error);
+          resolve();
+        }
+      });
+    });
+  }
+
+  loadDepartmentTaskCategoriesAsync(departmentId: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.api.getDepartmentTaskCategories(departmentId).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            const allCategories = [
+              ...(response.data.favouriteList || []),
+              ...(response.data.departmentList || []),
+              ...(response.data.allDepartmentList || [])
+            ];
+            const uniqueCategories = allCategories.filter((category, index, self) =>
+              index === self.findIndex((c) => c.categoryId === category.categoryId)
+            );
+            this.taskCategories = uniqueCategories;
+            console.log('Loaded task categories:', this.taskCategories.length);
+          }
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading task categories:', error);
+          resolve();
+        }
+      });
+    });
+  }
+
+  loadAllTaskCategoriesAsync(): Promise<void> {
+    return new Promise((resolve) => {
+      const userId = this.currentUserId;
+      if (!userId) {
+        console.warn('No user ID available to load task categories');
+        resolve();
+        return;
+      }
+      
+      this.api.getUserTaskCategories(userId).subscribe({
+        next: (response: any) => {
+          if (response.success && response.data) {
+            const allCategories = [
+              ...(response.data.favouriteList || []),
+              ...(response.data.departmentList || []),
+              ...(response.data.allDepartmentList || [])
+            ];
+            const uniqueCategories = allCategories.filter((category: any, index: number, self: any[]) =>
+              index === self.findIndex((c: any) => c.categoryId === category.categoryId)
+            );
+            this.taskCategories = uniqueCategories;
+            console.log('Loaded task categories:', this.taskCategories.length);
+          }
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading task categories:', error);
+          resolve();
+        }
+      });
+    });
   }
 
   loadDepartmentTaskCategories(departmentId: number) {
