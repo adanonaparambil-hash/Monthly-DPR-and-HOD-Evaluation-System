@@ -1,9 +1,10 @@
-# View-Only Mode for "Assigned to Others" Tasks and My Logged Hours
+# View-Only Mode for "Assigned to Others" Tasks, My Logged Hours, and DPR Approval
 
 ## Summary
-Implemented view-only mode for the task details modal in two scenarios:
+Implemented view-only mode for the task details modal in three scenarios:
 1. When opened from the "Assigned to Others" tab in My Tasks
 2. When opened from "My Logged Hours" page where the record's userId doesn't match the logged-in user
+3. When opened from "DPR Approval" page (always view-only, no conditions)
 
 Users can view task details and add comments, but cannot modify task fields or control timers.
 
@@ -72,6 +73,13 @@ Added styles for:
 ### 7. My Logged Hours Template (`my-logged-hours.html`)
 - Added `[isViewOnly]="isTaskModalViewOnly"` binding to the task details modal component
 
+### 8. DPR Approval Component (`dpr-approval.component.ts`)
+- Added `isTaskModalViewOnly: boolean = true` property (always true for approval listing)
+- All tasks opened from DPR Approval are in view-only mode by default
+
+### 9. DPR Approval Template (`dpr-approval.component.html`)
+- Added `[isViewOnly]="isTaskModalViewOnly"` binding to the task details modal component
+
 ## Behavior
 
 ### When Opening from "MY TASKS" Tab:
@@ -108,6 +116,22 @@ Added styles for:
   - Record's userId (from API response)
 - View-only mode is enabled when IDs don't match
 
+### When Opening from "DPR APPROVAL" Page:
+- **Always view-only mode** (no conditions)
+- "View Only" badge displayed in header
+- Shows "Today's Logged Hours" (read-only display)
+- All fields are readonly/disabled
+- Timer controls hidden
+- Save button hidden
+- CAN add comments (for approval feedback)
+- Cannot upload files (only view/download existing)
+- Cannot delete files
+- Cannot add custom fields
+- Progress controls disabled
+- Daily Remarks input field hidden
+- Dropdowns cannot be opened
+- This is an approval/review interface, so editing is not allowed
+
 ## User Experience
 - Clear visual indication with orange "View Only" badge
 - Shows today's logged hours for reference
@@ -123,11 +147,12 @@ Added styles for:
 2. **My Tasks - Assigned to Others Tab**: Open a task - verify view-only mode is active
 3. **My Logged Hours - Own Task**: Open your own task record - verify full edit mode
 4. **My Logged Hours - Other User's Task**: Open another user's task record - verify view-only mode
-5. In view-only mode, verify "Today's Logged Hours" is displayed
-6. In view-only mode, verify Daily Remarks field is hidden
-7. Try to modify fields in view-only mode - verify they are disabled
-8. Try to open dropdowns in view-only mode - verify they don't open
-9. Try to add a comment in view-only mode - verify it works successfully
-10. Verify file download still works in view-only mode
-11. Close and reopen modal - verify mode resets correctly
-12. Check console logs to verify userId comparison is working correctly
+5. **DPR Approval**: Open any task from approval listing - verify view-only mode is always active
+6. In view-only mode, verify "Today's Logged Hours" is displayed
+7. In view-only mode, verify Daily Remarks field is hidden
+8. Try to modify fields in view-only mode - verify they are disabled
+9. Try to open dropdowns in view-only mode - verify they don't open
+10. Try to add a comment in view-only mode - verify it works successfully (for collaboration/approval feedback)
+11. Verify file download still works in view-only mode
+12. Close and reopen modal - verify mode resets correctly
+13. Check console logs to verify userId comparison is working correctly (for My Logged Hours)

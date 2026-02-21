@@ -102,6 +102,7 @@ export class DprApprovalComponent implements OnInit {
   selectedTaskIdForModal: number = 0;
   selectedUserIdForModal: string = '';
   selectedCategoryIdForModal: number = 0;
+  isTaskModalViewOnly: boolean = true; // Always view-only in DPR Approval
 
   constructor(
     private api: Api,
