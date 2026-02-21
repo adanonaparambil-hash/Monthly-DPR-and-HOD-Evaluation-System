@@ -15,6 +15,7 @@ interface LoggedHour {
   description: string;
   category: string;
   categoryId?: number;  // Added for modal
+  userId?: string;  // Added for view-only mode check
   type?: string;
   process?: string;
   assignedTo?: string;
@@ -119,6 +120,7 @@ export class MyLoggedHoursComponent implements OnInit {
   selectedTaskId: number = 0;
   selectedTaskCategoryId: number = 0;
   currentUserId: string = '';
+  isTaskModalViewOnly: boolean = false; // View-only mode for other users' tasks
 
   // Break History Modal
   showBreakHistoryModal = false;
@@ -651,6 +653,7 @@ export class MyLoggedHoursComponent implements OnInit {
             description: log.description || log.dailyComment || 'No description',
             category: log.categoryName || 'Uncategorized',
             categoryId: log.categoryId ?? 0,
+            userId: log.userId || log.empId || log.employeeId || '', // Capture userId from API
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
@@ -679,6 +682,7 @@ export class MyLoggedHoursComponent implements OnInit {
             description: log.description || log.dailyComment || 'No description',
             category: log.categoryName || 'Uncategorized',
             categoryId: log.categoryId ?? 0,
+            userId: log.userId || log.empId || log.employeeId || '', // Capture userId from API
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
@@ -853,7 +857,7 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // Get current user for userId
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const userId = currentUser.empId || currentUser.employeeId || '';
+    const currentUserId = currentUser.empId || currentUser.employeeId || '';
     
     // Use categoryId from API response if valid (not 0, null, undefined)
     // Otherwise fall back to finding it from taskCategories array
@@ -865,10 +869,17 @@ export class MyLoggedHoursComponent implements OnInit {
     }
     this.selectedTaskCategoryId = categoryId;
     
+    // Check if the record's userId matches the current logged-in user
+    // If they don't match, enable view-only mode
+    const recordUserId = record.userId || '';
+    this.isTaskModalViewOnly = (recordUserId !== '' && recordUserId !== currentUserId);
+    
     console.log('Opening task modal:', {
       taskId: this.selectedTaskId,
       categoryId: this.selectedTaskCategoryId,
-      userId: userId,
+      currentUserId: currentUserId,
+      recordUserId: recordUserId,
+      isViewOnly: this.isTaskModalViewOnly,
       recordCategoryId: record.categoryId
     });
     
@@ -878,6 +889,7 @@ export class MyLoggedHoursComponent implements OnInit {
 
   closeTaskModal() {
     this.showTaskModal = false;
+    this.isTaskModalViewOnly = false; // Reset view-only mode
     document.body.style.overflow = 'auto';
     
     // Reload logged hours to reflect any changes made in the modal

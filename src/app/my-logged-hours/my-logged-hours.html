@@ -360,6 +360,7 @@
     [taskId]="selectedTaskId"
     [userId]="currentUserId"
     [categoryId]="selectedTaskCategoryId"
+    [isViewOnly]="isTaskModalViewOnly"
     (closeModal)="closeTaskModal()"
     (taskUpdated)="onTaskUpdated($event)"
     (taskPaused)="onTaskPaused($event)"
