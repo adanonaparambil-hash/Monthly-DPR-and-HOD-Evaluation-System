@@ -2619,23 +2619,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Handle task paused event from modal
   onTaskPausedFromModal(taskId: number) {
     console.log('Task paused from modal:', taskId);
-    // Reload active tasks
+    // Reload active tasks to refresh the listing
     this.loadActiveTasks();
   }
   
   // Handle task resumed event from modal
   onTaskResumedFromModal(taskId: number) {
     console.log('Task resumed from modal:', taskId);
-    // Reload active tasks
+    // Reload active tasks to refresh the listing
     this.loadActiveTasks();
   }
   
   // Handle task stopped event from modal
   onTaskStoppedFromModal(taskId: number) {
     console.log('Task stopped from modal:', taskId);
-    // Reload active tasks and close modal
+    // Reload active tasks to refresh the listing
     this.loadActiveTasks();
-    this.closeTaskDetailsModal();
+    // Keep modal open - don't close it
   }
 
   // Save task changes method

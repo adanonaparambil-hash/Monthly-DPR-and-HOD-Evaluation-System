@@ -489,15 +489,64 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Task control methods
   pauseTaskFromModal() {
-    this.stopTimer();
-    this.selectedTaskDetailStatus = 'pause';
-    this.taskPaused.emit(this.taskId);
+    // Call executeTimer API with PAUSED action
+    const timerRequest = {
+      taskId: this.taskId,
+      userId: this.userId,
+      action: 'PAUSED'
+    };
+    
+    this.api.executeTimer(timerRequest).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.stopTimer();
+          this.selectedTaskDetailStatus = 'pause';
+          this.toasterService.showSuccess('Task Paused', 'Task timer has been paused successfully!');
+          
+          // Reload task details to get updated data
+          this.loadTaskDetails();
+          
+          // Emit event to parent component
+          this.taskPaused.emit(this.taskId);
+        } else {
+          this.toasterService.showError('Pause Failed', response?.message || 'Failed to pause task');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error pausing task:', error);
+        this.toasterService.showError('Error', 'Failed to pause task');
+      }
+    });
   }
 
   resumeTaskFromModal() {
-    this.startTimer(this.timerElapsedSeconds);
-    this.selectedTaskDetailStatus = 'running';
-    this.taskResumed.emit(this.taskId);
+    // Call executeTimer API with START action
+    const timerRequest = {
+      taskId: this.taskId,
+      userId: this.userId,
+      action: 'START'
+    };
+    
+    this.api.executeTimer(timerRequest).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.selectedTaskDetailStatus = 'running';
+          this.toasterService.showSuccess('Task Resumed', 'Task timer has been resumed successfully!');
+          
+          // Reload task details to get updated data
+          this.loadTaskDetails();
+          
+          // Emit event to parent component
+          this.taskResumed.emit(this.taskId);
+        } else {
+          this.toasterService.showError('Resume Failed', response?.message || 'Failed to resume task');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error resuming task:', error);
+        this.toasterService.showError('Error', 'Failed to resume task');
+      }
+    });
   }
 
   stopTaskFromModal() {
@@ -510,10 +559,36 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.stopTimer();
-        this.selectedTaskDetailStatus = 'not-closed';
-        this.taskStopped.emit(this.taskId);
-        this.close();
+        // Call executeTimer API with STOP action
+        const timerRequest = {
+          taskId: this.taskId,
+          userId: this.userId,
+          action: 'STOP'
+        };
+        
+        this.api.executeTimer(timerRequest).subscribe({
+          next: (response: any) => {
+            if (response && response.success) {
+              this.stopTimer();
+              this.selectedTaskDetailStatus = 'not-closed';
+              this.toasterService.showSuccess('Task Stopped', 'Task timer has been stopped successfully!');
+              
+              // Reload task details to get updated data
+              this.loadTaskDetails();
+              
+              // Emit event to parent component
+              this.taskStopped.emit(this.taskId);
+              
+              // Keep modal open - don't call this.close()
+            } else {
+              this.toasterService.showError('Stop Failed', response?.message || 'Failed to stop task');
+            }
+          },
+          error: (error: any) => {
+            console.error('Error stopping task:', error);
+            this.toasterService.showError('Error', 'Failed to stop task');
+          }
+        });
       }
     });
   }
