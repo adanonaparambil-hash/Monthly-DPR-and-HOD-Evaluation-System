@@ -9,8 +9,15 @@
           <i class="fas fa-arrow-left"></i>
         </button>
         <div class="modal-task-id-badge">TSK-{{ selectedTaskId }}</div>
+        <!-- View-only badge -->
+        @if (isViewOnly) {
+          <div class="view-only-badge">
+            <i class="fas fa-eye"></i>
+            View Only
+          </div>
+        }
         <div class="status-dropdown-container">
-          <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus">
+          <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" [disabled]="isViewOnly">
             <option value="not-started">Not Started</option>
             <option value="not-closed">Closed</option>
             <option value="running">Running</option>
@@ -21,46 +28,61 @@
       </div>
 
       <div class="modal-header-right">
-        <div class="modal-timer-section">
-          <span class="timer-label">Running Timer</span>
-          <div class="timer-controls">
+        <!-- Show Today's Logged Hours in view-only mode -->
+        @if (isViewOnly) {
+          <div class="modal-timer-section">
+            <span class="timer-label">Today's Logged Hours</span>
             <div class="timer-display centered-timer">
               <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
             </div>
-            <div class="timer-buttons">
-              <!-- Show Pause button when task is RUNNING -->
-              <button class="timer-btn pause-btn" 
-                      *ngIf="selectedTaskDetailStatus === 'running'"
-                      (click)="pauseTaskFromModal()"
-                      title="Pause Task">
-                <i class="fas fa-pause"></i>
-              </button>
-              
-              <!-- Show Resume button when task is PAUSED -->
-              <button class="timer-btn resume-btn" 
-                      *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
-                      (click)="resumeTaskFromModal()"
-                      title="Resume Task">
-                <i class="fas fa-play"></i>
-              </button>
-              
-              <!-- Always show Stop button -->
-              <button class="timer-btn stop-btn"
-                      (click)="stopTaskFromModal()"
-                      title="Stop Task">
-                <i class="fas fa-stop"></i>
-              </button>
+          </div>
+          
+          <div class="divider"></div>
+        }
+        
+        <!-- Only show timer controls and save button if NOT in view-only mode -->
+        @if (!isViewOnly) {
+          <div class="modal-timer-section">
+            <span class="timer-label">Running Timer</span>
+            <div class="timer-controls">
+              <div class="timer-display centered-timer">
+                <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
+              </div>
+              <div class="timer-buttons">
+                <!-- Show Pause button when task is RUNNING -->
+                <button class="timer-btn pause-btn" 
+                        *ngIf="selectedTaskDetailStatus === 'running'"
+                        (click)="pauseTaskFromModal()"
+                        title="Pause Task">
+                  <i class="fas fa-pause"></i>
+                </button>
+                
+                <!-- Show Resume button when task is PAUSED -->
+                <button class="timer-btn resume-btn" 
+                        *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
+                        (click)="resumeTaskFromModal()"
+                        title="Resume Task">
+                  <i class="fas fa-play"></i>
+                </button>
+                
+                <!-- Always show Stop button -->
+                <button class="timer-btn stop-btn"
+                        (click)="stopTaskFromModal()"
+                        title="Stop Task">
+                  <i class="fas fa-stop"></i>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Save Button next to Running Timer -->
-        <button class="save-task-btn" (click)="saveTaskChanges()" title="Save Changes">
-          <i class="fas fa-save"></i>
-          <span>Save</span>
-        </button>
+          
+          <!-- Save Button next to Running Timer -->
+          <button class="save-task-btn" (click)="saveTaskChanges()" title="Save Changes">
+            <i class="fas fa-save"></i>
+            <span>Save</span>
+          </button>
 
-        <div class="divider"></div>
+          <div class="divider"></div>
+        }
 
         <div class="total-hours-section">
           <span class="hours-label">Total Hours</span>
@@ -89,7 +111,7 @@
               <span class="modal-category-badge">{{ selectedTaskCategory }}</span>
             </div>
             <input type="text" class="modal-task-title editable-title" [(ngModel)]="editableTaskTitle"
-              placeholder="Enter task title...">
+              placeholder="Enter task title..." [readonly]="isViewOnly">
           </div>
 
           <!-- Advanced 3D Circular Progress Indicator -->
@@ -232,43 +254,47 @@
             <div class="progress-3d-percentage">{{ taskProgress }}%</div>
           </div>
 
-          <!-- Manual Progress Input -->
-          <div class="manual-progress-input">
-            <div class="progress-input-container">
-              <input type="number" class="progress-input" [(ngModel)]="taskProgress"
-                (input)="onManualProgressChange($event)" min="0" max="100" placeholder="0">
-              <span class="progress-input-suffix">%</span>
-              <div class="progress-quick-buttons">
-                <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
-                <button class="progress-quick-btn" (click)="setQuickProgress(100)">✓</button>
+          <!-- Manual Progress Input - Hide in view-only mode -->
+          @if (!isViewOnly) {
+            <div class="manual-progress-input">
+              <div class="progress-input-container">
+                <input type="number" class="progress-input" [(ngModel)]="taskProgress"
+                  (input)="onManualProgressChange($event)" min="0" max="100" placeholder="0">
+                <span class="progress-input-suffix">%</span>
+                <div class="progress-quick-buttons">
+                  <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
+                  <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
+                  <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
+                  <button class="progress-quick-btn" (click)="setQuickProgress(100)">✓</button>
+                </div>
               </div>
             </div>
-          </div>
+          }
         </div>
 
         <!-- Task Description -->
         <div class="description-section">
           <label class="section-label">Task Description</label>
           <textarea class="description-card editable-description" [(ngModel)]="editableTaskDescription"
-            placeholder="Enter task description..."></textarea>
+            placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
-        <!-- Daily Remarks - Compact -->
-        <div class="daily-remarks-compact">
-          <label class="remarks-label">
-            <i class="fas fa-comment-dots"></i>
-            Daily Remarks
-          </label>
-          <input 
-            type="text" 
-            class="remarks-input" 
-            [(ngModel)]="dailyRemarks"
-            placeholder="Add today's progress notes or updates..."
-            maxlength="200"
-          />
-        </div>
+        <!-- Daily Remarks - Compact (Only show in normal mode, not in view-only) -->
+        @if (!isViewOnly) {
+          <div class="daily-remarks-compact">
+            <label class="remarks-label">
+              <i class="fas fa-comment-dots"></i>
+              Daily Remarks
+            </label>
+            <input 
+              type="text" 
+              class="remarks-input" 
+              [(ngModel)]="dailyRemarks"
+              placeholder="Add today's progress notes or updates..."
+              maxlength="200"
+            />
+          </div>
+        }
 
         <!-- Project Metadata -->
         <div class="metadata-section">
@@ -293,6 +319,7 @@
                     (input)="onProjectSearchInputChange($event)"
                     (focus)="showProjectDropdown()"
                     (blur)="hideProjectDropdown()"
+                    [readonly]="isViewOnly"
                     autocomplete="off">
                   <div class="dropdown-icon">
                     <i class="fas fa-chevron-down"></i>
@@ -329,6 +356,7 @@
                     (input)="onAssigneeSearchInputChange($event)"
                     (focus)="showAssigneeDropdown()"
                     (blur)="hideAssigneeDropdown()"
+                    [readonly]="isViewOnly"
                     autocomplete="off">
                   <div class="dropdown-icon">
                     <i class="fas fa-chevron-down"></i>
@@ -356,7 +384,7 @@
                   <i class="fas fa-calendar-alt label-icon"></i>
                   Start Date
                 </p>
-                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskStartDate">
+                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskStartDate" [readonly]="isViewOnly">
               </div>
             </div>
 
@@ -367,7 +395,7 @@
                   <i class="fas fa-calendar-check label-icon orange"></i>
                   Target Date
                 </p>
-                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskEndDate">
+                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskEndDate" [readonly]="isViewOnly">
               </div>
             </div>
 
@@ -385,6 +413,7 @@
                   placeholder="0.00"
                   step="0.5"
                   min="0"
+                  [readonly]="isViewOnly"
                 >
               </div>
             </div>
@@ -399,12 +428,12 @@
                 </p>
                 @if (field.type === 'text') {
                 <input type="text" class="metadata-input" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()">
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" [readonly]="isViewOnly">
                 } @else if (field.type === 'number') {
                 <input type="number" class="metadata-input" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()">
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" [readonly]="isViewOnly">
                 } @else if (field.type === 'dropdown') {
-                <select class="metadata-select" [(ngModel)]="field.value">
+                <select class="metadata-select" [(ngModel)]="field.value" [disabled]="isViewOnly">
                   <option value="">Select {{ field.label }}</option>
                   @for (option of field.options; track option; let i = $index) {
                   <option [value]="i">{{ option }}</option>
@@ -412,13 +441,13 @@
                 </select>
                 } @else if (field.type === 'textarea') {
                 <textarea class="metadata-textarea" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2"></textarea>
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2" [readonly]="isViewOnly"></textarea>
                 } @else if (field.type === 'date') {
-                <input type="date" class="metadata-input" [(ngModel)]="field.value">
+                <input type="date" class="metadata-input" [(ngModel)]="field.value" [readonly]="isViewOnly">
                 }
               </div>
-              <!-- Only show remove button for fields that are NOT mapped (manually added fields) -->
-              @if (field.isMapped !== 'Y') {
+              <!-- Only show remove button for fields that are NOT mapped (manually added fields) and NOT in view-only mode -->
+              @if (field.isMapped !== 'Y' && !isViewOnly) {
               <button class="remove-field-btn" (click)="removeCustomField(field.key)" title="Remove field">
                 <i class="fas fa-times"></i>
               </button>
@@ -426,11 +455,13 @@
             </div>
             }
 
-            <!-- Add Field Button - Always at the end -->
-            <button class="add-field-card" (click)="openAddFieldModal()">
-              <i class="fas fa-plus-circle"></i>
-              <span class="add-field-text">Add Field</span>
-            </button>
+            <!-- Add Field Button - Always at the end, hide in view-only mode -->
+            @if (!isViewOnly) {
+              <button class="add-field-card" (click)="openAddFieldModal()">
+                <i class="fas fa-plus-circle"></i>
+                <span class="add-field-text">Add Field</span>
+              </button>
+            }
           </div>
         </div>
 
@@ -445,23 +476,25 @@
 
           <!-- Attachments Content -->
           <div class="attachments-content">
-            <!-- Integrated Upload Area -->
-            <div class="integrated-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
-              (drop)="onFileDrop($event)">
-              <div class="upload-area-content">
-                <div class="upload-icon">
-                  <i class="fas fa-cloud-upload-alt"></i>
+            <!-- Integrated Upload Area - Hide in view-only mode -->
+            @if (!isViewOnly) {
+              <div class="integrated-upload-area" (click)="triggerFileUpload()" (dragover)="onDragOver($event)"
+                (drop)="onFileDrop($event)">
+                <div class="upload-area-content">
+                  <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                  </div>
+                  <div class="upload-text">
+                    <span class="upload-primary">Drop files here or click to browse</span>
+                    <span class="upload-secondary">PDF, DOC, XLS, JPG, PNG (Max 10MB each)</span>
+                  </div>
                 </div>
-                <div class="upload-text">
-                  <span class="upload-primary">Drop files here or click to browse</span>
-                  <span class="upload-secondary">PDF, DOC, XLS, JPG, PNG (Max 10MB each)</span>
-                </div>
+                <button class="upload-action-btn">
+                  <i class="fas fa-plus"></i>
+                  <span>Add Files</span>
+                </button>
               </div>
-              <button class="upload-action-btn">
-                <i class="fas fa-plus"></i>
-                <span>Add Files</span>
-              </button>
-            </div>
+            }
 
             <!-- Uploaded Files List -->
             @if (uploadedFiles.length > 0) {
@@ -483,13 +516,24 @@
                   <button class="file-action-btn download" (click)="downloadFile(file)" title="Download">
                     <i class="fas fa-download"></i>
                   </button>
-                  <button class="file-action-btn delete" (click)="deleteFile(file)" title="Delete">
-                    <i class="fas fa-trash"></i>
-                  </button>
+                  <!-- Hide delete button in view-only mode -->
+                  @if (!isViewOnly) {
+                    <button class="file-action-btn delete" (click)="deleteFile(file)" title="Delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  }
                 </div>
               </div>
               }
             </div>
+            }
+            
+            <!-- Show message when no files and in view-only mode -->
+            @if (uploadedFiles.length === 0 && isViewOnly) {
+              <div class="no-files-message">
+                <i class="fas fa-folder-open"></i>
+                <p>No attachments available</p>
+              </div>
             }
 
             <!-- Hidden file input -->

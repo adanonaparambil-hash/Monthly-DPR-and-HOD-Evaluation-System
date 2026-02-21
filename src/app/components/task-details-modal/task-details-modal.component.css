@@ -4,3 +4,77 @@
 @import '../../my-task/task-modal-glassmorphism.css';
 
 /* Additional component-specific styles can be added here if needed */
+
+/* View-only mode styles */
+.view-only-message {
+  padding: 16px 20px;
+  background: rgba(255, 193, 7, 0.1);
+  border-top: 1px solid rgba(255, 193, 7, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f59e0b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.view-only-message i {
+  font-size: 14px;
+}
+
+.no-files-message {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.no-files-message i {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.no-files-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Disable pointer events on readonly fields */
+input[readonly],
+textarea[readonly],
+select[disabled] {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background-color: rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+}
+
+/* Disable dropdown interactions in view-only mode */
+.searchable-dropdown input[readonly] {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.searchable-dropdown input[readonly] + .dropdown-icon {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* View-only badge in header */
+.view-only-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.view-only-badge i {
+  font-size: 13px;
+}

@@ -192,6 +192,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   selectedTaskIdForModal: number = 0;
   selectedUserIdForModal: string = '';
   selectedCategoryIdForModal: number = 0;
+  isTaskModalViewOnly: boolean = false; // View-only mode for "Assigned to Others"
   
   selectTaskActiveTab: 'favorites' | 'myDepartment' | 'all' = 'favorites';
   selectTaskSearchTerm = ''; // Search term for Select Task modal
@@ -2697,13 +2698,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     console.log('Opening task details modal:', {
       taskId: task.id,
       userId: userId,
-      categoryId: categoryId
+      categoryId: categoryId,
+      activeTab: this.activeTab
     });
     
     // Set properties for standalone modal component
     this.selectedTaskIdForModal = task.id;
     this.selectedUserIdForModal = userId;
     this.selectedCategoryIdForModal = categoryId || 0;
+    
+    // Set view-only mode if opening from "Assigned to Others" tab
+    this.isTaskModalViewOnly = (this.activeTab === 'ASSIGNED TO OTHERS');
     
     // Show the modal
     this.showTaskDetailsModal = true;
@@ -2790,6 +2795,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   closeTaskDetailsModal() {
     this.showTaskDetailsModal = false;
+    this.isTaskModalViewOnly = false; // Reset view-only mode
     // Restore body scroll
     document.body.style.overflow = 'auto';
   }

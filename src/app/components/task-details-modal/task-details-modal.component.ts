@@ -38,6 +38,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;
   @Input() userId!: string;
   @Input() categoryId!: number;
+  @Input() isViewOnly: boolean = false; // View-only mode for "Assigned to Others"
   
   // Output events
   @Output() closeModal = new EventEmitter<void>();
@@ -728,11 +729,12 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Progress control
   startProgressDrag(event: MouseEvent) {
+    if (this.isViewOnly) return; // Prevent dragging in view-only mode
     this.isDraggingProgress = true;
   }
 
   onProgressDrag(event: MouseEvent) {
-    if (this.isDraggingProgress) {
+    if (this.isDraggingProgress && !this.isViewOnly) {
       // Calculate progress based on mouse position
       // Implementation here
     }
@@ -743,6 +745,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   onManualProgressChange(event: any) {
+    if (this.isViewOnly) return; // Prevent changes in view-only mode
     this.selectedTaskProgress = this.taskProgress;
     this.isProgressChanging = true;
     setTimeout(() => {
@@ -751,6 +754,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   setQuickProgress(value: number) {
+    if (this.isViewOnly) return; // Prevent changes in view-only mode
     this.taskProgress = value;
     this.selectedTaskProgress = value;
   }
@@ -841,6 +845,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Dropdown methods
   showProjectDropdown() {
+    if (this.isViewOnly) return; // Prevent dropdown in view-only mode
     this.isProjectDropdownVisible = true;
   }
 
@@ -851,6 +856,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   showAssigneeDropdown() {
+    if (this.isViewOnly) return; // Prevent dropdown in view-only mode
     this.isAssigneeDropdownVisible = true;
   }
 
