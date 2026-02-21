@@ -794,6 +794,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             }
           }
           
+          // Initialize break timer from API data
+          this.initializeBreakTimerFromAPI(data.breakStart);
+          
           // Update myTasksList from API
           this.myTasksList = data.myTasks || [];
           this.assignedByMeList = data.assignedByMe || [];
@@ -826,21 +829,51 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             // Start the timer for the running task
             this.startActiveTaskTimer();
           } else {
+            // No running task found, stop the timer interval
+            if (this.activeTaskTimerInterval) {
+              clearInterval(this.activeTaskTimerInterval);
+              this.activeTaskTimerInterval = null;
+            }
+            
             const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
             if (pausedTask) {
               this.activeTask = pausedTask;
               this.hasActiveTask = true;
               console.log('Active PAUSED task found:', pausedTask.title || pausedTask.category);
+              
+              // Initialize timer display with today's logged hours for paused task
+              const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === pausedTask.id);
+              if (taskData && taskData.todayLoggedHours) {
+                this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+                this.updateActiveTaskTimerDisplay();
+                console.log('Paused task timer initialized:', this.activeTaskTimer);
+              }
             } else {
               const closedTask = this.tasks.find(t => t.status === 'CLOSED');
               if (closedTask) {
                 this.activeTask = closedTask;
                 this.hasActiveTask = true;
                 console.log('Active CLOSED task found:', closedTask.title || closedTask.category);
+                
+                // Initialize timer display with today's logged hours for closed task
+                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === closedTask.id);
+                if (taskData && taskData.todayLoggedHours) {
+                  this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+                  this.updateActiveTaskTimerDisplay();
+                  console.log('Closed task timer initialized:', this.activeTaskTimer);
+                }
               } else if (this.tasks.length > 0) {
                 this.activeTask = this.tasks[0];
                 this.hasActiveTask = true;
                 console.log('Showing first available task:', this.activeTask.title || this.activeTask.category);
+                
+                // Initialize timer display with today's logged hours
+                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
+                if (taskData && taskData.todayLoggedHours) {
+                  this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+                  this.updateActiveTaskTimerDisplay();
+                  console.log('First task timer initialized:', this.activeTaskTimer);
+                }
               } else {
                 this.activeTask = null;
                 this.hasActiveTask = false;
@@ -874,6 +907,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.breakRemarks = data.breakRemarks || '';
           this.breakId = data.breakId || null;
           
+          // Set selected break type based on breakReason
+          if (this.breakReason) {
+            const reasonLower = this.breakReason.toLowerCase();
+            if (reasonLower.includes('lunch')) {
+              this.selectedBreakType = 'lunch';
+            } else if (reasonLower.includes('coffee')) {
+              this.selectedBreakType = 'coffee';
+            } else if (reasonLower.includes('quick')) {
+              this.selectedBreakType = 'quick';
+            }
+          }
+          
+          // Initialize break timer from API data
+          this.initializeBreakTimerFromAPI(data.breakStart);
+          
           // Update task lists from API
           this.myTasksList = data.myTasks || [];
           this.assignedByMeList = data.assignedByMe || [];
@@ -906,21 +954,51 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             // Start the timer for the running task
             this.startActiveTaskTimer();
           } else {
+            // No running task found, stop the timer interval
+            if (this.activeTaskTimerInterval) {
+              clearInterval(this.activeTaskTimerInterval);
+              this.activeTaskTimerInterval = null;
+            }
+            
             const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
             if (pausedTask) {
               this.activeTask = pausedTask;
               this.hasActiveTask = true;
               console.log('Active PAUSED task found:', pausedTask.title || pausedTask.category);
+              
+              // Initialize timer display with today's logged hours for paused task
+              const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === pausedTask.id);
+              if (taskData && taskData.todayLoggedHours) {
+                this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+                this.updateActiveTaskTimerDisplay();
+                console.log('Paused task timer initialized:', this.activeTaskTimer);
+              }
             } else {
               const closedTask = this.tasks.find(t => t.status === 'CLOSED');
               if (closedTask) {
                 this.activeTask = closedTask;
                 this.hasActiveTask = true;
                 console.log('Active CLOSED task found:', closedTask.title || closedTask.category);
+                
+                // Initialize timer display with today's logged hours for closed task
+                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === closedTask.id);
+                if (taskData && taskData.todayLoggedHours) {
+                  this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+                  this.updateActiveTaskTimerDisplay();
+                  console.log('Closed task timer initialized:', this.activeTaskTimer);
+                }
               } else if (this.tasks.length > 0) {
                 this.activeTask = this.tasks[0];
                 this.hasActiveTask = true;
                 console.log('Showing first available task:', this.activeTask.title || this.activeTask.category);
+                
+                // Initialize timer display with today's logged hours
+                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
+                if (taskData && taskData.todayLoggedHours) {
+                  this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+                  this.updateActiveTaskTimerDisplay();
+                  console.log('First task timer initialized:', this.activeTaskTimer);
+                }
               } else {
                 this.activeTask = null;
                 this.hasActiveTask = false;
@@ -1367,6 +1445,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
     
+    // Pause the active task timer if this is the active task
+    if (this.activeTask && this.activeTask.id === taskId) {
+      this.pauseActiveTaskTimer();
+    }
+    
     // Prepare timer action request
     const timerRequest: any = {
       taskId: taskId,
@@ -1687,7 +1770,19 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       clearInterval(this.activeTaskTimerInterval);
       this.activeTaskTimerInterval = null;
     }
-    console.log('Active task timer paused');
+    
+    // When pausing, update the display with current elapsed time from task data
+    if (this.activeTask) {
+      const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
+      if (taskData && taskData.todayLoggedHours) {
+        // Convert minutes to seconds
+        this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
+        // Update the display to show the paused time
+        this.updateActiveTaskTimerDisplay();
+      }
+    }
+    
+    console.log('Active task timer paused, showing elapsed time:', this.activeTaskTimer);
   }
 
   // Stop and reset the live timer for active task
@@ -1763,6 +1858,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Pause the active task timer when break starts
+    if (this.activeTask && this.activeTask.status === 'RUNNING') {
+      this.pauseActiveTaskTimer();
+    }
+
     // Map break type to reason
     const breakReasons = {
       lunch: 'Lunch Break',
@@ -1809,7 +1909,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Show success toaster
           this.toasterService.showSuccess('Break Started', `${reason} has been started successfully!`);
           
-          // Reload active tasks
+          // Reload active tasks to update status
           this.loadActiveTasks();
         } else {
           console.error('Failed to start break:', response?.message);
@@ -2012,6 +2112,91 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     
     // Update caption to default
     this.updateBreakCaption();
+  }
+
+  // Helper method to initialize break timer from API data
+  private initializeBreakTimerFromAPI(breakStart: string | Date) {
+    console.log('=== Initializing break timer from API ===');
+    console.log('Break status:', this.breakStatus);
+    console.log('Break start:', breakStart);
+    
+    // Check for both 'RUNNING' and 'OPEN' status
+    if ((this.breakStatus === 'RUNNING' || this.breakStatus === 'OPEN') && breakStart) {
+      console.log('>>> Starting RUNNING/OPEN break timer');
+      // Calculate elapsed time from breakStart
+      const breakStartTime = new Date(breakStart);
+      const now = new Date();
+      const elapsedMilliseconds = now.getTime() - breakStartTime.getTime();
+      const elapsedSeconds = Math.max(0, Math.floor(elapsedMilliseconds / 1000)); // Ensure never negative
+      
+      console.log('Calculated elapsed seconds:', elapsedSeconds, 'from', breakStartTime, 'to', now);
+      
+      // Set break state
+      this.isBreakRunning = true;
+      this.isBreakPaused = false;
+      this.breakStartTime = breakStartTime;
+      this.breakElapsedSeconds = elapsedSeconds;
+      
+      // Update display
+      this.updateBreakTimerDisplay();
+      this.updateBreakCaption();
+      
+      console.log('Break state set:', {
+        isBreakRunning: this.isBreakRunning,
+        breakTimerDisplay: this.breakTimerDisplay
+      });
+      
+      // Start the timer interval if not already running
+      if (!this.breakTimerInterval) {
+        this.breakTimerInterval = setInterval(() => {
+          if (!this.isBreakPaused) {
+            this.breakElapsedSeconds++;
+            this.updateBreakTimerDisplay();
+          }
+        }, 1000);
+        console.log('Break timer interval started');
+      }
+    } else if (this.breakStatus === 'PAUSED' && breakStart) {
+      console.log('>>> Starting PAUSED break timer');
+      // Break is paused
+      const breakStartTime = new Date(breakStart);
+      const now = new Date();
+      const elapsedMilliseconds = now.getTime() - breakStartTime.getTime();
+      const elapsedSeconds = Math.max(0, Math.floor(elapsedMilliseconds / 1000)); // Ensure never negative
+      
+      this.isBreakRunning = true;
+      this.isBreakPaused = true;
+      this.breakStartTime = breakStartTime;
+      this.breakElapsedSeconds = elapsedSeconds;
+      
+      // Update display
+      this.updateBreakTimerDisplay();
+      this.updateBreakCaption();
+      
+      // Stop the timer interval
+      if (this.breakTimerInterval) {
+        clearInterval(this.breakTimerInterval);
+        this.breakTimerInterval = null;
+      }
+    } else {
+      console.log('>>> No active break, resetting');
+      // No active break - reset break tracker
+      if (this.breakStatus === 'NONE') {
+        this.isBreakRunning = false;
+        this.isBreakPaused = false;
+        this.breakElapsedSeconds = 0;
+        this.breakTimerDisplay = '00:00:00';
+        this.selectedBreakType = null;
+        
+        // Stop timer if running
+        if (this.breakTimerInterval) {
+          clearInterval(this.breakTimerInterval);
+          this.breakTimerInterval = null;
+        }
+        
+        this.updateBreakCaption();
+      }
+    }
   }
 
   private updateBreakTimerDisplay() {
