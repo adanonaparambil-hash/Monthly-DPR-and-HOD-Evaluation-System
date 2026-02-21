@@ -309,6 +309,7 @@
           </div>
           <div class="cell status">
             <span class="status-badge" [class]="getStatusClass(task.status)">
+              <i class="fas fa-flag" *ngIf="task.status === 'AUTO CLOSED'" style="color: #ef4444; margin-right: 4px;"></i>
               {{ task.status }}
             </span>
           </div>

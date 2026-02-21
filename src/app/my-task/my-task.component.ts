@@ -16,7 +16,7 @@ interface Task {
   id: number;
   title: string;
   description: string;
-  status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED';
+  status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED' | 'AUTO CLOSED';
   category: string;
   categoryId?: number; // Add categoryId property
   loggedHours: string;
@@ -810,6 +810,13 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
           
+          // Sort tasks: RUNNING tasks first, then others
+          this.tasks.sort((a, b) => {
+            if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
+            if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
+            return 0;
+          });
+          
           // Find and set the active task - Priority: RUNNING > PAUSED > CLOSED > Any task > None
           const runningTask = this.tasks.find(t => t.status === 'RUNNING');
           if (runningTask) {
@@ -882,6 +889,13 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
+          
+          // Sort tasks: RUNNING tasks first, then others
+          this.tasks.sort((a, b) => {
+            if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
+            if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
+            return 0;
+          });
           
           // Find and set the active task - Priority: RUNNING > PAUSED > CLOSED > Any task > None
           const runningTask = this.tasks.find(t => t.status === 'RUNNING');
@@ -1237,16 +1251,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       tasksToFilter = this.tasks;
     }
     
-    // Then apply search filter if search term exists
-    if (!this.searchTerm) {
-      return tasksToFilter;
+    // Apply search filter if search term exists
+    if (this.searchTerm) {
+      tasksToFilter = tasksToFilter.filter(task =>
+        task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.category.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
     }
     
-    return tasksToFilter.filter(task =>
-      task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      task.category.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
+    // Sort tasks: RUNNING tasks first, then others
+    tasksToFilter.sort((a, b) => {
+      if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
+      if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
+      return 0;
+    });
+    
+    return tasksToFilter;
   }
 
   getCategoryClass(category: string): string {
@@ -1267,6 +1288,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       case 'PAUSED': return 'pending';
       case 'CLOSED': return 'on-hold';
       case 'COMPLETED': return 'completed';
+      case 'AUTO CLOSED': return 'auto-closed';
       default: return 'default';
     }
   }

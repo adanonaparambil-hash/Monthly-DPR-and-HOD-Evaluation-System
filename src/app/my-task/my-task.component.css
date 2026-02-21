@@ -2113,6 +2113,13 @@
   color: #64748b;
 }
 
+.status-badge.auto-closed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-weight: 800;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
@@ -2153,25 +2160,25 @@
 }
 
 .action-btn.stop {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
 .action-btn.stop:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(59, 130, 246, 0.2);
   transform: scale(1.05);
 }
 
 .action-btn.delete {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .action-btn.delete:hover {
-  background: rgba(220, 38, 38, 0.2);
+  background: rgba(239, 68, 68, 0.2);
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* Pagination */
@@ -12878,6 +12885,12 @@
   color: #fcd34d;
 }
 
+.task-board-container.dark-mode .status-badge.auto-closed {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
 /* Dark mode - Progress Bar */
 .task-board-container.dark-mode .progress-bar {
   background: #374151;
@@ -12912,21 +12925,21 @@
 }
 
 .task-board-container.dark-mode .action-btn.stop {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.task-board-container.dark-mode .action-btn.delete {
   background: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-.task-board-container.dark-mode .action-btn.delete {
-  background: rgba(220, 38, 38, 0.2);
-  color: #fca5a5;
-  border-color: rgba(220, 38, 38, 0.3);
-}
-
 .task-board-container.dark-mode .action-btn.delete:hover {
-  background: rgba(220, 38, 38, 0.3);
+  background: rgba(239, 68, 68, 0.3);
   color: #f87171;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
 }
 
 /* Dark mode - Pagination */
