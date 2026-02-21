@@ -315,22 +315,37 @@
           </div>
           <div class="cell action" (click)="$event.stopPropagation()">
             <div class="action-buttons">
-              @if (task.status !== 'RUNNING') {
-              <button class="action-btn play" (click)="startTask(task.id)" title="Start/Resume Task">
-                <i class="fas fa-play"></i>
-              </button>
-              } @else {
-              <button class="action-btn pause" (click)="pauseTask(task.id)" title="Pause Task">
-                <i class="fas fa-pause"></i>
-              </button>
+              <!-- Show all action buttons for MY TASKS tab -->
+              @if (activeTab === 'MY TASKS') {
+                @if (task.status !== 'RUNNING') {
+                <button class="action-btn play" (click)="startTask(task.id)" title="Start/Resume Task">
+                  <i class="fas fa-play"></i>
+                </button>
+                } @else {
+                <button class="action-btn pause" (click)="pauseTask(task.id)" title="Pause Task">
+                  <i class="fas fa-pause"></i>
+                </button>
+                }
+                <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
+                  <i class="fas fa-stop"></i>
+                </button>
+                @if (task.status === 'NOT STARTED') {
+                <button class="action-btn delete" (click)="deleteTask(task.id)" title="Delete Task">
+                  <i class="fas fa-trash"></i>
+                </button>
+                }
               }
-              <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
-                <i class="fas fa-stop"></i>
-              </button>
-              @if (task.status === 'NOT STARTED') {
-              <button class="action-btn delete" (click)="deleteTask(task.id)" title="Delete Task">
-                <i class="fas fa-trash"></i>
-              </button>
+              
+              <!-- Show view button and delete (only for NOT STARTED) for ASSIGNED TO OTHERS tab -->
+              @if (activeTab === 'ASSIGNED TO OTHERS') {
+                <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+                @if (task.status === 'NOT STARTED') {
+                <button class="action-btn delete" (click)="deleteTask(task.id)" title="Delete Task">
+                  <i class="fas fa-trash"></i>
+                </button>
+                }
               }
             </div>
           </div>

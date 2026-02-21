@@ -175,9 +175,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           this.selectedTaskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
           this.taskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
           
-          // Format timers - API returns minutes
-          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayTotalMinutes || 0);
-          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalTimeMinutes || 0);
+          // Format timers - API returns minutes, convert to seconds for formatTime
+          const todaySeconds = (taskDetails.todayTotalMinutes || 0) * 60;
+          const totalSeconds = (taskDetails.totalTimeMinutes || 0) * 60;
+          this.selectedTaskRunningTimer = this.formatTime(todaySeconds);
+          this.selectedTaskTotalHours = this.formatTime(totalSeconds);
           
           // Bind Project Metadata fields
           this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
@@ -869,7 +871,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   formatTime(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
