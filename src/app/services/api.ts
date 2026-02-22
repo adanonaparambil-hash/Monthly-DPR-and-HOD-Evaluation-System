@@ -7,7 +7,7 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
-import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest,UserDailyLogHistoryRequest } from '../models/TimeSheetDPR.model';
+import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest,UserDailyLogHistoryRequest ,CustomFieldDtolist} from '../models/TimeSheetDPR.model';
 
 
 @Injectable({
@@ -417,10 +417,12 @@ export class Api {
   }
 
 
-
-  saveCustomField(fieldData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveCustomField`, fieldData);
+  saveCustomField(CustomFieldDtolist: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveOrUpdateCustomField`, CustomFieldDtolist);
   }
+
+
+
 
   updateCustomField(fieldData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/UpdateCustomField`, fieldData);

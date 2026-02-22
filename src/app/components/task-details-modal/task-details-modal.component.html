@@ -114,162 +114,71 @@
               placeholder="Enter task title..." [readonly]="isViewOnly">
           </div>
 
-          <!-- Advanced 3D Circular Progress Indicator -->
-          <div class="progress-circle-3d" [class.dragging]="isDraggingProgress" [class.animating]="isProgressAnimating"
-            (mousedown)="startProgressDrag($event)" (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()"
-            (mouseleave)="endProgressDrag()" title="Click and drag to adjust progress">
-
-            <!-- 3D Circle Container -->
-            <div class="circle-3d-container">
-              <!-- Background Rings -->
-              <div class="bg-ring ring-1"></div>
-              <div class="bg-ring ring-2"></div>
-              <div class="bg-ring ring-3"></div>
-
-              <!-- Main Progress Circle -->
-              <div class="main-circle">
-                <!-- Animated Background -->
-                <div class="circle-bg-animated"></div>
-
-                <!-- Progress Fill -->
-                <div class="progress-fill-3d" [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg)'">
-                  <div class="fill-segment"></div>
-                </div>
-
-                <!-- Progress Track -->
-                <svg class="progress-svg-3d" viewBox="0 0 100 100">
+          <!-- Modern Combined Progress Component -->
+          <div class="modern-progress-section">
+            <!-- Progress Circle with Percentage -->
+            <div class="progress-circle-wrapper">
+              <div class="progress-circle-modern">
+                <svg class="progress-ring" viewBox="0 0 120 120">
                   <defs>
-                    <linearGradient id="progressGradient3D" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style="stop-color:#06d6a0;stop-opacity:1" />
-                      <stop offset="30%" style="stop-color:#10b981;stop-opacity:1" />
-                      <stop offset="70%" style="stop-color:#34d399;stop-opacity:1" />
-                      <stop offset="100%" style="stop-color:#6ee7b7;stop-opacity:1" />
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#10b981" />
+                      <stop offset="100%" style="stop-color:#34d399" />
                     </linearGradient>
-                    <filter id="glow3D">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
                   </defs>
-
                   <!-- Background Circle -->
-                  <circle class="progress-bg-3d" cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)"
-                    stroke-width="8" />
-
+                  <circle class="progress-ring-bg" cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" stroke-width="8" />
                   <!-- Progress Circle -->
-                  <circle class="progress-stroke-3d" cx="50" cy="50" r="40" fill="none"
-                    stroke="url(#progressGradient3D)" stroke-width="8" stroke-linecap="round" filter="url(#glow3D)"
-                    [style.stroke-dasharray]="251.2" [style.stroke-dashoffset]="251.2 - (selectedTaskProgress / 100) * 251.2"
-                    transform="rotate(-90 50 50)" />
-
-                  <!-- Animated Particles -->
-                  <g class="particles">
-                    <circle class="particle particle-1" r="2" fill="#10b981" opacity="0.8">
-                      <animateMotion dur="3s" repeatCount="indefinite">
-                        <mpath href="#progressPath" />
-                      </animateMotion>
-                    </circle>
-                    <circle class="particle particle-2" r="1.5" fill="#34d399" opacity="0.6">
-                      <animateMotion dur="4s" repeatCount="indefinite" begin="1s">
-                        <mpath href="#progressPath" />
-                      </animateMotion>
-                    </circle>
-                    <circle class="particle particle-3" r="1" fill="#6ee7b7" opacity="0.4">
-                      <animateMotion dur="5s" repeatCount="indefinite" begin="2s">
-                        <mpath href="#progressPath" />
-                      </animateMotion>
-                    </circle>
-                  </g>
-
-                  <!-- Hidden path for particle animation -->
-                  <path id="progressPath" d="M 50,10 A 40,40 0 1,1 49.9,10" fill="none" opacity="0" />
+                  <circle class="progress-ring-fill" cx="60" cy="60" r="52" fill="none" 
+                    stroke="url(#progressGradient)" stroke-width="8" stroke-linecap="round"
+                    [style.stroke-dasharray]="326.73" 
+                    [style.stroke-dashoffset]="326.73 - (selectedTaskProgress / 100) * 326.73"
+                    transform="rotate(-90 60 60)" />
                 </svg>
-
-                <!-- 3D Depth Layers -->
-                <div class="depth-layer layer-1"></div>
-                <div class="depth-layer layer-2"></div>
-                <div class="depth-layer layer-3"></div>
-
-                <!-- Inner Glow -->
-                <div class="inner-glow"></div>
-              </div>
-
-              <!-- Outer Glow Effects -->
-              <div class="outer-glow glow-1"></div>
-              <div class="outer-glow glow-2"></div>
-              <div class="outer-glow glow-3"></div>
-            </div>
-
-            <!-- Progress Content -->
-            <div class="progress-content-3d">
-              <span class="progress-percentage-3d">{{ selectedTaskProgress }}%</span>
-              <span class="progress-label-3d">COMPLETE</span>
-            </div>
-
-            <!-- Interactive Drag Handle -->
-            <div class="progress-handle-3d"
-              [style.transform]="'rotate(' + (selectedTaskProgress * 3.6 - 90) + 'deg) translateX(45px) rotate(' + (90 - selectedTaskProgress * 3.6) + 'deg)'">
-              <div class="handle-outer-ring"></div>
-              <div class="handle-inner-core"></div>
-              <div class="handle-pulse"></div>
-            </div>
-
-            <!-- Progress Indicators -->
-            <div class="progress-indicators">
-              <div class="indicator" [class.active]="selectedTaskProgress >= 25"
-                style="transform: rotate(0deg) translateX(55px)">25</div>
-              <div class="indicator" [class.active]="selectedTaskProgress >= 50"
-                style="transform: rotate(90deg) translateX(55px) rotate(-90deg)">50</div>
-              <div class="indicator" [class.active]="selectedTaskProgress >= 75"
-                style="transform: rotate(180deg) translateX(55px) rotate(-180deg)">75</div>
-              <div class="indicator" [class.active]="selectedTaskProgress >= 100"
-                style="transform: rotate(270deg) translateX(55px) rotate(-270deg)">100</div>
-            </div>
-
-            <!-- Floating Elements -->
-            <div class="floating-elements">
-              <div class="float-element element-1"></div>
-              <div class="float-element element-2"></div>
-              <div class="float-element element-3"></div>
-              <div class="float-element element-4"></div>
-            </div>
-          </div>
-
-          <!-- Premium 3D Progress Bar -->
-          <div class="premium-3d-progress-container" (mousedown)="startProgressDrag($event)"
-            (mousemove)="onProgressDrag($event)" (mouseup)="endProgressDrag()" (mouseleave)="endProgressDrag()">
-            <div class="progress-3d-track"></div>
-            <div class="progress-3d-fill" [style.width.%]="taskProgress" [class.value-changing]="isProgressChanging">
-            </div>
-            <div class="progress-3d-particles">
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-              <div class="progress-3d-particle"></div>
-            </div>
-            <div class="progress-3d-percentage">{{ taskProgress }}%</div>
-          </div>
-
-          <!-- Manual Progress Input - Hide in view-only mode -->
-          @if (!isViewOnly) {
-            <div class="manual-progress-input">
-              <div class="progress-input-container">
-                <input type="number" class="progress-input" [(ngModel)]="taskProgress"
-                  (input)="onManualProgressChange($event)" min="0" max="100" placeholder="0">
-                <span class="progress-input-suffix">%</span>
-                <div class="progress-quick-buttons">
-                  <button class="progress-quick-btn" (click)="setQuickProgress(25)">25</button>
-                  <button class="progress-quick-btn" (click)="setQuickProgress(50)">50</button>
-                  <button class="progress-quick-btn" (click)="setQuickProgress(75)">75</button>
-                  <button class="progress-quick-btn" (click)="setQuickProgress(100)">✓</button>
+                <div class="progress-circle-content">
+                  <span class="progress-percentage">{{ selectedTaskProgress }}%</span>
                 </div>
               </div>
+              <span class="progress-label">Complete</span>
             </div>
-          }
+
+            <!-- Progress Controls (only in edit mode) -->
+            @if (!isViewOnly) {
+              <div class="progress-controls-modern">
+                <label class="progress-control-label">Adjust Progress</label>
+                
+                <!-- Slider -->
+                <div class="progress-slider-container">
+                  <input type="range" class="progress-slider" 
+                    [(ngModel)]="taskProgress"
+                    (input)="onManualProgressChange($event)"
+                    min="0" max="100" step="1">
+                  <div class="progress-slider-track">
+                    <div class="progress-slider-fill" [style.width.%]="taskProgress"></div>
+                  </div>
+                </div>
+
+                <!-- Quick Buttons -->
+                <div class="progress-quick-actions">
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(0)" [class.active]="taskProgress === 0">
+                    0%
+                  </button>
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(25)" [class.active]="taskProgress === 25">
+                    25%
+                  </button>
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(50)" [class.active]="taskProgress === 50">
+                    50%
+                  </button>
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(75)" [class.active]="taskProgress === 75">
+                    75%
+                  </button>
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(100)" [class.active]="taskProgress === 100">
+                    <i class="fas fa-check"></i> 100%
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         </div>
 
         <!-- Task Description -->
@@ -279,20 +188,25 @@
             placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
-        <!-- Daily Remarks - Compact (Only show in normal mode, not in view-only) -->
-        @if (!isViewOnly) {
+        <!-- Daily Remarks - Compact (Only show when status is CLOSED and not in view-only mode) -->
+        @if (!isViewOnly && selectedTaskDetailStatus === 'not-closed') {
           <div class="daily-remarks-compact">
             <label class="remarks-label">
               <i class="fas fa-comment-dots"></i>
               Daily Remarks
             </label>
-            <input 
-              type="text" 
-              class="remarks-input" 
-              [(ngModel)]="dailyRemarks"
-              placeholder="Add today's progress notes or updates..."
-              maxlength="200"
-            />
+            <div class="remarks-input-container">
+              <input 
+                type="text" 
+                class="remarks-input" 
+                [(ngModel)]="dailyRemarks"
+                placeholder="Add today's progress notes or updates..."
+                maxlength="200"
+              />
+              <button class="remarks-submit-btn" (click)="submitDailyRemarks()" [disabled]="!dailyRemarks.trim()" title="Submit Remarks">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
           </div>
         }
 
@@ -554,16 +468,22 @@
 
         <!-- Comments Content -->
         <div class="comments-content" *ngIf="activeSidebarTab === 'comments'">
-          <!-- Display comments from API -->
-          <div class="comment-item" *ngFor="let comment of taskComments">
+          <!-- Display comments from API with chat-style layout -->
+          <div class="comment-item" 
+               *ngFor="let comment of taskComments"
+               [class.comment-own]="isOwnComment(comment)"
+               [class.comment-other]="!isOwnComment(comment)">
             <div class="comment-avatar" *ngIf="!comment.profileImageBase64">
               {{ getInitials(comment.empName) }}
             </div>
             <img *ngIf="comment.profileImageBase64" [src]="comment.profileImageBase64" alt="{{ comment.empName }}" class="comment-avatar" />
-            <div class="comment-body">
+            <div class="comment-content">
               <div class="comment-header">
                 <span class="comment-author">{{ comment.empName }}</span>
-                <span class="comment-time">{{ getTimeAgo(comment.submittedOn) }}</span>
+                <span class="comment-time">
+                  <i class="fas fa-clock"></i>
+                  {{ getTimeAgo(comment.submittedOn) }}
+                </span>
               </div>
               <div class="comment-message">
                 {{ comment.comments }}
@@ -573,8 +493,9 @@
           
           <!-- Empty state when no comments -->
           <div class="no-comments" *ngIf="taskComments.length === 0">
-            <i class="fas fa-comments"></i>
-            <p>No comments yet. Be the first to comment!</p>
+            <i class="fas fa-comment-dots"></i>
+            <p>No comments yet</p>
+            <span>Start a conversation about this task</span>
           </div>
         </div>
 
@@ -588,10 +509,16 @@
               <div class="activity-content-enhanced">
                 <div class="activity-header-enhanced">
                   <span class="activity-description">{{ activity.description }}</span>
-                  <span class="activity-time">{{ getTimeAgo(activity.actionDate) }}</span>
                 </div>
                 <div class="activity-meta-enhanced">
-                  <span class="activity-user" *ngIf="activity.actionBy">{{ activity.actionBy }}</span>
+                  <span class="activity-user" *ngIf="activity.actionBy">
+                    <i class="fas fa-user"></i>
+                    {{ activity.actionBy }}
+                  </span>
+                  <span class="activity-time">
+                    <i class="fas fa-clock"></i>
+                    {{ getTimeAgo(activity.actionDate) }}
+                  </span>
                 </div>
               </div>
             </div>

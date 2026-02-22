@@ -855,9 +855,13 @@ export class MyLoggedHoursComponent implements OnInit {
     const taskIdStr = record.taskId?.replace('TSK-', '') || '0';
     this.selectedTaskId = parseInt(taskIdStr, 10);
     
-    // Get current user for userId
+    // Get current user for comparison
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const currentUserId = currentUser.empId || currentUser.employeeId || '';
+    
+    // Use the record's userId for the API call (not the session userId)
+    const recordUserId = record.userId || currentUserId;
+    this.currentUserId = recordUserId;
     
     // Use categoryId from API response if valid (not 0, null, undefined)
     // Otherwise fall back to finding it from taskCategories array
@@ -871,7 +875,6 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // Check if the record's userId matches the current logged-in user
     // If they don't match, enable view-only mode
-    const recordUserId = record.userId || '';
     this.isTaskModalViewOnly = (recordUserId !== '' && recordUserId !== currentUserId);
     
     console.log('Opening task modal:', {

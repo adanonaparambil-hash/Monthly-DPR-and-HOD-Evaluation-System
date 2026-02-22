@@ -275,3 +275,21 @@ export interface OpenBreakDto {
   breakStartTime: string | Date;
   breakDurationMinutes: number;
 }
+
+export interface CustomFieldOption {
+  optionId: number;
+  optionValue: string;
+  isActive: string;      // "Y" | "N"
+  sortOrder: number;
+}
+
+
+export interface CustomFieldDtolist {
+  fieldId?: number | null;
+  fieldName: string;
+  fieldType: string;
+  isActive: string;      // default "Y"
+  isMandatory: string;   // default "N"
+  user: string;
+  options: CustomFieldOption[];
+}

@@ -385,7 +385,12 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     this.api.getActivity(taskId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
-          this.activityLogs = response.data;
+          // Sort by date descending (latest first)
+          this.activityLogs = response.data.sort((a: any, b: any) => {
+            const dateA = new Date(a.actionDate || a.timestamp || 0).getTime();
+            const dateB = new Date(b.actionDate || b.timestamp || 0).getTime();
+            return dateB - dateA; // Descending order (latest first)
+          });
         }
       },
       error: (error: any) => {
@@ -622,6 +627,20 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         this.toasterService.showError('Error', 'Failed to add comment');
       }
     });
+  }
+
+  // Submit daily remarks
+  submitDailyRemarks() {
+    if (!this.dailyRemarks.trim()) {
+      this.toasterService.showError('Error', 'Please enter daily remarks');
+      return;
+    }
+
+    // Save the task with daily remarks
+    this.saveTaskChanges();
+    
+    // Show success message
+    this.toasterService.showSuccess('Success', 'Daily remarks submitted');
   }
 
   // File upload methods
@@ -1028,14 +1047,19 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   getTimeAgo(dateString: string | Date): string {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
+    // Return exact date and time in a readable format
+    // Format: "Jan 15, 2024 at 2:30 PM"
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
+    
+    return date.toLocaleString('en-US', options).replace(',', ' at');
   }
 
   getActivityIconFromDescription(description: string): string {
@@ -1055,6 +1079,22 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     if (description.includes('comment')) return '#3b82f6';
     if (description.includes('file') || description.includes('upload')) return '#8b5cf6';
     return '#6b7280';
+  }
+
+  // Check if comment belongs to the task owner (modal's userId)
+  // LEFT side = task owner's comments
+  // RIGHT side = all other users' comments
+  isOwnComment(comment: TaskCommentDto): boolean {
+    // Use the modal's userId (task owner) instead of session userId
+    const taskOwnerUserId = this.userId;
+    
+    // Check by userId if available
+    if (comment.userId) {
+      return comment.userId === taskOwnerUserId;
+    }
+    
+    // Fallback: if no userId in comment, return false (show on right side)
+    return false;
   }
 
   // Close modal

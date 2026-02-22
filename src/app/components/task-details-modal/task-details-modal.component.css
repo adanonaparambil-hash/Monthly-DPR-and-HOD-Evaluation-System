@@ -78,3 +78,886 @@ select[disabled] {
 .view-only-badge i {
   font-size: 13px;
 }
+
+/* Daily Remarks Input Container with Button */
+.remarks-input-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remarks-input-container .remarks-input {
+  flex: 1;
+}
+
+.remarks-submit-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.remarks-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.remarks-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.remarks-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  box-shadow: none;
+}
+
+.remarks-submit-btn i {
+  font-size: 14px;
+}
+
+/* Activity Log Enhanced Layout */
+.activity-header-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.activity-description {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.activity-meta-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.activity-user {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.activity-user i {
+  font-size: 11px;
+}
+
+.activity-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.activity-time i {
+  font-size: 11px;
+}
+
+/* Comments Enhanced Layout - Chat Style - Ultra Compact */
+.comment-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Own comments (current user) - Left side */
+.comment-item.comment-own {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+/* Other users' comments - Right side */
+.comment-item.comment-other {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.comment-item.comment-other .comment-content {
+  text-align: right;
+}
+
+.comment-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.comment-item.comment-other .comment-avatar {
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+}
+
+.comment-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-item.comment-other .comment-header {
+  justify-content: flex-end;
+}
+
+.comment-author {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1.2;
+}
+
+.comment-message {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #1f2937;
+  word-wrap: break-word;
+  margin-top: 1px;
+}
+
+.comment-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.comment-time i {
+  font-size: 9px;
+}
+
+/* Empty state for no comments */
+.no-comments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.no-comments i {
+  font-size: 48px;
+  color: #d1d5db;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.no-comments p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 4px 0;
+}
+
+.no-comments span {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Modern Combined Progress Section - Extra Compact with 3D Perspective */
+.modern-progress-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* Progress Circle Wrapper with 3D Transform */
+.progress-circle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transform-style: preserve-3d;
+  animation: tilt-3d 6s ease-in-out infinite;
+}
+
+@keyframes tilt-3d {
+  0%, 100% {
+    transform: rotateY(0deg) rotateX(0deg);
+  }
+  25% {
+    transform: rotateY(-5deg) rotateX(2deg);
+  }
+  50% {
+    transform: rotateY(0deg) rotateX(0deg);
+  }
+  75% {
+    transform: rotateY(5deg) rotateX(-2deg);
+  }
+}
+
+/* Progress Circle Modern - GSAP-style 3D Effects */
+.progress-circle-modern {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  transform-style: preserve-3d;
+  animation: float-rotate-3d 8s ease-in-out infinite;
+}
+
+@keyframes float-rotate-3d {
+  0%, 100% {
+    transform: translateY(0px) translateZ(0px) rotateZ(0deg);
+  }
+  25% {
+    transform: translateY(-3px) translateZ(5px) rotateZ(2deg);
+  }
+  50% {
+    transform: translateY(0px) translateZ(0px) rotateZ(0deg);
+  }
+  75% {
+    transform: translateY(-3px) translateZ(5px) rotateZ(-2deg);
+  }
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg);
+  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.4));
+  animation: pulse-glow-3d 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes pulse-glow-3d {
+  0%, 100% {
+    filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.4));
+    transform: scale(1) translateZ(0px);
+  }
+  50% {
+    filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.6));
+    transform: scale(1.02) translateZ(3px);
+  }
+}
+
+.progress-ring-bg {
+  transition: all 0.3s ease;
+  animation: ring-breathe 4s ease-in-out infinite;
+}
+
+@keyframes ring-breathe {
+  0%, 100% {
+    stroke-width: 8;
+    opacity: 1;
+  }
+  50% {
+    stroke-width: 7;
+    opacity: 0.9;
+  }
+}
+
+.progress-ring-fill {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: shimmer-wave 3s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes shimmer-wave {
+  0% {
+    stroke-opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    stroke-opacity: 0.85;
+    filter: brightness(1.2);
+  }
+  100% {
+    stroke-opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+.progress-circle-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  animation: scale-pulse-3d 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes scale-pulse-3d {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1) translateZ(0px);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08) translateZ(5px);
+  }
+}
+
+.progress-percentage {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 30%, #6ee7b7 60%, #34d399 80%, #10b981 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  animation: gradient-flow 4s ease infinite;
+  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+  transform-style: preserve-3d;
+}
+
+@keyframes gradient-flow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.progress-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center;
+  animation: fade-pulse-3d 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes fade-pulse-3d {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateZ(0px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateZ(2px);
+  }
+}
+
+/* 3D Layered Glow Effects */
+.progress-circle-modern::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateZ(-5px);
+  animation: glow-expand-3d 3s ease-in-out infinite;
+  z-index: -1;
+  filter: blur(8px);
+}
+
+@keyframes glow-expand-3d {
+  0%, 100% {
+    width: 70px;
+    height: 70px;
+    opacity: 0.6;
+    transform: translate(-50%, -50%) translateZ(-5px) scale(1);
+  }
+  50% {
+    width: 85px;
+    height: 85px;
+    opacity: 0.9;
+    transform: translate(-50%, -50%) translateZ(-3px) scale(1.1);
+  }
+}
+
+/* Rotating 3D Particles with Depth */
+.progress-circle-modern::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(16, 185, 129, 0.15) 60deg,
+    rgba(52, 211, 153, 0.2) 120deg,
+    transparent 180deg,
+    rgba(110, 231, 183, 0.15) 240deg,
+    rgba(52, 211, 153, 0.2) 300deg,
+    transparent 360deg
+  );
+  animation: rotate-particles-3d 6s linear infinite;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  filter: blur(1px);
+}
+
+@keyframes rotate-particles-3d {
+  from {
+    transform: rotate(0deg) translateZ(2px);
+  }
+  to {
+    transform: rotate(360deg) translateZ(2px);
+  }
+}
+
+/* Add orbiting light effect */
+.progress-circle-wrapper::before {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, #10b981, transparent);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  animation: orbit-light 4s linear infinite;
+  filter: blur(2px);
+  opacity: 0.8;
+}
+
+@keyframes orbit-light {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(35px) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg) translateX(35px) rotate(-360deg);
+  }
+}
+
+/* Progress Controls Modern - Extra Compact */
+.progress-controls-modern {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-control-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0;
+}
+
+/* Progress Slider - GSAP-style 3D Effects */
+.progress-slider-container {
+  position: relative;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  perspective: 500px;
+  transform-style: preserve-3d;
+}
+
+.progress-slider {
+  width: 100%;
+  height: 5px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  cursor: pointer;
+  box-shadow: 
+    0 4px 8px rgba(16, 185, 129, 0.4),
+    0 0 0 0 rgba(16, 185, 129, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: thumb-pulse-3d 2.5s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes thumb-pulse-3d {
+  0%, 100% {
+    box-shadow: 
+      0 4px 8px rgba(16, 185, 129, 0.4),
+      0 0 0 0 rgba(16, 185, 129, 0.4);
+    transform: scale(1) translateZ(0px);
+  }
+  50% {
+    box-shadow: 
+      0 6px 12px rgba(16, 185, 129, 0.6),
+      0 0 0 4px rgba(16, 185, 129, 0.2);
+    transform: scale(1.05) translateZ(2px);
+  }
+}
+
+.progress-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25) translateZ(5px);
+  box-shadow: 
+    0 8px 16px rgba(16, 185, 129, 0.6),
+    0 0 0 6px rgba(16, 185, 129, 0.2);
+  animation: none;
+}
+
+.progress-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15) translateZ(3px);
+  box-shadow: 
+    0 4px 10px rgba(16, 185, 129, 0.5),
+    0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.progress-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 
+    0 4px 8px rgba(16, 185, 129, 0.4),
+    0 0 0 0 rgba(16, 185, 129, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: thumb-pulse-3d 2.5s ease-in-out infinite;
+}
+
+.progress-slider::-moz-range-thumb:hover {
+  transform: scale(1.25) translateZ(5px);
+  box-shadow: 
+    0 8px 16px rgba(16, 185, 129, 0.6),
+    0 0 0 6px rgba(16, 185, 129, 0.2);
+  animation: none;
+}
+
+.progress-slider::-moz-range-thumb:active {
+  transform: scale(1.15) translateZ(3px);
+  box-shadow: 
+    0 4px 10px rgba(16, 185, 129, 0.5),
+    0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.progress-slider-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);
+  border-radius: 2.5px;
+  transform: translateY(-50%) translateZ(-2px);
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(255, 255, 255, 0.5);
+  transform-style: preserve-3d;
+}
+
+.progress-slider-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+  background-size: 200% 100%;
+  border-radius: 2.5px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 2px 6px rgba(16, 185, 129, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  animation: fill-wave 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes fill-wave {
+  0%, 100% {
+    background-position: 0% 50%;
+    transform: translateZ(0px);
+  }
+  50% {
+    background-position: 100% 50%;
+    transform: translateZ(1px);
+  }
+}
+
+/* Animated shimmer effect */
+.progress-slider-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 40%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0.4) 60%,
+    transparent 100%
+  );
+  animation: shimmer-slide-3d 2.5s infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes shimmer-slide-3d {
+  0% {
+    left: -100%;
+    transform: translateZ(1px);
+  }
+  100% {
+    left: 200%;
+    transform: translateZ(1px);
+  }
+}
+
+/* Glowing edge effect */
+.progress-slider-fill::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  bottom: -2px;
+  width: 25px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6), transparent);
+  filter: blur(4px);
+  animation: edge-glow 2s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes edge-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateZ(2px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateZ(3px);
+  }
+}
+
+/* Floating particles along the track */
+.progress-slider-track::before {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.6), transparent);
+  border-radius: 50%;
+  top: 50%;
+  left: 0;
+  animation: particle-float 4s linear infinite;
+  filter: blur(1px);
+}
+
+@keyframes particle-float {
+  0% {
+    left: 0%;
+    opacity: 0;
+    transform: translateY(-50%) translateZ(2px);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+    transform: translateY(-50%) translateZ(2px);
+  }
+}
+
+/* Quick Action Buttons - Extra Compact with Animations */
+.progress-quick-actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.progress-quick-btn-modern {
+  flex: 1;
+  min-width: 42px;
+  padding: 5px 8px;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ripple effect on hover */
+.progress-quick-btn-modern::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.progress-quick-btn-modern:hover::before {
+  width: 100px;
+  height: 100px;
+}
+
+.progress-quick-btn-modern:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: #f0fdf4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15);
+}
+
+.progress-quick-btn-modern:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+}
+
+.progress-quick-btn-modern.active {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  border-color: #10b981;
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  animation: active-pulse 2s ease-in-out infinite;
+}
+
+@keyframes active-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+  }
+}
+
+/* Shine effect for active button */
+.progress-quick-btn-modern.active::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.progress-quick-btn-modern i {
+  font-size: 9px;
+  animation: icon-bounce 2s ease-in-out infinite;
+}
+
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modern-progress-section {
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 14px;
+  }
+  
+  .progress-circle-modern {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .progress-percentage {
+    font-size: 14px;
+  }
+}

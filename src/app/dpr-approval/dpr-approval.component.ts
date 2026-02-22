@@ -56,6 +56,7 @@ interface DPRLog {
   id: string;
   taskId?: number;
   categoryId?: number;
+  userId?: string;
   date: string;
   project: string;
   projectType: 'internal' | 'client';
@@ -400,6 +401,7 @@ export class DprApprovalComponent implements OnInit {
             id: item.approvalId?.toString() || item.taskId?.toString(),
             taskId: item.taskId, // Store taskId separately for approval
             categoryId: item.categoryID || item.categoryId, // Store categoryId from API
+            userId: item.userId || item.empId || item.employeeId || '', // Store userId from API
             date: this.formatDisplayDate(item.logDate),
             project: item.project || 'N/A',
             projectType: 'internal',
@@ -776,9 +778,14 @@ export class DprApprovalComponent implements OnInit {
       return;
     }
 
-    // Get current user
+    // Use the record's userId instead of session userId
+    // This is important for viewing other users' tasks in DPR Approval
+    const recordUserId = log.userId || '';
+    
+    // Fallback to session userId if record doesn't have userId
     const currentUser = this.sessionService.getCurrentUser();
-    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    const sessionUserId = currentUser?.empId || currentUser?.employeeId || '';
+    const userId = recordUserId || sessionUserId;
     
     // Use categoryId directly from the log (from API response)
     // Fallback to looking it up by name if not available
@@ -787,6 +794,8 @@ export class DprApprovalComponent implements OnInit {
     console.log('Opening task details modal from DPR Approval:', {
       taskId: taskId,
       userId: userId,
+      recordUserId: recordUserId,
+      sessionUserId: sessionUserId,
       categoryId: categoryId,
       categoryIdFromLog: log.categoryId,
       category: log.category
