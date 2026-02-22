@@ -13,6 +13,8 @@ interface LoggedHour {
   taskId?: string;
   title: string;
   description: string;
+  dailyComment?: string;  // Added for daily comment column
+  projectName?: string;   // Added for project name column
   category: string;
   categoryId?: number;  // Added for modal
   userId?: string;  // Added for view-only mode check
@@ -41,7 +43,6 @@ interface LoggedHour {
   duration: string;
   date: string;
   loggedBy: string;
-  dailyComment?: string;
 }
 
 interface Project {
@@ -87,7 +88,7 @@ interface ColumnDefinition {
   standalone: true,
   imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent],
   templateUrl: './my-logged-hours.html',
-  styleUrls: ['./my-logged-hours.css', './manage-fields-ultra.css']
+  styleUrls: ['./my-logged-hours.css', './manage-fields-ultra.css', './manage-fields-modern-v2.css']
 })
 export class MyLoggedHoursComponent implements OnInit {
   isDarkMode = false;
@@ -159,7 +160,9 @@ export class MyLoggedHoursComponent implements OnInit {
   availableColumns: ColumnDefinition[] = [
     { key: 'taskId', label: 'Task ID', visible: false, width: '120px', type: 'text' },
     { key: 'title', label: 'Task Title', visible: true, width: '250px', type: 'text', required: true },
-    { key: 'description', label: 'Description', visible: true, width: '300px', type: 'text', required: true },
+    { key: 'description', label: 'Description', visible: true, width: '150px', type: 'text', required: true },
+    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '150px', type: 'text' },
+    { key: 'projectName', label: 'Project Name', visible: true, width: '180px', type: 'text' },
     { key: 'category', label: 'Task Category', visible: true, width: '180px', type: 'select', required: true },
     { key: 'type', label: 'Type', visible: false, width: '120px', type: 'select' },
     { key: 'process', label: 'Process', visible: false, width: '150px', type: 'text' },
@@ -650,15 +653,16 @@ export class MyLoggedHoursComponent implements OnInit {
             id: `${log.taskId}-${index}`,
             taskId: `TSK-${log.taskId}`,
             title: log.taskTitle || 'Untitled Task',
-            description: log.description || log.dailyComment || 'No description',
+            description: log.description || 'No description',
+            dailyComment: log.dailyComment || '',
+            projectName: log.projectName || '',
             category: log.categoryName || 'Uncategorized',
             categoryId: log.categoryId ?? 0,
             userId: log.userId || log.empId || log.employeeId || '', // Capture userId from API
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
-            loggedBy: log.loggedBy || '',
-            dailyComment: log.dailyComment || ''
+            loggedBy: log.loggedBy || ''
           }));
           
           // If it's the first page, replace the data; otherwise, append
@@ -679,15 +683,16 @@ export class MyLoggedHoursComponent implements OnInit {
             id: `${log.taskId}-${index}`,
             taskId: `TSK-${log.taskId}`,
             title: log.taskTitle || 'Untitled Task',
-            description: log.description || log.dailyComment || 'No description',
+            description: log.description || 'No description',
+            dailyComment: log.dailyComment || '',
+            projectName: log.projectName || '',
             category: log.categoryName || 'Uncategorized',
             categoryId: log.categoryId ?? 0,
             userId: log.userId || log.empId || log.employeeId || '', // Capture userId from API
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
-            loggedBy: log.loggedBy || '',
-            dailyComment: log.dailyComment || ''
+            loggedBy: log.loggedBy || ''
           }));
           
           // If it's the first page, replace the data; otherwise, append
@@ -1323,8 +1328,8 @@ export class MyLoggedHoursComponent implements OnInit {
       optionsArray: field.optionsArray || []
     };
     
-    // Parse options for dropdown
-    if (field.fieldType === 'Dropdown') {
+    // Parse options for dropdown (case-insensitive check)
+    if (field.fieldType?.toUpperCase() === 'DROPDOWN') {
       if (field.optionsArray && field.optionsArray.length > 0) {
         // Use the optionsArray from API response
         this.currentFieldOptions = field.optionsArray
@@ -1358,7 +1363,7 @@ export class MyLoggedHoursComponent implements OnInit {
       return false;
     }
     
-    if (this.currentField.fieldType === 'Dropdown') {
+    if (this.currentField.fieldType?.toUpperCase() === 'DROPDOWN') {
       const validOptions = this.currentFieldOptions.filter(opt => opt.optionValue && opt.optionValue.trim());
       if (validOptions.length === 0) {
         return false;
@@ -1385,7 +1390,7 @@ export class MyLoggedHoursComponent implements OnInit {
 
     // Prepare options array for dropdown (only if fieldType is DROPDOWN)
     let optionsData: any[] = [];
-    if (this.currentField.fieldType === 'Dropdown') {
+    if (this.currentField.fieldType?.toUpperCase() === 'DROPDOWN') {
       optionsData = this.currentFieldOptions
         .filter(opt => opt.optionValue && opt.optionValue.trim())
         .map((opt, index) => ({

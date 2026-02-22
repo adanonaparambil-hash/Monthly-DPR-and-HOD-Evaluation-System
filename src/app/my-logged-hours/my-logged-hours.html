@@ -661,36 +661,36 @@
             <button 
               type="button"
               class="type-btn-ultra" 
-              [class.active]="currentField.fieldType === 'Text'"
+              [class.active]="currentField.fieldType?.toUpperCase() === 'TEXT'"
               [disabled]="editingField"
-              (click)="!editingField && (currentField.fieldType = 'Text')">
+              (click)="!editingField && (currentField.fieldType = 'TEXT')">
               <i class="fas fa-align-left"></i>
               <span>TEXT</span>
             </button>
             <button 
               type="button"
               class="type-btn-ultra" 
-              [class.active]="currentField.fieldType === 'Number'"
+              [class.active]="currentField.fieldType?.toUpperCase() === 'NUMBER'"
               [disabled]="editingField"
-              (click)="!editingField && (currentField.fieldType = 'Number')">
+              (click)="!editingField && (currentField.fieldType = 'NUMBER')">
               <i class="fas fa-hashtag"></i>
               <span>NUMBER</span>
             </button>
             <button 
               type="button"
               class="type-btn-ultra" 
-              [class.active]="currentField.fieldType === 'Dropdown'"
+              [class.active]="currentField.fieldType?.toUpperCase() === 'DROPDOWN'"
               [disabled]="editingField"
-              (click)="!editingField && (currentField.fieldType = 'Dropdown')">
+              (click)="!editingField && (currentField.fieldType = 'DROPDOWN')">
               <i class="fas fa-list"></i>
               <span>DROPDOWN</span>
             </button>
             <button 
               type="button"
               class="type-btn-ultra" 
-              [class.active]="currentField.fieldType === 'Date'"
+              [class.active]="currentField.fieldType?.toUpperCase() === 'DATE'"
               [disabled]="editingField"
-              (click)="!editingField && (currentField.fieldType = 'Date')">
+              (click)="!editingField && (currentField.fieldType = 'DATE')">
               <i class="fas fa-calendar"></i>
               <span>DATE</span>
             </button>
@@ -722,7 +722,7 @@
         </div>
 
         <!-- Dropdown Options (only if Dropdown type) -->
-        @if (currentField.fieldType === 'Dropdown') {
+        @if (currentField.fieldType?.toUpperCase() === 'DROPDOWN') {
           <div class="form-field-ultra">
             <label class="field-label-ultra">Dropdown Options <span class="options-count">{{ getOptionsCount() }} Options</span></label>
             
