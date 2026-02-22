@@ -961,3 +961,31 @@ select[disabled] {
     font-size: 14px;
   }
 }
+
+
+/* Validation Error Styling for Custom Fields */
+.field-error {
+  border: 2px solid #ef4444 !important;
+  background: #fef2f2 !important;
+  animation: shake 0.3s ease;
+}
+
+.field-error .metadata-input,
+.field-error .metadata-select,
+.field-error .metadata-textarea {
+  border-color: #ef4444 !important;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Required field indicator */
+.required-indicator {
+  color: #ef4444;
+  font-weight: bold;
+  margin-left: 4px;
+  font-size: 14px;
+}

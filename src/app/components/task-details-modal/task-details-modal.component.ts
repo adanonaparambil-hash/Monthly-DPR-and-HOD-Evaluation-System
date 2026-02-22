@@ -15,6 +15,7 @@ interface CustomField {
   value?: any;
   fieldId?: number;
   isMapped?: 'Y' | 'N';
+  isMandatory?: 'Y' | 'N';
 }
 
 interface UploadedFile {
@@ -72,6 +73,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   availableCustomFields: CustomField[] = [];
   tempSelectedFields: string[] = [];
   showAddFieldModal = false;
+  validationErrors: string[] = []; // Track fields with validation errors
   
   // Files
   uploadedFiles: UploadedFile[] = [];
@@ -233,7 +235,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
                   options: optionsArray,
                   value: field.savedValue || field.value || '',
                   fieldId: field.fieldId,
-                  isMapped: field.isMapped || 'N'
+                  isMapped: field.isMapped || 'N',
+                  isMandatory: field.isMandatory || 'N'
                 };
               });
           }
@@ -276,7 +279,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             description: `${field.fieldName} field`,
             options: field.options || [],
             fieldId: field.fieldId,
-            isMapped: field.isMapped || 'N'
+            isMapped: field.isMapped || 'N',
+            isMandatory: field.isMandatory || 'N'
           }));
         }
       },
@@ -399,9 +403,104 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Validate mandatory custom fields when status is Closed or Completed
+  validateMandatoryFields(): { isValid: boolean; missingFields: string[]; missingFieldKeys: string[] } {
+    const missingFields: string[] = [];
+    const missingFieldKeys: string[] = [];
+    
+    console.log('=== Validating Mandatory Fields ===');
+    console.log('Current status:', this.selectedTaskDetailStatus);
+    console.log('Status type:', typeof this.selectedTaskDetailStatus);
+    console.log('Selected custom fields count:', this.selectedCustomFields.length);
+    console.log('Selected custom fields:', JSON.stringify(this.selectedCustomFields, null, 2));
+    
+    // Check if status is Closed or Completed (case-insensitive and trimmed)
+    const currentStatus = (this.selectedTaskDetailStatus || '').toLowerCase().trim();
+    const statusRequiringValidation = ['not-closed', 'closed', 'completed'];
+    
+    console.log('Normalized status:', currentStatus);
+    console.log('Statuses requiring validation:', statusRequiringValidation);
+    console.log('Does status require validation?', statusRequiringValidation.includes(currentStatus));
+    
+    if (!statusRequiringValidation.includes(currentStatus)) {
+      console.log('Status does not require validation. Skipping...');
+      return { isValid: true, missingFields: [], missingFieldKeys: [] };
+    }
+    
+    console.log('Status requires validation. Checking mandatory fields...');
+    
+    // Check each custom field
+    this.selectedCustomFields.forEach((field, index) => {
+      console.log(`\n[Field ${index + 1}] Checking field:`, {
+        label: field.label,
+        key: field.key,
+        isMandatory: field.isMandatory,
+        value: field.value,
+        type: field.type
+      });
+      
+      // Trim isMandatory value to handle trailing spaces from API
+      const isMandatory = (field.isMandatory || '').trim().toUpperCase();
+      
+      if (isMandatory === 'Y') {
+        const value = field.value;
+        const isEmpty = value === null || value === undefined || value === '' || 
+                       (typeof value === 'string' && value.trim() === '');
+        
+        if (isEmpty) {
+          console.log(`  ❌ Field "${field.label}" is mandatory but empty!`);
+          missingFields.push(field.label);
+          missingFieldKeys.push(field.key);
+        } else {
+          console.log(`  ✓ Field "${field.label}" is mandatory and has value:`, value);
+        }
+      } else {
+        console.log(`  ℹ Field "${field.label}" is not mandatory (isMandatory: ${field.isMandatory} -> normalized: ${isMandatory})`);
+      }
+    });
+    
+    console.log('\n=== Validation Summary ===');
+    console.log('Missing fields:', missingFields);
+    console.log('Missing field keys:', missingFieldKeys);
+    console.log('Validation result:', missingFields.length === 0 ? '✓ VALID' : '❌ INVALID');
+    
+    return {
+      isValid: missingFields.length === 0,
+      missingFields: missingFields,
+      missingFieldKeys: missingFieldKeys
+    };
+  }
+
+  // Check if a field has validation error
+  hasFieldError(fieldKey: string): boolean {
+    return this.validationErrors.includes(fieldKey);
+  }
+
+  // Clear validation errors
+  clearValidationErrors() {
+    this.validationErrors = [];
+  }
+
   // Save task changes
   saveTaskChanges() {
     console.log('=== saveTaskChanges START ===');
+    
+    // Clear previous validation errors
+    this.clearValidationErrors();
+    
+    // Validate mandatory fields if status is Closed or Completed
+    const validation = this.validateMandatoryFields();
+    if (!validation.isValid) {
+      // Set validation errors to highlight fields
+      this.validationErrors = validation.missingFieldKeys;
+      
+      const fieldsList = validation.missingFields.join(', ');
+      this.toasterService.showError(
+        'Validation Error', 
+        `Please fill in the following mandatory fields: ${fieldsList}`
+      );
+      return;
+    }
     
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userId = currentUser.empId || currentUser.employeeId || this.userId;
@@ -928,8 +1027,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   getProjectDisplayName(): string {
+    if (!this.selectedProjectId) {
+      return 'Select project...';
+    }
     const project = this.projectsList.find(p => p.projectId?.toString() === this.selectedProjectId);
-    return project?.projectName || '';
+    return project?.projectName || 'Select project...';
   }
 
   getAssigneeDisplayName(): string {
@@ -957,15 +1059,22 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     return statusMap[status] || 'not-started';
   }
 
+  // Map API field type to component field type (case-insensitive)
   mapFieldType(apiFieldType: string): 'text' | 'number' | 'dropdown' | 'textarea' | 'date' {
+    if (!apiFieldType) return 'text';
+    
+    // Convert to uppercase for case-insensitive comparison
+    const normalizedType = apiFieldType.toUpperCase();
+    
     const typeMap: { [key: string]: 'text' | 'number' | 'dropdown' | 'textarea' | 'date' } = {
-      'Text': 'text',
-      'Dropdown': 'dropdown',
-      'Number': 'number',
-      'Textarea': 'textarea',
-      'Date': 'date'
+      'TEXT': 'text',
+      'DROPDOWN': 'dropdown',
+      'NUMBER': 'number',
+      'TEXTAREA': 'textarea',
+      'DATE': 'date'
     };
-    return typeMap[apiFieldType] || 'text';
+    
+    return typeMap[normalizedType] || 'text';
   }
 
   formatTime(seconds: number): string {

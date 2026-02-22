@@ -1374,39 +1374,43 @@ export class MyLoggedHoursComponent implements OnInit {
       return;
     }
 
+    // Get logged-in user from session
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userId = currentUser.empId || currentUser.employeeId || '';
 
-    // Prepare options array for dropdown
+    if (!userId) {
+      this.toasterService.showError('Error', 'User session not found');
+      return;
+    }
+
+    // Prepare options array for dropdown (only if fieldType is DROPDOWN)
     let optionsData: any[] = [];
     if (this.currentField.fieldType === 'Dropdown') {
       optionsData = this.currentFieldOptions
         .filter(opt => opt.optionValue && opt.optionValue.trim())
         .map((opt, index) => ({
-          optionId: opt.optionId || undefined,
+          optionId: this.editingField && opt.optionId ? opt.optionId : 0,
           optionValue: opt.optionValue.trim(),
           isActive: opt.isActive ? 'Y' : 'N',
           sortOrder: opt.sortOrder || (index + 1)
         }));
     }
 
+    // Prepare field data according to API requirements
     const fieldData = {
-      fieldId: this.editingField ? this.currentField.fieldId : undefined,
+      fieldId: this.editingField && this.currentField.fieldId ? this.currentField.fieldId : 0,
       fieldName: this.currentField.fieldName.trim(),
-      fieldType: this.currentField.fieldType,
-      isActive: this.currentField.isActive ? 'Y' : 'N',
+      fieldType: this.currentField.fieldType.toUpperCase(), // TEXT, NUMBER, DATE, DROPDOWN
       isMandatory: this.currentField.isMandatory ? 'Y' : 'N',
-      options: optionsData,
-      createdBy: userId
+      isActive: this.currentField.isActive ? 'Y' : 'N',
+      userId: userId, // Logged-in user's empId
+      options: optionsData // Only for dropdown, empty array for others
     };
 
     console.log(this.editingField ? 'Updating field:' : 'Creating field:', fieldData);
 
-    const apiCall = this.editingField 
-      ? this.api.updateCustomField(fieldData)
-      : this.api.saveCustomField(fieldData);
-
-    apiCall.subscribe({
+    // Call the saveCustomField API (handles both create and update)
+    this.api.saveCustomField(fieldData).subscribe({
       next: (response: any) => {
         console.log('Field saved:', response);
         
@@ -1421,7 +1425,7 @@ export class MyLoggedHoursComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Error saving field:', error);
-        this.toasterService.showError('Error', 'Failed to save field');
+        this.toasterService.showError('Error', 'Failed to save field. Please try again.');
       }
     });
   }

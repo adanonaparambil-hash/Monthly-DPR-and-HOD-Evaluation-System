@@ -334,20 +334,26 @@
 
             <!-- Added Custom Fields -->
             @for (field of selectedCustomFields; track field.key) {
-            <div class="metadata-card custom-field-card">
+            <div class="metadata-card custom-field-card" [class.field-error]="hasFieldError(field.key)">
               <div class="metadata-content">
                 <p class="metadata-label">
                   <i class="fas label-icon" [ngClass]="'fa-' + getFieldIcon(field.type)"></i>
                   {{ field.label }}
+                  @if ((field.isMandatory || '').trim().toUpperCase() === 'Y') {
+                    <span class="required-indicator">*</span>
+                  }
                 </p>
                 @if (field.type === 'text') {
                 <input type="text" class="metadata-input" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()" [readonly]="isViewOnly">
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" [readonly]="isViewOnly"
+                  (input)="clearValidationErrors()">
                 } @else if (field.type === 'number') {
                 <input type="number" class="metadata-input" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()" [readonly]="isViewOnly">
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" [readonly]="isViewOnly"
+                  (input)="clearValidationErrors()">
                 } @else if (field.type === 'dropdown') {
-                <select class="metadata-select" [(ngModel)]="field.value" [disabled]="isViewOnly">
+                <select class="metadata-select" [(ngModel)]="field.value" [disabled]="isViewOnly"
+                  (change)="clearValidationErrors()">
                   <option value="">Select {{ field.label }}</option>
                   @for (option of field.options; track option; let i = $index) {
                   <option [value]="i">{{ option }}</option>
@@ -355,9 +361,11 @@
                 </select>
                 } @else if (field.type === 'textarea') {
                 <textarea class="metadata-textarea" [(ngModel)]="field.value"
-                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2" [readonly]="isViewOnly"></textarea>
+                  [placeholder]="'Enter ' + field.label.toLowerCase()" rows="2" [readonly]="isViewOnly"
+                  (input)="clearValidationErrors()"></textarea>
                 } @else if (field.type === 'date') {
-                <input type="date" class="metadata-input" [(ngModel)]="field.value" [readonly]="isViewOnly">
+                <input type="date" class="metadata-input" [(ngModel)]="field.value" [readonly]="isViewOnly"
+                  (change)="clearValidationErrors()">
                 }
               </div>
               <!-- Only show remove button for fields that are NOT mapped (manually added fields) and NOT in view-only mode -->

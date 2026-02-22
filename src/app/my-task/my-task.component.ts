@@ -465,16 +465,22 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Map API field type to component field type
+  // Map API field type to component field type (case-insensitive)
   mapFieldType(apiFieldType: string): 'text' | 'number' | 'dropdown' | 'textarea' | 'date' {
+    if (!apiFieldType) return 'text';
+    
+    // Convert to uppercase for case-insensitive comparison
+    const normalizedType = apiFieldType.toUpperCase();
+    
     const typeMap: { [key: string]: 'text' | 'number' | 'dropdown' | 'textarea' | 'date' } = {
-      'Text': 'text',
-      'Dropdown': 'dropdown',
-      'Number': 'number',
-      'Textarea': 'textarea',
-      'Date': 'date'
+      'TEXT': 'text',
+      'DROPDOWN': 'dropdown',
+      'NUMBER': 'number',
+      'TEXTAREA': 'textarea',
+      'DATE': 'date'
     };
-    return typeMap[apiFieldType] || 'text';
+    
+    return typeMap[normalizedType] || 'text';
   }
 
   // Load Task Files from API
@@ -1023,7 +1029,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Convert ActiveTaskDto to Task interface for display
   convertActiveTasksToTasks(activeTasks: ActiveTaskDto[]): Task[] {
-    console.log('Converting active tasks to display format. Total tasks:', activeTasks.length);
+    // console.log('Converting active tasks to display format. Total tasks:', activeTasks.length);
     
     return activeTasks.map((task, index) => {
       // Use API status directly
@@ -1035,18 +1041,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       
       // Log first 3 tasks for debugging
       if (index < 3) {
-        console.log(`Task ${index + 1}:`, {
-          taskId: task.taskId,
-          title: task.taskTitle,
-          apiStatus: task.status,
-          mappedstatus: task.status as any,
-          category: task.taskCategory,
-          assignedById: task.assignedById,
-          assignedByName: task.assignedByName,
-          assigneeId: task.assigneeId,
-          assigneeName: task.assigneeName,
-          finalAssignee: assigneeName
-        });
+        // console.log(`Task ${index + 1}:`, {
+        //   taskId: task.taskId,
+        //   title: task.taskTitle,
+        //   apiStatus: task.status,
+        //   mappedstatus: task.status as any,
+        //   category: task.taskCategory,
+        //   assignedById: task.assignedById,
+        //   assignedByName: task.assignedByName,
+        //   assigneeId: task.assigneeId,
+        //   assigneeName: task.assigneeName,
+        //   finalAssignee: assigneeName
+        // });
       }
       
       return {
