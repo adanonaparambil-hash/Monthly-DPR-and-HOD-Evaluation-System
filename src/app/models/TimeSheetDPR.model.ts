@@ -249,6 +249,8 @@ export interface UserDailyLogHistoryRequest {
   departmentId?:number;
   pageNumber?: number;
   pageSize?: number;
+  isExport?: string;
+  selectedColumns?: string[];
 }
 
 export interface UserDailyLogHistoryResponse {

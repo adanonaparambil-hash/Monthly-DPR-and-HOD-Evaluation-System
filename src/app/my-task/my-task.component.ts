@@ -188,6 +188,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   showManageTasksModal = false; // New modal for managing task categories
   selectedTask: Task | null = null;
   
+  // Role flags from session
+  isHOD = false;  // Flag to check if user is HOD
+  
   // Properties for standalone task details modal
   selectedTaskIdForModal: number = 0;
   selectedUserIdForModal: string = '';
@@ -335,6 +338,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.themeService.isDarkMode$.subscribe(isDark => {
       this.isDarkMode = isDark;
     });
+
+    // Get current user data from session and check if HOD
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const hodFlag = (currentUser.isHOD || '').toString().toUpperCase();
+    this.isHOD = hodFlag === 'H';
+    console.log('My Task - User is HOD:', this.isHOD, 'HOD Flag:', hodFlag);
 
     // Initialize component
     this.initializeDetailedSubtasks();

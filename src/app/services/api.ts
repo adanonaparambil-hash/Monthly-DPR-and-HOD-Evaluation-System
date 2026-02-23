@@ -392,12 +392,10 @@ export class Api {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetEmployeeApprovalListPaged/${employeeId}/${pageNo}/${pageSize}/${fromDate ?? ''}/${toDate ?? ''}/${projectId ?? 0}/${categoryId}`);
   }
 
+
   getUserDailyLogHistory(request: UserDailyLogHistoryRequest) {
-      return this.http.post<any>(
-      `${this.apiUrl}/DailyTimeSheet/GetUserDailyLogHistory`,
-      request
-    );
- }
+        return this.http.post<any>(`${this.apiUrl}/DailyTimeSheet/GetUserDailyLogHistory`,request);
+  }
 
  
  getOpenBreaks(): Observable<any> {
@@ -422,7 +420,14 @@ export class Api {
   }
 
 
+  exportUserDailyLogHistory(request: UserDailyLogHistoryRequest) {
+      return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportUserDailyLogHistory`, request, {
+          responseType: 'blob' 
+      });
+  }
 
+
+  ////////////////// un wanted ///////////////////////////
 
   updateCustomField(fieldData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/UpdateCustomField`, fieldData);

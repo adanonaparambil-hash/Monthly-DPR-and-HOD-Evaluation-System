@@ -13,7 +13,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="action-btn secondary" (click)="openManageFieldsModal()">
+      <button class="action-btn secondary" *ngIf="isHOD" (click)="openManageFieldsModal()">
         <i class="fas fa-cog"></i>
         <span>Manage Fields</span>
       </button>
@@ -21,7 +21,7 @@
         <i class="fas fa-download"></i>
         <span>Export Report</span>
       </button>
-      <button class="action-btn primary" (click)="openBreakHistoryModal()">
+      <button class="action-btn primary" *ngIf="isHOD" (click)="openBreakHistoryModal()">
         <i class="fas fa-coffee"></i>
         <span>Break History</span>
       </button>
@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <div class="filter-group">
+      <div class="filter-group" *ngIf="isHOD">
         <label class="filter-label">Employee</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-user filter-icon"></i>
@@ -105,9 +105,13 @@
         <i class="fas fa-check-circle"></i>
         <span>Apply Filter</span>
       </button>
-      <button class="filter-btn" (click)="openColumnModal()">
+      <!-- <button class="filter-btn" (click)="openColumnModal()">
         <i class="fas fa-columns"></i>
         <span>Edit Columns</span>
+      </button> -->
+      <button class="filter-btn" (click)="openCustomFieldsModal()">
+        <i class="fas fa-plus-square"></i>
+        <span>Add Custom Columns</span>
       </button>
     </div>
   </div>
@@ -116,8 +120,8 @@
   <div class="table-wrapper">
     <div class="data-table">
     <!-- Table Header -->
-    <div class="table-header" [style.grid-template-columns]="getGridTemplateColumns()">
-      @for (column of getVisibleColumns(); track column.key) {
+    <div class="table-header" [style.grid-template-columns]="getGridTemplateColumnsWithCustomFields()">
+      @for (column of getAllVisibleColumns(); track column.key) {
         <div class="header-col" [class]="column.key">{{ column.label }}</div>
       }
     </div>
@@ -161,8 +165,8 @@
             </div>
             <div class="day-records">
               @for (record of dayGroup.records; track record.id) {
-                <div class="record-row" [style.grid-template-columns]="getGridTemplateColumns()" (click)="openTaskModal(record)" style="cursor: pointer;">
-                  @for (column of getVisibleColumns(); track column.key) {
+                <div class="record-row" [style.grid-template-columns]="getGridTemplateColumnsWithCustomFields()" (click)="openTaskModal(record)" style="cursor: pointer;">
+                  @for (column of getAllVisibleColumns(); track column.key) {
                     <div class="record-col" [class]="column.key">
                       @switch (column.key) {
                         @case ('title') {
@@ -198,15 +202,15 @@
                         @case ('progress') {
                           <div class="progress-container">
                             <div class="progress-bar">
-                              <div class="progress-fill" [style.width.%]="getColumnValue(record, column.key)"></div>
+                              <div class="progress-fill" [style.width.%]="getColumnValueWithCustomFields(record, column)"></div>
                             </div>
-                            <span class="progress-text">{{ formatColumnValue(getColumnValue(record, column.key), column) }}</span>
+                            <span class="progress-text">{{ formatColumnValue(getColumnValueWithCustomFields(record, column), column) }}</span>
                           </div>
                         }
                         @default {
                           <span class="column-value" 
-                                [title]="getTooltipText(record, column.key)">
-                            {{ formatColumnValue(getColumnValue(record, column.key), column) }}
+                                [title]="getColumnValueWithCustomFields(record, column)">
+                            {{ formatColumnValue(getColumnValueWithCustomFields(record, column), column) }}
                           </span>
                         }
                       }
@@ -238,7 +242,7 @@
         }
         
         <!-- Scroll Hint -->
-        @if (getVisibleColumns().length > 4) {
+        @if (getAllVisibleColumns().length > 4) {
           <div class="scroll-hint">
             <i class="fas fa-arrows-alt-h"></i>
             Scroll horizontally to see more columns
@@ -768,6 +772,86 @@
           [disabled]="!isCurrentFieldValid()">
           <i class="fas fa-check"></i>
           Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Custom Fields Modal -->
+@if (showCustomFieldsModal) {
+  <div class="modal-overlay-fields" (click)="closeCustomFieldsModal()">
+    <div class="custom-fields-modal" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="fields-modal-header">
+        <div class="header-content">
+          <h2 class="modal-title-ultra">Add Custom Field Columns</h2>
+          <p class="modal-subtitle-ultra">Select custom fields to display as columns in the table</p>
+        </div>
+        <button class="close-btn-ultra" (click)="closeCustomFieldsModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="fields-modal-body">
+        <!-- Empty State -->
+        @if (availableCustomFields.length === 0) {
+          <div class="empty-state-ultra">
+            <div class="empty-icon-ultra">
+              <i class="fas fa-inbox"></i>
+            </div>
+            <h3>No Custom Fields Available</h3>
+            <p>No custom fields found in the current data set</p>
+          </div>
+        }
+
+        <!-- Custom Fields List -->
+        @if (availableCustomFields.length > 0) {
+          <div class="custom-fields-list">
+            <div class="fields-grid">
+              @for (fieldName of availableCustomFields; track fieldName) {
+                <div class="custom-field-item" 
+                     [class.selected]="isCustomFieldSelected(fieldName)"
+                     (click)="toggleCustomField(fieldName)">
+                  <div class="field-checkbox">
+                    <input type="checkbox" 
+                           [checked]="isCustomFieldSelected(fieldName)" 
+                           class="checkbox-input">
+                    <div class="checkbox-custom">
+                      <i class="fas fa-check"></i>
+                    </div>
+                  </div>
+                  
+                  <div class="field-info">
+                    <div class="field-name">{{ fieldName }}</div>
+                    <div class="field-meta">
+                      <span class="field-type-badge">Custom Field</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="custom-fields-summary">
+            <div class="summary-info">
+              <i class="fas fa-info-circle"></i>
+              <span>{{ selectedCustomFields.length }} of {{ availableCustomFields.length }} fields selected</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="fields-modal-footer">
+        <button class="btn-cancel-ultra" (click)="closeCustomFieldsModal()">
+          Cancel
+        </button>
+        <button class="btn-save-ultra" (click)="applyCustomFieldChanges()">
+          <i class="fas fa-check"></i>
+          Apply Changes
         </button>
       </div>
     </div>

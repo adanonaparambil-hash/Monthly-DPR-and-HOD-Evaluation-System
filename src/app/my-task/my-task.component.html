@@ -957,7 +957,7 @@
         <p class="select-modal-subtitle">Manage team workflow and initiate time tracking.</p>
       </div>
       <div class="header-actions">
-        <button class="manage-tasks-btn" (click)="openManageTasksModal()">
+        <button class="manage-tasks-btn" *ngIf="isHOD" (click)="openManageTasksModal()">
           <i class="fas fa-cog"></i>
           <span>Manage Tasks</span>
         </button>

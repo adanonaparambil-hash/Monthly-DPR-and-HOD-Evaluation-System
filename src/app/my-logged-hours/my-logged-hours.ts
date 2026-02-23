@@ -43,6 +43,7 @@ interface LoggedHour {
   duration: string;
   date: string;
   loggedBy: string;
+  customFields?: { [key: string]: any };  // Dynamic custom fields from API
 }
 
 interface Project {
@@ -110,6 +111,9 @@ export class MyLoggedHoursComponent implements OnInit {
   // Loading state
   isLoadingData = false;
 
+  // Role flags from session
+  isHOD = false;  // Flag to check if user is HOD
+
   // Pagination properties
   currentPage = 1;
   pageSize = 500;
@@ -157,6 +161,45 @@ export class MyLoggedHoursComponent implements OnInit {
 
   // Column management
   showColumnModal = false;
+  showCustomFieldsModal = false;  // New modal for custom fields
+  availableCustomFields: string[] = [];  // List of all custom field names from API
+  selectedCustomFields: string[] = [];  // User-selected custom fields to display
+  
+  // Mapping of column keys to API field names
+  columnToApiFieldMap: { [key: string]: string } = {
+    'taskId': 'TaskId',
+    'title': 'TaskTitle',
+    'description': 'Description',
+    'dailyComment': 'DailyComment',
+    'projectName': 'ProjectName',
+    'category': 'CategoryName',
+    'type': 'Type',
+    'process': 'Process',
+    'assignedTo': 'AssignedTo',
+    'assignedBy': 'AssignedBy',
+    'department': 'Department',
+    'project': 'ProjectName',
+    'workPlace': 'WorkPlace',
+    'trade': 'Trade',
+    'stage': 'Stage',
+    'section': 'Section',
+    'startDate': 'StartDate',
+    'targetDate': 'TargetDate',
+    'timeTaken': 'TimeTaken',
+    'progress': 'Progress',
+    'status': 'Status',
+    'instruction': 'Instruction',
+    'count': 'Count',
+    'unit': 'Unit',
+    'remarks': 'Remarks',
+    'folderPath': 'FolderPath',
+    'documentLink': 'DocumentLink',
+    'priority': 'Priority',
+    'loggedBy': 'LoggedBy',
+    'duration': 'Duration',
+    'date': 'LogDate'  // Added log date mapping
+  };
+  
   availableColumns: ColumnDefinition[] = [
     { key: 'taskId', label: 'Task ID', visible: false, width: '120px', type: 'text' },
     { key: 'title', label: 'Task Title', visible: true, width: '250px', type: 'text', required: true },
@@ -207,6 +250,11 @@ export class MyLoggedHoursComponent implements OnInit {
     // Get current user data from session
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     this.currentUserId = currentUser.empId || currentUser.employeeId || '';
+    
+    // Check if user is HOD
+    const hodFlag = (currentUser.isHOD || '').toString().toUpperCase();
+    this.isHOD = hodFlag === 'H';
+    console.log('User is HOD:', this.isHOD, 'HOD Flag:', hodFlag);
     
     // Debug: Log the entire user object to see what fields are available
     console.log('Current user from session:', currentUser);
@@ -623,7 +671,8 @@ export class MyLoggedHoursComponent implements OnInit {
       projectId: this.selectedProject !== 'all' ? Number(this.selectedProject) : undefined,
       categoryId: this.selectedCategory !== 'all' ? Number(this.selectedCategory) : undefined,
       pageNumber: this.currentPage,
-      pageSize: this.pageSize
+      pageSize: this.pageSize,
+      isExport: 'N'  // Always 'N' for normal data loading
     };
     
     // Only add userId if it's defined (specific employee selected)
@@ -662,8 +711,12 @@ export class MyLoggedHoursComponent implements OnInit {
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
-            loggedBy: log.loggedBy || ''
+            loggedBy: log.loggedBy || '',
+            customFields: log.customFields || {}  // Store custom fields
           }));
+          
+          // Extract all unique custom field names from the response
+          this.extractCustomFieldNames(response.data);
           
           // If it's the first page, replace the data; otherwise, append
           if (this.currentPage === 1) {
@@ -692,8 +745,12 @@ export class MyLoggedHoursComponent implements OnInit {
             duration: log.duration || '00:00',
             date: log.logDate ? log.logDate.split('T')[0] : '',
             project: log.projectName || 'No Project',
-            loggedBy: log.loggedBy || ''
+            loggedBy: log.loggedBy || '',
+            customFields: log.customFields || {}  // Store custom fields
           }));
+          
+          // Extract all unique custom field names from the response
+          this.extractCustomFieldNames(response.data);
           
           // If it's the first page, replace the data; otherwise, append
           if (this.currentPage === 1) {
@@ -845,8 +902,108 @@ export class MyLoggedHoursComponent implements OnInit {
   }
 
   exportReport() {
-    // Implement export functionality
     console.log('Exporting report from', this.fromDate, 'to', this.toDate);
+    
+    // Get current user
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const currentUserId = currentUser.empId || currentUser.employeeId || '';
+    
+    // Determine userId based on employee and department selection
+    let userId = undefined;
+    
+    // Only set userId if a specific employee is selected AND department is not "all"
+    if (this.selectedEmployee !== 'all' && this.selectedDepartment !== 'all') {
+      userId = this.selectedEmployee;
+    } else if (this.selectedDepartment === 'all' || this.selectedEmployee === 'all') {
+      userId = undefined;
+    }
+    
+    // Get all visible column names mapped to API field names
+    const allColumns = this.getAllVisibleColumns();
+    const selectedColumns = allColumns.map(col => {
+      // For custom field columns, extract the actual field name and capitalize first letter
+      if (col.key.startsWith('customField_')) {
+        const fieldName = col.key.replace('customField_', '');
+        return this.capitalizeFirstLetter(fieldName);
+      }
+      // For standard columns, map to API field names (already capitalized in map)
+      return this.columnToApiFieldMap[col.key] || this.capitalizeFirstLetter(col.key);
+    }).filter(fieldName => fieldName); // Remove any undefined values
+    
+    // Always include LogDate if not already present
+    if (!selectedColumns.includes('LogDate')) {
+      selectedColumns.push('LogDate');
+    }
+    
+    // Build export request object
+    const exportRequest: any = {
+      fromDate: this.fromDate || undefined,
+      toDate: this.toDate || undefined,
+      projectId: this.selectedProject !== 'all' ? Number(this.selectedProject) : undefined,
+      categoryId: this.selectedCategory !== 'all' ? Number(this.selectedCategory) : undefined,
+      pageNumber: 0,  // Always 0 for export
+      pageSize: 0,    // Always 0 for export
+      isExport: 'Y',  // 'Y' for export
+      selectedColumns: selectedColumns  // Array of API field names with first letter capitalized
+    };
+    
+    // Only add userId if it's defined (specific employee selected)
+    if (userId) {
+      exportRequest.userId = userId;
+    }
+    
+    // Only add departmentId if a specific department is selected
+    if (this.selectedDepartment !== 'all') {
+      exportRequest.departmentId = Number(this.selectedDepartment);
+    }
+    
+    // Only add employeeId if a specific employee is selected (not "All Employees")
+    if (this.selectedEmployee !== 'all') {
+      exportRequest.employeeId = this.selectedEmployee;
+    }
+    
+    console.log('Export request:', exportRequest);
+    console.log('Selected columns (API field names):', selectedColumns);
+    
+    // Show loading state
+    this.toasterService.showInfo('Export', 'Preparing your report...');
+    
+    // Call export API
+    this.api.exportUserDailyLogHistory(exportRequest).subscribe({
+      next: (blob: Blob) => {
+        console.log('Export successful, downloading file...');
+        
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Generate filename with date range
+        const fromDateStr = this.fromDate ? this.fromDate.replace(/-/g, '') : 'start';
+        const toDateStr = this.toDate ? this.toDate.replace(/-/g, '') : 'end';
+        link.download = `LoggedHours_${fromDateStr}_to_${toDateStr}.xlsx`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        this.toasterService.showSuccess('Export Complete', 'Your report has been downloaded successfully');
+      },
+      error: (error: any) => {
+        console.error('Error exporting report:', error);
+        this.toasterService.showError('Export Failed', 'Failed to export report. Please try again.');
+      }
+    });
+  }
+
+  // Helper function to capitalize first letter only
+  capitalizeFirstLetter(str: string): string {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   logNewHours() {
@@ -1551,5 +1708,153 @@ export class MyLoggedHoursComponent implements OnInit {
       'Dropdown': 'fas fa-list'
     };
     return iconMap[fieldType] || 'fas fa-question';
+  }
+
+  // Custom Fields Column Management
+  extractCustomFieldNames(data: any[]) {
+    const fieldNamesSet = new Set<string>();
+    
+    data.forEach(log => {
+      if (log.customFields && typeof log.customFields === 'object') {
+        Object.keys(log.customFields).forEach(fieldName => {
+          // Only add non-empty field names
+          if (fieldName && fieldName.trim()) {
+            fieldNamesSet.add(fieldName);
+          }
+        });
+      }
+    });
+    
+    this.availableCustomFields = Array.from(fieldNamesSet).sort();
+    console.log('Extracted custom field names:', this.availableCustomFields);
+  }
+
+  openCustomFieldsModal() {
+    this.showCustomFieldsModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeCustomFieldsModal() {
+    this.showCustomFieldsModal = false;
+    document.body.style.overflow = 'auto';
+  }
+
+  toggleCustomField(fieldName: string) {
+    const index = this.selectedCustomFields.indexOf(fieldName);
+    if (index > -1) {
+      // Remove from selected
+      this.selectedCustomFields.splice(index, 1);
+    } else {
+      // Add to selected
+      this.selectedCustomFields.push(fieldName);
+    }
+  }
+
+  isCustomFieldSelected(fieldName: string): boolean {
+    return this.selectedCustomFields.includes(fieldName);
+  }
+
+  applyCustomFieldChanges() {
+    console.log('Applied custom fields:', this.selectedCustomFields);
+    this.closeCustomFieldsModal();
+  }
+
+  getCustomFieldValue(record: LoggedHour, fieldName: string): string {
+    if (!record.customFields || !record.customFields[fieldName]) {
+      return '-';
+    }
+    const value = record.customFields[fieldName];
+    return value !== null && value !== undefined && value !== '' ? value.toString() : '-';
+  }
+
+  getAllVisibleColumns(): ColumnDefinition[] {
+    // Get standard visible columns
+    const standardColumns = this.getVisibleColumns();
+    
+    // Add custom field columns
+    const customFieldColumns: ColumnDefinition[] = this.selectedCustomFields.map(fieldName => ({
+      key: `customField_${fieldName}`,
+      label: fieldName,
+      visible: true,
+      width: '150px',
+      type: 'text',
+      required: false
+    }));
+    
+    // Insert custom fields before the last column (duration)
+    const lastColumn = standardColumns[standardColumns.length - 1];
+    const columnsWithoutLast = standardColumns.slice(0, -1);
+    
+    return [...columnsWithoutLast, ...customFieldColumns, lastColumn];
+  }
+
+  getGridTemplateColumnsWithCustomFields(): string {
+    const allColumns = this.getAllVisibleColumns();
+    
+    return allColumns.map(col => {
+      // Handle custom field columns
+      if (col.key.startsWith('customField_')) {
+        return '150px';
+      }
+      
+      // Set specific widths for different column types
+      switch (col.key) {
+        case 'title':
+          return '300px';
+        case 'description':
+          return '350px';
+        case 'category':
+          return '180px';
+        case 'loggedBy':
+          return '150px';
+        case 'duration':
+          return '120px';
+        case 'progress':
+          return '140px';
+        case 'taskId':
+          return '120px';
+        case 'startDate':
+        case 'targetDate':
+          return '130px';
+        case 'status':
+        case 'type':
+        case 'trade':
+        case 'stage':
+        case 'section':
+          return '120px';
+        case 'assignedTo':
+        case 'assignedBy':
+        case 'department':
+          return '150px';
+        case 'project':
+        case 'workPlace':
+          return '180px';
+        case 'process':
+        case 'instruction':
+        case 'remarks':
+          return '200px';
+        case 'folderPath':
+        case 'documentLink':
+          return '250px';
+        case 'count':
+        case 'unit':
+          return '100px';
+        case 'timeTaken':
+          return '120px';
+        default:
+          return col.width || '150px';
+      }
+    }).join(' ');
+  }
+
+  getColumnValueWithCustomFields(record: LoggedHour, column: ColumnDefinition): any {
+    // Check if it's a custom field column
+    if (column.key.startsWith('customField_')) {
+      const fieldName = column.key.replace('customField_', '');
+      return this.getCustomFieldValue(record, fieldName);
+    }
+    
+    // Otherwise use the standard column value getter
+    return this.getColumnValue(record, column.key);
   }
 }
