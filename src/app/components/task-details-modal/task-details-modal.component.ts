@@ -655,47 +655,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   stopTaskFromModal() {
-    Swal.fire({
-      title: 'Stop Task?',
-      text: 'Are you sure you want to stop this task?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, stop it',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Call executeTimer API with STOP action
-        const timerRequest = {
-          taskId: this.taskId,
-          userId: this.userId,
-          action: 'STOP'
-        };
-        
-        this.api.executeTimer(timerRequest).subscribe({
-          next: (response: any) => {
-            if (response && response.success) {
-              this.stopTimer();
-              this.selectedTaskDetailStatus = 'not-closed';
-              this.toasterService.showSuccess('Task Stopped', 'Task timer has been stopped successfully!');
-              
-              // Reload task details to get updated data
-              this.loadTaskDetails();
-              
-              // Emit event to parent component
-              this.taskStopped.emit(this.taskId);
-              
-              // Keep modal open - don't call this.close()
-            } else {
-              this.toasterService.showError('Stop Failed', response?.message || 'Failed to stop task');
-            }
-          },
-          error: (error: any) => {
-            console.error('Error stopping task:', error);
-            this.toasterService.showError('Error', 'Failed to stop task');
-          }
-        });
-      }
-    });
+    // Simply change the status to CLOSED without confirmation or API call
+    this.stopTimer();
+    this.selectedTaskDetailStatus = 'not-closed';
+    this.toasterService.showInfo('Task Status Changed', 'Task status changed to Closed');
   }
 
   // Add comment
