@@ -101,6 +101,7 @@ export class MyLoggedHoursComponent implements OnInit {
   selectedDepartment: string | number = 'all';
   selectedEmployee: string | number = 'all';
   selectedCategory: string | number = 'all';
+  tableSearchTerm = '';  // Client-side table search
 
   // API data
   projects: Project[] = [];
@@ -802,8 +803,31 @@ export class MyLoggedHoursComponent implements OnInit {
 
   // Group logged hours by date
   getGroupedLoggedHours(): { date: string; displayDate: string; displayDay: string; records: LoggedHour[] }[] {
-    // Group records by date
-    const grouped = this.loggedHours.reduce((acc, record) => {
+    // First, filter records based on search term
+    let filteredRecords = this.loggedHours;
+    
+    if (this.tableSearchTerm && this.tableSearchTerm.trim()) {
+      const searchLower = this.tableSearchTerm.toLowerCase().trim();
+      filteredRecords = this.loggedHours.filter(record => {
+        // Search in multiple fields
+        const searchableText = [
+          record.title,
+          record.description,
+          record.category,
+          record.projectName,
+          record.dailyComment,
+          record.loggedBy,
+          record.taskId,
+          // Also search in custom fields
+          ...Object.values(record.customFields || {}).map(v => String(v))
+        ].join(' ').toLowerCase();
+        
+        return searchableText.includes(searchLower);
+      });
+    }
+    
+    // Group filtered records by date
+    const grouped = filteredRecords.reduce((acc, record) => {
       if (!acc[record.date]) {
         acc[record.date] = [];
       }
@@ -820,6 +844,40 @@ export class MyLoggedHoursComponent implements OnInit {
     })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
     return groupedArray;
+  }
+
+  // Clear table search
+  clearTableSearch() {
+    this.tableSearchTerm = '';
+  }
+
+  // Handle table search change
+  onTableSearchChange() {
+    // This method can be used for debouncing if needed in the future
+    // For now, the filtering happens automatically through getGroupedLoggedHours()
+  }
+
+  // Get filtered records count
+  getFilteredRecordsCount(): number {
+    if (!this.tableSearchTerm || !this.tableSearchTerm.trim()) {
+      return this.loggedHours.length;
+    }
+    
+    const searchLower = this.tableSearchTerm.toLowerCase().trim();
+    return this.loggedHours.filter(record => {
+      const searchableText = [
+        record.title,
+        record.description,
+        record.category,
+        record.projectName,
+        record.dailyComment,
+        record.loggedBy,
+        record.taskId,
+        ...Object.values(record.customFields || {}).map(v => String(v))
+      ].join(' ').toLowerCase();
+      
+      return searchableText.includes(searchLower);
+    }).length;
   }
 
   formatDisplayDate(dateString: string): string {

@@ -13,18 +13,22 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="action-btn secondary" *ngIf="isHOD" (click)="openManageFieldsModal()">
-        <i class="fas fa-cog"></i>
-        <span>Manage Fields</span>
-      </button>
+      @if (isHOD) {
+        <button class="action-btn secondary" (click)="openManageFieldsModal()">
+          <i class="fas fa-cog"></i>
+          <span>Manage Fields</span>
+        </button>
+      }
       <button class="action-btn secondary" (click)="exportReport()">
         <i class="fas fa-download"></i>
         <span>Export Report</span>
       </button>
-      <button class="action-btn primary" *ngIf="isHOD" (click)="openBreakHistoryModal()">
-        <i class="fas fa-coffee"></i>
-        <span>Break History</span>
-      </button>
+      @if (isHOD) {
+        <button class="action-btn primary" (click)="openBreakHistoryModal()">
+          <i class="fas fa-coffee"></i>
+          <span>Break History</span>
+        </button>
+      }
     </div>
   </header>
 
@@ -73,18 +77,20 @@
         </div>
       </div>
 
-      <div class="filter-group" *ngIf="isHOD">
-        <label class="filter-label">Employee</label>
-        <div class="filter-input-wrapper">
-          <i class="fas fa-user filter-icon"></i>
-          <select class="filter-select" [(ngModel)]="selectedEmployee" [disabled]="selectedDepartment === 'all'">
-            <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Employees' }}</option>
-            <option *ngFor="let employee of employees" [value]="employee.employeeCode">
-              {{ employee.employeeName }}
-            </option>
-          </select>
+      @if (isHOD) {
+        <div class="filter-group">
+          <label class="filter-label">Employee</label>
+          <div class="filter-input-wrapper">
+            <i class="fas fa-user filter-icon"></i>
+            <select class="filter-select" [(ngModel)]="selectedEmployee" [disabled]="selectedDepartment === 'all'">
+              <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Employees' }}</option>
+              <option *ngFor="let employee of employees" [value]="employee.employeeCode">
+                {{ employee.employeeName }}
+              </option>
+            </select>
+          </div>
         </div>
-      </div>
+      }
 
       <div class="filter-group">
         <label class="filter-label">Task Category</label>
@@ -113,6 +119,21 @@
         <i class="fas fa-plus-square"></i>
         <span>Add Custom Columns</span>
       </button>
+      <!-- Compact Search -->
+      <div class="compact-search">
+        <i class="fas fa-search"></i>
+        <input 
+          type="text" 
+          class="compact-search-input" 
+          [(ngModel)]="tableSearchTerm" 
+          placeholder="Search table..."
+          (input)="onTableSearchChange()">
+        @if (tableSearchTerm) {
+          <button class="clear-search-btn-compact" (click)="clearTableSearch()" title="Clear">
+            <i class="fas fa-times"></i>
+          </button>
+        }
+      </div>
     </div>
   </div>
 
