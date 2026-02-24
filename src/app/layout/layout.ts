@@ -397,8 +397,15 @@ export class layout implements OnInit, OnDestroy {
     localStorage.setItem('dprOnlyMode', 'true');
     localStorage.setItem('dprModeTimestamp', Date.now().toString());
     
+    // Get the base href from the document
+    const baseElement = document.querySelector('base');
+    const baseHref = baseElement ? baseElement.getAttribute('href') || '/' : '/';
+    
+    // Construct the full URL with base path
+    const dprUrl = `${window.location.origin}${baseHref}my-task?dprMode=true`;
+    
     // Open My Task page in new tab with URL parameter for immediate detection
-    window.open('/my-task?dprMode=true', '_blank');
+    window.open(dprUrl, '_blank');
   }
 
   isDPRRouteActive(): boolean {
