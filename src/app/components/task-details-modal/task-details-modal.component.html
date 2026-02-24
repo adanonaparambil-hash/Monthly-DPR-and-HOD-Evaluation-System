@@ -8,7 +8,10 @@
         <button class="modal-back-button" (click)="close()">
           <i class="fas fa-arrow-left"></i>
         </button>
-        <div class="modal-task-id-badge">TSK-{{ selectedTaskId }}</div>
+        <!-- Only show Task ID badge if taskId exists (not a new task) -->
+        @if (taskId && taskId > 0) {
+          <div class="modal-task-id-badge">TSK-{{ selectedTaskId }}</div>
+        }
         <!-- View-only badge -->
         @if (isViewOnly) {
           <div class="view-only-badge">
@@ -16,15 +19,24 @@
             View Only
           </div>
         }
-        <div class="status-dropdown-container">
-          <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" [disabled]="isViewOnly">
-            <option value="not-started">Not Started</option>
-            <option value="not-closed">Closed</option>
-            <option value="running">Running</option>
-            <option value="completed">Completed</option>
-            <option value="pause">Pause</option>
-          </select>
-        </div>
+        <!-- Only show status dropdown if taskId exists (not a new task) -->
+        @if (taskId && taskId > 0) {
+          <div class="status-dropdown-container">
+            <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" [disabled]="isViewOnly || taskId === 0">
+              <option value="not-started">Not Started</option>
+              <option value="not-closed">Closed</option>
+              <option value="running">Running</option>
+              <option value="completed">Completed</option>
+              <option value="pause">Pause</option>
+            </select>
+          </div>
+        } @else {
+          <!-- For new tasks, show fixed "Not Started" badge -->
+          <div class="status-badge-fixed">
+            <i class="fas fa-circle" style="color: #94a3b8; font-size: 8px;"></i>
+            Not Started
+          </div>
+        }
       </div>
 
       <div class="modal-header-right">

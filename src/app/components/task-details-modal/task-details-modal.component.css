@@ -989,3 +989,35 @@ select[disabled] {
   margin-left: 4px;
   font-size: 14px;
 }
+
+
+/* Fixed status badge for new tasks (not editable) */
+.status-badge-fixed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: default;
+  user-select: none;
+}
+
+.status-badge-fixed i {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

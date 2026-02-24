@@ -195,6 +195,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   selectedTaskIdForModal: number = 0;
   selectedUserIdForModal: string = '';
   selectedCategoryIdForModal: number = 0;
+  selectedCategoryNameForModal: string = ''; // Category name for new tasks
   isTaskModalViewOnly: boolean = false; // View-only mode for "Assigned to Others"
   
   selectTaskActiveTab: 'favorites' | 'myDepartment' | 'all' = 'favorites';
@@ -2589,27 +2590,15 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // Check if there's an existing task for this category in myTasksList
-    // Match by taskCategory name since ActiveTaskDto doesn't have categoryId
-    const existingTask = this.myTasksList.find(t => t.taskCategory === category.categoryName);
+    // Always treat as NEW task assignment from Select Task modal
+    // Task details will be loaded after saving
+    console.log('Opening modal for new task assignment with categoryId:', category.categoryId);
     
-    if (existingTask) {
-      // Open task details modal for existing task
-      console.log('Found existing task for category, opening modal with taskId:', existingTask.taskId);
-      
-      // Set properties for standalone modal component
-      this.selectedTaskIdForModal = existingTask.taskId;
-      this.selectedUserIdForModal = userId;
-      this.selectedCategoryIdForModal = category.categoryId;
-    } else {
-      // No existing task - pass taskId as 0 to indicate new task
-      console.log('No existing task found, opening modal for new task with categoryId:', category.categoryId);
-      
-      // Set properties for standalone modal component
-      this.selectedTaskIdForModal = 0; // 0 indicates new task
-      this.selectedUserIdForModal = userId;
-      this.selectedCategoryIdForModal = category.categoryId;
-    }
+    // Set properties for standalone modal component
+    this.selectedTaskIdForModal = 0; // 0 indicates new task
+    this.selectedUserIdForModal = userId;
+    this.selectedCategoryIdForModal = category.categoryId;
+    this.selectedCategoryNameForModal = category.categoryName; // Pass category name for new tasks
     
     // Hide the Select Task modal
     this.showSelectTaskModal = false;

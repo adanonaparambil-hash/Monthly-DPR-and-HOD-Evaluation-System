@@ -39,6 +39,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;
   @Input() userId!: string;
   @Input() categoryId!: number;
+  @Input() categoryName?: string; // Category name for new tasks
   @Input() isViewOnly: boolean = false; // View-only mode for "Assigned to Others"
   
   // Output events
@@ -132,6 +133,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       // New task - just show empty form with category info
       console.log('New task mode - showing empty form for categoryId:', this.categoryId);
       this.selectedTaskDetailStatus = 'not-started';
+      this.selectedTaskCategory = this.categoryName || ''; // Set category name for new tasks
       this.editableTaskTitle = '';
       this.editableTaskDescription = '';
       this.dailyRemarks = '';

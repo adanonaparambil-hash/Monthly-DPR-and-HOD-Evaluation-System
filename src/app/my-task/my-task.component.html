@@ -1017,22 +1017,22 @@
         } @else {
         <div class="task-list">
           @for (task of getFilteredFavouriteTaskList(); track task.categoryId) {
-          <div class="task-item" (click)="selectTask(task)">
+          <div class="task-item">
             <i class="fas fa-star star-icon active" (click)="toggleFavourite(task, $event)" title="Remove from favorites"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
             </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
+            <div class="task-item-actions">
+              <button class="assign-btn" (click)="selectTask(task)">
+                <i class="fas fa-user-check"></i>
+                Assign
+              </button>
+              <button class="add-start-btn" (click)="addTaskToMyList(task)">
+                <i class="fas fa-plus"></i>
+                Add
+              </button>
             </div>
-            <button class="add-start-btn" (click)="addTaskToMyList(task); $event.stopPropagation()">
-              <i class="fas fa-plus"></i>
-              Add
-            </button>
           </div>
           }
         </div>
@@ -1057,7 +1057,7 @@
         } @else {
         <div class="task-list">
           @for (task of getFilteredDepartmentTaskList(); track task.categoryId) {
-          <div class="task-item" (click)="selectTask(task)">
+          <div class="task-item">
             <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
                (click)="toggleFavourite(task, $event)" 
                [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
@@ -1065,16 +1065,16 @@
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
             </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
+            <div class="task-item-actions">
+              <button class="assign-btn" (click)="selectTask(task)">
+                <i class="fas fa-user-check"></i>
+                Assign
+              </button>
+              <button class="add-start-btn" (click)="addTaskToMyList(task)">
+                <i class="fas fa-plus"></i>
+                Add
+              </button>
             </div>
-            <button class="add-start-btn" (click)="addTaskToMyList(task); $event.stopPropagation()">
-              <i class="fas fa-plus"></i>
-              Add
-            </button>
           </div>
           }
         </div>
@@ -1099,7 +1099,7 @@
         } @else {
         <div class="task-list">
           @for (task of getFilteredAllDepartmentTaskList(); track task.categoryId) {
-          <div class="task-item" (click)="selectTask(task)">
+          <div class="task-item">
             <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
                (click)="toggleFavourite(task, $event)" 
                [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
@@ -1107,16 +1107,16 @@
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
             </div>
-            <div class="task-item-info">
-              <div class="task-info-item assigned">
-                <i class="fas fa-user-friends"></i>
-                <span>Assigned Task</span>
-              </div>
+            <div class="task-item-actions">
+              <button class="assign-btn" (click)="selectTask(task)">
+                <i class="fas fa-user-check"></i>
+                Assign
+              </button>
+              <button class="add-start-btn" (click)="addTaskToMyList(task)">
+                <i class="fas fa-plus"></i>
+                Add
+              </button>
             </div>
-            <button class="add-start-btn" (click)="addTaskToMyList(task); $event.stopPropagation()">
-              <i class="fas fa-plus"></i>
-              Add
-            </button>
           </div>
           }
         </div>
@@ -1151,6 +1151,7 @@
     [taskId]="selectedTaskIdForModal"
     [userId]="selectedUserIdForModal"
     [categoryId]="selectedCategoryIdForModal"
+    [categoryName]="selectedCategoryNameForModal"
     [isViewOnly]="isTaskModalViewOnly"
     (closeModal)="closeTaskDetailsModal()"
     (taskUpdated)="onTaskUpdatedFromModal($event)"

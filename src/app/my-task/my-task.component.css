@@ -3790,14 +3790,16 @@
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   transition: all 0.3s ease;
-  cursor: pointer;
+  cursor: default;
+  position: relative;
 }
 
+
+
 .task-item:hover {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-  border-color: #059669;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+  background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .star-icon {
@@ -3877,12 +3879,18 @@
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
   height: 32px;
+  position: relative;
+  z-index: 2;
 }
 
 .add-start-btn:hover {
   background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+}
+
+.add-start-btn:active {
+  transform: translateY(0) scale(1);
 }
 
 .add-start-btn i {
@@ -3895,6 +3903,52 @@
 
 .add-start-btn.secondary:hover {
   background: linear-gradient(135deg, #059669, #047857);
+}
+
+/* Task Item Actions Container */
+.task-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Assign Button */
+.assign-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  height: 32px;
+  position: relative;
+  z-index: 2;
+}
+
+.assign-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.assign-btn:active {
+  transform: translateY(0) scale(1);
+}
+
+.assign-btn i {
+  font-size: 10px;
 }
 
 /* Empty State for Select Task Modal */
