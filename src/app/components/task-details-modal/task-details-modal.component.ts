@@ -594,6 +594,78 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Handle status dropdown change
+  onStatusChange(newStatus: string) {
+    console.log('Status changed to:', newStatus);
+    
+    // Only call executeTimer for RUNNING and PAUSE status changes
+    if (newStatus === 'running') {
+      // Call executeTimer with START action
+      const timerRequest = {
+        taskId: this.taskId,
+        userId: this.userId,
+        action: 'START'
+      };
+      
+      this.api.executeTimer(timerRequest).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            this.toasterService.showSuccess('Task Started', 'Task timer has been started successfully!');
+            
+            // Reload task details to get updated data
+            this.loadTaskDetails();
+            
+            // Emit event to parent component
+            this.taskResumed.emit(this.taskId);
+          } else {
+            this.toasterService.showError('Start Failed', response?.message || 'Failed to start task');
+            // Revert status on failure
+            this.loadTaskDetails();
+          }
+        },
+        error: (error: any) => {
+          console.error('Error starting task:', error);
+          this.toasterService.showError('Error', 'Failed to start task');
+          // Revert status on failure
+          this.loadTaskDetails();
+        }
+      });
+    } else if (newStatus === 'pause' || newStatus === 'paused') {
+      // Call executeTimer with PAUSED action
+      const timerRequest = {
+        taskId: this.taskId,
+        userId: this.userId,
+        action: 'PAUSED'
+      };
+      
+      this.api.executeTimer(timerRequest).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            this.stopTimer();
+            this.toasterService.showSuccess('Task Paused', 'Task timer has been paused successfully!');
+            
+            // Reload task details to get updated data
+            this.loadTaskDetails();
+            
+            // Emit event to parent component
+            this.taskPaused.emit(this.taskId);
+          } else {
+            this.toasterService.showError('Pause Failed', response?.message || 'Failed to pause task');
+            // Revert status on failure
+            this.loadTaskDetails();
+          }
+        },
+        error: (error: any) => {
+          console.error('Error pausing task:', error);
+          this.toasterService.showError('Error', 'Failed to pause task');
+          // Revert status on failure
+          this.loadTaskDetails();
+        }
+      });
+    }
+    // For other status changes (not-started, completed, closed), just update the status without calling executeTimer
+  }
+
   // Task control methods
   pauseTaskFromModal() {
     // Call executeTimer API with PAUSED action

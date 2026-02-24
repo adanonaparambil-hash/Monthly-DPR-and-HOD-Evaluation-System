@@ -22,7 +22,7 @@
         <!-- Only show status dropdown if taskId exists (not a new task) -->
         @if (taskId && taskId > 0) {
           <div class="status-dropdown-container">
-            <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" [disabled]="isViewOnly || taskId === 0">
+            <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" (ngModelChange)="onStatusChange($event)" [disabled]="isViewOnly || taskId === 0">
               <option value="not-started">Not Started</option>
               <option value="not-closed">Closed</option>
               <option value="running">Running</option>
