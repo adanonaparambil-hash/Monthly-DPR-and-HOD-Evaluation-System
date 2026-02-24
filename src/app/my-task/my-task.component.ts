@@ -2663,32 +2663,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           `"${category.categoryName}" has been successfully added to your tasks!`
         );
         
-        // Add the new task to the My Tasks list
-        // If the API returns the created task, use that; otherwise create a local task
-        const newTask: Task = {
-          id: response?.taskId || Date.now(),
-          title: '',
-          description: '',
-          status: 'NOT STARTED',
-          category: category.categoryName,
-          loggedHours: '0.0h',
-          totalHours: '0.0h',
-          startDate: '', // Empty start date
-          assignee: currentUser?.employeeName || currentUser?.name || 'Myself',
-          progress: 0,
-          isFavorite: false
-        };
+        // Reload active tasks from API to get the latest list
+        this.loadActiveTasks();
         
-        // Add to the beginning of the tasks array
-        this.tasks.unshift(newTask);
-        
-        // Update task counts
-        this.myTasksCount = this.tasks.filter(t => t.status !== 'COMPLETED').length;
-        
-        // Refresh the task list
-        this.tasks = [...this.tasks];
-        
-        console.log('Task added to My Tasks list:', newTask);
+        console.log('Task list refreshed from API');
         
         // NOTE: Modal stays open to allow adding more tasks
       },

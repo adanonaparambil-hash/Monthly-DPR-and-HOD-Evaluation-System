@@ -87,7 +87,7 @@ export class DprApprovalComponent implements OnInit {
 
   // Pagination properties
   currentPage = 1;
-  pageSize = 100;
+  pageSize = 500;
   totalRecords = 0;
   totalPages = 0;
   displayedLogs: DPRLog[] = [];
@@ -180,11 +180,18 @@ export class DprApprovalComponent implements OnInit {
 
   setDefaultDates() {
     const today = new Date();
-    const lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
     
+    // Set To Date as today
     this.toDate = this.formatDateForInput(today);
-    this.fromDate = this.formatDateForInput(lastWeek);
+    
+    // Set From Date as first day of current month
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.fromDate = this.formatDateForInput(firstDayOfMonth);
+    
+    console.log('Default dates set:', {
+      fromDate: this.fromDate,
+      toDate: this.toDate
+    });
   }
 
   formatDateForInput(date: Date): string {
