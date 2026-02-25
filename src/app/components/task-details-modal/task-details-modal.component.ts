@@ -516,7 +516,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       'pause': 'PAUSED',
       'paused': 'PAUSED',
       'completed': 'COMPLETED',
-      'not-closed': 'CLOSED'
+      'not-closed': 'CLOSED',
+      'auto-closed': 'AUTO CLOSED'
     };
     
     const apiStatus = statusMap[this.selectedTaskDetailStatus] || 'NOT STARTED';
@@ -553,9 +554,57 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         console.log('Response:', response);
         
         if (response && response.success) {
+          // Check if this was a new task (first time save)
+          const isNewTask = this.taskId === 0;
+          
           this.toasterService.showSuccess('Success', 'Task updated successfully');
+          
+          // Check if we need to call saveTaskFieldMapping
+          // Only for new tasks (taskId === 0) when assigning to a different user
+          const assignedUserId = this.selectedAssigneeId;
+          const sessionUserId = userId;
+          const isDifferentUser = assignedUserId && assignedUserId !== sessionUserId;
+          
+          if (isNewTask && isDifferentUser && this.selectedCustomFields.length > 0) {
+            console.log('New task assigned to different user - calling saveTaskFieldMapping');
+            
+            // Extract field IDs from custom fields
+            const fieldIds = this.selectedCustomFields
+              .filter(field => field.fieldId && field.fieldId > 0)
+              .map(field => field.fieldId!);
+            
+            if (fieldIds.length > 0) {
+              const fieldMappingRequest: any = {
+                categoryId: this.categoryId,
+                fieldIds: fieldIds,
+                userId: assignedUserId
+              };
+              
+              console.log('Field mapping request:', fieldMappingRequest);
+              
+              this.api.saveTaskFieldMapping(fieldMappingRequest).subscribe({
+                next: (mappingResponse: any) => {
+                  if (mappingResponse && mappingResponse.success) {
+                    console.log('Field mapping saved successfully');
+                  } else {
+                    console.warn('Field mapping failed:', mappingResponse?.message);
+                  }
+                },
+                error: (mappingError: any) => {
+                  console.error('Error saving field mapping:', mappingError);
+                }
+              });
+            }
+          }
+          
           this.taskUpdated.emit(taskSaveRequest);
           console.log('Task saved successfully');
+          
+          // Close modal only on first save (new task) to prevent duplicate task creation
+          if (isNewTask) {
+            console.log('First time save - closing modal to prevent duplicates');
+            this.close();
+          }
         } else {
           const errorMessage = response?.message || 'Failed to update task';
           this.toasterService.showError('Error', errorMessage);
@@ -1091,7 +1140,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       'RUNNING': 'running',
       'PAUSED': 'pause',
       'COMPLETED': 'completed',
-      'CLOSED': 'not-closed'
+      'CLOSED': 'not-closed',
+      'AUTO CLOSED': 'auto-closed'
     };
     return statusMap[status] || 'not-started';
   }
