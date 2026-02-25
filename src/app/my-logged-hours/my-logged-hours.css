@@ -3626,3 +3626,235 @@
     font-size: 12px;
   }
 }
+
+
+/* Duration Cell with Three-Dot Menu */
+.duration-cell-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.duration-text {
+  flex: 1;
+}
+
+.more-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+
+.more-btn:hover {
+  background: var(--hover-bg);
+  color: var(--primary-color);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.more-btn i {
+  font-size: 14px;
+}
+
+/* Day Log History Modal */
+.day-log-history-modal-large {
+  background: var(--card-bg);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.day-log-table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.day-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.day-log-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--header-bg);
+  z-index: 10;
+}
+
+.day-log-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.day-log-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s ease;
+}
+
+.day-log-table tbody tr:hover {
+  background: var(--hover-bg);
+}
+
+.day-log-table td {
+  padding: 14px 16px;
+  color: var(--text-primary);
+}
+
+/* Day Log Table Columns */
+.th-log-id,
+.td-log-id {
+  width: 120px;
+}
+
+.th-user,
+.td-user {
+  width: 200px;
+}
+
+.th-log-date,
+.td-log-date {
+  width: 150px;
+}
+
+.th-start-time,
+.td-start-time {
+  width: 130px;
+}
+
+.th-end-time,
+.td-end-time {
+  width: 130px;
+}
+
+.th-duration,
+.td-duration {
+  width: 140px;
+}
+
+.th-actions,
+.td-actions {
+  width: 100px;
+  text-align: center;
+}
+
+/* Day Log Table Cell Styles */
+.log-id-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--primary-color-light);
+  color: var(--primary-color);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.task-title-text {
+  display: block;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.user-id {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.log-date,
+.created-date,
+.time-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.time-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--hover-bg);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.btn-icon-edit {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.btn-icon-edit:hover {
+  background: var(--primary-color-light);
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+.no-action-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  opacity: 0.5;
+}
+
+/* Dark Mode Adjustments for Day Log Modal */
+.dark-mode .day-log-history-modal-large {
+  background: #1e1e1e;
+}
+
+.dark-mode .day-log-table thead {
+  background: #2a2a2a;
+}
+
+.dark-mode .day-log-table tbody tr:hover {
+  background: #2a2a2a;
+}
+
+.dark-mode .log-id-badge {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+
+.dark-mode .more-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

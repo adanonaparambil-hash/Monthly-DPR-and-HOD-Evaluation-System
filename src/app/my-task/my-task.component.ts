@@ -837,12 +837,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             return 0;
           });
           
-          // Find and set the active task - Priority: RUNNING > PAUSED > CLOSED > Any task > None
-          const runningTask = this.tasks.find(t => t.status === 'RUNNING');
+          // Find and set the active task - ONLY from MY TASKS list (not from Assigned to Others)
+          // Priority: RUNNING > PAUSED > CLOSED > Any task from My Tasks > None
+          const myTasksOnly = this.convertActiveTasksToTasks(this.myTasksList);
+          const runningTask = myTasksOnly.find(t => t.status === 'RUNNING');
           if (runningTask) {
             this.activeTask = runningTask;
             this.hasActiveTask = true;
-            console.log('Active RUNNING task found:', runningTask.title || runningTask.category);
+            console.log('Active RUNNING task found in MY TASKS:', runningTask.title || runningTask.category);
             // Start the timer for the running task
             this.startActiveTaskTimer();
           } else {
@@ -852,40 +854,40 @@ export class MyTaskComponent implements OnInit, OnDestroy {
               this.activeTaskTimerInterval = null;
             }
             
-            const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
+            const pausedTask = myTasksOnly.find(t => t.status === 'PAUSED');
             if (pausedTask) {
               this.activeTask = pausedTask;
               this.hasActiveTask = true;
-              console.log('Active PAUSED task found:', pausedTask.title || pausedTask.category);
+              console.log('Active PAUSED task found in MY TASKS:', pausedTask.title || pausedTask.category);
               
               // Initialize timer display with today's logged hours for paused task
-              const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === pausedTask.id);
+              const taskData = this.myTasksList.find(t => t.taskId === pausedTask.id);
               if (taskData && taskData.todayLoggedHours) {
                 this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
                 this.updateActiveTaskTimerDisplay();
                 console.log('Paused task timer initialized:', this.activeTaskTimer);
               }
             } else {
-              const closedTask = this.tasks.find(t => t.status === 'CLOSED');
+              const closedTask = myTasksOnly.find(t => t.status === 'CLOSED');
               if (closedTask) {
                 this.activeTask = closedTask;
                 this.hasActiveTask = true;
-                console.log('Active CLOSED task found:', closedTask.title || closedTask.category);
+                console.log('Active CLOSED task found in MY TASKS:', closedTask.title || closedTask.category);
                 
                 // Initialize timer display with today's logged hours for closed task
-                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === closedTask.id);
+                const taskData = this.myTasksList.find(t => t.taskId === closedTask.id);
                 if (taskData && taskData.todayLoggedHours) {
                   this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
                   this.updateActiveTaskTimerDisplay();
                   console.log('Closed task timer initialized:', this.activeTaskTimer);
                 }
-              } else if (this.tasks.length > 0) {
-                this.activeTask = this.tasks[0];
+              } else if (myTasksOnly.length > 0) {
+                this.activeTask = myTasksOnly[0];
                 this.hasActiveTask = true;
-                console.log('Showing first available task:', this.activeTask.title || this.activeTask.category);
+                console.log('Showing first available task from MY TASKS:', this.activeTask.title || this.activeTask.category);
                 
                 // Initialize timer display with today's logged hours
-                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
+                const taskData = this.myTasksList.find(t => t.taskId === this.activeTask?.id);
                 if (taskData && taskData.todayLoggedHours) {
                   this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
                   this.updateActiveTaskTimerDisplay();
@@ -894,7 +896,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
               } else {
                 this.activeTask = null;
                 this.hasActiveTask = false;
-                console.log('No tasks found in list');
+                console.log('No tasks found in MY TASKS list');
               }
             }
           }
@@ -962,12 +964,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             return 0;
           });
           
-          // Find and set the active task - Priority: RUNNING > PAUSED > CLOSED > Any task > None
-          const runningTask = this.tasks.find(t => t.status === 'RUNNING');
+          // Find and set the active task - ONLY from MY TASKS list (not from Assigned to Others)
+          // Priority: RUNNING > PAUSED > CLOSED > Any task from My Tasks > None
+          const myTasksOnly = this.convertActiveTasksToTasks(this.myTasksList);
+          const runningTask = myTasksOnly.find(t => t.status === 'RUNNING');
           if (runningTask) {
             this.activeTask = runningTask;
             this.hasActiveTask = true;
-            console.log('Active RUNNING task found:', runningTask.title || runningTask.category);
+            console.log('Active RUNNING task found in MY TASKS:', runningTask.title || runningTask.category);
             // Start the timer for the running task
             this.startActiveTaskTimer();
           } else {
@@ -977,40 +981,40 @@ export class MyTaskComponent implements OnInit, OnDestroy {
               this.activeTaskTimerInterval = null;
             }
             
-            const pausedTask = this.tasks.find(t => t.status === 'PAUSED');
+            const pausedTask = myTasksOnly.find(t => t.status === 'PAUSED');
             if (pausedTask) {
               this.activeTask = pausedTask;
               this.hasActiveTask = true;
-              console.log('Active PAUSED task found:', pausedTask.title || pausedTask.category);
+              console.log('Active PAUSED task found in MY TASKS:', pausedTask.title || pausedTask.category);
               
               // Initialize timer display with today's logged hours for paused task
-              const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === pausedTask.id);
+              const taskData = this.myTasksList.find(t => t.taskId === pausedTask.id);
               if (taskData && taskData.todayLoggedHours) {
                 this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
                 this.updateActiveTaskTimerDisplay();
                 console.log('Paused task timer initialized:', this.activeTaskTimer);
               }
             } else {
-              const closedTask = this.tasks.find(t => t.status === 'CLOSED');
+              const closedTask = myTasksOnly.find(t => t.status === 'CLOSED');
               if (closedTask) {
                 this.activeTask = closedTask;
                 this.hasActiveTask = true;
-                console.log('Active CLOSED task found:', closedTask.title || closedTask.category);
+                console.log('Active CLOSED task found in MY TASKS:', closedTask.title || closedTask.category);
                 
                 // Initialize timer display with today's logged hours for closed task
-                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === closedTask.id);
+                const taskData = this.myTasksList.find(t => t.taskId === closedTask.id);
                 if (taskData && taskData.todayLoggedHours) {
                   this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
                   this.updateActiveTaskTimerDisplay();
                   console.log('Closed task timer initialized:', this.activeTaskTimer);
                 }
-              } else if (this.tasks.length > 0) {
-                this.activeTask = this.tasks[0];
+              } else if (myTasksOnly.length > 0) {
+                this.activeTask = myTasksOnly[0];
                 this.hasActiveTask = true;
-                console.log('Showing first available task:', this.activeTask.title || this.activeTask.category);
+                console.log('Showing first available task from MY TASKS:', this.activeTask.title || this.activeTask.category);
                 
                 // Initialize timer display with today's logged hours
-                const taskData = [...this.myTasksList, ...this.assignedByMeList].find(t => t.taskId === this.activeTask?.id);
+                const taskData = this.myTasksList.find(t => t.taskId === this.activeTask?.id);
                 if (taskData && taskData.todayLoggedHours) {
                   this.activeTaskElapsedSeconds = Math.floor(taskData.todayLoggedHours * 60);
                   this.updateActiveTaskTimerDisplay();
@@ -1019,7 +1023,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
               } else {
                 this.activeTask = null;
                 this.hasActiveTask = false;
-                console.log('No tasks found in list');
+                console.log('No tasks found in MY TASKS list');
               }
             }
           }

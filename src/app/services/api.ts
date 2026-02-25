@@ -7,7 +7,7 @@ import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingReques
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
-import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest,UserDailyLogHistoryRequest ,CustomFieldDtolist} from '../models/TimeSheetDPR.model';
+import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest,UserDailyLogHistoryRequest ,CustomFieldDtolist,DecreaseTimeLogRequest,UserTaskDayLogHistoryRequest} from '../models/TimeSheetDPR.model';
 
 
 @Injectable({
@@ -425,6 +425,17 @@ export class Api {
           responseType: 'blob' 
       });
   }
+
+
+  getUserTaskDayLogHistory(request: UserTaskDayLogHistoryRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetUserTaskDayLogHistory`, request);
+  }
+
+  decreaseTimeLog(request: DecreaseTimeLogRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/DailyTimeSheet/DecreaseTimeLogOnly`, request);
+  }
+
+
 
 
   ////////////////// un wanted ///////////////////////////

@@ -133,6 +133,12 @@ export class MyLoggedHoursComponent implements OnInit {
   openBreaks: any[] = [];
   isLoadingBreaks = false;
 
+  // Day Log History Modal
+  showDayLogHistoryModal = false;
+  dayLogHistory: any[] = [];
+  isLoadingDayLogs = false;
+  selectedRecordForDayLog: LoggedHour | null = null;
+
   // Manage Fields Modal
   showManageFieldsModal = false;
   customFields: any[] = [];
@@ -1387,6 +1393,241 @@ export class MyLoggedHoursComponent implements OnInit {
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
+  }
+
+  // Day Log History Modal Methods
+  openDayLogHistoryModal(record: LoggedHour, event: Event) {
+    event.stopPropagation(); // Prevent opening task modal
+    console.log('Opening Day Log History modal for record:', record);
+    
+    this.selectedRecordForDayLog = record;
+    this.showDayLogHistoryModal = true;
+    this.loadDayLogHistory(record);
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeDayLogHistoryModal() {
+    this.showDayLogHistoryModal = false;
+    this.selectedRecordForDayLog = null;
+    this.dayLogHistory = [];
+    
+    // Restore body scroll
+    document.body.style.overflow = '';
+  }
+
+  loadDayLogHistory(record: LoggedHour) {
+    this.isLoadingDayLogs = true;
+    
+    // Extract taskId (remove 'TSK-' prefix if present)
+    const taskIdStr = record.taskId?.replace('TSK-', '') || '0';
+    const taskId = parseInt(taskIdStr, 10);
+    
+    // Get userId from record or current user
+    const userId = record.userId || this.currentUserId;
+    
+    // Get logDate from record
+    const logDate = record.date;
+    
+    console.log('Loading day log history with params:', {
+      userId,
+      taskId,
+      logDate
+    });
+    
+    const request = {
+      userId: userId,
+      taskId: taskId,
+      logDate: logDate
+    };
+    
+    this.api.getUserTaskDayLogHistory(request).subscribe({
+      next: (response: any) => {
+        console.log('Day log history response:', response);
+        
+        if (response && response.success && response.data) {
+          this.dayLogHistory = response.data;
+          console.log('Loaded day log history:', this.dayLogHistory.length, 'entries');
+        } else {
+          this.dayLogHistory = [];
+          console.warn('No day log history data found');
+        }
+        
+        this.isLoadingDayLogs = false;
+      },
+      error: (error: any) => {
+        console.error('Error loading day log history:', error);
+        this.dayLogHistory = [];
+        this.isLoadingDayLogs = false;
+        this.toasterService.showError('Error', 'Failed to load day log history');
+      }
+    });
+  }
+
+  formatLogDate(dateTime: string | Date): string {
+    if (!dateTime) return 'N/A';
+    
+    const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+    
+    // Format as: Feb 24, 2026 1:40 PM
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  formatLogDateOnly(dateTime: string | Date): string {
+    if (!dateTime) return 'N/A';
+    
+    const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+    
+    // Format as: Feb 24, 2026 (date only, no time)
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  formatTimeOnly(timeString: string | Date): string {
+    if (!timeString) return 'N/A';
+    
+    const date = typeof timeString === 'string' ? new Date(timeString) : timeString;
+    
+    // Format as: 1:40 PM (time only)
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  canEditLog(log: any): boolean {
+    // User can only edit their own logs
+    // Compare logged-in user ID with the log's user ID
+    return log.userId === this.currentUserId;
+  }
+
+  editDayLog(log: any) {
+    console.log('Edit day log:', log);
+    
+    const currentMinutes = log.minutesSpent || 0;
+    
+    // Show SweetAlert with input for new minutes
+    Swal.fire({
+      title: 'Edit Time Log',
+      html: `
+        <div style="text-align: left; margin-bottom: 15px;">
+          <p style="margin-bottom: 10px;"><strong>Current Duration:</strong> ${log.duration} (${currentMinutes} minutes)</p>
+          <p style="margin-bottom: 10px; color: #666;">You can only reduce the time, not increase it.</p>
+        </div>
+        <input id="swal-input-minutes" class="swal2-input" type="number" 
+               placeholder="Enter new minutes" 
+               min="0" 
+               max="${currentMinutes}" 
+               value="${currentMinutes}"
+               style="width: 80%; margin: 10px auto;">
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Update',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6366f1',
+      cancelButtonColor: '#6b7280',
+      preConfirm: () => {
+        const input = document.getElementById('swal-input-minutes') as HTMLInputElement;
+        const newMinutes = parseInt(input.value, 10);
+        
+        // Validation
+        if (isNaN(newMinutes) || newMinutes < 0) {
+          Swal.showValidationMessage('Please enter a valid number of minutes');
+          return false;
+        }
+        
+        if (newMinutes > currentMinutes) {
+          Swal.showValidationMessage(`You can only reduce time. Maximum is ${currentMinutes} minutes`);
+          return false;
+        }
+        
+        if (newMinutes === currentMinutes) {
+          Swal.showValidationMessage('Please enter a different value');
+          return false;
+        }
+        
+        return newMinutes;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value !== undefined) {
+        const newMinutes = result.value;
+        this.updateTimeLog(log, newMinutes);
+      }
+    });
+  }
+
+  updateTimeLog(log: any, newMinutes: number) {
+    const request = {
+      timeLogId: log.timeLogId,
+      newMinutes: newMinutes,
+      userId: log.userId
+    };
+    
+    console.log('Updating time log with request:', request);
+    
+    // Show loading
+    Swal.fire({
+      title: 'Updating...',
+      text: 'Please wait while we update the time log',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+    this.api.decreaseTimeLog(request).subscribe({
+      next: (response: any) => {
+        console.log('Time log update response:', response);
+        
+        if (response && response.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Updated!',
+            text: 'Time log has been updated successfully',
+            confirmButtonColor: '#6366f1',
+            timer: 2000
+          });
+          
+          // Refresh the day log history modal
+          if (this.selectedRecordForDayLog) {
+            this.loadDayLogHistory(this.selectedRecordForDayLog);
+          }
+          
+          // Refresh the main page listing
+          this.applyFilters();
+          
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: response?.message || 'Failed to update time log',
+            confirmButtonColor: '#6366f1'
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error updating time log:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while updating the time log',
+          confirmButtonColor: '#6366f1'
+        });
+      }
+    });
   }
 
   // Manage Fields Modal Methods

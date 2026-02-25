@@ -290,8 +290,34 @@ export interface CustomFieldDtolist {
   fieldId?: number | null;
   fieldName: string;
   fieldType: string;
-  isActive: string;      // default "Y"
-  isMandatory: string;   // default "N"
+  isActive: string;   
+  isMandatory: string;   
   user: string;
   options: CustomFieldOption[];
+}
+
+
+export interface UserTaskDayLogHistoryRequest {
+  userId?: string;
+  taskId?: number;
+  logDate?: string; 
+}
+
+export interface UserTaskDayLogHistoryResponse {
+  timeLogId?: number;
+  taskId?: number;
+  taskTitle?: string;
+  userId?: string;
+  userName?: string;
+  logDate?: string; 
+  minutesSpent?: number;
+  duration?: string;
+  startTime: string; 
+  endTime: string; 
+}
+
+export interface DecreaseTimeLogRequest {
+  timeLogId?: number;
+  newMinutes?: number;
+  userId?: string;
 }
