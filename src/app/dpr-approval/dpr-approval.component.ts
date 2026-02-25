@@ -404,27 +404,45 @@ export class DprApprovalComponent implements OnInit {
         if (response.success && response.data) {
           // Map the API response to DPRLog format
           // API returns: data.records (array) and data.totalCount (number)
-          this.displayedLogs = response.data.records?.map((item: any) => ({
-            id: item.approvalId?.toString() || item.taskId?.toString(),
-            taskId: item.taskId, // Store taskId separately for approval
-            categoryId: item.categoryID || item.categoryId, // Store categoryId from API
-            userId: item.userId || item.empId || item.employeeId || '', // Store userId from API
-            date: this.formatDisplayDate(item.logDate),
-            project: item.project || 'N/A',
-            projectType: 'internal',
-            taskTitle: item.taskTitle || 'No Title',
-            taskDescription: item.dailyRemarks || item.taskDescription || 'No Description',
-            category: item.category || 'N/A',
-            categoryType: 'feature',
-            hours: this.formatHours(item.hours),
-            status: item.status?.toLowerCase() || 'pending',
-            isSelected: false
-          })) || [];
+          this.displayedLogs = response.data.records?.map((item: any) => {
+            // Extract userId - try multiple possible field names from API
+            const userId = item.userId || item.empId || item.employeeId || item.UserId || item.EmpId || '';
+            
+            // If still no userId, use the selected user's ID as fallback
+            const finalUserId = userId || this.selectedUser?.id || '';
+            
+            console.log('Mapping approval record:', {
+              approvalId: item.approvalId,
+              taskId: item.taskId,
+              userId: finalUserId,
+              rawUserId: item.userId,
+              rawEmpId: item.empId,
+              rawEmployeeId: item.employeeId,
+              selectedUserId: this.selectedUser?.id
+            });
+            
+            return {
+              id: item.approvalId?.toString() || item.taskId?.toString(),
+              taskId: item.taskId, // Store taskId separately for approval
+              categoryId: item.categoryID || item.categoryId, // Store categoryId from API
+              userId: finalUserId, // Store userId from API or fallback to selected user
+              date: this.formatDisplayDate(item.logDate),
+              project: item.project || 'N/A',
+              projectType: 'internal',
+              taskTitle: item.taskTitle || 'No Title',
+              taskDescription: item.dailyRemarks || item.taskDescription || 'No Description',
+              category: item.category || 'N/A',
+              categoryType: 'feature',
+              hours: this.formatHours(item.hours),
+              status: item.status?.toLowerCase() || 'pending',
+              isSelected: false
+            };
+          }) || [];
 
           this.totalRecords = response.data.totalCount || 0;
           this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
           
-          console.log('Loaded approval logs:', this.displayedLogs);
+          console.log('Loaded approval logs:', this.displayedLogs.length, 'records');
           console.log('Total records:', this.totalRecords);
         } else {
           console.warn('API response success is false or no data:', response);
@@ -785,32 +803,35 @@ export class DprApprovalComponent implements OnInit {
       return;
     }
 
-    // Use the record's userId instead of session userId
-    // This is important for viewing other users' tasks in DPR Approval
+    // IMPORTANT: Use the record's userId (from the selected employee record)
+    // NOT the session userId (which is the HOD/approver)
     const recordUserId = log.userId || '';
     
-    // Fallback to session userId if record doesn't have userId
-    const currentUser = this.sessionService.getCurrentUser();
-    const sessionUserId = currentUser?.empId || currentUser?.employeeId || '';
-    const userId = recordUserId || sessionUserId;
+    if (!recordUserId) {
+      console.error('No userId found in log record:', log);
+      // Fallback to selected user's ID if log doesn't have userId
+      const userId = this.selectedUser?.id || '';
+      console.warn('Using selected user ID as fallback:', userId);
+      this.selectedUserIdForModal = userId;
+    } else {
+      console.log('Using record userId:', recordUserId);
+      this.selectedUserIdForModal = recordUserId;
+    }
     
     // Use categoryId directly from the log (from API response)
-    // Fallback to looking it up by name if not available
     const categoryId = log.categoryId || this.getCategoryIdFromName(log.category);
     
     console.log('Opening task details modal from DPR Approval:', {
       taskId: taskId,
-      userId: userId,
+      userId: this.selectedUserIdForModal,
       recordUserId: recordUserId,
-      sessionUserId: sessionUserId,
+      selectedUserFromList: this.selectedUser?.id,
       categoryId: categoryId,
-      categoryIdFromLog: log.categoryId,
-      category: log.category
+      logData: log
     });
     
     // Set properties for standalone modal component
     this.selectedTaskIdForModal = taskId;
-    this.selectedUserIdForModal = userId;
     this.selectedCategoryIdForModal = categoryId || 0;
     
     // Show the modal
