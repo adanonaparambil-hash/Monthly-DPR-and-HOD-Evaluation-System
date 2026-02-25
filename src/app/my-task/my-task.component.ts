@@ -1359,12 +1359,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       );
     }
     
-    // Sort tasks: RUNNING tasks first, then others
-    tasksToFilter.sort((a, b) => {
-      if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
-      if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
-      return 0;
-    });
+    // Sort tasks: AUTO CLOSED first, then RUNNING, then others
+    this.sortTasksByPriority(tasksToFilter);
     
     return tasksToFilter;
   }
@@ -3591,6 +3587,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return `${hours}h`;
     }
     return `${hours}h ${mins}m`;
+  }
+
+  // Sort tasks with priority: AUTO CLOSED first, then RUNNING, then others
+  sortTasksByPriority(tasks: Task[]): Task[] {
+    return tasks.sort((a, b) => {
+      // AUTO CLOSED tasks come first
+      if (a.status === 'AUTO CLOSED' && b.status !== 'AUTO CLOSED') return -1;
+      if (a.status !== 'AUTO CLOSED' && b.status === 'AUTO CLOSED') return 1;
+      
+      // Then RUNNING tasks
+      if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
+      if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
+      
+      return 0;
+    });
   }
 
   // Format date string for input field (YYYY-MM-DD format)
