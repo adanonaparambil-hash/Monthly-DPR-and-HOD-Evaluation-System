@@ -134,6 +134,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   hasActiveTask = false;
   activeTask: Task | null = null;
 
+  // AUTO CLOSED tasks blocking
+  autoClosedTaskCount = 0;
+  isBlockedByAutoClosedTasks = false;
+
   // Timer and stats - will be updated from API
   activeTaskTimer = '00:00:00';
   punchedHours = '00:00:00';
@@ -373,6 +377,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
     // Load active tasks from API - this will set the active task if one is running
     this.loadActiveTasks();
+    
+    // Check AUTO CLOSED tasks count
+    this.checkAutoClosedTasksCount();
   }
 
   // Load Employee Master List from API
@@ -1405,6 +1412,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   startTask(taskId: number) {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Action Blocked',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s).<br>Please close them before starting any task.`,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    
     // Get current user
     const currentUser = this.sessionService.getCurrentUser();
     const userId = currentUser?.empId || currentUser?.employeeId || '';
@@ -1439,6 +1458,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           
           // Reload active tasks to get latest updates
           this.loadActiveTasks();
+          
+          // Recheck AUTO CLOSED count after starting
+          this.checkAutoClosedTasksCount();
         } else {
           console.error('Failed to start task:', response?.message);
           this.toasterService.showError('Start Failed', response?.message || 'Failed to start task. Please try again.');
@@ -1453,6 +1475,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   pauseTask(taskId: number) {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before pausing any tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
     // Get current user
     const currentUser = this.sessionService.getCurrentUser();
     const userId = currentUser?.empId || currentUser?.employeeId || '';
@@ -1489,6 +1523,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           
           // Reload active tasks to get latest updates
           this.loadActiveTasks();
+          
+          // Recheck AUTO CLOSED count after pausing
+          this.checkAutoClosedTasksCount();
         } else {
           console.error('Failed to pause task:', response?.message);
           this.toasterService.showError('Pause Failed', response?.message || 'Failed to pause task. Please try again.');
@@ -1540,6 +1577,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           
           // Reload active tasks to get latest updates
           this.loadActiveTasks();
+          
+          // Recheck AUTO CLOSED count after stopping
+          this.checkAutoClosedTasksCount();
         } else {
           console.error('Failed to stop task:', response?.message);
           this.toasterService.showError('Stop Failed', response?.message || 'Failed to stop task. Please try again.');
@@ -1711,6 +1751,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Modal methods
   openCreateTaskModal() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Action Blocked',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s).<br>Please close them before creating a new task.`,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    
     this.showSelectTaskModal = true;
     document.body.style.overflow = 'hidden';
     
@@ -1864,6 +1916,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   startBreak() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Action Blocked',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s).<br>Please close them before starting a break.`,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    
     if (!this.selectedBreakType) return;
 
     // Get current user
@@ -2269,6 +2333,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   openManageTasksModal() {
     this.showManageTasksModal = true;
     this.isAddingNewCategory = false;
+    
+    // Set default department filter to logged-in user's department
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userDeptId = currentUser.departmentID || currentUser.deptId || currentUser.departmentId;
+    
+    if (userDeptId && this.departmentMasterList.length > 0) {
+      const userDept = this.departmentMasterList.find(dept => dept.departmentId === userDeptId);
+      if (userDept) {
+        this.selectedDepartmentFilter = userDept.deptName;
+        console.log('Default department filter set to:', userDept.deptName);
+      } else {
+        this.selectedDepartmentFilter = 'ALL';
+      }
+    } else {
+      this.selectedDepartmentFilter = 'ALL';
+    }
+    
     document.body.style.overflow = 'hidden';
   }
 
@@ -2293,14 +2374,16 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Enable editing for this category
     category.isEditing = true;
     
-    // Debug: Log the category being edited
+    // Debug: Log the category being edited with all fields
     console.log('Editing category:', {
       categoryId: category.categoryId,
       categoryName: category.categoryName,
       departmentId: category.departmentId,
       departmentName: category.departmentName,
-      sequenceNumber: category.sequenceNumber
+      sequenceNumber: category.sequenceNumber,
+      estimatedHours: category.sequenceNumber // Show as estimatedHours for clarity
     });
+    console.log('Full category object:', category);
   }
 
   // Save edited category
@@ -2326,16 +2409,19 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             category.isEditing = false;
             console.log('Category updated successfully:', response);
             
+            // Show success toaster
+            this.toasterService.showSuccess('Success', 'Task category updated successfully');
+            
             // Reload task categories to get fresh data
             this.loadTaskCategories();
           } else {
             console.error('Failed to update category:', response?.message);
-            alert('Failed to update category: ' + (response?.message || 'Unknown error'));
+            this.toasterService.showError('Error', 'Failed to update category: ' + (response?.message || 'Unknown error'));
           }
         },
         error: (error: any) => {
           console.error('Error updating category:', error);
-          alert('Error updating category. Please try again.');
+          this.toasterService.showError('Error', 'Error updating category. Please try again.');
         }
       });
     }
@@ -2366,7 +2452,29 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Show add new category form
   showAddCategoryForm() {
     this.isAddingNewCategory = true;
-    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '' };
+    
+    // Set default department to logged-in user's department
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userDeptId = currentUser.departmentID || currentUser.deptId || currentUser.departmentId;
+    
+    if (userDeptId && this.departmentMasterList.length > 0) {
+      const userDept = this.departmentMasterList.find(dept => dept.departmentId === userDeptId);
+      if (userDept) {
+        this.newTaskCategory = { 
+          categoryId: 0, 
+          categoryName: '', 
+          departmentId: userDept.departmentId, 
+          departmentName: userDept.deptName,
+          sequenceNumber: 0
+        };
+        console.log('Default department set for new category:', userDept.deptName);
+      } else {
+        this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+      }
+    } else {
+      this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+    }
+    
     this.cancelAllEdits();
   }
 
@@ -2407,6 +2515,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           if (response && response.success) {
             console.log('Category created successfully:', response);
             
+            // Show success toaster
+            this.toasterService.showSuccess('Success', 'Task category created successfully');
+            
             // Reset form
             this.isAddingNewCategory = false;
             this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
@@ -2415,12 +2526,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             this.loadTaskCategories();
           } else {
             console.error('Failed to create category:', response?.message);
-            alert('Failed to create category: ' + (response?.message || 'Unknown error'));
+            this.toasterService.showError('Error', 'Failed to create category: ' + (response?.message || 'Unknown error'));
           }
         },
         error: (error: any) => {
           console.error('Error creating category:', error);
-          alert('Error creating category. Please try again.');
+          this.toasterService.showError('Error', 'Error creating category. Please try again.');
         }
       });
     }
@@ -2592,13 +2703,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     
     // Always treat as NEW task assignment from Select Task modal
     // Task details will be loaded after saving
-    console.log('Opening modal for new task assignment with categoryId:', category.categoryId);
+    console.log('Opening modal for new task assignment with categoryId:', category.categoryId, 'estimatedHours:', category.sequenceNumber);
     
     // Set properties for standalone modal component
     this.selectedTaskIdForModal = 0; // 0 indicates new task
     this.selectedUserIdForModal = userId;
     this.selectedCategoryIdForModal = category.categoryId;
     this.selectedCategoryNameForModal = category.categoryName; // Pass category name for new tasks
+    this.selectedTaskEstimatedHours = category.sequenceNumber || 0; // Pass estimated hours from category
     
     // Hide the Select Task modal
     this.showSelectTaskModal = false;
@@ -2612,7 +2724,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Add task to My Tasks list
   addTaskToMyList(category: TaskCategory): void {
-    console.log('Adding task to My Tasks:', category.categoryName);
+    console.log('Adding task to My Tasks:', category.categoryName, 'estimatedHours:', category.sequenceNumber);
     
     // Get current user from session
     const currentUser = this.sessionService.getCurrentUser();
@@ -2638,8 +2750,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       createdBy: createdBy,
       assignees: [createdBy], // Assign to self by default
       customFields: [], // Empty custom fields
-      estimatedHours: 0
+      estimatedHours: category.sequenceNumber || 0 // Use category's estimated hours
     };
+    
+    console.log('Task save request with estimatedHours:', taskSaveRequest.estimatedHours);
     
     // Call the API to save the task
     this.api.saveTaskBulk(taskSaveRequest).subscribe({
@@ -4062,8 +4176,211 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Start active task from header
+  startActiveTask() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Action Blocked',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s).<br>Please close them before starting any task.`,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    
+    if (!this.activeTask) {
+      this.toasterService.showError('Error', 'No active task to start');
+      return;
+    }
+
+    // Start the live timer
+    this.startActiveTaskTimer();
+
+    // Call the existing startTask method
+    this.startTask(this.activeTask.id);
+  }
+
+  // Check if there are AUTO CLOSED tasks in MY TASKS list
+  hasAutoClosedTasks(): boolean {
+    return this.myTasksList.some(task => 
+      task.status?.toUpperCase() === 'AUTO CLOSED' || 
+      task.status?.toUpperCase() === 'AUTO-CLOSED' ||
+      task.status?.toUpperCase() === 'AUTOCLOSED'
+    );
+  }
+
+  // Get count of AUTO CLOSED tasks
+  getAutoClosedTasksCount(): number {
+    return this.myTasksList.filter(task => 
+      task.status?.toUpperCase() === 'AUTO CLOSED' || 
+      task.status?.toUpperCase() === 'AUTO-CLOSED' ||
+      task.status?.toUpperCase() === 'AUTOCLOSED'
+    ).length;
+  }
+
+  // Check AUTO CLOSED tasks count from API
+  checkAutoClosedTasksCount() {
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    if (!userId) {
+      console.warn('No user ID found for AUTO CLOSED check');
+      return;
+    }
+    
+    this.api.GetAutoClosedTaskCount(userId).subscribe({
+      next: (response: any) => {
+        console.log('AUTO CLOSED task count response:', response);
+        
+        if (response && response.success) {
+          this.autoClosedTaskCount = response.data || 0;
+          this.isBlockedByAutoClosedTasks = this.autoClosedTaskCount > 0;
+          
+          console.log('AUTO CLOSED count:', this.autoClosedTaskCount, 'Blocked:', this.isBlockedByAutoClosedTasks);
+          
+          if (this.isBlockedByAutoClosedTasks) {
+            console.warn(`User is blocked from starting tasks due to ${this.autoClosedTaskCount} AUTO CLOSED task(s)`);
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error checking AUTO CLOSED task count:', error);
+        // On error, don't block the user
+        this.autoClosedTaskCount = 0;
+        this.isBlockedByAutoClosedTasks = false;
+      }
+    });
+  }
+
+  // Scroll to AUTO CLOSED tasks in the listing
+  scrollToAutoClosedTasks() {
+    // Switch to MY TASKS tab
+    this.activeTab = 'MY TASKS';
+    
+    // Scroll to task listing section
+    setTimeout(() => {
+      const taskListingElement = document.querySelector('.task-listing-section');
+      if (taskListingElement) {
+        taskListingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+    
+    this.toasterService.showInfo('Auto-Closed Tasks', 'Showing auto-closed tasks in the listing below');
+  }
+
+  // Close all AUTO CLOSED tasks
+  closeAllAutoClosedTasks() {
+    const autoClosedTasks = this.myTasksList.filter(task => 
+      task.status?.toUpperCase() === 'AUTO CLOSED' || 
+      task.status?.toUpperCase() === 'AUTO-CLOSED' ||
+      task.status?.toUpperCase() === 'AUTOCLOSED'
+    );
+
+    if (autoClosedTasks.length === 0) {
+      this.toasterService.showInfo('No Tasks', 'No auto-closed tasks to close');
+      return;
+    }
+
+    // Show confirmation
+    Swal.fire({
+      title: 'Close All Auto-Closed Tasks?',
+      html: `
+        <p>You are about to close <strong>${autoClosedTasks.length}</strong> auto-closed task${autoClosedTasks.length > 1 ? 's' : ''}.</p>
+        <p style="color: #666; margin-top: 10px;">This will change their status to "CLOSED".</p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Close All',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6366f1',
+      cancelButtonColor: '#6b7280'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.executeCloseAllAutoClosedTasks(autoClosedTasks);
+      }
+    });
+  }
+
+  // Execute closing all AUTO CLOSED tasks
+  executeCloseAllAutoClosedTasks(tasks: ActiveTaskDto[]) {
+    let completedCount = 0;
+    let failedCount = 0;
+
+    // Show loading
+    Swal.fire({
+      title: 'Closing Tasks...',
+      html: `Processing ${tasks.length} task${tasks.length > 1 ? 's' : ''}...`,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Process each task
+    const promises = tasks.map(task => {
+      const timerRequest = {
+        taskId: task.taskId,
+        userId: this.sessionService.getCurrentUser()?.empId || '',
+        action: 'CLOSED'
+      };
+
+      return this.api.executeTimer(timerRequest).toPromise()
+        .then((response: any) => {
+          if (response && response.success) {
+            completedCount++;
+          } else {
+            failedCount++;
+          }
+        })
+        .catch(() => {
+          failedCount++;
+        });
+    });
+
+    // Wait for all promises to complete
+    Promise.all(promises).then(() => {
+      // Reload active tasks
+      this.loadActiveTasks();
+
+      // Show result
+      if (failedCount === 0) {
+        Swal.fire({
+          icon: 'success',
+          title: 'All Tasks Closed!',
+          text: `Successfully closed ${completedCount} task${completedCount > 1 ? 's' : ''}`,
+          confirmButtonColor: '#6366f1',
+          timer: 2000
+        });
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Partially Completed',
+          html: `
+            <p>Closed: ${completedCount} task${completedCount > 1 ? 's' : ''}</p>
+            <p>Failed: ${failedCount} task${failedCount > 1 ? 's' : ''}</p>
+          `,
+          confirmButtonColor: '#6366f1'
+        });
+      }
+    });
+  }
+
   // Pause active task from header
   pauseActiveTask() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before pausing any tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
     if (!this.activeTask) {
       this.toasterService.showError('Error', 'No active task to pause');
       return;
@@ -4105,6 +4422,18 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Resume active task from header
   resumeActiveTask() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Action Blocked',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s).<br>Please close them before resuming any task.`,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    
     if (!this.activeTask) {
       this.toasterService.showError('Error', 'No active task to resume');
       return;
@@ -4167,108 +4496,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Stop the live timer
-    this.stopActiveTaskTimer();
-
-    // Save active task to local variable to avoid null issues
-    const taskToStop = this.activeTask;
+    // Don't stop the timer or change header status
+    // Just open the modal for the user to stop the task
     
-    // Open the task details modal with status set to CLOSED
-    this.selectedTask = taskToStop;
-    this.selectedTaskStatus = 'closed';
-    this.selectedTaskDetailStatus = 'not-closed';
-    
-    // Get current user
-    const currentUser = this.sessionService.getCurrentUser();
-    const userId = currentUser?.empId || currentUser?.employeeId || '';
-    
-    // Get category ID
-    let categoryId = taskToStop.categoryId || this.getCategoryIdFromTask(taskToStop);
-    
-    // Show the modal
-    this.showTaskDetailsModal = true;
-    
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'relative';
-    document.body.style.zIndex = '1';
-    
-    // Load task details from API
-    this.api.getTaskById(taskToStop.id, userId, categoryId || 0).subscribe({
-      next: (response: any) => {
-        if (response && response.success && response.data) {
-          const taskDetails = response.data;
-          
-          // Bind all values from API response
-          this.selectedTaskId = taskDetails.taskId?.toString() || taskToStop.id?.toString() || '';
-          this.selectedTaskCategory = taskDetails.categoryName || taskToStop.category;
-          this.editableTaskTitle = taskDetails.taskTitle || taskToStop.title;
-          this.editableTaskDescription = taskDetails.taskDescription || taskToStop.description || '';
-          this.selectedTaskProgress = taskDetails.progressPercentage || taskDetails.progress || 0;
-          this.taskProgress = this.selectedTaskProgress;
-          
-          // Format timers
-          this.selectedTaskRunningTimer = this.formatMinutesToTime(taskDetails.todayTotalMinutes || 0);
-          this.selectedTaskTotalHours = this.formatMinutesToTime(taskDetails.totalTimeMinutes || 0);
-          
-          // Set status to CLOSED
-          this.selectedTaskDetailStatus = 'not-closed';
-          this.dailyRemarks = taskDetails.dailyRemarks || '';
-          
-          // Bind Project Metadata fields
-          this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
-          this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
-          this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
-          this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
-          
-          // Load and bind custom fields from API response
-          if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
-            this.selectedCustomFields = taskDetails.customFields
-              .filter((field: any) => field.isMapped === 'Y')
-              .map((field: any) => {
-                // Parse options string to array
-                let optionsArray: string[] = [];
-                if (field.options && typeof field.options === 'string') {
-                  optionsArray = field.options.split(',').map((opt: string) => opt.trim());
-                } else if (Array.isArray(field.options)) {
-                  optionsArray = field.options;
-                }
-                
-                return {
-                  key: field.fieldName?.toLowerCase().replace(/\s+/g, '_') || `field_${field.fieldId}`,
-                  label: field.fieldName || 'Custom Field',
-                  type: this.mapFieldType(field.fieldType),
-                  description: `${field.fieldName} field`,
-                  options: optionsArray,
-                  fieldId: field.fieldId,
-                  isMapped: field.isMapped,
-                  value: field.savedValue || ''
-                };
-              });
-            
-            console.log('Custom fields loaded from stopped task:', this.selectedCustomFields.length, 'fields');
-          } else {
-            this.selectedCustomFields = [];
-          }
-          
-          // Update selected task object
-          if (this.selectedTask) {
-            this.selectedTask.progress = this.selectedTaskProgress;
-            this.selectedTask.status = 'CLOSED';
-          }
-          
-          // Load task files and comments
-          this.loadTaskFiles(taskToStop.id);
-          this.loadComments(taskToStop.id);
-        }
-      },
-      error: (error: any) => {
-        console.error('Error fetching task details:', error);
-        // Fallback to binding from task list data
-        this.bindTaskListData(taskToStop);
-        this.selectedTaskDetailStatus = 'not-closed';
-      }
-    });
+    // Open the task details modal
+    this.openTaskDetailsModal(this.activeTask);
   }
 
   // Pause task from modal

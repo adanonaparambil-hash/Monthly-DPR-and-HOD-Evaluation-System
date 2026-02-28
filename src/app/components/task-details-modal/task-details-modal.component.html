@@ -23,12 +23,12 @@
         @if (taskId && taskId > 0) {
           <div class="status-dropdown-container">
             <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" (ngModelChange)="onStatusChange($event)" [disabled]="isViewOnly || taskId === 0">
-              <option value="not-started">Not Started</option>
+              <option value="not-started" disabled>Not Started</option>
               <option value="not-closed">Closed</option>
               <option value="running">Running</option>
               <option value="completed">Completed</option>
               <option value="pause">Pause</option>
-              <option value="auto-closed">Auto Closed</option>
+              <option value="auto-closed" disabled>Auto Closed</option>
             </select>
           </div>
         } @else {
@@ -62,6 +62,14 @@
                 <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
               </div>
               <div class="timer-buttons">
+                <!-- Show Start button when task is NOT STARTED -->
+                <button class="timer-btn start-btn" 
+                        *ngIf="selectedTaskDetailStatus === 'not-started'"
+                        (click)="startTaskFromModal()"
+                        title="Start Task">
+                  <i class="fas fa-play"></i>
+                </button>
+                
                 <!-- Show Pause button when task is RUNNING -->
                 <button class="timer-btn pause-btn" 
                         *ngIf="selectedTaskDetailStatus === 'running'"
@@ -213,10 +221,11 @@
                 type="text" 
                 class="remarks-input" 
                 [(ngModel)]="dailyRemarks"
+                (keyup.enter)="sendDailyRemarksAsComment()"
                 placeholder="Add today's progress notes or updates..."
                 maxlength="200"
               />
-              <button class="remarks-submit-btn" (click)="submitDailyRemarks()" [disabled]="!dailyRemarks.trim()" title="Submit Remarks">
+              <button class="remarks-submit-btn" (click)="sendDailyRemarksAsComment()" [disabled]="!dailyRemarks.trim()" title="Send to Comments">
                 <i class="fas fa-paper-plane"></i>
               </button>
             </div>
@@ -482,7 +491,7 @@
       <div class="comments-panel">
         <div class="comments-tabs">
           <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'"
-            (click)="setActiveSidebarTab('comments')">DAILY REMARKS</button>
+            (click)="setActiveSidebarTab('comments')">COMMENTS</button>
           <button class="comment-tab" [class.active]="activeSidebarTab === 'history'"
             (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
         </div>

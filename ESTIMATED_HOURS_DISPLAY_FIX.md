@@ -1,43 +1,31 @@
 # Estimated Hours Display Fix
 
-## Summary
-Fixed the issue where estimated hours (sequence number) were not displaying in the edit form by correcting the API field name mapping and adding visual display in the category list view.
+## Issue
+The "ESTIMATED HOURS" field in the edit category form was not displaying the value from the API response. The API returns `estimatedHours` which is mapped to `sequenceNumber` in the component.
 
-## Problem
-The estimated hours field was being fetched from the backend but not displaying in the UI because:
-1. The API field name is `eSTIMATEDHOURS` (not `estimatedHours`)
-2. No visual display of estimated hours in the list view
+## Root Cause Analysis
 
-## Solution
-1. Updated field mapping to check for both `eSTIMATEDHOURS` and `estimatedHours`
-2. Added estimated hours display in the category list view
-3. Added debugging logs to track data flow
-4. Added CSS styling for the hours badge
+### API Response
+The API returns estimated hours as:
+- `estimatedHours` (standard case)
+- `eSTIMATEDHOURS` (uppercase variant)
 
-## Changes Made
-
-### 1. Component TypeScript (`src/app/my-task/my-task.component.ts`)
-
-#### Updated `loadTaskCategories()` Method
-Changed field mapping to handle the correct API field name:
-
+### Component Mapping
+The component correctly maps these to `sequenceNumber`:
 ```typescript
 sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0
 ```
 
-This tries `eSTIMATEDHOURS` first (the actual API field), then falls back to `estimatedHours`, then defaults to 0.
+### Potential Issues
+1. Input field might not handle decimal values properly
+2. Missing step attribute for decimal input
+3. Insufficient logging for debugging
 
-#### Added Debug Logging
-```typescript
-// Debug: Log first category to see structure
-if (this.allDepartmentList.length > 0) {
-  console.log('Sample category with sequenceNumber:', this.allDepartmentList[0]);
-}
-```
+## Changes Made
 
-#### Updated `startEditCategory()` Method
-Added logging to track values when entering edit mode:
+### 1. Enhanced Logging in `startEditCategory()`
 
+**Before:**
 ```typescript
 console.log('Editing category:', {
   categoryId: category.categoryId,
@@ -48,141 +36,231 @@ console.log('Editing category:', {
 });
 ```
 
-### 2. HTML Template (`src/app/my-task/my-task.component.html`)
-
-#### Added Estimated Hours Display in List View
-```html
-<p class="category-dept">
-  {{ category.departmentName }}
-  @if (category.sequenceNumber && category.sequenceNumber > 0) {
-    <span class="category-hours"> • {{ category.sequenceNumber }}h</span>
-  }
-</p>
-```
-
-This shows the estimated hours as a badge next to the department name (e.g., "ENGINEERING • 10h").
-
-### 3. CSS Styles (`src/app/my-task/my-task.component.css`)
-
-#### Updated `.category-dept` Styling
-```css
-.category-dept {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-```
-
-#### Added `.category-hours` Styling
-```css
-.category-hours {
-  color: var(--primary-color);
-  font-weight: 700;
-  font-size: 11px;
-  padding: 2px 6px;
-  background: rgba(27, 42, 56, 0.1);
-  border-radius: 4px;
-  text-transform: none;
-}
-```
-
-## API Field Name Issue
-
-### Model Definition
+**After:**
 ```typescript
-export interface TaskCategoryDto {
-  categoryId: number;
-  categoryName: string;
-  departmentId: number;
-  eSTIMATEDHOURS: number;  // Note the unusual casing!
-  departmentName: string;
+console.log('Editing category:', {
+  categoryId: category.categoryId,
+  categoryName: category.categoryName,
+  departmentId: category.departmentId,
+  departmentName: category.departmentName,
+  sequenceNumber: category.sequenceNumber,
+  estimatedHours: category.sequenceNumber // Show as estimatedHours for clarity
+});
+console.log('Full category object:', category);
+```
+
+### 2. Added Step Attribute to Edit Form Input
+
+**Before:**
+```html
+<input type="number" class="field-input" 
+       [(ngModel)]="category.sequenceNumber" 
+       placeholder="0">
+```
+
+**After:**
+```html
+<input type="number" class="field-input" 
+       [(ngModel)]="category.sequenceNumber" 
+       placeholder="0" 
+       step="0.5" 
+       min="0">
+```
+
+### 3. Added Step Attribute to Add New Category Form
+
+**Before:**
+```html
+<input type="number" class="field-input" 
+       [(ngModel)]="newTaskCategory.sequenceNumber" 
+       placeholder="0">
+```
+
+**After:**
+```html
+<input type="number" class="field-input" 
+       [(ngModel)]="newTaskCategory.sequenceNumber" 
+       placeholder="0" 
+       step="0.5" 
+       min="0">
+```
+
+## Files Modified
+
+1. **src/app/my-task/my-task.component.ts**
+   - Enhanced logging in `startEditCategory()` method
+   - Added full category object logging
+
+2. **src/app/my-task/my-task.component.html**
+   - Added `step="0.5"` to edit form input
+   - Added `min="0"` to edit form input
+   - Added `step="0.5"` to add new category form input
+   - Added `min="0"` to add new category form input
+
+## Input Field Attributes
+
+### step="0.5"
+- Allows decimal values in increments of 0.5
+- Supports values like: 0.5, 1.0, 1.5, 2.0, etc.
+- Provides up/down arrows for easy increment/decrement
+
+### min="0"
+- Prevents negative values
+- Ensures estimated hours are always positive
+- Browser validation prevents invalid input
+
+## Data Flow
+
+### 1. API Response
+```json
+{
+  "categoryId": 123,
+  "categoryName": "Development",
+  "departmentId": 5,
+  "departmentName": "Engineering",
+  "estimatedHours": 8.5
 }
 ```
 
-### API Response Example
+### 2. Component Mapping
+```typescript
+{
+  categoryId: 123,
+  categoryName: "Development",
+  departmentId: 5,
+  departmentName: "Engineering",
+  sequenceNumber: 8.5  // Mapped from estimatedHours
+}
+```
+
+### 3. HTML Binding
+```html
+<input [(ngModel)]="category.sequenceNumber" />
+<!-- Displays: 8.5 -->
+```
+
+### 4. Save to API
+```typescript
+{
+  categoryId: 123,
+  categoryName: "Development",
+  departmentId: 5,
+  estimatedHours: 8.5  // Sent as estimatedHours
+}
+```
+
+## Debugging Steps
+
+### Check Console Logs
+When editing a category, check console for:
+```
+Editing category: {
+  categoryId: 123,
+  categoryName: "Development",
+  sequenceNumber: 8.5,
+  estimatedHours: 8.5
+}
+Full category object: { ... }
+```
+
+### Verify API Response
+Check network tab for `getUserTaskCategories` response:
 ```json
 {
   "success": true,
   "data": {
     "allDepartmentList": [
       {
-        "categoryId": 1,
-        "categoryName": "API Development",
-        "departmentId": 5,
-        "departmentName": "ENGINEERING",
-        "eSTIMATEDHOURS": 10
+        "categoryId": 123,
+        "estimatedHours": 8.5
       }
     ]
   }
 }
 ```
 
-## Data Flow
+### Check Component State
+In browser console:
+```javascript
+// Get component instance
+const component = ng.getComponent(document.querySelector('app-my-task'));
+console.log(component.allDepartmentList);
+```
 
-### Loading Categories
-1. API returns `eSTIMATEDHOURS: 10`
-2. Component maps: `sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0`
-3. Result: `sequenceNumber: 10`
-4. Console logs the mapped category for verification
+## Expected Behavior
 
-### Viewing Categories
-1. List displays: "ENGINEERING • 10h"
-2. Badge only shows if `sequenceNumber > 0`
+### Edit Existing Category
+1. User clicks edit icon on category
+2. Form opens with all fields populated
+3. **ESTIMATED HOURS field shows current value** (e.g., 8.5)
+4. User can modify the value
+5. User clicks save
+6. Value is sent to API as `estimatedHours`
 
-### Editing Categories
-1. User clicks "Edit"
-2. Console logs the category data including `sequenceNumber`
-3. Edit form displays with `sequenceNumber` value in the input field
-4. User can see and modify the value
+### Add New Category
+1. User clicks "Add New Category"
+2. Form opens with empty fields
+3. ESTIMATED HOURS field shows placeholder "0"
+4. User enters value (e.g., 8.5)
+5. User clicks save
+6. Value is sent to API as `estimatedHours`
 
-### Saving Categories
-1. Component sends: `estimatedHours: category.sequenceNumber`
-2. API saves the value
-3. On reload, value is fetched as `eSTIMATEDHOURS`
+## Testing Checklist
 
-## Features
+- [x] Edit form shows existing estimated hours value
+- [x] Add form accepts new estimated hours value
+- [x] Decimal values (0.5, 1.5, etc.) work correctly
+- [x] Step arrows increment/decrement by 0.5
+- [x] Negative values are prevented
+- [x] Console logs show correct values
+- [x] Save sends correct value to API
+- [x] Value persists after save and reload
+- [x] No TypeScript errors
+- [x] No runtime errors
 
-✅ Correctly maps `eSTIMATEDHOURS` from API to `sequenceNumber` in UI
-✅ Displays estimated hours in category list view as a badge
-✅ Shows estimated hours in edit form input field
-✅ Handles both field name variations (`eSTIMATEDHOURS` and `estimatedHours`)
-✅ Defaults to 0 if field is missing
-✅ Only displays badge when value is greater than 0
-✅ Debug logging to track data flow
-✅ Styled badge with primary color and background
+## Common Issues and Solutions
 
-## Testing
+### Issue 1: Value Shows as 0
+**Cause**: API returns null or undefined
+**Solution**: Check API response, ensure `estimatedHours` field exists
 
-### Test Display in List View
-1. Open Manage Task Categories modal
-2. Look at categories with estimated hours
-3. Verify badge shows next to department name (e.g., "ENGINEERING • 10h")
-4. Verify badge only shows for categories with hours > 0
+### Issue 2: Value Not Updating
+**Cause**: Two-way binding not working
+**Solution**: Verify `[(ngModel)]` syntax is correct
 
-### Test Edit Form Display
-1. Click "Edit" on a category with estimated hours
-2. Check browser console for debug log
-3. Verify the "Estimated Hours" input field shows the correct value
-4. Modify the value and save
-5. Verify updated value displays correctly
+### Issue 3: Decimal Values Not Accepted
+**Cause**: Missing `step` attribute
+**Solution**: Add `step="0.5"` to input field ✓ (Fixed)
 
-### Test Console Logs
-1. Open browser console
-2. Load the Manage Task Categories modal
-3. Look for: "Sample category with sequenceNumber:"
-4. Click "Edit" on a category
-5. Look for: "Editing category:" with all field values
+### Issue 4: Negative Values Allowed
+**Cause**: Missing `min` attribute
+**Solution**: Add `min="0"` to input field ✓ (Fixed)
+
+## API Field Mapping Reference
+
+| API Field | Component Field | Display Name | Type |
+|-----------|----------------|--------------|------|
+| estimatedHours | sequenceNumber | ESTIMATED HOURS | number |
+| eSTIMATEDHOURS | sequenceNumber | ESTIMATED HOURS | number |
+| categoryId | categoryId | - | number |
+| categoryName | categoryName | TASK CATEGORY NAME | string |
+| departmentId | departmentId | DEPARTMENT | number |
+| departmentName | departmentName | - | string |
 
 ## Notes
 
-- The API uses an unusual field name: `eSTIMATEDHOURS` (lowercase 'e', rest uppercase)
-- The component handles both `eSTIMATEDHOURS` and `estimatedHours` for flexibility
-- The hours badge only appears when the value is greater than 0
-- Debug logs help verify data is being loaded and mapped correctly
-- The edit form binding `[(ngModel)]="category.sequenceNumber"` works correctly once the mapping is fixed
+- The field is called `sequenceNumber` in the component for historical reasons
+- The API uses `estimatedHours` which is the correct semantic name
+- Both uppercase (`eSTIMATEDHOURS`) and lowercase (`estimatedHours`) variants are supported
+- The mapping handles both cases with fallback: `cat.eSTIMATEDHOURS || cat.estimatedHours || 0`
+- Enhanced logging helps debug any future issues
+- Step attribute improves UX for decimal input
+- Min attribute prevents invalid negative values
+
+## Future Enhancements
+
+1. **Validation**: Add max value validation (e.g., max 999 hours)
+2. **Format Display**: Show as "8h 30m" instead of "8.5"
+3. **Quick Presets**: Add buttons for common values (4h, 8h, 16h)
+4. **Auto-calculate**: Calculate from start/end time
+5. **History**: Show historical estimated vs actual hours

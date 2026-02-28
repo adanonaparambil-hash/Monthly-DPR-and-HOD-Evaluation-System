@@ -930,6 +930,7 @@
                   <th class="th-start-time">Start Time</th>
                   <th class="th-end-time">End Time</th>
                   <th class="th-duration">Duration</th>
+                  <th class="th-status">Status</th>
                   <th class="th-actions">Actions</th>
                 </tr>
               </thead>
@@ -958,6 +959,11 @@
                       <span class="duration-badge">
                         <i class="fas fa-clock"></i>
                         {{ log.duration }}
+                      </span>
+                    </td>
+                    <td class="td-status">
+                      <span class="status-badge" [ngClass]="getStatusClass(log.status)">
+                        {{ log.status || 'N/A' }}
                       </span>
                     </td>
                     <td class="td-actions">

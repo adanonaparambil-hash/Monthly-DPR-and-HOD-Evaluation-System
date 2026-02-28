@@ -2685,6 +2685,103 @@
   font-size: 12px;
 }
 
+/* Status Badge in Day Log History Modal */
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.status-running {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.status-paused {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.status-not-started {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.status-closed {
+  background: #e0e7ff;
+  color: #4338ca;
+  border: 1px solid #a5b4fc;
+}
+
+.status-auto-closed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.status-default {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+/* Dark mode status badges */
+.dark-mode .status-running {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border-color: #3b82f6;
+}
+
+.dark-mode .status-completed {
+  background: #064e3b;
+  color: #6ee7b7;
+  border-color: #10b981;
+}
+
+.dark-mode .status-paused {
+  background: #78350f;
+  color: #fcd34d;
+  border-color: #f59e0b;
+}
+
+.dark-mode .status-not-started {
+  background: #374151;
+  color: #d1d5db;
+  border-color: #6b7280;
+}
+
+.dark-mode .status-closed {
+  background: #312e81;
+  color: #a5b4fc;
+  border-color: #6366f1;
+}
+
+.dark-mode .status-auto-closed {
+  background: #7f1d1d;
+  color: #fca5a5;
+  border-color: #dc2626;
+}
+
+.dark-mode .status-default {
+  background: #374151;
+  color: #9ca3af;
+  border-color: #6b7280;
+}
+
 /* Remarks */
 .remarks-text {
   font-size: 12px;
@@ -3752,6 +3849,11 @@
 .th-duration,
 .td-duration {
   width: 140px;
+}
+
+.th-status,
+.td-status {
+  width: 130px;
 }
 
 .th-actions,

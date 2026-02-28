@@ -115,6 +115,10 @@ export class MyLoggedHoursComponent implements OnInit {
   // Role flags from session
   isHOD = false;  // Flag to check if user is HOD
 
+  // AUTO CLOSED tasks blocking
+  autoClosedTaskCount = 0;
+  isBlockedByAutoClosedTasks = false;
+
   // Pagination properties
   currentPage = 1;
   pageSize = 500;
@@ -262,6 +266,9 @@ export class MyLoggedHoursComponent implements OnInit {
     const hodFlag = (currentUser.isHOD || '').toString().toUpperCase();
     this.isHOD = hodFlag === 'H';
     console.log('User is HOD:', this.isHOD, 'HOD Flag:', hodFlag);
+    
+    // Check AUTO CLOSED tasks count
+    this.checkAutoClosedTasksCount();
     
     // Debug: Log the entire user object to see what fields are available
     console.log('Current user from session:', currentUser);
@@ -1513,6 +1520,33 @@ export class MyLoggedHoursComponent implements OnInit {
     return log.userId === this.currentUserId;
   }
 
+  getStatusClass(status: string): string {
+    if (!status) return 'status-default';
+    
+    const normalizedStatus = status.toUpperCase().trim();
+    
+    switch (normalizedStatus) {
+      case 'RUNNING':
+      case 'IN PROGRESS':
+        return 'status-running';
+      case 'COMPLETED':
+      case 'DONE':
+        return 'status-completed';
+      case 'PAUSED':
+      case 'PAUSE':
+        return 'status-paused';
+      case 'NOT STARTED':
+        return 'status-not-started';
+      case 'CLOSED':
+      case 'NOT CLOSED':
+        return 'status-closed';
+      case 'AUTO CLOSED':
+        return 'status-auto-closed';
+      default:
+        return 'status-default';
+    }
+  }
+
   editDayLog(log: any) {
     console.log('Edit day log:', log);
     
@@ -2155,5 +2189,36 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // Otherwise use the standard column value getter
     return this.getColumnValue(record, column.key);
+  }
+
+  // Check AUTO CLOSED tasks count from API
+  checkAutoClosedTasksCount() {
+    if (!this.currentUserId) {
+      console.warn('No user ID found for AUTO CLOSED check');
+      return;
+    }
+    
+    this.api.GetAutoClosedTaskCount(this.currentUserId).subscribe({
+      next: (response: any) => {
+        console.log('AUTO CLOSED task count response (My Logged Hours):', response);
+        
+        if (response && response.success) {
+          this.autoClosedTaskCount = response.data || 0;
+          this.isBlockedByAutoClosedTasks = this.autoClosedTaskCount > 0;
+          
+          console.log('AUTO CLOSED count (My Logged Hours):', this.autoClosedTaskCount, 'Blocked:', this.isBlockedByAutoClosedTasks);
+          
+          if (this.isBlockedByAutoClosedTasks) {
+            console.warn(`User is blocked from starting tasks due to ${this.autoClosedTaskCount} AUTO CLOSED task(s)`);
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error checking AUTO CLOSED task count:', error);
+        // On error, don't block the user
+        this.autoClosedTaskCount = 0;
+        this.isBlockedByAutoClosedTasks = false;
+      }
+    });
   }
 }

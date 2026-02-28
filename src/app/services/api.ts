@@ -436,6 +436,12 @@ export class Api {
   }
 
 
+  
+  GetAutoClosedTaskCount(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAutoClosedTaskCount/${userId}`);
+  }
+
+
 
 
   ////////////////// un wanted ///////////////////////////

@@ -6,8 +6,26 @@
   <div class="top-section">
     <!-- Active Task Card -->
     <div class="active-task-card reduced-width">
+      <!-- AUTO CLOSED Tasks Alert -->
+      <div class="auto-closed-alert" *ngIf="hasAutoClosedTasks()">
+        <div class="alert-icon-wrapper">
+          <div class="alert-icon-pulse"></div>
+          <i class="fas fa-exclamation-triangle alert-icon"></i>
+        </div>
+        <div class="alert-content">
+          <h3 class="alert-title">
+            <i class="fas fa-exclamation-circle"></i>
+            Action Required: Auto-Closed Tasks
+          </h3>
+          <p class="alert-message">
+            You have <strong>{{ getAutoClosedTasksCount() }}</strong> auto-closed task{{ getAutoClosedTasksCount() > 1 ? 's' : '' }} pending. 
+            Please close {{ getAutoClosedTasksCount() > 1 ? 'these tasks' : 'this task' }} before starting today's work to log your hours properly.
+          </p>
+        </div>
+      </div>
+
       <!-- Empty State -->
-      <div class="empty-task-state" *ngIf="!hasActiveTask">
+      <div class="empty-task-state" *ngIf="!hasActiveTask && !hasAutoClosedTasks()">
         <div class="empty-icon">
           <i class="fas fa-tasks"></i>
         </div>
@@ -20,7 +38,7 @@
       </div>
 
       <!-- Active Task Content -->
-      <div *ngIf="hasActiveTask">
+      <div *ngIf="hasActiveTask && !hasAutoClosedTasks()">
       <div class="task-status">
         <div class="status-indicator">
           <div class="status-dot"></div>
@@ -61,6 +79,13 @@
 
           <!-- Modern Control Buttons -->
           <div class="modern-controls">
+            <button class="modern-control-btn start-btn" 
+                    *ngIf="activeTask?.status === 'NOT STARTED'" 
+                    (click)="startActiveTask()">
+              <div class="btn-glow"></div>
+              <i class="fas fa-play"></i>
+              <span class="btn-label">Start</span>
+            </button>
             <button class="modern-control-btn pause-btn" 
                     *ngIf="activeTask?.status === 'RUNNING'" 
                     (click)="pauseActiveTask()">
@@ -1152,6 +1177,7 @@
     [userId]="selectedUserIdForModal"
     [categoryId]="selectedCategoryIdForModal"
     [categoryName]="selectedCategoryNameForModal"
+    [estimatedHours]="selectedTaskEstimatedHours"
     [isViewOnly]="isTaskModalViewOnly"
     (closeModal)="closeTaskDetailsModal()"
     (taskUpdated)="onTaskUpdatedFromModal($event)"
@@ -1323,7 +1349,7 @@
             
             <div class="form-field">
               <label class="field-label">ESTIMATED HOURS</label>
-              <input type="number" class="field-input" [(ngModel)]="newTaskCategory.sequenceNumber" placeholder="0">
+              <input type="number" class="field-input" [(ngModel)]="newTaskCategory.sequenceNumber" placeholder="0" step="0.5" min="0">
             </div>
           </div>
           
@@ -1364,7 +1390,7 @@
                 
                 <div class="form-field">
                   <label class="field-label">ESTIMATED HOURS</label>
-                  <input type="number" class="field-input" [(ngModel)]="category.sequenceNumber" placeholder="0">
+                  <input type="number" class="field-input" [(ngModel)]="category.sequenceNumber" placeholder="0" step="0.5" min="0">
                 </div>
               </div>
               

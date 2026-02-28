@@ -40,6 +40,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   @Input() userId!: string;
   @Input() categoryId!: number;
   @Input() categoryName?: string; // Category name for new tasks
+  @Input() estimatedHours?: number; // Estimated hours from category
   @Input() isViewOnly: boolean = false; // View-only mode for "Assigned to Others"
   
   // Output events
@@ -48,6 +49,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   @Output() taskPaused = new EventEmitter<number>();
   @Output() taskResumed = new EventEmitter<number>();
   @Output() taskStopped = new EventEmitter<number>();
+  
+  // AUTO CLOSED tasks blocking
+  autoClosedTaskCount = 0;
+  isBlockedByAutoClosedTasks = false;
   
   // Task data
   selectedTaskId = '';
@@ -117,6 +122,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       categoryId: this.categoryId
     });
     
+    // Check AUTO CLOSED tasks count
+    this.checkAutoClosedTasksCount();
+    
     // Load common data regardless of taskId
     this.loadCustomFields();
     this.loadProjectsList();
@@ -131,9 +139,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       this.loadActivity(this.taskId);
     } else if (this.categoryId && this.userId) {
       // New task - just show empty form with category info
-      console.log('New task mode - showing empty form for categoryId:', this.categoryId);
+      console.log('New task mode - showing empty form for categoryId:', this.categoryId, 'estimatedHours:', this.estimatedHours);
       this.selectedTaskDetailStatus = 'not-started';
       this.selectedTaskCategory = this.categoryName || ''; // Set category name for new tasks
+      this.selectedTaskEstimatedHours = this.estimatedHours || 0; // Set estimated hours from category
       this.editableTaskTitle = '';
       this.editableTaskDescription = '';
       this.dailyRemarks = '';
@@ -559,6 +568,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           
           this.toasterService.showSuccess('Success', 'Task updated successfully');
           
+          // Recheck AUTO CLOSED count after saving task
+          this.checkAutoClosedTasksCount();
+          
           // Check if we need to call saveTaskFieldMapping
           // Only for new tasks (taskId === 0) when assigning to a different user
           const assignedUserId = this.selectedAssigneeId;
@@ -647,6 +659,34 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   onStatusChange(newStatus: string) {
     console.log('Status changed to:', newStatus);
     
+    // Block changing to 'running' status if AUTO CLOSED tasks exist
+    if (newStatus === 'running' && this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before starting any tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      // Revert status change
+      this.loadTaskDetails();
+      return;
+    }
+    
+    // Block changing to 'pause' status if AUTO CLOSED tasks exist
+    if ((newStatus === 'pause' || newStatus === 'paused') && this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before pausing any tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      // Revert status change
+      this.loadTaskDetails();
+      return;
+    }
+    
     // Only call executeTimer for RUNNING and PAUSE status changes
     if (newStatus === 'running') {
       // Call executeTimer with START action
@@ -663,6 +703,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             
             // Reload task details to get updated data
             this.loadTaskDetails();
+            
+            // Recheck AUTO CLOSED count after starting
+            this.checkAutoClosedTasksCount();
             
             // Emit event to parent component
             this.taskResumed.emit(this.taskId);
@@ -696,6 +739,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             // Reload task details to get updated data
             this.loadTaskDetails();
             
+            // Recheck AUTO CLOSED count after pausing
+            this.checkAutoClosedTasksCount();
+            
             // Emit event to parent component
             this.taskPaused.emit(this.taskId);
           } else {
@@ -716,7 +762,64 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   // Task control methods
+  startTaskFromModal() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before starting any new tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
+    // Call executeTimer API with START action
+    const timerRequest = {
+      taskId: this.taskId,
+      userId: this.userId,
+      action: 'START'
+    };
+    
+    this.api.executeTimer(timerRequest).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.selectedTaskDetailStatus = 'running';
+          this.toasterService.showSuccess('Task Started', 'Task timer has been started successfully!');
+          
+          // Reload task details to get updated data
+          this.loadTaskDetails();
+          
+          // Recheck AUTO CLOSED count after starting
+          this.checkAutoClosedTasksCount();
+          
+          // Emit event to parent component (reuse taskResumed event)
+          this.taskResumed.emit(this.taskId);
+        } else {
+          this.toasterService.showError('Start Failed', response?.message || 'Failed to start task');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error starting task:', error);
+        this.toasterService.showError('Error', 'Failed to start task');
+      }
+    });
+  }
+
   pauseTaskFromModal() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before pausing any tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
     // Call executeTimer API with PAUSED action
     const timerRequest = {
       taskId: this.taskId,
@@ -734,6 +837,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           // Reload task details to get updated data
           this.loadTaskDetails();
           
+          // Recheck AUTO CLOSED count after pausing
+          this.checkAutoClosedTasksCount();
+          
           // Emit event to parent component
           this.taskPaused.emit(this.taskId);
         } else {
@@ -748,6 +854,18 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   resumeTaskFromModal() {
+    // Check if blocked by AUTO CLOSED tasks
+    if (this.isBlockedByAutoClosedTasks) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'AUTO CLOSED Tasks Pending',
+        html: `You have <strong>${this.autoClosedTaskCount}</strong> AUTO CLOSED task(s) that need to be closed.<br><br>Please close them before resuming any tasks.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
     // Call executeTimer API with START action
     const timerRequest = {
       taskId: this.taskId,
@@ -763,6 +881,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           
           // Reload task details to get updated data
           this.loadTaskDetails();
+          
+          // Recheck AUTO CLOSED count after resuming
+          this.checkAutoClosedTasksCount();
           
           // Emit event to parent component
           this.taskResumed.emit(this.taskId);
@@ -782,6 +903,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     this.stopTimer();
     this.selectedTaskDetailStatus = 'not-closed';
     this.toasterService.showInfo('Task Status Changed', 'Task status changed to Closed');
+    
+    // Recheck AUTO CLOSED count after stopping
+    this.checkAutoClosedTasksCount();
   }
 
   // Add comment
@@ -826,6 +950,42 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     // Show success message
     this.toasterService.showSuccess('Success', 'Daily remarks submitted');
+  }
+
+  // Send daily remarks as a comment
+  sendDailyRemarksAsComment() {
+    if (!this.dailyRemarks.trim()) {
+      this.toasterService.showError('Error', 'Please enter daily remarks');
+      return;
+    }
+
+    const commentData: TaskCommentDto = {
+      commentId: 0,
+      taskId: this.taskId,
+      userId: this.userId,
+      comments: this.dailyRemarks,
+      submittedOn: new Date().toISOString(),
+      empName: '',
+      profileImage: undefined,
+      profileImageBase64: undefined
+    };
+
+    this.api.saveComment(commentData).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Remark added to comments');
+          this.dailyRemarks = ''; // Clear the input
+          this.loadComments(this.taskId); // Reload comments
+          
+          // Switch to comments tab to show the new comment
+          this.activeSidebarTab = 'comments';
+        }
+      },
+      error: (error: any) => {
+        console.error('Error adding remark as comment:', error);
+        this.toasterService.showError('Error', 'Failed to add remark');
+      }
+    });
   }
 
   // File upload methods
@@ -1296,5 +1456,36 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   // Close modal
   close() {
     this.closeModal.emit();
+  }
+
+  // Check AUTO CLOSED tasks count from API
+  checkAutoClosedTasksCount() {
+    if (!this.userId) {
+      console.warn('No user ID found for AUTO CLOSED check');
+      return;
+    }
+    
+    this.api.GetAutoClosedTaskCount(this.userId).subscribe({
+      next: (response: any) => {
+        console.log('AUTO CLOSED task count response (Task Modal):', response);
+        
+        if (response && response.success) {
+          this.autoClosedTaskCount = response.data || 0;
+          this.isBlockedByAutoClosedTasks = this.autoClosedTaskCount > 0;
+          
+          console.log('AUTO CLOSED count (Task Modal):', this.autoClosedTaskCount, 'Blocked:', this.isBlockedByAutoClosedTasks);
+          
+          if (this.isBlockedByAutoClosedTasks) {
+            console.warn(`User is blocked from starting tasks due to ${this.autoClosedTaskCount} AUTO CLOSED task(s)`);
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error checking AUTO CLOSED task count:', error);
+        // On error, don't block the user
+        this.autoClosedTaskCount = 0;
+        this.isBlockedByAutoClosedTasks = false;
+      }
+    });
   }
 }
