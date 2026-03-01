@@ -1021,3 +1021,266 @@ select[disabled] {
     opacity: 0.5;
   }
 }
+
+
+/* Activity Log Content - Modern Design */
+.activity-log-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+}
+
+.activity-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  position: relative;
+}
+
+/* Timeline vertical line */
+.activity-timeline::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  bottom: 40px;
+  width: 2px;
+  background: linear-gradient(to bottom, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%);
+  z-index: 0;
+}
+
+.activity-item-enhanced {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.activity-item-enhanced:hover {
+  background: #f9fafb;
+  border-color: #10b981;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.activity-icon-enhanced {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+/* Icon pulse animation */
+.activity-icon-enhanced::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  background: inherit;
+  opacity: 0.3;
+  animation: icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+.activity-content-enhanced {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.activity-header-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-description {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.activity-meta-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.activity-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.activity-user i {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.activity-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.activity-time i {
+  font-size: 11px;
+}
+
+.no-activity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed #e5e7eb;
+  margin: 20px 0;
+}
+
+.no-activity i {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+  color: #d1d5db;
+}
+
+.no-activity p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Ensure comments section also has proper scrolling */
+.comments-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+}
+
+.comments-list {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Custom scrollbar for activity log */
+.activity-log-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.activity-log-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+.activity-log-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #10b981, #34d399);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.activity-log-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #059669, #10b981);
+}
+
+/* Dark mode adjustments */
+.dark-mode .activity-log-content {
+  background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);
+}
+
+.dark-mode .activity-timeline::before {
+  background: linear-gradient(to bottom, #374151 0%, #4b5563 50%, #374151 100%);
+}
+
+.dark-mode .activity-item-enhanced {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .activity-item-enhanced:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.dark-mode .activity-description {
+  color: #f3f4f6;
+}
+
+.dark-mode .activity-user {
+  color: #9ca3af;
+}
+
+.dark-mode .activity-time {
+  color: #6b7280;
+}
+
+.dark-mode .no-activity {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .no-activity i {
+  color: #4b5563;
+}
+
+.dark-mode .no-activity p {
+  color: #9ca3af;
+}
+
+.dark-mode .comments-content {
+  background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);
+}

@@ -2919,12 +2919,13 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
 
 /* Activity Log Content */
 .activity-log-content {
-  padding: 16px 0;
-  max-height: 500px;
+  flex: 1;
+  padding: 16px;
   overflow-y: auto;
-  /* Remove extra bottom space */
-  padding-bottom: 0 !important;
-  /* Ensure no background overlays */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background: transparent !important;
   position: relative;
   z-index: 1;
@@ -2935,10 +2936,7 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   flex-direction: column;
   gap: 16px;
   position: relative;
-  padding-left: 8px;
-  /* Remove extra bottom padding */
-  padding-bottom: 0 !important;
-  /* Ensure no background overlays */
+  flex: 1;
   background: transparent !important;
 }
 
@@ -3298,18 +3296,16 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
 .comments-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  /* Remove extra bottom padding */
-  padding-bottom: 16px !important;
-  /* Ensure content fits properly */
-  max-height: calc(100% - 60px);
-  /* Ensure no background overlays */
+  height: 100%;
   background: transparent !important;
   position: relative;
   z-index: 1;
+}
 }
 
 .comment-item {

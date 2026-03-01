@@ -864,7 +864,17 @@
   flex: 1;
   padding: 16px;
   overflow-y: auto;
-  max-height: 500px;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.activity-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
 }
 
 .activity-timeline {
