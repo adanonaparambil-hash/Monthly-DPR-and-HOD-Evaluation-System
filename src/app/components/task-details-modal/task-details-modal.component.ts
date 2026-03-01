@@ -61,6 +61,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   selectedTaskTotalHours = '0h';
   selectedTaskProgress = 0;
   selectedTaskDetailStatus = 'not-started';
+  previousTaskStatus = 'not-started'; // Track previous status for dropdown changes
   
   // Editable fields
   editableTaskTitle = '';
@@ -224,6 +225,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           
           // Map status
           this.selectedTaskDetailStatus = this.mapTaskStatus(taskDetails.status);
+          this.previousTaskStatus = this.selectedTaskDetailStatus; // Track previous status
           
           // Map custom fields if available
           if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
@@ -499,6 +501,15 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     // Clear previous validation errors
     this.clearValidationErrors();
     
+    // Check if status is CLOSED and Daily Remarks is mandatory
+    if (this.selectedTaskDetailStatus === 'not-closed' && !this.dailyRemarks.trim()) {
+      this.toasterService.showError(
+        'Validation Error', 
+        'Daily Remarks is mandatory when closing a task'
+      );
+      return;
+    }
+    
     // Validate mandatory fields if status is Closed or Completed
     const validation = this.validateMandatoryFields();
     if (!validation.isValid) {
@@ -609,6 +620,12 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             }
           }
           
+          // If status is CLOSED and Daily Remarks has value, save it as a comment
+          if (this.selectedTaskDetailStatus === 'not-closed' && this.dailyRemarks.trim()) {
+            console.log('Status is CLOSED with Daily Remarks - saving as comment');
+            this.saveDailyRemarksAsComment();
+          }
+          
           this.taskUpdated.emit(taskSaveRequest);
           console.log('Task saved successfully');
           
@@ -632,6 +649,35 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         
         const errorMessage = error?.error?.message || error?.message || 'Failed to update task';
         this.toasterService.showError('Error', errorMessage);
+      }
+    });
+  }
+  
+  // Save Daily Remarks as a comment (called automatically when status is CLOSED)
+  private saveDailyRemarksAsComment() {
+    const commentData: TaskCommentDto = {
+      commentId: 0,
+      taskId: this.taskId,
+      userId: this.userId,
+      comments: this.dailyRemarks,
+      submittedOn: new Date().toISOString(),
+      empName: '',
+      profileImage: undefined,
+      profileImageBase64: undefined
+    };
+
+    this.api.saveComment(commentData).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          console.log('Daily Remarks saved as comment successfully');
+          this.dailyRemarks = ''; // Clear the input
+          this.loadComments(this.taskId); // Reload comments to show the new comment
+        } else {
+          console.error('Failed to save Daily Remarks as comment:', response?.message);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error saving Daily Remarks as comment:', error);
       }
     });
   }
@@ -687,6 +733,67 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       return;
     }
     
+    // Handle CLOSED status change - pause first if task is running
+    if (newStatus === 'not-closed') {
+      // If task is currently RUNNING, pause it first before changing to CLOSED
+      if (this.selectedTaskDetailStatus === 'running') {
+        console.log('Task is RUNNING - pausing before closing via dropdown');
+        
+        // Call executeTimer API with PAUSED action
+        const timerRequest = {
+          taskId: this.taskId,
+          userId: this.userId,
+          action: 'PAUSED'
+        };
+        
+        this.api.executeTimer(timerRequest).subscribe({
+          next: (response: any) => {
+            if (response && response.success) {
+              console.log('Task paused successfully via dropdown, now changing to CLOSED');
+              this.stopTimer();
+              this.selectedTaskDetailStatus = 'not-closed';
+              this.toasterService.showInfo('Task Status Changed', 'Task paused and status changed to Closed');
+              
+              // Emit event to parent component to refresh task list
+              this.taskStopped.emit(this.taskId);
+              
+              // Recheck AUTO CLOSED count after stopping
+              this.checkAutoClosedTasksCount();
+              
+              // Trigger change detection to show Daily Remarks section
+              this.cdr.detectChanges();
+            } else {
+              this.toasterService.showError('Pause Failed', 'Failed to pause task before closing');
+              console.error('Failed to pause task:', response?.message);
+              // Revert status on failure
+              this.loadTaskDetails();
+            }
+          },
+          error: (error: any) => {
+            console.error('Error pausing task before closing via dropdown:', error);
+            this.toasterService.showError('Error', 'Failed to pause task before closing');
+            // Revert status on failure
+            this.loadTaskDetails();
+          }
+        });
+      } else {
+        // Task is not running, just change status to CLOSED
+        this.stopTimer();
+        this.selectedTaskDetailStatus = 'not-closed';
+        this.toasterService.showInfo('Task Status Changed', 'Task status changed to Closed');
+        
+        // Emit event to parent component to refresh task list
+        this.taskStopped.emit(this.taskId);
+        
+        // Recheck AUTO CLOSED count after stopping
+        this.checkAutoClosedTasksCount();
+        
+        // Trigger change detection to show Daily Remarks section
+        this.cdr.detectChanges();
+      }
+      return;
+    }
+    
     // Only call executeTimer for RUNNING and PAUSE status changes
     if (newStatus === 'running') {
       // Call executeTimer with START action
@@ -699,27 +806,24 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       this.api.executeTimer(timerRequest).subscribe({
         next: (response: any) => {
           if (response && response.success) {
+            this.selectedTaskDetailStatus = 'running';
             this.toasterService.showSuccess('Task Started', 'Task timer has been started successfully!');
-            
-            // Reload task details to get updated data
-            this.loadTaskDetails();
             
             // Recheck AUTO CLOSED count after starting
             this.checkAutoClosedTasksCount();
             
             // Emit event to parent component
             this.taskResumed.emit(this.taskId);
+            
+            // Trigger change detection
+            this.cdr.detectChanges();
           } else {
             this.toasterService.showError('Start Failed', response?.message || 'Failed to start task');
-            // Revert status on failure
-            this.loadTaskDetails();
           }
         },
         error: (error: any) => {
           console.error('Error starting task:', error);
           this.toasterService.showError('Error', 'Failed to start task');
-          // Revert status on failure
-          this.loadTaskDetails();
         }
       });
     } else if (newStatus === 'pause' || newStatus === 'paused') {
@@ -734,31 +838,28 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           if (response && response.success) {
             this.stopTimer();
+            this.selectedTaskDetailStatus = 'pause';
             this.toasterService.showSuccess('Task Paused', 'Task timer has been paused successfully!');
-            
-            // Reload task details to get updated data
-            this.loadTaskDetails();
             
             // Recheck AUTO CLOSED count after pausing
             this.checkAutoClosedTasksCount();
             
             // Emit event to parent component
             this.taskPaused.emit(this.taskId);
+            
+            // Trigger change detection
+            this.cdr.detectChanges();
           } else {
             this.toasterService.showError('Pause Failed', response?.message || 'Failed to pause task');
-            // Revert status on failure
-            this.loadTaskDetails();
           }
         },
         error: (error: any) => {
           console.error('Error pausing task:', error);
           this.toasterService.showError('Error', 'Failed to pause task');
-          // Revert status on failure
-          this.loadTaskDetails();
         }
       });
     }
-    // For other status changes (not-started, completed, closed), just update the status without calling executeTimer
+    // For other status changes (not-started, completed), just update the status without calling executeTimer
   }
 
   // Task control methods
@@ -899,13 +1000,52 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   stopTaskFromModal() {
-    // Simply change the status to CLOSED without confirmation or API call
-    this.stopTimer();
-    this.selectedTaskDetailStatus = 'not-closed';
-    this.toasterService.showInfo('Task Status Changed', 'Task status changed to Closed');
-    
-    // Recheck AUTO CLOSED count after stopping
-    this.checkAutoClosedTasksCount();
+    // If task is currently RUNNING, pause it first before changing to CLOSED
+    if (this.selectedTaskDetailStatus === 'running') {
+      console.log('Task is RUNNING - pausing before closing');
+      
+      // Call executeTimer API with PAUSED action
+      const timerRequest = {
+        taskId: this.taskId,
+        userId: this.userId,
+        action: 'PAUSED'
+      };
+      
+      this.api.executeTimer(timerRequest).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            console.log('Task paused successfully, now changing to CLOSED');
+            this.stopTimer();
+            this.selectedTaskDetailStatus = 'not-closed';
+            this.toasterService.showInfo('Task Status Changed', 'Task paused and status changed to Closed');
+            
+            // Emit event to parent component to refresh task list
+            this.taskStopped.emit(this.taskId);
+            
+            // Recheck AUTO CLOSED count after stopping
+            this.checkAutoClosedTasksCount();
+          } else {
+            this.toasterService.showError('Pause Failed', 'Failed to pause task before closing');
+            console.error('Failed to pause task:', response?.message);
+          }
+        },
+        error: (error: any) => {
+          console.error('Error pausing task before closing:', error);
+          this.toasterService.showError('Error', 'Failed to pause task before closing');
+        }
+      });
+    } else {
+      // Task is not running, just change status to CLOSED
+      this.stopTimer();
+      this.selectedTaskDetailStatus = 'not-closed';
+      this.toasterService.showInfo('Task Status Changed', 'Task status changed to Closed');
+      
+      // Emit event to parent component to refresh task list
+      this.taskStopped.emit(this.taskId);
+      
+      // Recheck AUTO CLOSED count after stopping
+      this.checkAutoClosedTasksCount();
+    }
   }
 
   // Add comment
@@ -934,56 +1074,6 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       error: (error: any) => {
         console.error('Error adding comment:', error);
         this.toasterService.showError('Error', 'Failed to add comment');
-      }
-    });
-  }
-
-  // Submit daily remarks
-  submitDailyRemarks() {
-    if (!this.dailyRemarks.trim()) {
-      this.toasterService.showError('Error', 'Please enter daily remarks');
-      return;
-    }
-
-    // Save the task with daily remarks
-    this.saveTaskChanges();
-    
-    // Show success message
-    this.toasterService.showSuccess('Success', 'Daily remarks submitted');
-  }
-
-  // Send daily remarks as a comment
-  sendDailyRemarksAsComment() {
-    if (!this.dailyRemarks.trim()) {
-      this.toasterService.showError('Error', 'Please enter daily remarks');
-      return;
-    }
-
-    const commentData: TaskCommentDto = {
-      commentId: 0,
-      taskId: this.taskId,
-      userId: this.userId,
-      comments: this.dailyRemarks,
-      submittedOn: new Date().toISOString(),
-      empName: '',
-      profileImage: undefined,
-      profileImageBase64: undefined
-    };
-
-    this.api.saveComment(commentData).subscribe({
-      next: (response: any) => {
-        if (response && response.success) {
-          this.toasterService.showSuccess('Success', 'Remark added to comments');
-          this.dailyRemarks = ''; // Clear the input
-          this.loadComments(this.taskId); // Reload comments
-          
-          // Switch to comments tab to show the new comment
-          this.activeSidebarTab = 'comments';
-        }
-      },
-      error: (error: any) => {
-        console.error('Error adding remark as comment:', error);
-        this.toasterService.showError('Error', 'Failed to add remark');
       }
     });
   }

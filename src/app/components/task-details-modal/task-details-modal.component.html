@@ -22,7 +22,7 @@
         <!-- Only show status dropdown if taskId exists (not a new task) -->
         @if (taskId && taskId > 0) {
           <div class="status-dropdown-container">
-            <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" (ngModelChange)="onStatusChange($event)" [disabled]="isViewOnly || taskId === 0">
+            <select class="modal-status-select" [value]="selectedTaskDetailStatus" (change)="onStatusChange($any($event.target).value)" [disabled]="isViewOnly || taskId === 0">
               <option value="not-started" disabled>Not Started</option>
               <option value="not-closed">Closed</option>
               <option value="running">Running</option>
@@ -78,16 +78,17 @@
                   <i class="fas fa-pause"></i>
                 </button>
                 
-                <!-- Show Resume button when task is PAUSED -->
+                <!-- Show Resume button when task is PAUSED or CLOSED (but not AUTO CLOSED) -->
                 <button class="timer-btn resume-btn" 
-                        *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
+                        *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused' || selectedTaskDetailStatus === 'not-closed'"
                         (click)="resumeTaskFromModal()"
                         title="Resume Task">
                   <i class="fas fa-play"></i>
                 </button>
                 
-                <!-- Always show Stop button -->
+                <!-- Always show Stop button (except for AUTO CLOSED) -->
                 <button class="timer-btn stop-btn"
+                        *ngIf="selectedTaskDetailStatus !== 'auto-closed'"
                         (click)="stopTaskFromModal()"
                         title="Stop Task">
                   <i class="fas fa-stop"></i>
@@ -209,25 +210,22 @@
             placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
-        <!-- Daily Remarks - Compact (Only show when status is CLOSED and not in view-only mode) -->
+        <!-- Daily Remarks - Mandatory when status is CLOSED (No separate save button) -->
         @if (!isViewOnly && selectedTaskDetailStatus === 'not-closed') {
           <div class="daily-remarks-compact">
             <label class="remarks-label">
               <i class="fas fa-comment-dots"></i>
               Daily Remarks
+              <span class="required-indicator">*</span>
             </label>
             <div class="remarks-input-container">
               <input 
                 type="text" 
                 class="remarks-input" 
                 [(ngModel)]="dailyRemarks"
-                (keyup.enter)="sendDailyRemarksAsComment()"
-                placeholder="Add today's progress notes or updates..."
+                placeholder="Add today's progress notes or updates (mandatory for closing task)..."
                 maxlength="200"
               />
-              <button class="remarks-submit-btn" (click)="sendDailyRemarksAsComment()" [disabled]="!dailyRemarks.trim()" title="Send to Comments">
-                <i class="fas fa-paper-plane"></i>
-              </button>
             </div>
           </div>
         }
