@@ -3306,7 +3306,6 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   position: relative;
   z-index: 1;
 }
-}
 
 .comment-item {
   display: flex;

@@ -1369,3 +1369,28 @@ select[disabled] {
 .dark-mode .comments-content {
   background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);
 }
+
+
+/* Start Date Disabled State */
+.metadata-input:disabled {
+  background-color: var(--disabled-bg, #f3f4f6);
+  color: var(--disabled-text, #9ca3af);
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: var(--disabled-border, #e5e7eb);
+}
+
+.dark-mode .metadata-input:disabled {
+  background-color: #2a2a2a;
+  color: #6b7280;
+  border-color: #374151;
+}
+
+/* Disabled input hover state */
+.metadata-input:disabled:hover {
+  border-color: var(--disabled-border, #e5e7eb);
+}
+
+.dark-mode .metadata-input:disabled:hover {
+  border-color: #374151;
+}

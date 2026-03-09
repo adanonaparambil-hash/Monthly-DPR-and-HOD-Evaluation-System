@@ -240,7 +240,7 @@ export class layout implements OnInit, OnDestroy {
       '/dpr-approval': 'DPR Approval Management',
       '/chat': 'Internal Communications',
       '/my-task': 'My Task Management',
-      '/my-logged-hours': 'My Logged Hours'
+      '/my-logged-hours': 'Log History'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';
@@ -549,13 +549,13 @@ export class layout implements OnInit, OnDestroy {
 
   // Start polling for notification count every 3 seconds (lightweight API call)
   startNotificationCountPolling() {
-    // Initial load
+    // Initial load on page load
     this.loadNotificationCount();
 
-    // Set up polling every 3 seconds
+    // Set up polling every 10 minutes (600,000 milliseconds)
     this.notificationCountInterval = setInterval(() => {
       this.loadNotificationCount();
-    }, 3000); // 3 seconds
+    }, 600000); // 10 minutes
   }
 
   // Load only notification count (lightweight API call)

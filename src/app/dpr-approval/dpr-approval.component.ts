@@ -184,9 +184,9 @@ export class DprApprovalComponent implements OnInit {
     // Set To Date as today
     this.toDate = this.formatDateForInput(today);
     
-    // Set From Date as first day of current month
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    this.fromDate = this.formatDateForInput(firstDayOfMonth);
+    // Set From Date as January 1st of current year (2026-01-01)
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1); // Month 0 = January
+    this.fromDate = this.formatDateForInput(firstDayOfYear);
     
     console.log('Default dates set:', {
       fromDate: this.fromDate,

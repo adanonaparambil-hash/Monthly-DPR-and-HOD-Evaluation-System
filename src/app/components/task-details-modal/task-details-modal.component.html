@@ -22,13 +22,16 @@
         <!-- Only show status dropdown if taskId exists (not a new task) -->
         @if (taskId && taskId > 0) {
           <div class="status-dropdown-container">
-            <select class="modal-status-select" [value]="selectedTaskDetailStatus" (change)="onStatusChange($any($event.target).value)" [disabled]="isViewOnly || taskId === 0">
-              <option value="not-started" disabled>Not Started</option>
+            <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" (ngModelChange)="onStatusChange($event)" [disabled]="isViewOnly || taskId === 0">
+              <!-- Hidden options - only show current status, not selectable -->
+              <option value="not-started" [hidden]="selectedTaskDetailStatus !== 'not-started'" disabled>Not Started</option>
+              <option value="running" [hidden]="selectedTaskDetailStatus !== 'running'" disabled>Running</option>
+              <option value="pause" [hidden]="selectedTaskDetailStatus !== 'pause' && selectedTaskDetailStatus !== 'paused'" disabled>Pause</option>
+              <option value="auto-closed" [hidden]="selectedTaskDetailStatus !== 'auto-closed'" disabled>Auto Closed</option>
+              
+              <!-- User selectable options -->
               <option value="not-closed">Closed</option>
-              <option value="running">Running</option>
               <option value="completed">Completed</option>
-              <option value="pause">Pause</option>
-              <option value="auto-closed" disabled>Auto Closed</option>
             </select>
           </div>
         } @else {
@@ -210,8 +213,8 @@
             placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
-        <!-- Daily Remarks - Mandatory when status is CLOSED (No separate save button) -->
-        @if (!isViewOnly && selectedTaskDetailStatus === 'not-closed') {
+        <!-- Daily Remarks - Mandatory when status is CLOSED or COMPLETED -->
+        @if (!isViewOnly && (selectedTaskDetailStatus === 'not-closed' || selectedTaskDetailStatus === 'completed')) {
           <div class="daily-remarks-compact">
             <label class="remarks-label">
               <i class="fas fa-comment-dots"></i>
@@ -318,7 +321,11 @@
                   <i class="fas fa-calendar-alt label-icon"></i>
                   Start Date
                 </p>
-                <input type="date" class="metadata-input" [(ngModel)]="selectedTaskStartDate" [readonly]="isViewOnly">
+                <input type="date" 
+                       class="metadata-input" 
+                       [(ngModel)]="selectedTaskStartDate" 
+                       [readonly]="isViewOnly" 
+                       [disabled]="isStartDateDisabled()">
               </div>
             </div>
 

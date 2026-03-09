@@ -7,7 +7,7 @@
       <div class="header-info">
         <h1 class="page-title">
           <i class="fas fa-clock animated-clock-title"></i>
-          My Logged Hours
+          Log History
         </h1>
         <!-- <p class="page-subtitle">PRODUCTIVITY DASHBOARD</p> -->
       </div>
@@ -23,12 +23,10 @@
         <i class="fas fa-download"></i>
         <span>Export Report</span>
       </button>
-      @if (isHOD) {
-        <button class="action-btn primary" (click)="openBreakHistoryModal()">
-          <i class="fas fa-coffee"></i>
-          <span>Break History</span>
-        </button>
-      }
+      <button class="action-btn primary" (click)="openBreakHistoryModal()">
+        <i class="fas fa-coffee"></i>
+        <span>Break History</span>
+      </button>
     </div>
   </header>
 
@@ -69,7 +67,6 @@
         <div class="filter-input-wrapper">
           <i class="fas fa-building filter-icon"></i>
           <select class="filter-select" [(ngModel)]="selectedDepartment" (change)="onDepartmentChange()">
-            <option value="all">All Departments</option>
             <option *ngFor="let dept of departments" [value]="dept.departmentId">
               {{ dept.deptName }}
             </option>
@@ -82,8 +79,8 @@
           <label class="filter-label">Employee</label>
           <div class="filter-input-wrapper">
             <i class="fas fa-user filter-icon"></i>
-            <select class="filter-select" [(ngModel)]="selectedEmployee" [disabled]="selectedDepartment === 'all'">
-              <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Employees' }}</option>
+            <select class="filter-select" [(ngModel)]="selectedEmployee">
+              <option value="all">All Employees</option>
               <option *ngFor="let employee of employees" [value]="employee.employeeCode">
                 {{ employee.employeeName }}
               </option>
@@ -96,8 +93,8 @@
         <label class="filter-label">Task Category</label>
         <div class="filter-input-wrapper">
           <i class="fas fa-tags filter-icon"></i>
-          <select class="filter-select" [(ngModel)]="selectedCategory" [disabled]="selectedDepartment === 'all'">
-            <option value="all">{{ selectedDepartment === 'all' ? 'Select Department First' : 'All Categories' }}</option>
+          <select class="filter-select" [(ngModel)]="selectedCategory">
+            <option value="all">All Categories</option>
             <option *ngFor="let category of taskCategories" [value]="category.categoryId">
               {{ category.categoryName }}
             </option>

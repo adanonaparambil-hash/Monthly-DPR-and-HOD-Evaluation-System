@@ -98,7 +98,7 @@ export class MyLoggedHoursComponent implements OnInit {
   fromDate = '';
   toDate = '';
   selectedProject: string | number = 'all';
-  selectedDepartment: string | number = 'all';
+  selectedDepartment: string | number = ''; // Will be set from API or session
   selectedEmployee: string | number = 'all';
   selectedCategory: string | number = 'all';
   tableSearchTerm = '';  // Client-side table search
@@ -212,12 +212,13 @@ export class MyLoggedHoursComponent implements OnInit {
   };
   
   availableColumns: ColumnDefinition[] = [
+    { key: 'category', label: 'Task Category', visible: true, width: '280px', type: 'select', required: true },
     { key: 'taskId', label: 'Task ID', visible: false, width: '120px', type: 'text' },
     { key: 'title', label: 'Task Title', visible: true, width: '250px', type: 'text', required: true },
     { key: 'description', label: 'Description', visible: true, width: '150px', type: 'text', required: true },
     { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '150px', type: 'text' },
     { key: 'projectName', label: 'Project Name', visible: true, width: '180px', type: 'text' },
-    { key: 'category', label: 'Task Category', visible: true, width: '180px', type: 'select', required: true },
+    { key: 'loggedBy', label: 'Logged By', visible: true, width: '150px', type: 'text', required: true },
     { key: 'type', label: 'Type', visible: false, width: '120px', type: 'select' },
     { key: 'process', label: 'Process', visible: false, width: '150px', type: 'text' },
     { key: 'assignedTo', label: 'Assigned To', visible: false, width: '150px', type: 'text' },
@@ -239,7 +240,6 @@ export class MyLoggedHoursComponent implements OnInit {
     { key: 'remarks', label: 'Remarks', visible: false, width: '200px', type: 'text' },
     { key: 'folderPath', label: 'Folder Path', visible: false, width: '200px', type: 'text' },
     { key: 'documentLink', label: 'Document Link', visible: false, width: '200px', type: 'text' },
-    { key: 'loggedBy', label: 'Logged By', visible: true, width: '150px', type: 'text', required: true },
     { key: 'duration', label: 'Duration', visible: true, width: '120px', type: 'text', required: true }
   ];
 
@@ -493,11 +493,6 @@ export class MyLoggedHoursComponent implements OnInit {
     this.employees = [];
     this.taskCategories = [];
     
-    // If "All Departments" is selected, don't load employees or categories
-    if (this.selectedDepartment === 'all') {
-      return;
-    }
-    
     // Load employees for the selected department
     this.loadEmployeesByDepartment(Number(this.selectedDepartment));
     
@@ -668,14 +663,14 @@ export class MyLoggedHoursComponent implements OnInit {
     // Determine userId based on employee and department selection
     let userId = undefined;
     
-    // Only set userId if a specific employee is selected AND department is not "all"
-    if (this.selectedEmployee !== 'all' && this.selectedDepartment !== 'all') {
+    // Only set userId if a specific employee is selected
+    if (this.selectedEmployee !== 'all') {
       userId = this.selectedEmployee; // selectedEmployee is the employeeCode
       console.log('Filtering by selected employee code:', userId);
-    } else if (this.selectedDepartment === 'all' || this.selectedEmployee === 'all') {
-      // If "All Departments" or "All Employees" is selected, userId should be null
+    } else {
+      // If "All Employees" is selected, userId should be null
       userId = undefined;
-      console.log('All Departments or All Employees selected - userId is null');
+      console.log('All Employees selected - userId is null');
     }
     
     // Build request object
@@ -694,10 +689,8 @@ export class MyLoggedHoursComponent implements OnInit {
       request.userId = userId;
     }
     
-    // Only add departmentId if a specific department is selected
-    if (this.selectedDepartment !== 'all') {
-      request.departmentId = Number(this.selectedDepartment);
-    }
+    // Always add departmentId since "All Departments" option is removed
+    request.departmentId = Number(this.selectedDepartment);
     
     // Only add employeeId if a specific employee is selected (not "All Employees")
     if (this.selectedEmployee !== 'all') {
@@ -715,8 +708,8 @@ export class MyLoggedHoursComponent implements OnInit {
           const newRecords = response.data.map((log: any, index: number) => ({
             id: `${log.taskId}-${index}`,
             taskId: `TSK-${log.taskId}`,
-            title: log.taskTitle || 'Untitled Task',
-            description: log.description || 'No description',
+            title: log.taskTitle || '-',
+            description: log.description || '-',
             dailyComment: log.dailyComment || '',
             projectName: log.projectName || '',
             category: log.categoryName || 'Uncategorized',
@@ -749,8 +742,8 @@ export class MyLoggedHoursComponent implements OnInit {
           const newRecords = response.data.map((log: any, index: number) => ({
             id: `${log.taskId}-${index}`,
             taskId: `TSK-${log.taskId}`,
-            title: log.taskTitle || 'Untitled Task',
-            description: log.description || 'No description',
+            title: log.taskTitle || '-',
+            description: log.description || '-',
             dailyComment: log.dailyComment || '',
             projectName: log.projectName || '',
             category: log.categoryName || 'Uncategorized',
@@ -985,7 +978,7 @@ export class MyLoggedHoursComponent implements OnInit {
     // Only set userId if a specific employee is selected AND department is not "all"
     if (this.selectedEmployee !== 'all' && this.selectedDepartment !== 'all') {
       userId = this.selectedEmployee;
-    } else if (this.selectedDepartment === 'all' || this.selectedEmployee === 'all') {
+    } else {
       userId = undefined;
     }
     
@@ -1023,10 +1016,8 @@ export class MyLoggedHoursComponent implements OnInit {
       exportRequest.userId = userId;
     }
     
-    // Only add departmentId if a specific department is selected
-    if (this.selectedDepartment !== 'all') {
-      exportRequest.departmentId = Number(this.selectedDepartment);
-    }
+    // Always add departmentId since "All Departments" option is removed
+    exportRequest.departmentId = Number(this.selectedDepartment);
     
     // Only add employeeId if a specific employee is selected (not "All Employees")
     if (this.selectedEmployee !== 'all') {

@@ -1084,7 +1084,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         category: task.taskCategory || 'General',
         loggedHours: this.formatMinutesToTime(task.todayLoggedHours),
         totalHours: this.formatMinutesToTime(task.totalLoggedHours),
-        startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
+        startDate: task.startDate ? this.formatDateForInput(task.startDate) : '',
         assignee: assigneeName || 'Unassigned',
         assigneeId: assigneeId,
         assigneeImage: assigneeImage,
@@ -2784,9 +2784,20 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   openTaskDetailsModal(task: Task) {
-    // Get current user
-    const currentUser = this.sessionService.getCurrentUser();
-    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    // For "ASSIGNED TO OTHERS" tab, use the assignee's userId from the task
+    // For "MY TASKS" tab, use the current user's userId from session
+    let userId: string;
+    
+    if (this.activeTab === 'ASSIGNED TO OTHERS') {
+      // Use the assigneeId from the task (the person the task is assigned to)
+      userId = task.assigneeId || '';
+      console.log('Opening task from ASSIGNED TO OTHERS - using assigneeId:', userId);
+    } else {
+      // Use current user's ID from session
+      const currentUser = this.sessionService.getCurrentUser();
+      userId = currentUser?.empId || currentUser?.employeeId || '';
+      console.log('Opening task from MY TASKS - using session userId:', userId);
+    }
     
     // Get category ID from the task directly or from lookup
     let categoryId = task.categoryId || this.getCategoryIdFromTask(task);
@@ -2795,7 +2806,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       taskId: task.id,
       userId: userId,
       categoryId: categoryId,
-      activeTab: this.activeTab
+      activeTab: this.activeTab,
+      assigneeId: task.assigneeId
     });
     
     // Set properties for standalone modal component
@@ -2901,6 +2913,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     console.log('Task updated from modal:', taskData);
     // Reload active tasks to refresh the list
     this.loadActiveTasks();
+    // Recheck AUTO CLOSED count after task update
+    this.checkAutoClosedTasksCount();
   }
   
   // Handle task paused event from modal
@@ -3719,12 +3733,30 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   // Format date string for input field (YYYY-MM-DD format)
-  formatDateForInput(dateString: string): string {
+  formatDateForInput(dateString: string | Date): string {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
+      // Convert Date object to string if needed
+      const dateStr = dateString instanceof Date ? dateString.toISOString() : dateString;
+      
+      // Extract just the date part (YYYY-MM-DD) to avoid timezone issues
+      // If the date string is like "2024-03-15T00:00:00", extract "2024-03-15"
+      const datePart = dateStr.split('T')[0];
+      
+      // Validate the date format
+      if (datePart && /^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
+      
+      // Fallback: try to parse as Date object
+      const date = new Date(dateStr);
       if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      
+      // Use UTC methods to avoid timezone shifts
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch (e) {
       return '';
     }

@@ -501,11 +501,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     // Clear previous validation errors
     this.clearValidationErrors();
     
-    // Check if status is CLOSED and Daily Remarks is mandatory
-    if (this.selectedTaskDetailStatus === 'not-closed' && !this.dailyRemarks.trim()) {
+    // Check if status is CLOSED or COMPLETED and Daily Remarks is mandatory
+    if ((this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') && !this.dailyRemarks.trim()) {
       this.toasterService.showError(
         'Validation Error', 
-        'Daily Remarks is mandatory when closing a task'
+        'Daily Remarks is mandatory when closing or completing a task'
       );
       return;
     }
@@ -529,6 +529,50 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     console.log('Current user:', { userId, currentUser });
     
+    // If status is CLOSED or COMPLETED and Daily Remarks has value, save comment FIRST
+    if ((this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') && this.dailyRemarks.trim()) {
+      console.log('Status is CLOSED/COMPLETED with Daily Remarks - saving comment first');
+      this.saveCommentThenTask(userId);
+    } else {
+      // No daily remarks or different status - proceed directly to save task
+      this.proceedWithTaskSave(userId);
+    }
+  }
+  
+  // Save comment first, then save task
+  private saveCommentThenTask(userId: string) {
+    const commentRequest: any = {
+      taskId: this.taskId,
+      userId: userId,
+      comments: this.dailyRemarks.trim()  // Note: API expects 'comments' not 'comment'
+    };
+    
+    console.log('Calling saveComment API first:', commentRequest);
+    
+    this.api.saveComment(commentRequest).subscribe({
+      next: (commentResponse: any) => {
+        if (commentResponse && commentResponse.success) {
+          console.log('Comment saved successfully, now saving task');
+          this.toasterService.showSuccess('Comment Saved', 'Daily remarks saved successfully');
+          
+          // Now proceed with task save
+          this.proceedWithTaskSave(userId);
+        } else {
+          const errorMessage = commentResponse?.message || 'Failed to save comment';
+          this.toasterService.showError('Error', errorMessage);
+          console.error('Comment save failed:', errorMessage);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error saving comment:', error);
+        const errorMessage = error?.error?.message || error?.message || 'Failed to save comment';
+        this.toasterService.showError('Error', errorMessage);
+      }
+    });
+  }
+  
+  // Proceed with task save (called after comment save or directly)
+  private proceedWithTaskSave(userId: string) {
     // Map status from component format to API format
     const statusMap: { [key: string]: string } = {
       'not-started': 'NOT STARTED',
@@ -620,20 +664,13 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             }
           }
           
-          // If status is CLOSED and Daily Remarks has value, save it as a comment
-          if (this.selectedTaskDetailStatus === 'not-closed' && this.dailyRemarks.trim()) {
-            console.log('Status is CLOSED with Daily Remarks - saving as comment');
-            this.saveDailyRemarksAsComment();
-          }
-          
+          // Emit task updated event to parent component to refresh listing
           this.taskUpdated.emit(taskSaveRequest);
-          console.log('Task saved successfully');
+          console.log('Task saved successfully - emitting taskUpdated event');
           
-          // Close modal only on first save (new task) to prevent duplicate task creation
-          if (isNewTask) {
-            console.log('First time save - closing modal to prevent duplicates');
-            this.close();
-          }
+          // Always close modal after successful save
+          console.log('Closing modal after save');
+          this.close();
         } else {
           const errorMessage = response?.message || 'Failed to update task';
           this.toasterService.showError('Error', errorMessage);
@@ -704,6 +741,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   // Handle status dropdown change
   onStatusChange(newStatus: string) {
     console.log('Status changed to:', newStatus);
+    console.log('Previous status was:', this.previousTaskStatus);
     
     // Block changing to 'running' status if AUTO CLOSED tasks exist
     if (newStatus === 'running' && this.isBlockedByAutoClosedTasks) {
@@ -733,11 +771,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // Handle CLOSED status change - pause first if task is running
+    // Handle CLOSED status change - pause first ONLY if task WAS running
     if (newStatus === 'not-closed') {
-      // If task is currently RUNNING, pause it first before changing to CLOSED
-      if (this.selectedTaskDetailStatus === 'running') {
-        console.log('Task is RUNNING - pausing before closing via dropdown');
+      // Check PREVIOUS status to see if task was RUNNING before dropdown change
+      if (this.previousTaskStatus === 'running') {
+        console.log('Task WAS RUNNING - calling executeTimer with PAUSED before closing');
         
         // Call executeTimer API with PAUSED action
         const timerRequest = {
@@ -749,9 +787,13 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         this.api.executeTimer(timerRequest).subscribe({
           next: (response: any) => {
             if (response && response.success) {
-              console.log('Task paused successfully via dropdown, now changing to CLOSED');
+              console.log('ExecuteTimer PAUSED called successfully, now changing to CLOSED');
               this.stopTimer();
+              
+              // Set status to CLOSED (not-closed)
               this.selectedTaskDetailStatus = 'not-closed';
+              this.previousTaskStatus = 'not-closed'; // Update previous status
+              
               this.toasterService.showInfo('Task Status Changed', 'Task paused and status changed to Closed');
               
               // Emit event to parent component to refresh task list
@@ -763,23 +805,25 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
               // Trigger change detection to show Daily Remarks section
               this.cdr.detectChanges();
             } else {
-              this.toasterService.showError('Pause Failed', 'Failed to pause task before closing');
-              console.error('Failed to pause task:', response?.message);
+              this.toasterService.showError('Status Change Failed', 'Failed to pause task before closing');
+              console.error('Failed to execute timer pause:', response?.message);
               // Revert status on failure
               this.loadTaskDetails();
             }
           },
           error: (error: any) => {
-            console.error('Error pausing task before closing via dropdown:', error);
+            console.error('Error executing timer pause before closing:', error);
             this.toasterService.showError('Error', 'Failed to pause task before closing');
             // Revert status on failure
             this.loadTaskDetails();
           }
         });
       } else {
-        // Task is not running, just change status to CLOSED
+        // Task was NOT running (already paused, not started, etc.) - just change status to CLOSED
+        console.log('Task was not running - changing status to CLOSED without calling executeTimer');
         this.stopTimer();
         this.selectedTaskDetailStatus = 'not-closed';
+        this.previousTaskStatus = 'not-closed'; // Update previous status
         this.toasterService.showInfo('Task Status Changed', 'Task status changed to Closed');
         
         // Emit event to parent component to refresh task list
@@ -807,6 +851,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           if (response && response.success) {
             this.selectedTaskDetailStatus = 'running';
+            this.previousTaskStatus = 'running'; // Update previous status
             this.toasterService.showSuccess('Task Started', 'Task timer has been started successfully!');
             
             // Recheck AUTO CLOSED count after starting
@@ -819,11 +864,15 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           } else {
             this.toasterService.showError('Start Failed', response?.message || 'Failed to start task');
+            // Revert on failure
+            this.loadTaskDetails();
           }
         },
         error: (error: any) => {
           console.error('Error starting task:', error);
           this.toasterService.showError('Error', 'Failed to start task');
+          // Revert on failure
+          this.loadTaskDetails();
         }
       });
     } else if (newStatus === 'pause' || newStatus === 'paused') {
@@ -839,6 +888,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           if (response && response.success) {
             this.stopTimer();
             this.selectedTaskDetailStatus = 'pause';
+            this.previousTaskStatus = 'pause'; // Update previous status
             this.toasterService.showSuccess('Task Paused', 'Task timer has been paused successfully!');
             
             // Recheck AUTO CLOSED count after pausing
@@ -851,15 +901,24 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           } else {
             this.toasterService.showError('Pause Failed', response?.message || 'Failed to pause task');
+            // Revert on failure
+            this.loadTaskDetails();
           }
         },
         error: (error: any) => {
           console.error('Error pausing task:', error);
           this.toasterService.showError('Error', 'Failed to pause task');
+          // Revert on failure
+          this.loadTaskDetails();
         }
       });
+    } else {
+      // For other status changes (not-started, completed), just update the status without calling executeTimer
+      this.selectedTaskDetailStatus = newStatus;
+      this.previousTaskStatus = newStatus; // Update previous status
+      this.toasterService.showInfo('Status Changed', `Task status changed to ${newStatus}`);
+      this.cdr.detectChanges();
     }
-    // For other status changes (not-started, completed), just update the status without calling executeTimer
   }
 
   // Task control methods
@@ -1320,6 +1379,13 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     }, 200);
   }
 
+  // Check if Start Date should be disabled
+  isStartDateDisabled(): boolean {
+    // Start Date is only editable when status is "NOT STARTED"
+    // For all other statuses (RUNNING, PAUSED, CLOSED, AUTO CLOSED), it should be disabled
+    return this.selectedTaskDetailStatus !== 'not-started';
+  }
+
   onProjectSearchInputChange(event: any) {
     this.projectSearchTerm = event.target.value;
   }
@@ -1446,12 +1512,30 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   // Format date string for input field (YYYY-MM-DD format)
-  formatDateForInput(dateString: string): string {
+  formatDateForInput(dateString: string | Date): string {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
+      // Convert Date object to string if needed
+      const dateStr = dateString instanceof Date ? dateString.toISOString() : dateString;
+      
+      // Extract just the date part (YYYY-MM-DD) to avoid timezone issues
+      // If the date string is like "2024-03-15T00:00:00", extract "2024-03-15"
+      const datePart = dateStr.split('T')[0];
+      
+      // Validate the date format
+      if (datePart && /^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
+      
+      // Fallback: try to parse as Date object
+      const date = new Date(dateStr);
       if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      
+      // Use UTC methods to avoid timezone shifts
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch (e) {
       return '';
     }
