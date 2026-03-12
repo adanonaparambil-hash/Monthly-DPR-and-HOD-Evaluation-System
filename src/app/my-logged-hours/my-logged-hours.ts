@@ -1529,6 +1529,20 @@ export class MyLoggedHoursComponent implements OnInit {
     });
   }
 
+  getBreakReasonIcon(reason: string): string {
+    if (!reason) return 'fas fa-clock';
+    const reasonUpper = reason.toUpperCase();
+    
+    if (reasonUpper.includes('QUICK')) {
+      return 'fas fa-bolt';
+    } else if (reasonUpper.includes('LUNCH')) {
+      return 'fas fa-utensils';
+    } else if (reasonUpper.includes('TRAVEL')) {
+      return 'fas fa-car';
+    }
+    return 'fas fa-clock';
+  }
+
   formatDuration(minutes: number): string {
     if (minutes < 1) {
       return 'Just started';

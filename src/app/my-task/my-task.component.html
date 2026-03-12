@@ -173,27 +173,27 @@
       <div class="break-tracker-card">
         <div class="break-tracker-header">
           <div class="break-tracker-icon">
-            <i class="fas fa-mug-hot"></i>
+            <i class="fas fa-clock"></i>
           </div>
-          <div class="break-tracker-title">Break Tracker</div>
+          <div class="break-tracker-title">Travel & Break Tracker</div>
         </div>
 
         <!-- Break Type Selection -->
         <div class="break-type-selection">
+          <button class="break-type-btn" [class.active]="selectedBreakType === 'quick'"
+            (click)="selectBreakType('quick')">
+            <i class="fas fa-bolt"></i>
+            <span>Quick</span>
+          </button>
           <button class="break-type-btn" [class.active]="selectedBreakType === 'lunch'"
             (click)="selectBreakType('lunch')">
             <i class="fas fa-utensils"></i>
             <span>Lunch</span>
           </button>
-          <button class="break-type-btn" [class.active]="selectedBreakType === 'coffee'"
-            (click)="selectBreakType('coffee')">
-            <i class="fas fa-coffee"></i>
-            <span>Coffee</span>
-          </button>
-          <button class="break-type-btn" [class.active]="selectedBreakType === 'quick'"
-            (click)="selectBreakType('quick')">
-            <i class="fas fa-bolt"></i>
-            <span>Quick</span>
+          <button class="break-type-btn" [class.active]="selectedBreakType === 'travel'"
+            (click)="selectBreakType('travel')">
+            <i class="fas fa-car"></i>
+            <span>Travel</span>
           </button>
         </div>
 
@@ -201,12 +201,6 @@
         <div class="break-timer-display">
           <div class="timer-value">{{ breakTimerDisplay }}</div>
           <div class="timer-caption">{{ breakTimerCaption }}</div>
-        </div>
-
-        <!-- Remarks Field -->
-        <div class="break-remarks">
-          <input type="text" class="remarks-input" [(ngModel)]="breakRemarks" placeholder="Add notes (optional)..."
-            maxlength="50">
         </div>
 
         <!-- Control Buttons -->

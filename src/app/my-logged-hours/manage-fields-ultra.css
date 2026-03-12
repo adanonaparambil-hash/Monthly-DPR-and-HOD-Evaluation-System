@@ -529,7 +529,6 @@
   color: #ffffff;
   margin: 0 0 4px 0;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .add-field-subtitle {
@@ -993,10 +992,6 @@
   border-color: #334155;
 }
 
-.logged-hours-container.dark-mode .modal-title-ultra,
-.logged-hours-container.dark-mode .add-field-title {
-  color: #f1f5f9;
-}
 
 .logged-hours-container.dark-mode .modal-subtitle-ultra,
 .logged-hours-container.dark-mode .add-field-subtitle {

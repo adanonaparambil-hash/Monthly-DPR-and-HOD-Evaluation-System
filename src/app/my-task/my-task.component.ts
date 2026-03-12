@@ -160,7 +160,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   breakId: number | null = null;
   
   // Break Tracker
-  selectedBreakType: 'lunch' | 'coffee' | 'quick' | null = null;
+  selectedBreakType: 'lunch' | 'travel' | 'quick' | null = null;
   isBreakRunning = false;
   isBreakPaused = false;
   breakTimerDisplay = '00:00:00';
@@ -849,8 +849,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             const reasonLower = this.breakReason.toLowerCase();
             if (reasonLower.includes('lunch')) {
               this.selectedBreakType = 'lunch';
-            } else if (reasonLower.includes('coffee')) {
-              this.selectedBreakType = 'coffee';
+            } else if (reasonLower.includes('travel')) {
+              this.selectedBreakType = 'travel';
             } else if (reasonLower.includes('quick')) {
               this.selectedBreakType = 'quick';
             }
@@ -976,8 +976,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             const reasonLower = this.breakReason.toLowerCase();
             if (reasonLower.includes('lunch')) {
               this.selectedBreakType = 'lunch';
-            } else if (reasonLower.includes('coffee')) {
-              this.selectedBreakType = 'coffee';
+            } else if (reasonLower.includes('travel')) {
+              this.selectedBreakType = 'travel';
             } else if (reasonLower.includes('quick')) {
               this.selectedBreakType = 'quick';
             }
@@ -1931,7 +1931,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   // Break Tracker Methods
-  selectBreakType(type: 'lunch' | 'coffee' | 'quick') {
+  selectBreakType(type: 'lunch' | 'travel' | 'quick') {
     this.selectedBreakType = type;
     if (!this.isBreakRunning) {
       this.updateBreakCaption();
@@ -1943,14 +1943,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (!this.selectedBreakType) {
       return '';
     }
-    
-    const breakReasons: { [key: string]: string } = {
-      lunch: 'Lunch Break',
-      coffee: 'Coffee Break',
-      quick: 'Quick Break'
-    };
-    
-    return breakReasons[this.selectedBreakType] || '';
+    return this.selectedBreakType.toUpperCase();
   }
 
   startBreak() {
@@ -1982,19 +1975,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       this.pauseActiveTaskTimer();
     }
 
-    // Map break type to reason
-    const breakReasons = {
-      lunch: 'Lunch Break',
-      coffee: 'Coffee Break',
-      quick: 'Quick Break'
-    };
-    const reason = breakReasons[this.selectedBreakType];
-
-    // Prepare break request
+    // Prepare break request with uppercase break type
     const breakRequest: any = {
       userId: userId,
       action: 'START',
-      reason: reason,
+      reason: this.selectedBreakType.toUpperCase(),
       remarks: this.breakRemarks || ''
     };
 
@@ -2014,7 +1999,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.breakStartTime = new Date();
           this.breakElapsedSeconds = 0;
           this.breakId = response.data?.breakId || null;
-          this.breakReason = reason;
+          this.breakReason = this.selectedBreakType?.toUpperCase() || '';
           this.updateBreakCaption();
 
           // Start local timer for display
@@ -2026,7 +2011,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           }, 1000);
           
           // Show success toaster
-          this.toasterService.showSuccess('Break Started', `${reason} has been started successfully!`);
+          this.toasterService.showSuccess('Break Started', `${this.selectedBreakType?.toUpperCase()} has been started successfully!`);
           
           // Reload active tasks to update status
           this.loadActiveTasks();
@@ -2333,7 +2318,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     } else if (this.selectedBreakType && !this.isBreakRunning) {
       const typeNames = {
         lunch: 'Lunch Break',
-        coffee: 'Coffee Break',
+        travel: 'Travel Break',
         quick: 'Quick Break'
       };
       this.breakTimerCaption = `Ready to start ${typeNames[this.selectedBreakType]}`;
@@ -2342,7 +2327,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     } else if (this.isBreakRunning) {
       const typeNames = {
         lunch: 'Lunch',
-        coffee: 'Coffee',
+        travel: 'Travel',
         quick: 'Quick'
       };
       this.breakTimerCaption = `${typeNames[this.selectedBreakType!]} break in progress`;
@@ -2353,11 +2338,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (!this.selectedBreakType && !this.isBreakRunning) {
       return 'Choose your break type above';
     } else if (this.selectedBreakType && !this.isBreakRunning) {
-      return 'Click Start when ready';
+      // Show meaningful message based on break type
+      const messages: { [key: string]: string } = {
+        quick: '⚡ Quick break - Recharge yourself!',
+        lunch: '🍽️ Enjoy your lunch break!',
+        travel: '🚗 Enjoy your travel time!'
+      };
+      return messages[this.selectedBreakType!] || 'Click Start when ready';
     } else if (this.isBreakRunning && this.isBreakPaused) {
       return 'Break timer paused';
     } else if (this.isBreakRunning) {
-      return 'Enjoy your break! 😊';
+      // Show meaningful message based on break type while running
+      const runningMessages: { [key: string]: string } = {
+        quick: '⚡ Quick break in progress - Enjoy!',
+        lunch: '🍽️ Enjoy your lunch break!',
+        travel: '🚗 Safe travels!'
+      };
+      return runningMessages[this.selectedBreakType!] || 'Enjoy your break! 😊';
     }
     return '';
   }

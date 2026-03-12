@@ -24,8 +24,8 @@
         <span>Export Report</span>
       </button>
       <button class="action-btn primary" (click)="openBreakHistoryModal()">
-        <i class="fas fa-coffee"></i>
-        <span>Break History</span>
+        <i class="fas fa-clock"></i>
+        <span>Travel & Break History</span>
       </button>
     </div>
   </header>
@@ -400,10 +400,10 @@
       <!-- Modal Header -->
       <div class="modal-header-large">
         <div class="modal-title-section-large">
-          <i class="fas fa-coffee modal-icon-large"></i>
+          <i class="fas fa-clock modal-icon-large"></i>
           <div>
-            <h2 class="modal-title-large">Break History</h2>
-            <p class="modal-subtitle-large">View and filter break sessions</p>
+            <h2 class="modal-title-large">Travel & Break History</h2>
+            <p class="modal-subtitle-large">View and filter travel and break sessions</p>
           </div>
         </div>
         <button class="close-btn-large" (click)="closeBreakHistoryModal()">
@@ -543,7 +543,7 @@
                     </td>
                     <td class="td-reason">
                       <span class="break-reason-badge">
-                        <i class="fas fa-mug-hot"></i>
+                        <i [ngClass]="getBreakReasonIcon(breakRecord.breakReason)"></i>
                         {{ breakRecord.breakReason }}
                       </span>
                     </td>

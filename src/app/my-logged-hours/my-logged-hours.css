@@ -2435,9 +2435,8 @@
 .modal-title-large {
   font-size: 26px;
   font-weight: 700;
-  color: #ffffff;
+  color: #fef3c7;
   margin: 0 0 4px 0;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .modal-subtitle-large {
@@ -3986,7 +3985,7 @@
 .break-history-filters .filter-label {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
