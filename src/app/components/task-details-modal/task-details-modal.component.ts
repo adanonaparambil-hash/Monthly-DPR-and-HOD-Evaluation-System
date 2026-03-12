@@ -282,7 +282,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Load custom fields from API
   loadCustomFields() {
-    this.api.getCustomFields().subscribe({
+    this.api.getCustomFields(this.userId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           this.availableCustomFields = response.data.map((field: any) => ({
@@ -501,6 +501,15 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     // Clear previous validation errors
     this.clearValidationErrors();
     
+    // Validate Assignee is selected (mandatory)
+    if (!this.selectedAssigneeId || this.selectedAssigneeId.trim() === '') {
+      this.toasterService.showError(
+        'Validation Error', 
+        'Assigned To is mandatory. Please select an assignee.'
+      );
+      return;
+    }
+    
     // Check if status is CLOSED or COMPLETED and Daily Remarks is mandatory
     if ((this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') && !this.dailyRemarks.trim()) {
       this.toasterService.showError(
@@ -541,10 +550,15 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   
   // Save comment first, then save task
   private saveCommentThenTask(userId: string) {
-    const commentRequest: any = {
+    const commentRequest: TaskCommentDto = {
+      commentId: 0,
       taskId: this.taskId,
       userId: userId,
-      comments: this.dailyRemarks.trim()  // Note: API expects 'comments' not 'comment'
+      comments: this.dailyRemarks.trim(),
+      submittedOn: new Date().toISOString(),
+      empName: '',
+      profileImage: undefined,
+      profileImageBase64: undefined
     };
     
     console.log('Calling saveComment API first:', commentRequest);
@@ -1360,22 +1374,40 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   showProjectDropdown() {
     if (this.isViewOnly) return; // Prevent dropdown in view-only mode
     this.isProjectDropdownVisible = true;
+    // If a project is already selected, show its name in search term for editing
+    // Otherwise, keep it empty for new search
+    if (this.selectedProjectId) {
+      const selectedProject = this.projectsList.find(p => p.projectId?.toString() === this.selectedProjectId);
+      this.projectSearchTerm = selectedProject?.projectName || '';
+    } else {
+      this.projectSearchTerm = '';
+    }
   }
 
   hideProjectDropdown() {
     setTimeout(() => {
       this.isProjectDropdownVisible = false;
+      this.projectSearchTerm = ''; // Clear search term when closing dropdown
     }, 200);
   }
 
   showAssigneeDropdown() {
     if (this.isViewOnly) return; // Prevent dropdown in view-only mode
     this.isAssigneeDropdownVisible = true;
+    // If an assignee is already selected, show their name in search term for editing
+    // Otherwise, keep it empty for new search
+    if (this.selectedAssigneeId) {
+      const selectedAssignee = this.employeeMasterList.find(emp => emp.idValue?.toString() === this.selectedAssigneeId?.toString());
+      this.assigneeSearchTerm = selectedAssignee?.description || '';
+    } else {
+      this.assigneeSearchTerm = '';
+    }
   }
 
   hideAssigneeDropdown() {
     setTimeout(() => {
       this.isAssigneeDropdownVisible = false;
+      this.assigneeSearchTerm = ''; // Clear search term when closing dropdown
     }, 200);
   }
 
@@ -1630,6 +1662,20 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   // Close modal
   close() {
     this.closeModal.emit();
+  }
+
+  // Get status display text
+  getStatusDisplayText(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'not-started': 'Not Started',
+      'running': 'Running',
+      'pause': 'Paused',
+      'paused': 'Paused',
+      'not-closed': 'Closed',
+      'completed': 'Completed',
+      'auto-closed': 'Auto Closed'
+    };
+    return statusMap[status] || status;
   }
 
   // Check AUTO CLOSED tasks count from API

@@ -19,27 +19,67 @@
             View Only
           </div>
         }
-        <!-- Only show status dropdown if taskId exists (not a new task) -->
+        <!-- Status Display/Dropdown -->
         @if (taskId && taskId > 0) {
-          <div class="status-dropdown-container">
-            <select class="modal-status-select" [(ngModel)]="selectedTaskDetailStatus" (ngModelChange)="onStatusChange($event)" [disabled]="isViewOnly || taskId === 0">
-              <!-- Hidden options - only show current status, not selectable -->
-              <option value="not-started" [hidden]="selectedTaskDetailStatus !== 'not-started'" disabled>Not Started</option>
-              <option value="running" [hidden]="selectedTaskDetailStatus !== 'running'" disabled>Running</option>
-              <option value="pause" [hidden]="selectedTaskDetailStatus !== 'pause' && selectedTaskDetailStatus !== 'paused'" disabled>Pause</option>
-              <option value="auto-closed" [hidden]="selectedTaskDetailStatus !== 'auto-closed'" disabled>Auto Closed</option>
-              
-              <!-- User selectable options -->
-              <option value="not-closed">Closed</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
+          @if (!isViewOnly) {
+            <!-- Status Dropdown - Only show if NOT in view-only mode -->
+            <div class="status-dropdown-control">
+              <select class="status-dropdown-select" [(ngModel)]="selectedTaskDetailStatus" (change)="onStatusChange(selectedTaskDetailStatus)">
+                <option [value]="selectedTaskDetailStatus" disabled>{{ getStatusDisplayText(selectedTaskDetailStatus) }}</option>
+                <option value="not-closed">Closed</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          } @else {
+            <!-- Status Badge - Show in view-only mode -->
+            <div class="status-display-badge" [class]="'status-' + selectedTaskDetailStatus">
+              <i class="fas fa-circle status-dot"></i>
+              <span class="status-text">{{ getStatusDisplayText(selectedTaskDetailStatus) }}</span>
+            </div>
+          }
         } @else {
           <!-- For new tasks, show fixed "Not Started" badge -->
-          <div class="status-badge-fixed">
-            <i class="fas fa-circle" style="color: #94a3b8; font-size: 8px;"></i>
-            Not Started
+          <div class="status-display-badge status-not-started">
+            <i class="fas fa-circle status-dot"></i>
+            <span class="status-text">Not Started</span>
           </div>
+        }
+        
+        <!-- Timer Control Buttons (Start/Pause/Resume) - Icon Only - Only show if NOT in view-only mode -->
+        @if (!isViewOnly && taskId && taskId > 0) {
+          <div class="header-timer-controls">
+            <!-- Show Start button when task is NOT STARTED -->
+            <button class="timer-control-icon start-icon" 
+                    *ngIf="selectedTaskDetailStatus === 'not-started'"
+                    (click)="startTaskFromModal()"
+                    title="Start Task">
+              <i class="fas fa-play"></i>
+            </button>
+            
+            <!-- Show Pause button when task is RUNNING -->
+            <button class="timer-control-icon pause-icon" 
+                    *ngIf="selectedTaskDetailStatus === 'running'"
+                    (click)="pauseTaskFromModal()"
+                    title="Pause Task">
+              <i class="fas fa-pause"></i>
+            </button>
+            
+            <!-- Show Resume button when task is PAUSED or CLOSED (but not AUTO CLOSED) -->
+            <button class="timer-control-icon resume-icon" 
+                    *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused' || selectedTaskDetailStatus === 'not-closed'"
+                    (click)="resumeTaskFromModal()"
+                    title="Resume Task">
+              <i class="fas fa-play"></i>
+            </button>
+          </div>
+        }
+        
+        <!-- Save Button - aligned with other action buttons -->
+        @if (!isViewOnly) {
+          <button class="save-task-btn-header" (click)="saveTaskChanges()" title="Save Changes">
+            <i class="fas fa-save"></i>
+            <span>Save</span>
+          </button>
         }
       </div>
 
@@ -56,55 +96,14 @@
           <div class="divider"></div>
         }
         
-        <!-- Only show timer controls and save button if NOT in view-only mode -->
+        <!-- Show timer display if NOT in view-only mode -->
         @if (!isViewOnly) {
           <div class="modal-timer-section">
             <span class="timer-label">Running Timer</span>
-            <div class="timer-controls">
-              <div class="timer-display centered-timer">
-                <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
-              </div>
-              <div class="timer-buttons">
-                <!-- Show Start button when task is NOT STARTED -->
-                <button class="timer-btn start-btn" 
-                        *ngIf="selectedTaskDetailStatus === 'not-started'"
-                        (click)="startTaskFromModal()"
-                        title="Start Task">
-                  <i class="fas fa-play"></i>
-                </button>
-                
-                <!-- Show Pause button when task is RUNNING -->
-                <button class="timer-btn pause-btn" 
-                        *ngIf="selectedTaskDetailStatus === 'running'"
-                        (click)="pauseTaskFromModal()"
-                        title="Pause Task">
-                  <i class="fas fa-pause"></i>
-                </button>
-                
-                <!-- Show Resume button when task is PAUSED or CLOSED (but not AUTO CLOSED) -->
-                <button class="timer-btn resume-btn" 
-                        *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused' || selectedTaskDetailStatus === 'not-closed'"
-                        (click)="resumeTaskFromModal()"
-                        title="Resume Task">
-                  <i class="fas fa-play"></i>
-                </button>
-                
-                <!-- Always show Stop button (except for AUTO CLOSED) -->
-                <button class="timer-btn stop-btn"
-                        *ngIf="selectedTaskDetailStatus !== 'auto-closed'"
-                        (click)="stopTaskFromModal()"
-                        title="Stop Task">
-                  <i class="fas fa-stop"></i>
-                </button>
-              </div>
+            <div class="timer-display centered-timer">
+              <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
             </div>
           </div>
-          
-          <!-- Save Button next to Running Timer -->
-          <button class="save-task-btn" (click)="saveTaskChanges()" title="Save Changes">
-            <i class="fas fa-save"></i>
-            <span>Save</span>
-          </button>
 
           <div class="divider"></div>
         }
@@ -213,12 +212,12 @@
             placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
-        <!-- Daily Remarks - Mandatory when status is CLOSED or COMPLETED -->
-        @if (!isViewOnly && (selectedTaskDetailStatus === 'not-closed' || selectedTaskDetailStatus === 'completed')) {
+        <!-- Daily Remarks - Always visible -->
+        @if (!isViewOnly) {
           <div class="daily-remarks-compact">
             <label class="remarks-label">
               <i class="fas fa-comment-dots"></i>
-              Daily Remarks
+              Remarks
               <span class="required-indicator">*</span>
             </label>
             <div class="remarks-input-container">
@@ -226,7 +225,7 @@
                 type="text" 
                 class="remarks-input" 
                 [(ngModel)]="dailyRemarks"
-                placeholder="Add today's progress notes or updates (mandatory for closing task)..."
+                placeholder="Add today's progress notes or updates..."
                 maxlength="200"
               />
             </div>
@@ -250,7 +249,7 @@
                 <div class="searchable-dropdown">
                   <input 
                     type="text" 
-                    [value]="getProjectDisplayName()"
+                    [value]="isProjectDropdownVisible ? projectSearchTerm : getProjectDisplayName()"
                     [placeholder]="projectsList.length === 0 ? 'Loading projects...' : 'Search and select project...'"
                     class="dropdown-input"
                     (input)="onProjectSearchInputChange($event)"
@@ -283,11 +282,12 @@
                 <p class="metadata-label">
                   <i class="fas fa-user label-icon"></i>
                   Assigned To
+                  <span class="required-indicator">*</span>
                 </p>
                 <div class="searchable-dropdown">
                   <input 
                     type="text" 
-                    [value]="getAssigneeDisplayName()"
+                    [value]="isAssigneeDropdownVisible ? assigneeSearchTerm : getAssigneeDisplayName()"
                     [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select assignee...'"
                     class="dropdown-input"
                     (input)="onAssigneeSearchInputChange($event)"

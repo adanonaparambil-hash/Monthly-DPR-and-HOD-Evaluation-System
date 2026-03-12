@@ -103,6 +103,8 @@ interface TaskCategory {
   departmentId: number;
   departmentName?: string;
   sequenceNumber?: number;
+  estimatedHours?: number;
+  timeDisplay?: string;
   isFavourite?: 'Y' | 'N';
   isEditing?: boolean;
 }
@@ -450,7 +452,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Load Custom Fields from API
   loadCustomFields(): void {
-    this.api.getCustomFields().subscribe({
+    // Get current user ID from session
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    
+    this.api.getCustomFields(userId).subscribe({
       next: (response: any) => {
         if (response && response.success && response.data) {
           this.availableCustomFields = response.data.map((field: any) => ({
@@ -638,6 +644,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Convert minutes to HH:MM format
+  private minutesToTimeFormat(minutes: number): string {
+    if (!minutes || minutes < 0) return '00:00';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+
   // Load Task Categories from API
   loadTaskCategories(): void {
     // Get user ID from session/localStorage
@@ -648,35 +662,47 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         if (response && response.success && response.data) {
           // Map API response to TaskCategory interface with sequenceNumber
-          this.favouriteList = (response.data.favouriteList || []).map((cat: any) => ({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            departmentId: cat.departmentId,
-            departmentName: cat.departmentName,
-            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
-            isFavourite: 'Y',  // Items in favouriteList are favorites
-            isEditing: false
-          }));
+          this.favouriteList = (response.data.favouriteList || []).map((cat: any) => {
+            const estimatedMinutes = cat.eSTIMATEDHOURS || cat.estimatedHours || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'Y',
+              isEditing: false
+            };
+          });
           
-          this.departmentList = (response.data.departmentList || []).map((cat: any) => ({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            departmentId: cat.departmentId,
-            departmentName: cat.departmentName,
-            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
-            isFavourite: cat.isFavourite || 'N',
-            isEditing: false
-          }));
+          this.departmentList = (response.data.departmentList || []).map((cat: any) => {
+            const estimatedMinutes = cat.eSTIMATEDHOURS || cat.estimatedHours || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'N',
+              isEditing: false
+            };
+          });
           
-          this.allDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => ({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            departmentId: cat.departmentId,
-            departmentName: cat.departmentName,
-            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
-            isFavourite: cat.isFavourite || 'N',
-            isEditing: false
-          }));
+          this.allDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => {
+            const estimatedMinutes = cat.eSTIMATEDHOURS || cat.estimatedHours || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'N',
+              isEditing: false
+            };
+          });
           
           this.taskCategories = [...this.allDepartmentList];
           console.log('Task Categories loaded for user:', userId, 
@@ -686,46 +712,58 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           
           // Debug: Log first category to see structure
           if (this.allDepartmentList.length > 0) {
-            console.log('Sample category with sequenceNumber:', this.allDepartmentList[0]);
+            console.log('Sample category with timeDisplay:', this.allDepartmentList[0]);
           }
         } else if (response && response.data) {
           // Handle direct data response
-          this.favouriteList = (response.data.favouriteList || []).map((cat: any) => ({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            departmentId: cat.departmentId,
-            departmentName: cat.departmentName,
-            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
-            isFavourite: 'Y',  // Items in favouriteList are favorites
-            isEditing: false
-          }));
+          this.favouriteList = (response.data.favouriteList || []).map((cat: any) => {
+            const estimatedMinutes = cat.eSTIMATEDHOURS || cat.estimatedHours || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'Y',
+              isEditing: false
+            };
+          });
           
-          this.departmentList = (response.data.departmentList || []).map((cat: any) => ({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            departmentId: cat.departmentId,
-            departmentName: cat.departmentName,
-            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
-            isFavourite: cat.isFavourite || 'N',
-            isEditing: false
-          }));
+          this.departmentList = (response.data.departmentList || []).map((cat: any) => {
+            const estimatedMinutes = cat.eSTIMATEDHOURS || cat.estimatedHours || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'N',
+              isEditing: false
+            };
+          });
           
-          this.allDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => ({
-            categoryId: cat.categoryId,
-            categoryName: cat.categoryName,
-            departmentId: cat.departmentId,
-            departmentName: cat.departmentName,
-            sequenceNumber: cat.eSTIMATEDHOURS || cat.estimatedHours || 0,
-            isFavourite: cat.isFavourite || 'N',
-            isEditing: false
-          }));
+          this.allDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => {
+            const estimatedMinutes = cat.eSTIMATEDHOURS || cat.estimatedHours || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'N',
+              isEditing: false
+            };
+          });
           
           this.taskCategories = [...this.allDepartmentList];
           console.log('Task Categories loaded (direct data) for user:', userId, this.allDepartmentList.length);
           
           // Debug: Log first category to see structure
           if (this.allDepartmentList.length > 0) {
-            console.log('Sample category with sequenceNumber:', this.allDepartmentList[0]);
+            console.log('Sample category with timeDisplay:', this.allDepartmentList[0]);
           }
         }
       },
@@ -2371,6 +2409,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Close add form if open
     this.isAddingNewCategory = false;
     
+    // Initialize timeDisplay from sequenceNumber if not already set
+    if (!category.timeDisplay && category.sequenceNumber) {
+      category.timeDisplay = this.minutesToTimeFormat(category.sequenceNumber);
+    }
+    
     // Enable editing for this category
     category.isEditing = true;
     
@@ -2381,7 +2424,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       departmentId: category.departmentId,
       departmentName: category.departmentName,
       sequenceNumber: category.sequenceNumber,
-      estimatedHours: category.sequenceNumber // Show as estimatedHours for clarity
+      timeDisplay: category.timeDisplay
     });
     console.log('Full category object:', category);
   }
@@ -2465,14 +2508,15 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           categoryName: '', 
           departmentId: userDept.departmentId, 
           departmentName: userDept.deptName,
-          sequenceNumber: 0
+          sequenceNumber: 0,
+          timeDisplay: ''
         };
         console.log('Default department set for new category:', userDept.deptName);
       } else {
-        this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+        this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0, timeDisplay: '' };
       }
     } else {
-      this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+      this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0, timeDisplay: '' };
     }
     
     this.cancelAllEdits();
@@ -2481,7 +2525,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Cancel adding new category
   cancelAddCategory() {
     this.isAddingNewCategory = false;
-    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+    this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0, timeDisplay: '' };
   }
 
   // Handle department dropdown change
@@ -2501,12 +2545,15 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
       const userId = currentUser.empId || currentUser.employeeId || '1';
 
+      // Convert HH:MM to total minutes
+      const totalMinutes = this.parseTimeToMinutes(this.newTaskCategory.timeDisplay || '00:00');
+
       // Prepare API request
       const request: any = {
         categoryName: this.newTaskCategory.categoryName.trim(),
         departmentId: this.newTaskCategory.departmentId,
         createdBy: userId,
-        estimatedHours: this.newTaskCategory.sequenceNumber || 0
+        estimatedHours: totalMinutes
       };
 
       // Call API to create category
@@ -2520,7 +2567,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             
             // Reset form
             this.isAddingNewCategory = false;
-            this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
+            this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0, timeDisplay: '' };
             
             // Reload task categories to get fresh data
             this.loadTaskCategories();
@@ -2534,6 +2581,46 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.toasterService.showError('Error', 'Error creating category. Please try again.');
         }
       });
+    }
+  }
+
+  // Parse HH:MM format to total minutes
+  private parseTimeToMinutes(timeStr: string): number {
+    if (!timeStr || timeStr.trim() === '') return 0;
+    const parts = timeStr.split(':');
+    if (parts.length !== 2) return 0;
+    
+    const hours = parseInt(parts[0], 10) || 0;
+    const minutes = parseInt(parts[1], 10) || 0;
+    
+    // Validate ranges
+    const validHours = Math.min(Math.max(hours, 0), 23);
+    const validMinutes = Math.min(Math.max(minutes, 0), 59);
+    
+    return validHours * 60 + validMinutes;
+  }
+
+  // Handle time input - format as HH:MM
+  onTimeInput(category: TaskCategory): void {
+    if (!category.timeDisplay) return;
+    
+    let input = category.timeDisplay.replace(/[^0-9:]/g, '');
+    
+    // Auto-format as user types
+    if (input.length === 2 && !input.includes(':')) {
+      input = input + ':';
+    }
+    
+    // Limit to HH:MM format
+    if (input.length > 5) {
+      input = input.substring(0, 5);
+    }
+    
+    category.timeDisplay = input;
+    
+    // Update sequenceNumber for backend
+    if (input.length === 5 && input.includes(':')) {
+      category.sequenceNumber = this.parseTimeToMinutes(input);
     }
   }
 
@@ -2684,6 +2771,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Check if a category is favourited
   isFavourited(category: TaskCategory): boolean {
     return category.isFavourite === 'Y';
+  }
+
+  // Check if a category already has tasks in My Tasks list
+  hasExistingTaskInMyList(category: TaskCategory): boolean {
+    // Check if any task in myTasksList has the same category name
+    return this.myTasksList.some(task => 
+      task.taskCategory?.toLowerCase() === category.categoryName?.toLowerCase()
+    );
   }
 
   // Select a task category - opens task details modal

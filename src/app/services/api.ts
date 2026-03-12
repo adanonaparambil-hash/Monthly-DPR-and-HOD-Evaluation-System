@@ -244,8 +244,7 @@ export class Api {
 
    /* ===================== CUSTOM FIELDS ===================== */
 
-  getCustomFields(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetCustomFields`);
+  getCustomFields(userid: string): Observable<any> { return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetCustomFields/${userid}`);
   }
 
   /* ===================== TASK ===================== */
@@ -398,8 +397,8 @@ export class Api {
   }
 
  
- getOpenBreaks(): Observable<any> {
-   return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`);
+ getOpenBreaks(request: any): Observable<any> {
+   return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request);
   }
   
 
@@ -410,8 +409,8 @@ export class Api {
 
 
   
-  getAllFieldsAsync(): Observable<any> {
-   return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAllFieldsAsync`);
+  getAllFieldsAsync(departmentId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAllFieldsAsync/${departmentId}`);
   }
 
 
@@ -459,3 +458,4 @@ export class Api {
 
 
 }
+

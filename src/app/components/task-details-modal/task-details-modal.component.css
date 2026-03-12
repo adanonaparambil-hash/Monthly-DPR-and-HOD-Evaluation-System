@@ -5,6 +5,818 @@
 
 /* Additional component-specific styles can be added here if needed */
 
+/* Status Display Badge (Read-only) */
+.status-display-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  text-align: center;
+  justify-content: center;
+}
+
+.status-dot {
+  font-size: 8px;
+}
+
+/* Status Badge Colors */
+.status-display-badge.status-not-started {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+  border: 2px solid #cbd5e1;
+}
+
+.status-display-badge.status-not-started .status-dot {
+  color: #94a3b8;
+}
+
+.status-display-badge.status-running {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 2px solid #93c5fd;
+}
+
+.status-display-badge.status-running .status-dot {
+  color: #3b82f6;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.status-display-badge.status-pause,
+.status-display-badge.status-paused {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 2px solid #fbbf24;
+}
+
+.status-display-badge.status-pause .status-dot,
+.status-display-badge.status-paused .status-dot {
+  color: #f59e0b;
+}
+
+.status-display-badge.status-not-closed {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 2px solid #f87171;
+}
+
+.status-display-badge.status-not-closed .status-dot {
+  color: #ef4444;
+}
+
+.status-display-badge.status-completed {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 2px solid #6ee7b7;
+}
+
+.status-display-badge.status-completed .status-dot {
+  color: #10b981;
+}
+
+.status-display-badge.status-auto-closed {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+  border: 2px solid #a5b4fc;
+}
+
+.status-display-badge.status-auto-closed .status-dot {
+  color: #6366f1;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* Header Action Buttons Container */
+.header-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+/* Timer Control Icons - Icon Only, Compact */
+.header-timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.timer-control-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-control-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.timer-control-icon:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.timer-control-icon i {
+  font-size: 14px;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.timer-control-icon:hover i {
+  transform: scale(1.2);
+}
+
+.timer-control-icon:active {
+  transform: scale(0.95);
+}
+
+/* Start Icon - Teal */
+.timer-control-icon.start-icon {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+}
+
+.timer-control-icon.start-icon:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Pause Icon - Purple */
+.timer-control-icon.pause-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.timer-control-icon.pause-icon:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Resume Icon - Blue */
+.timer-control-icon.resume-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.timer-control-icon.resume-icon:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Header Action Buttons (Start/Pause/Resume) - Compact & Aligned */
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  height: 36px;
+}
+
+.header-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.header-action-btn:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.header-action-btn i {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.header-action-btn:hover i {
+  transform: scale(1.15);
+}
+
+.header-action-btn:active {
+  transform: scale(0.96);
+}
+
+/* Start Button - Green */
+.header-action-btn.start-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.header-action-btn.start-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Pause Button - Purple */
+.header-action-btn.pause-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.header-action-btn.pause-btn:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Resume Button - Blue */
+.header-action-btn.resume-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.header-action-btn.resume-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Status Segmented Control (Enhanced Pill-style Toggle) */
+/* Status Dropdown Control */
+.status-dropdown-control {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+  margin-right: 8px;
+}
+
+.status-dropdown-select {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23ffffff' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+  min-width: 160px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-dropdown-select::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  animation: shimmer-dropdown 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer-dropdown {
+  0% {
+    transform: translate(-100%, -100%) rotate(45deg);
+  }
+  100% {
+    transform: translate(100%, 100%) rotate(45deg);
+  }
+}
+
+.status-dropdown-select:hover {
+  border-color: #764ba2;
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.status-dropdown-select:focus {
+  outline: none;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3), 0 6px 25px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.status-dropdown-select:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* Dropdown options styling */
+.status-dropdown-select option {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #1e293b;
+  font-weight: 600;
+  border: none;
+  line-height: 1.8;
+}
+
+.status-dropdown-select option:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.status-dropdown-select option:checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 700;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.status-dropdown-select option:disabled {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Red glow for Closed button */
+.segment-btn:first-child.active::after {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(239, 68, 68, 0.2));
+}
+
+/* Green glow for Completed button */
+.segment-btn:last-child.active::after {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.2));
+}
+
+@keyframes glow-pulse-segment {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* Save Button in Header - Compact & Aligned */
+.save-task-btn-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 8px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  position: relative;
+  overflow: hidden;
+  height: 36px;
+}
+
+.save-task-btn-header::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.save-task-btn-header:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.save-task-btn-header i {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.save-task-btn-header:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.save-task-btn-header:hover i {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+.save-task-btn-header:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+/* Enhanced Animated Timer Display - Vertical Layout with Exciting Animations */
+.modal-timer-section {
+  display: flex;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
+  background-size: 200% 200%;
+  border: 2px solid #6ee7b7;
+  border-radius: 8px;
+  box-shadow: 
+    0 2px 8px rgba(16, 185, 129, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: gradient-wave 4s ease-in-out infinite;
+  min-height: 48px;
+}
+
+@keyframes gradient-wave {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Animated particles floating across */
+.modal-timer-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.4), 
+    transparent);
+  animation: timer-shine 2.5s ease-in-out infinite;
+}
+
+@keyframes timer-shine {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* Pulsing glow effect */
+.modal-timer-section::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(52, 211, 153, 0.4));
+  opacity: 0;
+  animation: timer-glow-pulse 2s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes timer-glow-pulse {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.modal-timer-section:hover {
+  border-color: #10b981;
+  box-shadow: 
+    0 4px 12px rgba(16, 185, 129, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.timer-label {
+  position: relative;
+  z-index: 1;
+  font-size: 9px;
+  font-weight: 600;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  animation: label-pulse 3s ease-in-out infinite;
+  margin-bottom: 0 !important;
+  text-align: center;
+}
+
+@keyframes label-pulse {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.timer-display.centered-timer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  min-width: auto;
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.timer-text {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #047857;
+  letter-spacing: 1.5px;
+  animation: timer-tick 1s ease-in-out infinite;
+  text-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes timer-tick {
+  0%, 100% {
+    transform: scale(1);
+    color: #047857;
+  }
+  50% {
+    transform: scale(1.05);
+    color: #059669;
+  }
+}
+
+/* Total Hours Section - Vertical Layout with Matching Animations */
+.total-hours-section {
+  display: flex;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+  background-size: 200% 200%;
+  border: 2px solid #93c5fd;
+  border-radius: 8px;
+  box-shadow: 
+    0 2px 8px rgba(59, 130, 246, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: gradient-wave-blue 4s ease-in-out infinite 0.5s;
+  min-height: 48px;
+}
+
+@keyframes gradient-wave-blue {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.total-hours-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.4), 
+    transparent);
+  animation: hours-shine 2.5s ease-in-out infinite 0.8s;
+}
+
+@keyframes hours-shine {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.total-hours-section::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(147, 197, 253, 0.4));
+  opacity: 0;
+  animation: hours-glow-pulse 2s ease-in-out infinite 0.5s;
+  z-index: 0;
+}
+
+@keyframes hours-glow-pulse {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.total-hours-section:hover {
+  border-color: #3b82f6;
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.hours-label {
+  position: relative;
+  z-index: 1;
+  font-size: 9px;
+  font-weight: 600;
+  color: #1e40af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  animation: label-pulse 3s ease-in-out infinite 0.5s;
+  margin-bottom: 0 !important;
+  text-align: center;
+}
+
+.hours-display {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-direction: row;
+}
+
+.hours-display i {
+  font-size: 11px;
+  color: #2563eb;
+  animation: icon-spin-slow 8s linear infinite;
+}
+
+@keyframes icon-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hours-text {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e40af;
+  letter-spacing: 1.5px;
+  text-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Divider between sections */
+.divider {
+  width: 1px;
+  height: 44px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    #e2e8f0 20%, 
+    #e2e8f0 80%, 
+    transparent 100%);
+  margin: 0 8px;
+}
+
+/* Enhanced Task Title Input - White Background for Better Visibility */
+.modal-task-title.editable-title {
+  width: 100%;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(249, 250, 251, 0.95) 100%);
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.modal-task-title.editable-title::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.modal-task-title.editable-title:hover {
+  border-color: #cbd5e1;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(249, 250, 251, 1) 100%);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.modal-task-title.editable-title:focus {
+  border-color: #10b981;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(240, 253, 244, 0.95) 100%);
+  box-shadow: 
+    0 8px 20px rgba(16, 185, 129, 0.12),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    0 0 0 3px rgba(16, 185, 129, 0.1);
+  transform: translateY(-1px);
+}
+
 /* View-only mode styles */
 .view-only-message {
   padding: 16px 20px;

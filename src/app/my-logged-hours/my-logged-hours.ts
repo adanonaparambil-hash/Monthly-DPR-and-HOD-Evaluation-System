@@ -136,6 +136,14 @@ export class MyLoggedHoursComponent implements OnInit {
   showBreakHistoryModal = false;
   openBreaks: any[] = [];
   isLoadingBreaks = false;
+  breakHistoryFromDate = '';
+  breakHistoryToDate = '';
+  breakHistorySelectedDepartment: number | string = '';
+  breakHistorySelectedEmployee: string = '';
+  breakHistorySelectedReason: string = '';
+  breakHistoryDepartments: Department[] = [];
+  breakHistoryEmployees: Employee[] = [];
+  breakReasons: any[] = [];
 
   // Day Log History Modal
   showDayLogHistoryModal = false;
@@ -147,6 +155,7 @@ export class MyLoggedHoursComponent implements OnInit {
   showManageFieldsModal = false;
   customFields: any[] = [];
   isLoadingFields = false;
+  selectedDepartmentForFields: number | string = ''; // Department filter for manage fields modal
   
   // Add Field Modal (Separate)
   showAddFieldModal = false;
@@ -1319,6 +1328,36 @@ export class MyLoggedHoursComponent implements OnInit {
   openBreakHistoryModal() {
     console.log('Opening Break History modal...');
     this.showBreakHistoryModal = true;
+    
+    // Initialize filter dates
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.breakHistoryFromDate = this.formatDateForInput(firstDayOfMonth);
+    this.breakHistoryToDate = this.formatDateForInput(today);
+    
+    // Get current user from session
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const userDepartmentId = currentUser.departmentID;
+    const userEmployeeCode = currentUser.empId || currentUser.employeeId || currentUser.employeeCode;
+    
+    console.log('Session values:', {
+      departmentId: userDepartmentId,
+      employeeCode: userEmployeeCode
+    });
+    
+    // Auto-set department and employee from session
+    this.breakHistorySelectedDepartment = userDepartmentId || '';
+    this.breakHistorySelectedEmployee = userEmployeeCode || '';
+    
+    // Load departments and break reasons
+    this.loadBreakHistoryDepartments();
+    
+    // If department is set from session, load employees for that department
+    if (this.breakHistorySelectedDepartment) {
+      this.loadBreakHistoryEmployees(Number(this.breakHistorySelectedDepartment));
+    }
+    
+    // Load initial break history
     this.loadBreakHistory();
     
     // Prevent body scroll
@@ -1328,20 +1367,121 @@ export class MyLoggedHoursComponent implements OnInit {
   closeBreakHistoryModal() {
     this.showBreakHistoryModal = false;
     
+    // Reset filters
+    this.breakHistoryFromDate = '';
+    this.breakHistoryToDate = '';
+    this.breakHistorySelectedDepartment = '';
+    this.breakHistorySelectedEmployee = '';
+    this.breakHistorySelectedReason = '';
+    this.breakHistoryDepartments = [];
+    this.breakHistoryEmployees = [];
+    
     // Restore body scroll
     document.body.style.overflow = '';
+  }
+
+  loadBreakHistoryDepartments() {
+    this.api.getDepartmentList().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.breakHistoryDepartments = response.data.filter((dept: Department) => dept.status === 'Y');
+          console.log('Loaded departments for break history:', this.breakHistoryDepartments.length);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading departments for break history:', error);
+      }
+    });
+  }
+
+  loadBreakReasons() {
+    // Load break reasons from dropdown master (assuming ID 5 for break reasons)
+    this.api.getDropDownValues(5).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.breakReasons = response.data;
+          console.log('Loaded break reasons:', this.breakReasons.length);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading break reasons:', error);
+      }
+    });
+  }
+
+  onBreakHistoryDepartmentChange() {
+    console.log('Break history department changed to:', this.breakHistorySelectedDepartment);
+    
+    // Reset employee selection
+    this.breakHistorySelectedEmployee = '';
+    this.breakHistoryEmployees = [];
+    
+    // Load employees for selected department
+    if (this.breakHistorySelectedDepartment) {
+      this.loadBreakHistoryEmployees(Number(this.breakHistorySelectedDepartment));
+    }
+  }
+
+  loadBreakHistoryEmployees(departmentId: number) {
+    console.log('Loading employees for break history department:', departmentId);
+    
+    this.api.getEmployeesByDepartment(departmentId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.breakHistoryEmployees = response.data;
+          console.log('Loaded employees for break history:', this.breakHistoryEmployees.length);
+          
+          // Auto-select current user's employee code if available
+          const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+          const currentEmpId = currentUser.empId || currentUser.employeeId || currentUser.employeeCode;
+          
+          if (currentEmpId && !this.breakHistorySelectedEmployee) {
+            // Find the employee in the list by matching employeeCode with empId
+            const currentEmployee = this.breakHistoryEmployees.find(emp => 
+              emp.employeeCode === currentEmpId || 
+              emp.employeeCode === String(currentEmpId)
+            );
+            
+            if (currentEmployee) {
+              this.breakHistorySelectedEmployee = currentEmployee.employeeCode;
+              console.log('Auto-selected employee from session:', currentEmployee.employeeName);
+            }
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading employees for break history:', error);
+      }
+    });
+  }
+
+  applyBreakHistoryFilters() {
+    console.log('Applying break history filters...');
+    this.loadBreakHistory();
   }
 
   loadBreakHistory() {
     this.isLoadingBreaks = true;
     
-    this.api.getOpenBreaks().subscribe({
+    const params = {
+      userId: this.breakHistorySelectedEmployee || '',
+      fromDate: this.breakHistoryFromDate || '',
+      toDate: this.breakHistoryToDate || '',
+      departmentId: this.breakHistorySelectedDepartment ? Number(this.breakHistorySelectedDepartment) : 0,
+      breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null
+    };
+    
+    console.log('Loading break history with params:', params);
+    
+    this.api.getOpenBreaks(params).subscribe({
       next: (response: any) => {
         console.log('Break history response:', response);
         
         if (response && response.success && response.data) {
           this.openBreaks = response.data;
           console.log('Loaded open breaks:', this.openBreaks.length);
+        } else if (response && Array.isArray(response.data)) {
+          this.openBreaks = response.data;
         } else {
           this.openBreaks = [];
         }
@@ -1379,6 +1519,16 @@ export class MyLoggedHoursComponent implements OnInit {
     });
   }
 
+  formatBreakDate(dateTime: string | Date): string {
+    if (!dateTime) return '-';
+    const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
   formatDuration(minutes: number): string {
     if (minutes < 1) {
       return 'Just started';
@@ -1391,6 +1541,16 @@ export class MyLoggedHoursComponent implements OnInit {
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
+  }
+
+  getBreakStatusClass(status: string): string {
+    if (!status) return 'open';
+    return status.toLowerCase();
+  }
+
+  getBreakStatusLabel(status: string): string {
+    if (!status) return 'On Break';
+    return status === 'CLOSED' ? 'Closed' : 'On Break';
   }
 
   // Day Log History Modal Methods
@@ -1659,6 +1819,12 @@ export class MyLoggedHoursComponent implements OnInit {
   openManageFieldsModal() {
     console.log('Opening Manage Fields modal...');
     this.showManageFieldsModal = true;
+    
+    // Set default department to logged-in user's department
+    if (this.departments && this.departments.length > 0) {
+      this.selectedDepartmentForFields = this.selectedDepartment || this.departments[0].departmentId;
+    }
+    
     this.loadCustomFields();
     document.body.style.overflow = 'hidden';
   }
@@ -1669,12 +1835,21 @@ export class MyLoggedHoursComponent implements OnInit {
     document.body.style.overflow = '';
   }
 
+  onDepartmentChangeForFields() {
+    console.log('Department changed for fields:', this.selectedDepartmentForFields);
+    // Reload custom fields based on selected department
+    this.loadCustomFields();
+  }
+
   loadCustomFields() {
     this.isLoadingFields = true;
     
-    this.api.getAllFieldsAsync().subscribe({
+    // Get the department ID to pass to API
+    const departmentId = this.selectedDepartmentForFields || this.selectedDepartment || 0;
+    
+    this.api.getAllFieldsAsync(departmentId as number).subscribe({
       next: (response: any) => {
-        console.log('Custom fields response:', response);
+        console.log('Custom fields response for department:', departmentId, response);
         
         if (response && response.success && response.data) {
           // Map the API response to our field structure
@@ -1733,7 +1908,8 @@ export class MyLoggedHoursComponent implements OnInit {
       fieldName: this.newField.fieldName.trim(),
       fieldType: this.newField.fieldType,
       options: this.newField.fieldType === 'Dropdown' ? this.newField.options : '',
-      createdBy: userId
+      createdBy: userId,
+      departmentId: this.selectedDepartmentForFields || 0 // Department from modal dropdown
     };
 
     console.log('Creating field:', fieldData);
@@ -1890,6 +2066,7 @@ export class MyLoggedHoursComponent implements OnInit {
       isMandatory: this.currentField.isMandatory ? 'Y' : 'N',
       isActive: this.currentField.isActive ? 'Y' : 'N',
       userId: userId, // Logged-in user's empId
+      departmentId: this.selectedDepartmentForFields || 0, // Department from modal dropdown
       options: optionsData // Only for dropdown, empty array for others
     };
 

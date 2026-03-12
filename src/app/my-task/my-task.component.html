@@ -293,7 +293,7 @@
         <div class="header-cell title">TASK TITLE</div>
         <div class="header-cell start-date">START DATE</div>
         <div class="header-cell assignee">ASSIGNEE</div>
-        <div class="header-cell logged">TODAY LOGGED HOURS</div>
+        <div class="header-cell logged">TODAY HOURS</div>
         <div class="header-cell total">TOTAL HOURS</div>
         <div class="header-cell progress">PROGRESS</div>
         <div class="header-cell status">STATUS</div>
@@ -325,12 +325,7 @@
           <div class="cell logged">{{ task.loggedHours }}</div>
           <div class="cell total">{{ task.totalHours }}</div>
           <div class="cell progress">
-            <div class="progress-container">
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="task.progress"></div>
-              </div>
-              <span class="progress-text">{{ task.progress }}%</span>
-            </div>
+            <span class="progress-text-only">{{ task.progress }}%</span>
           </div>
           <div class="cell status">
             <span class="status-badge" [class]="getStatusClass(task.status)">
@@ -354,11 +349,12 @@
                 <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
                   <i class="fas fa-stop"></i>
                 </button>
-                @if (task.status === 'NOT STARTED') {
-                <button class="action-btn delete" (click)="deleteTask(task.id)" title="Delete Task">
+                <button class="action-btn delete" 
+                        (click)="deleteTask(task.id)" 
+                        [disabled]="task.status !== 'NOT STARTED'"
+                        [title]="task.status === 'NOT STARTED' ? 'Delete Task' : 'Can only delete NOT STARTED tasks'">
                   <i class="fas fa-trash"></i>
                 </button>
-                }
               }
               
               <!-- Show view button and delete (only for NOT STARTED) for ASSIGNED TO OTHERS tab -->
@@ -366,11 +362,12 @@
                 <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
                   <i class="fas fa-eye"></i>
                 </button>
-                @if (task.status === 'NOT STARTED') {
-                <button class="action-btn delete" (click)="deleteTask(task.id)" title="Delete Task">
+                <button class="action-btn delete" 
+                        (click)="deleteTask(task.id)" 
+                        [disabled]="task.status !== 'NOT STARTED'"
+                        [title]="task.status === 'NOT STARTED' ? 'Delete Task' : 'Can only delete NOT STARTED tasks'">
                   <i class="fas fa-trash"></i>
                 </button>
-                }
               }
             </div>
           </div>
@@ -1042,7 +1039,7 @@
         } @else {
         <div class="task-list">
           @for (task of getFilteredFavouriteTaskList(); track task.categoryId) {
-          <div class="task-item">
+          <div class="task-item" [class.has-existing-task]="hasExistingTaskInMyList(task)">
             <i class="fas fa-star star-icon active" (click)="toggleFavourite(task, $event)" title="Remove from favorites"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
@@ -1082,7 +1079,7 @@
         } @else {
         <div class="task-list">
           @for (task of getFilteredDepartmentTaskList(); track task.categoryId) {
-          <div class="task-item">
+          <div class="task-item" [class.has-existing-task]="hasExistingTaskInMyList(task)">
             <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
                (click)="toggleFavourite(task, $event)" 
                [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
@@ -1124,7 +1121,7 @@
         } @else {
         <div class="task-list">
           @for (task of getFilteredAllDepartmentTaskList(); track task.categoryId) {
-          <div class="task-item">
+          <div class="task-item" [class.has-existing-task]="hasExistingTaskInMyList(task)">
             <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
                (click)="toggleFavourite(task, $event)" 
                [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
@@ -1344,12 +1341,12 @@
             
             <div class="form-field">
               <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
-              <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName" placeholder="Enter category name">
+              <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName" (input)="newTaskCategory.categoryName = newTaskCategory.categoryName.toUpperCase()" placeholder="Enter category name">
             </div>
             
             <div class="form-field">
               <label class="field-label">ESTIMATED HOURS</label>
-              <input type="number" class="field-input" [(ngModel)]="newTaskCategory.sequenceNumber" placeholder="0" step="0.5" min="0">
+              <input type="text" class="field-input time-format-input" [(ngModel)]="newTaskCategory.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(newTaskCategory)" maxlength="5">
             </div>
           </div>
           
@@ -1385,12 +1382,12 @@
                 
                 <div class="form-field">
                   <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
-                  <input type="text" class="field-input" [(ngModel)]="category.categoryName" placeholder="Enter category name">
+                  <input type="text" class="field-input" [(ngModel)]="category.categoryName" (input)="category.categoryName = category.categoryName.toUpperCase()" placeholder="Enter category name">
                 </div>
                 
                 <div class="form-field">
                   <label class="field-label">ESTIMATED HOURS</label>
-                  <input type="number" class="field-input" [(ngModel)]="category.sequenceNumber" placeholder="0" step="0.5" min="0">
+                  <input type="text" class="field-input time-format-input" [(ngModel)]="category.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(category)" maxlength="5">
                 </div>
               </div>
               
