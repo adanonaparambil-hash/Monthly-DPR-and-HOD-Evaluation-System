@@ -79,27 +79,31 @@
 
           <!-- Modern Control Buttons -->
           <div class="modern-controls">
+            <!-- Start: shown when NOT STARTED or CLOSED -->
             <button class="modern-control-btn start-btn" 
-                    *ngIf="activeTask?.status === 'NOT STARTED'" 
+                    *ngIf="activeTask?.status === 'NOT STARTED' || activeTask?.status === 'CLOSED'"
                     (click)="startActiveTask()">
               <div class="btn-glow"></div>
               <i class="fas fa-play"></i>
               <span class="btn-label">Start</span>
             </button>
+            <!-- Pause: shown when RUNNING -->
             <button class="modern-control-btn pause-btn" 
-                    *ngIf="activeTask?.status === 'RUNNING'" 
+                    *ngIf="activeTask?.status === 'RUNNING'"
                     (click)="pauseActiveTask()">
               <div class="btn-glow"></div>
               <i class="fas fa-pause"></i>
               <span class="btn-label">Pause</span>
             </button>
+            <!-- Resume: shown when PAUSED -->
             <button class="modern-control-btn resume-btn" 
-                    *ngIf="activeTask?.status === 'PAUSED'" 
+                    *ngIf="activeTask?.status === 'PAUSED'"
                     (click)="resumeActiveTask()">
               <div class="btn-glow"></div>
               <i class="fas fa-play"></i>
               <span class="btn-label">Resume</span>
             </button>
+            <!-- Stop: always shown -->
             <button class="modern-control-btn stop-btn" 
                     (click)="stopActiveTask()">
               <div class="btn-glow"></div>

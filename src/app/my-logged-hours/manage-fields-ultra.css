@@ -84,9 +84,9 @@
   align-items: center;
   gap: 10px;
   padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  border: 1px solid rgba(20, 93, 86, 0.25);
+  color: #145d56;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
@@ -95,13 +95,26 @@
 }
 
 .btn-add-new-field:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #f0fdf4;
+  border-color: rgba(20, 93, 86, 0.35);
   transform: translateY(-2px);
 }
 
 .btn-add-new-field i {
   font-size: 16px;
+  background: linear-gradient(135deg, #145d56, #1a7a70) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.btn-add-new-field span {
+  background: linear-gradient(135deg, #145d56, #1a7a70) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
 .close-btn-ultra {

@@ -24,11 +24,14 @@
           @if (!isViewOnly) {
             <!-- Status Dropdown - Only show if NOT in view-only mode -->
             <div class="status-dropdown-control">
-              <select class="status-dropdown-select" [(ngModel)]="selectedTaskDetailStatus" (change)="onStatusChange(selectedTaskDetailStatus)">
-                <option [value]="selectedTaskDetailStatus" disabled>{{ getStatusDisplayText(selectedTaskDetailStatus) }}</option>
-                <option value="not-closed">Closed</option>
-                <option value="completed">Completed</option>
-              </select>
+              <div class="status-dropdown-wrapper">
+                <select class="status-dropdown-select" [(ngModel)]="selectedTaskDetailStatus" (change)="onStatusChange(selectedTaskDetailStatus)">
+                  <option [value]="selectedTaskDetailStatus" disabled>{{ getStatusDisplayText(selectedTaskDetailStatus) }}</option>
+                  <option value="not-closed">Closed</option>
+                  <option value="completed">Completed</option>
+                </select>
+                <i class="fas fa-chevron-down status-dropdown-arrow"></i>
+              </div>
             </div>
           } @else {
             <!-- Status Badge - Show in view-only mode -->
@@ -64,11 +67,19 @@
               <i class="fas fa-pause"></i>
             </button>
             
-            <!-- Show Resume button when task is PAUSED or CLOSED (but not AUTO CLOSED) -->
+            <!-- Show Resume button when task is PAUSED -->
             <button class="timer-control-icon resume-icon" 
-                    *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused' || selectedTaskDetailStatus === 'not-closed'"
+                    *ngIf="selectedTaskDetailStatus === 'pause' || selectedTaskDetailStatus === 'paused'"
                     (click)="resumeTaskFromModal()"
                     title="Resume Task">
+              <i class="fas fa-play"></i>
+            </button>
+            
+            <!-- Show Start button when task is CLOSED (not-closed) -->
+            <button class="timer-control-icon start-icon" 
+                    *ngIf="selectedTaskDetailStatus === 'not-closed'"
+                    (click)="startTaskFromModal()"
+                    title="Start Task">
               <i class="fas fa-play"></i>
             </button>
           </div>
@@ -99,8 +110,12 @@
         <!-- Show timer display if NOT in view-only mode -->
         @if (!isViewOnly) {
           <div class="modal-timer-section">
-            <span class="timer-label">Running Timer</span>
+            <span class="timer-label">
+              <i class="fas fa-circle timer-pulse-dot"></i>
+              Running Timer
+            </span>
             <div class="timer-display centered-timer">
+              <i class="fas fa-clock timer-clock-icon"></i>
               <span class="timer-text">{{ selectedTaskRunningTimer }}</span>
             </div>
           </div>
@@ -232,49 +247,13 @@
           </div>
         }
 
-        <!-- Project Metadata -->
+        <!-- Task Details -->
         <div class="metadata-section">
           <div class="metadata-header">
-            <h3 class="section-label">Project Metadata</h3>
+            <h3 class="section-label">Task Details</h3>
           </div>
 
           <div class="metadata-grid">
-            <!-- Project -->
-            <div class="metadata-card project-dropdown-card">
-              <div class="metadata-content">
-                <p class="metadata-label">
-                  <i class="fas fa-folder label-icon"></i>
-                  Project
-                </p>
-                <div class="searchable-dropdown">
-                  <input 
-                    type="text" 
-                    [value]="isProjectDropdownVisible ? projectSearchTerm : getProjectDisplayName()"
-                    [placeholder]="projectsList.length === 0 ? 'Loading projects...' : 'Search and select project...'"
-                    class="dropdown-input"
-                    (input)="onProjectSearchInputChange($event)"
-                    (focus)="showProjectDropdown()"
-                    (blur)="hideProjectDropdown()"
-                    [readonly]="isViewOnly"
-                    autocomplete="off">
-                  <div class="dropdown-icon">
-                    <i class="fas fa-chevron-down"></i>
-                  </div>
-                  <div class="dropdown-list project-dropdown" *ngIf="isProjectDropdownVisible">
-                    <div 
-                      class="dropdown-item" 
-                      *ngFor="let project of getFilteredProjects()"
-                      (mousedown)="selectProject(project)"
-                      [class.selected]="isProjectSelected(project)">
-                      <div class="project-name-only">{{ project.projectName || '' }}</div>
-                    </div>
-                    <div class="no-results" *ngIf="getFilteredProjects().length === 0">
-                      No projects found
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <!-- Assigned To -->
             <div class="metadata-card assignee-dropdown-card">
@@ -326,6 +305,43 @@
                        [(ngModel)]="selectedTaskStartDate" 
                        [readonly]="isViewOnly" 
                        [disabled]="isStartDateDisabled()">
+              </div>
+            </div>
+
+            <!-- Project -->
+            <div class="metadata-card project-dropdown-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-folder label-icon"></i>
+                  Project
+                </p>
+                <div class="searchable-dropdown">
+                  <input 
+                    type="text" 
+                    [value]="isProjectDropdownVisible ? projectSearchTerm : getProjectDisplayName()"
+                    [placeholder]="projectsList.length === 0 ? 'Loading projects...' : 'Search and select project...'"
+                    class="dropdown-input"
+                    (input)="onProjectSearchInputChange($event)"
+                    (focus)="showProjectDropdown()"
+                    (blur)="hideProjectDropdown()"
+                    [readonly]="isViewOnly"
+                    autocomplete="off">
+                  <div class="dropdown-icon">
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                  <div class="dropdown-list project-dropdown" *ngIf="isProjectDropdownVisible">
+                    <div 
+                      class="dropdown-item" 
+                      *ngFor="let project of getFilteredProjects()"
+                      (mousedown)="selectProject(project)"
+                      [class.selected]="isProjectSelected(project)">
+                      <div class="project-name-only">{{ project.projectName || '' }}</div>
+                    </div>
+                    <div class="no-results" *ngIf="getFilteredProjects().length === 0">
+                      No projects found
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -588,7 +604,7 @@
     <!-- Modal Header -->
     <div class="add-field-modal-header">
       <h3 class="add-field-modal-title">Add Fields</h3>
-      <p class="add-field-modal-subtitle">Select fields to add to project metadata</p>
+      <p class="add-field-modal-subtitle">Select fields to add to Task Details</p>
       <button class="modal-close-btn" (click)="closeAddFieldModal()">
         <i class="fas fa-times"></i>
       </button>

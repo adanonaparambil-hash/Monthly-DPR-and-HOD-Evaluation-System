@@ -1713,60 +1713,82 @@ export class MyLoggedHoursComponent implements OnInit {
   }
 
   editDayLog(log: any) {
-    console.log('Edit day log:', log);
-    
-    const currentMinutes = log.minutesSpent || 0;
-    
-    // Show SweetAlert with input for new minutes
-    Swal.fire({
-      title: 'Edit Time Log',
-      html: `
-        <div style="text-align: left; margin-bottom: 15px;">
-          <p style="margin-bottom: 10px;"><strong>Current Duration:</strong> ${log.duration} (${currentMinutes} minutes)</p>
-          <p style="margin-bottom: 10px; color: #666;">You can only reduce the time, not increase it.</p>
-        </div>
-        <input id="swal-input-minutes" class="swal2-input" type="number" 
-               placeholder="Enter new minutes" 
-               min="0" 
-               max="${currentMinutes}" 
-               value="${currentMinutes}"
-               style="width: 80%; margin: 10px auto;">
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Update',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#6366f1',
-      cancelButtonColor: '#6b7280',
-      preConfirm: () => {
-        const input = document.getElementById('swal-input-minutes') as HTMLInputElement;
-        const newMinutes = parseInt(input.value, 10);
-        
-        // Validation
-        if (isNaN(newMinutes) || newMinutes < 0) {
-          Swal.showValidationMessage('Please enter a valid number of minutes');
-          return false;
+      console.log('Edit day log:', log);
+
+      const currentMinutes = log.minutesSpent || 0;
+      const hours = Math.floor(currentMinutes / 60);
+      const minutes = currentMinutes % 60;
+      const currentTimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+      // Show SweetAlert with input for new time in HH:MM format
+      Swal.fire({
+        title: 'Edit Time Log',
+        html: `
+          <div style="text-align: left; margin-bottom: 15px;">
+            <p style="margin-bottom: 10px;"><strong>Current Duration:</strong> ${log.duration}</p>
+            <p style="margin-bottom: 10px; color: #666;">You can only reduce the time, not increase it.</p>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0;">
+            <label style="font-weight: 600; color: #333;">Enter Time (HH:MM):</label>
+            <input id="swal-input-time" class="swal2-input" type="text" 
+                   placeholder="HH:MM" 
+                   value="${currentTimeFormatted}"
+                   style="width: 120px; text-align: center; font-size: 16px; font-weight: 600;">
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#6366f1',
+        cancelButtonColor: '#6b7280',
+        preConfirm: () => {
+          const input = document.getElementById('swal-input-time') as HTMLInputElement;
+          const timeValue = input.value.trim();
+
+          // Parse HH:MM format
+          const timeParts = timeValue.split(':');
+          if (timeParts.length !== 2) {
+            Swal.showValidationMessage('Please enter time in HH:MM format');
+            return false;
+          }
+
+          const inputHours = parseInt(timeParts[0], 10);
+          const inputMinutes = parseInt(timeParts[1], 10);
+
+          // Validation
+          if (isNaN(inputHours) || isNaN(inputMinutes)) {
+            Swal.showValidationMessage('Please enter valid numbers for hours and minutes');
+            return false;
+          }
+
+          if (inputHours < 0 || inputMinutes < 0 || inputMinutes > 59) {
+            Swal.showValidationMessage('Please enter valid time (HH: 0-23, MM: 0-59)');
+            return false;
+          }
+
+          const newTotalMinutes = inputHours * 60 + inputMinutes;
+
+          if (newTotalMinutes > currentMinutes) {
+            Swal.showValidationMessage(`You can only reduce time. Maximum is ${currentTimeFormatted}`);
+            return false;
+          }
+
+          if (newTotalMinutes === currentMinutes) {
+            Swal.showValidationMessage('Please enter a different value');
+            return false;
+          }
+
+          return newTotalMinutes;
         }
-        
-        if (newMinutes > currentMinutes) {
-          Swal.showValidationMessage(`You can only reduce time. Maximum is ${currentMinutes} minutes`);
-          return false;
+      }).then((result) => {
+        if (result.isConfirmed && result.value !== undefined) {
+          const newMinutes = result.value;
+          this.updateTimeLog(log, newMinutes);
         }
-        
-        if (newMinutes === currentMinutes) {
-          Swal.showValidationMessage('Please enter a different value');
-          return false;
-        }
-        
-        return newMinutes;
-      }
-    }).then((result) => {
-      if (result.isConfirmed && result.value !== undefined) {
-        const newMinutes = result.value;
-        this.updateTimeLog(log, newMinutes);
-      }
-    });
-  }
+      });
+    }
+
 
   updateTimeLog(log: any, newMinutes: number) {
     const request = {

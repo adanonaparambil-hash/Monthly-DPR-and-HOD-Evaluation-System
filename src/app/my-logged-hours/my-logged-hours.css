@@ -14,11 +14,11 @@
   background: white;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  padding: 24px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   gap: 16px;
 }
 
@@ -118,7 +118,7 @@
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #111827;
   margin: 0;
@@ -144,7 +144,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -188,11 +188,11 @@
   background: white;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  padding: 20px 24px;
-  margin-bottom: 24px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .filters-row {
@@ -204,7 +204,7 @@
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .filter-label {
@@ -232,7 +232,7 @@
 
 .filter-select {
   width: 100%;
-  padding: 10px 16px 10px 40px;
+  padding: 8px 16px 8px 40px;
   background: white;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -249,7 +249,7 @@
 
 .filter-date-input {
   width: 100%;
-  padding: 10px 16px 10px 40px;
+  padding: 8px 16px 8px 40px;
   background: white;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -288,7 +288,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: white;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -2435,8 +2435,24 @@
 .modal-title-large {
   font-size: 26px;
   font-weight: 700;
-  color: #fef3c7;
+  color: #ffffff;
   margin: 0 0 4px 0;
+}
+
+/* Force white title inside the Break History header (prevents global overrides) */
+.modal-header-large .modal-title-large {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Force white titles in other teal modal headers (e.g. Add Custom Field) */
+.add-field-header .add-field-title,
+.fields-modal-header .modal-title-ultra {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
 }
 
 .modal-subtitle-large {
