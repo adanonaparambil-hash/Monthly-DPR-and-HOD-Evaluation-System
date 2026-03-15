@@ -212,9 +212,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   favouriteList: TaskCategory[] = [];
   departmentList: TaskCategory[] = [];
   allDepartmentList: TaskCategory[] = [];
+  manageDepartmentList: TaskCategory[] = []; // Populated from getDepartmentTaskCategories when Manage modal opens
   newTaskCategory: TaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0 };
   isAddingNewCategory = false;
   selectedDepartmentFilter = 'ALL'; // Department filter
+  selectedManageDeptId: number = 0; // Department ID for manage modal filter
   selectedCategoryId: number | null = null; // Store selected category ID for logging hours
 
   // Department Master List from API
@@ -222,21 +224,23 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Get departments for filter dropdown
   getDepartments(): string[] {
+    const sourceList = this.manageDepartmentList.length > 0 ? this.manageDepartmentList : this.allDepartmentList;
     if (this.departmentMasterList.length > 0) {
       const deptNames = this.departmentMasterList.map(dept => dept.deptName);
       return ['ALL', ...deptNames];
     }
     // Fallback to task categories if API hasn't loaded yet
-    const departments = this.allDepartmentList.map(cat => cat.departmentName || 'Unknown');
+    const departments = sourceList.map(cat => cat.departmentName || 'Unknown');
     return ['ALL', ...Array.from(new Set(departments)).sort()];
   }
 
   // Get filtered task categories based on selected department
   getFilteredCategories(): TaskCategory[] {
-    if (this.selectedDepartmentFilter === 'ALL') {
-      return this.allDepartmentList;
+    // When manage modal is open, only show manageDepartmentList (never fall back to allDepartmentList)
+    if (this.showManageTasksModal) {
+      return this.manageDepartmentList;
     }
-    return this.allDepartmentList.filter(cat => cat.departmentName === this.selectedDepartmentFilter);
+    return this.allDepartmentList;
   }
 
   // Files tab only (subtasks tab removed)
@@ -2368,29 +2372,66 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   openManageTasksModal() {
     this.showManageTasksModal = true;
     this.isAddingNewCategory = false;
+    this.manageDepartmentList = []; // Reset before loading
     
-    // Set default department filter to logged-in user's department
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const userDeptId = currentUser.departmentID || currentUser.deptId || currentUser.departmentId;
     
+    this.selectedManageDeptId = userDeptId || 0;
+    
+    // Set display filter name for legacy usage
     if (userDeptId && this.departmentMasterList.length > 0) {
       const userDept = this.departmentMasterList.find(dept => dept.departmentId === userDeptId);
-      if (userDept) {
-        this.selectedDepartmentFilter = userDept.deptName;
-        console.log('Default department filter set to:', userDept.deptName);
-      } else {
-        this.selectedDepartmentFilter = 'ALL';
-      }
+      this.selectedDepartmentFilter = userDept ? userDept.deptName : 'ALL';
     } else {
       this.selectedDepartmentFilter = 'ALL';
+    }
+
+    // Call getDepartmentTaskCategories API
+    if (userDeptId) {
+      this.loadManageDeptCategories(userDeptId);
     }
     
     document.body.style.overflow = 'hidden';
   }
 
+  loadManageDeptCategories(deptId: number) {
+    this.api.getDepartmentTaskCategories(deptId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.manageDepartmentList = (response.data.allDepartmentList || []).map((cat: any) => {
+            const estimatedMinutes = cat.estimatedHours || cat.eSTIMATEDHOURS || 0;
+            return {
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              departmentId: cat.departmentId,
+              departmentName: cat.departmentName,
+              sequenceNumber: estimatedMinutes,
+              timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
+              isFavourite: cat.isFav || 'N',
+              isEditing: false
+            };
+          });
+          console.log('Manage Task Categories loaded for dept', deptId, ':', this.manageDepartmentList.length);
+        }
+      },
+      error: (err: any) => {
+        console.error('Error loading department task categories:', err);
+      }
+    });
+  }
+
+  onManageDeptFilterChange() {
+    this.manageDepartmentList = []; // Clear first
+    if (this.selectedManageDeptId && this.selectedManageDeptId !== 0) {
+      this.loadManageDeptCategories(this.selectedManageDeptId);
+    }
+  }
+
   closeManageTasksModal() {
     this.showManageTasksModal = false;
     this.isAddingNewCategory = false;
+    this.manageDepartmentList = []; // Clear manage list on close
     this.cancelAllEdits();
     document.body.style.overflow = 'auto';
   }

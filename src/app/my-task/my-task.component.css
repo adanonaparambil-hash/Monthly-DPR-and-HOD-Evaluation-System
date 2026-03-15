@@ -1,4 +1,4 @@
-/* Import Google Fonts */
+﻿/* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* Task Board Container */
@@ -1832,7 +1832,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(90px, 0.6fr) minmax(130px, 0.8fr) minmax(80px, 0.5fr) minmax(80px, 0.5fr) minmax(50px, 0.4fr) minmax(90px, 0.6fr) minmax(90px, 0.6fr);
+  grid-template-columns: minmax(150px, 1fr) minmax(280px, 2.4fr) minmax(90px, 0.6fr) minmax(130px, 0.8fr) minmax(80px, 0.5fr) minmax(80px, 0.5fr) minmax(60px, 0.4fr) minmax(60px, 0.38fr) minmax(70px, 0.42fr);
   gap: 12px;
   padding: 20px 24px;
   background: linear-gradient(135deg, #1B2A38, #138271);
@@ -1865,7 +1865,7 @@
 
 .table-row {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(90px, 0.6fr) minmax(130px, 0.8fr) minmax(80px, 0.5fr) minmax(80px, 0.5fr) minmax(50px, 0.4fr) minmax(90px, 0.6fr) minmax(90px, 0.6fr);
+  grid-template-columns: minmax(150px, 1fr) minmax(280px, 2.4fr) minmax(90px, 0.6fr) minmax(130px, 0.8fr) minmax(80px, 0.5fr) minmax(80px, 0.5fr) minmax(60px, 0.4fr) minmax(60px, 0.38fr) minmax(70px, 0.42fr);
   gap: 12px;
   padding: 16px 24px;
   border-bottom: 1px solid #e2e8f0;
@@ -16148,3 +16148,19 @@
 }
 
 
+
+/* Center align TODAY HOURS, TOTAL HOURS, PROGRESS header and cells */
+.header-cell.logged,
+.header-cell.total,
+.header-cell.progress {
+  text-align: center;
+}
+
+.cell.logged,
+.cell.total,
+.cell.progress {
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+}

@@ -1310,9 +1310,10 @@
           <i class="fas fa-filter"></i>
           FILTER BY DEPARTMENT
         </label>
-        <select class="filter-dept-select" [(ngModel)]="selectedDepartmentFilter">
-          @for (dept of getDepartments(); track dept) {
-            <option [value]="dept">{{ dept }}</option>
+        <select class="filter-dept-select" [(ngModel)]="selectedManageDeptId" (change)="onManageDeptFilterChange()">
+          <option [value]="0">ALL</option>
+          @for (dept of departmentMasterList; track dept.departmentId) {
+            <option [value]="dept.departmentId">{{ dept.deptName }}</option>
           }
         </select>
       </div>
