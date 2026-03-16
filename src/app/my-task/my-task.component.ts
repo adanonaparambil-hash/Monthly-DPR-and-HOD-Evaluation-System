@@ -16,7 +16,7 @@ interface Task {
   id: number;
   title: string;
   description: string;
-  status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED' | 'AUTO CLOSED';
+  status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED' | 'AUTO CLOSED' | 'RE OPEN';
   category: string;
   categoryId?: number; // Add categoryId property
   loggedHours: string;
@@ -107,6 +107,7 @@ interface TaskCategory {
   timeDisplay?: string;
   isFavourite?: 'Y' | 'N';
   isEditing?: boolean;
+  selectedFields?: { fieldId: number; fieldName: string }[];
 }
 
 interface TaskCategoryResponse {
@@ -218,6 +219,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   selectedDepartmentFilter = 'ALL'; // Department filter
   selectedManageDeptId: number = 0; // Department ID for manage modal filter
   selectedCategoryId: number | null = null; // Store selected category ID for logging hours
+
+  // Fields selection for add/edit category form
+  availableFields: any[] = [];
+  fieldSearchTerm: string = '';
+  showFieldsDropdown: boolean = false;
+  newCategorySelectedFields: { fieldId: number; fieldName: string }[] = [];
 
   // Department Master List from API
   departmentMasterList: any[] = [];
@@ -1433,6 +1440,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       case 'CLOSED': return 'on-hold';
       case 'COMPLETED': return 'completed';
       case 'AUTO CLOSED': return 'auto-closed';
+      case 'RE OPEN': return 're-open';
       default: return 'default';
     }
   }
@@ -2409,7 +2417,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
               sequenceNumber: estimatedMinutes,
               timeDisplay: this.minutesToTimeFormat(estimatedMinutes),
               isFavourite: cat.isFav || 'N',
-              isEditing: false
+              isEditing: false,
+              selectedFields: ((cat.fields || cat.fieldList || cat.Fields || cat.FieldList || []) as any[])
+                .filter((f: any) => f && (f.fieldId || f.FieldId) && (f.fieldName || f.FieldName))
+                .map((f: any) => ({ fieldId: f.fieldId || f.FieldId, fieldName: f.fieldName || f.FieldName }))
             };
           });
           console.log('Manage Task Categories loaded for dept', deptId, ':', this.manageDepartmentList.length);
@@ -2428,6 +2439,43 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     }
   }
 
+  loadAvailableFields(deptId: number) {
+    this.api.getAllFieldsAsync(deptId).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.availableFields = response.data;
+        } else {
+          this.availableFields = [];
+        }
+      },
+      error: () => { this.availableFields = []; }
+    });
+  }
+
+  getFilteredAvailableFields(): any[] {
+    if (!this.fieldSearchTerm.trim()) return this.availableFields;
+    const s = this.fieldSearchTerm.toLowerCase();
+    return this.availableFields.filter(f => f.fieldName.toLowerCase().includes(s));
+  }
+
+  isCategoryFieldSelected(fieldId: number, selectedFields: { fieldId: number; fieldName: string }[]): boolean {
+    return selectedFields.some(f => f.fieldId === fieldId);
+  }
+
+  toggleCategoryField(field: any, selectedFields: { fieldId: number; fieldName: string }[]) {
+    const idx = selectedFields.findIndex(f => f.fieldId === field.fieldId);
+    if (idx >= 0) {
+      selectedFields.splice(idx, 1);
+    } else {
+      selectedFields.push({ fieldId: field.fieldId, fieldName: field.fieldName });
+    }
+  }
+
+  removeCategoryField(fieldId: number, selectedFields: { fieldId: number; fieldName: string }[]) {
+    const idx = selectedFields.findIndex(f => f.fieldId === fieldId);
+    if (idx >= 0) selectedFields.splice(idx, 1);
+  }
+
   closeManageTasksModal() {
     this.showManageTasksModal = false;
     this.isAddingNewCategory = false;
@@ -2443,28 +2491,31 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.favouriteList.forEach(cat => cat.isEditing = false);
     this.departmentList.forEach(cat => cat.isEditing = false);
     this.allDepartmentList.forEach(cat => cat.isEditing = false);
+    this.manageDepartmentList.forEach(cat => cat.isEditing = false);
     
     // Close add form if open
     this.isAddingNewCategory = false;
+    this.fieldSearchTerm = '';
+    this.showFieldsDropdown = false;
     
     // Initialize timeDisplay from sequenceNumber if not already set
     if (!category.timeDisplay && category.sequenceNumber) {
       category.timeDisplay = this.minutesToTimeFormat(category.sequenceNumber);
     }
+
+    // Initialize selectedFields from category's existing fields
+    if (!category.selectedFields) {
+      category.selectedFields = [];
+    }
     
     // Enable editing for this category
     category.isEditing = true;
+
+    // Load available fields using current dept filter
+    const deptId = this.selectedManageDeptId || category.departmentId;
+    if (deptId) this.loadAvailableFields(deptId);
     
-    // Debug: Log the category being edited with all fields
-    console.log('Editing category:', {
-      categoryId: category.categoryId,
-      categoryName: category.categoryName,
-      departmentId: category.departmentId,
-      departmentName: category.departmentName,
-      sequenceNumber: category.sequenceNumber,
-      timeDisplay: category.timeDisplay
-    });
-    console.log('Full category object:', category);
+    console.log('Editing category:', category.categoryName);
   }
 
   // Save edited category
@@ -2480,7 +2531,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         categoryName: category.categoryName.trim(),
         departmentId: category.departmentId,
         createdBy: userId,
-        estimatedHours: category.sequenceNumber || 0
+        estimatedHours: category.sequenceNumber || 0,
+        fieldMappingList: (category.selectedFields || []).map(f => f.fieldId)
       };
 
       // Call API to update category
@@ -2533,6 +2585,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Show add new category form
   showAddCategoryForm() {
     this.isAddingNewCategory = true;
+    this.newCategorySelectedFields = [];
+    this.fieldSearchTerm = '';
+    this.showFieldsDropdown = false;
     
     // Set default department to logged-in user's department
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
@@ -2556,6 +2611,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     } else {
       this.newTaskCategory = { categoryId: 0, categoryName: '', departmentId: 0, departmentName: '', sequenceNumber: 0, timeDisplay: '' };
     }
+
+    // Load fields using the current manage dept filter
+    const deptId = this.selectedManageDeptId || userDeptId;
+    if (deptId) this.loadAvailableFields(deptId);
     
     this.cancelAllEdits();
   }
@@ -2591,7 +2650,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         categoryName: this.newTaskCategory.categoryName.trim(),
         departmentId: this.newTaskCategory.departmentId,
         createdBy: userId,
-        estimatedHours: totalMinutes
+        estimatedHours: totalMinutes,
+        fieldMappingList: this.newCategorySelectedFields.map(f => f.fieldId)
       };
 
       // Call API to create category
@@ -2949,7 +3009,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.selectedCategoryIdForModal = categoryId || 0;
     
     // Set view-only mode if opening from "Assigned to Others" tab
-    this.isTaskModalViewOnly = (this.activeTab === 'ASSIGNED TO OTHERS');
+    this.isTaskModalViewOnly = false;
     
     // Show the modal
     this.showTaskDetailsModal = true;
@@ -2958,6 +3018,35 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     document.body.style.overflow = 'hidden';
   }
   
+  // Open task details modal in normal (non-view-only) mode — used for completed tasks in "Assigned to Others"
+  openTaskDetailsModalNormal(task: Task) {
+    // Use the assignee's userId so the API loads the correct task data
+    const userId = task.assigneeId || '';
+    const categoryId = task.categoryId || this.getCategoryIdFromTask(task);
+
+    this.selectedTaskIdForModal = task.id;
+    this.selectedUserIdForModal = userId;
+    this.selectedCategoryIdForModal = categoryId || 0;
+    this.isTaskModalViewOnly = false; // Editable mode
+    this.showTaskDetailsModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Approve a completed task from "Assigned to Others" listing
+  approveTask(task: Task): void {
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    this.api.executeTimer({ taskId: task.id, userId, action: 'APPROVED' }).subscribe({
+      next: () => {
+        this.toasterService.showSuccess('Approved', 'Task approved successfully');
+        this.loadActiveTasks();
+      },
+      error: () => {
+        this.toasterService.showError('Error', 'Failed to approve task');
+      }
+    });
+  }
+
   // Helper method to get category ID from task
   private getCategoryIdFromTask(task: Task): number {
     // Try to find the category ID from the task categories list

@@ -29,6 +29,9 @@
                   <option [value]="selectedTaskDetailStatus" disabled>{{ getStatusDisplayText(selectedTaskDetailStatus) }}</option>
                   <option value="not-closed">Closed</option>
                   <option value="completed">Completed</option>
+                  @if (selectedTaskDetailStatus === 'completed') {
+                    <option value="re-open">Re Open</option>
+                  }
                 </select>
                 <i class="fas fa-chevron-down status-dropdown-arrow"></i>
               </div>

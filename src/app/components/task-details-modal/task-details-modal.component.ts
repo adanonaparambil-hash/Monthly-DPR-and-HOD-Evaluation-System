@@ -595,6 +595,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       'paused': 'PAUSED',
       'completed': 'COMPLETED',
       'not-closed': 'CLOSED',
+      're-open': 'RE OPEN',
       'auto-closed': 'AUTO CLOSED'
     };
     
@@ -1489,6 +1490,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       'PAUSED': 'pause',
       'COMPLETED': 'completed',
       'CLOSED': 'not-closed',
+      'RE OPEN': 're-open',
       'AUTO CLOSED': 'auto-closed'
     };
     return statusMap[status] || 'not-started';
@@ -1673,7 +1675,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       'paused': 'Paused',
       'not-closed': 'Closed',
       'completed': 'Completed',
-      'auto-closed': 'Auto Closed'
+      'auto-closed': 'Auto Closed',
+      're-open': 'Re Open'
     };
     return statusMap[status] || status;
   }

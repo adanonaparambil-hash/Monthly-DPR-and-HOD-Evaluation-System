@@ -140,7 +140,8 @@ export interface TaskCategoryRequest {
   categoryName: string;
   departmentId: number;
   createdBy: string;
-  estimatedHours : number;
+  estimatedHours: number;
+  fieldMappingList: number[];
 }
 
 

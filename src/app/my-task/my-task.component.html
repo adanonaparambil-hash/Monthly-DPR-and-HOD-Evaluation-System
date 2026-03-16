@@ -328,6 +328,7 @@
           <div class="cell status">
             <span class="status-badge" [class]="getStatusClass(task.status)">
               <i class="fas fa-flag" *ngIf="task.status === 'AUTO CLOSED'" style="color: #ef4444; margin-right: 4px;"></i>
+              <i class="fas fa-rotate-right" *ngIf="task.status === 'RE OPEN'" style="margin-right: 4px;"></i>
               {{ task.status }}
             </span>
           </div>
@@ -360,6 +361,11 @@
                 <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
                   <i class="fas fa-eye"></i>
                 </button>
+                @if (task.status === 'COMPLETED') {
+                  <button class="action-btn complete-review" (click)="approveTask(task); $event.stopPropagation()" title="Approve Completed Task">
+                    <i class="fas fa-check"></i>
+                  </button>
+                }
                 <button class="action-btn delete" 
                         (click)="deleteTask(task.id)" 
                         [disabled]="task.status !== 'NOT STARTED'"
@@ -1327,97 +1333,206 @@
       <!-- Add/Edit Form -->
       @if (isAddingNewCategory) {
         <div class="category-edit-form">
-          <div class="form-fields-row">
-            <div class="form-field">
-              <label class="field-label">DEPARTMENT <span class="required">*</span></label>
-              <select class="field-input" [(ngModel)]="newTaskCategory.departmentId">
-                <option value="0">Select Department</option>
-                @for (dept of departmentMasterList; track dept.departmentId) {
-                  <option [value]="dept.departmentId">{{ dept.deptName }}</option>
-                }
-              </select>
-            </div>
-            
-            <div class="form-field">
-              <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
-              <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName" (input)="newTaskCategory.categoryName = newTaskCategory.categoryName.toUpperCase()" placeholder="Enter category name">
-            </div>
-            
-            <div class="form-field">
-              <label class="field-label">ESTIMATED HOURS</label>
-              <input type="text" class="field-input time-format-input" [(ngModel)]="newTaskCategory.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(newTaskCategory)" maxlength="5">
-            </div>
-          </div>
-          
-          <div class="form-actions-row">
-            <button class="btn-form-cancel" (click)="cancelAddCategory()">
-              <i class="fas fa-times"></i>
-              Cancel
-            </button>
-            <button class="btn-form-save" (click)="saveNewCategory()">
-              <i class="fas fa-check"></i>
-              Save
-            </button>
-          </div>
-        </div>
-      }
-
-      <!-- Categories List -->
-      <div class="categories-items-list">
-        @for (category of getFilteredCategories(); track category.categoryId) {
-          @if (category.isEditing) {
-            <!-- Edit Form for this category -->
-            <div class="category-edit-form">
+          <div class="category-form-layout">
+            <!-- Left: Fields -->
+            <div class="category-form-left">
               <div class="form-fields-row">
                 <div class="form-field">
                   <label class="field-label">DEPARTMENT <span class="required">*</span></label>
-                  <select class="field-input" [(ngModel)]="category.departmentId" (change)="onDepartmentChange(category.departmentId, category)">
+                  <select class="field-input" [(ngModel)]="newTaskCategory.departmentId">
                     <option value="0">Select Department</option>
                     @for (dept of departmentMasterList; track dept.departmentId) {
                       <option [value]="dept.departmentId">{{ dept.deptName }}</option>
                     }
                   </select>
                 </div>
-                
-                <div class="form-field">
-                  <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
-                  <input type="text" class="field-input" [(ngModel)]="category.categoryName" (input)="category.categoryName = category.categoryName.toUpperCase()" placeholder="Enter category name">
-                </div>
-                
                 <div class="form-field">
                   <label class="field-label">ESTIMATED HOURS</label>
-                  <input type="text" class="field-input time-format-input" [(ngModel)]="category.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(category)" maxlength="5">
+                  <input type="text" class="field-input time-format-input" [(ngModel)]="newTaskCategory.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(newTaskCategory)" maxlength="5">
                 </div>
               </div>
-              
+              <div class="form-field" style="margin-bottom:12px">
+                <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
+                <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName" (input)="newTaskCategory.categoryName = newTaskCategory.categoryName.toUpperCase()" placeholder="e.g. Invoice Processing">
+              </div>
+              <!-- Selected Fields -->
+              <div class="selected-fields-section">
+                <label class="field-label">SELECTED FIELDS</label>
+                <div class="selected-fields-box">
+                  @if (newCategorySelectedFields.length === 0) {
+                    <span class="no-fields-hint">No fields selected</span>
+                  }
+                  @for (sf of newCategorySelectedFields; track sf.fieldId) {
+                    <span class="selected-field-tag">
+                      {{ sf.fieldName }}
+                      <button class="tag-remove-btn" (click)="removeCategoryField(sf.fieldId, newCategorySelectedFields)"><i class="fas fa-times"></i></button>
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+            <!-- Right: Fields Selection -->
+            <div class="category-form-right">
+              <label class="field-label">FIELDS SELECTION</label>
+              <div class="fields-checklist-dropdown">
+                <button type="button" class="fields-dropdown-trigger" (click)="showFieldsDropdown = !showFieldsDropdown">
+                  <i class="fas fa-list-check"></i>
+                  <span>{{ newCategorySelectedFields.length > 0 ? newCategorySelectedFields.length + ' field(s) selected' : 'Select fields...' }}</span>
+                  <i class="fas fa-chevron-down" [class.rotated]="showFieldsDropdown"></i>
+                </button>
+                @if (showFieldsDropdown) {
+                  <div class="fields-dropdown-panel">
+                    <div class="fields-search-box">
+                      <i class="fas fa-search fields-search-icon"></i>
+                      <input type="text" class="fields-search-input" [(ngModel)]="fieldSearchTerm" placeholder="Search fields...">
+                    </div>
+                    <div class="fields-list">
+                      @for (field of getFilteredAvailableFields(); track field.fieldId) {
+                        <label class="field-checkbox-item" [class.checked]="isCategoryFieldSelected(field.fieldId, newCategorySelectedFields)">
+                          <input type="checkbox" [checked]="isCategoryFieldSelected(field.fieldId, newCategorySelectedFields)" (change)="toggleCategoryField(field, newCategorySelectedFields)">
+                          <span class="field-checkbox-label">{{ field.fieldName }}</span>
+                        </label>
+                      }
+                      @if (getFilteredAvailableFields().length === 0) {
+                        <p class="no-fields-msg">No fields found</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="form-actions-row">
+            <button class="btn-form-cancel" (click)="cancelAddCategory()">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="btn-form-save" (click)="saveNewCategory()">
+              <i class="fas fa-check"></i> Save Category
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Categories Table -->
+      <div class="categories-table">
+        <div class="cat-table-header">
+          <div class="cat-col-dept">DEPARTMENT</div>
+          <div class="cat-col-name">TASK CATEGORY</div>
+          <div class="cat-col-hours">HOURS</div>
+          <div class="cat-col-fields">FIELDS</div>
+          <div class="cat-col-action">ACTION</div>
+        </div>
+        <div class="categories-items-list">
+        @for (category of getFilteredCategories(); track category.categoryId) {
+          @if (category.isEditing) {
+            <!-- Edit Form -->
+            <div class="cat-edit-form-row">
+              <div class="category-form-layout">
+                <!-- Left -->
+                <div class="category-form-left">
+                  <div class="form-fields-row">
+                    <div class="form-field">
+                      <label class="field-label">DEPARTMENT <span class="required">*</span></label>
+                      <select class="field-input" [(ngModel)]="category.departmentId" (change)="onDepartmentChange(category.departmentId, category)">
+                        <option value="0">Select Department</option>
+                        @for (dept of departmentMasterList; track dept.departmentId) {
+                          <option [value]="dept.departmentId">{{ dept.deptName }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label class="field-label">ESTIMATED HOURS</label>
+                      <input type="text" class="field-input time-format-input" [(ngModel)]="category.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(category)" maxlength="5">
+                    </div>
+                  </div>
+                  <div class="form-field" style="margin-bottom:12px">
+                    <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
+                    <input type="text" class="field-input" [(ngModel)]="category.categoryName" (input)="category.categoryName = category.categoryName.toUpperCase()" placeholder="Enter category name">
+                  </div>
+                  <!-- Selected Fields -->
+                  <div class="selected-fields-section">
+                    <label class="field-label">SELECTED FIELDS</label>
+                    <div class="selected-fields-box">
+                      @if (!category.selectedFields || category.selectedFields.length === 0) {
+                        <span class="no-fields-hint">No fields selected</span>
+                      }
+                      @for (sf of category.selectedFields || []; track sf.fieldId) {
+                        <span class="selected-field-tag">
+                          {{ sf.fieldName }}
+                          <button class="tag-remove-btn" (click)="removeCategoryField(sf.fieldId, category.selectedFields!)"><i class="fas fa-times"></i></button>
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <!-- Right: Fields Selection -->
+                <div class="category-form-right">
+                  <label class="field-label">FIELDS SELECTION</label>
+                  <div class="fields-checklist-dropdown">
+                    <button type="button" class="fields-dropdown-trigger" (click)="showFieldsDropdown = !showFieldsDropdown">
+                      <i class="fas fa-list-check"></i>
+                      <span>{{ (category.selectedFields?.length || 0) > 0 ? (category.selectedFields?.length) + ' field(s) selected' : 'Select fields...' }}</span>
+                      <i class="fas fa-chevron-down" [class.rotated]="showFieldsDropdown"></i>
+                    </button>
+                    @if (showFieldsDropdown) {
+                      <div class="fields-dropdown-panel">
+                        <div class="fields-search-box">
+                          <i class="fas fa-search fields-search-icon"></i>
+                          <input type="text" class="fields-search-input" [(ngModel)]="fieldSearchTerm" placeholder="Search fields...">
+                        </div>
+                        <div class="fields-list">
+                          @for (field of getFilteredAvailableFields(); track field.fieldId) {
+                            <label class="field-checkbox-item" [class.checked]="isCategoryFieldSelected(field.fieldId, category.selectedFields || [])">
+                              <input type="checkbox" [checked]="isCategoryFieldSelected(field.fieldId, category.selectedFields || [])" (change)="toggleCategoryField(field, category.selectedFields!)">
+                              <span class="field-checkbox-label">{{ field.fieldName }}</span>
+                            </label>
+                          }
+                          @if (getFilteredAvailableFields().length === 0) {
+                            <p class="no-fields-msg">No fields found</p>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
               <div class="form-actions-row">
                 <button class="btn-form-cancel" (click)="cancelEdit(category)">
-                  <i class="fas fa-times"></i>
-                  Cancel
+                  <i class="fas fa-times"></i> Cancel
                 </button>
                 <button class="btn-form-save" (click)="saveCategory(category)">
-                  <i class="fas fa-check"></i>
-                  Save
+                  <i class="fas fa-check"></i> Save Category
                 </button>
               </div>
             </div>
           } @else {
-            <!-- Category List Item -->
-            <div class="category-list-item">
-              <div class="category-item-icon">
-                <i class="fas fa-list"></i>
+            <!-- Category Table Row -->
+            <div class="cat-table-row">
+              <div class="cat-col-dept">
+                <span class="dept-pill">{{ category.departmentName }}</span>
               </div>
-              <div class="category-item-content">
-                <h5 class="category-item-title">{{ category.categoryName }}</h5>
-                <p class="category-item-dept">{{ category.departmentName }}</p>
+              <div class="cat-col-name">{{ category.categoryName }}</div>
+              <div class="cat-col-hours">
+                <span class="hours-pill">{{ category.timeDisplay || '0:00' }}</span>
               </div>
-              <button class="category-edit-btn" (click)="startEditCategory(category)">
-                <i class="fas fa-edit"></i>
-                Edit
-              </button>
+              <div class="cat-col-fields">
+                @if (category.selectedFields && category.selectedFields.length > 0) {
+                  @for (f of category.selectedFields; track f.fieldId) {
+                    <span class="field-pill">{{ f.fieldName }}</span>
+                  }
+                } @else {
+                  <span class="no-fields-text">—</span>
+                }
+              </div>
+              <div class="cat-col-action">
+                <button class="cat-action-btn" (click)="startEditCategory(category)" title="Edit">
+                  <i class="fas fa-pen"></i>
+                </button>
+              </div>
             </div>
           }
         }
+        </div>
       </div>
     </div>
   </div>
