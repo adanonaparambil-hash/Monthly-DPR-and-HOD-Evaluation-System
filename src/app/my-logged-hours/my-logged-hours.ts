@@ -249,7 +249,7 @@ export class MyLoggedHoursComponent implements OnInit {
     { key: 'remarks', label: 'Remarks', visible: false, width: '200px', type: 'text' },
     { key: 'folderPath', label: 'Folder Path', visible: false, width: '200px', type: 'text' },
     { key: 'documentLink', label: 'Document Link', visible: false, width: '200px', type: 'text' },
-    { key: 'duration', label: 'Duration', visible: true, width: '120px', type: 'text', required: true }
+    { key: 'duration', label: 'Log Time', visible: true, width: '120px', type: 'text', required: true }
   ];
 
   // Logged hours data from API (no hardcoded data)

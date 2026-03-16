@@ -550,10 +550,14 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   
   // Save comment first, then save task
   private saveCommentThenTask(userId: string) {
+    // For saveComment, always use session userId (not the task's userId)
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = currentUser.empId || currentUser.employeeId || userId;
+
     const commentRequest: TaskCommentDto = {
       commentId: 0,
       taskId: this.taskId,
-      userId: userId,
+      userId: sessionUserId,
       comments: this.dailyRemarks.trim(),
       submittedOn: new Date().toISOString(),
       empName: '',
@@ -707,10 +711,14 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   
   // Save Daily Remarks as a comment (called automatically when status is CLOSED)
   private saveDailyRemarksAsComment() {
+    // Always use session userId for saving comments
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = currentUser.empId || currentUser.employeeId || this.userId;
+
     const commentData: TaskCommentDto = {
       commentId: 0,
       taskId: this.taskId,
-      userId: this.userId,
+      userId: sessionUserId,
       comments: this.dailyRemarks,
       submittedOn: new Date().toISOString(),
       empName: '',
@@ -1126,10 +1134,13 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   addComment() {
     if (!this.newComment.trim()) return;
 
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = sessionUser.empId || sessionUser.employeeId || this.userId;
+
     const commentData: TaskCommentDto = {
       commentId: 0,
       taskId: this.taskId,
-      userId: this.userId,
+      userId: sessionUserId,
       comments: this.newComment,
       submittedOn: new Date().toISOString(),
       empName: '',
