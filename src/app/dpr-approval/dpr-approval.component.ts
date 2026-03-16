@@ -216,6 +216,53 @@ export class DprApprovalComponent implements OnInit {
     return dateString;
   }
 
+  // Refresh pending users list while keeping the current user selected
+  refreshPendingUsersKeepSelection(currentSelectedUserId: string | undefined) {
+    const currentUser = localStorage.getItem('current_user');
+    if (!currentUser) return;
+
+    const userData = JSON.parse(currentUser);
+    const userId = userData.empId || userData.employeeId;
+    if (!userId) return;
+
+    this.api.getPendingApprovalUsers(userId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.pendingUsers = response.data.map((user: PendingApprovalUserResponse) => ({
+            id: user.employeeId,
+            name: user.employeeName,
+            role: user.designation,
+            avatar: user.employeeImageBase64 || user.employeeImage || undefined,
+            initials: this.getUserInitials(user.employeeName),
+            pendingLogs: user.pendingLogCount,
+            lastActivity: this.formatLastActivity(user.lastActivityDate),
+            // Keep the previously selected user highlighted, not auto-select first
+            isSelected: user.employeeId === currentSelectedUserId
+          }));
+
+          // Restore selectedUser reference to the same user (updated data)
+          const stillExists = this.pendingUsers.find(u => u.id === currentSelectedUserId);
+          if (stillExists) {
+            this.selectedUser = stillExists;
+          }
+          // If the user no longer exists in the list (all their logs approved),
+          // select the first user and load their records
+          else if (this.pendingUsers.length > 0) {
+            this.pendingUsers[0].isSelected = true;
+            this.selectedUser = this.pendingUsers[0];
+            this.loadApprovalList();
+          } else {
+            this.selectedUser = null;
+            this.displayedLogs = [];
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error refreshing pending users:', error);
+      }
+    });
+  }
+
   loadPendingApprovalUsers() {
     // Get current user ID from local storage
     const currentUser = localStorage.getItem('current_user');
@@ -750,10 +797,15 @@ export class DprApprovalComponent implements OnInit {
           // Reset selections
           this.selectAll = false;
           this.displayedLogs.forEach(log => log.isSelected = false);
-          
-          // Reload both approval list and pending users to reflect changes
+
+          // Remember the currently selected user before refreshing
+          const currentSelectedUserId = this.selectedUser?.id;
+
+          // Reload approval list for the current user first
           this.loadApprovalList();
-          this.loadPendingApprovalUsers();
+
+          // Refresh pending users sidebar without changing the selected user
+          this.refreshPendingUsersKeepSelection(currentSelectedUserId);
           
           // Show success message with SweetAlert
           Swal.fire({
