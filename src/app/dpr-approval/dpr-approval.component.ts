@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
-import { TaskBulkApprovalRequest } from '../models/TimeSheetDPR.model';
+import { TaskBulkApprovalRequest, DecreaseTimeLogRequest } from '../models/TimeSheetDPR.model';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
 import { ToasterComponent } from '../components/toaster/toaster.component';
+import { ToasterService } from '../services/toaster.service';
 import { SessionService } from '../services/session.service';
 import Swal from 'sweetalert2';
 
@@ -58,6 +59,7 @@ interface DPRLog {
   categoryId?: number;
   userId?: string;
   date: string;
+  rawDate?: string; // Raw ISO date from API for API calls
   project: string;
   projectType: 'internal' | 'client';
   taskTitle: string;
@@ -105,9 +107,16 @@ export class DprApprovalComponent implements OnInit {
   selectedCategoryIdForModal: number = 0;
   isTaskModalViewOnly: boolean = true; // Always view-only in DPR Approval
 
+  // Day Log History modal properties
+  showDayLogHistoryModal = false;
+  selectedLogForDayHistory: DPRLog | null = null;
+  dayLogHistory: any[] = [];
+  isLoadingDayLogs = false;
+
   constructor(
     private api: Api,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private toasterService: ToasterService
   ) {}
 
   dprLogs: DPRLog[] = [
@@ -427,10 +436,11 @@ export class DprApprovalComponent implements OnInit {
               categoryId: item.categoryID || item.categoryId, // Store categoryId from API
               userId: finalUserId, // Store userId from API or fallback to selected user
               date: this.formatDisplayDate(item.logDate),
+              rawDate: item.logDate || '', // Keep raw ISO date for API calls
               project: item.project || 'N/A',
               projectType: 'internal',
-              taskTitle: item.taskTitle || 'No Title',
-              taskDescription: item.dailyRemarks || item.taskDescription || 'No Description',
+              taskTitle: item.taskTitle || '-',
+              taskDescription: item.dailyRemarks || item.taskDescription || '-',
               category: item.category || 'N/A',
               categoryType: 'feature',
               hours: this.formatHours(item.hours),
@@ -741,8 +751,9 @@ export class DprApprovalComponent implements OnInit {
           this.selectAll = false;
           this.displayedLogs.forEach(log => log.isSelected = false);
           
-          // Reload the approval list to reflect changes
+          // Reload both approval list and pending users to reflect changes
           this.loadApprovalList();
+          this.loadPendingApprovalUsers();
           
           // Show success message with SweetAlert
           Swal.fire({
@@ -887,5 +898,178 @@ export class DprApprovalComponent implements OnInit {
     console.log('Task stopped from modal:', taskId);
     // Reload approval list to reflect changes
     this.loadApprovalList();
+  }
+
+  // ===== Day Log History Modal =====
+
+  openDayLogHistoryModal(log: DPRLog, event: Event) {
+    event.stopPropagation();
+    this.selectedLogForDayHistory = log;
+    this.showDayLogHistoryModal = true;
+    this.loadDayLogHistory(log);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeDayLogHistoryModal() {
+    this.showDayLogHistoryModal = false;
+    this.selectedLogForDayHistory = null;
+    this.dayLogHistory = [];
+    document.body.style.overflow = '';
+  }
+
+  loadDayLogHistory(log: DPRLog) {
+    this.isLoadingDayLogs = true;
+    const taskId = log.taskId || 0;
+    const userId = log.userId || this.selectedUser?.id || '';
+    // logDate: use the raw ISO date from the API response
+    const logDate = log.rawDate || log.date;
+
+    this.api.getUserTaskDayLogHistory({ userId, taskId, logDate }).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data) {
+          this.dayLogHistory = response.data;
+        } else {
+          this.dayLogHistory = [];
+        }
+        this.isLoadingDayLogs = false;
+      },
+      error: () => {
+        this.dayLogHistory = [];
+        this.isLoadingDayLogs = false;
+        this.toasterService.showError('Error', 'Failed to load day log history');
+      }
+    });
+  }
+
+  formatLogDateOnly(dateTime: string | Date): string {
+    if (!dateTime) return 'N/A';
+    const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  formatTimeOnly(timeString: string | Date): string {
+    if (!timeString) return 'N/A';
+    const date = typeof timeString === 'string' ? new Date(timeString) : timeString;
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  }
+
+  getDayLogStatusClass(status: string): string {
+    if (!status) return '';
+    switch (status.toUpperCase().trim()) {
+      case 'RUNNING': return 'status-running';
+      case 'COMPLETED': return 'status-completed';
+      case 'PAUSED': return 'status-paused';
+      default: return '';
+    }
+  }
+
+  editDayLog(log: any) {
+    const currentMinutes = log.minutesSpent || 0;
+    const hours = Math.floor(currentMinutes / 60);
+    const minutes = currentMinutes % 60;
+    const currentTimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+    Swal.fire({
+      title: 'Edit Time Log',
+      html: `
+        <div style="text-align: left; margin-bottom: 15px;">
+          <p style="margin-bottom: 10px;"><strong>Current Duration:</strong> ${log.duration}</p>
+          <p style="margin-bottom: 10px; color: #666;">You can increase or decrease the time for this log.</p>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0;">
+          <label style="font-weight: 600; color: #333;">Enter Time (HH:MM):</label>
+          <input id="swal-input-time" class="swal2-input" type="text"
+                 placeholder="HH:MM"
+                 value="${currentTimeFormatted}"
+                 style="width: 120px; text-align: center; font-size: 16px; font-weight: 600;">
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Update',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6366f1',
+      cancelButtonColor: '#6b7280',
+      preConfirm: () => {
+        const input = document.getElementById('swal-input-time') as HTMLInputElement;
+        const timeValue = input.value.trim();
+        const timeParts = timeValue.split(':');
+        if (timeParts.length !== 2) {
+          Swal.showValidationMessage('Please enter time in HH:MM format');
+          return false;
+        }
+        const inputHours = parseInt(timeParts[0], 10);
+        const inputMinutes = parseInt(timeParts[1], 10);
+        if (isNaN(inputHours) || isNaN(inputMinutes)) {
+          Swal.showValidationMessage('Please enter valid numbers for hours and minutes');
+          return false;
+        }
+        if (inputHours < 0 || inputMinutes < 0 || inputMinutes > 59) {
+          Swal.showValidationMessage('Please enter valid time (HH: 0-23, MM: 0-59)');
+          return false;
+        }
+        const newTotalMinutes = inputHours * 60 + inputMinutes;
+        if (newTotalMinutes === currentMinutes) {
+          Swal.showValidationMessage('Please enter a different value');
+          return false;
+        }
+        return newTotalMinutes;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value !== undefined) {
+        this.updateTimeLog(log, result.value);
+      }
+    });
+  }
+
+  updateTimeLog(log: any, newMinutes: number) {
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+
+    const request: DecreaseTimeLogRequest = {
+      timeLogId: log.timeLogId,
+      newMinutes: newMinutes,
+      userId: userId
+    };
+
+    Swal.fire({
+      title: 'Updating...',
+      text: 'Please wait while we update the time log',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    this.api.decreaseTimeLog(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Updated!',
+            text: 'Time log has been updated successfully',
+            confirmButtonColor: '#6366f1',
+            timer: 2000
+          });
+          // Refresh the day log history modal
+          if (this.selectedLogForDayHistory) {
+            this.loadDayLogHistory(this.selectedLogForDayHistory);
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: response?.message || 'Failed to update time log',
+            confirmButtonColor: '#6366f1'
+          });
+        }
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while updating the time log',
+          confirmButtonColor: '#6366f1'
+        });
+      }
+    });
   }
 }

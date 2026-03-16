@@ -190,7 +190,7 @@
                 [disabled]="getSelectedLogsCount() === 0"
               >
                 <i class="fas fa-check-double"></i>
-                <span>Approve All</span>
+                <span>Approve</span>
                 @if (getSelectedLogsCount() > 0) {
                   <span class="selection-count">
                     {{ getSelectedLogsCount() }}
@@ -245,7 +245,7 @@
                   <th class="title-col">Task Title</th>
                   <th class="description-col">Daily Remarks</th>
                   <th class="project-col">Project</th>
-                  <th class="hours-col">Hours</th>
+                  <th class="hours-col">Log Time</th>
                   <th class="status-col">Status</th>
                 </tr>
               </thead>
@@ -308,7 +308,12 @@
 
                     <!-- Hours -->
                     <td class="hours-cell">
-                      <span class="hours-text">{{ log.hours }}</span>
+                      <div class="hours-cell-wrapper">
+                        <span class="hours-text">{{ log.hours }}</span>
+                        <button class="more-btn" (click)="openDayLogHistoryModal(log, $event)" title="View Day Log History">
+                          <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                      </div>
                     </td>
 
                     <!-- Status -->
@@ -412,3 +417,103 @@
   (taskResumed)="onTaskResumed($event)"
   (taskStopped)="onTaskStopped($event)">
 </app-task-details-modal>
+
+<!-- Day Log History Modal -->
+@if (showDayLogHistoryModal) {
+  <div class="modal-overlay-large" (click)="closeDayLogHistoryModal()">
+    <div class="day-log-history-modal-large" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header-large">
+        <div class="modal-title-section-large">
+          <i class="fas fa-history modal-icon-large"></i>
+          <div>
+            <h2 class="modal-title-large">Day Log History</h2>
+            <p class="modal-subtitle-large">Detailed time log entries for this task</p>
+          </div>
+        </div>
+        <button class="close-btn-large" (click)="closeDayLogHistoryModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body-large">
+        @if (isLoadingDayLogs) {
+          <div class="loading-state-large">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading day log history...</p>
+          </div>
+        }
+        @if (!isLoadingDayLogs && dayLogHistory.length === 0) {
+          <div class="empty-state-large">
+            <i class="fas fa-history"></i>
+            <p>No Log History</p>
+            <span>No time log entries found for this task</span>
+          </div>
+        }
+        @if (!isLoadingDayLogs && dayLogHistory.length > 0) {
+          <div class="day-log-table-container">
+            <table class="day-log-table">
+              <thead>
+                <tr>
+                  <th class="th-log-id">Log ID</th>
+                  <th class="th-user">User</th>
+                  <th class="th-log-date">Log Date</th>
+                  <th class="th-start-time">Start Time</th>
+                  <th class="th-end-time">End Time</th>
+                  <th class="th-duration">Duration</th>
+                  <th class="th-status">Status</th>
+                  <th class="th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of dayLogHistory; track log.timeLogId) {
+                  <tr class="day-log-row">
+                    <td class="td-log-id"><span class="log-id-badge">#{{ log.timeLogId }}</span></td>
+                    <td class="td-user">
+                      <div class="user-cell">
+                        <span class="user-name">{{ log.userName }}</span>
+                        <span class="user-id">{{ log.userId }}</span>
+                      </div>
+                    </td>
+                    <td class="td-log-date"><span class="log-date">{{ formatLogDateOnly(log.logDate) }}</span></td>
+                    <td class="td-start-time"><span class="time-text">{{ formatTimeOnly(log.startTime) }}</span></td>
+                    <td class="td-end-time"><span class="time-text">{{ formatTimeOnly(log.endTime) }}</span></td>
+                    <td class="td-duration">
+                      <span class="duration-badge">
+                        <i class="fas fa-clock"></i>
+                        {{ log.duration }}
+                      </span>
+                    </td>
+                    <td class="td-status">
+                      <span class="status-badge" [ngClass]="getDayLogStatusClass(log.status)">
+                        {{ log.status || 'N/A' }}
+                      </span>
+                    </td>
+                    <td class="td-actions">
+                      <button class="btn-icon-edit" (click)="editDayLog(log); $event.stopPropagation()" title="Edit Duration">
+                        <i class="fas fa-pencil-alt"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-large">
+        <div class="footer-info">
+          <i class="fas fa-info-circle"></i>
+          <span>Showing {{ dayLogHistory.length }} log entr{{ dayLogHistory.length === 1 ? 'y' : 'ies' }}</span>
+        </div>
+        <button class="btn-secondary-large" (click)="closeDayLogHistoryModal()">
+          <i class="fas fa-times"></i>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}
