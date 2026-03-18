@@ -151,6 +151,19 @@ export class MyLoggedHoursComponent implements OnInit {
   isLoadingDayLogs = false;
   selectedRecordForDayLog: LoggedHour | null = null;
 
+  // Log Time Popup (for AUTO CLOSED logs from Day Log History)
+  showLogTimePopup = false;
+  logTimeDate = '';
+  logTimeStartTime = '09:00 AM';
+  logTimeEndTime = '11:30 AM';
+  logTimeTotalMinutes = 0;
+  logTimeTotalDisplay = '00:00';
+  logTimeEditValue = '00:00';
+  isEditingLogTime = false;
+  private logTimeTimeLogId = 0;
+  private logTimeOriginalMinutes = 0;
+  logTimeStatus = '';
+
   // Manage Fields Modal
   showManageFieldsModal = false;
   customFields: any[] = [];
@@ -1116,11 +1129,20 @@ export class MyLoggedHoursComponent implements OnInit {
       currentUserId: currentUserId,
       recordUserId: recordUserId,
       isViewOnly: this.isTaskModalViewOnly,
-      recordCategoryId: record.categoryId
+      recordCategoryId: record.categoryId,
+      recordStatus: record.status
     });
     
+    // Show modal immediately with loading state
     this.showTaskModal = true;
     document.body.style.overflow = 'hidden';
+    
+    // For AUTO CLOSED tasks, add a small delay to ensure modal renders before loading data
+    if (record.status && record.status.toUpperCase() === 'AUTO CLOSED') {
+      setTimeout(() => {
+        console.log('AUTO CLOSED task modal opened, ready for data loading');
+      }, 100);
+    }
   }
 
   closeTaskModal() {
@@ -1154,6 +1176,25 @@ export class MyLoggedHoursComponent implements OnInit {
     console.log('Task stopped from modal:', taskId);
     // Reload logged hours to reflect changes
     this.loadLoggedHours();
+  }
+
+  // Handle showLogTime event from task-details-modal (AUTO CLOSED task)
+  onShowLogTime(data: any) {
+    if (!data) { this.showLogTimePopup = false; return; }
+    this.logTimeTimeLogId = data.timeLogId || 0;
+    this.logTimeStatus = data.status || 'AUTO CLOSED';
+    this.logTimeOriginalMinutes = data.totalMinutes || 0;
+    this.logTimeTotalMinutes = data.totalMinutes || 0;
+    this.logTimeDate = data.date || '';
+    this.logTimeStartTime = data.startTime || '09:00 AM';
+    this.logTimeEndTime = data.endTime || '11:30 AM';
+    this.logTimeTotalDisplay = data.totalDisplay || '00:00';
+    this.logTimeEditValue = data.totalDisplay || '00:00';
+    this.isEditingLogTime = false;
+    
+    // Keep task modal open — Log Time popup renders on top via fixed overlay
+    // Task modal stays visible in background, Log Time popup appears on top
+    setTimeout(() => { this.showLogTimePopup = true; }, 50);
   }
 
   // Column management methods
@@ -1582,6 +1623,7 @@ export class MyLoggedHoursComponent implements OnInit {
 
   closeDayLogHistoryModal() {
     this.showDayLogHistoryModal = false;
+    this.showLogTimePopup = false;
     this.selectedRecordForDayLog = null;
     this.dayLogHistory = [];
     
@@ -1713,81 +1755,210 @@ export class MyLoggedHoursComponent implements OnInit {
   }
 
   editDayLog(log: any) {
-      console.log('Edit day log:', log);
+    console.log('Edit day log:', log);
 
-      const currentMinutes = log.minutesSpent || 0;
-      const hours = Math.floor(currentMinutes / 60);
-      const minutes = currentMinutes % 60;
-      const currentTimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-
-      // Show SweetAlert with input for new time in HH:MM format
-      Swal.fire({
-        title: 'Edit Time Log',
-        html: `
-          <div style="text-align: left; margin-bottom: 15px;">
-            <p style="margin-bottom: 10px;"><strong>Current Duration:</strong> ${log.duration}</p>
-            <p style="margin-bottom: 10px; color: #666;">You can only reduce the time, not increase it.</p>
-          </div>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0;">
-            <label style="font-weight: 600; color: #333;">Enter Time (HH:MM):</label>
-            <input id="swal-input-time" class="swal2-input" type="text" 
-                   placeholder="HH:MM" 
-                   value="${currentTimeFormatted}"
-                   style="width: 120px; text-align: center; font-size: 16px; font-weight: 600;">
-          </div>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Update',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#6366f1',
-        cancelButtonColor: '#6b7280',
-        preConfirm: () => {
-          const input = document.getElementById('swal-input-time') as HTMLInputElement;
-          const timeValue = input.value.trim();
-
-          // Parse HH:MM format
-          const timeParts = timeValue.split(':');
-          if (timeParts.length !== 2) {
-            Swal.showValidationMessage('Please enter time in HH:MM format');
-            return false;
-          }
-
-          const inputHours = parseInt(timeParts[0], 10);
-          const inputMinutes = parseInt(timeParts[1], 10);
-
-          // Validation
-          if (isNaN(inputHours) || isNaN(inputMinutes)) {
-            Swal.showValidationMessage('Please enter valid numbers for hours and minutes');
-            return false;
-          }
-
-          if (inputHours < 0 || inputMinutes < 0 || inputMinutes > 59) {
-            Swal.showValidationMessage('Please enter valid time (HH: 0-23, MM: 0-59)');
-            return false;
-          }
-
-          const newTotalMinutes = inputHours * 60 + inputMinutes;
-
-          if (newTotalMinutes > currentMinutes) {
-            Swal.showValidationMessage(`You can only reduce time. Maximum is ${currentTimeFormatted}`);
-            return false;
-          }
-
-          if (newTotalMinutes === currentMinutes) {
-            Swal.showValidationMessage('Please enter a different value');
-            return false;
-          }
-
-          return newTotalMinutes;
-        }
-      }).then((result) => {
-        if (result.isConfirmed && result.value !== undefined) {
-          const newMinutes = result.value;
-          this.updateTimeLog(log, newMinutes);
-        }
-      });
+    // If status is AUTO CLOSED → always show Log Time popup
+    if ((log.status || '').toUpperCase().trim() === 'AUTO CLOSED') {
+      this.openLogTimePopup(log);
+      return;
     }
+
+    // Otherwise fall back to Swal edit dialog
+    const currentMinutes = log.minutesSpent || 0;
+    const hours = Math.floor(currentMinutes / 60);
+    const minutes = currentMinutes % 60;
+    const currentTimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+    Swal.fire({
+      title: 'Edit Time Log',
+      html: `
+        <div style="text-align: left; margin-bottom: 15px;">
+          <p style="margin-bottom: 10px;"><strong>Current Duration:</strong> ${log.duration}</p>
+          <p style="margin-bottom: 10px; color: #666;">You can only reduce the time, not increase it.</p>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0;">
+          <label style="font-weight: 600; color: #333;">Enter Time (HH:MM):</label>
+          <input id="swal-input-time" class="swal2-input" type="text" 
+                 placeholder="HH:MM" 
+                 value="${currentTimeFormatted}"
+                 style="width: 120px; text-align: center; font-size: 16px; font-weight: 600;">
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Update',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6366f1',
+      cancelButtonColor: '#6b7280',
+      preConfirm: () => {
+        const input = document.getElementById('swal-input-time') as HTMLInputElement;
+        const timeValue = input.value.trim();
+        const timeParts = timeValue.split(':');
+        if (timeParts.length !== 2) {
+          Swal.showValidationMessage('Please enter time in HH:MM format');
+          return false;
+        }
+        const inputHours = parseInt(timeParts[0], 10);
+        const inputMinutes = parseInt(timeParts[1], 10);
+        if (isNaN(inputHours) || isNaN(inputMinutes)) {
+          Swal.showValidationMessage('Please enter valid numbers for hours and minutes');
+          return false;
+        }
+        if (inputHours < 0 || inputMinutes < 0 || inputMinutes > 59) {
+          Swal.showValidationMessage('Please enter valid time (HH: 0-23, MM: 0-59)');
+          return false;
+        }
+        const newTotalMinutes = inputHours * 60 + inputMinutes;
+        if (newTotalMinutes > currentMinutes) {
+          Swal.showValidationMessage(`You can only reduce time. Maximum is ${currentTimeFormatted}`);
+          return false;
+        }
+        if (newTotalMinutes === currentMinutes) {
+          Swal.showValidationMessage('Please enter a different value');
+          return false;
+        }
+        return newTotalMinutes;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value !== undefined) {
+        this.updateTimeLog(log, result.value);
+      }
+    });
+  }
+
+  openLogTimePopup(log: any) {
+    // Prepare all popup data first
+    this.logTimeTimeLogId = log.timeLogId || 0;
+    this.logTimeStatus = (log.status || 'AUTO CLOSED').toUpperCase();
+
+    // Parse original minutes from minutesSpent, or fall back to parsing log.duration string
+    let originalMinutes = log.minutesSpent || log.totalMinutes || 0;
+    if (!originalMinutes && log.duration) {
+      const parts = (log.duration as string).split(':');
+      if (parts.length === 2) {
+        originalMinutes = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      }
+    }
+    this.logTimeOriginalMinutes = originalMinutes;
+    this.logTimeTotalMinutes = originalMinutes;
+
+    const h = Math.floor(this.logTimeTotalMinutes / 60);
+    const m = this.logTimeTotalMinutes % 60;
+    this.logTimeTotalDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    this.logTimeEditValue = this.logTimeTotalDisplay;
+
+    // Bind date
+    if (log.logDate) {
+      const d = new Date(log.logDate);
+      this.logTimeDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } else {
+      this.logTimeDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Bind start/end time
+    this.logTimeStartTime = log.startTime ? new Date(log.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '09:00 AM';
+    this.logTimeEndTime = log.endTime ? new Date(log.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '11:30 AM';
+
+    this.isEditingLogTime = false;
+
+    // Keep Day Log History modal open — ltp-modal-overlay covers it via position:absolute
+    this.showLogTimePopup = true;
+  }
+
+  closeLogTimePopup() {
+    this.showLogTimePopup = false;
+  }
+
+  onLogTimeStartEndChange() {
+    try {
+      const parseTime = (t: string) => {
+        const [time, period] = t.trim().split(' ');
+        let [h, m] = time.split(':').map(Number);
+        if (period?.toUpperCase() === 'PM' && h !== 12) h += 12;
+        if (period?.toUpperCase() === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+      };
+      const diff = parseTime(this.logTimeEndTime) - parseTime(this.logTimeStartTime);
+      if (diff > 0) {
+        if (diff > this.logTimeOriginalMinutes) {
+          this.toasterService.showError('Invalid Time', 'You can only reduce the time, not increase it');
+          // Reset to original
+          const oh = Math.floor(this.logTimeOriginalMinutes / 60);
+          const om = this.logTimeOriginalMinutes % 60;
+          this.logTimeTotalDisplay = `${String(oh).padStart(2, '0')}:${String(om).padStart(2, '0')}`;
+          this.logTimeEditValue = this.logTimeTotalDisplay;
+          this.logTimeTotalMinutes = this.logTimeOriginalMinutes;
+          return;
+        }
+        this.logTimeTotalMinutes = diff;
+        this.logTimeTotalDisplay = `${String(Math.floor(diff / 60)).padStart(2, '0')}:${String(diff % 60).padStart(2, '0')}`;
+        this.logTimeEditValue = this.logTimeTotalDisplay;
+      }
+    } catch (e) {}
+  }
+
+  startEditLogTime() { this.isEditingLogTime = true; }
+
+  confirmEditLogTime() {
+    const parts = this.logTimeEditValue.split(':');
+    if (parts.length === 2) {
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (!isNaN(h) && !isNaN(m) && h >= 0 && m >= 0 && m <= 59) {
+        const newMinutes = h * 60 + m;
+        if (newMinutes >= this.logTimeOriginalMinutes) {
+          this.toasterService.showError('Invalid Time', 'Please enter a value less than the original time');
+          this.logTimeEditValue = this.logTimeTotalDisplay;
+          this.isEditingLogTime = false;
+          return;
+        }
+        this.logTimeTotalMinutes = newMinutes;
+        this.logTimeTotalDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      } else {
+        this.toasterService.showError('Invalid Time', 'Please enter a valid time in HH:MM format');
+        this.logTimeEditValue = this.logTimeTotalDisplay;
+      }
+    }
+    this.isEditingLogTime = false;
+  }
+
+  submitLogTime() {
+    if (this.logTimeTotalMinutes < 0) {
+      this.toasterService.showError('Invalid Time', 'Time cannot be negative');
+      return;
+    }
+    if (this.logTimeTotalMinutes >= this.logTimeOriginalMinutes) {
+      this.toasterService.showError('Invalid Time', 'Please enter a value less than the original time');
+      return;
+    }
+    if (!this.logTimeTimeLogId) {
+      this.toasterService.showError('Error', 'Time log ID not found');
+      return;
+    }
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = sessionUser.empId || sessionUser.employeeId || this.currentUserId;
+    this.api.decreaseTimeLog({ timeLogId: this.logTimeTimeLogId, newMinutes: this.logTimeTotalMinutes, userId: sessionUserId }).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Time logged successfully');
+          // Close Log Time popup — Day Log History stays open (was never hidden)
+          this.showLogTimePopup = false;
+          // Refresh Day Log History data if open
+          if (this.selectedRecordForDayLog && this.showDayLogHistoryModal) {
+            this.loadDayLogHistory(this.selectedRecordForDayLog);
+          }
+          this.applyFilters();
+        } else {
+          // Keep popup open on failure — just show error
+          this.toasterService.showError('Error', response?.message || 'Failed to log time');
+        }
+      },
+      error: () => {
+        // Keep popup open on error — just show error
+        this.toasterService.showError('Error', 'Failed to log time');
+      }
+    });
+  }
 
 
   updateTimeLog(log: any, newMinutes: number) {

@@ -144,8 +144,18 @@
 
     <!-- Main Content -->
     <div class="task-content">
+      <!-- Loading State -->
+      @if (isLoading) {
+        <div class="modal-loading-state">
+          <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+          <p>Loading task details...</p>
+        </div>
+      }
+
       <!-- Left Panel -->
-      <div class="task-main-panel">
+      <div class="task-main-panel" [class.hidden]="isLoading">
         <!-- Title Section with Progress Circle -->
         <div class="title-section">
           <div class="title-content">
@@ -512,7 +522,7 @@
       </div>
 
       <!-- Right Panel - Comments -->
-      <div class="comments-panel">
+      <div class="comments-panel" [class.hidden]="isLoading">
         <div class="comments-tabs">
           <button class="comment-tab" [class.active]="activeSidebarTab === 'comments'"
             (click)="setActiveSidebarTab('comments')">COMMENTS</button>
@@ -659,3 +669,4 @@
   </div>
 </div>
 }
+

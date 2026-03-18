@@ -1131,6 +1131,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         description: task.description || '',
         status: task.status as any,
         category: task.taskCategory || 'General',
+        categoryId: (task as any).categoryId || (task as any).taskCategoryId || 0,
         loggedHours: this.formatMinutesToTime(task.todayLoggedHours),
         totalHours: this.formatMinutesToTime(task.totalLoggedHours),
         startDate: task.startDate ? this.formatDateForInput(task.startDate) : '',
@@ -3159,6 +3160,113 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Reload active tasks to refresh the listing
     this.loadActiveTasks();
     // Keep modal open - don't close it
+  }
+
+  // ===== Log Time Popup (rendered at my-task level to escape stacking context) =====
+  showLogTimePopup = false;
+  logTimeDate = '';
+  logTimeStartTime = '09:00 AM';
+  logTimeEndTime = '11:30 AM';
+  logTimeTotalMinutes = 150;
+  logTimeTotalDisplay = '02:30';
+  logTimeEditValue = '02:30';
+  isEditingLogTime = false;
+  private logTimeTaskId = 0;
+  private logTimeUserId = '';
+  private logTimeTimeLogId = 0;
+  logTimeStatus = '';
+  private logTimeOriginalMinutes = 0;
+
+  onShowLogTime(data: any) {
+    if (!data) { this.showLogTimePopup = false; return; }
+    this.logTimeTaskId = data.taskId;
+    this.logTimeUserId = data.userId;
+    this.logTimeDate = data.date;
+    this.logTimeStartTime = data.startTime || '09:00 AM';
+    this.logTimeEndTime = data.endTime || '11:30 AM';
+    this.logTimeTotalMinutes = data.totalMinutes || 0;
+    this.logTimeOriginalMinutes = data.totalMinutes || 0;
+    this.logTimeTotalDisplay = data.totalDisplay || '00:00';
+    this.logTimeEditValue = data.totalDisplay || '00:00';
+    this.logTimeTimeLogId = data.timeLogId || 0;
+    this.logTimeStatus = data.status || 'AUTO CLOSED';
+    this.isEditingLogTime = false;
+    this.showLogTimePopup = true;
+  }
+
+  closeLogTimePopup() {
+    this.showLogTimePopup = false;
+  }
+
+  onLogTimeStartEndChange() {
+    try {
+      const parseTime = (t: string) => {
+        const [time, period] = t.trim().split(' ');
+        let [h, m] = time.split(':').map(Number);
+        if (period?.toUpperCase() === 'PM' && h !== 12) h += 12;
+        if (period?.toUpperCase() === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+      };
+      const diff = parseTime(this.logTimeEndTime) - parseTime(this.logTimeStartTime);
+      if (diff > 0) {
+        this.logTimeTotalMinutes = diff;
+        this.logTimeTotalDisplay = `${String(Math.floor(diff / 60)).padStart(2, '0')}:${String(diff % 60).padStart(2, '0')}`;
+        this.logTimeEditValue = this.logTimeTotalDisplay;
+      }
+    } catch (e) {}
+  }
+
+  startEditLogTime() { this.isEditingLogTime = true; }
+
+  confirmEditLogTime() {
+    const parts = this.logTimeEditValue.split(':');
+    if (parts.length === 2) {
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (!isNaN(h) && !isNaN(m) && h >= 0 && m >= 0 && m <= 59) {
+        const newMinutes = h * 60 + m;
+        if (newMinutes > this.logTimeOriginalMinutes) {
+          this.toasterService.showError('Invalid Time', 'You can only reduce the time, not increase it');
+          this.logTimeEditValue = this.logTimeTotalDisplay;
+          this.isEditingLogTime = false;
+          return;
+        }
+        this.logTimeTotalMinutes = newMinutes;
+        this.logTimeTotalDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+    }
+    this.isEditingLogTime = false;
+  }
+
+  submitLogTime() {
+    if (this.logTimeTotalMinutes < 0) {
+      this.toasterService.showError('Invalid Time', 'Time cannot be negative');
+      return;
+    }
+    if (this.logTimeTotalMinutes > this.logTimeOriginalMinutes) {
+      this.toasterService.showError('Invalid Time', 'You can only reduce the time, not increase it');
+      return;
+    }
+    if (!this.logTimeTimeLogId) {
+      this.toasterService.showError('Error', 'Time log ID not found');
+      return;
+    }
+    const currentUser = this.sessionService.getCurrentUser();
+    const sessionUserId = currentUser?.empId || currentUser?.employeeId || this.logTimeUserId;
+    this.api.decreaseTimeLog({ timeLogId: this.logTimeTimeLogId, newMinutes: this.logTimeTotalMinutes, userId: sessionUserId }).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Time logged successfully');
+          this.showLogTimePopup = false;
+          this.loadActiveTasks();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to log time');
+        }
+      },
+      error: () => {
+        this.toasterService.showError('Error', 'Failed to log time');
+      }
+    });
   }
 
   // Save task changes method

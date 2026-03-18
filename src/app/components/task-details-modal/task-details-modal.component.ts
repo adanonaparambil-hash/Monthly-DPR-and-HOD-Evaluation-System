@@ -49,10 +49,25 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   @Output() taskPaused = new EventEmitter<number>();
   @Output() taskResumed = new EventEmitter<number>();
   @Output() taskStopped = new EventEmitter<number>();
+  @Output() showLogTime = new EventEmitter<any>(); // Emits log time data to parent for rendering outside stacking context
   
   // AUTO CLOSED tasks blocking
   autoClosedTaskCount = 0;
   isBlockedByAutoClosedTasks = false;
+
+  // Loading state
+  isLoading = false;
+
+  // Log Time popup (shown when session user opens their own AUTO CLOSED task)
+  showLogTimePopup = false;
+  logTimeDate = '';
+  logTimeStartTime = '';
+  logTimeEndTime = '';
+  logTimeTotalMinutes = 0;
+  logTimeTotalDisplay = '00:00';
+  isEditingLogTime = false;
+  logTimeEditValue = '';
+  logTimeTimeLogId = 0; // timeLogID from API response
   
   // Task data
   selectedTaskId = '';
@@ -132,8 +147,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     this.loadEmployeeMasterList();
     
     // If taskId is provided and not 0, load existing task details
-    if (this.taskId && this.taskId > 0 && this.userId && this.categoryId) {
+    // categoryId can be 0 — backend handles it gracefully
+    if (this.taskId && this.taskId > 0 && this.userId) {
       console.log('Loading existing task details...');
+      this.isLoading = true;
       this.loadTaskDetails();
       this.loadTaskFiles(this.taskId);
       this.loadComments(this.taskId);
@@ -226,6 +243,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           // Map status
           this.selectedTaskDetailStatus = this.mapTaskStatus(taskDetails.status);
           this.previousTaskStatus = this.selectedTaskDetailStatus; // Track previous status
+
+          // Show Log Time popup if session user === task userId AND status is AUTO CLOSED
+          this.checkAndShowLogTimePopup(taskDetails);
           
           // Map custom fields if available
           if (taskDetails.customFields && Array.isArray(taskDetails.customFields)) {
@@ -261,6 +281,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           }
           
           console.log('=== Task details loaded successfully ===');
+          this.isLoading = false;
           this.cdr.detectChanges();
         } else {
           console.error('API response invalid:', {
@@ -268,6 +289,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             hasSuccess: response?.success,
             hasData: !!response?.data
           });
+          this.isLoading = false;
+          this.cdr.detectChanges();
         }
       },
       error: (error: any) => {
@@ -275,6 +298,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         console.error('Error loading task details:', error);
         console.error('Error status:', error?.status);
         console.error('Error message:', error?.message);
+        this.isLoading = false;
+        this.cdr.detectChanges();
         this.toasterService.showError('Error', 'Failed to load task details');
       }
     });
@@ -1719,6 +1744,156 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         // On error, don't block the user
         this.autoClosedTaskCount = 0;
         this.isBlockedByAutoClosedTasks = false;
+      }
+    });
+  }
+
+  // ===== Log Time Popup =====
+
+  checkAndShowLogTimePopup(taskDetails: any) {
+    // Only show when timeLogStatus is 'AUTO CLOSED'
+    const timeLogStatus = (taskDetails.timeLogStatus || '').toUpperCase().trim();
+    if (timeLogStatus !== 'AUTO CLOSED') return;
+
+    // Only show when the logged-in session user matches the task assignee
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = (sessionUser.empId || sessionUser.employeeId || '').toString().trim();
+    const taskAssignee = (taskDetails.assignee || '').toString().trim();
+
+    if (!sessionUserId || sessionUserId !== taskAssignee) return;
+
+    // Store timeLogID for the submit call
+    this.logTimeTimeLogId = taskDetails.timeLogID || taskDetails.timeLogId || 0;
+
+    // Bind LOG DATE from timeLogDate
+    const logDateRaw = taskDetails.timeLogDate;
+    if (logDateRaw) {
+      const d = new Date(logDateRaw);
+      this.logTimeDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } else {
+      this.logTimeDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Bind START TIME from timeLogStartDate
+    const startRaw = taskDetails.timeLogStartDate;
+    if (startRaw) {
+      const s = new Date(startRaw);
+      this.logTimeStartTime = s.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } else {
+      this.logTimeStartTime = '09:00 AM';
+    }
+
+    // Bind END TIME from timeLogEndDate
+    const endRaw = taskDetails.timeLogEndDate;
+    if (endRaw) {
+      const e = new Date(endRaw);
+      this.logTimeEndTime = e.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } else {
+      this.logTimeEndTime = '11:30 AM';
+    }
+
+    // Bind TOTAL TIME from timeLogHours (value is in minutes)
+    const totalMins = taskDetails.timeLogHours || 0;
+    this.logTimeTotalMinutes = Math.round(totalMins);
+    const h = Math.floor(this.logTimeTotalMinutes / 60);
+    const m = this.logTimeTotalMinutes % 60;
+    this.logTimeTotalDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    this.logTimeEditValue = this.logTimeTotalDisplay;
+    this.isEditingLogTime = false;
+
+    // Emit to parent so it renders outside the stacking context
+    this.showLogTime.emit({
+      taskId: this.taskId,
+      userId: this.userId,
+      date: this.logTimeDate,
+      startTime: this.logTimeStartTime,
+      endTime: this.logTimeEndTime,
+      totalMinutes: this.logTimeTotalMinutes,
+      totalDisplay: this.logTimeTotalDisplay,
+      timeLogId: this.logTimeTimeLogId,
+      status: taskDetails.timeLogStatus || 'AUTO CLOSED'
+    });
+  }
+
+  onLogTimeStartEndChange() {
+    // Recalculate total from start/end time
+    try {
+      const parseTime = (t: string) => {
+        const [time, period] = t.trim().split(' ');
+        let [h, m] = time.split(':').map(Number);
+        if (period?.toUpperCase() === 'PM' && h !== 12) h += 12;
+        if (period?.toUpperCase() === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+      };
+      const startMins = parseTime(this.logTimeStartTime);
+      const endMins = parseTime(this.logTimeEndTime);
+      const diff = endMins - startMins;
+      if (diff > 0) {
+        this.logTimeTotalMinutes = diff;
+        const h = Math.floor(diff / 60);
+        const m = diff % 60;
+        this.logTimeTotalDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        this.logTimeEditValue = this.logTimeTotalDisplay;
+      }
+    } catch (e) {}
+    this.cdr.detectChanges();
+  }
+
+  startEditLogTime() {
+    this.isEditingLogTime = true;
+    this.logTimeEditValue = this.logTimeTotalDisplay;
+  }
+
+  confirmEditLogTime() {
+    const parts = this.logTimeEditValue.split(':');
+    if (parts.length === 2) {
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (!isNaN(h) && !isNaN(m) && m >= 0 && m <= 59) {
+        this.logTimeTotalMinutes = h * 60 + m;
+        this.logTimeTotalDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+    }
+    this.isEditingLogTime = false;
+    this.cdr.detectChanges();
+  }
+
+  closeLogTimePopup() {
+    this.showLogTimePopup = false;
+  }
+
+  submitLogTime() {
+    if (!this.logTimeTotalMinutes || this.logTimeTotalMinutes <= 0) {
+      this.toasterService.showError('Invalid Time', 'Please enter a valid duration');
+      return;
+    }
+
+    if (!this.logTimeTimeLogId) {
+      this.toasterService.showError('Error', 'Time log ID not found');
+      return;
+    }
+
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = sessionUser.empId || sessionUser.employeeId || this.userId;
+
+    const request = {
+      timeLogId: this.logTimeTimeLogId,
+      newMinutes: this.logTimeTotalMinutes,
+      userId: sessionUserId
+    };
+
+    this.api.decreaseTimeLog(request).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.toasterService.showSuccess('Success', 'Time logged successfully');
+          this.showLogTime.emit(null); // signal parent to close popup
+          this.loadTaskDetails();
+        } else {
+          this.toasterService.showError('Error', response?.message || 'Failed to log time');
+        }
+      },
+      error: () => {
+        this.toasterService.showError('Error', 'Failed to log time');
       }
     });
   }
