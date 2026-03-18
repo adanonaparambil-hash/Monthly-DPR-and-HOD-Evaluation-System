@@ -463,9 +463,8 @@
               <i class="fas fa-comment filter-icon"></i>
               <select class="filter-select" [(ngModel)]="breakHistorySelectedReason">
                 <option value="">All Reasons</option>
-                <option value="QUICK">QUICK</option>
-                <option value="LUNCH">LUNCH</option>
-                <option value="TRAVEL">TRAVEL</option>
+                <option value="BREAK">Break</option>
+                <option value="TRAVEL">Travel</option>
               </select>
             </div>
           </div>
@@ -581,8 +580,38 @@
       <div class="modal-footer-large">
         <div class="footer-info">
           <i class="fas fa-info-circle"></i>
-          <span>Showing {{ openBreaks.length }} active break(s)</span>
+          <span>Showing {{ getBreakHistoryPageRange() }}</span>
         </div>
+        
+        <!-- Pagination Controls -->
+        <div class="pagination-controls">
+          <button class="pagination-btn" (click)="breakHistoryFirstPage()" [disabled]="breakHistoryPageNumber === 1">
+            <i class="fas fa-chevron-double-left"></i>
+            <span>First</span>
+          </button>
+          <button class="pagination-btn" (click)="breakHistoryPreviousPage()" [disabled]="breakHistoryPageNumber === 1">
+            <i class="fas fa-chevron-left"></i>
+            <span>Previous</span>
+          </button>
+          
+          <div class="page-numbers">
+            @for (page of getBreakHistoryPageNumbers(); track page) {
+              <button class="page-number-btn" [class.active]="page === breakHistoryPageNumber" (click)="breakHistoryGoToPage(page)">
+                {{ page }}
+              </button>
+            }
+          </div>
+          
+          <button class="pagination-btn" (click)="breakHistoryNextPage()" [disabled]="breakHistoryPageNumber === breakHistoryTotalPages">
+            <i class="fas fa-chevron-right"></i>
+            <span>Next</span>
+          </button>
+          <button class="pagination-btn" (click)="breakHistoryLastPage()" [disabled]="breakHistoryPageNumber === breakHistoryTotalPages">
+            <i class="fas fa-chevron-double-right"></i>
+            <span>Last</span>
+          </button>
+        </div>
+        
         <div class="footer-actions">
           <button class="btn-secondary-large" (click)="closeBreakHistoryModal()">
             <i class="fas fa-times"></i>

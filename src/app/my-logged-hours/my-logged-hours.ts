@@ -144,6 +144,12 @@ export class MyLoggedHoursComponent implements OnInit {
   breakHistoryDepartments: Department[] = [];
   breakHistoryEmployees: Employee[] = [];
   breakReasons: any[] = [];
+  
+  // Break History Pagination
+  breakHistoryPageNumber = 1;
+  breakHistoryPageSize = 100;
+  breakHistoryTotalRecords = 0;
+  breakHistoryTotalPages = 0;
 
   // Day Log History Modal
   showDayLogHistoryModal = false;
@@ -1370,10 +1376,12 @@ export class MyLoggedHoursComponent implements OnInit {
     console.log('Opening Break History modal...');
     this.showBreakHistoryModal = true;
     
-    // Initialize filter dates
+    // Initialize filter dates - last 5 days (today - 5 days to today)
     const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    this.breakHistoryFromDate = this.formatDateForInput(firstDayOfMonth);
+    const fiveDaysAgo = new Date(today);
+    fiveDaysAgo.setDate(today.getDate() - 5);
+    
+    this.breakHistoryFromDate = this.formatDateForInput(fiveDaysAgo);
     this.breakHistoryToDate = this.formatDateForInput(today);
     
     // Get current user from session
@@ -1498,6 +1506,7 @@ export class MyLoggedHoursComponent implements OnInit {
 
   applyBreakHistoryFilters() {
     console.log('Applying break history filters...');
+    this.breakHistoryPageNumber = 1;
     this.loadBreakHistory();
   }
 
@@ -1509,7 +1518,9 @@ export class MyLoggedHoursComponent implements OnInit {
       fromDate: this.breakHistoryFromDate || '',
       toDate: this.breakHistoryToDate || '',
       departmentId: this.breakHistorySelectedDepartment ? Number(this.breakHistorySelectedDepartment) : 0,
-      breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null
+      breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null,
+      pageNumber: this.breakHistoryPageNumber,
+      pageSize: this.breakHistoryPageSize
     };
     
     console.log('Loading break history with params:', params);
@@ -1520,11 +1531,17 @@ export class MyLoggedHoursComponent implements OnInit {
         
         if (response && response.success && response.data) {
           this.openBreaks = response.data;
+          this.breakHistoryTotalRecords = response.totalRecords || 0;
+          this.breakHistoryTotalPages = Math.ceil(this.breakHistoryTotalRecords / this.breakHistoryPageSize);
           console.log('Loaded open breaks:', this.openBreaks.length);
         } else if (response && Array.isArray(response.data)) {
           this.openBreaks = response.data;
+          this.breakHistoryTotalRecords = response.data.length;
+          this.breakHistoryTotalPages = Math.ceil(this.breakHistoryTotalRecords / this.breakHistoryPageSize);
         } else {
           this.openBreaks = [];
+          this.breakHistoryTotalRecords = 0;
+          this.breakHistoryTotalPages = 0;
         }
         
         this.isLoadingBreaks = false;
@@ -1532,13 +1549,71 @@ export class MyLoggedHoursComponent implements OnInit {
       error: (error: any) => {
         console.error('Error loading break history:', error);
         this.openBreaks = [];
+        this.breakHistoryTotalRecords = 0;
+        this.breakHistoryTotalPages = 0;
         this.isLoadingBreaks = false;
       }
     });
   }
 
+  breakHistoryNextPage() {
+    if (this.breakHistoryPageNumber < this.breakHistoryTotalPages) {
+      this.breakHistoryPageNumber++;
+      this.loadBreakHistory();
+    }
+  }
+
+  breakHistoryPreviousPage() {
+    if (this.breakHistoryPageNumber > 1) {
+      this.breakHistoryPageNumber--;
+      this.loadBreakHistory();
+    }
+  }
+
+  breakHistoryFirstPage() {
+    this.breakHistoryPageNumber = 1;
+    this.loadBreakHistory();
+  }
+
+  breakHistoryLastPage() {
+    this.breakHistoryPageNumber = this.breakHistoryTotalPages;
+    this.loadBreakHistory();
+  }
+
+  breakHistoryGoToPage(page: number) {
+    if (page >= 1 && page <= this.breakHistoryTotalPages) {
+      this.breakHistoryPageNumber = page;
+      this.loadBreakHistory();
+    }
+  }
+
+  getBreakHistoryPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, this.breakHistoryPageNumber - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(this.breakHistoryTotalPages, startPage + maxPagesToShow - 1);
+    
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  getBreakHistoryPageRange(): string {
+    if (this.breakHistoryTotalRecords === 0) {
+      return 'No records';
+    }
+    const start = (this.breakHistoryPageNumber - 1) * this.breakHistoryPageSize + 1;
+    const end = Math.min(this.breakHistoryPageNumber * this.breakHistoryPageSize, this.breakHistoryTotalRecords);
+    return `Showing ${start}-${end} of ${this.breakHistoryTotalRecords}`;
+  }
+
   refreshBreakHistory() {
-    console.log('Refreshing break history...');
+    this.breakHistoryPageNumber = 1;
     this.loadBreakHistory();
   }
 

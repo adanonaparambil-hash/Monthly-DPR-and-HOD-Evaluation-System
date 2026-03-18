@@ -2844,6 +2844,8 @@
   padding: 20px 32px;
   border-top: 1px solid #e5e7eb;
   background: white;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .footer-info {
@@ -2852,15 +2854,94 @@
   gap: 8px;
   font-size: 14px;
   color: #6b7280;
+  flex-shrink: 0;
 }
 
 .footer-info i {
   color: #145d56;
 }
 
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #145d56;
+  color: white;
+  border-color: #145d56;
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+.pagination-btn i {
+  font-size: 12px;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.page-number-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 8px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-number-btn:hover:not(.active) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.page-number-btn.active {
+  background: #145d56;
+  color: white;
+  border-color: #145d56;
+  box-shadow: 0 2px 8px rgba(20, 93, 86, 0.3);
+}
+
 .footer-actions {
   display: flex;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .btn-secondary-large,
@@ -4014,9 +4095,10 @@
 .break-history-filters .filter-label {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 4px;
 }
 
 .break-history-filters .filter-input-wrapper {
