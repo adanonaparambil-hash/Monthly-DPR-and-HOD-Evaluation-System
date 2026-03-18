@@ -1765,6 +1765,19 @@
   justify-content: center;
   z-index: 200000;
 }
+
+/* Log Time Popup inside Day Log History Modal */
+.ltp-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647;
+  border-radius: 12px;
+}
+
 .log-time-popup {
   background: #fff;
   border-radius: 16px;
@@ -1773,6 +1786,7 @@
   box-shadow: 0 24px 64px rgba(0,0,0,0.25);
   overflow: hidden;
   animation: ltpSlideIn 0.25s ease-out;
+  z-index: 2147483648;
 }
 @keyframes ltpSlideIn {
   from { opacity: 0; transform: translateY(-16px) scale(0.97); }

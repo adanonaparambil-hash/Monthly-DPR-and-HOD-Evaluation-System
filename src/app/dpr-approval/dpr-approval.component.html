@@ -559,6 +559,50 @@
           Close
         </button>
       </div>
+
+      <!-- Log Time Popup (inside Day Log History modal) -->
+      @if (showLogTimePopup) {
+        <div class="ltp-modal-overlay" (click)="closeLogTimePopup()">
+          <div class="log-time-popup" (click)="$event.stopPropagation()">
+            <div class="ltp-header">
+              <div class="ltp-title">
+                <span class="ltp-icon"><i class="fas fa-clock"></i></span>
+                <span>Log Time</span>
+                <span class="ltp-status-badge">{{ logTimeStatus }}</span>
+              </div>
+              <button class="ltp-close" (click)="closeLogTimePopup()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ltp-date-row">
+              <span class="ltp-date-label">LOG DATE</span>
+              <span class="ltp-date-value">{{ logTimeDate }}</span>
+            </div>
+            <div class="ltp-time-row">
+              <div class="ltp-time-group">
+                <label class="ltp-time-label">START TIME</label>
+                <input class="ltp-time-input" type="text" [(ngModel)]="logTimeStartTime" placeholder="09:00 AM" (blur)="onLogTimeStartEndChange()" />
+              </div>
+              <div class="ltp-time-group">
+                <label class="ltp-time-label">END TIME</label>
+                <input class="ltp-time-input" type="text" [(ngModel)]="logTimeEndTime" placeholder="11:30 AM" (blur)="onLogTimeStartEndChange()" />
+              </div>
+            </div>
+            <div class="ltp-total-section">
+              <span class="ltp-total-label">TOTAL TIME (HRS:MIN)</span>
+              <div class="ltp-total-display">
+                @if (isEditingLogTime) {
+                  <input class="ltp-total-edit-input" type="text" [(ngModel)]="logTimeEditValue" placeholder="HH:MM" (blur)="confirmEditLogTime()" (keyup.enter)="confirmEditLogTime()" />
+                } @else {
+                  <span class="ltp-total-value">{{ logTimeTotalDisplay }}</span>
+                  <button class="ltp-edit-btn" (click)="startEditLogTime()"><i class="fas fa-pencil-alt"></i></button>
+                }
+              </div>
+            </div>
+            <button class="ltp-submit-btn" (click)="submitLogTime()">
+              <i class="fas fa-save"></i> Save
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
 }
