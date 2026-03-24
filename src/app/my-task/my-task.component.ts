@@ -145,6 +145,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   activeTaskTimer = '00:00:00';
   punchedHours = '00:00:00';
   runningTime = '00:00:00';
+  travelTime = '00:00:00';
+  breakTime = '00:00:00';
   todayTotalHours = 0;
   lastPunchTime = '';
 

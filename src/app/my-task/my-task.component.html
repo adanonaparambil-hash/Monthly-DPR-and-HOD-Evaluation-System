@@ -18,8 +18,10 @@
             Action Required: Auto-Closed Tasks
           </h3>
           <p class="alert-message">
-            You have <strong>{{ getAutoClosedTasksCount() }}</strong> auto-closed task{{ getAutoClosedTasksCount() > 1 ? 's' : '' }} pending. 
-            Please close {{ getAutoClosedTasksCount() > 1 ? 'these tasks' : 'this task' }} before starting today's work to log your hours properly.
+            You have <strong>{{ getAutoClosedTasksCount() }}</strong> auto-closed task{{ getAutoClosedTasksCount() > 1 ?
+            's' : '' }} pending.
+            Please close {{ getAutoClosedTasksCount() > 1 ? 'these tasks' : 'this task' }} before starting today's work
+            to log your hours properly.
           </p>
         </div>
       </div>
@@ -39,135 +41,132 @@
 
       <!-- Active Task Content -->
       <div *ngIf="hasActiveTask && !hasAutoClosedTasks()">
-      <div class="task-status">
-        <div class="status-indicator">
-          <div class="status-dot"></div>
-          <span class="status-text">{{ activeTask?.status || 'NO STATUS' }}</span>
-        </div>
-
-        <!-- Ultra Modern Timer Control Section -->
-        <div class="timer-control-section">
-          <!-- Animated Bars -->
-          <div class="timer-bars">
-            <span class="bar bar-1"></span>
-            <span class="bar bar-2"></span>
-            <span class="bar bar-3"></span>
-            <span class="bar bar-4"></span>
+        <div class="task-status">
+          <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span class="status-text">{{ activeTask?.status || 'NO STATUS' }}</span>
           </div>
 
-          <!-- Timer Display -->
-          <div class="timer-box">
-            <div class="timer-glow-bg"></div>
-            <div class="timer-digits">
-              <span class="digit-group">
-                <span class="digit">{{ getActiveTaskTimer().substring(0, 1) }}</span>
-                <span class="digit">{{ getActiveTaskTimer().substring(1, 2) }}</span>
-              </span>
-              <span class="separator">:</span>
-              <span class="digit-group">
-                <span class="digit">{{ getActiveTaskTimer().substring(3, 4) }}</span>
-                <span class="digit">{{ getActiveTaskTimer().substring(4, 5) }}</span>
-              </span>
-              <span class="separator">:</span>
-              <span class="digit-group">
-                <span class="digit">{{ getActiveTaskTimer().substring(6, 7) }}</span>
-                <span class="digit">{{ getActiveTaskTimer().substring(7, 8) }}</span>
-              </span>
+          <!-- Ultra Modern Timer Control Section -->
+          <div class="timer-control-section">
+            <!-- Animated Bars -->
+            <div class="timer-bars">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+              <span class="bar bar-4"></span>
             </div>
-            <div class="timer-label-modern">TIME ELAPSED</div>
-          </div>
 
-          <!-- Modern Control Buttons -->
-          <div class="modern-controls">
-            <!-- Start: shown when NOT STARTED or CLOSED -->
-            <button class="modern-control-btn start-btn" 
-                    *ngIf="activeTask?.status === 'NOT STARTED' || activeTask?.status === 'CLOSED'"
-                    (click)="startActiveTask()">
-              <div class="btn-glow"></div>
-              <i class="fas fa-play"></i>
-              <span class="btn-label">Start</span>
-            </button>
-            <!-- Pause: shown when RUNNING -->
-            <button class="modern-control-btn pause-btn" 
-                    *ngIf="activeTask?.status === 'RUNNING'"
-                    (click)="pauseActiveTask()">
-              <div class="btn-glow"></div>
-              <i class="fas fa-pause"></i>
-              <span class="btn-label">Pause</span>
-            </button>
-            <!-- Resume: shown when PAUSED -->
-            <button class="modern-control-btn resume-btn" 
-                    *ngIf="activeTask?.status === 'PAUSED'"
-                    (click)="resumeActiveTask()">
-              <div class="btn-glow"></div>
-              <i class="fas fa-play"></i>
-              <span class="btn-label">Resume</span>
-            </button>
-            <!-- Stop: always shown -->
-            <button class="modern-control-btn stop-btn" 
-                    (click)="stopActiveTask()">
-              <div class="btn-glow"></div>
-              <i class="fas fa-stop"></i>
-              <span class="btn-label">Stop</span>
-            </button>
-          </div>
+            <!-- Timer Display -->
+            <div class="timer-box">
+              <div class="timer-glow-bg"></div>
+              <div class="timer-digits">
+                <span class="digit-group">
+                  <span class="digit">{{ getActiveTaskTimer().substring(0, 1) }}</span>
+                  <span class="digit">{{ getActiveTaskTimer().substring(1, 2) }}</span>
+                </span>
+                <span class="separator">:</span>
+                <span class="digit-group">
+                  <span class="digit">{{ getActiveTaskTimer().substring(3, 4) }}</span>
+                  <span class="digit">{{ getActiveTaskTimer().substring(4, 5) }}</span>
+                </span>
+                <span class="separator">:</span>
+                <span class="digit-group">
+                  <span class="digit">{{ getActiveTaskTimer().substring(6, 7) }}</span>
+                  <span class="digit">{{ getActiveTaskTimer().substring(7, 8) }}</span>
+                </span>
+              </div>
+              <div class="timer-label-modern">TIME ELAPSED</div>
+            </div>
 
-          <!-- Animated Wave -->
-          <div class="timer-wave">
-            <svg viewBox="0 0 40 40" class="wave-svg">
-              <circle class="wave-circle wave-1" cx="20" cy="20" r="8" />
-              <circle class="wave-circle wave-2" cx="20" cy="20" r="8" />
-              <circle class="wave-circle wave-3" cx="20" cy="20" r="8" />
-            </svg>
+            <!-- Modern Control Buttons -->
+            <div class="modern-controls">
+              <!-- Start: shown when NOT STARTED or CLOSED -->
+              <button class="modern-control-btn start-btn"
+                *ngIf="activeTask?.status === 'NOT STARTED' || activeTask?.status === 'CLOSED'"
+                (click)="startActiveTask()">
+                <div class="btn-glow"></div>
+                <i class="fas fa-play"></i>
+                <span class="btn-label">Start</span>
+              </button>
+              <!-- Pause: shown when RUNNING -->
+              <button class="modern-control-btn pause-btn" *ngIf="activeTask?.status === 'RUNNING'"
+                (click)="pauseActiveTask()">
+                <div class="btn-glow"></div>
+                <i class="fas fa-pause"></i>
+                <span class="btn-label">Pause</span>
+              </button>
+              <!-- Resume: shown when PAUSED -->
+              <button class="modern-control-btn resume-btn" *ngIf="activeTask?.status === 'PAUSED'"
+                (click)="resumeActiveTask()">
+                <div class="btn-glow"></div>
+                <i class="fas fa-play"></i>
+                <span class="btn-label">Resume</span>
+              </button>
+              <!-- Stop: always shown -->
+              <button class="modern-control-btn stop-btn" (click)="stopActiveTask()">
+                <div class="btn-glow"></div>
+                <i class="fas fa-stop"></i>
+                <span class="btn-label">Stop</span>
+              </button>
+            </div>
+
+            <!-- Animated Wave -->
+            <div class="timer-wave">
+              <svg viewBox="0 0 40 40" class="wave-svg">
+                <circle class="wave-circle wave-1" cx="20" cy="20" r="8" />
+                <circle class="wave-circle wave-2" cx="20" cy="20" r="8" />
+                <circle class="wave-circle wave-3" cx="20" cy="20" r="8" />
+              </svg>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="task-info">
-        <div class="task-header">
-          <span class="category-badge" [class]="getCategoryClass(activeTask?.category || '')">
-            {{ activeTask?.category || 'NO CATEGORY' }}
-          </span>
-          <h2 class="task-title">{{ activeTask?.title || '' }}</h2>
-        </div>
-
-        <!-- Modern Animated Progress Section -->
-        <div class="modern-progress-section">
-          <div class="progress-info">
-            <span class="progress-label">Task Completion</span>
-            <span class="progress-value">{{ activeTask?.progress || 0 }}%</span>
+        <div class="task-info">
+          <div class="task-header">
+            <span class="category-badge" [class]="getCategoryClass(activeTask?.category || '')">
+              {{ activeTask?.category || 'NO CATEGORY' }}
+            </span>
+            <h2 class="task-title">{{ activeTask?.title || '' }}</h2>
           </div>
-          <div class="animated-progress-bar">
-            <div class="progress-track">
-              <div class="progress-fill" [style.width.%]="activeTask?.progress || 0">
-                <div class="progress-shimmer"></div>
-                <div class="progress-glow"></div>
+
+          <!-- Modern Animated Progress Section -->
+          <div class="modern-progress-section">
+            <div class="progress-info">
+              <span class="progress-label">Task Completion</span>
+              <span class="progress-value">{{ activeTask?.progress || 0 }}%</span>
+            </div>
+            <div class="animated-progress-bar">
+              <div class="progress-track">
+                <div class="progress-fill" [style.width.%]="activeTask?.progress || 0">
+                  <div class="progress-shimmer"></div>
+                  <div class="progress-glow"></div>
+                </div>
+              </div>
+              <div class="progress-particles">
+                <span class="particle"></span>
+                <span class="particle"></span>
+                <span class="particle"></span>
+                <span class="particle"></span>
+                <span class="particle"></span>
               </div>
             </div>
-            <div class="progress-particles">
-              <span class="particle"></span>
-              <span class="particle"></span>
-              <span class="particle"></span>
-              <span class="particle"></span>
-              <span class="particle"></span>
+          </div>
+
+          <div class="task-meta">
+            <div class="task-details">
+              <div class="task-detail-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Started: {{ activeTask?.startDate | date:'MMM dd, yyyy' }}</span>
+              </div>
+              <div class="task-detail-item">
+                <i class="fas fa-user"></i>
+                <span>Assigned by: {{ activeTask?.assignee || 'N/A' }}</span>
+              </div>
+
             </div>
           </div>
         </div>
-
-        <div class="task-meta">
-          <div class="task-details">
-            <div class="task-detail-item">
-              <i class="fas fa-calendar-alt"></i>
-              <span>Started: {{ activeTask?.startDate | date:'MMM dd, yyyy' }}</span>
-            </div>
-            <div class="task-detail-item">
-              <i class="fas fa-user"></i>
-              <span>Assigned by: {{ activeTask?.assignee || 'N/A' }}</span>
-            </div>
-
-          </div>
-        </div>
-      </div>
       </div>
       <!-- End Active Task Content -->
     </div>
@@ -249,6 +248,26 @@
           <div class="stat-sublabel">RUNNING TIME</div>
         </div>
 
+        <div class="stat-card travel-break-card">
+          <div class="stat-header">
+            <span class="stat-label">TRAVEL & BREAK</span>
+            <div class="stat-icon">
+              <i class="fas fa-road"></i>
+            </div>
+          </div>
+          <div class="travel-break-content">
+            <div class="travel-section">
+              <div class="travel-value">{{ travelTime }}</div>
+              <div class="travel-label">Travel</div>
+            </div>
+            <div class="travel-break-pipe">|</div>
+            <div class="break-section">
+              <div class="break-value">{{ breakTime }}</div>
+              <div class="break-label">Break</div>
+            </div>
+          </div>
+        </div>
+
         <div class="stat-card punched-hours">
           <div class="stat-header">
             <span class="stat-label">LAST PUNCHED TIME</span>
@@ -316,7 +335,8 @@
           <div class="cell assignee">
             <div class="assignee-info">
               <div class="assignee-avatar" *ngIf="!task.assigneeImage">{{ task.assignee.charAt(0) }}</div>
-              <img *ngIf="task.assigneeImage" [src]="task.assigneeImage" alt="{{ task.assignee }}" class="assignee-avatar" />
+              <img *ngIf="task.assigneeImage" [src]="task.assigneeImage" alt="{{ task.assignee }}"
+                class="assignee-avatar" />
               <span>{{ task.assignee }}</span>
             </div>
           </div>
@@ -327,7 +347,8 @@
           </div>
           <div class="cell status">
             <span class="status-badge" [class]="getStatusClass(task.status)">
-              <i class="fas fa-flag" *ngIf="task.status === 'AUTO CLOSED'" style="color: #ef4444; margin-right: 4px;"></i>
+              <i class="fas fa-flag" *ngIf="task.status === 'AUTO CLOSED'"
+                style="color: #ef4444; margin-right: 4px;"></i>
               <i class="fas fa-rotate-right" *ngIf="task.status === 'RE OPEN'" style="margin-right: 4px;"></i>
               {{ task.status }}
             </span>
@@ -336,42 +357,39 @@
             <div class="action-buttons">
               <!-- Show all action buttons for MY TASKS tab -->
               @if (activeTab === 'MY TASKS') {
-                @if (task.status !== 'RUNNING') {
-                <button class="action-btn play" (click)="startTask(task.id)" title="Start/Resume Task">
-                  <i class="fas fa-play"></i>
-                </button>
-                } @else {
-                <button class="action-btn pause" (click)="pauseTask(task.id)" title="Pause Task">
-                  <i class="fas fa-pause"></i>
-                </button>
-                }
-                <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
-                  <i class="fas fa-stop"></i>
-                </button>
-                <button class="action-btn delete" 
-                        (click)="deleteTask(task.id)" 
-                        [disabled]="task.status !== 'NOT STARTED'"
-                        [title]="task.status === 'NOT STARTED' ? 'Delete Task' : 'Can only delete NOT STARTED tasks'">
-                  <i class="fas fa-trash"></i>
-                </button>
+              @if (task.status !== 'RUNNING') {
+              <button class="action-btn play" (click)="startTask(task.id)" title="Start/Resume Task">
+                <i class="fas fa-play"></i>
+              </button>
+              } @else {
+              <button class="action-btn pause" (click)="pauseTask(task.id)" title="Pause Task">
+                <i class="fas fa-pause"></i>
+              </button>
               }
-              
+              <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
+                <i class="fas fa-stop"></i>
+              </button>
+              <button class="action-btn delete" (click)="deleteTask(task.id)" [disabled]="task.status !== 'NOT STARTED'"
+                [title]="task.status === 'NOT STARTED' ? 'Delete Task' : 'Can only delete NOT STARTED tasks'">
+                <i class="fas fa-trash"></i>
+              </button>
+              }
+
               <!-- Show view button and delete (only for NOT STARTED) for ASSIGNED TO OTHERS tab -->
               @if (activeTab === 'ASSIGNED TO OTHERS') {
-                <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
-                  <i class="fas fa-eye"></i>
-                </button>
-                @if (task.status === 'COMPLETED') {
-                  <button class="action-btn complete-review" (click)="approveTask(task); $event.stopPropagation()" title="Approve Completed Task">
-                    <i class="fas fa-check"></i>
-                  </button>
-                }
-                <button class="action-btn delete" 
-                        (click)="deleteTask(task.id)" 
-                        [disabled]="task.status !== 'NOT STARTED'"
-                        [title]="task.status === 'NOT STARTED' ? 'Delete Task' : 'Can only delete NOT STARTED tasks'">
-                  <i class="fas fa-trash"></i>
-                </button>
+              <button class="action-btn stop" (click)="openTaskDetailsModal(task)" title="View Task Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              @if (task.status === 'COMPLETED') {
+              <button class="action-btn complete-review" (click)="approveTask(task); $event.stopPropagation()"
+                title="Approve Completed Task">
+                <i class="fas fa-check"></i>
+              </button>
+              }
+              <button class="action-btn delete" (click)="deleteTask(task.id)" [disabled]="task.status !== 'NOT STARTED'"
+                [title]="task.status === 'NOT STARTED' ? 'Delete Task' : 'Can only delete NOT STARTED tasks'">
+                <i class="fas fa-trash"></i>
+              </button>
               }
             </div>
           </div>
@@ -432,48 +450,41 @@
               <span class="multi-select-text">{{ getSelectedAssigneesDisplay() }}</span>
               <i class="fas fa-chevron-down select-icon"></i>
             </div>
-            
+
             <!-- Selected Assignees Tags -->
             @if (newTask.assignees.length > 0) {
-              <div class="selected-tags">
-                @for (assigneeId of newTask.assignees; track assigneeId) {
-                  <span class="tag">
-                    {{ getEmployeeName(assigneeId) }}
-                      <i class="fas fa-times" (click)="removeAssignee(assigneeId)"></i>
-                    </span>
-                }
-              </div>
+            <div class="selected-tags">
+              @for (assigneeId of newTask.assignees; track assigneeId) {
+              <span class="tag">
+                {{ getEmployeeName(assigneeId) }}
+                <i class="fas fa-times" (click)="removeAssignee(assigneeId)"></i>
+              </span>
+              }
+            </div>
             }
-            
+
             <!-- Dropdown List -->
             @if (isAssigneeDropdownVisible) {
-              <div class="multi-select-dropdown">
-                <div class="dropdown-search">
-                  <i class="fas fa-search"></i>
-                  <input 
-                    type="text" 
-                    placeholder="Search assignees..." 
-                    [(ngModel)]="assigneeSearchTerm"
-                    (input)="onAssigneeSearchInputChange($event)"
-                    (click)="$event.stopPropagation()"
-                  >
-                </div>
-                <div class="dropdown-options">
-                  @for (employee of getFilteredAssignees(); track employee.idValue) {
-                    <div class="dropdown-option" (click)="toggleAssigneeSelection(employee.idValue); $event.stopPropagation()">
-                      <input 
-                        type="checkbox" 
-                        [checked]="isAssigneeSelectedInMulti(employee.idValue)"
-                        (click)="$event.stopPropagation()"
-                      >
-                      <span class="option-text">{{ employee.description }}</span>
-                    </div>
-                  }
-                  @if (getFilteredAssignees().length === 0) {
-                    <div class="no-options">No assignees found</div>
-                  }
-                </div>
+            <div class="multi-select-dropdown">
+              <div class="dropdown-search">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search assignees..." [(ngModel)]="assigneeSearchTerm"
+                  (input)="onAssigneeSearchInputChange($event)" (click)="$event.stopPropagation()">
               </div>
+              <div class="dropdown-options">
+                @for (employee of getFilteredAssignees(); track employee.idValue) {
+                <div class="dropdown-option"
+                  (click)="toggleAssigneeSelection(employee.idValue); $event.stopPropagation()">
+                  <input type="checkbox" [checked]="isAssigneeSelectedInMulti(employee.idValue)"
+                    (click)="$event.stopPropagation()">
+                  <span class="option-text">{{ employee.description }}</span>
+                </div>
+                }
+                @if (getFilteredAssignees().length === 0) {
+                <div class="no-options">No assignees found</div>
+                }
+              </div>
+            </div>
             }
           </div>
         </div>
@@ -674,7 +685,8 @@
         <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
           Cancel
         </button>
-        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || newTask.assignees.length === 0">
+        <button type="button" class="create-btn" (click)="createTask()"
+          [disabled]="!newTask.name || newTask.assignees.length === 0">
           Create Task
         </button>
       </div>
@@ -720,48 +732,41 @@
               <span class="multi-select-text">{{ getSelectedAssigneesDisplay() }}</span>
               <i class="fas fa-chevron-down select-icon"></i>
             </div>
-            
+
             <!-- Selected Assignees Tags -->
             @if (newTask.assignees.length > 0) {
-              <div class="selected-tags">
-                @for (assigneeId of newTask.assignees; track assigneeId) {
-                  <span class="tag">
-                    {{ getEmployeeName(assigneeId) }}
-                      <i class="fas fa-times" (click)="removeAssignee(assigneeId)"></i>
-                    </span>
-                }
-              </div>
+            <div class="selected-tags">
+              @for (assigneeId of newTask.assignees; track assigneeId) {
+              <span class="tag">
+                {{ getEmployeeName(assigneeId) }}
+                <i class="fas fa-times" (click)="removeAssignee(assigneeId)"></i>
+              </span>
+              }
+            </div>
             }
-            
+
             <!-- Dropdown List -->
             @if (isAssigneeDropdownVisible) {
-              <div class="multi-select-dropdown">
-                <div class="dropdown-search">
-                  <i class="fas fa-search"></i>
-                  <input 
-                    type="text" 
-                    placeholder="Search assignees..." 
-                    [(ngModel)]="assigneeSearchTerm"
-                    (input)="onAssigneeSearchInputChange($event)"
-                    (click)="$event.stopPropagation()"
-                  >
-                </div>
-                <div class="dropdown-options">
-                  @for (employee of getFilteredAssignees(); track employee.idValue) {
-                    <div class="dropdown-option" (click)="toggleAssigneeSelection(employee.idValue); $event.stopPropagation()">
-                      <input 
-                        type="checkbox" 
-                        [checked]="isAssigneeSelectedInMulti(employee.idValue)"
-                        (click)="$event.stopPropagation()"
-                      >
-                      <span class="option-text">{{ employee.description }}</span>
-                    </div>
-                  }
-                  @if (getFilteredAssignees().length === 0) {
-                    <div class="no-options">No assignees found</div>
-                  }
-                </div>
+            <div class="multi-select-dropdown">
+              <div class="dropdown-search">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search assignees..." [(ngModel)]="assigneeSearchTerm"
+                  (input)="onAssigneeSearchInputChange($event)" (click)="$event.stopPropagation()">
               </div>
+              <div class="dropdown-options">
+                @for (employee of getFilteredAssignees(); track employee.idValue) {
+                <div class="dropdown-option"
+                  (click)="toggleAssigneeSelection(employee.idValue); $event.stopPropagation()">
+                  <input type="checkbox" [checked]="isAssigneeSelectedInMulti(employee.idValue)"
+                    (click)="$event.stopPropagation()">
+                  <span class="option-text">{{ employee.description }}</span>
+                </div>
+                }
+                @if (getFilteredAssignees().length === 0) {
+                <div class="no-options">No assignees found</div>
+                }
+              </div>
+            </div>
             }
           </div>
         </div>
@@ -964,7 +969,8 @@
         <button type="button" class="cancel-btn" (click)="closeCreateTaskModal()">
           Cancel
         </button>
-        <button type="button" class="create-btn" (click)="createTask()" [disabled]="!newTask.name || newTask.assignees.length === 0">
+        <button type="button" class="create-btn" (click)="createTask()"
+          [disabled]="!newTask.name || newTask.assignees.length === 0">
           Create Task
         </button>
       </div>
@@ -998,12 +1004,8 @@
     <!-- Search Box -->
     <div class="select-search-box">
       <i class="fas fa-search search-icon"></i>
-      <input 
-        type="text" 
-        placeholder="Search tasks, departments, or assignees..." 
-        class="select-search-input"
-        [(ngModel)]="selectTaskSearchTerm"
-      >
+      <input type="text" placeholder="Search tasks, departments, or assignees..." class="select-search-input"
+        [(ngModel)]="selectTaskSearchTerm">
     </div>
 
     <!-- Tabs -->
@@ -1014,7 +1016,8 @@
         PINNED FAVORITES
         <span class="tab-count">{{ getFavoritesCount() }}</span>
       </button>
-      <button class="select-tab-btn" [class.active]="selectTaskActiveTab === 'myDepartment'" (click)="setSelectTaskTab('myDepartment')">
+      <button class="select-tab-btn" [class.active]="selectTaskActiveTab === 'myDepartment'"
+        (click)="setSelectTaskTab('myDepartment')">
         <i class="fas fa-users"></i>
         MY DEPARTMENT TASKS
         <span class="tab-count">{{ getMyDepartmentTasksCount() }}</span>
@@ -1035,18 +1038,19 @@
         <div class="empty-state">
           <i class="fas fa-star"></i>
           @if (selectTaskSearchTerm) {
-            <p>No matching favorites found</p>
-            <span>Try a different search term</span>
+          <p>No matching favorites found</p>
+          <span>Try a different search term</span>
           } @else {
-            <p>No favorites yet</p>
-            <span>Click the star icon on any task to add it here for quick access</span>
+          <p>No favorites yet</p>
+          <span>Click the star icon on any task to add it here for quick access</span>
           }
         </div>
         } @else {
         <div class="task-list">
           @for (task of getFilteredFavouriteTaskList(); track task.categoryId) {
           <div class="task-item" [class.has-existing-task]="hasExistingTaskInMyList(task)">
-            <i class="fas fa-star star-icon active" (click)="toggleFavourite(task, $event)" title="Remove from favorites"></i>
+            <i class="fas fa-star star-icon active" (click)="toggleFavourite(task, $event)"
+              title="Remove from favorites"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
@@ -1075,20 +1079,20 @@
         <div class="empty-state">
           <i class="fas fa-users"></i>
           @if (selectTaskSearchTerm) {
-            <p>No matching department tasks found</p>
-            <span>Try a different search term</span>
+          <p>No matching department tasks found</p>
+          <span>Try a different search term</span>
           } @else {
-            <p>No department tasks yet</p>
-            <span>Tasks assigned to your department will appear here</span>
+          <p>No department tasks yet</p>
+          <span>Tasks assigned to your department will appear here</span>
           }
         </div>
         } @else {
         <div class="task-list">
           @for (task of getFilteredDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" [class.has-existing-task]="hasExistingTaskInMyList(task)">
-            <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
-               (click)="toggleFavourite(task, $event)" 
-               [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
+            <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'"
+              (click)="toggleFavourite(task, $event)"
+              [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
@@ -1117,20 +1121,20 @@
         <div class="empty-state">
           <i class="fas fa-th-large"></i>
           @if (selectTaskSearchTerm) {
-            <p>No matching tasks found</p>
-            <span>Try a different search term</span>
+          <p>No matching tasks found</p>
+          <span>Try a different search term</span>
           } @else {
-            <p>No tasks available</p>
-            <span>Tasks from all departments will appear here</span>
+          <p>No tasks available</p>
+          <span>Tasks from all departments will appear here</span>
           }
         </div>
         } @else {
         <div class="task-list">
           @for (task of getFilteredAllDepartmentTaskList(); track task.categoryId) {
           <div class="task-item" [class.has-existing-task]="hasExistingTaskInMyList(task)">
-            <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'" 
-               (click)="toggleFavourite(task, $event)" 
-               [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
+            <i [class]="isFavourited(task) ? 'fas fa-star star-icon active' : 'far fa-star star-icon'"
+              (click)="toggleFavourite(task, $event)"
+              [title]="isFavourited(task) ? 'Remove from favorites' : 'Add to favorites'"></i>
             <div class="task-item-content">
               <h4 class="task-item-title">{{ task.categoryName }}</h4>
               <p class="task-item-dept">DEPARTMENT: {{ task.departmentName }}</p>
@@ -1175,64 +1179,60 @@
 
 <!-- Task Details Modal - Using Standalone Component -->
 @if (showTaskDetailsModal) {
-  <app-task-details-modal
-    [taskId]="selectedTaskIdForModal"
-    [userId]="selectedUserIdForModal"
-    [categoryId]="selectedCategoryIdForModal"
-    [categoryName]="selectedCategoryNameForModal"
-    [estimatedHours]="selectedTaskEstimatedHours"
-    [isViewOnly]="isTaskModalViewOnly"
-    (closeModal)="closeTaskDetailsModal()"
-    (taskUpdated)="onTaskUpdatedFromModal($event)"
-    (taskPaused)="onTaskPausedFromModal($event)"
-    (taskResumed)="onTaskResumedFromModal($event)"
-    (taskStopped)="onTaskStoppedFromModal($event)"
-    (showLogTime)="onShowLogTime($event)">
-  </app-task-details-modal>
+<app-task-details-modal [taskId]="selectedTaskIdForModal" [userId]="selectedUserIdForModal"
+  [categoryId]="selectedCategoryIdForModal" [categoryName]="selectedCategoryNameForModal"
+  [estimatedHours]="selectedTaskEstimatedHours" [isViewOnly]="isTaskModalViewOnly"
+  (closeModal)="closeTaskDetailsModal()" (taskUpdated)="onTaskUpdatedFromModal($event)"
+  (taskPaused)="onTaskPausedFromModal($event)" (taskResumed)="onTaskResumedFromModal($event)"
+  (taskStopped)="onTaskStoppedFromModal($event)" (showLogTime)="onShowLogTime($event)">
+</app-task-details-modal>
 }
 
 <!-- Log Time Popup (rendered at root level to escape stacking context) -->
 @if (showLogTimePopup) {
-  <div class="log-time-overlay" (click)="closeLogTimePopup()">
-    <div class="log-time-popup" (click)="$event.stopPropagation()">
-      <div class="ltp-header">
-        <div class="ltp-title">
-          <span class="ltp-icon"><i class="fas fa-clock"></i></span>
-          <span>Log Time</span>
-          <span class="ltp-status-badge">{{ logTimeStatus }}</span>
-        </div>
-        <button class="ltp-close" (click)="closeLogTimePopup()"><i class="fas fa-times"></i></button>
+<div class="log-time-overlay" (click)="closeLogTimePopup()">
+  <div class="log-time-popup" (click)="$event.stopPropagation()">
+    <div class="ltp-header">
+      <div class="ltp-title">
+        <span class="ltp-icon"><i class="fas fa-clock"></i></span>
+        <span>Log Time</span>
+        <span class="ltp-status-badge">{{ logTimeStatus }}</span>
       </div>
-      <div class="ltp-date-row">
-        <span class="ltp-date-label">LOG DATE</span>
-        <span class="ltp-date-value">{{ logTimeDate }}</span>
-      </div>
-      <div class="ltp-time-row">
-        <div class="ltp-time-group">
-          <label class="ltp-time-label">START TIME</label>
-          <input class="ltp-time-input" type="text" [(ngModel)]="logTimeStartTime" placeholder="09:00 AM" (blur)="onLogTimeStartEndChange()" />
-        </div>
-        <div class="ltp-time-group">
-          <label class="ltp-time-label">END TIME</label>
-          <input class="ltp-time-input" type="text" [(ngModel)]="logTimeEndTime" placeholder="11:30 AM" (blur)="onLogTimeStartEndChange()" />
-        </div>
-      </div>
-      <div class="ltp-total-section">
-        <span class="ltp-total-label">TOTAL TIME (HRS:MIN)</span>
-        <div class="ltp-total-display">
-          @if (isEditingLogTime) {
-            <input class="ltp-total-edit-input" type="text" [(ngModel)]="logTimeEditValue" placeholder="HH:MM" (blur)="confirmEditLogTime()" (keyup.enter)="confirmEditLogTime()" />
-          } @else {
-            <span class="ltp-total-value">{{ logTimeTotalDisplay }}</span>
-            <button class="ltp-edit-btn" (click)="startEditLogTime()"><i class="fas fa-pencil-alt"></i></button>
-          }
-        </div>
-      </div>
-      <button class="ltp-submit-btn" (click)="submitLogTime()">
-        <i class="fas fa-save"></i> Save
-      </button>
+      <button class="ltp-close" (click)="closeLogTimePopup()"><i class="fas fa-times"></i></button>
     </div>
+    <div class="ltp-date-row">
+      <span class="ltp-date-label">LOG DATE</span>
+      <span class="ltp-date-value">{{ logTimeDate }}</span>
+    </div>
+    <div class="ltp-time-row">
+      <div class="ltp-time-group">
+        <label class="ltp-time-label">START TIME</label>
+        <input class="ltp-time-input" type="text" [(ngModel)]="logTimeStartTime" placeholder="09:00 AM"
+          (blur)="onLogTimeStartEndChange()" />
+      </div>
+      <div class="ltp-time-group">
+        <label class="ltp-time-label">END TIME</label>
+        <input class="ltp-time-input" type="text" [(ngModel)]="logTimeEndTime" placeholder="11:30 AM"
+          (blur)="onLogTimeStartEndChange()" />
+      </div>
+    </div>
+    <div class="ltp-total-section">
+      <span class="ltp-total-label">TOTAL TIME (HRS:MIN)</span>
+      <div class="ltp-total-display">
+        @if (isEditingLogTime) {
+        <input class="ltp-total-edit-input" type="text" [(ngModel)]="logTimeEditValue" placeholder="HH:MM"
+          (blur)="confirmEditLogTime()" (keyup.enter)="confirmEditLogTime()" />
+        } @else {
+        <span class="ltp-total-value">{{ logTimeTotalDisplay }}</span>
+        <button class="ltp-edit-btn" (click)="startEditLogTime()"><i class="fas fa-pencil-alt"></i></button>
+        }
+      </div>
+    </div>
+    <button class="ltp-submit-btn" (click)="submitLogTime()">
+      <i class="fas fa-save"></i> Save
+    </button>
   </div>
+</div>
 }
 
 <!-- Add Field Modal - Small Popup -->
@@ -1357,7 +1357,7 @@
         <i class="fas fa-plus-circle"></i>
         Add New Category
       </button>
-      
+
       <div class="filter-department">
         <label class="filter-dept-label">
           <i class="fas fa-filter"></i>
@@ -1366,7 +1366,7 @@
         <select class="filter-dept-select" [(ngModel)]="selectedManageDeptId" (change)="onManageDeptFilterChange()">
           <option [value]="0">ALL</option>
           @for (dept of departmentMasterList; track dept.departmentId) {
-            <option [value]="dept.departmentId">{{ dept.deptName }}</option>
+          <option [value]="dept.departmentId">{{ dept.deptName }}</option>
           }
         </select>
       </div>
@@ -1379,85 +1379,93 @@
 
       <!-- Add/Edit Form -->
       @if (isAddingNewCategory) {
-        <div class="category-edit-form">
-          <div class="category-form-layout">
-            <!-- Left: Fields -->
-            <div class="category-form-left">
-              <div class="form-fields-row">
-                <div class="form-field">
-                  <label class="field-label">DEPARTMENT <span class="required">*</span></label>
-                  <select class="field-input" [(ngModel)]="newTaskCategory.departmentId">
-                    <option value="0">Select Department</option>
-                    @for (dept of departmentMasterList; track dept.departmentId) {
-                      <option [value]="dept.departmentId">{{ dept.deptName }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="form-field">
-                  <label class="field-label">ESTIMATED HOURS</label>
-                  <input type="text" class="field-input time-format-input" [(ngModel)]="newTaskCategory.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(newTaskCategory)" maxlength="5">
-                </div>
-              </div>
-              <div class="form-field" style="margin-bottom:12px">
-                <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
-                <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName" (input)="newTaskCategory.categoryName = newTaskCategory.categoryName.toUpperCase()" placeholder="e.g. Invoice Processing">
-              </div>
-              <!-- Selected Fields -->
-              <div class="selected-fields-section">
-                <label class="field-label">SELECTED FIELDS</label>
-                <div class="selected-fields-box">
-                  @if (newCategorySelectedFields.length === 0) {
-                    <span class="no-fields-hint">No fields selected</span>
+      <div class="category-edit-form">
+        <div class="category-form-layout">
+          <!-- Left: Fields -->
+          <div class="category-form-left">
+            <div class="form-fields-row">
+              <div class="form-field">
+                <label class="field-label">DEPARTMENT <span class="required">*</span></label>
+                <select class="field-input" [(ngModel)]="newTaskCategory.departmentId">
+                  <option value="0">Select Department</option>
+                  @for (dept of departmentMasterList; track dept.departmentId) {
+                  <option [value]="dept.departmentId">{{ dept.deptName }}</option>
                   }
-                  @for (sf of newCategorySelectedFields; track sf.fieldId) {
-                    <span class="selected-field-tag">
-                      {{ sf.fieldName }}
-                      <button class="tag-remove-btn" (click)="removeCategoryField(sf.fieldId, newCategorySelectedFields)"><i class="fas fa-times"></i></button>
-                    </span>
-                  }
-                </div>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="field-label">ESTIMATED HOURS</label>
+                <input type="text" class="field-input time-format-input" [(ngModel)]="newTaskCategory.timeDisplay"
+                  placeholder="HH:MM" (input)="onTimeInput(newTaskCategory)" maxlength="5">
               </div>
             </div>
-            <!-- Right: Fields Selection -->
-            <div class="category-form-right">
-              <label class="field-label">FIELDS SELECTION</label>
-              <div class="fields-checklist-dropdown">
-                <button type="button" class="fields-dropdown-trigger" (click)="showFieldsDropdown = !showFieldsDropdown">
-                  <i class="fas fa-list-check"></i>
-                  <span>{{ newCategorySelectedFields.length > 0 ? newCategorySelectedFields.length + ' field(s) selected' : 'Select fields...' }}</span>
-                  <i class="fas fa-chevron-down" [class.rotated]="showFieldsDropdown"></i>
-                </button>
-                @if (showFieldsDropdown) {
-                  <div class="fields-dropdown-panel">
-                    <div class="fields-search-box">
-                      <i class="fas fa-search fields-search-icon"></i>
-                      <input type="text" class="fields-search-input" [(ngModel)]="fieldSearchTerm" placeholder="Search fields...">
-                    </div>
-                    <div class="fields-list">
-                      @for (field of getFilteredAvailableFields(); track field.fieldId) {
-                        <label class="field-checkbox-item" [class.checked]="isCategoryFieldSelected(field.fieldId, newCategorySelectedFields)">
-                          <input type="checkbox" [checked]="isCategoryFieldSelected(field.fieldId, newCategorySelectedFields)" (change)="toggleCategoryField(field, newCategorySelectedFields)">
-                          <span class="field-checkbox-label">{{ field.fieldName }}</span>
-                        </label>
-                      }
-                      @if (getFilteredAvailableFields().length === 0) {
-                        <p class="no-fields-msg">No fields found</p>
-                      }
-                    </div>
-                  </div>
+            <div class="form-field" style="margin-bottom:12px">
+              <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
+              <input type="text" class="field-input" [(ngModel)]="newTaskCategory.categoryName"
+                (input)="newTaskCategory.categoryName = newTaskCategory.categoryName.toUpperCase()"
+                placeholder="e.g. Invoice Processing">
+            </div>
+            <!-- Selected Fields -->
+            <div class="selected-fields-section">
+              <label class="field-label">SELECTED FIELDS</label>
+              <div class="selected-fields-box">
+                @if (newCategorySelectedFields.length === 0) {
+                <span class="no-fields-hint">No fields selected</span>
+                }
+                @for (sf of newCategorySelectedFields; track sf.fieldId) {
+                <span class="selected-field-tag">
+                  {{ sf.fieldName }}
+                  <button class="tag-remove-btn" (click)="removeCategoryField(sf.fieldId, newCategorySelectedFields)"><i
+                      class="fas fa-times"></i></button>
+                </span>
                 }
               </div>
             </div>
           </div>
-          <div class="form-actions-row">
-            <button class="btn-form-cancel" (click)="cancelAddCategory()">
-              <i class="fas fa-times"></i> Cancel
-            </button>
-            <button class="btn-form-save" (click)="saveNewCategory()">
-              <i class="fas fa-check"></i> Save Category
-            </button>
+          <!-- Right: Fields Selection -->
+          <div class="category-form-right">
+            <label class="field-label">FIELDS SELECTION</label>
+            <div class="fields-checklist-dropdown">
+              <button type="button" class="fields-dropdown-trigger" (click)="showFieldsDropdown = !showFieldsDropdown">
+                <i class="fas fa-list-check"></i>
+                <span>{{ newCategorySelectedFields.length > 0 ? newCategorySelectedFields.length + ' field(s) selected'
+                  : 'Select fields...' }}</span>
+                <i class="fas fa-chevron-down" [class.rotated]="showFieldsDropdown"></i>
+              </button>
+              @if (showFieldsDropdown) {
+              <div class="fields-dropdown-panel">
+                <div class="fields-search-box">
+                  <i class="fas fa-search fields-search-icon"></i>
+                  <input type="text" class="fields-search-input" [(ngModel)]="fieldSearchTerm"
+                    placeholder="Search fields...">
+                </div>
+                <div class="fields-list">
+                  @for (field of getFilteredAvailableFields(); track field.fieldId) {
+                  <label class="field-checkbox-item"
+                    [class.checked]="isCategoryFieldSelected(field.fieldId, newCategorySelectedFields)">
+                    <input type="checkbox" [checked]="isCategoryFieldSelected(field.fieldId, newCategorySelectedFields)"
+                      (change)="toggleCategoryField(field, newCategorySelectedFields)">
+                    <span class="field-checkbox-label">{{ field.fieldName }}</span>
+                  </label>
+                  }
+                  @if (getFilteredAvailableFields().length === 0) {
+                  <p class="no-fields-msg">No fields found</p>
+                  }
+                </div>
+              </div>
+              }
+            </div>
           </div>
         </div>
+        <div class="form-actions-row">
+          <button class="btn-form-cancel" (click)="cancelAddCategory()">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button class="btn-form-save" (click)="saveNewCategory()">
+            <i class="fas fa-check"></i> Save Category
+          </button>
+        </div>
+      </div>
       }
 
       <!-- Categories Table -->
@@ -1470,115 +1478,127 @@
           <div class="cat-col-action">ACTION</div>
         </div>
         <div class="categories-items-list">
-        @for (category of getFilteredCategories(); track category.categoryId) {
+          @for (category of getFilteredCategories(); track category.categoryId) {
           @if (category.isEditing) {
-            <!-- Edit Form -->
-            <div class="cat-edit-form-row">
-              <div class="category-form-layout">
-                <!-- Left -->
-                <div class="category-form-left">
-                  <div class="form-fields-row">
-                    <div class="form-field">
-                      <label class="field-label">DEPARTMENT <span class="required">*</span></label>
-                      <select class="field-input" [(ngModel)]="category.departmentId" (change)="onDepartmentChange(category.departmentId, category)">
-                        <option value="0">Select Department</option>
-                        @for (dept of departmentMasterList; track dept.departmentId) {
-                          <option [value]="dept.departmentId">{{ dept.deptName }}</option>
-                        }
-                      </select>
-                    </div>
-                    <div class="form-field">
-                      <label class="field-label">ESTIMATED HOURS</label>
-                      <input type="text" class="field-input time-format-input" [(ngModel)]="category.timeDisplay" placeholder="HH:MM" (input)="onTimeInput(category)" maxlength="5">
-                    </div>
-                  </div>
-                  <div class="form-field" style="margin-bottom:12px">
-                    <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
-                    <input type="text" class="field-input" [(ngModel)]="category.categoryName" (input)="category.categoryName = category.categoryName.toUpperCase()" placeholder="Enter category name">
-                  </div>
-                  <!-- Selected Fields -->
-                  <div class="selected-fields-section">
-                    <label class="field-label">SELECTED FIELDS</label>
-                    <div class="selected-fields-box">
-                      @if (!category.selectedFields || category.selectedFields.length === 0) {
-                        <span class="no-fields-hint">No fields selected</span>
+          <!-- Edit Form -->
+          <div class="cat-edit-form-row">
+            <div class="category-form-layout">
+              <!-- Left -->
+              <div class="category-form-left">
+                <div class="form-fields-row">
+                  <div class="form-field">
+                    <label class="field-label">DEPARTMENT <span class="required">*</span></label>
+                    <select class="field-input" [(ngModel)]="category.departmentId"
+                      (change)="onDepartmentChange(category.departmentId, category)">
+                      <option value="0">Select Department</option>
+                      @for (dept of departmentMasterList; track dept.departmentId) {
+                      <option [value]="dept.departmentId">{{ dept.deptName }}</option>
                       }
-                      @for (sf of category.selectedFields || []; track sf.fieldId) {
-                        <span class="selected-field-tag">
-                          {{ sf.fieldName }}
-                          <button class="tag-remove-btn" (click)="removeCategoryField(sf.fieldId, category.selectedFields!)"><i class="fas fa-times"></i></button>
-                        </span>
-                      }
-                    </div>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">ESTIMATED HOURS</label>
+                    <input type="text" class="field-input time-format-input" [(ngModel)]="category.timeDisplay"
+                      placeholder="HH:MM" (input)="onTimeInput(category)" maxlength="5">
                   </div>
                 </div>
-                <!-- Right: Fields Selection -->
-                <div class="category-form-right">
-                  <label class="field-label">FIELDS SELECTION</label>
-                  <div class="fields-checklist-dropdown">
-                    <button type="button" class="fields-dropdown-trigger" (click)="showFieldsDropdown = !showFieldsDropdown">
-                      <i class="fas fa-list-check"></i>
-                      <span>{{ (category.selectedFields?.length || 0) > 0 ? (category.selectedFields?.length) + ' field(s) selected' : 'Select fields...' }}</span>
-                      <i class="fas fa-chevron-down" [class.rotated]="showFieldsDropdown"></i>
-                    </button>
-                    @if (showFieldsDropdown) {
-                      <div class="fields-dropdown-panel">
-                        <div class="fields-search-box">
-                          <i class="fas fa-search fields-search-icon"></i>
-                          <input type="text" class="fields-search-input" [(ngModel)]="fieldSearchTerm" placeholder="Search fields...">
-                        </div>
-                        <div class="fields-list">
-                          @for (field of getFilteredAvailableFields(); track field.fieldId) {
-                            <label class="field-checkbox-item" [class.checked]="isCategoryFieldSelected(field.fieldId, category.selectedFields || [])">
-                              <input type="checkbox" [checked]="isCategoryFieldSelected(field.fieldId, category.selectedFields || [])" (change)="toggleCategoryField(field, category.selectedFields!)">
-                              <span class="field-checkbox-label">{{ field.fieldName }}</span>
-                            </label>
-                          }
-                          @if (getFilteredAvailableFields().length === 0) {
-                            <p class="no-fields-msg">No fields found</p>
-                          }
-                        </div>
-                      </div>
+                <div class="form-field" style="margin-bottom:12px">
+                  <label class="field-label">TASK CATEGORY NAME <span class="required">*</span></label>
+                  <input type="text" class="field-input" [(ngModel)]="category.categoryName"
+                    (input)="category.categoryName = category.categoryName.toUpperCase()"
+                    placeholder="Enter category name">
+                </div>
+                <!-- Selected Fields -->
+                <div class="selected-fields-section">
+                  <label class="field-label">SELECTED FIELDS</label>
+                  <div class="selected-fields-box">
+                    @if (!category.selectedFields || category.selectedFields.length === 0) {
+                    <span class="no-fields-hint">No fields selected</span>
+                    }
+                    @for (sf of category.selectedFields || []; track sf.fieldId) {
+                    <span class="selected-field-tag">
+                      {{ sf.fieldName }}
+                      <button class="tag-remove-btn"
+                        (click)="removeCategoryField(sf.fieldId, category.selectedFields!)"><i
+                          class="fas fa-times"></i></button>
+                    </span>
                     }
                   </div>
                 </div>
               </div>
-              <div class="form-actions-row">
-                <button class="btn-form-cancel" (click)="cancelEdit(category)">
-                  <i class="fas fa-times"></i> Cancel
-                </button>
-                <button class="btn-form-save" (click)="saveCategory(category)">
-                  <i class="fas fa-check"></i> Save Category
-                </button>
-              </div>
-            </div>
-          } @else {
-            <!-- Category Table Row -->
-            <div class="cat-table-row">
-              <div class="cat-col-dept">
-                <span class="dept-pill">{{ category.departmentName }}</span>
-              </div>
-              <div class="cat-col-name">{{ category.categoryName }}</div>
-              <div class="cat-col-hours">
-                <span class="hours-pill">{{ category.timeDisplay || '0:00' }}</span>
-              </div>
-              <div class="cat-col-fields">
-                @if (category.selectedFields && category.selectedFields.length > 0) {
-                  @for (f of category.selectedFields; track f.fieldId) {
-                    <span class="field-pill">{{ f.fieldName }}</span>
+              <!-- Right: Fields Selection -->
+              <div class="category-form-right">
+                <label class="field-label">FIELDS SELECTION</label>
+                <div class="fields-checklist-dropdown">
+                  <button type="button" class="fields-dropdown-trigger"
+                    (click)="showFieldsDropdown = !showFieldsDropdown">
+                    <i class="fas fa-list-check"></i>
+                    <span>{{ (category.selectedFields?.length || 0) > 0 ? (category.selectedFields?.length) + ' field(s)
+                      selected' : 'Select fields...' }}</span>
+                    <i class="fas fa-chevron-down" [class.rotated]="showFieldsDropdown"></i>
+                  </button>
+                  @if (showFieldsDropdown) {
+                  <div class="fields-dropdown-panel">
+                    <div class="fields-search-box">
+                      <i class="fas fa-search fields-search-icon"></i>
+                      <input type="text" class="fields-search-input" [(ngModel)]="fieldSearchTerm"
+                        placeholder="Search fields...">
+                    </div>
+                    <div class="fields-list">
+                      @for (field of getFilteredAvailableFields(); track field.fieldId) {
+                      <label class="field-checkbox-item"
+                        [class.checked]="isCategoryFieldSelected(field.fieldId, category.selectedFields || [])">
+                        <input type="checkbox"
+                          [checked]="isCategoryFieldSelected(field.fieldId, category.selectedFields || [])"
+                          (change)="toggleCategoryField(field, category.selectedFields!)">
+                        <span class="field-checkbox-label">{{ field.fieldName }}</span>
+                      </label>
+                      }
+                      @if (getFilteredAvailableFields().length === 0) {
+                      <p class="no-fields-msg">No fields found</p>
+                      }
+                    </div>
+                  </div>
                   }
-                } @else {
-                  <span class="no-fields-text">—</span>
-                }
-              </div>
-              <div class="cat-col-action">
-                <button class="cat-action-btn" (click)="startEditCategory(category)" title="Edit">
-                  <i class="fas fa-pen"></i>
-                </button>
+                </div>
               </div>
             </div>
+            <div class="form-actions-row">
+              <button class="btn-form-cancel" (click)="cancelEdit(category)">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+              <button class="btn-form-save" (click)="saveCategory(category)">
+                <i class="fas fa-check"></i> Save Category
+              </button>
+            </div>
+          </div>
+          } @else {
+          <!-- Category Table Row -->
+          <div class="cat-table-row">
+            <div class="cat-col-dept">
+              <span class="dept-pill">{{ category.departmentName }}</span>
+            </div>
+            <div class="cat-col-name">{{ category.categoryName }}</div>
+            <div class="cat-col-hours">
+              <span class="hours-pill">{{ category.timeDisplay || '0:00' }}</span>
+            </div>
+            <div class="cat-col-fields">
+              @if (category.selectedFields && category.selectedFields.length > 0) {
+              @for (f of category.selectedFields; track f.fieldId) {
+              <span class="field-pill">{{ f.fieldName }}</span>
+              }
+              } @else {
+              <span class="no-fields-text">—</span>
+              }
+            </div>
+            <div class="cat-col-action">
+              <button class="cat-action-btn" (click)="startEditCategory(category)" title="Edit">
+                <i class="fas fa-pen"></i>
+              </button>
+            </div>
+          </div>
           }
-        }
+          }
         </div>
       </div>
     </div>
