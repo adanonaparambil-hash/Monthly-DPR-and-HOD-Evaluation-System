@@ -33,6 +33,7 @@ export interface TaskSaveDto {
   createdBy: string;
   assignees: string[];
   customFields: CustomFieldInputDto[];
+  dailyRemarks?: string;
 }
 
 export interface TaskSaveResponseDto {

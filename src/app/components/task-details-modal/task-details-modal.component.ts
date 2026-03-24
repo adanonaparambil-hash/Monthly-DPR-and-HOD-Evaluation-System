@@ -563,58 +563,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     console.log('Current user:', { userId, currentUser });
     
-    // If status is CLOSED or COMPLETED and Daily Remarks has value, save comment FIRST
-    if ((this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') && this.dailyRemarks.trim()) {
-      console.log('Status is CLOSED/COMPLETED with Daily Remarks - saving comment first');
-      this.saveCommentThenTask(userId);
-    } else {
-      // No daily remarks or different status - proceed directly to save task
-      this.proceedWithTaskSave(userId);
-    }
+    // Proceed directly to save task with dailyRemarks included
+    this.proceedWithTaskSave(userId);
   }
   
-  // Save comment first, then save task
-  private saveCommentThenTask(userId: string) {
-    // For saveComment, always use session userId (not the task's userId)
-    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const sessionUserId = currentUser.empId || currentUser.employeeId || userId;
-
-    const commentRequest: TaskCommentDto = {
-      commentId: 0,
-      taskId: this.taskId,
-      userId: sessionUserId,
-      comments: this.dailyRemarks.trim(),
-      submittedOn: new Date().toISOString(),
-      empName: '',
-      profileImage: undefined,
-      profileImageBase64: undefined
-    };
-    
-    console.log('Calling saveComment API first:', commentRequest);
-    
-    this.api.saveComment(commentRequest).subscribe({
-      next: (commentResponse: any) => {
-        if (commentResponse && commentResponse.success) {
-          console.log('Comment saved successfully, now saving task');
-          this.toasterService.showSuccess('Comment Saved', 'Daily remarks saved successfully');
-          
-          // Now proceed with task save
-          this.proceedWithTaskSave(userId);
-        } else {
-          const errorMessage = commentResponse?.message || 'Failed to save comment';
-          this.toasterService.showError('Error', errorMessage);
-          console.error('Comment save failed:', errorMessage);
-        }
-      },
-      error: (error: any) => {
-        console.error('Error saving comment:', error);
-        const errorMessage = error?.error?.message || error?.message || 'Failed to save comment';
-        this.toasterService.showError('Error', errorMessage);
-      }
-    });
-  }
-  
-  // Proceed with task save (called after comment save or directly)
+  // Proceed with task save
   private proceedWithTaskSave(userId: string) {
     // Map status from component format to API format
     const statusMap: { [key: string]: string } = {
@@ -633,6 +586,23 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     // Prepare assignees array - filter out empty values
     const assignees = this.selectedAssigneeId ? [this.selectedAssigneeId] : [];
     
+    // Format dates properly for API (YYYY-MM-DD format)
+    const formatDateForApi = (date: string | Date | undefined): string | undefined => {
+      if (!date) return undefined;
+      if (typeof date === 'string') {
+        // If already a string, check if it's in the right format
+        if (date.match(/^\d{4}-\d{2}-\d{2}/)) return date;
+        // Try to parse and reformat
+        const parsed = new Date(date);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().split('T')[0];
+        }
+      } else if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+      }
+      return undefined;
+    };
+    
     const taskSaveRequest: TaskSaveDto = {
       taskId: this.taskId,
       categoryId: this.categoryId,
@@ -640,8 +610,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       description: this.editableTaskDescription?.trim() || '',
       projectId: parseInt(this.selectedProjectId) || 0,
       departmentId: 0, // Will be set by backend based on category
-      targetDate: this.selectedTaskEndDate || undefined,
-      startDate: this.selectedTaskStartDate || undefined,
+      targetDate: formatDateForApi(this.selectedTaskEndDate),
+      startDate: formatDateForApi(this.selectedTaskStartDate),
       progress: this.taskProgress || 0,
       estimatedHours: this.selectedTaskEstimatedHours || 0,
       status: apiStatus,
@@ -650,7 +620,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       customFields: this.selectedCustomFields.map(field => ({
         fieldId: field.fieldId || 0,
         value: field.value?.toString() || ''
-      }))
+      })),
+      dailyRemarks: this.dailyRemarks?.trim() || ''
     };
     
     console.log('Task save request:', taskSaveRequest);
@@ -730,39 +701,6 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         
         const errorMessage = error?.error?.message || error?.message || 'Failed to update task';
         this.toasterService.showError('Error', errorMessage);
-      }
-    });
-  }
-  
-  // Save Daily Remarks as a comment (called automatically when status is CLOSED)
-  private saveDailyRemarksAsComment() {
-    // Always use session userId for saving comments
-    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const sessionUserId = currentUser.empId || currentUser.employeeId || this.userId;
-
-    const commentData: TaskCommentDto = {
-      commentId: 0,
-      taskId: this.taskId,
-      userId: sessionUserId,
-      comments: this.dailyRemarks,
-      submittedOn: new Date().toISOString(),
-      empName: '',
-      profileImage: undefined,
-      profileImageBase64: undefined
-    };
-
-    this.api.saveComment(commentData).subscribe({
-      next: (response: any) => {
-        if (response && response.success) {
-          console.log('Daily Remarks saved as comment successfully');
-          this.dailyRemarks = ''; // Clear the input
-          this.loadComments(this.taskId); // Reload comments to show the new comment
-        } else {
-          console.error('Failed to save Daily Remarks as comment:', response?.message);
-        }
-      },
-      error: (error: any) => {
-        console.error('Error saving Daily Remarks as comment:', error);
       }
     });
   }
