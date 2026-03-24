@@ -16,16 +16,16 @@
 /* Top Section - Active Task and Stats in Same Row */
 .top-section {
   display: grid;
-  grid-template-columns: 1fr 200px 220px;
-  gap: 16px;
+  grid-template-columns: 1fr 180px 200px;
+  gap: 10px;
   align-items: stretch;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 /* Active Task Card - Reduced Size */
 .active-task-card {
   background: linear-gradient(135deg, #0f766e 0%, #059669 100%);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 10px 16px;
   color: white;
   position: relative;
@@ -1141,9 +1141,9 @@
 .right-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 3px;
   align-items: stretch;
-  width: 220px;
+  width: 200px;
   height: 100%;
 }
 
@@ -1152,13 +1152,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   background: #059669;
   color: white;
   border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
-  font-size: 13px;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1184,8 +1184,8 @@
 
 .stat-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 5px;
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
   flex: 1;
@@ -1262,7 +1262,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   position: relative;
   z-index: 1;
 }
@@ -1273,7 +1273,7 @@
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  line-height: 1.2;
+  line-height: 1;
   animation: slideInLeft 0.5s ease-out;
 }
 
@@ -1290,13 +1290,13 @@
 }
 
 .stat-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 11px;
   flex-shrink: 0;
   transition: all 0.3s ease;
   animation: bounceIn 0.6s ease-out;
@@ -1352,16 +1352,17 @@
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
   color: #0f172a;
-  margin-bottom: 4px;
+  margin-bottom: 1px;
   font-family: 'Inter', monospace;
   line-height: 1;
   letter-spacing: -0.5px;
   position: relative;
   z-index: 1;
   animation: countUp 0.8s ease-out;
+  text-align: center;
 }
 
 @keyframes countUp {
@@ -1377,7 +1378,7 @@
 }
 
 .stat-sublabel {
-  font-size: 9px;
+  font-size: 10px;
   color: #64748b;
   font-weight: 600;
   text-transform: uppercase;
@@ -1386,6 +1387,7 @@
   position: relative;
   z-index: 1;
   animation: fadeIn 1s ease-out;
+  text-align: center;
 }
 
 @keyframes fadeIn {
@@ -1402,7 +1404,7 @@
 .break-tracker-section {
   display: flex;
   align-items: stretch;
-  width: 200px;
+  width: 180px;
 }
 
 .break-tracker-card {
@@ -2386,20 +2388,20 @@
   }
 
   .top-section {
-    grid-template-columns: 1fr 180px 200px;
-    gap: 12px;
+    grid-template-columns: 1fr 160px 190px;
+    gap: 10px;
   }
 
   .break-tracker-section {
-    width: 180px;
+    width: 160px;
   }
 
   .right-section {
-    width: 200px;
+    width: 190px;
   }
 
   .active-task-card {
-    min-width: 350px;
+    min-width: 300px;
   }
 
   .table-header,
@@ -2711,11 +2713,11 @@
   }
 
   .stat-card {
-    padding: 14px;
+    padding: 12px;
   }
 
   .stat-value {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .table-row {
