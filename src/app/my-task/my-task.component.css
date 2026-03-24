@@ -22,6 +22,222 @@
   margin-bottom: 12px;
 }
 
+/* Mobile Responsive - Tablet */
+@media (max-width: 1024px) {
+  .task-board-container {
+    padding: 20px;
+  }
+
+  .top-section {
+    grid-template-columns: 1fr 180px;
+    gap: 12px;
+  }
+
+  .break-tracker-section {
+    display: none;
+  }
+
+  .right-section {
+    width: 100%;
+  }
+}
+
+/* Mobile Responsive - Small Tablet/Large Phone */
+@media (max-width: 768px) {
+  .task-board-container {
+    padding: 16px;
+  }
+
+  .top-section {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .break-tracker-section {
+    display: flex;
+    width: 100%;
+  }
+
+  .right-section {
+    width: 100%;
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .stats-grid {
+    flex-direction: row;
+    flex: 1;
+  }
+
+  .stat-card {
+    flex: 1;
+    padding: 12px;
+  }
+
+  .new-task-btn {
+    flex: 1;
+  }
+
+  .timer-control-section {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .timer-bars {
+    display: none;
+  }
+
+  .timer-box {
+    padding: 10px 16px 8px 16px;
+  }
+
+  .digit {
+    font-size: 20px;
+  }
+
+  .modern-controls {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .modern-control-btn {
+    padding: 8px 12px;
+    gap: 3px;
+  }
+
+  .btn-label {
+    font-size: 8px;
+  }
+
+  .task-info h2.task-title {
+    font-size: 15px;
+  }
+
+  .task-meta {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
+
+/* Mobile Responsive - Phone */
+@media (max-width: 480px) {
+  .task-board-container {
+    padding: 12px;
+  }
+
+  .top-section {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .active-task-card {
+    padding: 8px 12px;
+  }
+
+  .timer-control-section {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .timer-box {
+    padding: 8px 12px 6px 12px;
+    width: 100%;
+  }
+
+  .digit {
+    font-size: 18px;
+  }
+
+  .separator {
+    font-size: 16px;
+  }
+
+  .timer-label-modern {
+    font-size: 7px;
+  }
+
+  .modern-controls {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .modern-control-btn {
+    flex: 1;
+    padding: 8px 10px;
+    gap: 2px;
+  }
+
+  .btn-label {
+    font-size: 7px;
+  }
+
+  .task-info h2.task-title {
+    font-size: 13px;
+  }
+
+  .task-detail-item {
+    font-size: 10px;
+  }
+
+  .right-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stats-grid {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .stat-sublabel {
+    font-size: 8px;
+  }
+
+  .break-tracker-card {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .break-tracker-title {
+    font-size: 10px;
+  }
+
+  .break-type-btn {
+    padding: 5px 3px;
+    font-size: 8px;
+  }
+
+  .break-type-btn i {
+    font-size: 10px;
+  }
+
+  .break-tracker-card .break-timer-display .timer-value {
+    font-size: 24px !important;
+  }
+
+  .break-tracker-card .break-timer-display .timer-caption {
+    font-size: 7px !important;
+  }
+
+  .new-task-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
 /* Active Task Card - Reduced Size */
 .active-task-card {
   background: linear-gradient(135deg, #0f766e 0%, #059669 100%);
