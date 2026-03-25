@@ -18,6 +18,8 @@
             class="search-input" 
             placeholder="Search team member..." 
             type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange(searchTerm)"
           />
         </div>
       </div>
@@ -25,18 +27,18 @@
       <!-- Users List -->
       <div class="users-list">
         <!-- Empty State for No Users -->
-        @if (pendingUsers.length === 0) {
+        @if (filteredPendingUsers.length === 0) {
           <div class="users-empty-state">
             <div class="users-empty-icon">
               <i class="fas fa-user-check"></i>
             </div>
-            <p class="users-empty-text">No pending reviews</p>
-            <span class="users-empty-subtext">All approvals are up to date</span>
+            <p class="users-empty-text">{{ searchTerm ? 'No matching users' : 'No pending reviews' }}</p>
+            <span class="users-empty-subtext">{{ searchTerm ? 'Try a different search term' : 'All approvals are up to date' }}</span>
           </div>
         }
 
         <!-- Users List Items -->
-        @for (user of pendingUsers; track trackByUserId($index, user)) {
+        @for (user of filteredPendingUsers; track trackByUserId($index, user)) {
           <div 
             class="user-item"
             [class.selected]="user.isSelected"

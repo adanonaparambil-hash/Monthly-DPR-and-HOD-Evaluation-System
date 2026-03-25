@@ -87,6 +87,9 @@ export class DprApprovalComponent implements OnInit {
   selectedTaskCategory: string | number = 'all';
   selectAll = false;
 
+  // Search property
+  searchTerm: string = '';
+
   // Pagination properties
   currentPage = 1;
   pageSize = 500;
@@ -96,6 +99,7 @@ export class DprApprovalComponent implements OnInit {
   allDprLogs: DPRLog[] = []; // Store all logs
 
   pendingUsers: PendingUser[] = [];
+  filteredPendingUsers: PendingUser[] = [];
   projects: Project[] = [];
   departments: Department[] = [];
   taskCategories: TaskCategory[] = [];
@@ -299,6 +303,9 @@ export class DprApprovalComponent implements OnInit {
 
           console.log('Mapped pending users:', this.pendingUsers);
 
+          // Initialize filtered list
+          this.filteredPendingUsers = [...this.pendingUsers];
+
           // Set the first user as selected by default
           if (this.pendingUsers.length > 0) {
             this.selectedUser = this.pendingUsers[0];
@@ -331,6 +338,24 @@ export class DprApprovalComponent implements OnInit {
       return diffDays === 1 ? '1d ago' : `${diffDays}d ago`;
     } else {
       return activityDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
+
+  // Search method for pending users
+  onSearchChange(searchValue: string) {
+    this.searchTerm = searchValue.toLowerCase().trim();
+    this.filterPendingUsers();
+  }
+
+  // Filter pending users based on search term
+  filterPendingUsers() {
+    if (!this.searchTerm) {
+      this.filteredPendingUsers = [...this.pendingUsers];
+    } else {
+      this.filteredPendingUsers = this.pendingUsers.filter(user =>
+        user.name.toLowerCase().includes(this.searchTerm) ||
+        user.role.toLowerCase().includes(this.searchTerm)
+      );
     }
   }
 

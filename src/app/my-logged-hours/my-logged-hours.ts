@@ -1155,16 +1155,11 @@ export class MyLoggedHoursComponent implements OnInit {
     this.showTaskModal = false;
     this.isTaskModalViewOnly = false; // Reset view-only mode
     document.body.style.overflow = 'auto';
-    
-    // Reload logged hours to reflect any changes made in the modal
-    this.loadLoggedHours();
   }
 
   // Handle task updated event from modal
   onTaskUpdated(task: any) {
     console.log('Task updated from modal:', task);
-    // Reload logged hours to reflect changes
-    this.loadLoggedHours();
   }
 
   // Handle task paused event from modal
@@ -1180,8 +1175,6 @@ export class MyLoggedHoursComponent implements OnInit {
   // Handle task stopped event from modal
   onTaskStopped(taskId: number) {
     console.log('Task stopped from modal:', taskId);
-    // Reload logged hours to reflect changes
-    this.loadLoggedHours();
   }
 
   // Handle showLogTime event from task-details-modal (AUTO CLOSED task)
