@@ -555,7 +555,7 @@ export class layout implements OnInit, OnDestroy {
     // Set up polling every 10 minutes (600,000 milliseconds)
     this.notificationCountInterval = setInterval(() => {
       this.loadNotificationCount();
-    }, 600000); // 10 minutes
+    }, 3600000); // 10 minutes
   }
 
   // Load only notification count (lightweight API call)
