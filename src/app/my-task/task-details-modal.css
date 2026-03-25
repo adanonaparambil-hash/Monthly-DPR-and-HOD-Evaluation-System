@@ -16,22 +16,24 @@
 /* Top Section - Active Task and Stats in Same Row */
 .top-section {
   display: grid;
-  grid-template-columns: 1fr 180px 200px;
-  gap: 10px;
+  grid-template-columns: 1.3fr 195px 215px;
+  gap: 16px;
   align-items: stretch;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  height: auto;
 }
 
 /* Active Task Card - Reduced Size */
 .active-task-card {
   background: linear-gradient(135deg, #0f766e 0%, #059669 100%);
   border-radius: 20px;
-  padding: 10px 16px;
+  padding: 22px 26px;
   color: white;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 145px;
 }
 
 .active-task-card.reduced-width {
@@ -1143,7 +1145,7 @@
   flex-direction: column;
   gap: 3px;
   align-items: stretch;
-  width: 200px;
+  width: 215px;
   height: 100%;
 }
 
@@ -1362,7 +1364,7 @@
   position: relative;
   z-index: 1;
   animation: countUp 0.8s ease-out;
-  text-align: center;
+  text-align: left;
 }
 
 @keyframes countUp {
@@ -1387,7 +1389,7 @@
   position: relative;
   z-index: 1;
   animation: fadeIn 1s ease-out;
-  text-align: center;
+  text-align: left;
 }
 
 @keyframes fadeIn {
@@ -1404,7 +1406,7 @@
 .break-tracker-section {
   display: flex;
   align-items: stretch;
-  width: 180px;
+  width: 195px;
 }
 
 .break-tracker-card {

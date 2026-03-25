@@ -851,6 +851,13 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.punchedHours = this.formatMinutesToTime(this.todayTotalHours);
           this.runningTime = this.formatMinutesToTime(this.todayTotalHours);
           
+          // Update travel time and break time from API (values in minutes)
+          // API response uses 'travelTimeTacken' and 'breakTimeTacken' (typo in property name)
+          const travelTimeTaken = data.travelTimeTacken || data.travelTimeTaken || 0;
+          const breakTimeTaken = data.breakTimeTacken || data.breakTimeTaken || 0;
+          this.travelTime = this.formatMinutesToTime(travelTimeTaken);
+          this.breakTime = this.formatMinutesToTime(breakTimeTaken);
+          
           // Update break info from API
           this.breakStatus = data.breakStatus || 'NONE';
           this.breakReason = data.breakReason || null;
@@ -977,6 +984,13 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Format times for display
           this.punchedHours = this.formatMinutesToTime(this.todayTotalHours);
           this.runningTime = this.formatMinutesToTime(this.todayTotalHours);
+          
+          // Update travel time and break time from API (values in minutes)
+          // API response uses 'travelTimeTacken' and 'breakTimeTacken' (typo in property name)
+          const travelTimeTaken = data.travelTimeTacken || data.travelTimeTaken || 0;
+          const breakTimeTaken = data.breakTimeTacken || data.breakTimeTaken || 0;
+          this.travelTime = this.formatMinutesToTime(travelTimeTaken);
+          this.breakTime = this.formatMinutesToTime(breakTimeTaken);
           
           // Update break info from API
           this.breakStatus = data.breakStatus || 'NONE';
