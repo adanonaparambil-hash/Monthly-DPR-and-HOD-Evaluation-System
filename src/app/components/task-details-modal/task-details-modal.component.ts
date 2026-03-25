@@ -1601,21 +1601,25 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   getActivityIconFromDescription(description: string): string {
-    if (description.includes('started') || description.includes('play')) return 'fa-play';
-    if (description.includes('paused')) return 'fa-pause';
-    if (description.includes('stopped') || description.includes('completed')) return 'fa-stop';
-    if (description.includes('comment')) return 'fa-comment';
-    if (description.includes('file') || description.includes('upload')) return 'fa-file';
-    if (description.includes('updated') || description.includes('changed')) return 'fa-edit';
+    const desc = description.toLowerCase();
+    if (desc.includes('started') || desc.includes('play')) return 'fa-play';
+    if (desc.includes('paused')) return 'fa-pause';
+    if (desc.includes('stopped') || desc.includes('completed')) return 'fa-stop';
+    if (desc.includes('approved')) return 'fa-check-circle';
+    if (desc.includes('comment')) return 'fa-comment';
+    if (desc.includes('file') || desc.includes('upload')) return 'fa-file';
+    if (desc.includes('updated') || desc.includes('changed')) return 'fa-edit';
     return 'fa-circle';
   }
 
   getActivityColorFromDescription(description: string): string {
-    if (description.includes('started') || description.includes('play')) return '#10b981';
-    if (description.includes('paused')) return '#f59e0b';
-    if (description.includes('stopped') || description.includes('completed')) return '#ef4444';
-    if (description.includes('comment')) return '#3b82f6';
-    if (description.includes('file') || description.includes('upload')) return '#8b5cf6';
+    const desc = description.toLowerCase();
+    if (desc.includes('started') || desc.includes('play')) return '#10b981';
+    if (desc.includes('paused')) return '#f59e0b';
+    if (desc.includes('stopped') || desc.includes('completed')) return '#ef4444';
+    if (desc.includes('approved')) return '#059669';
+    if (desc.includes('comment')) return '#3b82f6';
+    if (desc.includes('file') || desc.includes('upload')) return '#8b5cf6';
     return '#6b7280';
   }
 
