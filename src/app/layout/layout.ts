@@ -228,11 +228,6 @@ export class layout implements OnInit, OnDestroy {
       return this.getPastReportsTitle();
     }
 
-    // Handle exit form with query parameters
-    if (this.currentRoute.includes('/exit-form')) {
-      return 'Exit Form';
-    }
-
     const routeTitles: { [key: string]: string } = {
       '/dashboard': 'Dashboard',
       '/employee-dashboard': 'Employee Analytics',
@@ -248,7 +243,9 @@ export class layout implements OnInit, OnDestroy {
       '/my-logged-hours': 'Log History',
       '/notice-management': 'Communication Master',
       '/hod-master': 'HOD Master',
-      '/employee-master': 'Employee Master'
+      '/employee-master': 'Employee Master',
+      '/rejoining-form': 'Rejoining Form',
+      '/exit-form': 'Exit Form'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';

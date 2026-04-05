@@ -169,143 +169,194 @@
 </div>
 
 <!-- Employee Profile Modal -->
-<div class="modal-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
-  <div class="profile-modal-card" (click)="$event.stopPropagation()">
+<div class="em-overlay" *ngIf="showViewModal" (click)="closeViewModal()">
+  <div class="em-modal" (click)="$event.stopPropagation()">
 
-    <!-- Modal Header -->
-    <div class="profile-modal-header">
-      <div class="profile-header-left">
-        <ng-container *ngIf="!isLoadingProfile && employeeProfile">
-          <div class="profile-avatar-wrap">
+    <!-- ── Hero Header ─────────────────────────────────────── -->
+    <div class="em-hero">
+      <!-- gradient bg decoration -->
+      <div class="em-hero-orb em-orb1"></div>
+      <div class="em-hero-orb em-orb2"></div>
+
+      <button class="em-close" (click)="closeViewModal()" title="Close">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <ng-container *ngIf="isLoadingProfile">
+        <div class="em-hero-loading">
+          <div class="em-spinner"></div>
+          <span>Loading profile…</span>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="!isLoadingProfile && employeeProfile">
+        <div class="em-hero-content">
+          <!-- Avatar -->
+          <div class="em-hero-avatar-wrap">
             <img *ngIf="employeeProfile.profileImageBase64"
               [src]="getProfileImageFromProfile(employeeProfile)"
               [alt]="employeeProfile.employeeName"
-              class="profile-avatar-img"
+              class="em-hero-avatar-img"
               (error)="employeeProfile.profileImageBase64 = null" />
             <div *ngIf="!employeeProfile.profileImageBase64"
-              class="profile-avatar"
+              class="em-hero-avatar"
               [style.background]="getAvatarColor(employeeProfile.employeeName)">
               {{ getInitials(employeeProfile.employeeName) }}
             </div>
+            <span class="em-hero-status-dot"></span>
           </div>
-          <div class="profile-header-info">
-            <p class="profile-emp-id">{{ employeeProfile.empId }}</p>
-            <h2 class="profile-emp-name">{{ employeeProfile.employeeName }}</h2>
-            <div class="profile-header-badges">
-              <span class="badge-dept"><i class="fas fa-building"></i>{{ employeeProfile.department }}</span>
-              <span class="badge-desig"><i class="fas fa-briefcase"></i>{{ employeeProfile.designation }}</span>
+          <!-- Info -->
+          <div class="em-hero-info">
+            <span class="em-hero-empid">{{ employeeProfile.empId }}</span>
+            <h2 class="em-hero-name">{{ editProfile.employeeName }}</h2>
+            <div class="em-hero-chips">
+              <span class="em-chip em-chip-dept"><i class="fas fa-building"></i>{{ editProfile.department || '—' }}</span>
+              <span class="em-chip em-chip-desig"><i class="fas fa-briefcase"></i>{{ editProfile.designation || '—' }}</span>
             </div>
           </div>
-        </ng-container>
-        <ng-container *ngIf="isLoadingProfile">
-          <div class="profile-header-loading">
-            <div class="spinner"></div>
-            <span>Loading profile...</span>
-          </div>
-        </ng-container>
-      </div>
-      <button class="modal-close-btn" (click)="closeViewModal()">
-        <i class="fas fa-times"></i>
-      </button>
+        </div>
+      </ng-container>
     </div>
 
-    <!-- Modal Body -->
-    <div class="profile-modal-body" *ngIf="!isLoadingProfile && employeeProfile">
+    <!-- ── Scrollable Body ─────────────────────────────────── -->
+    <div class="em-body" *ngIf="!isLoadingProfile && employeeProfile">
+
+      <!-- Section: Basic Info -->
+      <div class="em-section em-s1">
+        <div class="em-section-head">
+          <div class="em-section-icon em-icon-blue"><i class="fas fa-user-tie"></i></div>
+          <span class="em-section-title">Basic Information</span>
+        </div>
+        <div class="em-grid em-two-col">
+          <div class="em-field">
+            <label class="em-label">Employee Name</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.employeeName" placeholder="Employee name">
+          </div>
+          <div class="em-field">
+            <label class="em-label">Designation</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.designation" placeholder="Designation">
+          </div>
+          <div class="em-field">
+            <label class="em-label">Department</label>
+            <select class="em-input em-select" [(ngModel)]="editProfile.department">
+              <option value="">Select Department</option>
+              <option *ngFor="let d of departmentObjects" [value]="d.deptName">{{ d.deptName }}</option>
+            </select>
+          </div>
+          <div class="em-field">
+            <label class="em-label">Nationality</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.nation" placeholder="Nationality">
+          </div>
+          <div class="em-field">
+            <label class="em-label">Date of Joining</label>
+            <input class="em-input" type="date" [(ngModel)]="editProfile.doj">
+          </div>
+          <div class="em-field">
+            <label class="em-label">Date of Birth</label>
+            <input class="em-input" type="date" [(ngModel)]="editProfile.dob">
+          </div>
+        </div>
+      </div>
 
       <!-- Section: Contact Info -->
-      <div class="profile-section">
-        <div class="section-title"><i class="fas fa-address-card"></i> Contact Information</div>
-        <div class="profile-grid">
-          <div class="profile-field">
-            <span class="field-label">Phone</span>
-            <span class="field-value">{{ employeeProfile.phone || '—' }}</span>
+      <div class="em-section em-s2">
+        <div class="em-section-head">
+          <div class="em-section-icon em-icon-teal"><i class="fas fa-address-card"></i></div>
+          <span class="em-section-title">Contact Information</span>
+        </div>
+        <div class="em-grid em-two-col">
+          <div class="em-field">
+            <label class="em-label">Phone</label>
+            <div class="em-input-icon-wrap">
+              <i class="fas fa-phone em-input-icon"></i>
+              <input class="em-input em-input-padded" type="text" [(ngModel)]="editProfile.phone" placeholder="Phone number">
+            </div>
           </div>
-          <div class="profile-field">
-            <span class="field-label">Telephone</span>
-            <span class="field-value">{{ employeeProfile.telephone || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">Telephone</label>
+            <div class="em-input-icon-wrap">
+              <i class="fas fa-phone-alt em-input-icon"></i>
+              <input class="em-input em-input-padded" type="text" [(ngModel)]="editProfile.telephone" placeholder="Telephone">
+            </div>
           </div>
-          <div class="profile-field full-width">
-            <span class="field-label">Email</span>
-            <span class="field-value">{{ employeeProfile.email || '—' }}</span>
+          <div class="em-field em-full">
+            <label class="em-label">Email</label>
+            <div class="em-input-icon-wrap">
+              <i class="fas fa-envelope em-input-icon"></i>
+              <input class="em-input em-input-padded" type="email" [(ngModel)]="editProfile.email" placeholder="Email address">
+            </div>
           </div>
-          <div class="profile-field full-width">
-            <span class="field-label">Address</span>
-            <span class="field-value">{{ employeeProfile.address || '—' }}</span>
+          <div class="em-field em-full">
+            <label class="em-label">Address</label>
+            <div class="em-input-icon-wrap">
+              <i class="fas fa-map-marker-alt em-input-icon"></i>
+              <input class="em-input em-input-padded" type="text" [(ngModel)]="editProfile.address" placeholder="Address">
+            </div>
           </div>
-          <div class="profile-field">
-            <span class="field-label">Place</span>
-            <span class="field-value">{{ employeeProfile.place || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">Place</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.place" placeholder="Place">
           </div>
-          <div class="profile-field">
-            <span class="field-label">District</span>
-            <span class="field-value">{{ employeeProfile.district || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">District</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.district" placeholder="District">
           </div>
-          <div class="profile-field">
-            <span class="field-label">State</span>
-            <span class="field-value">{{ employeeProfile.state || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">State</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.state" placeholder="State">
           </div>
-          <div class="profile-field">
-            <span class="field-label">Post Office</span>
-            <span class="field-value">{{ employeeProfile.postOffice || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">Post Office</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.postOffice" placeholder="Post office">
           </div>
-          <div class="profile-field">
-            <span class="field-label">Location</span>
-            <span class="field-value">{{ employeeProfile.location || '—' }}</span>
-          </div>
-          <div class="profile-field">
-            <span class="field-label">Nationality</span>
-            <span class="field-value">{{ employeeProfile.nation || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">Location</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.location" placeholder="Location">
           </div>
         </div>
       </div>
 
-      <!-- Section: Professional Info -->
-      <div class="profile-section">
-        <div class="section-title"><i class="fas fa-briefcase"></i> Professional Details</div>
-        <div class="profile-grid">
-          <div class="profile-field">
-            <span class="field-label">Date of Joining</span>
-            <span class="field-value">{{ employeeProfile.doj || '—' }}</span>
+      <!-- Section: Professional -->
+      <div class="em-section em-s3">
+        <div class="em-section-head">
+          <div class="em-section-icon em-icon-purple"><i class="fas fa-briefcase"></i></div>
+          <span class="em-section-title">Professional Details</span>
+        </div>
+        <div class="em-grid em-two-col">
+          <div class="em-field">
+            <label class="em-label">Experience India (yrs)</label>
+            <input class="em-input" type="number" min="0" [(ngModel)]="editProfile.experienceInd" placeholder="0">
           </div>
-          <div class="profile-field">
-            <span class="field-label">Date of Birth</span>
-            <span class="field-value">{{ employeeProfile.dob || '—' }}</span>
+          <div class="em-field">
+            <label class="em-label">Experience Abroad (yrs)</label>
+            <input class="em-input" type="number" min="0" [(ngModel)]="editProfile.experienceAbroad" placeholder="0">
           </div>
-          <div class="profile-field">
-            <span class="field-label">Experience (India)</span>
-            <span class="field-value">{{ employeeProfile.experienceInd != null ? employeeProfile.experienceInd + ' yrs' : '—' }}</span>
+          <div class="em-field em-full">
+            <label class="em-label">Qualification</label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.qualification" placeholder="Qualification">
           </div>
-          <div class="profile-field">
-            <span class="field-label">Experience (Abroad)</span>
-            <span class="field-value">{{ employeeProfile.experienceAbroad != null ? employeeProfile.experienceAbroad + ' yrs' : '—' }}</span>
+          <div class="em-field em-full">
+            <label class="em-label">Skillset <span class="em-label-hint">(comma separated)</span></label>
+            <input class="em-input" type="text" [(ngModel)]="editProfile.skillset" placeholder="e.g. Angular, Java, SQL">
           </div>
-          <div class="profile-field full-width">
-            <span class="field-label">Qualification</span>
-            <span class="field-value">{{ employeeProfile.qualification || '—' }}</span>
+          <div class="em-field em-full">
+            <label class="em-label">Career Summary</label>
+            <textarea class="em-input em-textarea" [(ngModel)]="editProfile.careerSummary" rows="3" placeholder="Brief career summary…"></textarea>
           </div>
         </div>
-      </div>
-
-      <!-- Section: Skills -->
-      <div class="profile-section" *ngIf="employeeProfile.skillset">
-        <div class="section-title"><i class="fas fa-code"></i> Skillset</div>
-        <div class="skills-wrap">
-          <span class="skill-chip" *ngFor="let skill of employeeProfile.skillset.split(',')">{{ skill.trim() }}</span>
-        </div>
-      </div>
-
-      <!-- Section: Career Summary -->
-      <div class="profile-section" *ngIf="employeeProfile.careerSummary">
-        <div class="section-title"><i class="fas fa-file-alt"></i> Career Summary</div>
-        <p class="career-summary">{{ employeeProfile.careerSummary }}</p>
       </div>
 
     </div>
 
-    <!-- Modal Footer -->
-    <div class="profile-modal-footer">
-      <button class="btn-close-profile" (click)="closeViewModal()">
+    <!-- ── Footer ─────────────────────────────────────────── -->
+    <div class="em-footer">
+      <button class="em-btn em-btn-ghost" (click)="closeViewModal()">
         <i class="fas fa-times"></i> Close
+      </button>
+      <button class="em-btn em-btn-save" (click)="saveProfile()" [disabled]="isSaving || isLoadingProfile">
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        <i class="fas fa-check" *ngIf="!isSaving"></i>
+        {{ isSaving ? 'Saving…' : 'Save Changes' }}
       </button>
     </div>
 
