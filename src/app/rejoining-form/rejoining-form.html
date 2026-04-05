@@ -1,0 +1,285 @@
+<div class="rejoining-form-container">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="form-header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <i class="fas fa-home"></i> HR Services &rsaquo; <span>Rejoin Request</span>
+      </div>
+      <h1>Joining Report &ndash; Return From Leave</h1>
+      <p>Official re-induction form for employees returning from authorized leave</p>
+    </div>
+    <div class="header-right">
+      <div class="meta-block">
+        <div class="meta-label">Form No</div>
+        <div class="meta-value">RJ-2024-001</div>
+      </div>
+      <div class="meta-block">
+        <div class="meta-label">Date</div>
+        <div class="meta-value small">{{ getCurrentDate() }}</div>
+      </div>
+      <div class="status-pill"><span class="dot"></span>In Progress</div>
+    </div>
+  </div>
+
+  <!-- ── Success overlay ────────────────────────────────────── -->
+  <div class="success-overlay" *ngIf="submitSuccess">
+    <div class="success-card">
+      <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+      <h2>Application Submitted</h2>
+      <p>Your rejoining request is under review. HR will contact you within 2–3 business days.</p>
+    </div>
+  </div>
+
+  <!-- ── Two-column layout ──────────────────────────────────── -->
+  <div class="form-layout">
+
+    <!-- LEFT: main form -->
+    <div class="main-form">
+      <form [formGroup]="rejoiningForm" (ngSubmit)="onSubmit()">
+
+        <!-- Employee Details -->
+        <div class="form-section s1">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-user-tie"></i></div>
+            <h3 class="section-title">Employee Details</h3>
+          </div>
+          <div class="section-content">
+            <div class="emp-row">
+              <div class="emp-avatar">
+                <i class="fas fa-user"></i>
+                <span class="avatar-dot"></span>
+              </div>
+              <div class="form-grid two-col">
+                <div class="form-group">
+                  <label class="form-label">Employee Name</label>
+                  <input type="text" formControlName="employeeName" class="form-input"
+                    [class.error]="isFieldInvalid('employeeName')" placeholder="John Doe">
+                  <div class="error-text" *ngIf="isFieldInvalid('employeeName')">{{ getFieldError('employeeName') }}</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Employee ID</label>
+                  <input type="text" formControlName="employeeId" class="form-input"
+                    [class.error]="isFieldInvalid('employeeId')" placeholder="EMP-0001">
+                  <div class="error-text" *ngIf="isFieldInvalid('employeeId')">{{ getFieldError('employeeId') }}</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Designation</label>
+                  <input type="text" formControlName="designation" class="form-input"
+                    [class.error]="isFieldInvalid('designation')" placeholder="Engineering Manager">
+                  <div class="error-text" *ngIf="isFieldInvalid('designation')">{{ getFieldError('designation') }}</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Department</label>
+                  <select formControlName="department" class="form-input" [class.error]="isFieldInvalid('department')">
+                    <option value="">Select Department</option>
+                    <option value="IT">Information Technology</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                  </select>
+                  <div class="error-text" *ngIf="isFieldInvalid('department')">{{ getFieldError('department') }}</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Station / Section</label>
+                  <input type="text" class="form-input" placeholder="Head Office">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Date of Joining Office</label>
+                  <input type="date" formControlName="rejoiningDate" class="form-input"
+                    [class.error]="isFieldInvalid('rejoiningDate')">
+                  <div class="error-text" *ngIf="isFieldInvalid('rejoiningDate')">{{ getFieldError('rejoiningDate') }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leave Details -->
+        <div class="form-section s2">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-plane-departure"></i></div>
+            <h3 class="section-title">Leave Details</h3>
+          </div>
+          <div class="section-content">
+            <div class="form-grid four-col">
+              <div class="form-group">
+                <label class="form-label">Type of Leave</label>
+                <select class="form-input">
+                  <option value="">Select Type</option>
+                  <option>Annual Leave</option>
+                  <option>Sick Leave</option>
+                  <option>Maternity Leave</option>
+                  <option>Emergency Leave</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Approved Return Date</label>
+                <input type="date" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Extended Upto (Optional)</label>
+                <input type="date" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Actual Arrival Date</label>
+                <input type="date" formControlName="previousExitDate" class="form-input"
+                  [class.error]="isFieldInvalid('previousExitDate')">
+                <div class="error-text" *ngIf="isFieldInvalid('previousExitDate')">{{ getFieldError('previousExitDate') }}</div>
+              </div>
+            </div>
+            <p class="hint-text"><i class="fas fa-info-circle"></i> Arrival &gt; 3 days after approved return date requires justification.</p>
+          </div>
+        </div>
+
+        <!-- Joining Details -->
+        <div class="form-section s3">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-briefcase"></i></div>
+            <h3 class="section-title">Joining Details</h3>
+          </div>
+          <div class="section-content">
+            <div class="form-grid two-col">
+              <div class="form-group">
+                <label class="form-label">Joining Date</label>
+                <input type="date" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">HR Doc No.</label>
+                <input type="text" class="form-input" placeholder="Enter document number…">
+              </div>
+            </div>
+            <div class="form-group mt-16">
+              <label class="form-label">Remarks / Notes</label>
+              <textarea formControlName="reasonForRejoining" class="form-input textarea"
+                [class.error]="isFieldInvalid('reasonForRejoining')"
+                placeholder="Additional details or justification for late arrival…" rows="4"></textarea>
+              <div class="error-text" *ngIf="isFieldInvalid('reasonForRejoining')">{{ getFieldError('reasonForRejoining') }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approvals & Verification -->
+        <div class="form-section s4">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="section-title">Approvals &amp; Verification</h3>
+          </div>
+          <div class="section-content">
+            <div class="form-grid three-col">
+              <div class="form-group">
+                <label class="form-label">Employee Signature</label>
+                <div class="sig-box">
+                  <i class="fas fa-signature"></i>
+                  <span>Julian Castellanos (Signed Digitally)</span>
+                  <small>Automatically signed on {{ getCurrentDate() }}</small>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rejoining Verified By</label>
+                <input type="text" formControlName="previousSalary" class="form-input" placeholder="Manager name…">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Passport Received By</label>
+                <input type="text" class="form-input" placeholder="Custodian name…">
+              </div>
+            </div>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="medicalClearance" class="checkbox-input">
+                <span class="checkbox-mark"></span>
+                <span class="checkbox-text">I confirm I am medically fit to resume work and will provide clearance certificates if required.</span>
+              </label>
+              <div class="error-text" *ngIf="isFieldInvalid('medicalClearance')">Medical clearance confirmation is required</div>
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="agreementAccepted" class="checkbox-input">
+                <span class="checkbox-mark"></span>
+                <span class="checkbox-text">I agree to the terms of employment and understand rejoining is subject to management approval.</span>
+              </label>
+              <div class="error-text" *ngIf="isFieldInvalid('agreementAccepted')">Agreement acceptance is required</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost"><i class="fas fa-times"></i> Cancel</button>
+          <button type="button" class="btn btn-outline"><i class="fas fa-save"></i> Save Draft</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || !rejoiningForm.valid">
+            <span *ngIf="!isSubmitting"><i class="fas fa-paper-plane"></i> Submit Form</span>
+            <span *ngIf="isSubmitting"><i class="fas fa-spinner fa-spin"></i> Processing…</span>
+          </button>
+        </div>
+
+      </form>
+    </div><!-- /main-form -->
+
+    <!-- RIGHT: sidebar -->
+    <div class="form-sidebar">
+
+      <!-- Emergency Contact -->
+      <div class="sidebar-card sc1">
+        <div class="sidebar-header">
+          <div class="section-icon contact"><i class="fas fa-phone-alt"></i></div>
+          <h4>Emergency Contact</h4>
+        </div>
+        <div class="sidebar-content">
+          <div class="form-group mb-14">
+            <label class="form-label">Contact Name</label>
+            <input type="text" class="form-input" placeholder="Jane Doe">
+          </div>
+          <div class="form-group mb-14">
+            <label class="form-label">Relationship</label>
+            <select class="form-input">
+              <option>Spouse</option><option>Parent</option>
+              <option>Sibling</option><option>Friend</option>
+            </select>
+          </div>
+          <div class="form-group mb-14">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" formControlName="emergencyContact" class="form-input"
+              [class.error]="isFieldInvalid('emergencyContact')" placeholder="+1 (555) 000-1234">
+            <div class="error-text" *ngIf="isFieldInvalid('emergencyContact')">{{ getFieldError('emergencyContact') }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <textarea class="form-input textarea" rows="3" placeholder="124 Architecture Blvd, NY, 10010"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passport Handling -->
+      <div class="sidebar-card sc2">
+        <div class="sidebar-header">
+          <div class="section-icon passport"><i class="fas fa-passport"></i></div>
+          <h4>Passport Handling</h4>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="sidebar-content">
+          <p class="passport-note">
+            Employee has requested custody of passport for safe-keeping during personal documentation.
+          </p>
+          <div class="form-grid two-col">
+            <div class="form-group">
+              <label class="form-label">Passport No.</label>
+              <input type="text" class="form-input" placeholder="P82010">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Issue Date</label>
+              <input type="date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Expiry Date</label>
+              <input type="date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Passport File Rack No.</label>
+              <input type="text" class="form-input" placeholder="RACK-012">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /form-layout -->
+</div>

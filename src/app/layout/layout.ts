@@ -8,11 +8,13 @@ import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
 import { SessionMonitorComponent } from '../components/session-monitor.component';
 import { AvatarUtil } from '../utils/avatar.util';
+import { NoticePopupComponent } from '../components/notice-popup/notice-popup.component';
+import { NoticePopupService } from '../services/notice-popup.service';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent, NoticePopupComponent],
   templateUrl: './layout.html',
   styleUrls: ['./layout.css'],
   animations: [
@@ -43,13 +45,15 @@ export class layout implements OnInit, OnDestroy {
   isMPRMenuOpen = false;
   isDPRMenuOpen = false;
   isApprovalsMenuOpen = false;
+  isSystemMasterMenuOpen = false;
+  isFormServicesMenuOpen = false;
   isDPROnlyMode = false; // New property to control DPR-only mode
 
   notificationCount = 0;
   hasNewNotifications = false;
   notifications: any[] = [];
   isLoadingNotifications = false;
-  notificationsLoaded = false; // Track if notifications have been loaded
+  notificationsLoaded = false;
 
   // Polling interval reference
   private notificationCountInterval: any;
@@ -85,7 +89,8 @@ export class layout implements OnInit, OnDestroy {
     private router: Router, 
     private themeService: Theme, 
     private api: Api,
-    private authService: AuthService
+    private authService: AuthService,
+    private noticePopupService: NoticePopupService
   ) {
     // Subscribe to theme changes
     this.themeService.isDarkMode$.subscribe(isDark => {
@@ -240,7 +245,10 @@ export class layout implements OnInit, OnDestroy {
       '/dpr-approval': 'DPR Approval Management',
       '/chat': 'Internal Communications',
       '/my-task': 'My Task Management',
-      '/my-logged-hours': 'Log History'
+      '/my-logged-hours': 'Log History',
+      '/notice-management': 'Communication Master',
+      '/hod-master': 'HOD Master',
+      '/employee-master': 'Employee Master'
     };
 
     return routeTitles[this.currentRoute] || 'Dashboard';
@@ -379,6 +387,14 @@ export class layout implements OnInit, OnDestroy {
     return this.currentRoute.includes('/exit-form');
   }
 
+  toggleFormServicesMenu() {
+    this.isFormServicesMenuOpen = !this.isFormServicesMenuOpen;
+  }
+
+  isFormServicesRouteActive(): boolean {
+    return this.currentRoute.includes('/exit-form') || this.currentRoute.includes('/rejoining-form');
+  }
+
   toggleMPRMenu() {
     this.isMPRMenuOpen = !this.isMPRMenuOpen;
   }
@@ -424,6 +440,14 @@ export class layout implements OnInit, OnDestroy {
            this.currentRoute.includes('/approvals');
   }
 
+  toggleSystemMasterMenu() {
+    this.isSystemMasterMenuOpen = !this.isSystemMasterMenuOpen;
+  }
+
+  isSystemMasterRouteActive(): boolean {
+    return this.currentRoute.includes('/notice-management') || this.currentRoute.includes('/hod-master') || this.currentRoute.includes('/employee-master');
+  }
+
   // Update menu states based on current route
   updateMenuStatesBasedOnRoute(): void {
     // Auto-open MPR menu if on MPR-related routes
@@ -435,6 +459,11 @@ export class layout implements OnInit, OnDestroy {
     if (this.isDPRRouteActive()) {
       this.isDPRMenuOpen = true;
     }
+
+    // Auto-open Form Services menu if on form-related routes
+    if (this.isFormServicesRouteActive()) {
+      this.isFormServicesMenuOpen = true;
+    }
     
     // Auto-open Exit Form menu if on exit form routes
     if (this.isExitFormRouteActive()) {
@@ -444,6 +473,11 @@ export class layout implements OnInit, OnDestroy {
     // Auto-open Approvals menu if on approval routes (future)
     if (this.isApprovalsRouteActive()) {
       this.isApprovalsMenuOpen = true;
+    }
+
+    // Auto-open System Master menu if on system master routes
+    if (this.isSystemMasterRouteActive()) {
+      this.isSystemMasterMenuOpen = true;
     }
   }
 
@@ -614,7 +648,9 @@ export class layout implements OnInit, OnDestroy {
             message: notification.message,
             time: this.formatNotificationTime(notification.createdAt),
             isRead: notification.isRead,
-            link: notification.link
+            link: notification.link,
+            isNotice: notification.isNotice,
+            noticeID: notification.noticeID
           }));
 
           // Add notifications one by one with animation delay for better UX
@@ -659,6 +695,21 @@ export class layout implements OnInit, OnDestroy {
   }
 
   // Navigate to notification link if available
+  openNoticeFromNotification(notification: any, event?: Event) {
+    if (event) event.stopPropagation();
+    this.showNotifications = false;
+    const userId = this.userSession?.empId ?? '';
+    this.api.getUserNotices(userId, notification.noticeID, 'N').subscribe({
+      next: (res: any) => {
+        const list: any[] = Array.isArray(res?.data) ? res.data : [];
+        if (list.length > 0) {
+          this.noticePopupService.showNotice(list[0]);
+        }
+      },
+      error: () => {}
+    });
+  }
+
   navigateToNotification(notification: any, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -814,7 +865,7 @@ export class layout implements OnInit, OnDestroy {
 
   // Helper method to get appropriate icon based on notification type
   private getNotificationIcon(title: string): string {
-    const titleLower = title.toLowerCase();
+    const titleLower = (title ?? '').toLowerCase();
 
     if (titleLower.includes('approved') || titleLower.includes('success')) {
       return 'fas fa-check-circle text-success';

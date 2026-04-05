@@ -16,7 +16,7 @@ export interface UserSession {
 })
 export class AuthService {
   private readonly SESSION_KEY = 'user_session';
-  private readonly SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+  private readonly SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours (1 day) in milliseconds
   private readonly ACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes (1 hour) of inactivity
   
   private sessionSubject = new BehaviorSubject<UserSession | null>(null);
@@ -226,7 +226,6 @@ export class AuthService {
     return Date.now() - session.lastActivity;
   }
 
-  // Clean up URL parameters to prevent 431 errors
   public cleanupUrlParameters(): void {
     const url = new URL(window.location.href);
     const allowedParams = ['returnUrl', 'sessionExpired', 'inactivity', 'unauthorized'];

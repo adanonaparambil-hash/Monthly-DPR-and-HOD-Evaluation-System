@@ -4,10 +4,10 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
-import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails } from '../models/common.model';
+import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
-import { TaskSaveDto,DeleteTaskRequest,TaskTimerActionDto,TaskCommentDto,ToggleFavouriteCategoryRequest,TaskCategoryRequest,UserBreakRequest,TaskFieldMappingRequest,TaskBulkApprovalRequest,UserDailyLogHistoryRequest ,CustomFieldDtolist,DecreaseTimeLogRequest,UserTaskDayLogHistoryRequest} from '../models/TimeSheetDPR.model';
+import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, CustomFieldDtolist, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
 
 
 @Injectable({
@@ -199,6 +199,10 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetDepartmentList`);
   }
 
+  GetDepartmentListForNotice(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetDepartmentList`);
+  }
+
 
   GetTodaysBirthdaysAndQuotes(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetTodaysBirthdaysAndQuotes`);
@@ -242,9 +246,10 @@ export class Api {
   //-------------------------------- TimeSheet --------------------------------
 
 
-   /* ===================== CUSTOM FIELDS ===================== */
+  /* ===================== CUSTOM FIELDS ===================== */
 
-  getCustomFields(userid: string): Observable<any> { return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetCustomFields/${userid}`);
+  getCustomFields(userid: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetCustomFields/${userid}`);
   }
 
   /* ===================== TASK ===================== */
@@ -393,14 +398,14 @@ export class Api {
 
 
   getUserDailyLogHistory(request: UserDailyLogHistoryRequest) {
-        return this.http.post<any>(`${this.apiUrl}/DailyTimeSheet/GetUserDailyLogHistory`,request);
+    return this.http.post<any>(`${this.apiUrl}/DailyTimeSheet/GetUserDailyLogHistory`, request);
   }
 
- 
+
   getOpenBreaks(request: any): Observable<any> {
-   return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request);
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request);
   }
-  
+
 
   getByDepartment(departmentId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetByDepartment/${departmentId}`);
@@ -408,7 +413,7 @@ export class Api {
 
 
 
-  
+
   getAllFieldsAsync(departmentId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAllFieldsAsync/${departmentId}`);
   }
@@ -420,9 +425,9 @@ export class Api {
 
 
   exportUserDailyLogHistory(request: UserDailyLogHistoryRequest) {
-      return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportUserDailyLogHistory`, request, {
-          responseType: 'blob' 
-      });
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportUserDailyLogHistory`, request, {
+      responseType: 'blob'
+    });
   }
 
 
@@ -435,7 +440,7 @@ export class Api {
   }
 
 
-  
+
   GetAutoClosedTaskCount(userId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAutoClosedTaskCount/${userId}`);
   }
@@ -453,9 +458,47 @@ export class Api {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/DeleteCustomField`, { fieldId, userId });
   }
 
-  
+
+  saveNotice(request: NoticeSaveDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/SaveNotice`, request);
+  }
+
+  getUserNotices(userId: string, noticeId: number = 0, isOnLoad: string = 'Y'): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetUserNotices?userId=${userId}&noticeId=${noticeId}&IsOnLoad=${isOnLoad}`);
+  }
+
+  getNoticeById(noticeId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetNoticeById?noticeId=${noticeId}`);
+  }
+
+  getNoticesPaged(request: NoticePagedRequestDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/GetNoticesPaged`, request);
+  }
+
+  markNoticeAsRead(noticeId: number, userId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/MarkAsReadNotice`, { noticeId, userId });
+  }
+
+  deleteNotice(noticeId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/DeleteNotice?NoticeId=${noticeId}`);
+  }
+
+  saveHodMaster(request: HodMasterRequestDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/SaveHodMaster`, request);
+  }
 
 
+  getHodMaster(employeeName: string = '', department: string = ''): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetHodMaster?employeeName=${employeeName}&department=${department}`);
+  }
+
+  getEmployeeList(empName: string = '', department: string = '', designation: string = '', pageNo: number = 1, pageSize: number = 500): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetEmployeeList?empName=${empName}&department=${department}&designation=${designation}&pageNo=${pageNo}&pageSize=${pageSize}`);
+  }
+
+  getEmployeeMasterList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
+  }
 
 }
 

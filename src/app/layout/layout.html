@@ -1,6 +1,8 @@
 <div class="layout-container" [class.dark-theme]="isDarkMode" [class.sidebar-collapsed]="sidebarCollapsed">
   <!-- Session Monitor -->
   <app-session-monitor></app-session-monitor>
+  <!-- Notice Popup -->
+  <app-notice-popup></app-notice-popup>
   <!-- Sidebar -->
   <aside class="sidebar" [class.dpr-only-mode]="isDPROnlyMode">
     <div class="logo">
@@ -97,10 +99,51 @@
         <i class="fas fa-comments"></i> Chat
       </a>
 
-      <!-- Exit Form Menu - Single Item (hidden in DPR-only mode) -->
-      <a routerLink="/exit-form" routerLinkActive="active" *ngIf="!isDPROnlyMode" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-plane-departure"></i> Exit Form
-      </a>
+      <!-- Form Services Menu with Sub-items (hidden in DPR-only mode) -->
+      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
+        <a class="parent-menu" (click)="toggleFormServicesMenu()" [class.active]="isFormServicesRouteActive()">
+          <div class="menu-content">
+            <i class="fas fa-file-alt"></i>
+            <span>Form Services</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isFormServicesMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isFormServicesMenuOpen" [@slideDown]>
+          <a routerLink="/exit-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-plane-departure"></i>
+            <span>Exit Form</span>
+          </a>
+          <a routerLink="/rejoining-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-user-plus"></i>
+            <span>Rejoining Form</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- System Master Menu with Sub-items (hidden in DPR-only mode) -->
+      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode && (isHod || isCed)">
+        <a class="parent-menu" (click)="toggleSystemMasterMenu()" [class.active]="isSystemMasterRouteActive()">
+          <div class="menu-content">
+            <i class="fas fa-cogs"></i>
+            <span>System Master</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isSystemMasterMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isSystemMasterMenuOpen" [@slideDown]>
+          <a routerLink="/notice-management" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-bell"></i>
+            <span>Communication Master</span>
+          </a>
+          <a *ngIf="isHod" routerLink="/hod-master" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-user-tie"></i>
+            <span>HOD Master</span>
+          </a>
+          <a routerLink="/employee-master" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-users"></i>
+            <span>Employee Master</span>
+          </a>
+        </div>
+      </div>
 
       <!-- Profile Menu - Keep as is (hidden in DPR-only mode) -->
       <a routerLink="/profile" routerLinkActive="active" *ngIf="!isDPROnlyMode" (click)="closeSidebarOnMobile()">
@@ -175,13 +218,19 @@
 
               <!-- Notifications -->
               <div class="notification-item" *ngFor="let notification of notifications; trackBy: trackNotificationById"
-                [class.unread]="!notification.isRead" [@slideDown]>
-                <div class="notification-icon">
-                  <i [class]="notification.icon"></i>
+                [class.unread]="!notification.isRead"
+                [class.notice-item]="notification.isNotice === 'Y' && notification.noticeID !== 0"
+                [@slideDown]>
+                <div class="notification-icon" [class.notice-icon]="notification.isNotice === 'Y' && notification.noticeID !== 0">
+                  <i [class]="notification.isNotice === 'Y' && notification.noticeID !== 0 ? 'fas fa-bullhorn' : notification.icon"></i>
                 </div>
-                <div class="notification-content" (click)="navigateToNotification(notification, $event)">
+                <div class="notification-content"
+                  (click)="notification.isNotice === 'Y' && notification.noticeID !== 0 ? openNoticeFromNotification(notification, $event) : navigateToNotification(notification, $event)">
                   <p>{{ notification.message }}</p>
                   <span class="notification-time">{{ notification.time }}</span>
+                  <span class="notice-tag-pill" *ngIf="notification.isNotice === 'Y' && notification.noticeID !== 0">
+                    <i class="fas fa-bullhorn"></i> Notice
+                  </span>
                 </div>
                 <div class="notification-actions-item">
                   <button *ngIf="!notification.isRead" class="mark-read-btn"

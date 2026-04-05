@@ -9,11 +9,15 @@ import { HodDashboard } from './hod-dashboard/hod-dashboard';
 import { CedDashboard } from './ced-dashboard/ced-dashboard';
 import { CedDashboardNewComponent } from './ced-dashboard-new/ced-dashboard-new.component';
 import { EmergencyExitFormComponent } from './emergency-exit-form/emergency-exit-form.component';
+import { RejoiningForm } from './rejoining-form/rejoining-form';
 import { LeaveApprovalComponent } from './leave-approval/leave-approval.component';
 import { DprApprovalComponent } from './dpr-approval/dpr-approval.component';
 import { ChatComponent } from './chat/chat.component';
 import { MyTaskComponent } from './my-task/my-task.component';
 import { MyLoggedHoursComponent } from './my-logged-hours/my-logged-hours';
+import { NoticeManagementComponent } from './notice-management/notice-management.component';
+import { HodMasterComponent } from './hod-master/hod-master.component';
+import { EmployeeMasterComponent } from './employee-master/employee-master.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
@@ -41,11 +45,15 @@ export const routes: Routes = [
       { path: 'past-reports', component: PastReportsComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'exit-form', component: EmergencyExitFormComponent },
+      { path: 'rejoining-form', component: RejoiningForm },
       { path: 'leave-approval', component: LeaveApprovalComponent },
       { path: 'dpr-approval', component: DprApprovalComponent },
       { path: 'chat', component: ChatComponent },
       { path: 'my-task', component: MyTaskComponent },
       { path: 'my-logged-hours', component: MyLoggedHoursComponent },
+      { path: 'notice-management', component: NoticeManagementComponent },
+      { path: 'hod-master', component: HodMasterComponent },
+      { path: 'employee-master', component: EmployeeMasterComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

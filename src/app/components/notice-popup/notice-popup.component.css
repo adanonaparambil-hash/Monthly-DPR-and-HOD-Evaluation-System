@@ -1,0 +1,295 @@
+/* ===== OVERLAY ===== */
+.notice-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 23, 0.72);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ===== CARD ===== */
+.notice-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 640px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 20px 60px rgba(2,8,23,0.4),
+    0 4px 16px rgba(2,8,23,0.2);
+  animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cardIn {
+  from { transform: translateY(44px) scale(0.94); opacity: 0; }
+  to   { transform: translateY(0) scale(1);       opacity: 1; }
+}
+
+/* ===== HEADER — rich teal/slate ===== */
+.notice-header {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 40%, #134e4a 100%);
+  padding: 26px 28px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle animated shine */
+.notice-header::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 60%;
+  height: 200%;
+  background: rgba(255,255,255,0.06);
+  transform: skewX(-25deg);
+  animation: shine 5s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0%   { left: -20%; }
+  100% { left: 130%; }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Bell with ring */
+.bell-wrap {
+  width: 52px;
+  height: 52px;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #ffffff;
+  flex-shrink: 0;
+  animation: bellRing 3s ease-in-out infinite;
+}
+
+@keyframes bellRing {
+  0%, 65%, 100% { transform: rotate(0deg); }
+  70%  { transform: rotate(16deg); }
+  75%  { transform: rotate(-14deg); }
+  80%  { transform: rotate(10deg); }
+  85%  { transform: rotate(-6deg); }
+  90%  { transform: rotate(3deg); }
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  position: relative;
+  z-index: 1;
+}
+
+.official-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.priority-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.priority-chip.priority-high   { background: rgba(254,202,202,0.25); color: #fecaca; border: 1px solid rgba(254,202,202,0.3); }
+.priority-chip.priority-medium { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); }
+.priority-chip.priority-low    { background: rgba(167,243,208,0.2);  color: #a7f3d0; border: 1px solid rgba(167,243,208,0.3); }
+
+.counter-chip {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.9);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== TITLE ===== */
+.notice-title-wrap {
+  padding: 24px 28px 4px;
+}
+
+.notice-title {
+  font-size: 25px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+}
+
+/* ===== CONTENT with animated left bar ===== */
+.notice-content-block {
+  display: flex;
+  margin: 18px 28px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+}
+
+.content-bar {
+  width: 5px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #0d9488, #134e4a, #0d9488);
+  background-size: 100% 300%;
+  animation: barFlow 3s ease-in-out infinite;
+}
+
+@keyframes barFlow {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.notice-content {
+  padding: 16px 18px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #1e293b;
+  max-height: 220px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.notice-content::-webkit-scrollbar { width: 4px; }
+.notice-content::-webkit-scrollbar-thumb { background: #0d9488; border-radius: 4px; }
+
+.notice-content * {
+  -webkit-text-fill-color: unset !important;
+  max-width: 100%;
+}
+
+/* ===== META ===== */
+.notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 28px 18px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 5px 13px;
+  border-radius: 20px;
+}
+
+.meta-item i { color: #0d9488; font-size: 11px; }
+
+.meta-expiry {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+.meta-expiry i { color: #f97316; }
+
+/* ===== PROGRESS DOTS ===== */
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 28px 16px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dot-active {
+  background: linear-gradient(90deg, #0d9488, #134e4a);
+  width: 26px;
+  border-radius: 4px;
+}
+
+/* ===== FOOTER ===== */
+.notice-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 28px 22px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-dismiss {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-dismiss:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.btn-read {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 14px rgba(13,148,136,0.4);
+}
+
+.btn-read:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(13,148,136,0.5);
+}

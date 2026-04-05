@@ -1,3 +1,4 @@
+import { NumberSymbol } from "@angular/common";
 
 
 export interface ServiceResponse<T> {
@@ -109,4 +110,52 @@ export interface ExitEmpProfileDetails {
   postOffice?: string;
   nationality?: string;
   telephoneNo?: string;
+}
+
+export interface NoticeSaveDto {
+  noticeId?: number;         
+  title: string;
+  content: string;
+  startDate?: Date;
+  expiryDate?: Date;
+  priority: string;           
+  showOnLogin: string;        
+  createdBy: string;
+  isactive? : string;
+  targetType: string;         
+  targetIds?: string[];    
+  targetDeptId?: number[];        
+}
+
+export interface NoticePagedRequestDto {
+  pageStart?: number;
+  pageEnd?: number;
+  startDate?: Date;
+  expiryDate?: Date;
+  status?: string;
+  priority?: string;
+}
+
+
+export interface HodMasterRequestDto {
+  id?: number;
+  empId: string;
+  employeeName: string;
+  department: string;
+  designation: string;
+  isActive: string;
+  createdBy: string;
+}
+
+export interface HodMasterDto {
+  id: number;
+  empId: string;
+  employeeName: string;
+  department: string;
+  designation: string;
+  isActive: string;
+  isCed: string;
+  psDeptMasterId: string;
+  psProfMasterId: string;
+  profileImageBase64?: string;
 }

@@ -1,0 +1,279 @@
+<div class="hod-master-container">
+
+  <!-- Filter Section -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label class="filter-label">Employee Name</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" class="filter-input" placeholder="Search by name..." [(ngModel)]="filterName" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Department</label>
+        <div class="input-wrapper">
+          <i class="fas fa-building input-icon"></i>
+          <select class="filter-input filter-select" [(ngModel)]="filterDepartment">
+            <option value="">All Departments</option>
+            <option *ngFor="let dept of departmentList" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="search-btn" (click)="onSearch()">
+          <i class="fas fa-search"></i>
+          Search
+        </button>
+        <button class="add-btn" (click)="openCreateModal()">
+          <i class="fas fa-plus"></i>
+          Add HOD
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOD Listing Table -->
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="hod-table">
+        <thead>
+          <tr>
+            <th class="col-no">#</th>
+            <th class="col-empid">Emp ID</th>
+            <th>HOD Name</th>
+            <th>Department</th>
+            <th class="col-status">Status</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loading Row -->
+          <tr *ngIf="isLoading">
+            <td colspan="6" class="state-cell">
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <span>Loading HOD records...</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <tr *ngFor="let hod of hodList; let i = index" class="table-row">
+            <td class="col-no">
+              <span class="row-num">{{ i + 1 }}</span>
+            </td>
+            <td class="col-empid">
+              <span class="emp-id-badge">{{ hod.empId }}</span>
+            </td>
+            <td>
+              <div class="employee-cell">
+                <div class="avatar-wrap">
+                  <img
+                    *ngIf="hod.profileImageBase64"
+                    [src]="getProfileImage(hod)"
+                    [alt]="hod.employeeName"
+                    class="avatar-img"
+                    (error)="hod.profileImageBase64 = ''"
+                  />
+                  <div
+                    *ngIf="!hod.profileImageBase64"
+                    class="avatar"
+                    [style.background]="getAvatarColor(hod.employeeName)"
+                  >
+                    {{ getInitials(hod.employeeName) }}
+                  </div>
+                </div>
+                <div class="employee-info">
+                  <span class="employee-name">{{ hod.employeeName }}</span>
+                  <span class="employee-designation">{{ hod.designation }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="dept-badge">{{ hod.department }}</span>
+            </td>
+            <td class="col-status">
+              <span [class]="isActiveStatus(hod.isActive) ? 'status-badge active' : 'status-badge inactive'">
+                <i class="fas fa-circle"></i>
+                {{ isActiveStatus(hod.isActive) ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="col-actions">
+              <button class="edit-btn" (click)="openEditModal(hod)" title="Edit HOD">
+                <i class="fas fa-pencil-alt"></i>
+              </button>
+            </td>
+          </tr>
+
+          <!-- No Data Row -->
+          <tr *ngIf="!isLoading && hodList.length === 0">
+            <td colspan="6" class="state-cell">
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <i class="fas fa-user-tie"></i>
+                </div>
+                <p class="empty-title">No HOD records found</p>
+                <p class="empty-subtitle">Try adjusting your search filters</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Edit Modal Overlay -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <div class="modal-avatar-wrap" *ngIf="!isCreateMode && selectedHod">
+          <img
+            *ngIf="selectedHod.profileImageBase64"
+            [src]="getProfileImage(selectedHod)"
+            [alt]="selectedHod.employeeName"
+            class="modal-avatar-img"
+            (error)="selectedHod.profileImageBase64 = ''"
+          />
+          <div
+            *ngIf="!selectedHod.profileImageBase64"
+            class="modal-avatar"
+            [style.background]="getAvatarColor(selectedHod.employeeName)"
+          >
+            {{ getInitials(selectedHod.employeeName) }}
+          </div>
+        </div>
+        <div *ngIf="isCreateMode" class="modal-avatar-wrap">
+          <ng-container *ngIf="isLoadingProfile">
+            <div class="modal-avatar" style="background:#f1f5f9">
+              <i class="fas fa-spinner fa-spin" style="font-size:18px;color:#138271"></i>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="!isLoadingProfile && createProfileImage">
+            <img [src]="'data:image/jpeg;base64,' + createProfileImage" class="modal-avatar-img" alt="Profile" (error)="createProfileImage = null" />
+          </ng-container>          <ng-container *ngIf="!isLoadingProfile && !createProfileImage">
+            <div class="modal-avatar" [style.background]="createEmpName ? getAvatarColor(createEmpName) : 'linear-gradient(135deg,#1B2A38,#138271)'">
+              <span *ngIf="createEmpName">{{ getInitials(createEmpName) }}</span>
+              <i *ngIf="!createEmpName" class="fas fa-user-plus" style="font-size:20px"></i>
+            </div>
+          </ng-container>
+        </div>
+        <div>
+          <h3 class="modal-title">{{ isCreateMode ? 'Create New HOD' : 'Edit HOD' }}</h3>
+          <p class="modal-subtitle" *ngIf="!isCreateMode && selectedHod">{{ selectedHod.employeeName }}</p>
+          <p class="modal-subtitle" *ngIf="isCreateMode">Fill in the details below</p>
+        </div>
+      </div>
+      <button class="modal-close-btn" (click)="closeEditModal()" title="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body — Edit Mode -->
+    <div class="modal-body" *ngIf="!isCreateMode && selectedHod">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Employee Name</label>
+          <input type="text" class="form-input readonly" [value]="selectedHod.employeeName" readonly />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emp ID</label>
+          <input type="text" class="form-input readonly" [value]="selectedHod.empId" readonly />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <select class="form-select" [(ngModel)]="selectedDepartment" [disabled]="departmentList.length === 0">
+            <option value="" disabled>{{ departmentList.length === 0 ? 'Loading departments…' : 'Select department' }}</option>
+            <option *ngFor="let dept of departmentList" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Designation</label>
+          <input type="text" class="form-input readonly" [value]="selectedHod.designation" readonly />
+        </div>
+      </div>
+      <div class="form-group status-group">
+        <label class="form-label">Status</label>
+        <div class="status-toggle">
+          <button class="toggle-btn" [class.active]="isActiveStatus(selectedHod.isActive)" (click)="selectedHod.isActive = 'Y'">
+            <i class="fas fa-check-circle"></i> Active
+          </button>
+          <button class="toggle-btn" [class.inactive]="!isActiveStatus(selectedHod.isActive)" (click)="selectedHod.isActive = 'N'">
+            <i class="fas fa-times-circle"></i> Inactive
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Body — Create Mode -->
+    <div class="modal-body" *ngIf="isCreateMode">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Employee Name <span class="req">*</span></label>
+          <div class="emp-search-wrapper">
+            <input
+              type="text"
+              class="emp-search-input"
+              placeholder="Search employee..."
+              [(ngModel)]="empSearchText"
+              (focus)="onEmpSearchFocus()"
+              (blur)="onEmpSearchBlur()"
+              autocomplete="off"
+            />
+            <i class="fas fa-search emp-search-icon"></i>
+            <div class="emp-dropdown-list" *ngIf="showEmpDropdown">
+              <div *ngIf="filteredEmpList.length === 0" class="emp-dropdown-empty">No employees found</div>
+              <div
+                *ngFor="let emp of filteredEmpList"
+                class="emp-dropdown-item"
+                (mousedown)="selectEmployee(emp)"
+              >{{ emp.description }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emp ID</label>
+          <input type="text" class="form-input readonly" [value]="createEmpId" disabled placeholder="Auto-filled" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Designation</label>
+          <input type="text" class="form-input readonly" [value]="createDesignation" disabled placeholder="Auto-filled" />
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label class="form-label">Department <span class="req">*</span></label>
+          <select class="form-select" [(ngModel)]="selectedDepartment" [disabled]="departmentList.length === 0">
+            <option value="">{{ departmentList.length === 0 ? 'Loading departments…' : 'Select department' }}</option>
+            <option *ngFor="let dept of departmentList" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group status-group">
+        <label class="form-label">Status</label>
+        <div class="status-toggle">
+          <button class="toggle-btn" [class.active]="createIsActive === 'Y'" (click)="createIsActive = 'Y'">
+            <i class="fas fa-check-circle"></i> Active
+          </button>
+          <button class="toggle-btn" [class.inactive]="createIsActive === 'N'" (click)="createIsActive = 'N'">
+            <i class="fas fa-times-circle"></i> Inactive
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeEditModal()">Cancel</button>
+      <button class="btn-save" (click)="onSave()" [disabled]="isSaving">
+        <i class="fas fa-save" *ngIf="!isSaving"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        {{ isSaving ? 'Saving...' : (isCreateMode ? 'Create HOD' : 'Save Changes') }}
+      </button>
+    </div>
+
+  </div>
+</div>

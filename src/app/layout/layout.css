@@ -2692,3 +2692,29 @@ gout button disabled state */
     font-size: 13px;
   }
 }
+
+/* Notice items in notification dropdown */
+.notification-item.notice-item {
+  border-left: 3px solid #138271;
+  background: linear-gradient(135deg, #f0fdf9, #ffffff);
+}
+
+.notification-icon.notice-icon {
+  background: linear-gradient(135deg, #138271, #0f5f50);
+  color: white;
+}
+
+.notice-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

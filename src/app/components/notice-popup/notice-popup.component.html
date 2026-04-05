@@ -1,0 +1,61 @@
+<div class="notice-overlay" *ngIf="showPopup && current">
+  <div class="notice-card">
+
+    <!-- Header -->
+    <div class="notice-header">
+      <div class="header-left">
+        <div class="bell-wrap">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="header-titles">
+          <span class="official-label">OFFICIAL NOTICE</span>
+          <span class="priority-chip" [ngClass]="getPriorityClass(current.priority)">
+            {{ current.priority }} Priority
+          </span>
+        </div>
+      </div>
+      <span class="counter-chip" *ngIf="totalCount > 1">{{ currentIndex + 1 }} / {{ totalCount }}</span>
+    </div>
+
+    <!-- Title -->
+    <div class="notice-title-wrap">
+      <h2 class="notice-title">{{ current.title }}</h2>
+    </div>
+
+    <!-- Content with animated left bar -->
+    <div class="notice-content-block">
+      <div class="content-bar"></div>
+      <div class="notice-content" [innerHTML]="current.content"></div>
+    </div>
+
+    <!-- Meta — only createdBy and expiry -->
+    <div class="notice-meta">
+      <div class="meta-item" *ngIf="current.createdBy">
+        <i class="fas fa-user-tie"></i>
+        <span>{{ current.createdBy }}</span>
+      </div>
+      <div class="meta-item meta-expiry" *ngIf="current.expiryDate">
+        <i class="fas fa-hourglass-half"></i>
+        <span>Expires {{ current.expiryDate | date:'dd MMM yyyy' }}</span>
+      </div>
+    </div>
+
+    <!-- Progress dots -->
+    <div class="progress-dots" *ngIf="totalCount > 1">
+      <span class="dot" *ngFor="let n of notices; let i = index"
+            [class.dot-active]="i === currentIndex"></span>
+    </div>
+
+    <!-- Footer -->
+    <div class="notice-footer">
+      <button class="btn-dismiss" (click)="close()">
+        {{ totalCount > 1 && currentIndex < totalCount - 1 ? 'Skip' : 'Dismiss' }}
+      </button>
+      <button class="btn-read" (click)="markAsRead()">
+        <i class="fas fa-check-circle"></i>
+        {{ totalCount > 1 && currentIndex < totalCount - 1 ? 'Mark & Next' : 'Mark as Read' }}
+      </button>
+    </div>
+
+  </div>
+</div>
