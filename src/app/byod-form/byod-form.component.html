@@ -1,0 +1,533 @@
+<div class="byod-wrap">
+
+  <!-- ── Success Overlay ─────────────────────────────────── -->
+  <div class="byod-overlay" *ngIf="submitSuccess">
+    <div class="byod-success-card">
+      <div class="byod-success-ring"><i class="fas fa-check"></i></div>
+      <h2>Application Submitted!</h2>
+      <p>Your BYOD advance request has been submitted. The IT Department will review and process your application.</p>
+      <div class="byod-success-meta">
+        <span><i class="fas fa-file-alt"></i> Form No: ATC/IT/FORMS/BYOD/001</span>
+        <span><i class="fas fa-calendar"></i> {{ getCurrentDate() }}</span>
+      </div>
+      <button class="byod-btn byod-btn-primary" (click)="reset()">
+        <i class="fas fa-plus"></i> New Application
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Hero Banner ─────────────────────────────────────── -->
+  <div class="byod-hero">
+    <div class="byod-hero-bg"></div>
+    <div class="byod-hero-content">
+      <div class="byod-hero-icon"><i class="fas fa-laptop"></i></div>
+      <div class="byod-hero-text">
+        <p class="byod-hero-eyebrow">BYOD Policy — Bring Your Own Device</p>
+        <h1 class="byod-hero-title">Application For Advance Amount</h1>
+        <p class="byod-hero-sub">Notebook Computer Advance Request &nbsp;|&nbsp; Form No: ATC/IT/FORMS/BYOD/001</p>
+      </div>
+      <div class="byod-hero-chips">
+        <div class="byod-chip">
+          <span class="byod-chip-label">Advance</span>
+          <span class="byod-chip-val">OMR 300/-</span>
+        </div>
+        <div class="byod-chip">
+          <span class="byod-chip-label">Period</span>
+          <span class="byod-chip-val">5 Years</span>
+        </div>
+        <div class="byod-chip byod-chip-live">
+          <span class="byod-pulse-dot"></span> Active Policy
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="byodForm" (ngSubmit)="onSubmit()">
+
+    <!-- ── Two-column layout: LEFT = form + policy, RIGHT = approvals ── -->
+    <div class="byod-grid-layout">
+
+      <!-- ════════ LEFT COLUMN ════════ -->
+      <div class="byod-col-main">
+
+        <!-- Section label: Application Form -->
+        <div class="byod-section-label byod-anim-1">
+          <i class="fas fa-file-signature"></i> Application Form
+        </div>
+
+        <!-- Employee Details -->
+        <div class="byod-card byod-anim-2">
+          <div class="byod-card-head">
+            <div class="byod-card-icon byod-ci-navy"><i class="fas fa-user-tie"></i></div>
+            <div>
+              <h3 class="byod-card-title">Employee Details</h3>
+              <p class="byod-card-sub">Personal &amp; employment information</p>
+            </div>
+          </div>
+          <div class="byod-card-body">
+            <!-- Live employee preview -->
+            <div class="byod-emp-row">
+              <!-- Loading skeleton -->
+              <ng-container *ngIf="isLoadingProfile">
+                <div class="byod-emp-avatar byod-emp-avatar-skeleton"></div>
+                <div class="byod-emp-meta">
+                  <span class="byod-skeleton byod-skeleton-name"></span>
+                  <span class="byod-skeleton byod-skeleton-id"></span>
+                  <span class="byod-skeleton byod-skeleton-dept"></span>
+                </div>
+              </ng-container>
+              <!-- Loaded profile -->
+              <ng-container *ngIf="!isLoadingProfile">
+                <div class="byod-emp-avatar">
+                  <img *ngIf="profileImageSrc" [src]="profileImageSrc" alt="Profile" class="byod-emp-img">
+                  <i *ngIf="!profileImageSrc" class="fas fa-user"></i>
+                  <span class="byod-emp-avatar-dot"></span>
+                </div>
+                <div class="byod-emp-meta">
+                  <span class="byod-emp-name">{{ profile?.employeeName || byodForm.get('name')?.value || 'Employee Name' }}</span>
+                  <span class="byod-emp-id">
+                    <i class="fas fa-id-badge"></i> {{ profile?.empId || '—' }}
+                    &nbsp;·&nbsp;
+                    <i class="fas fa-briefcase"></i> {{ profile?.designation || '—' }}
+                  </span>
+                  <span class="byod-emp-dept"><i class="fas fa-building"></i> {{ profile?.department || '—' }}</span>
+                  <span class="byod-emp-contact" *ngIf="profile?.email">
+                    <i class="fas fa-envelope"></i> {{ profile?.email }}
+                  </span>
+                  <span class="byod-emp-contact" *ngIf="profile?.phone">
+                    <i class="fas fa-phone"></i> {{ profile?.phone }}
+                  </span>
+                </div>
+              </ng-container>
+            </div>
+            <div class="byod-form-grid">
+              <div class="byod-field">
+                <label class="byod-label">ID No</label>
+                <div class="byod-input-wrap">
+                  <i class="fas fa-id-badge byod-input-icon"></i>
+                  <input type="text" formControlName="idNo" class="byod-input byod-input-disabled" [attr.disabled]="true">
+                </div>
+              </div>
+              <div class="byod-field">
+                <label class="byod-label">Full Name</label>
+                <div class="byod-input-wrap">
+                  <i class="fas fa-user byod-input-icon"></i>
+                  <input type="text" formControlName="name" class="byod-input byod-input-disabled" [attr.disabled]="true">
+                </div>
+              </div>
+              <div class="byod-field">
+                <label class="byod-label">Date of Joining</label>
+                <div class="byod-input-wrap">
+                  <i class="fas fa-calendar-alt byod-input-icon"></i>
+                  <input type="date" formControlName="doj" class="byod-input byod-input-disabled" [attr.disabled]="true">
+                </div>
+              </div>
+              <div class="byod-field">
+                <label class="byod-label">Department</label>
+                <div class="byod-input-wrap">
+                  <i class="fas fa-building byod-input-icon"></i>
+                  <input type="text" formControlName="department" class="byod-input byod-input-disabled" [attr.disabled]="true">
+                </div>
+              </div>
+              <div class="byod-field">
+                <label class="byod-label">Designation</label>
+                <div class="byod-input-wrap">
+                  <i class="fas fa-briefcase byod-input-icon"></i>
+                  <input type="text" formControlName="designation" class="byod-input byod-input-disabled" [attr.disabled]="true">
+                </div>
+              </div>
+              <!-- HOD Selection -->
+              <div class="byod-field">
+                <label class="byod-label">HOD (Head of Department) <span class="byod-req">*</span></label>
+                <div class="byod-input-wrap">
+                  <i class="fas fa-user-tie byod-input-icon"></i>
+                  <select formControlName="hodId" class="byod-input byod-select" [class.byod-input-err]="isInvalid('hodId')">
+                    <option value="" disabled selected>
+                      {{ isLoadingHods ? 'Loading HODs…' : 'Select HOD' }}
+                    </option>
+                    <option *ngFor="let hod of hodList" [value]="hod.idValue">
+                      {{ hod.description }}
+                    </option>
+                  </select>
+                  <i class="fas fa-chevron-down byod-select-arrow"></i>
+                </div>
+                <span class="byod-err" *ngIf="isInvalid('hodId')"><i class="fas fa-exclamation-circle"></i> HOD selection is required</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advance Request -->
+        <div class="byod-card byod-anim-3">
+          <div class="byod-card-head">
+            <div class="byod-card-icon byod-ci-teal"><i class="fas fa-money-bill-wave"></i></div>
+            <div>
+              <h3 class="byod-card-title">Advance Request</h3>
+              <p class="byod-card-sub">BYOD notebook computer advance details</p>
+            </div>
+          </div>
+          <div class="byod-card-body">
+            <div class="byod-amount-banner">
+              <div class="byod-amount-left">
+                <div class="byod-amount-icon"><i class="fas fa-coins"></i></div>
+                <div>
+                  <span class="byod-amount-label">Advance Amount</span>
+                  <span class="byod-amount-val">OMR 300/-</span>
+                  <span class="byod-amount-note">For 5-year period as per company policy</span>
+                </div>
+              </div>
+              <div class="byod-amount-badge"><i class="fas fa-check-circle"></i> Approved Policy</div>
+            </div>
+            <div class="byod-request-text">
+              I hereby request the company to provide me with an advance amount of <strong>OMR 300/-</strong> towards
+              the cost of equipment and maintenance / Service expenses of Notebook computer for a period of
+              <strong>5 years</strong> as per company policy to meet the official assignments entrusted to me.
+              I hereby undertake that I will be submitting the invoice copy of the new laptop for company records
+              immediately after purchase <strong>(within 15 days from the date of receipt of the amount)</strong>.
+            </div>
+            <div class="byod-alert byod-alert-orange">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Employee must provide a copy of purchase bill of Notebook with software <strong>within 2 days of purchase</strong>.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section label: IT Policy & Terms (directly under Advance Request) -->
+        <div class="byod-section-label byod-anim-4">
+          <i class="fas fa-shield-alt"></i> IT Policy &amp; Terms &amp; Conditions
+        </div>
+
+        <!-- Policy Intro -->
+        <div class="byod-policy-intro-card byod-anim-5">
+          <i class="fas fa-info-circle"></i>
+          <p>Requested adherence of Company's IT Policy, Terms &amp; Conditions are detailed below. The Minimum Specification requirement of Notebook computer to be configured in <strong>Adrak Domain</strong> is as follows:</p>
+        </div>
+
+        <!-- Hardware + Software side by side 50:50 -->
+        <div class="byod-split-row byod-anim-6">
+
+          <!-- Hardware Requirements -->
+          <div class="byod-card byod-split-card">
+            <div class="byod-card-head">
+              <div class="byod-card-icon byod-ci-navy"><i class="fas fa-microchip"></i></div>
+              <div>
+                <h3 class="byod-card-title">Hardware Requirements</h3>
+                <p class="byod-card-sub">Minimum specifications</p>
+              </div>
+              <span class="byod-policy-badge">IT Policy</span>
+            </div>
+            <div class="byod-card-body">
+              <div class="byod-hw-list">
+                <div class="byod-hw-item">
+                  <div class="byod-hw-icon byod-hw-navy"><i class="fas fa-microchip"></i></div>
+                  <div class="byod-hw-info">
+                    <span class="byod-hw-num">01</span>
+                    <span class="byod-hw-label">Processor</span>
+                    <span class="byod-hw-val">Minimum Core i5</span>
+                  </div>
+                </div>
+                <div class="byod-hw-item">
+                  <div class="byod-hw-icon byod-hw-teal"><i class="fas fa-memory"></i></div>
+                  <div class="byod-hw-info">
+                    <span class="byod-hw-num">02</span>
+                    <span class="byod-hw-label">RAM</span>
+                    <span class="byod-hw-val">8 GB or more</span>
+                  </div>
+                </div>
+                <div class="byod-hw-item">
+                  <div class="byod-hw-icon byod-hw-purple"><i class="fas fa-network-wired"></i></div>
+                  <div class="byod-hw-info">
+                    <span class="byod-hw-num">03</span>
+                    <span class="byod-hw-label">Ethernet</span>
+                    <span class="byod-hw-val">1 Ethernet Port</span>
+                  </div>
+                </div>
+                <div class="byod-hw-item">
+                  <div class="byod-hw-icon byod-hw-green"><i class="fas fa-plug"></i></div>
+                  <div class="byod-hw-info">
+                    <span class="byod-hw-num">04</span>
+                    <span class="byod-hw-label">USB Ports</span>
+                    <span class="byod-hw-val">At least 2 USB Ports</span>
+                  </div>
+                </div>
+                <div class="byod-hw-item">
+                  <div class="byod-hw-icon byod-hw-amber"><i class="fas fa-tv"></i></div>
+                  <div class="byod-hw-info">
+                    <span class="byod-hw-num">05</span>
+                    <span class="byod-hw-label">Graphics Card <span class="byod-opt-tag">Optional</span></span>
+                    <span class="byod-hw-val">Min. 1 GB — CAD users</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Software Requirements -->
+          <div class="byod-card byod-split-card">
+            <div class="byod-card-head">
+              <div class="byod-card-icon byod-ci-purple"><i class="fas fa-code"></i></div>
+              <div>
+                <h3 class="byod-card-title">Software Requirements</h3>
+                <p class="byod-card-sub">Mandatory compliance</p>
+              </div>
+              <span class="byod-policy-badge">IT Policy</span>
+            </div>
+            <div class="byod-card-body">
+              <div class="byod-sw-list">
+                <div class="byod-sw-item">
+                  <div class="byod-sw-num">1</div>
+                  <div class="byod-sw-text">Company not responsible for illegal software. <strong>Licensed software is user's responsibility.</strong></div>
+                </div>
+                <div class="byod-sw-item">
+                  <div class="byod-sw-num">2</div>
+                  <div class="byod-sw-text"><strong>Windows 10/11 Professional (64-bit)</strong> required. Home/Students edition not allowed.</div>
+                </div>
+                <div class="byod-sw-item">
+                  <div class="byod-sw-num">3</div>
+                  <div class="byod-sw-text">Open Office, Google Docs</div>
+                </div>
+                <div class="byod-sw-item">
+                  <div class="byod-sw-num">4</div>
+                  <div class="byod-sw-text"><strong>CADMate</strong> — shared license, to be returned on leaving.</div>
+                </div>
+                <div class="byod-sw-item">
+                  <div class="byod-sw-num">5</div>
+                  <div class="byod-sw-text">IT configures network only if above conditions are met.</div>
+                </div>
+                <div class="byod-sw-item">
+                  <div class="byod-sw-num">6</div>
+                  <div class="byod-sw-text">System added to <strong>company domain</strong> — user unconditionally agrees.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /byod-split-row -->
+
+      </div><!-- /byod-col-main -->
+
+      <!-- ════════ RIGHT COLUMN: Approval Chain ════════ -->
+      <div class="byod-col-side">
+
+        <!-- Section label -->
+        <div class="byod-section-label byod-anim-1">
+          <i class="fas fa-check-circle"></i> Approvals
+        </div>
+
+        <!-- HOD Approval -->
+        <div class="byod-card byod-anim-2">
+          <div class="byod-card-head byod-head-official">
+            <div class="byod-card-icon byod-ci-purple"><i class="fas fa-user-tie"></i></div>
+            <div>
+              <h3 class="byod-card-title">HOD Approval</h3>
+              <p class="byod-card-sub">Official use only</p>
+            </div>
+            <span class="byod-official-badge"><i class="fas fa-lock"></i> Official</span>
+          </div>
+          <div class="byod-card-body">
+            <div class="byod-sig-mini">
+              <label class="byod-label">HOD Signature</label>
+              <div class="byod-sig-field"></div>
+              <span class="byod-sig-hint">Name, Sign &amp; Date</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CED Approval -->
+        <div class="byod-card byod-anim-3">
+          <div class="byod-card-head byod-head-official">
+            <div class="byod-card-icon byod-ci-amber"><i class="fas fa-crown"></i></div>
+            <div>
+              <h3 class="byod-card-title">CED Approval</h3>
+              <p class="byod-card-sub">Official use only</p>
+            </div>
+            <span class="byod-official-badge"><i class="fas fa-lock"></i> Official</span>
+          </div>
+          <div class="byod-card-body">
+            <div class="byod-sig-mini">
+              <label class="byod-label">CED Signature</label>
+              <div class="byod-sig-field"></div>
+              <span class="byod-sig-hint">Name, Sign &amp; Date</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- IT Department -->
+        <div class="byod-card byod-anim-4">
+          <div class="byod-card-head byod-head-official">
+            <div class="byod-card-icon byod-ci-cyan"><i class="fas fa-desktop"></i></div>
+            <div>
+              <h3 class="byod-card-title">IT Department</h3>
+              <p class="byod-card-sub">Official use only</p>
+            </div>
+            <span class="byod-official-badge"><i class="fas fa-lock"></i> Official</span>
+          </div>
+          <div class="byod-card-body">
+            <div class="byod-field byod-mb">
+              <label class="byod-label">Date</label>
+              <input type="date" class="byod-input byod-input-disabled" disabled>
+            </div>
+            <div class="byod-field byod-mb">
+              <label class="byod-label">Category of Staff (Eligibility)</label>
+              <div class="byod-radio-group">
+                <label class="byod-radio"><input type="radio" name="elig" disabled><span class="byod-radio-dot"></span> Yes</label>
+                <label class="byod-radio"><input type="radio" name="elig" disabled><span class="byod-radio-dot"></span> No</label>
+              </div>
+            </div>
+            <div class="byod-field byod-mb">
+              <label class="byod-label">User Type</label>
+              <div class="byod-radio-group">
+                <label class="byod-radio"><input type="radio" name="utype" disabled><span class="byod-radio-dot"></span> First Time</label>
+                <label class="byod-radio"><input type="radio" name="utype" disabled><span class="byod-radio-dot"></span> Existing</label>
+              </div>
+            </div>
+            <div class="byod-sub-section">
+              <div class="byod-sub-section-title"><i class="fas fa-laptop-code"></i> If Existing Notebook User</div>
+              <div class="byod-field byod-mb">
+                <label class="byod-label">Asset Code</label>
+                <input type="text" class="byod-input byod-input-disabled" placeholder="Asset code…" disabled>
+              </div>
+              <div class="byod-field byod-mb">
+                <label class="byod-label">Date of Purchase</label>
+                <input type="date" class="byod-input byod-input-disabled" disabled>
+              </div>
+              <div class="byod-field">
+                <label class="byod-label">Period in Years <span class="byod-mandatory-note">(Min. 5 Years)</span></label>
+                <input type="text" class="byod-input byod-input-disabled" placeholder="e.g. 5 years 3 months" disabled>
+              </div>
+            </div>
+            <div class="byod-alert byod-alert-green byod-mt">
+              <i class="fas fa-check-circle"></i>
+              <span>Verified by IT Dept. — proceed with application processing.</span>
+            </div>
+            <div class="byod-field byod-mt">
+              <label class="byod-label">HOD (IT Dept.) Signature</label>
+              <div class="byod-sig-field"></div>
+            </div>
+            <div class="byod-reject-section">
+              <label class="byod-label byod-label-danger"><i class="fas fa-times-circle"></i> If Rejected — Reason</label>
+              <textarea class="byod-input byod-input-disabled byod-textarea" rows="2" placeholder="Rejection reason…" disabled></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Department -->
+        <div class="byod-card byod-anim-5">
+          <div class="byod-card-head byod-head-official">
+            <div class="byod-card-icon byod-ci-violet"><i class="fas fa-building"></i></div>
+            <div>
+              <h3 class="byod-card-title">Admin Department</h3>
+              <p class="byod-card-sub">Official use only</p>
+            </div>
+            <span class="byod-official-badge"><i class="fas fa-lock"></i> Official</span>
+          </div>
+          <div class="byod-card-body">
+            <div class="byod-field byod-mb">
+              <label class="byod-label">Date</label>
+              <input type="date" class="byod-input byod-input-disabled" disabled>
+            </div>
+            <div class="byod-admin-confirm">
+              <i class="fas fa-coins"></i>
+              <span>Paid Advance of <strong>OMR 300/-</strong> towards the purchase of Notebook Computer (BYOD – Policy).</span>
+            </div>
+            <div class="byod-sig-pair byod-mt">
+              <div class="byod-sig-mini">
+                <label class="byod-label">DGM – Expat Affairs</label>
+                <div class="byod-sig-field"></div>
+                <span class="byod-sig-hint">Name, Sign &amp; Date</span>
+              </div>
+              <div class="byod-sig-mini">
+                <label class="byod-label">Employee (Received by)</label>
+                <div class="byod-sig-field"></div>
+                <span class="byod-sig-hint">Name, Sign &amp; Date</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /byod-col-side -->
+
+      <!-- ════════ FULL WIDTH ROW: Terms & Conditions + Agreement + Submit ════════ -->
+      <div class="byod-full-span">
+
+        <!-- Terms & Conditions -->
+        <div class="byod-card byod-anim-8">
+          <div class="byod-card-head">
+            <div class="byod-card-icon byod-ci-amber"><i class="fas fa-gavel"></i></div>
+            <div>
+              <h3 class="byod-card-title">Terms &amp; Conditions</h3>
+              <p class="byod-card-sub">Binding terms for all BYOD applicants</p>
+            </div>
+            <span class="byod-binding-badge">Binding</span>
+          </div>
+          <div class="byod-card-body">
+            <div class="byod-tc-list">
+              <div class="byod-tc-item byod-tc-warn">
+                <div class="byod-tc-icon"><i class="fas fa-tools"></i></div>
+                <div class="byod-tc-body">
+                  <span class="byod-tc-label">T&amp;C 1</span>
+                  <p>If the Notebook does not adhere to IT specifications, it must be <strong>upgraded or replaced by the employee at his/her own cost.</strong></p>
+                </div>
+              </div>
+              <div class="byod-tc-item byod-tc-info">
+                <div class="byod-tc-icon"><i class="fas fa-user-shield"></i></div>
+                <div class="byod-tc-body">
+                  <span class="byod-tc-label">T&amp;C 2</span>
+                  <p>The Notebook will be at <strong>sole ownership of the employee.</strong> All maintenance and upgrades are the employee's sole responsibility.</p>
+                </div>
+              </div>
+              <div class="byod-tc-item byod-tc-danger">
+                <div class="byod-tc-icon"><i class="fas fa-calendar-times"></i></div>
+                <div class="byod-tc-body">
+                  <span class="byod-tc-label">T&amp;C 3</span>
+                  <p>If employment ends within 5 years, a deduction of <strong>OMR 5/- monthly</strong> applies for the remaining balance period.</p>
+                </div>
+              </div>
+              <div class="byod-tc-item byod-tc-critical">
+                <div class="byod-tc-icon"><i class="fas fa-ban"></i></div>
+                <div class="byod-tc-body">
+                  <span class="byod-tc-label">T&amp;C 4 — Important</span>
+                  <p><strong>Employees are requested not to buy Huawei or Apple Laptops.</strong></p>
+                </div>
+              </div>
+            </div>
+            <div class="byod-agreement-divider"><span>Agreed &amp; Accepted</span></div>
+            <label class="byod-check-row">
+              <input type="checkbox" formControlName="agreementAccepted" class="byod-check-native">
+              <span class="byod-check-box"></span>
+              <span class="byod-check-text">
+                I have read and agree to the BYOD Policy Terms &amp; Conditions including hardware requirements,
+                software compliance, and the deduction clause of <strong>OMR 5/- per month</strong> in case of
+                early contract discontinuation within the 5-year period. I confirm I will not purchase
+                <strong>Huawei or Apple</strong> laptops under this policy.
+              </span>
+            </label>
+            <span class="byod-err byod-err-mt" *ngIf="isInvalid('agreementAccepted')">
+              <i class="fas fa-exclamation-circle"></i> You must accept the terms to proceed
+            </span>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="byod-actions byod-anim-8">
+          <button type="button" class="byod-btn byod-btn-ghost" (click)="byodForm.reset()">
+            <i class="fas fa-undo"></i> Clear Form
+          </button>
+          <button type="submit" class="byod-btn byod-btn-primary" [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting"><i class="fas fa-paper-plane"></i> Submit Application</span>
+            <span *ngIf="isSubmitting"><i class="fas fa-spinner fa-spin"></i> Processing…</span>
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="byod-page-footer">
+          <span><i class="fas fa-file-alt"></i> Form Rev No: 2 &nbsp;|&nbsp; Rev Date: 01.09.2021 &nbsp;|&nbsp; Form No: ATC/IT/FORMS/BYOD/001</span>
+        </div>
+
+      </div><!-- /byod-full-span -->
+
+    </div><!-- /byod-grid-layout -->
+
+  </form>
+
+</div>

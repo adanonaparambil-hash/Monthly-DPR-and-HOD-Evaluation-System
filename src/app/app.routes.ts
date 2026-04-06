@@ -18,6 +18,7 @@ import { MyLoggedHoursComponent } from './my-logged-hours/my-logged-hours';
 import { NoticeManagementComponent } from './notice-management/notice-management.component';
 import { HodMasterComponent } from './hod-master/hod-master.component';
 import { EmployeeMasterComponent } from './employee-master/employee-master.component';
+import { ByodFormComponent } from './byod-form/byod-form.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
@@ -54,6 +55,7 @@ export const routes: Routes = [
       { path: 'notice-management', component: NoticeManagementComponent },
       { path: 'hod-master', component: HodMasterComponent },
       { path: 'employee-master', component: EmployeeMasterComponent },
+      { path: 'byod-form', component: ByodFormComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

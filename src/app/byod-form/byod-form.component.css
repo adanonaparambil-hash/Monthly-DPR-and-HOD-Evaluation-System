@@ -1,0 +1,765 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Root ──────────────────────────────────────────────────── */
+.byod-wrap {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f1f5f9;
+  min-height: calc(100vh - 80px);
+  padding: 24px;
+  color: #0f172a;
+}
+
+/* ── Hero Banner ───────────────────────────────────────────── */
+.byod-hero {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  animation: byodSlideDown .5s cubic-bezier(.16,1,.3,1) both;
+}
+.byod-hero-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #1B2A38 0%, #138271 65%, #1aab96 100%);
+}
+.byod-hero-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.byod-hero-content {
+  position: relative; z-index: 1;
+  padding: 30px 32px;
+  display: flex; align-items: center; gap: 22px;
+}
+.byod-hero-icon {
+  width: 68px; height: 68px; border-radius: 16px;
+  background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+.byod-hero-icon i,
+.byod-hero-icon .fas {
+  font-size: 30px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+}
+.byod-hero-text { flex: 1; min-width: 0; }
+.byod-hero-eyebrow {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: rgba(255,255,255,.65);
+  margin: 0 0 6px;
+}
+.byod-hero-title {
+  font-size: 24px; font-weight: 800;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  margin: 0 0 6px; letter-spacing: -.4px;
+  text-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.byod-hero-sub {
+  font-size: 12.5px; color: rgba(255,255,255,.7); margin: 0;
+}
+.byod-hero-chips { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+.byod-chip {
+  display: flex; flex-direction: column; align-items: center;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 10px; padding: 8px 14px; backdrop-filter: blur(4px);
+}
+.byod-chip-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: rgba(255,255,255,.6); margin-bottom: 2px; }
+.byod-chip-val   { font-size: 13px; font-weight: 800; color: #fff; }
+.byod-chip-live  {
+  flex-direction: row; gap: 8px; align-items: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  padding: 8px 16px; border-radius: 50px;
+}
+.byod-pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #6ee7b7; animation: byodPulse 2s infinite;
+}
+
+/* ── Section Labels ────────────────────────────────────────── */
+.byod-section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .9px; color: #1B2A38;
+  margin-bottom: 14px; padding: 0 2px;
+  opacity: 0; animation: byodFadeUp .5s cubic-bezier(.16,1,.3,1) both;
+}
+.byod-section-label::before {
+  content: '';
+  display: block; width: 4px; height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #1B2A38, #138271);
+  flex-shrink: 0;
+}
+.byod-section-label i {
+  font-size: 14px !important;
+  color: #138271 !important;
+  -webkit-text-fill-color: #138271 !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  width: auto; height: auto;
+  border-radius: 0; box-shadow: none;
+  display: inline;
+}
+.byod-section-label + * { /* first card after label */ }
+
+/* ── Grid Layout ───────────────────────────────────────────── */
+.byod-grid-layout {
+  display: grid; grid-template-columns: 1fr 310px;
+  gap: 20px; align-items: start;
+}
+.byod-col-main  { display: flex; flex-direction: column; gap: 16px; }
+.byod-col-side  { display: flex; flex-direction: column; gap: 16px; }
+
+/* Full-width row spanning both columns */
+.byod-full-span {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.byod-card {
+  background: #fff; border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  overflow: hidden;
+  opacity: 0; transform: translateY(18px);
+  animation: byodFadeUp .5s cubic-bezier(.16,1,.3,1) both;
+  transition: box-shadow .25s, transform .25s;
+  margin-bottom: 0;
+}
+.byod-card:hover { box-shadow: 0 6px 22px rgba(0,0,0,.09); transform: translateY(-2px); }
+
+.byod-anim-1  { animation-delay: .04s; }
+.byod-anim-2  { animation-delay: .08s; }
+.byod-anim-3  { animation-delay: .12s; }
+.byod-anim-4  { animation-delay: .16s; }
+.byod-anim-5  { animation-delay: .20s; }
+.byod-anim-6  { animation-delay: .24s; }
+.byod-anim-7  { animation-delay: .28s; }
+.byod-anim-8  { animation-delay: .32s; }
+.byod-anim-9  { animation-delay: .36s; }
+.byod-anim-10 { animation-delay: .40s; }
+
+/* ── Card Header ───────────────────────────────────────────── */
+.byod-card-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+}
+.byod-head-official { background: linear-gradient(135deg, #fefce8, #fef9c3); }
+.byod-card-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
+.byod-card-sub   { font-size: 11.5px; color: #94a3b8; margin: 2px 0 0; }
+
+/* ── Card Icons ────────────────────────────────────────────── */
+.byod-card-icon {
+  width: 42px; height: 42px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .25s;
+}
+/* Force icon color white — override any global styles */
+.byod-card-icon i,
+.byod-card-icon .fas,
+.byod-card-icon .far,
+.byod-card-icon .fab {
+  font-size: 17px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  line-height: 1;
+}
+/* Animate only the icon box, not the whole card */
+.byod-card-head:hover .byod-card-icon {
+  transform: scale(1.15) rotate(-8deg);
+}
+.byod-ci-navy {
+  background: linear-gradient(135deg, #1B2A38 0%, #2C3E50 100%);
+  box-shadow: 0 4px 12px rgba(27,42,56,.4);
+}
+.byod-ci-teal {
+  background: linear-gradient(135deg, #138271 0%, #1aab96 100%);
+  box-shadow: 0 4px 12px rgba(19,130,113,.4);
+}
+.byod-ci-purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  box-shadow: 0 4px 12px rgba(124,58,237,.35);
+}
+.byod-ci-amber {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  box-shadow: 0 4px 12px rgba(217,119,6,.35);
+}
+.byod-ci-cyan {
+  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+  box-shadow: 0 4px 12px rgba(8,145,178,.35);
+}
+.byod-ci-violet {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  box-shadow: 0 4px 12px rgba(124,58,237,.35);
+}
+
+/* ── Badges ────────────────────────────────────────────────── */
+.byod-official-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 4px 10px; border-radius: 20px;
+  background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+  display: flex; align-items: center; gap: 5px;
+}
+.byod-policy-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 4px 10px; border-radius: 20px;
+  background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe;
+}
+.byod-binding-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 4px 10px; border-radius: 20px;
+  background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+}
+
+/* ── Card Body ─────────────────────────────────────────────── */
+.byod-card-body { padding: 20px; }
+
+/* ── Policy Section (full width, below grid) ───────────────── */
+.byod-policy-section {
+  margin-top: 28px;
+}
+
+/* ── Employee Avatar Row ───────────────────────────────────── */
+.byod-emp-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; margin-bottom: 18px;
+  background: linear-gradient(135deg, #f0fdf9, #f8fafc);
+  border: 1px solid #e2e8f0; border-radius: 12px;
+}
+.byod-emp-avatar {
+  width: 72px; height: 72px; border-radius: 16px;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: #fff; flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(19,130,113,.3);
+  position: relative; overflow: hidden;
+}
+.byod-emp-img {
+  width: 100%; height: 100%; object-fit: cover;
+  border-radius: 16px;
+}
+.byod-emp-avatar-dot {
+  position: absolute; bottom: 5px; right: 5px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #22c55e; border: 2px solid #fff;
+}
+.byod-emp-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.byod-emp-name {
+  font-size: 15px; font-weight: 700; color: #0f172a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.byod-emp-id   { font-size: 12px; color: #64748b; font-weight: 500; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.byod-emp-id i { color: #94a3b8; font-size: 11px; }
+.byod-emp-dept { font-size: 12px; color: #138271; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+.byod-emp-contact { font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 5px; }
+.byod-emp-contact i { color: #94a3b8; font-size: 11px; }
+
+/* ── Skeleton Loading ──────────────────────────────────────── */
+.byod-emp-avatar-skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: byodShimmer 1.4s infinite;
+}
+.byod-skeleton {
+  display: block; border-radius: 6px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: byodShimmer 1.4s infinite;
+}
+.byod-skeleton-name { height: 16px; width: 180px; margin-bottom: 4px; }
+.byod-skeleton-id   { height: 12px; width: 140px; margin-bottom: 4px; }
+.byod-skeleton-dept { height: 12px; width: 100px; }
+@keyframes byodShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Form Grid ─────────────────────────────────────────────── */
+.byod-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.byod-field-full { grid-column: 1 / -1; }
+.byod-field { display: flex; flex-direction: column; }
+.byod-mb { margin-bottom: 12px; }
+.byod-mt { margin-top: 14px; }
+
+/* ── Labels ────────────────────────────────────────────────── */
+.byod-label {
+  font-size: 11px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px;
+}
+.byod-req { color: #ef4444; }
+.byod-mandatory-note { font-size: 9px; color: #f97316; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.byod-label-danger { color: #dc2626; }
+
+/* ── Inputs ────────────────────────────────────────────────── */
+.byod-input-wrap { position: relative; }
+.byod-input-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: #94a3b8; font-size: 13px; pointer-events: none;
+  transition: color .2s;
+}
+.byod-input-wrap:focus-within .byod-input-icon { color: #138271; }
+.byod-input {
+  width: 100%; padding: 10px 13px 10px 36px;
+  border: 1.5px solid #e2e8f0; border-radius: 9px;
+  font-size: 13.5px; font-weight: 500; color: #0f172a;
+  background: #f8fafc; font-family: inherit;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+  outline: none;
+}
+/* inputs without icon wrapper */
+.byod-sub-section .byod-input,
+.byod-reject-section .byod-input,
+.byod-field > .byod-input { padding-left: 13px; }
+.byod-input:hover:not(:disabled)  { border-color: #cbd5e1; background: #fff; }
+.byod-input:focus:not(:disabled)  { border-color: #138271; background: #fff; box-shadow: 0 0 0 3px rgba(19,130,113,.12); }
+.byod-input-err { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239,68,68,.1) !important; }
+.byod-input-disabled { opacity: .5; cursor: not-allowed; background: #f1f5f9 !important; }
+.byod-input::placeholder { color: #cbd5e1; font-weight: 400; }
+.byod-textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+/* ── Select ────────────────────────────────────────────────── */
+.byod-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 36px !important;
+}
+.byod-select-arrow {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: #94a3b8; font-size: 11px; pointer-events: none;
+  transition: color .2s, transform .2s;
+}
+.byod-input-wrap:focus-within .byod-select-arrow {
+  color: #138271; transform: translateY(-50%) rotate(180deg);
+}
+.byod-err {
+  font-size: 11.5px; color: #ef4444; margin-top: 5px;
+  font-weight: 500; display: flex; align-items: center; gap: 5px;
+}
+.byod-err-mt { margin-top: 10px; }
+
+/* ── Amount Banner ─────────────────────────────────────────── */
+.byod-amount-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(135deg, #f0fdf9, #ccfbf1);
+  border: 1px solid #99f6e4; border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 14px;
+}
+.byod-amount-left { display: flex; align-items: center; gap: 14px; }
+.byod-amount-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg,#138271,#1aab96);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(19,130,113,.3);
+}
+.byod-amount-icon i,
+.byod-amount-icon .fas {
+  font-size: 20px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+}
+.byod-amount-label { display: block; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+.byod-amount-val   { display: block; font-size: 24px; font-weight: 800; color: #0f766e; line-height: 1.1; }
+.byod-amount-note  { display: block; font-size: 11px; color: #64748b; margin-top: 2px; }
+.byod-amount-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg,#138271,#1aab96); color: #fff;
+  padding: 7px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  box-shadow: 0 3px 10px rgba(19,130,113,.3);
+}
+.byod-request-text {
+  font-size: 13.5px; color: #334155; line-height: 1.75;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+}
+
+/* ── Alerts ────────────────────────────────────────────────── */
+.byod-alert {
+  display: flex; align-items: flex-start; gap: 10px;
+  border-radius: 9px; padding: 11px 14px;
+  font-size: 12.5px; line-height: 1.55;
+}
+.byod-alert i { flex-shrink: 0; margin-top: 1px; }
+.byod-alert-orange { background: #fff7ed; border: 1px solid #fed7aa; border-left: 3px solid #f97316; color: #9a3412; }
+.byod-alert-orange i { color: #f97316; }
+.byod-alert-green  { background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 3px solid #138271; color: #065f46; }
+.byod-alert-green i { color: #138271; }
+
+/* ── Signature Row ─────────────────────────────────────────── */
+.byod-sig-row {
+  display: flex; align-items: center;
+}
+.byod-sig-box {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 18px 12px;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.byod-sig-box:hover { border-color: #138271; background: #f0fdf9; transform: translateY(-3px); }
+.byod-sig-connector { color: #cbd5e1; font-size: 14px; padding: 0 10px; flex-shrink: 0; }
+.byod-sig-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #fff; margin-bottom: 4px;
+}
+.byod-sig-emp  { background: linear-gradient(135deg,#1B2A38,#2C3E50); box-shadow: 0 4px 12px rgba(27,42,56,.3); }
+.byod-sig-hod  { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 4px 12px rgba(19,130,113,.3); }
+.byod-sig-ceo  { background: linear-gradient(135deg,#d97706,#f59e0b); box-shadow: 0 4px 12px rgba(217,119,6,.3); }
+.byod-sig-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.byod-sig-hint  { font-size: 10.5px; color: #94a3b8; }
+.byod-sig-line  { width: 80%; height: 1.5px; background: #e2e8f0; border-radius: 2px; margin-top: 6px; }
+
+/* ── Agreement Divider ─────────────────────────────────────── */
+.byod-agreement-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0 14px;
+}
+.byod-agreement-divider::before,
+.byod-agreement-divider::after {
+  content: ''; flex: 1; height: 1.5px;
+  background: linear-gradient(90deg, transparent, #e2e8f0);
+}
+.byod-agreement-divider::after {
+  background: linear-gradient(90deg, #e2e8f0, transparent);
+}
+.byod-agreement-divider span {
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .7px; color: #94a3b8; white-space: nowrap;
+}
+
+/* ── Checkbox ──────────────────────────────────────────────── */
+.byod-check-row {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 16px; border-radius: 10px;
+  border: 1.5px solid #e2e8f0; background: #f8fafc;
+  cursor: pointer; transition: border-color .2s, background .2s, transform .15s;
+}
+.byod-check-row:hover { border-color: #138271; background: #f0fdf9; transform: translateX(3px); }
+.byod-check-native { display: none; }
+.byod-check-box {
+  width: 20px; height: 20px; border: 2px solid #cbd5e1;
+  border-radius: 5px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; transition: all .25s cubic-bezier(.34,1.56,.64,1);
+}
+.byod-check-native:checked + .byod-check-box {
+  background: linear-gradient(135deg,#138271,#1aab96);
+  border-color: #138271; box-shadow: 0 3px 8px rgba(19,130,113,.3);
+  transform: scale(1.1);
+}
+.byod-check-native:checked + .byod-check-box::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 800; }
+.byod-check-text { font-size: 13px; color: #475569; line-height: 1.6; font-weight: 500; }
+
+/* ── Radio ─────────────────────────────────────────────────── */
+.byod-radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.byod-radio {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 13px; border-radius: 8px;
+  border: 1.5px solid #e2e8f0; background: #f8fafc;
+  font-size: 12.5px; font-weight: 500; color: #64748b;
+  opacity: .6; cursor: not-allowed;
+}
+.byod-radio-dot {
+  width: 14px; height: 14px; border: 2px solid #cbd5e1;
+  border-radius: 50%; background: #fff; flex-shrink: 0;
+}
+
+/* ── Sub Section ───────────────────────────────────────────── */
+.byod-sub-section {
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 14px; margin: 12px 0;
+}
+.byod-sub-section-title {
+  font-size: 12px; font-weight: 700; color: #1B2A38;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+}
+.byod-sub-section-title i { color: #138271; }
+
+/* ── Sig Field ─────────────────────────────────────────────── */
+.byod-sig-field {
+  width: 100%; height: 2px; background: #cbd5e1;
+  border-radius: 2px; margin: 8px 0 4px;
+}
+.byod-reject-section { margin-top: 14px; }
+
+/* ── Admin Confirm ─────────────────────────────────────────── */
+.byod-admin-confirm {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: linear-gradient(135deg,#f0fdf9,#ccfbf1);
+  border: 1px solid #99f6e4; border-radius: 10px;
+  padding: 14px; font-size: 13px; color: #0f766e; line-height: 1.6;
+}
+.byod-admin-confirm i { font-size: 18px; color: #138271; flex-shrink: 0; margin-top: 1px; }
+.byod-sig-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.byod-sig-mini { display: flex; flex-direction: column; }
+
+/* ── Actions ───────────────────────────────────────────────── */
+.byod-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 20px 0 4px;
+  animation: byodFadeUp .5s .25s cubic-bezier(.16,1,.3,1) both;
+}
+.byod-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 22px; border-radius: 9px;
+  font-size: 13.5px; font-weight: 600; font-family: inherit;
+  cursor: pointer; border: none; transition: all .2s ease; white-space: nowrap;
+}
+.byod-btn-ghost {
+  background: transparent; color: #64748b; border: 1.5px solid #e2e8f0;
+}
+.byod-btn-ghost:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.byod-btn-primary {
+  background: linear-gradient(135deg,#1B2A38,#138271);
+  color: #fff; padding: 10px 26px;
+  box-shadow: 0 4px 14px rgba(19,130,113,.3);
+}
+.byod-btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(19,130,113,.4); }
+.byod-btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Policy Intro Card ─────────────────────────────────────── */
+.byod-policy-intro-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: linear-gradient(135deg,#f0fdf9,#ccfbf1);
+  border: 1px solid #99f6e4; border-left: 4px solid #138271;
+  border-radius: 12px; padding: 16px 20px;
+  font-size: 13.5px; color: #0f766e; line-height: 1.7;
+  margin-bottom: 16px;
+  opacity: 0; animation: byodFadeUp .5s cubic-bezier(.16,1,.3,1) both;
+}
+.byod-policy-intro-card i { font-size: 20px; color: #138271; flex-shrink: 0; margin-top: 2px; }
+.byod-policy-intro-card p { margin: 0; }
+
+/* ── Split Row (50:50 side by side, equal height) ──────────── */
+.byod-split-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+.byod-split-card {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+.byod-split-card .byod-card-body {
+  flex: 1;
+}
+
+/* hw-list: compact single column stack inside the split card */
+.byod-hw-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── Hardware Grid (kept for any legacy use) ───────────────── */
+.byod-hw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.byod-hw-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.byod-hw-item:hover { border-color: #138271; background: #f0fdf9; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(19,130,113,.08); }
+.byod-hw-optional { grid-column: 1 / -1; }
+.byod-hw-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.byod-hw-icon i,
+.byod-hw-icon .fas {
+  font-size: 14px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+}
+.byod-hw-item:hover .byod-hw-icon { transform: scale(1.1) rotate(-5deg); }
+.byod-hw-navy   { background: linear-gradient(135deg,#1B2A38,#2C3E50); box-shadow: 0 3px 10px rgba(27,42,56,.3); }
+.byod-hw-teal   { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 3px 10px rgba(19,130,113,.3); }
+.byod-hw-purple { background: linear-gradient(135deg,#7c3aed,#a855f7); box-shadow: 0 3px 10px rgba(124,58,237,.3); }
+.byod-hw-green  { background: linear-gradient(135deg,#059669,#10b981); box-shadow: 0 3px 10px rgba(5,150,105,.3); }
+.byod-hw-amber  { background: linear-gradient(135deg,#d97706,#f59e0b); box-shadow: 0 3px 10px rgba(217,119,6,.3); }
+.byod-hw-info { display: flex; flex-direction: column; gap: 2px; }
+.byod-hw-num   { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .8px; }
+.byod-hw-label { font-size: 12px; font-weight: 700; color: #0f172a; }
+.byod-hw-val   { font-size: 12.5px; color: #475569; }
+.byod-opt-tag {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+  padding: 1px 6px; border-radius: 10px; margin-left: 6px;
+}
+
+/* ── Software List ─────────────────────────────────────────── */
+.byod-sw-list { display: flex; flex-direction: column; gap: 10px; }
+.byod-sw-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 10px; border-radius: 8px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  transition: border-color .2s, background .2s;
+}
+.byod-sw-item:hover { border-color: #7c3aed; background: #faf5ff; }
+.byod-sw-num {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg,#1B2A38,#138271);
+  color: #fff; font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(19,130,113,.3);
+  margin-top: 1px;
+}
+.byod-sw-text { font-size: 13px; color: #334155; line-height: 1.65; }
+
+/* ── Terms List ────────────────────────────────────────────── */
+.byod-tc-list { display: flex; flex-direction: column; gap: 12px; }
+.byod-tc-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px; border-radius: 12px; border-left: 4px solid;
+  transition: transform .2s, box-shadow .2s;
+}
+.byod-tc-item:hover { transform: translateX(4px); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.byod-tc-warn    { background: #fffbeb; border-color: #f59e0b; }
+.byod-tc-info    { background: #f0fdf9; border-color: #138271; }
+.byod-tc-danger  { background: #fff7ed; border-color: #f97316; }
+.byod-tc-critical{ background: #fef2f2; border-color: #ef4444; }
+.byod-tc-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.byod-tc-icon i,
+.byod-tc-icon .fas {
+  font-size: 16px !important;
+  -webkit-text-fill-color: unset !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+}
+.byod-tc-warn    .byod-tc-icon { background: #fef3c7; }
+.byod-tc-warn    .byod-tc-icon i { color: #d97706 !important; -webkit-text-fill-color: #d97706 !important; }
+.byod-tc-info    .byod-tc-icon { background: #ccfbf1; }
+.byod-tc-info    .byod-tc-icon i { color: #138271 !important; -webkit-text-fill-color: #138271 !important; }
+.byod-tc-danger  .byod-tc-icon { background: #ffedd5; }
+.byod-tc-danger  .byod-tc-icon i { color: #ea580c !important; -webkit-text-fill-color: #ea580c !important; }
+.byod-tc-critical .byod-tc-icon { background: #fee2e2; }
+.byod-tc-critical .byod-tc-icon i { color: #dc2626 !important; -webkit-text-fill-color: #dc2626 !important; }
+.byod-tc-body { flex: 1; }
+.byod-tc-label {
+  display: inline-block; font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; margin-bottom: 5px;
+}
+.byod-tc-body p { font-size: 13px; color: #334155; line-height: 1.65; margin: 0; }
+
+/* ── Page Footer ───────────────────────────────────────────── */
+.byod-page-footer {
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px 20px; margin-top: 8px;
+  background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+  font-size: 12px; color: #94a3b8;
+  opacity: 0; animation: byodFadeUp .5s .42s cubic-bezier(.16,1,.3,1) both;
+}
+.byod-page-footer i { color: #138271; margin-right: 6px; }
+
+/* ── Success Overlay ───────────────────────────────────────── */
+.byod-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.6); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; animation: byodFadeIn .3s ease;
+}
+.byod-success-card {
+  background: #fff; padding: 44px 36px; border-radius: 22px;
+  text-align: center; max-width: 400px; margin: 20px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.2);
+  animation: byodPopIn .5s cubic-bezier(.34,1.56,.64,1) both;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.byod-success-ring {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg,#138271,#1aab96);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 24px rgba(19,130,113,.4);
+  animation: byodPopIn .6s .1s cubic-bezier(.34,1.56,.64,1) both;
+}
+.byod-success-ring i,
+.byod-success-ring .fas {
+  font-size: 30px !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+}
+.byod-success-card h2 { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; }
+.byod-success-card p  { color: #64748b; margin: 0; line-height: 1.65; font-size: 13.5px; }
+.byod-success-meta {
+  display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  font-size: 12px; color: #94a3b8;
+}
+.byod-success-meta i { color: #138271; margin-right: 4px; }
+
+/* ── Keyframes ─────────────────────────────────────────────── */
+@keyframes byodSlideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes byodFadeUp    { from { opacity:0; transform:translateY(18px);  } to { opacity:1; transform:translateY(0); } }
+@keyframes byodFadeIn    { from { opacity:0; } to { opacity:1; } }
+@keyframes byodPopIn     { from { opacity:0; transform:scale(.82); } to { opacity:1; transform:scale(1); } }
+@keyframes byodPulse     { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(1.5);} }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .byod-grid-layout { grid-template-columns: 1fr; }
+  .byod-hw-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .byod-wrap { padding: 14px; }
+  .byod-hero-content { flex-direction: column; align-items: flex-start; padding: 20px; }
+  .byod-hero-chips { flex-wrap: wrap; gap: 8px; }
+  .byod-hero-title { font-size: 18px; }
+  .byod-form-grid { grid-template-columns: 1fr; }
+  .byod-field-full { grid-column: 1; }
+  .byod-sig-row { flex-direction: column; gap: 10px; }
+  .byod-sig-connector { transform: rotate(90deg); }
+  .byod-hw-grid { grid-template-columns: 1fr; }
+  .byod-hw-optional { grid-column: 1; }
+  .byod-split-row { grid-template-columns: 1fr; }
+  .byod-actions { flex-direction: column; }
+  .byod-btn { width: 100%; justify-content: center; }
+  .byod-sig-pair { grid-template-columns: 1fr; }
+  .byod-amount-banner { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .byod-emp-row { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 480px) {
+  .byod-wrap { padding: 10px; }
+  .byod-hero-content { padding: 16px; }
+  .byod-card-head { padding: 12px 14px; }
+  .byod-card-body { padding: 14px; }
+}

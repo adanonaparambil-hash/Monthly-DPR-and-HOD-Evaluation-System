@@ -389,7 +389,7 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isFormServicesRouteActive(): boolean {
-    return this.currentRoute.includes('/exit-form') || this.currentRoute.includes('/rejoining-form');
+    return this.currentRoute.includes('/exit-form') || this.currentRoute.includes('/rejoining-form') || this.currentRoute.includes('/byod-form');
   }
 
   toggleMPRMenu() {
