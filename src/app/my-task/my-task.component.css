@@ -1566,6 +1566,8 @@
   letter-spacing: 0.8px;
   line-height: 1;
   animation: slideInLeft 0.5s ease-out;
+  text-align: center;
+  width: 100%;
 }
 
 @keyframes slideInLeft {
@@ -1685,17 +1687,6 @@
   flex: 1;
 }
 
-.travel-value,
-.break-value {
-  font-size: 22px;
-  font-weight: 900;
-  color: #0f172a;
-  font-family: 'Inter', monospace;
-  line-height: 1;
-  letter-spacing: -0.5px;
-  animation: countUp 0.8s ease-out;
-}
-
 .travel-label,
 .break-label {
   font-size: 10px;
@@ -1705,12 +1696,17 @@
   letter-spacing: 0.6px;
   line-height: 1;
   animation: fadeIn 1s ease-out;
-  order: 1;
 }
 
 .travel-value,
 .break-value {
-  order: 2;
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  font-family: 'Inter', monospace;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  animation: countUp 0.8s ease-out;
 }
 
 .stat-values-row {

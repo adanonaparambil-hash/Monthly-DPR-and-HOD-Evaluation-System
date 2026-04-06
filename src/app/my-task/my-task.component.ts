@@ -143,10 +143,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Timer and stats - will be updated from API
   activeTaskTimer = '00:00:00';
-  punchedHours = '00:00:00';
-  runningTime = '00:00:00';
-  travelTime = '00:00:00';
-  breakTime = '00:00:00';
+  punchedHours = '00:00';
+  runningTime = '00:00';
+  travelTime = '00:00';
+  breakTime = '00:00';
   todayTotalHours = 0;
   lastPunchTime = '';
 
@@ -4046,21 +4046,13 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   // Format minutes from backend - if < 60 show as minutes, else convert to HH:MM
   formatMinutesToTime(minutes: number): string {
     if (!minutes || minutes === 0) {
-      return '0m';
-    }
-    
-    if (minutes < 60) {
-      return Math.round(minutes) + 'm';
+      return '00:00';
     }
     
     const hours = Math.floor(minutes / 60);
     const mins = Math.round(minutes % 60);
     
-    // Format as "Xh Ym" (e.g., "14h 54m")
-    if (mins === 0) {
-      return `${hours}h`;
-    }
-    return `${hours}h ${mins}m`;
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   }
 
   // Sort tasks with priority: AUTO CLOSED first, then RUNNING, then others

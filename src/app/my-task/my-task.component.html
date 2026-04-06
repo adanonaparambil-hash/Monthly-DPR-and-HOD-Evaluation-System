@@ -239,20 +239,17 @@
 
         <div class="stat-card running-time">
           <div class="stat-header">
-            <span class="stat-label">TOTAL DAY LOGGED</span>
+            <span class="stat-label" style="width:100%;text-align:center;">TOTAL DAY LOGGED</span>
             <div class="stat-icon">
               <i class="fas fa-bolt"></i>
             </div>
           </div>
-          <div class="stat-value">{{ runningTime }}</div>
+          <div class="stat-value" style="text-align:center;">{{ runningTime }}</div>
         </div>
 
         <div class="stat-card travel-break-card">
-          <div class="stat-header">
-            <span class="stat-label"></span>
-            <div class="stat-icon">
-              <i class="fas fa-route"></i>
-            </div>
+          <div class="stat-header" style="justify-content:center;">
+            <span class="stat-label" style="width:100%;text-align:center;">BREAK & TRAVEL</span>
           </div>
           <div class="travel-break-content">
             <div class="break-section">
@@ -269,12 +266,12 @@
 
         <div class="stat-card punched-hours">
           <div class="stat-header">
-            <span class="stat-label">LAST PUNCHED TIME</span>
+            <span class="stat-label" style="width:100%;text-align:center;">LAST PUNCHED TIME</span>
             <div class="stat-icon">
               <i class="fas fa-clock"></i>
             </div>
           </div>
-          <div class="stat-value">{{ lastPunchTime || 'N/A' }}</div>
+          <div class="stat-value" style="text-align:center;">{{ lastPunchTime || '00:00' }}</div>
         </div>
 
       </div>
