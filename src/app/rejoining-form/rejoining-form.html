@@ -9,7 +9,7 @@
     </div>
   </div>
 
-  <!-- ── Page intro banner ──────────────────────────────────── -->
+  <!-- ── Banner ─────────────────────────────────────────────── -->
   <div class="rj-banner">
     <div class="rj-banner-icon"><i class="fas fa-user-check"></i></div>
     <div class="rj-banner-text">
@@ -29,14 +29,14 @@
     </div>
   </div>
 
-  <!-- ── Two-column layout ──────────────────────────────────── -->
+  <!-- ── Layout ─────────────────────────────────────────────── -->
   <div class="rj-layout">
 
-    <!-- LEFT: main form -->
+    <!-- ════ LEFT: main form ════ -->
     <div class="rj-main">
       <form [formGroup]="rejoiningForm" (ngSubmit)="onSubmit()">
 
-        <!-- Employee Details -->
+        <!-- 1. Employee Details -->
         <div class="rj-card rj-s1">
           <div class="rj-card-header">
             <div class="rj-icon rj-icon-blue"><i class="fas fa-user-tie"></i></div>
@@ -44,36 +44,26 @@
           </div>
           <div class="rj-card-body">
             <div class="rj-emp-row">
-              <div class="rj-avatar"><i class="fas fa-user"></i><span class="rj-avatar-dot"></span></div>
+              <div class="rj-avatar-wrap">
+                <img [src]="profileImage" (error)="onAvatarError($event)" class="rj-emp-avatar" alt="Profile Photo">
+                <span class="rj-avatar-dot"></span>
+              </div>
               <div class="rj-grid rj-two-col">
                 <div class="rj-field">
                   <label class="rj-label">Employee Name</label>
-                  <input type="text" formControlName="employeeName" class="rj-input"
-                    [class.rj-error]="isFieldInvalid('employeeName')" placeholder="John Doe">
-                  <span class="rj-err-msg" *ngIf="isFieldInvalid('employeeName')">{{ getFieldError('employeeName') }}</span>
+                  <input type="text" formControlName="employeeName" class="rj-input rj-readonly" readonly placeholder="John Doe">
                 </div>
                 <div class="rj-field">
                   <label class="rj-label">Employee ID</label>
-                  <input type="text" formControlName="employeeId" class="rj-input"
-                    [class.rj-error]="isFieldInvalid('employeeId')" placeholder="EMP-0001">
-                  <span class="rj-err-msg" *ngIf="isFieldInvalid('employeeId')">{{ getFieldError('employeeId') }}</span>
+                  <input type="text" formControlName="employeeId" class="rj-input rj-readonly" readonly placeholder="EMP-0001">
                 </div>
                 <div class="rj-field">
                   <label class="rj-label">Designation</label>
-                  <input type="text" formControlName="designation" class="rj-input"
-                    [class.rj-error]="isFieldInvalid('designation')" placeholder="Engineering Manager">
-                  <span class="rj-err-msg" *ngIf="isFieldInvalid('designation')">{{ getFieldError('designation') }}</span>
+                  <input type="text" formControlName="designation" class="rj-input rj-readonly" readonly placeholder="Designation">
                 </div>
                 <div class="rj-field">
                   <label class="rj-label">Department</label>
-                  <select formControlName="department" class="rj-input" [class.rj-error]="isFieldInvalid('department')">
-                    <option value="">Select Department</option>
-                    <option value="IT">Information Technology</option>
-                    <option value="HR">Human Resources</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
-                  </select>
-                  <span class="rj-err-msg" *ngIf="isFieldInvalid('department')">{{ getFieldError('department') }}</span>
+                  <input type="text" formControlName="department" class="rj-input rj-readonly" readonly placeholder="Department">
                 </div>
                 <div class="rj-field">
                   <label class="rj-label">Station / Section</label>
@@ -81,8 +71,7 @@
                 </div>
                 <div class="rj-field">
                   <label class="rj-label">Date of Joining Office</label>
-                  <input type="date" formControlName="rejoiningDate" class="rj-input"
-                    [class.rj-error]="isFieldInvalid('rejoiningDate')">
+                  <input type="date" formControlName="rejoiningDate" class="rj-input" [class.rj-error]="isFieldInvalid('rejoiningDate')">
                   <span class="rj-err-msg" *ngIf="isFieldInvalid('rejoiningDate')">{{ getFieldError('rejoiningDate') }}</span>
                 </div>
               </div>
@@ -90,7 +79,7 @@
           </div>
         </div>
 
-        <!-- Leave Details -->
+        <!-- 2. Leave Details -->
         <div class="rj-card rj-s2">
           <div class="rj-card-header">
             <div class="rj-icon rj-icon-purple"><i class="fas fa-plane-departure"></i></div>
@@ -118,8 +107,7 @@
               </div>
               <div class="rj-field">
                 <label class="rj-label">Actual Arrival Date</label>
-                <input type="date" formControlName="previousExitDate" class="rj-input"
-                  [class.rj-error]="isFieldInvalid('previousExitDate')">
+                <input type="date" formControlName="previousExitDate" class="rj-input" [class.rj-error]="isFieldInvalid('previousExitDate')">
                 <span class="rj-err-msg" *ngIf="isFieldInvalid('previousExitDate')">{{ getFieldError('previousExitDate') }}</span>
               </div>
             </div>
@@ -127,7 +115,7 @@
           </div>
         </div>
 
-        <!-- Joining Details -->
+        <!-- 3. Joining Details -->
         <div class="rj-card rj-s3">
           <div class="rj-card-header">
             <div class="rj-icon rj-icon-cyan"><i class="fas fa-briefcase"></i></div>
@@ -154,31 +142,88 @@
           </div>
         </div>
 
-        <!-- Approvals & Verification -->
-        <div class="rj-card rj-s4">
-          <div class="rj-card-header">
-            <div class="rj-icon rj-icon-green"><i class="fas fa-shield-alt"></i></div>
-            <span class="rj-card-title">Approvals &amp; Verification</span>
-          </div>
-          <div class="rj-card-body">
-            <div class="rj-grid rj-three-col">
-              <div class="rj-field">
-                <label class="rj-label">Employee Signature</label>
-                <div class="rj-sig-box">
-                  <i class="fas fa-signature"></i>
-                  <span>Signed Digitally</span>
-                  <small>{{ getCurrentDate() }}</small>
+        <!-- 4 & 5. Emergency Contact + Passport Handling side by side -->
+        <div class="rj-side-row">
+
+          <!-- Emergency Contact -->
+          <div class="rj-card rj-s4">
+            <div class="rj-card-header">
+              <div class="rj-icon rj-icon-amber"><i class="fas fa-phone-alt"></i></div>
+              <span class="rj-card-title">Emergency Contact</span>
+            </div>
+            <div class="rj-card-body">
+              <div class="rj-grid rj-two-col">
+                <div class="rj-field">
+                  <label class="rj-label">Contact Name</label>
+                  <input type="text" class="rj-input" placeholder="Jane Doe">
+                </div>
+                <div class="rj-field">
+                  <label class="rj-label">Relationship</label>
+                  <select class="rj-input">
+                    <option>Spouse</option><option>Parent</option>
+                    <option>Sibling</option><option>Friend</option>
+                  </select>
+                </div>
+                <div class="rj-field">
+                  <label class="rj-label">Phone Number</label>
+                  <input type="tel" formControlName="emergencyContact" class="rj-input"
+                    [class.rj-error]="isFieldInvalid('emergencyContact')" placeholder="+1 (555) 000-1234">
+                  <span class="rj-err-msg" *ngIf="isFieldInvalid('emergencyContact')">{{ getFieldError('emergencyContact') }}</span>
+                </div>
+                <div class="rj-field">
+                  <label class="rj-label">Email</label>
+                  <input type="email" class="rj-input" placeholder="contact@example.com">
                 </div>
               </div>
-              <div class="rj-field">
-                <label class="rj-label">Rejoining Verified By</label>
-                <input type="text" formControlName="previousSalary" class="rj-input" placeholder="Manager name…">
-              </div>
-              <div class="rj-field">
-                <label class="rj-label">Passport Received By</label>
-                <input type="text" class="rj-input" placeholder="Custodian name…">
+              <div class="rj-field rj-mt">
+                <label class="rj-label">Address</label>
+                <textarea class="rj-input rj-textarea" rows="2" placeholder="124 Architecture Blvd, NY, 10010"></textarea>
               </div>
             </div>
+          </div>
+
+          <!-- Passport Handling -->
+          <div class="rj-card rj-s5">
+            <div class="rj-card-header">
+              <div class="rj-icon rj-icon-violet"><i class="fas fa-passport"></i></div>
+              <span class="rj-card-title">Passport Handling</span>
+              <div class="rj-toggle"></div>
+            </div>
+            <div class="rj-card-body">
+              <p class="rj-passport-note">
+                <i class="fas fa-info-circle"></i>
+                Employee has requested custody of passport for safe-keeping during personal documentation.
+              </p>
+              <div class="rj-grid rj-two-col">
+                <div class="rj-field">
+                  <label class="rj-label">Passport No.</label>
+                  <input type="text" class="rj-input" placeholder="P82010">
+                </div>
+                <div class="rj-field">
+                  <label class="rj-label">Issue Date</label>
+                  <input type="date" class="rj-input">
+                </div>
+                <div class="rj-field">
+                  <label class="rj-label">Expiry Date</label>
+                  <input type="date" class="rj-input">
+                </div>
+                <div class="rj-field">
+                  <label class="rj-label">File Rack No.</label>
+                  <input type="text" class="rj-input" placeholder="RACK-012">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 6. Declaration -->
+        <div class="rj-card rj-s6">
+          <div class="rj-card-header">
+            <div class="rj-icon rj-icon-green"><i class="fas fa-shield-alt"></i></div>
+            <span class="rj-card-title">Declaration</span>
+          </div>
+          <div class="rj-card-body">
             <div class="rj-checks">
               <label class="rj-check-item">
                 <input type="checkbox" formControlName="medicalClearance" class="rj-check-input">
@@ -209,73 +254,74 @@
       </form>
     </div>
 
-    <!-- RIGHT: sidebar -->
+    <!-- ════ RIGHT: sidebar — Approval Flow only ════ -->
     <div class="rj-sidebar">
 
-      <!-- Emergency Contact -->
-      <div class="rj-card rj-sc1">
+      <div class="rj-card rj-sc0">
         <div class="rj-card-header">
-          <div class="rj-icon rj-icon-amber"><i class="fas fa-phone-alt"></i></div>
-          <span class="rj-card-title">Emergency Contact</span>
+          <div class="rj-icon rj-icon-teal"><i class="fas fa-project-diagram"></i></div>
+          <span class="rj-card-title">Approval Flow</span>
+          <span class="rj-flow-badge">3 Steps</span>
         </div>
-        <div class="rj-card-body">
-          <div class="rj-field rj-mb">
-            <label class="rj-label">Contact Name</label>
-            <input type="text" class="rj-input" placeholder="Jane Doe">
-          </div>
-          <div class="rj-field rj-mb">
-            <label class="rj-label">Relationship</label>
-            <select class="rj-input">
-              <option>Spouse</option><option>Parent</option>
-              <option>Sibling</option><option>Friend</option>
-            </select>
-          </div>
-          <div class="rj-field rj-mb">
-            <label class="rj-label">Phone Number</label>
-            <input type="tel" formControlName="emergencyContact" class="rj-input"
-              [class.rj-error]="isFieldInvalid('emergencyContact')" placeholder="+1 (555) 000-1234">
-            <span class="rj-err-msg" *ngIf="isFieldInvalid('emergencyContact')">{{ getFieldError('emergencyContact') }}</span>
-          </div>
-          <div class="rj-field">
-            <label class="rj-label">Address</label>
-            <textarea class="rj-input rj-textarea" rows="3" placeholder="124 Architecture Blvd, NY, 10010"></textarea>
-          </div>
-        </div>
-      </div>
+        <div class="rj-card-body rj-flow-body">
 
-      <!-- Passport Handling -->
-      <div class="rj-card rj-sc2">
-        <div class="rj-card-header">
-          <div class="rj-icon rj-icon-violet"><i class="fas fa-passport"></i></div>
-          <span class="rj-card-title">Passport Handling</span>
-          <div class="rj-toggle"></div>
-        </div>
-        <div class="rj-card-body">
-          <p class="rj-passport-note">
-            <i class="fas fa-info-circle"></i>
-            Employee has requested custody of passport for safe-keeping during personal documentation.
-          </p>
-          <div class="rj-grid rj-two-col">
-            <div class="rj-field">
-              <label class="rj-label">Passport No.</label>
-              <input type="text" class="rj-input" placeholder="P82010">
+          <!-- Step 1: Employee -->
+          <div class="rj-flow-item rj-fi-done">
+            <div class="rj-fi-track">
+              <div class="rj-fi-node rj-fn-done"><i class="fas fa-user"></i></div>
+              <div class="rj-fi-connector"></div>
             </div>
-            <div class="rj-field">
-              <label class="rj-label">Issue Date</label>
-              <input type="date" class="rj-input">
-            </div>
-            <div class="rj-field">
-              <label class="rj-label">Expiry Date</label>
-              <input type="date" class="rj-input">
-            </div>
-            <div class="rj-field">
-              <label class="rj-label">File Rack No.</label>
-              <input type="text" class="rj-input" placeholder="RACK-012">
+            <div class="rj-fi-detail">
+              <div class="rj-fi-top">
+                <span class="rj-fi-role">Employee</span>
+                <span class="rj-fi-status rj-fs-done"><i class="fas fa-check-circle"></i> Submitted</span>
+              </div>
+              <p class="rj-fi-desc">Submits the rejoining form</p>
+              <div class="rj-fi-email-pill">
+                <i class="fas fa-envelope"></i>
+                <span>Email sent to HOD</span>
+              </div>
             </div>
           </div>
+
+          <!-- Step 2: HR -->
+          <div class="rj-flow-item rj-fi-active">
+            <div class="rj-fi-track">
+              <div class="rj-fi-node rj-fn-active"><i class="fas fa-user-tie"></i></div>
+              <div class="rj-fi-connector"></div>
+            </div>
+            <div class="rj-fi-detail">
+              <div class="rj-fi-top">
+                <span class="rj-fi-role">HR Department</span>
+                <span class="rj-fi-status rj-fs-active"><i class="fas fa-clock"></i> In Review</span>
+              </div>
+              <p class="rj-fi-desc">Reviews &amp; verifies the application</p>
+            </div>
+          </div>
+
+          <!-- Step 3: Admin -->
+          <div class="rj-flow-item rj-fi-pending">
+            <div class="rj-fi-track">
+              <div class="rj-fi-node rj-fn-pending"><i class="fas fa-building"></i></div>
+            </div>
+            <div class="rj-fi-detail">
+              <div class="rj-fi-top">
+                <span class="rj-fi-role">Admin Department</span>
+                <span class="rj-fi-status rj-fs-pending"><i class="fas fa-hourglass-half"></i> Awaiting</span>
+              </div>
+              <p class="rj-fi-desc">Final approval &amp; clearance</p>
+            </div>
+          </div>
+
+          <div class="rj-fi-note">
+            <i class="fas fa-info-circle"></i>
+            <span>HOD is notified via email on submission. HR reviews first, then Admin gives final approval.</span>
+          </div>
+
         </div>
       </div>
 
     </div>
+
   </div>
 </div>

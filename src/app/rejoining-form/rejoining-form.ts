@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Api } from '../services/api';
 
 @Component({
   selector: 'app-rejoining-form',
@@ -14,9 +15,15 @@ export class RejoiningForm implements OnInit {
   isSubmitting = false;
   submitSuccess = false;
 
+  // Employee profile data
+  employeeProfile: any = null;
+  isLoadingProfile = false;
+  profileImage: string = 'assets/images/default-avatar.png';
+
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private api: Api
   ) {
     this.rejoiningForm = this.fb.group({
       employeeId: ['', [Validators.required]],
@@ -37,28 +44,54 @@ export class RejoiningForm implements OnInit {
   }
 
   ngOnInit(): void {
-    // Auto-populate employee data if available
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    if (currentUser) {
-      this.rejoiningForm.patchValue({
-        employeeId: currentUser.employeeId || '',
-        employeeName: currentUser.employeeName || '',
-        email: currentUser.email || ''
-      });
+    const empId = currentUser?.empId || currentUser?.userId || currentUser?.id || '';
+    if (empId) {
+      this.loadEmployeeProfile(empId);
     }
+  }
+
+  loadEmployeeProfile(empId: string): void {
+    this.isLoadingProfile = true;
+    this.api.GetEmployeeProfile(empId).subscribe({
+      next: (res: any) => {
+        this.isLoadingProfile = false;
+        if (res?.success && res?.data) {
+          const d = res.data;
+          this.employeeProfile = d;
+
+          // Set profile image
+          if (d.profileImageBase64) {
+            this.profileImage = d.profileImageBase64.startsWith('data:')
+              ? d.profileImageBase64
+              : `data:image/jpeg;base64,${d.profileImageBase64}`;
+          }
+
+          // Patch form fields
+          this.rejoiningForm.patchValue({
+            employeeId: d.empId || '',
+            employeeName: d.employeeName || '',
+            department: d.department || '',
+            designation: d.designation || '',
+            email: d.email || '',
+            contactNumber: (d.phone || '').replace(/\D/g, '').slice(-10)
+          });
+        }
+      },
+      error: (err: any) => {
+        this.isLoadingProfile = false;
+        console.error('Failed to load employee profile', err);
+      }
+    });
   }
 
   onSubmit(): void {
     if (this.rejoiningForm.valid) {
       this.isSubmitting = true;
-      
-      // Simulate API call
       setTimeout(() => {
         console.log('Rejoining Form Data:', this.rejoiningForm.value);
         this.isSubmitting = false;
         this.submitSuccess = true;
-        
-        // Reset form after success
         setTimeout(() => {
           this.submitSuccess = false;
           this.rejoiningForm.reset();
@@ -71,8 +104,7 @@ export class RejoiningForm implements OnInit {
 
   private markFormGroupTouched(): void {
     Object.keys(this.rejoiningForm.controls).forEach(key => {
-      const control = this.rejoiningForm.get(key);
-      control?.markAsTouched();
+      this.rejoiningForm.get(key)?.markAsTouched();
     });
   }
 
@@ -95,32 +127,38 @@ export class RejoiningForm implements OnInit {
 
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      employeeId: 'Employee ID',
-      employeeName: 'Employee Name',
-      department: 'Department',
-      designation: 'Designation',
-      previousExitDate: 'Previous Exit Date',
-      rejoiningDate: 'Rejoining Date',
-      reasonForRejoining: 'Reason for Rejoining',
-      previousSalary: 'Previous Salary',
-      expectedSalary: 'Expected Salary',
-      contactNumber: 'Contact Number',
-      email: 'Email Address',
-      emergencyContact: 'Emergency Contact',
-      medicalClearance: 'Medical Clearance',
-      agreementAccepted: 'Agreement'
+      employeeId: 'Employee ID', employeeName: 'Employee Name',
+      department: 'Department', designation: 'Designation',
+      previousExitDate: 'Previous Exit Date', rejoiningDate: 'Rejoining Date',
+      reasonForRejoining: 'Reason for Rejoining', previousSalary: 'Previous Salary',
+      expectedSalary: 'Expected Salary', contactNumber: 'Contact Number',
+      email: 'Email Address', emergencyContact: 'Emergency Contact',
+      medicalClearance: 'Medical Clearance', agreementAccepted: 'Agreement'
     };
     return labels[fieldName] || fieldName;
   }
 
   getCurrentDate(): string {
-    const today = new Date();
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    };
-    return today.toLocaleDateString('en-US', options);
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+
+  onAvatarError(event: Event): void {
+    (event.target as HTMLImageElement).src = 'assets/images/default-avatar.png';
+  }
+
+  // Converts "08-SEP-2025" or any parseable date string to "yyyy-MM-dd" for <input type="date">
+  parseToInputDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  }
+
+  getSkillsArray(): string[] {
+    return this.employeeProfile?.skillset
+      ? this.employeeProfile.skillset.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [];
   }
 }
