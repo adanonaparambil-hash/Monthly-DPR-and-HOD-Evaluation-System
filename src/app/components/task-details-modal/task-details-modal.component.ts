@@ -87,6 +87,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   selectedTaskStartDate = '';
   selectedTaskEndDate = '';
   selectedTaskEstimatedHours: number = 0;
+  estimatedHoursDisplay: string = ''; // HH:MM display format
   selectedProjectId: string = '';
   selectedAssigneeId: string = '';
   
@@ -161,6 +162,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       this.selectedTaskDetailStatus = 'not-started';
       this.selectedTaskCategory = this.categoryName || ''; // Set category name for new tasks
       this.selectedTaskEstimatedHours = this.estimatedHours || 0; // Set estimated hours from category
+      this.estimatedHoursDisplay = this.minutesToHHMM(this.selectedTaskEstimatedHours);
       this.editableTaskTitle = '';
       this.editableTaskDescription = '';
       this.dailyRemarks = '';
@@ -217,6 +219,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
           this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
           this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
+          this.estimatedHoursDisplay = this.minutesToHHMM(this.selectedTaskEstimatedHours);
           this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
           
           // Bind assignee - API returns 'assignee' field (could be userId or employeeId)
@@ -1520,6 +1523,37 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   // Format date string for input field (YYYY-MM-DD format)
+  // Convert minutes to HH:MM display string
+  minutesToHHMM(minutes: number): string {
+    if (!minutes || minutes <= 0) return '';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}:${String(m).padStart(2, '0')}`;
+  }
+
+  // Convert HH:MM string to total minutes
+  hhmmToMinutes(timeStr: string): number {
+    if (!timeStr || timeStr.trim() === '') return 0;
+    const parts = timeStr.split(':');
+    if (parts.length !== 2) return 0;
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return h * 60 + Math.min(m, 59);
+  }
+
+  // Handle estimated hours display input change
+  onEstimatedHoursInput(): void {
+    let input = this.estimatedHoursDisplay.replace(/[^0-9:]/g, '');
+    if (!input.includes(':') && input.length >= 2) {
+      input = input.substring(0, 2) + ':' + input.substring(2);
+    }
+    if (input.length > 6) input = input.substring(0, 6);
+    this.estimatedHoursDisplay = input;
+    if (input.includes(':') && input.split(':')[1].length > 0) {
+      this.selectedTaskEstimatedHours = this.hhmmToMinutes(input);
+    }
+  }
+
   formatDateForInput(dateString: string | Date): string {
     if (!dateString) return '';
     try {

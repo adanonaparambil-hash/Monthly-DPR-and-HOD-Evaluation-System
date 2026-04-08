@@ -2708,8 +2708,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const hours = parseInt(parts[0], 10) || 0;
     const minutes = parseInt(parts[1], 10) || 0;
     
-    // Validate ranges
-    const validHours = Math.min(Math.max(hours, 0), 23);
+    // Validate ranges (hours can exceed 23 for estimated task duration)
+    const validHours = Math.max(hours, 0);
     const validMinutes = Math.min(Math.max(minutes, 0), 59);
     
     return validHours * 60 + validMinutes;
@@ -2721,20 +2721,20 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     
     let input = category.timeDisplay.replace(/[^0-9:]/g, '');
     
-    // Auto-format as user types
-    if (input.length === 2 && !input.includes(':')) {
-      input = input + ':';
+    // Auto-format as user types: insert colon after 2 digits if no colon yet
+    if (!input.includes(':') && input.length >= 2) {
+      input = input.substring(0, 2) + ':' + input.substring(2);
     }
     
-    // Limit to HH:MM format
-    if (input.length > 5) {
-      input = input.substring(0, 5);
+    // Limit to HHH:MM format (max 6 chars to support hours > 23)
+    if (input.length > 6) {
+      input = input.substring(0, 6);
     }
     
     category.timeDisplay = input;
     
-    // Update sequenceNumber for backend
-    if (input.length === 5 && input.includes(':')) {
+    // Update sequenceNumber for backend whenever a valid partial or full time is entered
+    if (input.includes(':') && input.split(':')[1].length > 0) {
       category.sequenceNumber = this.parseTimeToMinutes(input);
     }
   }

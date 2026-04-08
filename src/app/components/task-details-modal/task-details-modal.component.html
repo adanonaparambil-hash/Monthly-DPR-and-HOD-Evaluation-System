@@ -54,9 +54,9 @@
         <!-- Timer Control Buttons (Start/Pause/Resume) - Icon Only - Only show if NOT in view-only mode -->
         @if (!isViewOnly && taskId && taskId > 0) {
           <div class="header-timer-controls">
-            <!-- Show Start button when task is NOT STARTED -->
+            <!-- Show Start button when task is NOT STARTED or RE-OPENED -->
             <button class="timer-control-icon start-icon" 
-                    *ngIf="selectedTaskDetailStatus === 'not-started'"
+                    *ngIf="selectedTaskDetailStatus === 'not-started' || selectedTaskDetailStatus === 're-open'"
                     (click)="startTaskFromModal()"
                     title="Start Task">
               <i class="fas fa-play"></i>
@@ -377,12 +377,12 @@
                   Estimated Hours
                 </p>
                 <input 
-                  type="number" 
+                  type="text" 
                   class="metadata-input" 
-                  [(ngModel)]="selectedTaskEstimatedHours"
-                  placeholder="0.00"
-                  step="0.5"
-                  min="0"
+                  [(ngModel)]="estimatedHoursDisplay"
+                  placeholder="HH:MM"
+                  maxlength="6"
+                  (input)="onEstimatedHoursInput()"
                   [readonly]="isViewOnly"
                 >
               </div>
