@@ -34,6 +34,7 @@ interface LeaveRequest {
   approvalID?: number;
   exitID?: number;
   currentStepName?: string;
+  profileImageBase64?: string;
 }
 
 @Component({
@@ -75,9 +76,20 @@ export class LeaveApprovalComponent implements OnInit {
   myRequests: LeaveRequest[] = [];
 
   // Filters
-  statusFilter: string = 'all';
+  statusFilter: string = 'Pending';
   typeFilter: string = 'all';
   dateFilter: string = 'all';
+  employeeNameFilter: string = '';
+  fromDateFilter: string = '';
+  toDateFilter: string = '';
+  // Holds the result after Search is clicked
+  private _filteredPending: LeaveRequest[] | null = null;
+
+  // Employee filter dropdown
+  empMasterList: { idValue: string; description: string; nationality?: string }[] = [];
+  filteredEmpList: { idValue: string; description: string; nationality?: string }[] = [];
+  empFilterSearch: string = '';
+  showEmpFilterDropdown: boolean = false;
 
   // Loading states
   isLoadingPending = false;
@@ -97,6 +109,16 @@ export class LeaveApprovalComponent implements OnInit {
   ngOnInit(): void {
     this.currentUser = this.sessionService.getCurrentUser();
 
+    // Load employee master list for filter dropdown
+    this.api.getEmployeeMasterList().subscribe({
+      next: (res: any) => {
+        const data = res?.data || res || [];
+        this.empMasterList = Array.isArray(data) ? data : [];
+        this.filteredEmpList = [...this.empMasterList];
+      },
+      error: () => {}
+    });
+
     // Check for tab parameter in URL
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'];
@@ -112,10 +134,19 @@ export class LeaveApprovalComponent implements OnInit {
 
   switchTab(tab: 'pending' | 'myRequests'): void {
     this.activeTab = tab;
-    this.typeFilter = 'all'; // Reset filter when switching tabs
+    this.typeFilter = 'all';
+    this.statusFilter = tab === 'pending' ? 'Pending' : 'all';
+    this.employeeNameFilter = '';
+    this.fromDateFilter = '';
+    this.toDateFilter = '';
     if (tab === 'pending') {
+      this._filteredPending = null;
       this.loadPendingApprovals();
     } else if (tab === 'myRequests') {
+      this.myFromDate = '';
+      this.myToDate = '';
+      this.myStatusFilter = 'all';
+      this.myTypeFilter = 'all';
       this.loadMyRequests();
     }
   }
@@ -129,41 +160,92 @@ export class LeaveApprovalComponent implements OnInit {
     }
   }
 
+  clearPendingFilters(): void {
+    this.employeeNameFilter = '';
+    this.empFilterSearch = '';
+    this.filteredEmpList = [...this.empMasterList];
+    this.fromDateFilter = '';
+    this.toDateFilter = '';
+    this.statusFilter = 'Pending';
+    this.typeFilter = 'all';
+    this._filteredPending = null;
+    this.loadPendingApprovals();
+  }
+
+  applyPendingFilters(): void {
+    this.loadPendingApprovals();
+  }
+
+  onEmpFilterSearch(): void {
+    const term = this.empFilterSearch.toLowerCase();
+    this.filteredEmpList = this.empMasterList.filter(e =>
+      e.description.toLowerCase().includes(term) ||
+      e.idValue.toLowerCase().includes(term)
+    );
+    // If user clears the search, also clear the filter value
+    if (!this.empFilterSearch.trim()) {
+      this.employeeNameFilter = '';
+    }
+  }
+
+  selectFilterEmployee(emp: { idValue: string; description: string }): void {
+    this.empFilterSearch = emp.description;
+    this.employeeNameFilter = emp.description;
+    this.showEmpFilterDropdown = false;
+  }
+
+  onEmpFilterBlur(): void {
+    // Delay so mousedown on option fires before blur closes the dropdown
+    setTimeout(() => { this.showEmpFilterDropdown = false; }, 200);
+  }
+
   loadPendingApprovals(): void {
     if (!this.currentUser) return;
 
     this.isLoadingPending = true;
+    this._filteredPending = null;
 
-    // Map filters to API parameters
-    let typeParam = '';
-    if (this.typeFilter === 'emergency') typeParam = 'E';
-    else if (this.typeFilter === 'planned') typeParam = 'P';
-    else if (this.typeFilter === 'resignation') typeParam = 'R';
+    // Map status filter → API code
+    let statusParam: string | undefined;
+    if (this.statusFilter === 'Pending')  statusParam = 'P';
+    else if (this.statusFilter === 'Approved') statusParam = 'A';
+    else if (this.statusFilter === 'Rejected') statusParam = 'R';
+
+    // Map form type filter → API code
+    let typeParam: string | undefined;
+    if (this.typeFilter === 'Emergency') typeParam = 'E';
+    else if (this.typeFilter === 'BYOD')   typeParam = 'B';
+    else if (this.typeFilter === 'Rejoin') typeParam = 'R';
 
     const requestParams: EmployeeApprovalInboxRequest = {
-      ApproverEmployeeId: this.currentUser.empId || this.currentUser.employeeId,
-      FormType: typeParam || ""
+      approverId: this.currentUser.empId || this.currentUser.employeeId,
+      formType:   typeParam   || undefined,
+      status:     statusParam || undefined,
+      employeeId: this.employeeNameFilter ? this.empMasterList.find(e => e.description === this.employeeNameFilter)?.idValue || undefined : undefined,
+      fromDate:   this.fromDateFilter ? new Date(this.fromDateFilter) : null,
+      toDate:     this.toDateFilter   ? new Date(this.toDateFilter)   : null,
     };
 
     this.api.GetExitApprovalList(requestParams).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.pendingApprovals = response.data.map((item: any) => ({
-            id: `REQ${item.exitID}`,
-            exitId: item.exitID, // Keeping both for compatibility if needed elsewhere
-            exitID: item.exitID,
-            approvalID: item.approvalID,
-            employeeName: item.employeeName || item.employeeName || '',
-            employeeId: item.employeeId || item.employeeID || '',
+            id: `REQ${item.formId}`,
+            exitId: item.formId,
+            exitID: item.formId,
+            approvalID: item.approvalId,
+            employeeName: item.employeeName || '',
+            employeeId: item.employeeId || '',
             department: item.department || '',
-            leaveType: this.mapTypeToLabel(item.type.trim()),
+            leaveType: this.mapFormTypeToLabel(item.formType),
             requestDate: item.requestDate,
-            departureDate: item.departureDate,
-            daysRequested: item.duration,
+            departureDate: item.actionDate,
+            daysRequested: 0,
             status: this.mapStatusToLabel(item.status),
-            currentStepName: item.currentStep || 'Pending',
+            currentStepName: item.approverRole || 'Pending',
             canApprove: true,
-            reason: item.reason || item.reasonForLeave || ''
+            reason: '',
+            profileImageBase64: item.profileImageBase64 || null
           }));
         } else {
           this.pendingApprovals = [];
@@ -183,42 +265,45 @@ export class LeaveApprovalComponent implements OnInit {
 
     this.isLoadingMyRequests = true;
 
-    // Map filters to API parameters
-    let statusParam = '';
-    if (this.statusFilter === 'pending') statusParam = 'P';
-    else if (this.statusFilter === 'approved') statusParam = 'A';
-    else if (this.statusFilter === 'rejected') statusParam = 'R';
+    // Map status filter → API code
+    let statusParam: string | undefined;
+    if (this.myStatusFilter === 'pending')   statusParam = 'P';
+    else if (this.myStatusFilter === 'approved')  statusParam = 'A';
+    else if (this.myStatusFilter === 'rejected')  statusParam = 'R';
+    else if (this.myStatusFilter === 'submitted') statusParam = 'S';
 
-    let typeParam = '';
-    if (this.typeFilter === 'emergency') typeParam = 'E';
-    else if (this.typeFilter === 'planned') typeParam = 'P';
-    else if (this.typeFilter === 'resignation') typeParam = 'R';
+    // Map form type filter → API code
+    let typeParam: string | undefined;
+    if (this.myTypeFilter === 'EXIT')   typeParam = 'E';
+    else if (this.myTypeFilter === 'BYOD')   typeParam = 'B';
+    else if (this.myTypeFilter === 'REJOIN') typeParam = 'R';
 
     const requestParams: MyApprovalRequest = {
       employeeId: this.currentUser.empId || this.currentUser.employeeId,
-      status: statusParam,
-      formType: typeParam
+      status:     statusParam || undefined,
+      formType:   typeParam   || undefined,
+      fromDate:   this.myFromDate || undefined,
+      toDate:     this.myToDate   || undefined,
     };
 
     this.api.GetMySubmittedRequests(requestParams).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-
           this.myRequests = response.data.map((item: any) => ({
-            id: `REQ${item.exitID || item.exitId}`,
-            exitId: item.exitID || item.exitId,
-            exitID: item.exitID || item.exitId,
-            employeeName: item.employeeName || item.EmployeeName || this.currentUser.name || '',
-            employeeId: item.employeeId || item.employeeID || this.currentUser.empId || this.currentUser.employeeId,
-            department: item.department || this.currentUser.department || '',
-            leaveType: this.mapTypeToLabel(item.type),
-            requestDate: item.submittedDate || item.requestDate || item.submittedOn,
-            departureDate: item.departureDate || item.dateOfDeparture,
-            daysRequested: item.duration || item.noOfDaysApproved,
-            reason: item.reason || item.reasonForLeave || '',
-            status: this.mapStatusToLabel(item.status),
-            currentStepName: item.currentStep || item.approvalStatus || 'Processing',
-            priority: 'Medium'
+            id:              `REQ${item.formId}`,
+            exitId:          item.formId,
+            exitID:          item.formId,
+            employeeName:    item.employeeName || '',
+            employeeId:      item.employeeId   || '',
+            department:      item.department   || '',
+            leaveType:       this.mapFormTypeToLabel(item.formType),
+            requestDate:     item.submittedDate,
+            departureDate:   item.actionDate,
+            daysRequested:   item.duration || 0,
+            reason:          item.reason   || '',
+            status:          this.mapMyStatusToLabel(item.status),
+            currentStepName: '',
+            priority:        'Medium'
           }));
         } else {
           this.myRequests = [];
@@ -231,6 +316,58 @@ export class LeaveApprovalComponent implements OnInit {
         this.myRequests = [];
       }
     });
+  }
+
+  private mapMyStatusToLabel(status: string): string {
+    const s = (status || '').trim().toUpperCase();
+    if (s === 'A') return 'Approved';
+    if (s === 'R') return 'Rejected';
+    if (s === 'P' || s === 'PENDING') return 'Pending';
+    if (s === 'S') return 'Submitted';
+    return status || 'Submitted';
+  }
+
+  // My Requests filters
+  myFromDate: string = '';
+  myToDate: string = '';
+  myStatusFilter: string = 'all';
+  myTypeFilter: string = 'all';
+
+  clearMyRequestFilters(): void {
+    this.myFromDate = '';
+    this.myToDate = '';
+    this.myStatusFilter = 'all';
+    this.myTypeFilter = 'all';
+    this.loadMyRequests();
+  }
+
+  getEmployeeAvatar(request: LeaveRequest): string | null {
+    const b64 = request.profileImageBase64;
+    if (!b64) return null;
+    return b64.startsWith('data:') ? b64 : `data:image/jpeg;base64,${b64}`;
+  }
+
+  viewMyRequestDetails(request: LeaveRequest): void {
+    if (request.leaveType === 'BYOD') {
+      this.router.navigate(['/byod-form'], { queryParams: { byodId: request.exitID } });
+      return;
+    }
+    if (request.leaveType === 'Rejoin') {
+      this.router.navigate(['/rejoining-form'], { queryParams: { rejoinId: request.exitID } });
+      return;
+    }
+    const formType = request.leaveType === 'Emergency' ? 'E' :
+      request.leaveType === 'Resignation' ? 'R' : 'P';
+    this.router.navigate(['/exit-form'], { queryParams: { type: formType, exitID: request.exitID } });
+  }
+
+  private mapFormTypeToLabel(formType: string): string {
+    switch ((formType || '').toUpperCase()) {
+      case 'EXIT':   return 'Emergency';
+      case 'BYOD':   return 'BYOD';
+      case 'REJOIN': return 'Rejoin';
+      default:       return formType || '';
+    }
   }
 
   private mapTypeToLabel(type: string): string {
@@ -288,28 +425,31 @@ export class LeaveApprovalComponent implements OnInit {
   getFilteredPendingApprovals(): LeaveRequest[] {
     let filtered = [...this.pendingApprovals];
 
-    if (this.typeFilter !== 'all') {
-      filtered = filtered.filter(r => r.leaveType.toLowerCase() === this.typeFilter);
+    if (this.employeeNameFilter.trim()) {
+      const term = this.employeeNameFilter.trim().toLowerCase();
+      filtered = filtered.filter(r =>
+        r.employeeName.toLowerCase().includes(term) ||
+        r.employeeId.toLowerCase().includes(term)
+      );
     }
 
-    if (this.dateFilter !== 'all') {
-      const now = new Date();
-      const filterDate = new Date();
+    if (this.typeFilter !== 'all') {
+      filtered = filtered.filter(r => r.leaveType.toLowerCase() === this.typeFilter.toLowerCase());
+    }
 
-      switch (this.dateFilter) {
-        case 'today':
-          filterDate.setHours(0, 0, 0, 0);
-          filtered = filtered.filter(r => r.requestDate >= filterDate);
-          break;
-        case 'week':
-          filterDate.setDate(now.getDate() - 7);
-          filtered = filtered.filter(r => r.requestDate >= filterDate);
-          break;
-        case 'month':
-          filterDate.setMonth(now.getMonth() - 1);
-          filtered = filtered.filter(r => r.requestDate >= filterDate);
-          break;
-      }
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter(r => r.status.toLowerCase() === this.statusFilter.toLowerCase());
+    }
+
+    if (this.fromDateFilter) {
+      const from = new Date(this.fromDateFilter);
+      filtered = filtered.filter(r => r.requestDate && new Date(r.requestDate) >= from);
+    }
+
+    if (this.toDateFilter) {
+      const to = new Date(this.toDateFilter);
+      to.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(r => r.requestDate && new Date(r.requestDate) <= to);
     }
 
     return filtered;
@@ -522,10 +662,12 @@ export class LeaveApprovalComponent implements OnInit {
   getFormTypeText(leaveType: any): string {
     if (!leaveType) return 'N/A';
     switch (String(leaveType)) {
-      case 'Emergency': return 'Emergency Exit';
-      case 'Planned': return 'Planned Leave';
+      case 'Emergency': return 'Exit Form';
+      case 'Planned':   return 'Planned Leave';
       case 'Resignation': return 'Resignation';
-      default: return String(leaveType);
+      case 'BYOD':      return 'BYOD';
+      case 'Rejoin':    return 'Rejoin';
+      default:          return String(leaveType);
     }
   }
 
@@ -554,7 +696,8 @@ export class LeaveApprovalComponent implements OnInit {
    * Get requests that need current user's approval
    */
   getMyPendingApprovals(): LeaveRequest[] {
-    return this.pendingApprovals.filter(r => r.canApprove);
+    const source = this._filteredPending ?? this.pendingApprovals;
+    return source.filter(r => r.canApprove);
   }
 
   /**
@@ -570,33 +713,25 @@ export class LeaveApprovalComponent implements OnInit {
   viewRequestDetails(request: LeaveRequest): void {
     sessionStorage.setItem('returnUrl', '/leave-approval');
 
-    // Navigate to emergency exit form - mode will be determined by presence of approvalID
+    if (request.leaveType === 'BYOD') {
+      this.router.navigate(['/byod-form'], {
+        queryParams: { byodId: request.exitID, approvalID: request.approvalID, approverCode: request.currentStepName }
+      });
+      return;
+    }
+    if (request.leaveType === 'Rejoin') {
+      this.router.navigate(['/rejoining-form'], {
+        queryParams: { rejoinId: request.exitID, approvalID: request.approvalID, approverCode: request.currentStepName }
+      });
+      return;
+    }
+
     const formType = request.leaveType === 'Emergency' ? 'E' :
       request.leaveType === 'Resignation' ? 'R' : 'P';
 
     this.router.navigate(['/exit-form'], {
-      queryParams: {
-        type: formType,
-        exitID: request.exitID,
-        approvalID: request.approvalID
-      }
+      queryParams: { type: formType, exitID: request.exitID, approvalID: request.approvalID }
     });
   }
-
-  viewMyRequestDetails(request: LeaveRequest): void {
-    sessionStorage.setItem('returnUrl', '/leave-approval?tab=myRequests');
-
-    // Navigate to emergency exit form - mode will be determined by data ownership/status
-    const formType = request.leaveType === 'Emergency' ? 'E' :
-      request.leaveType === 'Resignation' ? 'R' : 'P';
-
-    this.router.navigate(['/exit-form'], {
-      queryParams: {
-        type: formType,
-        exitID: request.exitID || request.exitId
-      }
-    });
-  }
-
 
 }

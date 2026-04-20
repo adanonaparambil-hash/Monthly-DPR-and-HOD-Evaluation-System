@@ -117,6 +117,9 @@ export class DprApprovalComponent implements OnInit {
   dayLogHistory: any[] = [];
   isLoadingDayLogs = false;
 
+  // Approval loading state
+  isApproving = false;
+
   constructor(
     private api: Api,
     private sessionService: SessionService,
@@ -750,15 +753,17 @@ export class DprApprovalComponent implements OnInit {
   }
 
   performApproval(selectedLogs: DPRLog[]) {
+    // Set loading state
+    this.isApproving = true;
+    
     // Get current user (approver) from localStorage
     const currentUser = localStorage.getItem('current_user');
     if (!currentUser) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Session Error',
-        text: 'No user session found. Please login again.',
-        confirmButtonColor: '#3b82f6'
-      });
+      this.isApproving = false;
+      this.toasterService.showError(
+        'Session Error',
+        'No user session found. Please login again.'
+      );
       return;
     }
 
@@ -767,12 +772,11 @@ export class DprApprovalComponent implements OnInit {
 
     if (!approverId) {
       console.error('User session data:', approverData);
-      Swal.fire({
-        icon: 'error',
-        title: 'Session Error',
-        text: 'Employee ID not found in session. Please login again.',
-        confirmButtonColor: '#3b82f6'
-      });
+      this.isApproving = false;
+      this.toasterService.showError(
+        'Session Error',
+        'Employee ID not found in session. Please login again.'
+      );
       return;
     }
 
@@ -780,12 +784,11 @@ export class DprApprovalComponent implements OnInit {
 
     // Get the selected user (whose logs are being approved)
     if (!this.selectedUser) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No user selected',
-        confirmButtonColor: '#3b82f6'
-      });
+      this.isApproving = false;
+      this.toasterService.showError(
+        'Error',
+        'No user selected'
+      );
       return;
     }
 
@@ -817,6 +820,7 @@ export class DprApprovalComponent implements OnInit {
     this.api.bulkTaskApproval(approvalRequest).subscribe({
       next: (response: any) => {
         console.log('BulkTaskApproval API Response:', response);
+        this.isApproving = false;
         
         if (response.success) {
           // Reset selections
@@ -832,31 +836,25 @@ export class DprApprovalComponent implements OnInit {
           // Refresh pending users sidebar without changing the selected user
           this.refreshPendingUsersKeepSelection(currentSelectedUserId);
           
-          // Show success message with SweetAlert
-          Swal.fire({
-            icon: 'success',
-            title: 'Approval Successful',
-            text: response.message || 'Tasks approved successfully',
-            confirmButtonColor: '#10b981',
-            timer: 3000
-          });
+          // Show success message with Toaster
+          this.toasterService.showSuccess(
+            'Approval Successful',
+            response.message || `${selectedLogs.length} task(s) approved successfully`
+          );
         } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Approval Failed',
-            text: response.message || 'Failed to approve tasks',
-            confirmButtonColor: '#3b82f6'
-          });
+          this.toasterService.showError(
+            'Approval Failed',
+            response.message || 'Failed to approve tasks'
+          );
         }
       },
       error: (error: any) => {
         console.error('Error approving tasks:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'An error occurred while approving tasks',
-          confirmButtonColor: '#3b82f6'
-        });
+        this.isApproving = false;
+        this.toasterService.showError(
+          'Approval Error',
+          'An error occurred while approving tasks'
+        );
       }
     });
   }

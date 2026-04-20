@@ -189,14 +189,19 @@
               <button 
                 class="btn-approve-header"
                 (click)="approveSelected()"
-                [disabled]="getSelectedLogsCount() === 0"
+                [disabled]="getSelectedLogsCount() === 0 || isApproving"
               >
-                <i class="fas fa-check-double"></i>
-                <span>Approve</span>
-                @if (getSelectedLogsCount() > 0) {
-                  <span class="selection-count">
-                    {{ getSelectedLogsCount() }}
-                  </span>
+                @if (isApproving) {
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span>Approving...</span>
+                } @else {
+                  <i class="fas fa-check-double"></i>
+                  <span>Approve</span>
+                  @if (getSelectedLogsCount() > 0) {
+                    <span class="selection-count">
+                      {{ getSelectedLogsCount() }}
+                    </span>
+                  }
                 }
               </button>
             </div>

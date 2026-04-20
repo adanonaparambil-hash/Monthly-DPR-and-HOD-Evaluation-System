@@ -236,7 +236,7 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard-old': 'CED Dashboard (Old)',
       '/ced-dashboard-new': 'CED Performance Dashboard',
       '/profile': 'My Profile',
-      '/leave-approval': 'Leave Approval Management',
+      '/leave-approval': 'Approval Management',
       '/dpr-approval': 'DPR Approval Management',
       '/chat': 'Internal Communications',
       '/my-task': 'My Task Management',
@@ -245,10 +245,13 @@ export class layout implements OnInit, OnDestroy {
       '/hod-master': 'HOD Master',
       '/employee-master': 'Employee Master',
       '/rejoining-form': 'Rejoining Form',
-      '/exit-form': 'Exit Form'
+      '/exit-form': 'Exit Form',
+      '/byod-form': 'BYOD Form'
     };
 
-    return routeTitles[this.currentRoute] || 'Dashboard';
+    // Strip query params and fragments before lookup
+    const cleanRoute = this.currentRoute.split('?')[0].split('#')[0];
+    return routeTitles[cleanRoute] || 'Dashboard';
   }
 
   getMPRTitle(): string {

@@ -784,12 +784,18 @@
 
 /* Disable pointer events on readonly fields */
 input[readonly],
-textarea[readonly],
 select[disabled] {
   cursor: not-allowed;
   opacity: 0.7;
   background-color: rgba(0, 0, 0, 0.05);
   pointer-events: none;
+}
+
+textarea[readonly] {
+  cursor: default;
+  opacity: 0.7;
+  background-color: rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
 }
 
 /* Disable dropdown interactions in view-only mode */
@@ -2690,4 +2696,14 @@ select.status-dropdown-select {
 .task-main-panel.hidden,
 .task-sidebar.hidden {
   display: none;
+}
+
+/* View-only description textarea: allow scrolling to see full content */
+textarea.editable-description[readonly] {
+  overflow-y: auto !important;
+  resize: none !important;
+  min-height: 120px;
+  max-height: 300px;
+  pointer-events: auto !important;
+  cursor: default !important;
 }

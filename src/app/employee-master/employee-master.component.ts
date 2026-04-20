@@ -99,7 +99,8 @@ export class EmployeeMasterComponent implements OnInit {
         const raw: any[] = Array.isArray(res?.data) ? res.data : [];
         this.departmentObjects = raw
           .map((d: any) => ({ deptId: d.deptId || d.id || '', deptName: (d.deptName || d.description || '').trim() }))
-          .filter(d => d.deptName.length > 0);
+          .filter(d => d.deptName.length > 0)
+          .sort((a, b) => a.deptName.localeCompare(b.deptName));
         this.departmentList = this.departmentObjects.map(d => d.deptName);
       },
       error: () => { /* non-critical */ }

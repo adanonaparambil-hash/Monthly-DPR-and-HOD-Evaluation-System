@@ -1217,14 +1217,14 @@
       <div class="ltp-total-display">
         @if (isEditingLogTime) {
         <input class="ltp-total-edit-input" type="text" [(ngModel)]="logTimeEditValue" placeholder="HH:MM"
-          (blur)="confirmEditLogTime()" (keyup.enter)="confirmEditLogTime()" />
+          (keyup.enter)="confirmEditLogTime()" />
         } @else {
         <span class="ltp-total-value">{{ logTimeTotalDisplay }}</span>
         <button class="ltp-edit-btn" (click)="startEditLogTime()"><i class="fas fa-pencil-alt"></i></button>
         }
       </div>
     </div>
-    <button class="ltp-submit-btn" (click)="submitLogTime()">
+    <button class="ltp-submit-btn" (mousedown)="$event.preventDefault()" (click)="submitLogTime()">
       <i class="fas fa-save"></i> Save
     </button>
   </div>

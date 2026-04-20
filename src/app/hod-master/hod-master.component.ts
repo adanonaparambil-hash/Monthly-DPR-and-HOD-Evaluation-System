@@ -57,7 +57,8 @@ export class HodMasterComponent implements OnInit {
         const raw: any[] = Array.isArray(res?.data) ? res.data : [];
         this.departmentList = raw
           .map((d: any) => (d.deptName || d.description || '').trim())
-          .filter((n: string) => n.length > 0);
+          .filter((n: string) => n.length > 0)
+          .sort((a: string, b: string) => a.localeCompare(b));
       },
       error: () => {}
     });
@@ -175,7 +176,7 @@ export class HodMasterComponent implements OnInit {
       this.api.GetDepartmentList().subscribe({
         next: (res: any) => {
           const raw: any[] = Array.isArray(res?.data) ? res.data : [];
-          const depts = raw.map((d: any) => (d.deptName || d.description || '').trim()).filter(n => n.length > 0);
+          const depts = raw.map((d: any) => (d.deptName || d.description || '').trim()).filter(n => n.length > 0).sort((a: string, b: string) => a.localeCompare(b));
           applyDept(depts);
         },
         error: () => {

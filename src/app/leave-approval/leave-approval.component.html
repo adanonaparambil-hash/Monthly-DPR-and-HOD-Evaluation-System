@@ -22,18 +22,76 @@
     <div class="tab-panel" *ngIf="activeTab === 'pending'" [@fadeInUp]="'in'">
       <div class="panel-header">
         <h2><i class="fas fa-hourglass-half"></i> Requests Awaiting Your Approval</h2>
-        <div class="filters">
+        <div class="filters filters-pending">
+          <!-- Employee Name -->
+          <div class="filter-group filter-emp-group">
+            <label class="filter-label">Employee Name</label>
+            <div class="filter-emp-wrap">
+              <div class="filter-input-wrap" (click)="showEmpFilterDropdown = true">
+                <i class="fas fa-user filter-input-icon"></i>
+                <input type="text" class="filter-input" placeholder="Search employee…"
+                  [(ngModel)]="empFilterSearch"
+                  (ngModelChange)="onEmpFilterSearch()"
+                  (focus)="showEmpFilterDropdown = true"
+                  (blur)="onEmpFilterBlur()"
+                  autocomplete="off">
+                <i class="fas fa-chevron-down filter-dd-arrow" [class.open]="showEmpFilterDropdown"></i>
+              </div>
+              <div class="filter-emp-dropdown" *ngIf="showEmpFilterDropdown && filteredEmpList.length > 0">
+                <div class="filter-emp-option"
+                  *ngFor="let emp of filteredEmpList"
+                  (mousedown)="selectFilterEmployee(emp)">
+                  <span class="filter-emp-name">{{ emp.description }}</span>
+                  <span class="filter-emp-id">{{ emp.idValue }}</span>
+                </div>
+              </div>
+              <div class="filter-emp-dropdown filter-emp-empty"
+                *ngIf="showEmpFilterDropdown && filteredEmpList.length === 0 && empFilterSearch.length > 0">
+                <span>No employees found</span>
+              </div>
+            </div>
+          </div>
+          <!-- From Date -->
           <div class="filter-group">
-            <label class="filter-label">Leave type</label>
-            <select [ngModel]="typeFilter" (change)="onTypeFilterChange($any($event.target).value)"
-              class="filter-select">
-              <option value="all">All Types</option>
-              <option value="emergency">Emergency</option>
-              <option value="planned">Planned</option>
-              <option value="resignation">Resignation</option>
+            <label class="filter-label">From Date</label>
+            <input type="date" class="filter-select" [(ngModel)]="fromDateFilter">
+          </div>
+          <!-- To Date -->
+          <div class="filter-group">
+            <label class="filter-label">To Date</label>
+            <input type="date" class="filter-select" [(ngModel)]="toDateFilter">
+          </div>
+          <!-- Status -->
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="filter-select" [(ngModel)]="statusFilter">
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
             </select>
           </div>
-
+          <!-- Form Type -->
+          <div class="filter-group">
+            <label class="filter-label">Form Type</label>
+            <select class="filter-select" [(ngModel)]="typeFilter">
+              <option value="all">All Types</option>
+              <option value="Emergency">Exit Form</option>
+              <option value="BYOD">BYOD</option>
+              <option value="Rejoin">Rejoin</option>
+            </select>
+          </div>
+          <!-- Search & Clear -->
+          <div class="filter-group filter-group-action">
+            <label class="filter-label">&nbsp;</label>
+            <div class="filter-action-row">
+              <button class="filter-search-btn" (click)="applyPendingFilters()">
+                <i class="fas fa-search"></i> Search
+              </button>
+              <button class="filter-clear-btn" (click)="clearPendingFilters()" title="Clear all filters">
+                <i class="fas fa-times"></i> Clear
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -51,67 +109,79 @@
           <table class="requests-table" *ngIf="getMyPendingApprovals().length > 0">
             <thead>
               <tr>
-                <th>Employee ID</th>
-                <th>Employee Name</th>
+                <th>#</th>
+                <th>Employee</th>
                 <th>Department</th>
-                <th>Type</th>
-                <th>Request Date</th>
-                <th>Departure</th>
-                <th>Duration</th>
-                <th>Reason</th>
-                <th>Current Step</th>
-                <th>Actions</th>
+                <th>Form Type</th>
+                <th>Submitted Date</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let request of getMyPendingApprovals(); trackBy: trackByRequestId" class="request-row"
-                [class]="getPriorityClass(request.priority)">
+              <tr *ngFor="let request of getMyPendingApprovals(); let i = index; trackBy: trackByRequestId"
+                class="request-row">
 
-                <!-- Employee ID -->
-                <td class="id-cell">{{ request.employeeId }}</td>
+                <!-- # -->
+                <td class="idx-cell">{{ i + 1 }}</td>
 
-                <!-- Employee Name -->
-                <td class="name-cell">{{ request.employeeName }}</td>
+                <!-- Employee -->
+                <td class="emp-cell">
+                  <div class="emp-info">
+                    <div class="emp-avatar">
+                      <img *ngIf="getEmployeeAvatar(request)" [src]="getEmployeeAvatar(request)" alt="" class="emp-avatar-img">
+                      <span *ngIf="!getEmployeeAvatar(request)" class="emp-avatar-initials">
+                      {{ (request.employeeName || '?').charAt(0).toUpperCase() }}
+                      </span>
+                    </div>
+                    <div class="emp-text">
+                      <span class="emp-name">{{ request.employeeName }}</span>
+                      <span class="emp-id"><i class="fas fa-id-badge"></i> {{ request.employeeId }}</span>
+                    </div>
+                  </div>
+                </td>
 
                 <!-- Department -->
-                <td class="dept-cell">{{ request.department }}</td>
+                <td class="dept-cell">
+                  <span class="dept-pill"><i class="fas fa-building"></i> {{ request.department }}</span>
+                </td>
 
-                <!-- Type -->
+                <!-- Form Type -->
                 <td class="type-cell">
-                  <span class="badge type-badge" [class]="getTypeClass(request.leaveType)">
-                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'"
-                      [class.fa-calendar-check]="request.leaveType === 'Planned'"
-                      [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
+                  <span class="form-type-badge"
+                    [class.ftb-exit]="request.leaveType === 'Emergency'"
+                    [class.ftb-byod]="request.leaveType === 'BYOD'"
+                    [class.ftb-rejoin]="request.leaveType === 'Rejoin'">
+                    <i class="fas"
+                      [class.fa-plane-departure]="request.leaveType === 'Emergency'"
+                      [class.fa-laptop]="request.leaveType === 'BYOD'"
+                      [class.fa-user-check]="request.leaveType === 'Rejoin'"></i>
                     {{ getFormTypeText(request.leaveType) }}
                   </span>
                 </td>
 
-                <!-- Request Date -->
-                <td class="date-cell">{{ request.requestDate }}</td>
-
-                <!-- Departure Date -->
-                <td class="date-cell">{{ request.departureDate }}</td>
-
-                <!-- Duration -->
-                <td class="duration-cell">{{ request.daysRequested }} days</td>
-
-                <!-- Reason -->
-                <td class="reason-cell">
-                  <div class="reason-text" [title]="request.reason">{{ request.reason }}</div>
+                <!-- Submitted Date -->
+                <td class="date-cell">
+                  <span class="date-val">{{ request.requestDate | date:'dd MMM yyyy' }}</span>
+                  <span class="time-val">{{ request.requestDate | date:'hh:mm a' }}</span>
                 </td>
 
-                <!-- Current Step -->
-                <td class="step-cell">
-                  <div class="current-step">{{ getCurrentStepName(request) }}</div>
+                <!-- Status -->
+                <td class="status-cell">
+                  <span class="status-pill"
+                    [class.sp-pending]="request.status === 'Pending'"
+                    [class.sp-approved]="request.status === 'Approved'"
+                    [class.sp-rejected]="request.status === 'Rejected'">
+                    <span class="sp-dot"></span>
+                    {{ request.status }}
+                  </span>
                 </td>
 
-                <!-- Actions -->
+                <!-- Action -->
                 <td class="actions-cell">
-                  <div class="action-buttons">
-                    <button class="btn-view-table" (click)="viewRequestDetails(request)" title="View & Review">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </div>
+                  <button class="btn-review" (click)="viewRequestDetails(request)" title="Review">
+                    <i class="fas fa-eye"></i> Review
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -133,25 +203,49 @@
     <div class="tab-panel" *ngIf="activeTab === 'myRequests'" [@fadeInUp]="'in'">
       <div class="panel-header">
         <h2><i class="fas fa-user"></i> My Submitted Requests</h2>
-        <div class="filters">
+        <div class="filters filters-pending">
+          <!-- From Date -->
+          <div class="filter-group">
+            <label class="filter-label">From Date</label>
+            <input type="date" class="filter-select" [(ngModel)]="myFromDate">
+          </div>
+          <!-- To Date -->
+          <div class="filter-group">
+            <label class="filter-label">To Date</label>
+            <input type="date" class="filter-select" [(ngModel)]="myToDate">
+          </div>
+          <!-- Form Type -->
+          <div class="filter-group">
+            <label class="filter-label">Form Type</label>
+            <select class="filter-select" [(ngModel)]="myTypeFilter">
+              <option value="all">All Types</option>
+              <option value="EXIT">Exit Form</option>
+              <option value="BYOD">BYOD</option>
+              <option value="REJOIN">Rejoin</option>
+            </select>
+          </div>
+          <!-- Status -->
           <div class="filter-group">
             <label class="filter-label">Status</label>
-            <select [(ngModel)]="statusFilter" (change)="loadMyRequests()" class="filter-select">
+            <select class="filter-select" [(ngModel)]="myStatusFilter">
               <option value="all">All Status</option>
+              <option value="submitted">Submitted</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
           </div>
-          <div class="filter-group">
-            <label class="filter-label">Leave type</label>
-            <select [ngModel]="typeFilter" (change)="onTypeFilterChange($any($event.target).value)"
-              class="filter-select">
-              <option value="all">All Types</option>
-              <option value="emergency">Emergency</option>
-              <option value="planned">Planned</option>
-              <option value="resignation">Resignation</option>
-            </select>
+          <!-- Search & Clear -->
+          <div class="filter-group filter-group-action">
+            <label class="filter-label">&nbsp;</label>
+            <div class="filter-action-row">
+              <button class="filter-search-btn" (click)="loadMyRequests()">
+                <i class="fas fa-search"></i> Search
+              </button>
+              <button class="filter-clear-btn" (click)="clearMyRequestFilters()">
+                <i class="fas fa-times"></i> Clear
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -167,69 +261,83 @@
       <!-- My Requests Table -->
       <div class="requests-table-container" *ngIf="!isLoadingMyRequests">
         <div class="table-wrapper">
-          <table class="requests-table" *ngIf="getFilteredMyRequests().length > 0">
+          <table class="requests-table" *ngIf="myRequests.length > 0">
             <thead>
               <tr>
-                <th>Employee ID</th>
+                <th>#</th>
+                <th>Employee</th>
                 <th>Department</th>
-                <th>Type</th>
-                <th>Request Date</th>
-                <th>Departure</th>
-                <th>Duration</th>
-                <th>Reason</th>
+                <th>Form Type</th>
+                <th>Submitted Date</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let request of getFilteredMyRequests(); trackBy: trackByRequestId" class="request-row"
-                [class]="getStatusClass(request.status)">
+              <tr *ngFor="let request of myRequests; let i = index; trackBy: trackByRequestId"
+                class="request-row">
 
-                <!-- Employee ID -->
-                <td class="id-cell">{{ request.employeeId }}</td>
+                <!-- # -->
+                <td class="idx-cell">{{ i + 1 }}</td>
+
+                <!-- Employee -->
+                <td class="emp-cell">
+                  <div class="emp-info">
+                    <div class="emp-avatar">
+                      <img *ngIf="getEmployeeAvatar(request)" [src]="getEmployeeAvatar(request)" alt="" class="emp-avatar-img">
+                      <span *ngIf="!getEmployeeAvatar(request)" class="emp-avatar-initials">
+                        {{ (request.employeeName || '?').charAt(0).toUpperCase() }}
+                      </span>
+                    </div>
+                    <div class="emp-text">
+                      <span class="emp-name">{{ request.employeeName }}</span>
+                      <span class="emp-id"><i class="fas fa-id-badge"></i> {{ request.employeeId }}</span>
+                    </div>
+                  </div>
+                </td>
 
                 <!-- Department -->
-                <td class="dept-cell">{{ request.department }}</td>
+                <td class="dept-cell">
+                  <span class="dept-pill"><i class="fas fa-building"></i> {{ request.department }}</span>
+                </td>
 
-                <!-- Type -->
+                <!-- Form Type -->
                 <td class="type-cell">
-                  <span class="badge type-badge" [class]="getTypeClass(request.leaveType)">
-                    <i class="fas" [class.fa-exclamation-triangle]="request.leaveType === 'Emergency'"
-                      [class.fa-calendar-check]="request.leaveType === 'Planned'"
-                      [class.fa-user-times]="request.leaveType === 'Resignation'"></i>
+                  <span class="form-type-badge"
+                    [class.ftb-exit]="request.leaveType === 'Emergency'"
+                    [class.ftb-byod]="request.leaveType === 'BYOD'"
+                    [class.ftb-rejoin]="request.leaveType === 'Rejoin'">
+                    <i class="fas"
+                      [class.fa-plane-departure]="request.leaveType === 'Emergency'"
+                      [class.fa-laptop]="request.leaveType === 'BYOD'"
+                      [class.fa-user-check]="request.leaveType === 'Rejoin'"></i>
                     {{ getFormTypeText(request.leaveType) }}
                   </span>
                 </td>
 
                 <!-- Submitted Date -->
-                <td class="date-cell">{{ request.requestDate }}</td>
-
-                <!-- Departure Date -->
-                <td class="date-cell">{{ request.departureDate }}</td>
-
-                <!-- Duration -->
-                <td class="duration-cell">{{ request.daysRequested }} days</td>
-
-                <!-- Reason -->
-                <td class="reason-cell">
-                  <div class="reason-text" [title]="request.reason">{{ request.reason }}</div>
+                <td class="date-cell">
+                  <span class="date-val">{{ request.requestDate | date:'dd MMM yyyy' }}</span>
+                  <span class="time-val">{{ request.requestDate | date:'hh:mm a' }}</span>
                 </td>
 
                 <!-- Status -->
                 <td class="status-cell">
-                  <span class="badge status-badge" [class]="getStatusClass(request.status)">
+                  <span class="status-pill"
+                    [class.sp-submitted]="request.status === 'Submitted'"
+                    [class.sp-pending]="request.status === 'Pending'"
+                    [class.sp-approved]="request.status === 'Approved'"
+                    [class.sp-rejected]="request.status === 'Rejected'">
+                    <span class="sp-dot"></span>
                     {{ request.status }}
                   </span>
                 </td>
 
-
-                <!-- Actions -->
+                <!-- Action -->
                 <td class="actions-cell">
-                  <div class="action-buttons">
-                    <button class="btn-view-table" (click)="viewMyRequestDetails(request)" title="View Details">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </div>
+                  <button class="btn-review" (click)="viewMyRequestDetails(request)" title="View">
+                    <i class="fas fa-eye"></i> View
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -237,12 +345,10 @@
         </div>
 
         <!-- No Requests -->
-        <div class="empty-state" *ngIf="getFilteredMyRequests().length === 0">
-          <div class="empty-icon">
-            <i class="fas fa-inbox"></i>
-          </div>
+        <div class="empty-state" *ngIf="myRequests.length === 0">
+          <div class="empty-icon"><i class="fas fa-inbox"></i></div>
           <h3>No Requests Found</h3>
-          <p>You haven't submitted any requests yet.</p>
+          <p>No submitted requests match your filters.</p>
         </div>
       </div>
     </div>

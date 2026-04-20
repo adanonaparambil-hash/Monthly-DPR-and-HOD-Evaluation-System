@@ -895,12 +895,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
           
-          // Sort tasks: RUNNING tasks first, then others
-          this.tasks.sort((a, b) => {
-            if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
-            if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
-            return 0;
-          });
+          // Preserve original order from API - do not reorder on status change
           
           // Find and set the active task - ONLY from MY TASKS list (not from Assigned to Others)
           // Priority: RUNNING > PAUSED > CLOSED > Any task from My Tasks > None
@@ -1029,12 +1024,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           // Convert ActiveTaskDto to Task format for display
           this.tasks = this.convertActiveTasksToTasks([...this.myTasksList, ...this.assignedByMeList]);
           
-          // Sort tasks: RUNNING tasks first, then others
-          this.tasks.sort((a, b) => {
-            if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
-            if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
-            return 0;
-          });
+          // Preserve original order from API - do not reorder on status change
           
           // Find and set the active task - ONLY from MY TASKS list (not from Assigned to Others)
           // Priority: RUNNING > PAUSED > CLOSED > Any task from My Tasks > None
@@ -3225,8 +3215,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       };
       const diff = parseTime(this.logTimeEndTime) - parseTime(this.logTimeStartTime);
       if (diff > 0) {
-        this.logTimeTotalMinutes = diff;
-        this.logTimeTotalDisplay = `${String(Math.floor(diff / 60)).padStart(2, '0')}:${String(diff % 60).padStart(2, '0')}`;
+        // Cap at original minutes — user can only decrease
+        const capped = Math.min(diff, this.logTimeOriginalMinutes);
+        this.logTimeTotalMinutes = capped;
+        this.logTimeTotalDisplay = `${String(Math.floor(capped / 60)).padStart(2, '0')}:${String(capped % 60).padStart(2, '0')}`;
         this.logTimeEditValue = this.logTimeTotalDisplay;
       }
     } catch (e) {}
@@ -3255,16 +3247,31 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   submitLogTime() {
-    if (this.logTimeTotalMinutes < 0) {
-      this.toasterService.showError('Invalid Time', 'Time cannot be negative');
+    // Always re-parse the current display value to catch any unconfirmed edits
+    const currentDisplay = this.isEditingLogTime ? this.logTimeEditValue : this.logTimeTotalDisplay;
+    const parts = currentDisplay.split(':');
+    if (parts.length === 2) {
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (!isNaN(h) && !isNaN(m) && m >= 0 && m <= 59) {
+        const parsed = h * 60 + m;
+        if (parsed > this.logTimeOriginalMinutes) {
+          this.toasterService.showError('Invalid Time', 'You can only reduce the time, not increase it');
+          this.logTimeEditValue = this.logTimeTotalDisplay;
+          this.isEditingLogTime = false;
+          return;
+        }
+        this.logTimeTotalMinutes = parsed;
+      }
+    }
+    this.isEditingLogTime = false;
+
+    if (!this.logTimeTimeLogId) {
+      this.toasterService.showError('Error', 'Time log ID not found');
       return;
     }
     if (this.logTimeTotalMinutes > this.logTimeOriginalMinutes) {
       this.toasterService.showError('Invalid Time', 'You can only reduce the time, not increase it');
-      return;
-    }
-    if (!this.logTimeTimeLogId) {
-      this.toasterService.showError('Error', 'Time log ID not found');
       return;
     }
     const currentUser = this.sessionService.getCurrentUser();
@@ -4055,16 +4062,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   }
 
-  // Sort tasks with priority: AUTO CLOSED first, then RUNNING, then others
+  // Sort tasks with priority: AUTO CLOSED first, then preserve original order
   sortTasksByPriority(tasks: Task[]): Task[] {
     return tasks.sort((a, b) => {
       // AUTO CLOSED tasks come first
       if (a.status === 'AUTO CLOSED' && b.status !== 'AUTO CLOSED') return -1;
       if (a.status !== 'AUTO CLOSED' && b.status === 'AUTO CLOSED') return 1;
-      
-      // Then RUNNING tasks
-      if (a.status === 'RUNNING' && b.status !== 'RUNNING') return -1;
-      if (a.status !== 'RUNNING' && b.status === 'RUNNING') return 1;
       
       return 0;
     });

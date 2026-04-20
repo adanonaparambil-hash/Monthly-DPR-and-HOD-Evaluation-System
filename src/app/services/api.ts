@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
-import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest } from '../models/employeeExit.model';
+import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest , EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, CustomFieldDtolist, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
 
 
@@ -213,6 +213,10 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
 
+  getEmployeePunchByDate(employeeId: string, date: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/EmpExitForm/getEmployeePunchByDate?employeeId=${employeeId}&date=${date}`);
+  }
+
 
   InsertEmployeeExit(EmployeeExitRequest: EmployeeExitRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/InsertEmployeeExit`, EmployeeExitRequest);
@@ -221,10 +225,6 @@ export class Api {
 
   GetMySubmittedRequests(MyApprovalRequest: MyApprovalRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/GetMySubmittedRequests`, MyApprovalRequest);
-  }
-
-  GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
   }
 
 
@@ -499,6 +499,39 @@ export class Api {
   getEmployeeMasterList(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
+
+
+  //RejoinForm 
+
+
+  saveEmployeeRejoining(request: EmployeeRejoiningDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/EmpExitForm/SaveEmployeeRejoining`, request);
+  }
+  
+  getEmployeeRejoiningById(rejoinId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetEmployeeRejoiningById?rejoinId=${rejoinId}`);
+  }
+  
+
+  //byod
+
+  saveEmployeeByod(request: EmployeeByodDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/EmpExitForm/SaveEmployeeByod`, request);
+  }
+
+  getEmployeeByodById(byodId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetEmployeeByodById?byodId=${byodId}`);
+  }
+
+  
+  // GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
+  //   return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
+  // }
+
+  GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
+  }
+
 
 }
 

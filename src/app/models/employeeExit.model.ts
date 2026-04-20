@@ -92,15 +92,27 @@ export interface EmployeeExitRequest {
 export interface MyApprovalRequest {
   employeeId?: string;
   status?: string;
-  formType?: string
+  formType?: string;
+  fromDate?: string;
+  toDate?: string
 }
+
+
+// export interface EmployeeApprovalInboxRequest {
+//   ApproverEmployeeId?: string;
+//   FormType?: string
+// }
 
 
 export interface EmployeeApprovalInboxRequest {
-  ApproverEmployeeId?: string;
-  FormType?: string
+  approverId?: string;
+  formType?: string;     // 'E' | 'B' | 'R' | null
+  fromDate?: Date | null;
+  toDate?: Date | null;
+  department?: string;
+  status?: string;
+  employeeId?: string;
 }
-
 
 export interface ExitApprovalDetailDto {
   approverRole?: string;
@@ -146,4 +158,68 @@ export interface IssuedAssetsResponse {
 
 export interface GroupedAssets {
   [category: string]: IssuedAsset[];
+}
+
+
+export interface EmployeeRejoiningDto {
+  rejoinId?: number;
+
+  employeeId: string;
+  section?: string;
+  labourCardExpiryDate?: string;
+
+  emergencyContactName?: string;
+  relation?: string;
+  emergencyContactAddress?: string;
+  emergencyContactPhone?: string;
+  emergencyContactEmail?: string;
+
+  leaveType?: string;
+  dateOfDeparture?: string;
+  approvedLeaveArrivalDate?: string;
+  extensionDate?: string;
+  joiningDate?: string;
+  arrivedOn?: string;
+
+  remarks?: string;
+
+  passportNo?: string;
+  passportDateOfIssue?: string;
+  passportExpiryDate?: string;
+
+  abDocNo?: string;
+  passportReceivedBy?: string;
+  passportFileRackNo?: string;
+
+  status?: string;
+  createdBy?: string;
+  createdOn?: string;
+
+  approvalId?: number;
+  approvalRemarks?: string;
+  baseurl?: string;
+}
+
+
+export interface EmployeeByodDto {
+  byodId?: number;
+
+  employeeId: string;
+  userType: string;
+  assetCode: string;
+
+  dateOfPurchase?: string;
+  yearsAsOnDate?: number;
+
+  status?: string;
+  category?: string;
+  userExisting?: string;
+
+  approvalId?: number;
+  approvalRemarks?: string;
+
+  hod?: string;
+  createdBy?: string;
+  createdOn?: string;
+  baseurl?: string;
 }
