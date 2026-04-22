@@ -22,7 +22,7 @@
       </a>
 
       <!-- MPR Menu with Sub-items - HIDDEN FOR NOW (hidden in DPR-only mode) -->
-      <div class="menu-item-with-submenu" >
+      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
         <a class="parent-menu" (click)="toggleMPRMenu()" [class.active]="isMPRRouteActive()">
           <div class="menu-content">
             <i class="fas fa-file-alt"></i>
