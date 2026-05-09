@@ -2,22 +2,23 @@ import { Component } from '@angular/core';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { FormsModule } from '@angular/forms';
 import { DPRTask, DPRKPI, DPRReview, ProofhubTaskDto, DPRComment } from '../models/task.model';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { DropdownOption, Notification, SendEmailRequest } from '../models/common.model';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AvatarUtil } from '../utils/avatar.util';
 
 
 
 @Component({
-  selector: 'app-monthly-dpr',
+  selector: 'app-apr',
   standalone: true,
   imports: [FormsModule, CommonModule],
-  templateUrl: './monthly-dpr.component.html',
-  styleUrl: './monthly-dpr.component.css',
+  templateUrl: './apr.component.html',
+  styleUrl: './apr.component.css',
   animations: [
     trigger('fadeInUp', [
       transition('* => *', [
@@ -53,7 +54,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     ]),
   ],
 })
-export class MonthlyDprComponent {
+export class AprComponent {
   monthYear = '';
 
   EmailID = '';
@@ -63,6 +64,10 @@ export class MonthlyDprComponent {
   showHodEvaluation = true;
   showManagementRemarks = true;
   showRemarksHistory = true;
+
+  // HOD Evaluation inputs
+  hodRecommendation: 'increment' | 'promotion' | 'no_change' | '' = '';
+  hodRemarks = '';
   summaryText = '';
   showModal = false;
   isGeneratingSummary = false;
@@ -83,9 +88,64 @@ export class MonthlyDprComponent {
   WorkedHours = 0;
   TotalEstimatedhours = 0;
 
+  // Profile display fields
+  profileImage = AvatarUtil.DEFAULT_AVATAR;
+  dateOfJoining = '';
+  totalExperience = '';
+  employmentType = '';
+  appraisalPeriod = '';
+
+  // Reviewers — up to 3 selected employees
+  selectedReviewers: string[] = [];   // array of empId strings
+  reviewerDropdownOpen = false;
+  reviewerSearchTerm = '';
+  employeeList: any[] = [];           // full employee list for reviewer selection
+
+  // HOD Evaluation reviewers — up to 3
+  selectedHodReviewers: string[] = [];
+  hodReviewerDropdownOpen = false;
+  hodReviewerSearchTerm = '';
+
   achievements = '';
   challenges = '';
   supportNeeded = '';
+
+  // Self-appraisal (sa* — matches C# field names)
+  saQuality = 0;
+  saTimeliness = 0;
+  saInitiative = 0;
+  saCommunication = 0;
+  saTeamwork = 0;
+  saProblemSolving = 0;
+  saAdaptability = 0;
+  saLearning = 0;
+  saGoalAlignment = 0;
+  saOverallSelf = 0;
+  saComments = '';
+
+  // Work summary
+  keyResponsibilities = '';
+  deliverablesOutcomes = '';
+
+  // Training & development
+  trainingCompleted = '';
+  skillsDeveloped = '';
+  trainingNeeded = '';
+
+  // Career goals
+  careerGoals = '';
+  supportNeededAnnual = '';
+
+  // Annual achievements
+  annualAchievements = '';
+  annualChallenges = '';
+
+  // Section collapse state
+  showWorkSummary = true;
+  showSelfAppraisal = true;
+  showAchievements = true;
+  showTraining = true;
+  showCareerGoals = true;
 
   quality = 0;
   timeliness = 0;
@@ -198,7 +258,7 @@ export class MonthlyDprComponent {
     if (this.isCed) return false; // CED should not see management remarks
 
     // HOD should only see management remarks when coming from evaluation sources
-    // Hide when coming directly from MPR Entry menu (no 'from' param or from='direct')
+    // Hide when coming directly from APR Entry menu (no 'from' param or from='direct')
     if (this.isHod) {
       const isDirectEntry = !this.navigationSource || this.navigationSource === 'direct';
       return !isDirectEntry; // Show only when NOT direct entry
@@ -212,7 +272,7 @@ export class MonthlyDprComponent {
   // Remarks History section visibility
   get showRemarksHistorySection(): boolean {
     // HOD should only see remarks history when coming from evaluation sources
-    // Hide when coming directly from MPR Entry menu
+    // Hide when coming directly from APR Entry menu
     if (this.isHod) {
       const isDirectEntry = !this.navigationSource || this.navigationSource === 'direct';
       return !isDirectEntry && this.canViewRemarksHistory; // Show only when NOT direct entry
@@ -275,50 +335,39 @@ export class MonthlyDprComponent {
 
 
   calculateOverallRating(): void {
-    // Calculate individual evaluation scores (all values are out of 100)
-    const qualityScore = this.quality || 0;
-    const timelinessScore = this.timeliness || 0;
-    const initiativeScore = this.initiative || 0;
-    const problemSolvingScore = this.problemSolving || 0;
-    const teamWorkScore = this.teamWork || 0;
+    const qualityScore       = this.quality       || 0;
+    const timelinessScore    = this.timeliness    || 0;
+    const initiativeScore    = this.initiative    || 0;
+    const problemSolvingScore= this.problemSolving|| 0;
+    const teamWorkScore      = this.teamWork      || 0;
     const communicationScore = this.communication || 0;
-    const hodRatingValue = this.hodRating || 0;
+    const hodRatingValue     = this.hodRating     || 0;
 
-    // Calculate HOD Evaluation Average for display purposes only
-    const hodScores = [
-      qualityScore,
-      timelinessScore,
-      initiativeScore,
-      problemSolvingScore,
-      teamWorkScore,
-      communicationScore
-    ].filter(score => score > 0);
-
+    // HOD Evaluation Average (for display only)
+    const hodScores = [qualityScore, timelinessScore, initiativeScore,
+                       problemSolvingScore, teamWorkScore, communicationScore]
+                      .filter(s => s > 0);
     this.hodEvaluationAverage = hodScores.length > 0
-      ? Math.round((hodScores.reduce((sum, score) => sum + score, 0) / hodScores.length) * 100) / 100
+      ? Math.round((hodScores.reduce((a, b) => a + b, 0) / hodScores.length) * 100) / 100
       : 0;
 
-    // Calculate Productivity Score (out of 5)
     this.calculateProductivityScore();
 
-    // Calculate Final Overall Rating using new weighted formula
-    // HOD Rating: 70%, Individual criteria: 5% each (30% total)
-    const hodRatingWeight = 0.7;
-    const individualCriteriaWeight = 0.05; // 5% each
+    // Weightage: HOD Overall Rating = 60%, 6 competencies share 40% (≈6.667% each)
+    const hodWeight         = 0.60;
+    const competencyWeight  = 0.40 / 6; // ≈ 0.06667 each
 
     const weightedAverage =
-      (hodRatingValue * hodRatingWeight) +
-      (qualityScore * individualCriteriaWeight) +
-      (timelinessScore * individualCriteriaWeight) +
-      (initiativeScore * individualCriteriaWeight) +
-      (problemSolvingScore * individualCriteriaWeight) +
-      (teamWorkScore * individualCriteriaWeight) +
-      (communicationScore * individualCriteriaWeight);
+      (hodRatingValue     * hodWeight) +
+      (qualityScore       * competencyWeight) +
+      (timelinessScore    * competencyWeight) +
+      (initiativeScore    * competencyWeight) +
+      (problemSolvingScore* competencyWeight) +
+      (teamWorkScore      * competencyWeight) +
+      (communicationScore * competencyWeight);
 
-    // Since all values are already out of 100, no need to multiply by 20
     this.overallScore = Math.round(weightedAverage);
 
-    // Show overall rating section if we have any meaningful data
     this.showOverallRating =
       this.hodEvaluationAverage > 0 || this.productivityScore > 0 || this.hodRating > 0;
   }
@@ -487,7 +536,11 @@ export class MonthlyDprComponent {
   // Track navigation source
   private navigationSource: string = '';
 
-  constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute, private router: Router) { }
+  constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute, private router: Router, private location: Location) { }
+
+  goBack(): void {
+    this.location.back();
+  }
 
   ngOnInit() {
 
@@ -496,12 +549,10 @@ export class MonthlyDprComponent {
     this.navigationSource = this.route.snapshot.queryParamMap.get('from') || '';
 
     // Set a default title immediately (will be updated when data loads)
-    if (!sessionStorage.getItem('currentMPRMonthYear')) {
-      sessionStorage.setItem('currentMPRMonthYear', 'Loading...');
-      window.dispatchEvent(new CustomEvent('mprMonthYearUpdated'));
+    if (!sessionStorage.getItem('currentAPRMonthYear')) {
+      sessionStorage.setItem('currentAPRMonthYear', 'Loading...');
+      window.dispatchEvent(new CustomEvent('aprMonthYearUpdated'));
     }
-
-    // this.loadKPIs();
 
     const user = JSON.parse(localStorage.getItem('current_user') || '{}');
     if (user) {
@@ -510,6 +561,12 @@ export class MonthlyDprComponent {
       this.designation = user.designation || '';
       this.department = user.department || '';
       this.EmailID = user.email || '';
+
+      // Profile display fields — pre-fill from session, then enrich from API
+      this.profileImage = AvatarUtil.processProfileImage(user.profileImageBase64);
+      this.dateOfJoining = user.dateOfJoining || user.joiningDate || '';
+      this.totalExperience = user.totalExperience || user.experience || '';
+      this.employmentType = user.employmentType || user.empType || 'Full-time';
 
       // Determine userType from session (default Employee)
       const code = ((user.isHOD || user.role || user.userType || '') as string).toString().toUpperCase();
@@ -520,24 +577,61 @@ export class MonthlyDprComponent {
       } else {
         this.userType = 'E';
       }
+
+      // Load full profile from API to enrich profile fields
+      if (!this.dprid && this.empId) {
+        this.loadEmployeeProfile(this.empId);
+      }
     }
 
-    // Only load KPIs if not loading an existing DPR (dprid will be set when viewing past reports)
-    // When viewing past reports, KPIs will be loaded after DPR data is fetched with correct department
+    // Load employee list for reviewer selection
+    this.api.getEmployeeMasterList().subscribe({
+      next: (res: any) => {
+        if (res?.success && res?.data) {
+          this.employeeList = res.data;
+        }
+      },
+      error: () => {}
+    });
+
     if (!this.dprid) {
       this.loadKPIs();
     }
 
     this.loadHodMasterList();
-
-    // Load DPR details first, then decide if we need ProofHub tasks
     this.GetDPREmployeeReviewDetails(this.dprid);
 
-    // Initial calculation of overall rating
     setTimeout(() => {
       this.calculateOverallRating();
     }, 1000);
 
+  }
+
+  private loadEmployeeProfile(empId: string): void {
+    this.api.GetEmployeeProfile(empId).subscribe({
+      next: (res: any) => {
+        if (res?.success && res?.data) {
+          const d = res.data;
+          this.empName        = d.employeeName  || this.empName;
+          this.designation    = d.designation   || this.designation;
+          this.department     = d.department    || this.department;
+          this.profileImage   = AvatarUtil.processProfileImage(d.profileImageBase64) || this.profileImage;
+          this.dateOfJoining  = d.doj           || d.joinDate || this.dateOfJoining;
+          this.employmentType = d.employmentType || this.employmentType || 'Full-time';
+
+          // Compute total experience from experienceInd + experienceAbroad (years)
+          const expInd    = Number(d.experienceInd)    || 0;
+          const expAbroad = Number(d.experienceAbroad) || 0;
+          const totalYrs  = expInd + expAbroad;
+          if (totalYrs > 0) {
+            const yrs = Math.floor(totalYrs);
+            const mos = Math.round((totalYrs - yrs) * 12);
+            this.totalExperience = mos > 0 ? `${yrs} yrs ${mos} mos` : `${yrs} yrs`;
+          }
+        }
+      },
+      error: (err: any) => console.error('Error loading employee profile:', err)
+    });
   }
 
 
@@ -560,6 +654,137 @@ export class MonthlyDprComponent {
 
   toggleRemarksHistory() {
     this.showRemarksHistory = !this.showRemarksHistory;
+  }
+
+  toggleWorkSummary() { this.showWorkSummary = !this.showWorkSummary; }
+  toggleSelfAppraisal() { this.showSelfAppraisal = !this.showSelfAppraisal; }
+  toggleAchievements() { this.showAchievements = !this.showAchievements; }
+  toggleTraining() { this.showTraining = !this.showTraining; }
+  toggleCareerGoals() { this.showCareerGoals = !this.showCareerGoals; }
+
+  onAvatarError(event: Event) {
+    AvatarUtil.handleImageError(event);
+  }
+
+  // ── Reviewer multi-select helpers ────────────────────────────
+  get filteredEmployeeList(): any[] {
+    const term = this.reviewerSearchTerm.toLowerCase().trim();
+    return this.employeeList.filter(e => {
+      const id   = e.empId || e.idValue || '';
+      const name = (e.employeeName || e.description || '').toLowerCase();
+      return id !== this.empId && (term === '' || name.includes(term));
+    });
+  }
+
+  isReviewerSelected(empId: string): boolean {
+    return this.selectedReviewers.includes(empId);
+  }
+
+  toggleReviewer(empId: string): void {
+    if (!this.canEditFields) return;
+    const idx = this.selectedReviewers.indexOf(empId);
+    if (idx > -1) {
+      this.selectedReviewers.splice(idx, 1);
+    } else if (this.selectedReviewers.length < 3) {
+      this.selectedReviewers.push(empId);
+    }
+  }
+
+  removeReviewer(empId: string): void {
+    this.selectedReviewers = this.selectedReviewers.filter(id => id !== empId);
+  }
+
+  getReviewerName(empId: string): string {
+    const emp = this.employeeList.find(e => (e.empId || e.idValue) === empId);
+    return emp ? (emp.employeeName || emp.description || empId) : empId;
+  }
+
+  toggleReviewerDropdown(): void {
+    if (!this.canEditFields) return;
+    this.reviewerDropdownOpen = !this.reviewerDropdownOpen;
+    if (this.reviewerDropdownOpen) this.reviewerSearchTerm = '';
+  }
+
+  closeReviewerDropdown(): void {
+    this.reviewerDropdownOpen = false;
+  }
+
+  // ── HOD Evaluation reviewer helpers ──────────────────────────
+  get filteredHodReviewerList(): any[] {
+    const term = this.hodReviewerSearchTerm.toLowerCase().trim();
+    return this.employeeList.filter(e => {
+      const id   = e.empId || e.idValue || '';
+      const name = (e.employeeName || e.description || '').toLowerCase();
+      return term === '' || name.includes(term);
+    });
+  }
+
+  isHodReviewerSelected(empId: string): boolean {
+    return this.selectedHodReviewers.includes(empId);
+  }
+
+  toggleHodReviewer(empId: string): void {
+    if (!this.canEditHodEvaluation) return;
+    const idx = this.selectedHodReviewers.indexOf(empId);
+    if (idx > -1) {
+      this.selectedHodReviewers.splice(idx, 1);
+    } else if (this.selectedHodReviewers.length < 3) {
+      this.selectedHodReviewers.push(empId);
+    }
+  }
+
+  removeHodReviewer(empId: string): void {
+    this.selectedHodReviewers = this.selectedHodReviewers.filter(id => id !== empId);
+  }
+
+  hodReviewerRect: { top: number; left: number; width: number } | null = null;
+
+  toggleHodReviewerDropdown(event: MouseEvent): void {
+    if (!this.canEditHodEvaluation) return;
+    this.hodReviewerDropdownOpen = !this.hodReviewerDropdownOpen;
+    if (this.hodReviewerDropdownOpen) {
+      this.hodReviewerSearchTerm = '';
+      const el = (event.currentTarget as HTMLElement);
+      const rect = el.getBoundingClientRect();
+      this.hodReviewerRect = { top: rect.bottom + 6, left: rect.left, width: rect.width };
+    }
+  }
+
+  closeHodReviewerDropdown(): void {
+    this.hodReviewerDropdownOpen = false;
+    this.hodReviewerRect = null;
+  }
+
+  // Self-appraisal reflection statements
+  readonly selfAppraisalStatements = [
+    { key: 'saQuality',       label: 'I consistently delivered work that met or exceeded the expected quality standard.',                    area: 'Quality & output' },
+    { key: 'saTimeliness',    label: 'I met my deadlines and honoured commitments throughout the appraisal year.',                          area: 'Timeliness & reliability' },
+    { key: 'saInitiative',    label: 'I took initiative and went beyond my core responsibilities without being asked.',                      area: 'Initiative & ownership' },
+    { key: 'saCommunication', label: 'I communicated clearly and kept my manager and team informed on progress and issues.',                 area: 'Communication' },
+    { key: 'saTeamwork',      label: 'I actively supported my teammates and contributed to a positive team environment.',                    area: 'Teamwork & collaboration' },
+    { key: 'saProblemSolving',label: 'I identified problems early, analysed them effectively, and resolved them with minimal escalation.',   area: 'Problem solving' },
+    { key: 'saAdaptability',  label: 'I adapted well to changes in priorities, processes, or team structure during the year.',               area: 'Adaptability' },
+    { key: 'saLearning',      label: 'I actively pursued learning opportunities and applied new knowledge to my work.',                      area: 'Learning & growth' },
+    { key: 'saGoalAlignment', label: 'My work was consistently aligned with the department\'s objectives and organisational goals.',         area: 'Goal alignment' },
+    { key: 'saOverallSelf',   label: 'Overall, I am satisfied with my performance and contribution this appraisal year.',                   area: 'Overall self-assessment' },
+  ];
+
+  getSelfRating(key: string): number {
+    return (this as any)[key] || 0;
+  }
+
+  setSelfRating(key: string, value: number): void {
+    if (this.canEditFields) {
+      (this as any)[key] = value;
+    }
+  }
+
+  get selfAppraisalAnsweredCount(): number {
+    return this.selfAppraisalStatements.filter(s => this.getSelfRating(s.key) > 0).length;
+  }
+
+  get selfAppraisalTotal(): number {
+    return this.selfAppraisalStatements.reduce((sum, s) => sum + this.getSelfRating(s.key), 0);
   }
 
   addNewTask() {
@@ -765,47 +990,23 @@ export class MonthlyDprComponent {
   }
 
   saveDraft() {
-    // Validation for Save Draft
+    // APR Draft — only require reporting manager
     if (!this.reportingTo) {
-      this.toastr.warning('Please specify the Reporting To field before saving.', 'Validation Failed');
+      this.toastr.warning('Please select a Reporting Manager before saving.', 'Validation Failed');
       return;
     }
-
-    // Check if at least one task exists with valid data
-    const validTasks = this.tasks.filter(
-      (task) => task.taskName && task.taskName.trim() !== ''
-    );
-
-    if (validTasks.length === 0) {
-      this.toastr.warning('Please add at least one task before saving.', 'Validation Failed');
-      return;
-    }
-
-    // Check if total actual hours exceed worked hours
-    const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
-
-    if (totalActualHours > this.WorkedHours) {
-      const exceededBy = totalActualHours - this.WorkedHours;
-      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
-      this.toastr.warning(
-        `Cannot save: Total actual hours (${totalActualHours}) exceed worked hours (${this.WorkedHours}) by ${exceededBy} hours (${percentage}%). Please adjust task hours.`,
-        'Hours Exceeded'
-      );
-      return;
-    }
-
     this.ApprovalStatus = 'D';
     this.saveEmployeeDetails();
   }
 
   ApproveReview() {
     this.ApprovalStatus = 'A';
-    this.HODReviewUpdate();
+    this.saveEmployeeDetails();
   }
 
   ReWorkReview() {
     this.ApprovalStatus = 'R';
-    this.HODReviewUpdate();
+    this.saveEmployeeDetails();
   }
 
   HODReviewUpdate() {
@@ -841,8 +1042,10 @@ export class MonthlyDprComponent {
           scoreTeamWork: Number(this.teamWork),
           scoreCommunication: Number(this.communication),
           hodrating: Number(this.hodRating),
-          scoreOverall: Number(this.overallScore), // System-generated final score (20-100)
+          scoreOverall: Number(this.overallScore),
           remarks: this.managementRemarks,
+          hodRecommendation: this.hodRecommendation,
+          hodRemarks: this.hodRemarks,
           dprid: this.dprid,
           overallValue: this.getRatingText(this.overallScore),
         };
@@ -862,9 +1065,9 @@ export class MonthlyDprComponent {
                 console.error('Error sending employee notification:', error);
               }
 
-              // Navigate to past reports page after successful approval/pushback
+              // Navigate to APR past reports page after successful approval/pushback
               setTimeout(() => {
-                this.router.navigate(['/past-reports']);
+                this.router.navigate(['/apr-past-reports']);
               }, 1500); // Small delay to show success message
 
             } else {
@@ -883,79 +1086,130 @@ export class MonthlyDprComponent {
 
   saveEmployeeDetails() {
 
-
-    if (this.ApprovalStatus == "S") {
-
+    if (this.ApprovalStatus === 'S') {
       this.ConfirmationMessage = 'Do you want to submit the review details?';
       this.ConfirmationMessageOnSubmit = 'Yes, Submit it!';
 
-      // Validation 1: Reporting To is required
+      // APR Submit validations — only APR-relevant fields
       if (!this.reportingTo) {
-        this.toastr.warning('Please specify the Reporting To field before submitting.', 'Validation Failed');
+        this.toastr.warning('Please select a Reporting Manager before submitting.', 'Validation Failed');
         return;
       }
 
-      // Validation 2: At least one task must exist
-      if (this.tasks.length === 0) {
-        this.toastr.warning('Please add at least one task before submitting.', 'Validation Failed');
+      if (!this.keyResponsibilities || this.keyResponsibilities.trim() === '') {
+        this.toastr.warning('Please fill in Key Responsibilities in the Work Summary section.', 'Validation Failed');
         return;
       }
 
-      // Validation 3: All tasks must be complete
-      const hasIncompleteTasks = this.tasks.some(
-        (task) => !task.taskName || !task.description || task.actualHours <= 0
-      );
-
-      if (hasIncompleteTasks) {
-        this.toastr.warning('Please complete all task details. Each task must have a name, description, and actual hours.', 'Validation Failed');
+      if (!this.deliverablesOutcomes || this.deliverablesOutcomes.trim() === '') {
+        this.toastr.warning('Please fill in Deliverables & Outcomes in the Work Summary section.', 'Validation Failed');
         return;
       }
 
-      // Validation 4: Total actual hours should not exceed worked hours
-      const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
-
-      if (totalActualHours > this.WorkedHours) {
-        this.toastr.warning('The sum of actual hours exceeds the Worked Hours. Please adjust your task hours.', 'Validation Failed');
+      const answeredCount = this.selfAppraisalAnsweredCount;
+      if (answeredCount < this.selfAppraisalStatements.length) {
+        this.toastr.warning(
+          `Please complete all ${this.selfAppraisalStatements.length} self-appraisal statements. (${answeredCount} of ${this.selfAppraisalStatements.length} answered)`,
+          'Validation Failed'
+        );
         return;
       }
 
-      // Validation 5: At least one KPI must be properly filled
-      const validKPIs = this.kpis.filter(
-        (kpi) => {
-          if (!kpi.kpiMasterId || kpi.kpiMasterId === 0) return false;
-          if (!kpi.kpiValue) return false;
-          if (typeof kpi.kpiValue === 'string' && kpi.kpiValue.trim() === '') return false;
-          if (typeof kpi.kpiValue === 'number' && kpi.kpiValue <= 0) return false;
-          return true;
-        }
-      );
-
-      if (validKPIs.length === 0) {
-        this.toastr.warning('Please complete at least one KPI with selection and value.', 'Validation Failed');
+      if (!this.annualAchievements || this.annualAchievements.trim() === '') {
+        this.toastr.warning('Please fill in Key Achievements & Highlights in the Achievements section.', 'Validation Failed');
         return;
       }
-    }
-    else {
+
+      if (!this.annualChallenges || this.annualChallenges.trim() === '') {
+        this.toastr.warning('Please fill in Challenges Faced in the Achievements section.', 'Validation Failed');
+        return;
+      }
+
+      if (!this.skillsDeveloped || this.skillsDeveloped.trim() === '') {
+        this.toastr.warning('Please fill in Skills Developed in the Training & Development section.', 'Validation Failed');
+        return;
+      }
+
+    } else if (this.ApprovalStatus === 'A') {
+      this.ConfirmationMessage = 'Do you want to approve this appraisal?';
+      this.ConfirmationMessageOnSubmit = 'Yes, Approve it!';
+
+    } else if (this.ApprovalStatus === 'R') {
+      this.ConfirmationMessage = 'Do you want to send this appraisal back for rework?';
+      this.ConfirmationMessageOnSubmit = 'Yes, Send for Rework!';
+
+    } else {
       this.ConfirmationMessage = 'Do you want to save the review details?';
       this.ConfirmationMessageOnSubmit = 'Yes, Save it!';
     }
 
 
-    // Get month and year from header instead of current date
-    const { month, year } = this.parseMonthYear();
+    // For APR: year saved = previous year (the year being appraised)
+    // e.g. submitting in 2026 → saves year = 2025
+    const { month } = this.parseMonthYear();
+    const year = new Date().getFullYear() - 1;
 
     const review: DPRReview = {
       employeeId: this.empId,
       month: month,
       year: year,
       workedHours: Number(this.WorkedHours),
-      achievements: this.achievements || '',
-      challenges: this.challenges || '',
+      achievements: this.annualAchievements || '',
+      challenges: this.annualChallenges || '',
       supportNeeded: this.supportNeeded || '',
       status: this.ApprovalStatus || '',
       hodId: this.reportingTo || '',
       dprid: this.dprid || 0,
+      formType: 'A',
+      appraisalPeriod: this.appraisalPeriod || '',
       totalEstimatedhours: Number(this.TotalEstimatedhours),
+      // Self-appraisal (sa* matches C# field names)
+      saQuality: this.saQuality,
+      saTimeliness: this.saTimeliness,
+      saInitiative: this.saInitiative,
+      saCommunication: this.saCommunication,
+      saTeamwork: this.saTeamwork,
+      saProblemSolving: this.saProblemSolving,
+      saAdaptability: this.saAdaptability,
+      saLearning: this.saLearning,
+      saGoalAlignment: this.saGoalAlignment,
+      saOverallSelf: this.saOverallSelf,
+      saTotal: this.selfAppraisalTotal,
+      saComments: this.saComments,
+      // Work summary
+      keyResponsibilities: this.keyResponsibilities,
+      deliverablesOutcomes: this.deliverablesOutcomes,
+      // Annual achievements
+      annualAchievements: this.annualAchievements,
+      annualChallenges: this.annualChallenges,
+      // Training
+      trainingCompleted: this.trainingCompleted,
+      skillsDeveloped: this.skillsDeveloped,
+      trainingNeeded: this.trainingNeeded,
+
+      // Career goals
+      careerGoals: this.careerGoals,
+      supportNeededAnnual: this.supportNeededAnnual,
+      // HOD evaluation fields (sent when HOD approves/rejects)
+      scoreQuality: Number(this.quality) || undefined,
+      scoreTimeliness: Number(this.timeliness) || undefined,
+      scoreInitiative: Number(this.initiative) || undefined,
+      scoreProblemSolving: Number(this.problemSolving) || undefined,
+      scoreTeamWork: Number(this.teamWork) || undefined,
+      scoreCommunication: Number(this.communication) || undefined,
+      hodrating: Number(this.hodRating) || undefined,
+      scoreOverall: Number(this.overallScore) || undefined,
+      overallValue: this.overallScore > 0 ? this.getRatingText(this.overallScore) : undefined,
+      hodRecommendation: this.hodRecommendation || undefined,
+      hodRemarks: this.hodRemarks || undefined,
+      // Reviewers
+      reviewer1Id: this.selectedReviewers[0] || undefined,
+      reviewer2Id: this.selectedReviewers[1] || undefined,
+      reviewer3Id: this.selectedReviewers[2] || undefined,
+      // HOD Evaluation reviewers
+      hodReviewer1Id: this.selectedHodReviewers[0] || undefined,
+      hodReviewer2Id: this.selectedHodReviewers[1] || undefined,
+      hodReviewer3Id: this.selectedHodReviewers[2] || undefined,
       tasksList: this.tasks.map((t) => ({
         taskName: t.taskName,
         description: t.description,
@@ -993,25 +1247,25 @@ export class MonthlyDprComponent {
 
               if (this.ApprovalStatus === 'S' && res.success) {
                 const dprId = res.data || this.dprid;
-
-                // Try to send notifications (non-blocking)
                 try {
                   this.sendNotificationToHOD(dprId);
                   this.sendNotificationToEmployee(dprId, true);
                 } catch (error) {
                   console.error('Error sending notifications:', error);
                 }
+                setTimeout(() => { this.router.navigate(['/apr-past-reports']); }, 1500);
 
-                // Navigate to past reports page after successful submission
-                setTimeout(() => {
-                  this.router.navigate(['/past-reports']);
-                }, 1500); // Small delay to show success message
+              } else if ((this.ApprovalStatus === 'A' || this.ApprovalStatus === 'R') && res.success) {
+                const dprId = res.data || this.dprid;
+                try {
+                  this.sendNotificationToEmployee(dprId, false);
+                } catch (error) {
+                  console.error('Error sending notification:', error);
+                }
+                setTimeout(() => { this.router.navigate(['/apr-past-reports']); }, 1500);
+
               } else if (this.ApprovalStatus === 'D' && res.success) {
-                // For draft saves, also navigate to past reports
-                console.log('Draft saved successfully');
-                setTimeout(() => {
-                  this.router.navigate(['/past-reports']);
-                }, 1500); // Small delay to show success message
+                setTimeout(() => { this.router.navigate(['/apr-past-reports']); }, 1500);
               }
 
             }
@@ -1091,17 +1345,25 @@ export class MonthlyDprComponent {
 
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
     this.monthYear = currentDate.toLocaleDateString('en-US', options);
-    
-    // Update header immediately
-    this.updateHeaderTitle();
+
+    // Financial year: Jan–Dec of the previous year
+    // e.g. submitting in 2026 → appraisal period = Jan 2025 – Dec 2025
+    const currentYear = new Date().getFullYear();
+    this.appraisalPeriod = this.computeAppraisalPeriod(currentYear - 1);    this.updateHeaderTitle();
+  }
+
+  /** Returns "Jan YYYY – Dec YYYY" — the calendar/financial year */
+  private computeAppraisalPeriod(year: number): string {
+    return `Jan ${year} – Dec ${year}`;
   }
 
   // Helper method to update the header title
   private updateHeaderTitle(): void {
     if (this.monthYear) {
-      sessionStorage.setItem('currentMPRMonthYear', this.monthYear);
-      // Trigger a custom event to notify the layout component
-      window.dispatchEvent(new CustomEvent('mprMonthYearUpdated', { detail: this.monthYear }));
+      // Show appraisalPeriod in the layout header if available, else fall back to monthYear
+      const titleValue = this.appraisalPeriod || this.monthYear;
+      sessionStorage.setItem('currentAPRMonthYear', titleValue);
+      window.dispatchEvent(new CustomEvent('aprMonthYearUpdated', { detail: titleValue }));
     }
   }
 
@@ -1293,6 +1555,11 @@ export class MonthlyDprComponent {
           this.empId = dpr.employeeId || '';
           this.empName = dpr.employeename || '';
           this.designation = dpr.designation || '';
+
+          // Load profile using the employee from this DPR record (not the logged-in user)
+          if (this.empId) {
+            this.loadEmployeeProfile(this.empId);
+          }
           this.department = dpr.department || '';
           this.EmailID = dpr.emailid || '';
 
@@ -1313,11 +1580,51 @@ export class MonthlyDprComponent {
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
           this.TotalEstimatedhours = dpr.totalEstimatedhours ?? 0;
+          // HOD evaluation
+          this.hodRecommendation = (dpr.hodRecommendation as any) ?? '';
+          this.hodRemarks        = dpr.hodRemarks ?? '';
+          // Reviewers
+          this.selectedReviewers = [
+            dpr.reviewer1Id,
+            dpr.reviewer2Id,
+            dpr.reviewer3Id
+          ].filter((id): id is string => !!id);
+          // HOD Evaluation reviewers
+          this.selectedHodReviewers = [
+            dpr.hodReviewer1Id,
+            dpr.hodReviewer2Id,
+            dpr.hodReviewer3Id
+          ].filter((id): id is string => !!id);
+          // Self-appraisal (sa* matches C# field names)
+          this.saQuality        = dpr.saQuality ?? 0;
+          this.saTimeliness     = dpr.saTimeliness ?? 0;
+          this.saInitiative     = dpr.saInitiative ?? 0;
+          this.saCommunication  = dpr.saCommunication ?? 0;
+          this.saTeamwork       = dpr.saTeamwork ?? 0;
+          this.saProblemSolving = dpr.saProblemSolving ?? 0;
+          this.saAdaptability   = dpr.saAdaptability ?? 0;
+          this.saLearning       = dpr.saLearning ?? 0;
+          this.saGoalAlignment  = dpr.saGoalAlignment ?? 0;
+          this.saOverallSelf    = dpr.saOverallSelf ?? 0;
+          this.saComments       = dpr.saComments ?? '';
+          // Work summary
+          this.keyResponsibilities  = dpr.keyResponsibilities ?? '';
+          this.deliverablesOutcomes = dpr.deliverablesOutcomes ?? '';
+          // Annual achievements — fallback to achievements/challenges if annualAchievements is null
+          this.annualAchievements = dpr.annualAchievements ?? dpr.achievements ?? '';
+          this.annualChallenges   = dpr.annualChallenges   ?? dpr.challenges   ?? '';
+          // Training
+          this.trainingCompleted = dpr.trainingCompleted ?? '';
+          this.skillsDeveloped   = dpr.skillsDeveloped ?? '';
+          this.trainingNeeded    = dpr.trainingNeeded ?? '';
+          // Career goals
+          this.careerGoals         = dpr.careerGoals ?? '';
+          this.supportNeededAnnual = dpr.supportNeededAnnual ?? '';
 
           // Load KPIs with the correct department from DPR data
           // Pass false to not reset kpis array - it will be populated from dpr.kpiList below
           this.loadKPIs(false);
-          
+
           // Set monthYear from DPR data if available
           if (dpr.month && dpr.year) {
             const monthNames = [
@@ -1325,7 +1632,9 @@ export class MonthlyDprComponent {
               'July', 'August', 'September', 'October', 'November', 'December'
             ];
             this.monthYear = `${monthNames[dpr.month - 1]} ${dpr.year}`;
-            
+            // Use stored appraisalPeriod from API if available, else compute from year
+            this.appraisalPeriod = dpr.appraisalPeriod || this.computeAppraisalPeriod(dpr.year - 1);
+
             // Update header immediately
             this.updateHeaderTitle();
           }
@@ -1544,9 +1853,9 @@ export class MonthlyDprComponent {
 
     const hodNotification: Partial<Notification> = {
       userId: this.reportingTo,
-      title: `New DPR Submitted by ${this.empName}`,
-      message: `${this.empName} (${this.empId}) has submitted the Monthly DPR for ${this.monthYear}. Click to review.`,
-      link: `/monthly-dpr/${dprId}?readonly=1`,
+      title: `New APR Submitted by ${this.empName}`,
+      message: `${this.empName} (${this.empId}) has submitted the Annual Performance Review for ${this.monthYear}. Click to review.`,
+      link: `/apr/${dprId}?readonly=1`,
       isRead: false
     };
 
@@ -1579,14 +1888,14 @@ export class MonthlyDprComponent {
     let message = '';
 
     if (isSubmission) {
-      title = 'DPR Submitted Successfully';
-      message = `Your Monthly DPR for ${this.monthYear} has been submitted successfully. Click to view.`;
+      title = 'APR Submitted Successfully';
+      message = `Your Annual Performance Review for ${this.monthYear} has been submitted successfully. Click to view.`;
     } else if (this.ApprovalStatus === 'A') {
-      title = 'DPR Approved';
-      message = `Your Monthly DPR for ${this.monthYear} has been approved by ${currentUser.employeeName || 'HOD'}.`;
+      title = 'APR Approved';
+      message = `Your Annual Performance Review for ${this.monthYear} has been approved by ${currentUser.employeeName || 'HOD'}.`;
     } else if (this.ApprovalStatus === 'R') {
-      title = 'DPR Requires Revision';
-      message = `Your DPR for ${this.monthYear} has been pushed back by ${currentUser.employeeName || 'HOD'} for revision.`;
+      title = 'APR Requires Revision';
+      message = `Your APR for ${this.monthYear} has been pushed back by ${currentUser.employeeName || 'HOD'} for revision.`;
     }
 
     console.log('Employee notification details:', { targetUserId, title, message });
@@ -1595,7 +1904,7 @@ export class MonthlyDprComponent {
       userId: targetUserId,
       title: title,
       message: message,
-      link: `/monthly-dpr/${dprId}?readonly=1`,
+      link: `/apr/${dprId}?readonly=1`,
       isRead: false
     };
 
@@ -1629,7 +1938,7 @@ export class MonthlyDprComponent {
     }
 
     const baseUrl = this.getBaseUrl();
-    const evaluationFormLink = `${baseUrl}/AdrakMPRUI/monthly-dpr/${dprId}?readonly=1`;
+    const evaluationFormLink = `${baseUrl}/AdrakMPRUI/apr/${dprId}?readonly=1`;
 
     // Get HOD email from idValue and name from description
     const hodEmail = hodInfo.idValue || ''; // idValue contains the email address
@@ -1641,16 +1950,16 @@ export class MonthlyDprComponent {
     }
 
     const emailRequest: SendEmailRequest = {
-      templateKey: 'DPR_SUBMISSION_HOD',
+      templateKey: 'APR_SUBMISSION_HOD',
       toEmail: hodEmail,
-      placeholders: {
+      placeholders: { 
         '[EmployeeName]': this.empName,
         '[EmployeeID]': this.empId,
-        '[HODName]': hodName,
-        '[MonthYear]': this.monthYear,
-        '[EvaluationFormLink]': evaluationFormLink,
-        '[HODRemarks]': this.managementRemarks || '',
-        '[EmployeeDprEditLink]': evaluationFormLink
+        '[ManagerName]': hodName,
+        '[AppraisalPeriod]': this.monthYear,
+        '[ManagerEvaluationLink]': evaluationFormLink,
+        '[ManagerRemarks]': this.managementRemarks || '',
+        '[AppraisalEditLink]': evaluationFormLink
       }
     };
 
@@ -1675,16 +1984,16 @@ export class MonthlyDprComponent {
     console.log('sendEmailToEmployee called with:', { dprId, isSubmission, ApprovalStatus: this.ApprovalStatus, EmailID: this.EmailID });
 
     const baseUrl = this.getBaseUrl();
-    const evaluationFormLink = `${baseUrl}/AdrakMPRUI/monthly-dpr/${dprId}?readonly=1`;
-    const employeeDprEditLink = `${baseUrl}/AdrakMPRUI/monthly-dpr/${dprId}`;
+    const evaluationFormLink = `${baseUrl}/AdrakMPRUI/apr/${dprId}?readonly=1`;
+    const employeeDprEditLink = `${baseUrl}/AdrakMPRUI/apr/${dprId}`;
 
     let templateKey = '';
     if (isSubmission) {
-      templateKey = 'DPR_SUBMISSION_EMPLOYEE';
+      templateKey = 'APR_SUBMISSION_EMPLOYEE';
     } else if (this.ApprovalStatus === 'A') {
-      templateKey = 'DPR_APPROVED';
+      templateKey = 'APR_APPROVED';
     } else if (this.ApprovalStatus === 'R') {
-      templateKey = 'DPR_PUSHBACK';
+      templateKey = 'APR_PUSHBACK';
     }
 
     console.log('Template key determined:', templateKey);
@@ -1709,11 +2018,11 @@ export class MonthlyDprComponent {
       placeholders: {
         '[EmployeeName]': this.empName,
         '[EmployeeID]': this.empId,
-        '[HODName]': hodName,
-        '[MonthYear]': this.monthYear,
-        '[EvaluationFormLink]': evaluationFormLink,
-        '[HODRemarks]': this.managementRemarks || '',
-        '[EmployeeDprEditLink]': this.ApprovalStatus === 'R' ? employeeDprEditLink : evaluationFormLink
+        '[ManagerName]': hodName,
+        '[AppraisalPeriod]': this.monthYear,
+        '[ManagerEvaluationLink]': evaluationFormLink,
+        '[ManagerRemarks]': this.managementRemarks || '',
+        '[AppraisalEditLink]': this.ApprovalStatus === 'R' ? employeeDprEditLink : evaluationFormLink
       }
     };
 

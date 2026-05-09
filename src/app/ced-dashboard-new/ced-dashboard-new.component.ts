@@ -56,6 +56,7 @@ interface ApiEmployee {
     initiative: number;
     communication: number;
     hOdRating: number;
+    hodRating: number;   // alternate casing from API
     problemSolving: number;
     teamwork: number;
     dprId: number;
@@ -85,6 +86,9 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     selectedEmployeeId: string = '';
     selectedEmployeeProfile: Employee | null = null;
     apiEmployees: ApiEmployee[] = []; // Store API response employees
+
+    // APR / MPR toggle — 'A' = Annual (APR), 'M' = Monthly (MPR)
+    formType: 'A' | 'M' = 'A';
 
     months = [
         { value: 1, name: 'January' },
@@ -543,25 +547,38 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
 
     private initializeDefaultMonthYear() {
         const currentDate = new Date();
-        // Set to previous month by default
-        const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+        const currentYear = currentDate.getFullYear();
 
-        this.selectedMonth = previousMonth.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
-        this.selectedYear = previousMonth.getFullYear();
+        // For APR: default to previous year (APR covers Jan–Dec of prior year)
+        // For MPR: default to previous month
+        if (this.formType === 'A') {
+            this.selectedYear = currentYear - 1;
+            this.selectedMonth = 0; // month not needed for APR
+        } else {
+            const previousMonth = new Date(currentYear, currentDate.getMonth() - 1);
+            this.selectedMonth = previousMonth.getMonth() + 1;
+            this.selectedYear = previousMonth.getFullYear();
+        }
 
-        console.log(`Default selection: Month ${this.selectedMonth}, Year ${this.selectedYear}`);
+        console.log(`Default selection: formType=${this.formType}, Month ${this.selectedMonth}, Year ${this.selectedYear}`);
     }
 
     private loadDashboardData() {
-        if (this.selectedMonth === 0 || this.selectedYear === 0) {
-            console.warn('Month or Year not selected');
+        // For APR, month is not required — only year is needed
+        if (this.selectedYear === 0) {
+            console.warn('Year not selected');
+            return;
+        }
+        if (this.formType === 'M' && this.selectedMonth === 0) {
+            console.warn('Month not selected for MPR');
             return;
         }
 
         this.isLoading = true;
-        console.log(`Loading dashboard data for month: ${this.selectedMonth}, year: ${this.selectedYear}`);
+        const month = this.formType === 'M' ? this.selectedMonth : 0;
+        console.log(`Loading dashboard data — formType: ${this.formType}, month: ${month}, year: ${this.selectedYear}`);
 
-        this.apiService.GetCEDDepartmentWiseDashBoardDetails(this.selectedMonth, this.selectedYear)
+        this.apiService.GetCEDDepartmentWiseDashBoardDetails(month, this.selectedYear, this.formType)
             .subscribe({
                 next: (response: ApiResponse) => {
                     console.log('API Response:', response);
@@ -600,6 +617,17 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         }
     }
 
+    onFormTypeChange(type: 'A' | 'M') {
+        this.formType = type;
+        // Re-initialise year default based on new form type
+        this.initializeDefaultMonthYear();
+        // Reset to departments view when switching form type
+        if (this.currentView === 'employees') {
+            this.backToDepartments();
+        }
+        this.loadDashboardData();
+    }
+
     onMonthYearChange() {
         console.log(`Month/Year changed to: ${this.selectedMonth}/${this.selectedYear}`);
         console.log('Month/Year change triggered - loading new data...');
@@ -631,6 +659,35 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         this.filteredEmployees = [];
         this.selectedStatusFilter = 'approved';
         this.expandedEmployeeId = null;
+    }
+
+    isExporting: boolean = false;
+
+    exportListing(): void {
+        if (!this.selectedDepartment) return;
+
+        this.isExporting = true;
+
+        this.apiService.exportAPRUserReport(
+            this.selectedMonth,
+            this.selectedYear,
+            this.selectedStatusFilter,
+            this.selectedDepartment.department,
+            this.formType
+        ).subscribe({
+            next: (blob: Blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${this.selectedDepartment!.department}_${this.formType === 'A' ? 'APR' : 'MPR'}_${this.selectedYear}.xlsx`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.isExporting = false;
+            },
+            error: () => {
+                this.isExporting = false;
+            }
+        });
     }
 
     getRankIcon(rank: number): string {
@@ -674,10 +731,11 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     viewMPRDetails(employee: Employee) {
-        console.log('Viewing MPR details for:', employee.name, 'DPR ID:', employee.dprId);
+        console.log('Viewing details for:', employee.name, 'DPR ID:', employee.dprId);
         
         if (employee.dprId) {
-            this.router.navigate(['/monthly-dpr', employee.dprId], { 
+            const route = this.formType === 'A' ? '/apr' : '/monthly-dpr';
+            this.router.navigate([route, employee.dprId], { 
                 queryParams: { 
                     readonly: '1',
                     from: 'ced-dashboard' 
@@ -750,7 +808,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
                 communication: apiEmp.communication || 0,
                 teamwork: apiEmp.teamwork || 0,
                 problemSolving: apiEmp.problemSolving || 0,
-                hodRating: apiEmp.hOdRating || 0
+                hodRating: apiEmp.hOdRating || apiEmp.hodRating || 0
             }
         }));
 
@@ -784,8 +842,13 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     private loadEmployeesForDepartment() {
-        if (!this.selectedDepartment || this.selectedMonth === 0 || this.selectedYear === 0) {
-            console.warn('Department, month, or year not selected');
+        if (!this.selectedDepartment || this.selectedYear === 0) {
+            console.warn('Department or year not selected');
+            return;
+        }
+        // For MPR, month is also required
+        if (this.formType === 'M' && this.selectedMonth === 0) {
+            console.warn('Month not selected for MPR');
             return;
         }
 
@@ -796,26 +859,24 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
             this.selectedMonth, 
             this.selectedYear, 
             this.selectedStatusFilter, 
-            this.selectedDepartment.department
+            this.selectedDepartment.department,
+            this.formType
         ).subscribe({
             next: (response: { success: boolean; message: string; data: ApiEmployee[] }) => {
                 console.log('Employee API Response:', response);
                 if (response.success && response.data) {
                     this.apiEmployees = response.data;
                     console.log('Employees loaded:', this.apiEmployees);
-                    
-                    // Scroll to top of the employee list after loading
-                    setTimeout(() => {
-                        const employeeListContainer = document.querySelector('.employees-container');
-                        if (employeeListContainer) {
-                            employeeListContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                    }, 100);
                 } else {
                     console.error('Failed to load employee data:', response.message);
                     this.apiEmployees = [];
                 }
                 this.isLoading = false;
+                // Scroll the layout's .content container (overflow-y:auto) to top
+                setTimeout(() => {
+                    const el = document.querySelector('.content') as HTMLElement;
+                    if (el) el.scrollTop = 0;
+                }, 0);
             },
             error: (error) => {
                 console.error('Error loading employee data:', error);

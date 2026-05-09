@@ -42,7 +42,9 @@ export class layout implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   currentRoute = '';
   isExitFormMenuOpen = false;
+  isProductivityMenuOpen = false;
   isMPRMenuOpen = false;
+  isAPRMenuOpen = false;
   isDPRMenuOpen = false;
   isApprovalsMenuOpen = false;
   isSystemMasterMenuOpen = false;
@@ -163,6 +165,9 @@ export class layout implements OnInit, OnDestroy {
     // Listen for MPR month/year updates from the MPR component
     window.addEventListener('mprMonthYearUpdated', this.handleMPRMonthYearUpdate.bind(this));
 
+    // Listen for APR month/year updates from the APR component
+    window.addEventListener('aprMonthYearUpdated', this.handleAPRMonthYearUpdate.bind(this));
+
     // Theme is automatically applied by the service
 
     // Start polling for notification count every 10 seconds (lightweight)
@@ -175,6 +180,13 @@ export class layout implements OnInit, OnDestroy {
     // We can force it by triggering a micro-task
     Promise.resolve().then(() => {
       // This will trigger change detection
+      this.currentRoute = this.router.url;
+    });
+  }
+
+  // Handler for APR month/year updates
+  private handleAPRMonthYearUpdate(event: any): void {
+    Promise.resolve().then(() => {
       this.currentRoute = this.router.url;
     });
   }
@@ -205,6 +217,7 @@ export class layout implements OnInit, OnDestroy {
     
     // Clean up event listener
     window.removeEventListener('mprMonthYearUpdated', this.handleMPRMonthYearUpdate.bind(this));
+    window.removeEventListener('aprMonthYearUpdated', this.handleAPRMonthYearUpdate.bind(this));
     
     // Clear DPR-only mode from sessionStorage when component is destroyed
     // (but only if we're not navigating to another DPR route)
@@ -218,9 +231,19 @@ export class layout implements OnInit, OnDestroy {
   }
 
   getPageTitle(): string {
+    // Handle APR past reports BEFORE the generic /apr check
+    if (this.currentRoute.includes('/apr-past-reports')) {
+      return this.getAPRPastReportsTitle();
+    }
+
     // Handle MPR routes with dynamic IDs (e.g., /monthly-dpr/123)
     if (this.currentRoute.includes('/monthly-dpr')) {
       return this.getMPRTitle();
+    }
+
+    // Handle APR routes with dynamic IDs (e.g., /apr/123)
+    if (this.currentRoute.includes('/apr')) {
+      return this.getAPRTitle();
     }
 
     // Handle Past Reports with role-based title
@@ -246,7 +269,8 @@ export class layout implements OnInit, OnDestroy {
       '/employee-master': 'Employee Master',
       '/rejoining-form': 'Rejoining Form',
       '/exit-form': 'Exit Form',
-      '/byod-form': 'BYOD Form'
+      '/byod-form': 'BYOD Form',
+      '/purchase-dashboard': 'Purchase Dashboard'
     };
 
     // Strip query params and fragments before lookup
@@ -261,6 +285,24 @@ export class layout implements OnInit, OnDestroy {
       return `Monthly Performance Review - ${monthYear}`;
     }
     return 'Monthly Performance Review';
+  }
+
+  getAPRTitle(): string {
+    const monthYear = sessionStorage.getItem('currentAPRMonthYear');
+    if (monthYear) {
+      return `Annual Performance Review - ${monthYear}`;
+    }
+    return 'Annual Performance Review';
+  }
+
+  getAPRPastReportsTitle(): string {
+    const code = (this.userSession?.isHOD || '').toString().toUpperCase();
+    switch (code) {
+      case 'E': return 'My APR Reports';
+      case 'H': return 'Team APR Reports';
+      case 'C': return 'All APR Reports';
+      default: return 'APR Past Reports';
+    }
   }
 
   getPastReportsTitle(): string {
@@ -387,6 +429,14 @@ export class layout implements OnInit, OnDestroy {
     return this.currentRoute.includes('/exit-form');
   }
 
+  toggleProductivityMenu() {
+    this.isProductivityMenuOpen = !this.isProductivityMenuOpen;
+  }
+
+  isProductivityRouteActive(): boolean {
+    return this.isMPRRouteActive() || this.isAPRRouteActive();
+  }
+
   toggleFormServicesMenu() {
     this.isFormServicesMenuOpen = !this.isFormServicesMenuOpen;
   }
@@ -400,7 +450,15 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isMPRRouteActive(): boolean {
-    return this.currentRoute.includes('/monthly-dpr') || this.currentRoute.includes('/past-reports');
+    return this.currentRoute.includes('/monthly-dpr');
+  }
+
+  toggleAPRMenu() {
+    this.isAPRMenuOpen = !this.isAPRMenuOpen;
+  }
+
+  isAPRRouteActive(): boolean {
+    return this.currentRoute.includes('/apr');
   }
 
   toggleDPRMenu() {
@@ -437,7 +495,9 @@ export class layout implements OnInit, OnDestroy {
   isApprovalsRouteActive(): boolean {
     return this.currentRoute.includes('/leave-approval') || 
            this.currentRoute.includes('/dpr-approval') || 
-           this.currentRoute.includes('/approvals');
+           this.currentRoute.includes('/approvals') ||
+           this.currentRoute.includes('/past-reports') ||
+           this.currentRoute.includes('/apr-past-reports');
   }
 
   toggleSystemMasterMenu() {
@@ -450,11 +510,21 @@ export class layout implements OnInit, OnDestroy {
 
   // Update menu states based on current route
   updateMenuStatesBasedOnRoute(): void {
+    // Auto-open Productivity menu if on MPR or APR related routes
+    if (this.isProductivityRouteActive()) {
+      this.isProductivityMenuOpen = true;
+    }
+
     // Auto-open MPR menu if on MPR-related routes
     if (this.isMPRRouteActive()) {
       this.isMPRMenuOpen = true;
     }
-    
+
+    // Auto-open APR menu if on APR-related routes
+    if (this.isAPRRouteActive()) {
+      this.isAPRMenuOpen = true;
+    }
+
     // Auto-open DPR menu if on DPR-related routes
     if (this.isDPRRouteActive()) {
       this.isDPRMenuOpen = true;
@@ -470,7 +540,7 @@ export class layout implements OnInit, OnDestroy {
       this.isExitFormMenuOpen = true;
     }
     
-    // Auto-open Approvals menu if on approval routes (future)
+    // Auto-open Approvals menu if on approval routes (includes past reports)
     if (this.isApprovalsRouteActive()) {
       this.isApprovalsMenuOpen = true;
     }
@@ -581,15 +651,10 @@ export class layout implements OnInit, OnDestroy {
     }
   }
 
-  // Start polling for notification count every 3 seconds (lightweight API call)
+  // Start polling for notification count — called once on page load only
   startNotificationCountPolling() {
-    // Initial load on page load
     this.loadNotificationCount();
-
-    // Set up polling every 10 minutes (600,000 milliseconds)
-    this.notificationCountInterval = setInterval(() => {
-      this.loadNotificationCount();
-    }, 3600000); // 1 hour
+    // No interval — count is refreshed only on page load/refresh
   }
 
   // Load only notification count (lightweight API call)

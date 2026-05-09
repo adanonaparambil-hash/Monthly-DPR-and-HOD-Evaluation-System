@@ -114,6 +114,8 @@ export class MyLoggedHoursComponent implements OnInit {
 
   // Role flags from session
   isHOD = false;  // Flag to check if user is HOD
+  isSurveillance = false; // Flag for SURVEILLANCE department users
+  isMasOrPurchase = false; // Flag for MAS / PURCHASE department users
 
   // AUTO CLOSED tasks blocking
   autoClosedTaskCount = 0;
@@ -294,6 +296,12 @@ export class MyLoggedHoursComponent implements OnInit {
     const hodFlag = (currentUser.isHOD || '').toString().toUpperCase();
     this.isHOD = hodFlag === 'H';
     console.log('User is HOD:', this.isHOD, 'HOD Flag:', hodFlag);
+
+    // Check if user belongs to SURVEILLANCE department
+    const userDept = (currentUser.department || '').toString().toUpperCase().trim();
+    this.isSurveillance = userDept === 'SURVEILLANCE';
+    this.isMasOrPurchase = userDept === 'MAS' || userDept === 'PURCHASE';
+    console.log('User is Surveillance:', this.isSurveillance, 'Department:', userDept);
     
     // Check AUTO CLOSED tasks count
     this.checkAutoClosedTasksCount();
@@ -1398,7 +1406,11 @@ export class MyLoggedHoursComponent implements OnInit {
     if (this.breakHistorySelectedDepartment) {
       this.loadBreakHistoryEmployees(Number(this.breakHistorySelectedDepartment));
     }
-    
+
+    // For MAS/PURCHASE: no department filter shown, but auto-load employees for their dept
+    if (this.isMasOrPurchase && this.breakHistorySelectedDepartment) {
+      this.loadBreakHistoryEmployees(Number(this.breakHistorySelectedDepartment));
+    }
     // Load initial break history
     this.loadBreakHistory();
     

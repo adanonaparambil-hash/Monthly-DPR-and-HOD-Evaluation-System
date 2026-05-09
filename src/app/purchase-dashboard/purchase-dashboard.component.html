@@ -1,0 +1,608 @@
+<div class="pd-wrap">
+
+  <!-- ══════════════════════════════════════════════════
+       2-COLUMN CHART GRID
+       ══════════════════════════════════════════════════ -->
+  <div class="pd-grid">
+
+    <!-- ─── Card 1 · Monthly LPO · Emerald ─── -->
+    <div class="pd-card pd-card--emerald">
+      <div class="pd-card-header">
+        <div class="pd-card-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="pd-card-title">
+          <h3>Monthly LPO</h3>
+          <span class="pd-badge">3D Bar + Trend</span>
+        </div>
+        <div class="pd-kpi">
+          <span class="pd-kpi-lbl">LPO Amount</span>
+          <span class="pd-kpi-val">{{ formatM(lpoTotal) }}</span>
+        </div>
+        <button class="pd-expand-btn" (click)="openExpanded('lpo')" title="Full view">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </div>
+
+      <div class="pd-filters">
+        <!-- Monthly: month range slider + year select -->
+        <ng-container *ngIf="lpoView === 'monthly'">
+          <div class="pd-fg">
+            <span class="pd-fl">{{ lpoFromLbl }} – {{ lpoToLbl }}</span>
+            <div class="dw">
+              <div class="dt"><div class="df"
+                [style.left.%]="(lpoMonthFrom/11)*100"
+                [style.right.%]="100-(lpoMonthTo/11)*100"></div></div>
+              <input type="range" min="0" max="11" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" class="ta">
+              <input type="range" min="0" max="11" [(ngModel)]="lpoMonthTo"   (ngModelChange)="onLPO()" class="tb">
+            </div>
+          </div>
+          <div class="pd-fg">
+            <select class="pd-sel" [(ngModel)]="lpoYear" (ngModelChange)="onLPO()">
+              <option *ngFor="let y of lpoYears" [value]="y">{{ y }}</option>
+            </select>
+          </div>
+        </ng-container>
+        <!-- Yearly: year range slider only -->
+        <div class="pd-fg" *ngIf="lpoView === 'yearly'">
+          <span class="pd-fl">{{ lpoFromYearLbl }} – {{ lpoToYearLbl }}</span>
+          <div class="dw">
+            <div class="dt"><div class="df"
+              [style.left.%]="(lpoYearFrom/3)*100"
+              [style.right.%]="100-(lpoYearTo/3)*100"></div></div>
+            <input type="range" min="0" max="3" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" class="ta">
+            <input type="range" min="0" max="3" [(ngModel)]="lpoYearTo"   (ngModelChange)="onLPO()" class="tb">
+          </div>
+        </div>
+        <!-- Company multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('lpoCoOpen');$event.stopPropagation()">
+            <i class="fas fa-building"></i>
+            <span>{{ getLabel(lpoCompanies, 'All Companies') }}</span>
+            <span class="pd-sel-count" *ngIf="lpoCompanies.length">{{ lpoCompanies.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="lpoCoOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="lpoCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="lpoCompanies.length" (click)="clearFilter('lpoCompanies', onLPO.bind(this))">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let c of companies"
+                 [class.pd-ddi-active]="isSelected(lpoCompanies, c)"
+                 (click)="toggleCompany('lpoCompanies', c, onLPO.bind(this))">
+              <span class="pd-ddi-cb"></span>
+              {{ c }}
+            </div>
+          </div>
+        </div>
+        <!-- View radios -->
+        <div class="pd-fg pd-radios">
+          <label class="pd-radio"><input type="radio" name="lpoV" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Monthly</label>
+          <label class="pd-radio"><input type="radio" name="lpoV" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Yearly</label>
+        </div>
+      </div>
+
+      <div class="pd-cw"><canvas #lpoCanvas></canvas></div>
+    </div>
+
+    <!-- ─── Card 2 · GRN Value · Indigo ─── -->
+    <div class="pd-card pd-card--indigo">
+      <div class="pd-card-header">
+        <div class="pd-card-icon"><i class="fas fa-receipt"></i></div>
+        <div class="pd-card-title">
+          <h3>GRN Value (Yearly)</h3>
+          <span class="pd-badge">Area Chart</span>
+        </div>
+        <div class="pd-kpi">
+          <span class="pd-kpi-lbl">GRN Amount</span>
+          <span class="pd-kpi-val">{{ formatM(grnTotal) }}</span>
+        </div>
+        <button class="pd-expand-btn" (click)="openExpanded('grn')" title="Full view">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </div>
+
+      <div class="pd-filters">
+        <!-- Year dual slider -->
+        <div class="pd-fg">
+          <span class="pd-fl">{{ grnFromYear }} – {{ grnToYear }}</span>
+          <div class="dw">
+            <div class="dt"><div class="df"
+              [style.left.%]="(grnYearFrom/9)*100"
+              [style.right.%]="100-(grnYearTo/9)*100"></div></div>
+            <input type="range" min="0" max="9" [(ngModel)]="grnYearFrom" (ngModelChange)="onGRN()" class="ta">
+            <input type="range" min="0" max="9" [(ngModel)]="grnYearTo"   (ngModelChange)="onGRN()" class="tb">
+          </div>
+        </div>
+        <!-- Month dual slider (monthly view only) -->
+        <div class="pd-fg" *ngIf="grnView === 'monthly'">
+          <span class="pd-fl">{{ grnFromMonth }} – {{ grnToMonth }}</span>
+          <div class="dw">
+            <div class="dt"><div class="df"
+              [style.left.%]="(grnMonthFrom/11)*100"
+              [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
+            <input type="range" min="0" max="11" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
+            <input type="range" min="0" max="11" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
+          </div>
+        </div>
+        <!-- Company multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('grnCoOpen');$event.stopPropagation()">
+            <i class="fas fa-building"></i>
+            <span>{{ getLabel(grnCompanies, 'All Companies') }}</span>
+            <span class="pd-sel-count" *ngIf="grnCompanies.length">{{ grnCompanies.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="grnCoOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="grnCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="grnCompanies.length" (click)="clearFilter('grnCompanies', onGRN.bind(this))">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let c of companies"
+                 [class.pd-ddi-active]="isSelected(grnCompanies, c)"
+                 (click)="toggleCompany('grnCompanies', c, onGRN.bind(this))">
+              <span class="pd-ddi-cb"></span>
+              {{ c }}
+            </div>
+          </div>
+        </div>
+        <!-- View radios -->
+        <div class="pd-fg pd-radios">
+          <label class="pd-radio"><input type="radio" name="grnV" value="yearly"  [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Yearly</label>
+          <label class="pd-radio"><input type="radio" name="grnV" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Monthly</label>
+        </div>
+        <!-- Download -->
+        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+      </div>
+
+      <div class="pd-cw"><canvas #grnCanvas></canvas></div>
+    </div>
+
+    <!-- ─── Card 3 · Main Projects · Sky ─── -->
+    <div class="pd-card pd-card--sky">
+      <div class="pd-card-header">
+        <div class="pd-card-icon"><i class="fas fa-project-diagram"></i></div>
+        <div class="pd-card-title">
+          <h3>Main Projects</h3>
+          <span class="pd-badge">Bar + Line</span>
+        </div>
+        <button class="pd-expand-btn" (click)="openExpanded('projects')" title="Full view">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </div>
+
+      <div class="pd-filters">
+        <!-- Company multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('projCoOpen');$event.stopPropagation()">
+            <i class="fas fa-building"></i>
+            <span>{{ getLabel(projCompanies, 'All Companies') }}</span>
+            <span class="pd-sel-count" *ngIf="projCompanies.length">{{ projCompanies.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="projCoOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="projCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="projCompanies.length" (click)="projCompanies=[]; loadProjects(); onProj()">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let c of companies"
+                 [class.pd-ddi-active]="isSelected(projCompanies, c)"
+                 (click)="toggleProjCompany(c)">
+              <span class="pd-ddi-cb"></span>
+              {{ c }}
+            </div>
+          </div>
+        </div>
+        <!-- Project multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('projPrOpen');$event.stopPropagation()">
+            <i class="fas fa-folder-open"></i>
+            <span>{{ getLabel(projProjects, 'All Projects') }}</span>
+            <span class="pd-sel-count" *ngIf="projProjects.length">{{ projProjects.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="projPrOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="projPrOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="projProjects.length" (click)="clearFilter('projProjects', onProj.bind(this))">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let p of projects"
+                 [class.pd-ddi-active]="isSelected(projProjects, p)"
+                 (click)="toggleProject('projProjects', p, onProj.bind(this))">
+              <span class="pd-ddi-cb"></span>
+              {{ p }}
+            </div>
+          </div>
+        </div>
+        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+      </div>
+
+      <div class="pd-cw"><canvas #projectsCanvas></canvas></div>
+    </div>
+
+    <!-- ─── Card 4 · Top Suppliers · Amber ─── -->
+    <div class="pd-card pd-card--amber">
+      <div class="pd-card-header">
+        <div class="pd-card-icon"><i class="fas fa-industry"></i></div>
+        <div class="pd-card-title">
+          <h3>Top {{ suppCount }} Suppliers</h3>
+          <span class="pd-badge">Doughnut</span>
+        </div>
+        <button class="pd-expand-btn" (click)="openExpanded('suppliers')" title="Full view">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </div>
+
+      <div class="pd-filters">
+        <!-- Company multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('suppCoOpen');$event.stopPropagation()">
+            <i class="fas fa-building"></i>
+            <span>{{ getLabel(suppCompanies, 'All Companies') }}</span>
+            <span class="pd-sel-count" *ngIf="suppCompanies.length">{{ suppCompanies.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="suppCoOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="suppCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="suppCompanies.length" (click)="clearFilter('suppCompanies', onSupp.bind(this))">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let c of companies"
+                 [class.pd-ddi-active]="isSelected(suppCompanies, c)"
+                 (click)="toggleCompany('suppCompanies', c, onSupp.bind(this))">
+              <span class="pd-ddi-cb"></span>
+              {{ c }}
+            </div>
+          </div>
+        </div>
+        <!-- Year range -->
+        <div class="pd-fg">
+          <span class="pd-fl">{{ suppFromYear }} – {{ suppToYear }}</span>
+          <div class="dw">
+            <div class="dt"><div class="df"
+              [style.left.%]="(suppYearFrom/16)*100"
+              [style.right.%]="100-(suppYearTo/16)*100"></div></div>
+            <input type="range" min="0" max="16" [(ngModel)]="suppYearFrom" (ngModelChange)="onSupp()" class="ta">
+            <input type="range" min="0" max="16" [(ngModel)]="suppYearTo"   (ngModelChange)="onSupp()" class="tb">
+          </div>
+        </div>
+        <!-- Count slider -->
+        <div class="pd-fg">
+          <span class="pd-fl">Top {{ suppCount }}</span>
+          <input type="range" min="1" max="12" [(ngModel)]="suppCount" (ngModelChange)="onSupp()" class="pd-sr">
+        </div>
+        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+      </div>
+
+      <div class="pd-cw pd-cw--tall"><canvas #suppliersCanvas></canvas></div>
+    </div>
+
+    <!-- ─── Card 5 · Main Facilities · Violet · Full width ─── -->
+    <div class="pd-card pd-card--violet pd-card--full">
+      <div class="pd-card-header">
+        <div class="pd-card-icon"><i class="fas fa-building"></i></div>
+        <div class="pd-card-title">
+          <h3>Main Facilities — PO vs GRN</h3>
+          <span class="pd-badge">Grouped H. Bar</span>
+        </div>
+        <button class="pd-expand-btn" (click)="openExpanded('facilities')" title="Full view">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </div>
+
+      <div class="pd-filters">
+        <!-- Company multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('facilCoOpen');$event.stopPropagation()">
+            <i class="fas fa-building"></i>
+            <span>{{ getLabel(facilCompanies, 'All Companies') }}</span>
+            <span class="pd-sel-count" *ngIf="facilCompanies.length">{{ facilCompanies.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="facilCoOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="facilCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="facilCompanies.length" (click)="facilCompanies=[]; loadProjects(); onFacil()">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let c of companies"
+                 [class.pd-ddi-active]="isSelected(facilCompanies, c)"
+                 (click)="toggleFacilCompany(c)">
+              <span class="pd-ddi-cb"></span>
+              {{ c }}
+            </div>
+          </div>
+        </div>
+        <!-- Project multi-select -->
+        <div class="pd-fg pd-ddw">
+          <button class="pd-ddb" (click)="toggleDD('facilPrOpen');$event.stopPropagation()">
+            <i class="fas fa-folder-open"></i>
+            <span>{{ getLabel(facilProjects, 'All Projects') }}</span>
+            <span class="pd-sel-count" *ngIf="facilProjects.length">{{ facilProjects.length }}</span>
+            <i class="fas fa-chevron-down pd-chev" [class.open]="facilPrOpen"></i>
+          </button>
+          <div class="pd-ddm" *ngIf="facilPrOpen" (click)="$event.stopPropagation()">
+            <div class="pd-ddi pd-ddi-clear" *ngIf="facilProjects.length" (click)="clearFilter('facilProjects', onFacil.bind(this))">
+              <i class="fas fa-times-circle"></i> Clear selection
+            </div>
+            <div class="pd-ddi" *ngFor="let f of facilities"
+                 [class.pd-ddi-active]="isSelected(facilProjects, f)"
+                 (click)="toggleProject('facilProjects', f, onFacil.bind(this))">
+              <span class="pd-ddi-cb"></span>
+              {{ f }}
+            </div>
+          </div>
+        </div>
+        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+      </div>
+
+      <div class="pd-cw pd-cw--radar"><canvas #facilitiesCanvas></canvas></div>
+    </div>
+
+  </div><!-- /pd-grid -->
+
+
+  <!-- ══════════════════════════════════════════════════
+       EXPAND MODAL — full-screen detail view
+       ══════════════════════════════════════════════════ -->
+  <div class="pd-modal-bg" *ngIf="expandedChart" (click)="closeExpanded()">
+    <div class="pd-modal-box" [ngClass]="'pd-card--' + expandedMeta?.clr"
+         (click)="$event.stopPropagation()">
+
+      <!-- ── Modal header ── -->
+      <div class="pd-modal-hdr">
+        <div class="pd-modal-title">
+          <div class="pd-modal-icon-wrap">
+            <i [class]="expandedMeta?.icon"></i>
+          </div>
+          <div>
+            <h2>{{ expandedMeta?.title }}</h2>
+            <span class="pd-modal-badge">{{ expandedMeta?.type }}</span>
+          </div>
+        </div>
+        <button class="pd-modal-close" (click)="closeExpanded()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- ── Modal filter strip ── -->
+      <div class="pd-modal-filters">
+
+        <!-- LPO filters -->
+        <ng-container *ngIf="expandedChart === 'lpo'">
+          <!-- Monthly: month slider + year select -->
+          <ng-container *ngIf="lpoView === 'monthly'">
+            <div class="pd-fg">
+              <span class="pd-fl">Months: {{ lpoFromLbl }} – {{ lpoToLbl }}</span>
+              <div class="dw">
+                <div class="dt"><div class="df"
+                  [style.left.%]="(lpoMonthFrom/11)*100"
+                  [style.right.%]="100-(lpoMonthTo/11)*100"></div></div>
+                <input type="range" min="0" max="11" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" class="ta">
+                <input type="range" min="0" max="11" [(ngModel)]="lpoMonthTo"   (ngModelChange)="onLPO()" class="tb">
+              </div>
+            </div>
+            <div class="pd-fg">
+              <select class="pd-sel" [(ngModel)]="lpoYear" (ngModelChange)="onLPO()">
+                <option *ngFor="let y of lpoYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+          </ng-container>
+          <!-- Yearly: year range slider only -->
+          <div class="pd-fg" *ngIf="lpoView === 'yearly'">
+            <span class="pd-fl">Year Range: {{ lpoFromYearLbl }} – {{ lpoToYearLbl }}</span>
+            <div class="dw dw--lg">
+              <div class="dt"><div class="df"
+                [style.left.%]="(lpoYearFrom/3)*100"
+                [style.right.%]="100-(lpoYearTo/3)*100"></div></div>
+              <input type="range" min="0" max="3" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" class="ta">
+              <input type="range" min="0" max="3" [(ngModel)]="lpoYearTo"   (ngModelChange)="onLPO()" class="tb">
+            </div>
+          </div>
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('lpoCoOpen');$event.stopPropagation()">
+              <i class="fas fa-building"></i>
+              <span>{{ getLabel(lpoCompanies, 'All Companies') }}</span>
+              <span class="pd-sel-count" *ngIf="lpoCompanies.length">{{ lpoCompanies.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="lpoCoOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="lpoCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="lpoCompanies.length" (click)="clearFilter('lpoCompanies', onLPO.bind(this))">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let c of companies"
+                   [class.pd-ddi-active]="isSelected(lpoCompanies, c)"
+                   (click)="toggleCompany('lpoCompanies', c, onLPO.bind(this))">
+                <span class="pd-ddi-cb"></span>
+                {{ c }}
+              </div>
+            </div>
+          </div>
+          <div class="pd-fg pd-radios">
+            <label class="pd-radio"><input type="radio" name="lpoVm" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Monthly</label>
+            <label class="pd-radio"><input type="radio" name="lpoVm" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Yearly</label>
+          </div>
+          <div class="pd-modal-kpi">
+            <span class="pd-kpi-lbl">LPO Amount</span>
+            <span class="pd-kpi-val">{{ formatM(lpoTotal) }}</span>
+          </div>
+        </ng-container>
+
+        <!-- GRN filters -->
+        <ng-container *ngIf="expandedChart === 'grn'">
+          <div class="pd-fg">
+            <span class="pd-fl">Year Range: {{ grnFromYear }} – {{ grnToYear }}</span>
+            <div class="dw">
+              <div class="dt"><div class="df"
+                [style.left.%]="(grnYearFrom/9)*100"
+                [style.right.%]="100-(grnYearTo/9)*100"></div></div>
+              <input type="range" min="0" max="9" [(ngModel)]="grnYearFrom" (ngModelChange)="onGRN()" class="ta">
+              <input type="range" min="0" max="9" [(ngModel)]="grnYearTo"   (ngModelChange)="onGRN()" class="tb">
+            </div>
+          </div>
+          <div class="pd-fg" *ngIf="grnView === 'monthly'">
+            <span class="pd-fl">Month Range: {{ grnFromMonth }} – {{ grnToMonth }}</span>
+            <div class="dw">
+              <div class="dt"><div class="df"
+                [style.left.%]="(grnMonthFrom/11)*100"
+                [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
+              <input type="range" min="0" max="11" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
+              <input type="range" min="0" max="11" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
+            </div>
+          </div>
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('grnCoOpen');$event.stopPropagation()">
+              <i class="fas fa-building"></i>
+              <span>{{ getLabel(grnCompanies, 'All Companies') }}</span>
+              <span class="pd-sel-count" *ngIf="grnCompanies.length">{{ grnCompanies.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="grnCoOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="grnCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="grnCompanies.length" (click)="clearFilter('grnCompanies', onGRN.bind(this))">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let c of companies"
+                   [class.pd-ddi-active]="isSelected(grnCompanies, c)"
+                   (click)="toggleCompany('grnCompanies', c, onGRN.bind(this))">
+                <span class="pd-ddi-cb"></span>
+                {{ c }}
+              </div>
+            </div>
+          </div>
+          <div class="pd-fg pd-radios">
+            <label class="pd-radio"><input type="radio" name="grnVm" value="yearly"  [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Yearly</label>
+            <label class="pd-radio"><input type="radio" name="grnVm" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Monthly</label>
+          </div>
+          <div class="pd-modal-kpi">
+            <span class="pd-kpi-lbl">GRN Amount</span>
+            <span class="pd-kpi-val">{{ formatM(grnTotal) }}</span>
+          </div>
+          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+        </ng-container>
+
+        <!-- Projects filters -->
+        <ng-container *ngIf="expandedChart === 'projects'">
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('projCoOpen');$event.stopPropagation()">
+              <i class="fas fa-building"></i>
+              <span>{{ getLabel(projCompanies, 'All Companies') }}</span>
+              <span class="pd-sel-count" *ngIf="projCompanies.length">{{ projCompanies.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="projCoOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="projCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="projCompanies.length" (click)="projCompanies=[]; loadProjects(); onProj()">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let c of companies"
+                   [class.pd-ddi-active]="isSelected(projCompanies, c)"
+                   (click)="toggleProjCompany(c)">
+                <span class="pd-ddi-cb"></span>
+                {{ c }}
+              </div>
+            </div>
+          </div>
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('projPrOpen');$event.stopPropagation()">
+              <i class="fas fa-folder-open"></i>
+              <span>{{ getLabel(projProjects, 'All Projects') }}</span>
+              <span class="pd-sel-count" *ngIf="projProjects.length">{{ projProjects.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="projPrOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="projPrOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="projProjects.length" (click)="clearFilter('projProjects', onProj.bind(this))">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let p of projects"
+                   [class.pd-ddi-active]="isSelected(projProjects, p)"
+                   (click)="toggleProject('projProjects', p, onProj.bind(this))">
+                <span class="pd-ddi-cb"></span>
+                {{ p }}
+              </div>
+            </div>
+          </div>
+          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+        </ng-container>
+
+        <!-- Suppliers filters -->
+        <ng-container *ngIf="expandedChart === 'suppliers'">
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('suppCoOpen');$event.stopPropagation()">
+              <i class="fas fa-building"></i>
+              <span>{{ getLabel(suppCompanies, 'All Companies') }}</span>
+              <span class="pd-sel-count" *ngIf="suppCompanies.length">{{ suppCompanies.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="suppCoOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="suppCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="suppCompanies.length" (click)="clearFilter('suppCompanies', onSupp.bind(this))">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let c of companies"
+                   [class.pd-ddi-active]="isSelected(suppCompanies, c)"
+                   (click)="toggleCompany('suppCompanies', c, onSupp.bind(this))">
+                <span class="pd-ddi-cb"></span>
+                {{ c }}
+              </div>
+            </div>
+          </div>
+          <div class="pd-fg">
+            <span class="pd-fl">Year Range: {{ suppFromYear }} – {{ suppToYear }}</span>
+            <div class="dw dw--lg">
+              <div class="dt"><div class="df"
+                [style.left.%]="(suppYearFrom/16)*100"
+                [style.right.%]="100-(suppYearTo/16)*100"></div></div>
+              <input type="range" min="0" max="16" [(ngModel)]="suppYearFrom" (ngModelChange)="onSupp()" class="ta">
+              <input type="range" min="0" max="16" [(ngModel)]="suppYearTo"   (ngModelChange)="onSupp()" class="tb">
+            </div>
+          </div>
+          <div class="pd-fg">
+            <span class="pd-fl">Number of Suppliers: {{ suppCount }}</span>
+            <input type="range" min="1" max="12" [(ngModel)]="suppCount" (ngModelChange)="onSupp()" class="pd-sr pd-sr--lg">
+          </div>
+          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+        </ng-container>
+
+        <!-- Facilities filters -->
+        <ng-container *ngIf="expandedChart === 'facilities'">
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('facilCoOpen');$event.stopPropagation()">
+              <i class="fas fa-building"></i>
+              <span>{{ getLabel(facilCompanies, 'All Companies') }}</span>
+              <span class="pd-sel-count" *ngIf="facilCompanies.length">{{ facilCompanies.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="facilCoOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="facilCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="facilCompanies.length" (click)="facilCompanies=[]; loadProjects(); onFacil()">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let c of companies"
+                   [class.pd-ddi-active]="isSelected(facilCompanies, c)"
+                   (click)="toggleFacilCompany(c)">
+                <span class="pd-ddi-cb"></span>
+                {{ c }}
+              </div>
+            </div>
+          </div>
+          <div class="pd-fg pd-ddw">
+            <button class="pd-ddb" (click)="toggleDD('facilPrOpen');$event.stopPropagation()">
+              <i class="fas fa-folder-open"></i>
+              <span>{{ getLabel(facilProjects, 'All Projects') }}</span>
+              <span class="pd-sel-count" *ngIf="facilProjects.length">{{ facilProjects.length }}</span>
+              <i class="fas fa-chevron-down pd-chev" [class.open]="facilPrOpen"></i>
+            </button>
+            <div class="pd-ddm pd-ddm--modal" *ngIf="facilPrOpen" (click)="$event.stopPropagation()">
+              <div class="pd-ddi pd-ddi-clear" *ngIf="facilProjects.length" (click)="clearFilter('facilProjects', onFacil.bind(this))">
+                <i class="fas fa-times-circle"></i> Clear selection
+              </div>
+              <div class="pd-ddi" *ngFor="let f of facilities"
+                   [class.pd-ddi-active]="isSelected(facilProjects, f)"
+                   (click)="toggleProject('facilProjects', f, onFacil.bind(this))">
+                <span class="pd-ddi-cb"></span>
+                {{ f }}
+              </div>
+            </div>
+          </div>
+          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+        </ng-container>
+
+      </div><!-- /pd-modal-filters -->
+
+      <!-- ── Full-size canvas ── -->
+      <div class="pd-modal-cw">
+        <canvas #modalCanvas></canvas>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /pd-wrap -->

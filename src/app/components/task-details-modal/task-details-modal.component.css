@@ -893,6 +893,12 @@ textarea[readonly] {
   font-weight: 600;
   color: #1f2937;
   line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .activity-meta-enhanced {
@@ -1952,6 +1958,7 @@ textarea[readonly] {
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .activity-header-enhanced {
@@ -1966,6 +1973,11 @@ textarea[readonly] {
   color: #1f2937;
   line-height: 1.4;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .activity-meta-enhanced {

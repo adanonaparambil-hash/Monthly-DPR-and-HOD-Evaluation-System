@@ -1,35 +1,111 @@
 // src/app/models/task.model.ts
 
 export interface DPRReview {
+  // ── Core ──────────────────────────────────────────────────────
   employeeId: string;
   month?: number;
   year?: number;
+  remarks?: string;
+  formType?: string;
+  status?: string;
+  hodId?: string;
+  dprid?: number;
+
+  // ── Monthly DPR ───────────────────────────────────────────────
   workedHours?: number;
   achievements?: string;
   challenges?: string;
   supportNeeded?: string;
-  status?: string;
-  hodId?: string;
-  scoreQuality?: number;
-  scoreTimeliness?: number;
-  scoreInitiative?: number;
-  scoreProblemSolving?: number;
-  scoreTeamWork?: number;
-  scoreCommunication?: number;
-  scoreOverall?: number;
-  hodrating?:number; // Legacy field - keep for backward compatibility
-  hodRating?: number; // HOD's manual rating (1-5)
+  totalEstimatedhours?: number;
   tasksList?: DPRTask[];
   commentsList?: DPRComment[];
   kpiList?: DPRKPI[];
-  dprid?: number;
-  remarks?: string;
+
+  // ── Annual Appraisal — Work Summary ───────────────────────────
+  appraisalPeriod?: string;
+  keyResponsibilities?: string;
+  deliverablesOutcomes?: string;
+
+  // ── Annual Appraisal — Self Appraisal ─────────────────────────
+  saQuality?: number;
+  saTimeliness?: number;
+  saInitiative?: number;
+  saCommunication?: number;
+  saTeamwork?: number;
+  saProblemSolving?: number;
+  saAdaptability?: number;
+  saLearning?: number;
+  saGoalAlignment?: number;
+  saOverallSelf?: number;
+  saTotal?: number;
+  saComments?: string;
+
+  // ── Annual Appraisal — Achievements ───────────────────────────
+  annualAchievements?: string;
+  annualChallenges?: string;
+
+  // ── Annual Appraisal — Training ───────────────────────────────
+  trainingCompleted?: string;
+  skillsDeveloped?: string;
+  trainingNeeded?: string;
+
+  // ── Annual Appraisal — Career Goals ───────────────────────────
+  careerGoalType?: string;
+  careerGoals?: string;
+  supportNeededAnnual?: string;
+
+  // ── HOD Evaluation ────────────────────────────────────────────
+  scoreQuality?: number;
+  scoreTimeliness?: number;
+  scoreInitiative?: number;
+  scoreCommunication?: number;
+  scoreTeamWork?: number;
+  scoreProblemSolving?: number;
+  hodrating?: number;
+  scoreOverall?: number;
+  overallValue?: string;
+
+  // ── HOD Remarks ───────────────────────────────────────────────
+  hodRecommendation?: string;
+  hodRemarks?: string;
+  hodReviewedAt?: Date;
+
+  // ── Reviewers (up to 3) ───────────────────────────────────────
+  reviewer1Id?: string;
+  reviewer2Id?: string;
+  reviewer3Id?: string;
+  // HOD Evaluation reviewers (up to 3)
+  hodReviewer1Id?: string;
+  hodReviewer2Id?: string;
+  hodReviewer3Id?: string;
+
+  // ── Extra ─────────────────────────────────────────────────────
   employeename?: string;
   designation?: string;
   department?: string;
   emailid?: string;
-  totalEstimatedhours? : number;
-  overallValue ?: string;
+  reviewAssessmentList?: ReviewAssessment[];
+}
+
+
+export interface ReviewAssessment {
+  reviewAssessmentId: number;
+  dprId: number;
+  reviewerId?: string;
+  raQuality?: number;
+  raTimeliness?: number;
+  raInitiative?: number;
+  raCommunication?: number;
+  raTeamwork?: number;
+  raProblemSolving?: number;
+  raAdaptability?: number;
+  raLearning?: number;
+  raGoalAlignment?: number;
+  raOverallReview?: number;
+  raTotal?: number;
+  raComments?: string;
+  status?: string;
+  userType?: string;
 }
 
 
@@ -129,10 +205,11 @@ export interface DPRMonthlyReviewListingRequest {
   employeeId?: string;
   createdAt?: Date;
   updatedAt?: Date;
-  row_num?:number;
-  page_number?:number;
-  items_per_page?:number;
-  department?:string;
+  row_num?: number;
+  page_number?: number;
+  items_per_page?: number;
+  department?: string;
+  formType?: string;
 }
 
 

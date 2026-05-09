@@ -11,11 +11,11 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-past-reports',
+  selector: 'app-apr-past-reports',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './past-reports.component.html',
-  styleUrls: ['./past-reports.component.css'],
+  templateUrl: './apr-past-reports.component.html',
+  styleUrls: ['./apr-past-reports.component.css'],
   animations: [
     trigger('fadeInUp', [
       state('in', style({ transform: 'translateY(0)', opacity: 1 })),
@@ -32,19 +32,20 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     ])
   ]
 })
-export class PastReportsComponent implements OnInit, OnDestroy {
+export class AprPastReportsComponent implements OnInit, OnDestroy {
   // Math reference for template
   Math = Math;
 
   hodList: DropdownOption[] = [];
   departmentList: DropdownOption[] = [];
+  employeeList: any[] = [];
 
   // User session and role properties
   userSession = JSON.parse(localStorage.getItem('current_user') || '{}');
   userType: 'E' | 'H' | 'C' = 'E';
   empId = '';
-  
-  
+
+
 
   // Role-based getters
   get isEmployee(): boolean { return this.userType === 'E'; }
@@ -54,6 +55,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
   // Filter properties
   filters = {
     employeeName: '',
+    employeeId: '',
     month: '',
     year: '',
     status: '',
@@ -96,14 +98,14 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     { value: '12', label: 'December' }
   ];
 
-  years = [
-    { value: '', label: 'Select year' },
-    { value: '2025', label: '2025' },
-    { value: '2024', label: '2024' },
-    { value: '2023', label: '2023' },
-    { value: '2022', label: '2022' },
-    { value: '2021', label: '2021' }
-  ];
+  years = (() => {
+    const currentYear = new Date().getFullYear();
+    const result = [{ value: '', label: 'Select year' }];
+    for (let y = currentYear; y >= currentYear - 4; y--) {
+      result.push({ value: y.toString(), label: y.toString() });
+    }
+    return result;
+  })();
 
   statuses = [
     { value: '', label: 'Select status' },
@@ -119,7 +121,12 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     this.initializeUserSession();
     this.setDefaultPreviousMonth();
     this.loadHodMasterList();
-    
+
+    // Load employee list for HOD and CED users
+    if (!this.isEmployee) {
+      this.loadEmployeeList();
+    }
+
     // Load department list first for CED users, then load reports
     if (this.isCed) {
       this.loadDepartmentList();
@@ -138,20 +145,20 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
   setDefaultPreviousMonth() {
     const today = new Date();
-    // Get previous month
-    const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    
-    // Set month (1-12)
-    this.filters.month = (previousMonth.getMonth() + 1).toString();
-    
-    // Set year
-    this.filters.year = previousMonth.getFullYear().toString();
+    // Default to previous year — APR covers Jan–Dec of the prior year
+    // e.g. in 2027 the user reviews 2026 records
+    this.filters.year = (today.getFullYear() - 1).toString();
+    this.filters.month = '';
+    // HOD default: show Submitted records (pending their review)
+    if (this.isHod) {
+      this.filters.status = 'S';
+    }
   }
 
   initializeUserSession() {
     if (this.userSession) {
       this.empId = this.userSession.empId || '';
-      
+
       // Determine userType from session
       const code = ((this.userSession.isHOD || this.userSession.role || this.userSession.userType || '') as string).toString().toUpperCase();
       if (code === 'H') {
@@ -190,7 +197,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
       page_number: this.currentBatch,
       items_per_page: this.itemsPerPage,
       row_num: ((this.currentBatch - 1) * this.itemsPerPage) + 1,
-      formType: 'M'
+      formType: 'A'
     };
 
     // Add department filter for CED users
@@ -206,11 +213,11 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     } else if (this.isHod) {
       request.hodName = this.empId;
       request.employeeName = this.filters.employeeName || undefined;
-      request.employeeId = undefined;
+      request.employeeId = this.filters.employeeId || undefined;
     } else if (this.isCed) {
       request.employeeName = this.filters.employeeName || undefined;
       request.hodName = this.filters.hodName || undefined;
-      request.employeeId = undefined;
+      request.employeeId = this.filters.employeeId || undefined;
     }
 
     this.api.GetMonthlyReviewListing(request).subscribe({
@@ -222,7 +229,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
           // Add new data to cache
           this.cachedData = [...this.cachedData, ...response.data];
-          
+
           // Update total records from API response if available
           if (response.totalRecords !== undefined) {
             this.totalRecords = response.totalRecords;
@@ -238,7 +245,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
           this.reports = this.cachedData;
           this.filteredReports = this.cachedData;
           this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
-          
+
         } else {
           if (resetCache) {
             this.reports = [];
@@ -267,37 +274,37 @@ export class PastReportsComponent implements OnInit, OnDestroy {
   clearFilters() {
     this.filters = {
       employeeName: '',
+      employeeId: '',
       month: '',
       year: '',
       status: '',
       hodName: '',
       department: ''
     };
-    
+
     // Set default previous month and year
     this.setDefaultPreviousMonth();
-    
+
     // Reset filters based on user role
     if (this.isEmployee) {
-      // Employee can't filter by employee name or HOD
       this.filters.employeeName = '';
       this.filters.hodName = '';
       this.filters.department = '';
     } else if (this.isHod) {
-      // HOD can filter by employee name but not HOD name
       this.filters.hodName = '';
       this.filters.department = '';
+      this.filters.status = 'S'; // HOD default: submitted records
     } else if (this.isCed) {
       // Set IT department as default for CED
-      const itDepartment = this.departmentList.find(dept => 
-        dept.description?.toUpperCase() === 'IT' || 
+      const itDepartment = this.departmentList.find(dept =>
+        dept.description?.toUpperCase() === 'IT' ||
         dept.idValue?.toUpperCase() === 'IT'
       );
       if (itDepartment && itDepartment.idValue) {
         this.filters.department = itDepartment.idValue;
       }
     }
-    
+
     // Reset cache and reload
     this.loadReports(true);
   }
@@ -305,11 +312,11 @@ export class PastReportsComponent implements OnInit, OnDestroy {
   onPageChange(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      
+
       // Check if we need to fetch more data from API
       const requiredDataLength = page * this.pageSize;
       const availableDataLength = this.cachedData.length;
-      
+
       // If we need more data and haven't reached the end
       if (requiredDataLength > availableDataLength && availableDataLength % this.itemsPerPage === 0) {
         // Fetch next batch (next 500 records)
@@ -368,10 +375,10 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
   getRoleBasedTitle(): string {
     switch (this.userType) {
-      case 'E': return 'My Reports';
-      case 'H': return 'Team Reports';
-      case 'C': return 'All Reports';
-      default: return 'Past Reports';
+      case 'E': return 'My APR Reports';
+      case 'H': return 'Team APR Reports';
+      case 'C': return 'All APR Reports';
+      default: return 'APR Past Reports';
     }
   }
 
@@ -381,13 +388,13 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
   viewReport(report: any) {
 
-    // Navigate to Monthly DPR in read-only mode with the selected record ID
+    // Navigate to APR in read-only mode with the selected record ID
     if (report) {
-      this.router.navigate(['/monthly-dpr', report], { 
-        queryParams: { 
+      this.router.navigate(['/apr', report], {
+        queryParams: {
           readonly: '1',
-          from: 'past-reports' 
-        } 
+          from: 'apr-past-reports'
+        }
       });
     } else {
       this.toastr.error('Invalid report ID', 'Error');
@@ -413,6 +420,21 @@ export class PastReportsComponent implements OnInit, OnDestroy {
 
 
 
+  loadEmployeeList(): void {
+    this.api.getEmployeeMasterList().subscribe(
+      (response: any) => {
+        if (response && response.success && response.data) {
+          this.employeeList = response.data;
+        } else {
+          console.warn('No employee records found');
+        }
+      },
+      (error) => {
+        console.error('Error fetching employee list:', error);
+      }
+    );
+  }
+
   loadHodMasterList(): void {
     this.api.GetHodMasterList().subscribe(
       (response: any) => {
@@ -434,11 +456,11 @@ export class PastReportsComponent implements OnInit, OnDestroy {
         if (response && response.success && response.data) {
           this.departmentList = response.data;
           console.log('Department list loaded:', this.departmentList);
-          
+
           // Set IT department as default if CED user
           if (this.isCed) {
-            const itDepartment = this.departmentList.find(dept => 
-              dept.description?.toUpperCase() === 'IT' || 
+            const itDepartment = this.departmentList.find(dept =>
+              dept.description?.toUpperCase() === 'IT' ||
               dept.idValue?.toUpperCase() === 'IT'
             );
             console.log('IT Department found:', itDepartment);
@@ -449,7 +471,7 @@ export class PastReportsComponent implements OnInit, OnDestroy {
               console.warn('IT department not found in list');
             }
           }
-          
+
           // Load reports after department is set
           this.loadReports();
         } else {

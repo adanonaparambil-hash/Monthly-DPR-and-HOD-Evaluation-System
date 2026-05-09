@@ -1,0 +1,185 @@
+<div class="apr-reports-page" [@fadeInUp]="animationState">
+
+  <!-- ── Filter Bar ── -->
+  <div class="filter-bar" [@slideIn]>
+    <div class="filter-bar-inner">
+
+      <!-- Employee dropdown (HOD / CED only) -->
+      @if (!isEmployee) {
+        <div class="filter-field">
+          <label class="filter-label"><i class="fas fa-user"></i> Employee</label>
+          <div class="select-wrap">
+            <select [(ngModel)]="filters.employeeId" (change)="applyFilters()" class="filter-select">
+              <option value="">All Employees</option>
+              @for (emp of employeeList; track emp.empId) {
+                <option [value]="emp.empId || emp.idValue">{{ emp.employeeName || emp.description }}</option>
+              }
+            </select>
+            <i class="fas fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+      }
+
+      <!-- Month — hidden but kept for filter logic -->
+      <div style="display:none">
+        <select [(ngModel)]="filters.month" (change)="applyFilters()">
+          @for (m of months; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+        </select>
+      </div>
+
+      <!-- Year -->
+      <div class="filter-field">
+        <label class="filter-label"><i class="fas fa-calendar-alt"></i> Year</label>
+        <div class="select-wrap">
+          <select [(ngModel)]="filters.year" (change)="applyFilters()" class="filter-select">
+            @for (year of years; track year.value) {
+              <option [value]="year.value">{{ year.label }}</option>
+            }
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="filter-field">
+        <label class="filter-label"><i class="fas fa-tag"></i> Status</label>
+        <div class="select-wrap">
+          <select [(ngModel)]="filters.status" (change)="applyFilters()" class="filter-select">
+            @for (s of statuses; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <!-- Department (CED only) -->
+      @if (isCed) {
+        <div class="filter-field">
+          <label class="filter-label"><i class="fas fa-building"></i> Department</label>
+          <div class="select-wrap">
+            <select [(ngModel)]="filters.department" (change)="applyFilters()" class="filter-select">
+              <option value="">All Departments</option>
+              @for (dept of departmentList; track dept.idValue) {
+                <option [value]="dept.idValue">{{ dept.description }}</option>
+              }
+            </select>
+            <i class="fas fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="filter-actions">
+        <button class="btn-apply" (click)="applyFilters()">
+          <i class="fas fa-search"></i>
+          <span>Search</span>
+        </button>
+        <button class="btn-reset" (click)="clearFilters()" title="Clear filters">
+          <i class="fas fa-rotate-left"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Loading skeleton ── -->
+  @if (loading) {
+    <div class="skeleton-wrap">
+      @for (n of [1,2,3,4,5,6]; track n) {
+        <div class="skeleton-row">
+          <div class="skel skel-sm"></div>
+          <div class="skel skel-lg"></div>
+          <div class="skel skel-md"></div>
+          <div class="skel skel-lg"></div>
+          <div class="skel skel-sm"></div>
+          <div class="skel skel-sm"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Table ── -->
+  @if (!loading) {
+    <div class="table-card">
+      <div class="table-scroll">
+        <table class="apr-table">
+          <thead>
+            <tr>
+              <th class="th-sl">#</th>
+              <th>Employee</th>
+              <th>Appraisal Period</th>
+              <th>Reporting Manager</th>
+              <th>Status</th>
+              <th class="th-action">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (report of getPaginatedReports(); track report.dprid; let i = $index) {
+              <tr class="data-row" [style.--row-index]="i">
+                <td class="td-sl">{{ getRowNumber(i) }}</td>
+                <td class="td-name">
+                  <div class="emp-cell">
+                    <div class="emp-avatar">{{ (report.employeeName || '?')[0].toUpperCase() }}</div>
+                    <span>{{ report.employeeName }}</span>
+                  </div>
+                </td>
+                <td>{{ report.appraisalPeriod || (report.year ? 'Jan ' + (report.year - 1) + ' – Dec ' + (report.year - 1) : '—') }}</td>
+                <td class="td-hod">{{ report.hodName }}</td>
+                <td>
+                  <span class="status-pill" [class]="'pill-' + getStatusClass(report.status)">
+                    <span class="pill-dot"></span>
+                    {{ getStatusLabel(report.status) }}
+                  </span>
+                </td>
+                <td class="td-action">
+                  <button class="btn-view" (click)="viewReport(report.dprid)" title="View Report">
+                    <i class="fas fa-eye"></i>
+                    <span>View</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty state -->
+      @if (filteredReports.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon-wrap">
+            <i class="fas fa-folder-open"></i>
+          </div>
+          <h3>No Reports Found</h3>
+          <p>No APR records match your current filters.</p>
+          <button class="btn-reset-empty" (click)="clearFilters()">
+            <i class="fas fa-rotate-left"></i> Reset Filters
+          </button>
+        </div>
+      }
+
+      <!-- Pagination -->
+      @if (filteredReports.length > 0) {
+        <div class="pagination-bar">
+          <span class="pagination-info">
+            Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong>–<strong>{{ Math.min(currentPage * pageSize, totalRecords) }}</strong> of <strong>{{ totalRecords }}</strong>
+          </span>
+          <div class="pagination-controls">
+            <button class="pg-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            @for (page of getPageNumbers(); track page) {
+              <button class="pg-btn" [class.pg-active]="page === currentPage" (click)="onPageChange(page)">
+                {{ page }}
+              </button>
+            }
+            <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

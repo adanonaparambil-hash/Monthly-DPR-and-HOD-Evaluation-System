@@ -3,6 +3,8 @@ import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { MonthlyDprComponent } from './monthly-dpr.component/monthly-dpr.component';
 import { PastReportsComponent } from './past-reports/past-reports.component';
+import { AprComponent } from './apr.component/apr.component';
+import { AprPastReportsComponent } from './apr-past-reports/apr-past-reports.component';
 import { ProfileComponent } from './profile/profile.component';
 import { EmployeeDashboard } from './employee-dashboard/employee-dashboard';
 import { HodDashboard } from './hod-dashboard/hod-dashboard';
@@ -19,6 +21,7 @@ import { NoticeManagementComponent } from './notice-management/notice-management
 import { HodMasterComponent } from './hod-master/hod-master.component';
 import { EmployeeMasterComponent } from './employee-master/employee-master.component';
 import { ByodFormComponent } from './byod-form/byod-form.component';
+import { PurchaseDashboardComponent } from './purchase-dashboard/purchase-dashboard.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
@@ -44,6 +47,9 @@ export const routes: Routes = [
       { path: 'monthly-dpr', component: MonthlyDprComponent },
       { path: 'monthly-dpr/:id', component: MonthlyDprComponent },
       { path: 'past-reports', component: PastReportsComponent },
+      { path: 'apr', component: AprComponent },
+      { path: 'apr/:id', component: AprComponent },
+      { path: 'apr-past-reports', component: AprPastReportsComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'exit-form', component: EmergencyExitFormComponent },
       { path: 'rejoining-form', component: RejoiningForm },
@@ -56,6 +62,7 @@ export const routes: Routes = [
       { path: 'hod-master', component: HodMasterComponent },
       { path: 'employee-master', component: EmployeeMasterComponent },
       { path: 'byod-form', component: ByodFormComponent },
+      { path: 'purchase-dashboard', component: PurchaseDashboardComponent },
     ]
   },
   { path: '**', redirectTo: 'login' },

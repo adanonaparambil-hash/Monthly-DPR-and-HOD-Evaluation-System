@@ -8,6 +8,7 @@ import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, Dr
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest , EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, CustomFieldDtolist, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
+import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest  } from '../models/axpertDashBoard.model';
 
 
 @Injectable({
@@ -186,13 +187,13 @@ export class Api {
   }
 
 
-  GetCEDDepartmentWiseDashBoardDetails(month: number, year: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/DashBoard/GetCEDDepartmentWiseDashBoardDetails/${month}/${year}`);
+  GetCEDDepartmentWiseDashBoardDetails(month: number, year: number, formType: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetCEDDepartmentWiseDashBoardDetails/${month}/${year}/${formType}`);
   }
 
 
-  GetEmployeeDetailsForcedDashboard(month: number, year: number, statusCondition: string, department: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDetailsForcedDashboard/${month}/${year}/${statusCondition}/${department}`);
+  GetEmployeeDetailsForcedDashboard(month: number, year: number, statusCondition: string, department: string, formType: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDetailsForcedDashboard/${month}/${year}/${statusCondition}/${department}/${formType}`);
   }
 
   GetDepartmentList(): Observable<any> {
@@ -531,6 +532,49 @@ export class Api {
   GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
   }
+
+
+
+
+  //axpert dashboard api 
+ 
+ 
+  GetLpoDashboard(request: LpoDashboardRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetLpoDashboard`, request);
+  }
+
+  GetGrnDashboard(request: GrnDashboardRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetGrnDashboard`, request);
+  }
+
+  GetProjectDashboard(request: ProjectDashboardRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetProjectDashboard`, request);
+  }
+
+  GetTopSuppliers(request: TopSupplierRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetTopSuppliers`, request);
+  }
+
+  GetFacilitiesDashboard(request: FacilitiesDashboardRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetFacilitiesDashboard`, request);
+  }
+
+
+  GetCompanyDropdown(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/AxpertDashBoard/GetCompanyDropdown`);
+  }
+
+
+  GetProjectDropdown(companies: string[] | null): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetProjectDropdown`, companies);
+  }
+
+
+  exportAPRUserReport( month: number, year: number, statusCondition: string, department: string, formType: string ): Observable<Blob> {
+    return this.http.get( `${this.apiUrl}/DashBoard/exportEmployeeAppraisal/${month}/${year}/${statusCondition}/${department}/${formType}`, 
+      {responseType: 'blob'});
+  }
+
 
 
 }

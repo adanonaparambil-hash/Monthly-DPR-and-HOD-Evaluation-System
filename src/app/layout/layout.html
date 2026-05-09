@@ -21,23 +21,30 @@
         <i class="fas fa-chart-line"></i> Dashboard
       </a>
 
-      <!-- MPR Menu with Sub-items - HIDDEN FOR NOW (hidden in DPR-only mode) -->
+      <!-- Purchase Dashboard — hidden -->
+      <!-- <a *ngIf="!isDPROnlyMode" routerLink="/purchase-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+        <i class="fas fa-shopping-bag"></i> Purchase Dashboard
+      </a> -->
+
+      <!-- Productivity Menu with MPR and APR sub-menus (hidden in DPR-only mode) -->
+      <!-- Productivity Menu with direct MPR and APR links (hidden in DPR-only mode) -->
       <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
-        <a class="parent-menu" (click)="toggleMPRMenu()" [class.active]="isMPRRouteActive()">
+        <a class="parent-menu" (click)="toggleProductivityMenu()" [class.active]="isProductivityRouteActive()">
           <div class="menu-content">
+            <i class="fas fa-chart-bar"></i>
+            <span>Productivity</span>
+          </div>
+          <i class="fas fa-chevron-down" [class.rotated]="isProductivityMenuOpen"></i>
+        </a>
+        <div class="submenu" *ngIf="isProductivityMenuOpen" [@slideDown]>
+          <!-- MPR hidden -->
+          <!-- <a routerLink="/monthly-dpr" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="fas fa-file-alt"></i>
             <span>MPR</span>
-          </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isMPRMenuOpen"></i>
-        </a>
-        <div class="submenu" *ngIf="isMPRMenuOpen" [@slideDown]>
-          <a routerLink="/monthly-dpr" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-edit"></i>
-            <span>MPR Entry</span>
-          </a>
-          <a routerLink="/past-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-history"></i>
-            <span>MPR Past Reports</span>
+          </a> -->
+          <a routerLink="/apr" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-file-contract"></i>
+            <span>APR</span>
           </a>
         </div>
       </div>
@@ -77,7 +84,7 @@
         </div>
       </div>
 
-      <!-- Approvals Menu (Empty for now, for future use) (hidden in DPR-only mode) -->
+      <!-- Approvals Menu (hidden in DPR-only mode) -->
       <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
         <a class="parent-menu" (click)="toggleApprovalsMenu()" [class.active]="isApprovalsRouteActive()">
           <div class="menu-content">
@@ -89,7 +96,16 @@
         <div class="submenu" *ngIf="isApprovalsMenuOpen" [@slideDown]>
           <a routerLink="/leave-approval" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="fas fa-clipboard-check"></i>
-            <span>Approvals</span>
+            <span>Form Approvals</span>
+          </a>
+          <!-- MPR Past Reports hidden -->
+          <!-- <a routerLink="/past-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-history"></i>
+            <span>MPR Past Reports</span>
+          </a> -->
+          <a routerLink="/apr-past-reports" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebarOnMobile()">
+            <i class="fas fa-history"></i>
+            <span>APR Past Reports</span>
           </a>
         </div>
       </div>

@@ -1,0 +1,634 @@
+<div class="apr-page" [@slideIn]>
+
+  <!-- ── Performance Badge (approved employees only) ── -->
+  @if (isEmployee && currentStatus === 'A' && overallScore > 0) {
+    <div class="perf-badge-section" [@scaleIn]>
+      <div class="perf-badge" [class]="getRatingClass(overallScore)">
+        <div class="perf-badge-circle">
+          <svg width="110" height="110">
+            <circle class="ring-bg" cx="55" cy="55" r="46"/>
+            <circle class="ring-fill" [class]="getRatingClass(overallScore)" cx="55" cy="55" r="46"
+              [style.stroke-dashoffset]="289 - (289 * overallScore / 100)"/>
+          </svg>
+          <span class="ring-score">{{ overallScore }}</span>
+        </div>
+        <div class="perf-badge-text">
+          <span class="perf-rating-label">{{ getRatingText(overallScore) }}</span>
+          <span class="perf-rating-desc">{{ getRatingDescription(overallScore) }}</span>
+          <span class="perf-period">Annual Performance Review · {{ monthYear }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Appraisal Period Header ── -->
+  <div class="apr-header-bar" [@scaleIn]>
+    <!-- Left: back button + icon + text info -->
+    <div class="apr-header-left">
+      <button class="apr-back-btn" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back</span>
+      </button>
+      <div class="apr-header-icon">
+        <i class="fas fa-file-contract"></i>
+      </div>
+      <div class="apr-header-info">
+        <span class="apr-period-label">Annual Performance Appraisal</span>
+        <span class="apr-period-value">{{ appraisalPeriod || monthYear || 'Current Period' }}</span>
+        <span class="apr-period-sub">{{ empName }} &nbsp;·&nbsp; {{ designation }}</span>
+      </div>
+    </div>
+    <!-- Right: status chip -->
+    <div class="apr-header-right">
+      <div class="apr-status-chip" [class]="'status-chip-' + currentStatus">
+        @if (currentStatus === 'D') { <i class="fas fa-pencil-alt"></i><span>Draft</span> }
+        @else if (currentStatus === 'S') { <i class="fas fa-paper-plane"></i><span>Submitted</span> }
+        @else if (currentStatus === 'R') { <i class="fas fa-undo"></i><span>Rework Required</span> }
+        @else if (currentStatus === 'A') { <i class="fas fa-check-circle"></i><span>Approved</span> }
+        @else { <i class="fas fa-file-alt"></i><span>{{ currentStatus }}</span> }
+      </div>
+    </div>
+    <!-- Decorative background shape -->
+    <div class="apr-header-deco"></div>
+  </div>
+
+  <!-- ── 1. Employee Profile ── -->
+  <div class="apr-card apr-card--blue" [@scaleIn] style="animation-delay:0.05s">
+    <div class="apr-card-header">
+      <div class="apr-card-title">
+        <div class="apr-card-icon-wrap icon-blue"><i class="fas fa-id-card"></i></div>
+        <span>Employee Profile</span>
+      </div>
+      <span class="apr-card-badge">Auto-filled from HR</span>
+    </div>
+    <div class="apr-card-body">
+      <!-- Avatar row -->
+      <div class="profile-avatar-row">
+        <img class="profile-avatar-img" [src]="profileImage" [alt]="empName" (error)="onAvatarError($event)">
+        <div class="profile-avatar-info">
+          <span class="profile-avatar-name">{{ empName }}</span>
+          <span class="profile-avatar-role">{{ designation }} &nbsp;·&nbsp; {{ department }}</span>
+        </div>
+      </div>
+      <!-- Fields grid -->
+      <div class="profile-grid">
+        <div class="profile-field">
+          <label>Employee ID</label>
+          <input [value]="empId" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Full Name</label>
+          <input [value]="empName" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Designation</label>
+          <input [value]="designation" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Department</label>
+          <input [value]="department" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Date of Joining</label>
+          <input [value]="dateOfJoining || '—'" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Total Experience</label>
+          <input [value]="totalExperience || '—'" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Employment Type</label>
+          <input [value]="employmentType || '—'" disabled>
+        </div>
+        <div class="profile-field">
+          <label>Reporting Manager <span class="req">*</span></label>
+          <select [(ngModel)]="reportingTo" [disabled]="!canEditFields">
+            <option value="">Select Manager</option>
+            @for (hod of hodList; track hod.idValue) {
+              <option [value]="hod.idValue">{{ hod.description }}</option>
+            }
+          </select>
+        </div>
+        <div class="profile-field">
+          <label>Appraisal Period</label>
+          <input [value]="appraisalPeriod || monthYear || '—'" disabled>
+        </div>
+      </div>
+
+      <!-- Reviewer multi-select (up to 3) -->
+      @if (canEditFields) {
+        <div class="reviewer-field">
+          <label class="reviewer-label">
+            <i class="fas fa-users"></i> Reviewers
+            <span class="reviewer-hint">(Select up to 3)</span>
+          </label>
+
+          <!-- Selected chips -->
+          <div class="reviewer-chips-wrap" (click)="toggleReviewerDropdown()">
+            @if (selectedReviewers.length === 0) {
+              <span class="reviewer-placeholder">Click to select reviewers...</span>
+            }
+            @for (id of selectedReviewers; track id) {
+              <span class="reviewer-chip">
+                <i class="fas fa-user-circle"></i>
+                {{ getReviewerName(id) }}
+                <button class="chip-remove" (click)="removeReviewer(id); $event.stopPropagation()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </span>
+            }
+            @if (selectedReviewers.length < 3) {
+              <span class="reviewer-add-icon"><i class="fas fa-plus"></i></span>
+            }
+          </div>
+
+          <!-- Backdrop to close dropdown -->
+          @if (reviewerDropdownOpen) {
+            <div class="reviewer-backdrop" (click)="closeReviewerDropdown()"></div>
+          }
+
+          <!-- Dropdown -->
+          @if (reviewerDropdownOpen) {
+            <div class="reviewer-dropdown" (click)="$event.stopPropagation()">
+              <div class="reviewer-search-wrap">
+                <i class="fas fa-search"></i>
+                <input class="reviewer-search" [(ngModel)]="reviewerSearchTerm"
+                  placeholder="Search employee...">
+              </div>
+              <div class="reviewer-list">
+                @if (filteredEmployeeList.length === 0) {
+                  <div class="reviewer-empty">No employees found</div>
+                }
+                @for (emp of filteredEmployeeList; track emp.empId || emp.idValue) {
+                  <div class="reviewer-option"
+                    [class.selected]="isReviewerSelected(emp.empId || emp.idValue)"
+                    [class.disabled]="!isReviewerSelected(emp.empId || emp.idValue) && selectedReviewers.length >= 3"
+                    (click)="toggleReviewer(emp.empId || emp.idValue)">
+                    <div class="reviewer-option-avatar">
+                      {{ (emp.employeeName || emp.description || '?')[0].toUpperCase() }}
+                    </div>
+                    <span>{{ emp.employeeName || emp.description }}</span>
+                    @if (isReviewerSelected(emp.empId || emp.idValue)) {
+                      <i class="fas fa-check reviewer-check"></i>
+                    }
+                  </div>
+                }
+              </div>              @if (selectedReviewers.length >= 3) {
+                <div class="reviewer-max-msg">
+                  <i class="fas fa-info-circle"></i> Maximum 3 reviewers selected
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else if (selectedReviewers.length > 0) {
+        <div class="reviewer-field">
+          <label class="reviewer-label"><i class="fas fa-users"></i> Reviewers</label>
+          <div class="reviewer-chips-wrap readonly">
+            @for (id of selectedReviewers; track id) {
+              <span class="reviewer-chip">
+                <i class="fas fa-user-circle"></i>
+                {{ getReviewerName(id) }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ── 2. Work Summary ── -->
+  <div class="apr-card apr-card--purple" [@scaleIn] style="animation-delay:0.1s">
+    <div class="apr-card-header" (click)="toggleWorkSummary()">
+      <div class="apr-card-title">
+        <div class="apr-card-icon-wrap icon-purple"><i class="fas fa-clipboard-list"></i></div>
+        <span>Work Summary</span>
+      </div>
+      <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showWorkSummary"></i>
+    </div>
+    @if (showWorkSummary) {
+      <div class="apr-card-body" [@fadeInUp]>
+        <p class="apr-section-hint">Describe the overall scope of work you handled this appraisal year — a clear summary of responsibilities and results.</p>
+        <div class="textarea-group">
+          <label><i class="fas fa-tasks"></i> Key Responsibilities Handled <span class="req">*</span></label>
+          <textarea [(ngModel)]="keyResponsibilities" placeholder="Describe your key responsibilities..." [disabled]="!canEditFields" rows="4"></textarea>
+        </div>
+        <div class="textarea-group">
+          <label><i class="fas fa-flag-checkered"></i> Deliverables &amp; Outcomes <span class="req">*</span></label>
+          <textarea [(ngModel)]="deliverablesOutcomes" placeholder="Describe your deliverables and outcomes..." [disabled]="!canEditFields" rows="4"></textarea>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── 3. Self Appraisal — Reflection Statements ── -->
+  <div class="apr-card apr-card--teal" [@scaleIn] style="animation-delay:0.15s">
+    <div class="apr-card-header" (click)="toggleSelfAppraisal()">
+      <div class="apr-card-title">
+        <div class="apr-card-icon-wrap icon-teal"><i class="fas fa-user-check"></i></div>
+        <span>Self Appraisal <span class="req">*</span></span>
+      </div>
+      <div class="apr-card-header-right">
+        <span class="completion-chip">{{ selfAppraisalAnsweredCount }} / {{ selfAppraisalStatements.length }} answered</span>
+        <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showSelfAppraisal"></i>
+      </div>
+    </div>
+    @if (showSelfAppraisal) {
+      <div class="apr-card-body" [@fadeInUp]>
+        <p class="apr-section-hint">Read each statement and rate how strongly it reflects your experience this year. Your responses will be shared with your HOD as part of the evaluation. &nbsp;<strong>1 = Strongly disagree &nbsp; 5 = Strongly agree</strong></p>
+
+        <div class="rating-scale-legend">
+          <span class="legend-left">Strongly disagree</span>
+          <div class="legend-dots">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          </div>
+          <span class="legend-right">Strongly agree</span>
+        </div>
+
+        <div class="reflection-list">
+          @for (stmt of selfAppraisalStatements; track stmt.key; let i = $index) {
+            <div class="reflection-row" [class.answered]="getSelfRating(stmt.key) > 0">
+              <div class="reflection-num">{{ (i + 1).toString().padStart(2, '0') }}</div>
+              <div class="reflection-content">
+                <p class="reflection-statement">{{ stmt.label }}</p>
+                <span class="reflection-area">{{ stmt.area }}</span>
+              </div>
+              <div class="reflection-rating">
+                @for (star of [1,2,3,4,5]; track star) {
+                  <button class="rating-dot"
+                    [class.selected]="getSelfRating(stmt.key) >= star"
+                    [class.disabled]="!canEditFields"
+                    (click)="setSelfRating(stmt.key, star)"
+                    [title]="star.toString()">
+                    {{ star }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (selfAppraisalAnsweredCount === selfAppraisalStatements.length) {
+          <div class="self-total-row">
+            <span class="self-total-label">Self-appraisal total</span>
+            <span class="self-total-score">{{ selfAppraisalTotal }} / 50</span>
+          </div>
+        }
+
+        <div class="textarea-group" style="margin-top: 20px;">
+          <label><i class="fas fa-comment-alt"></i> Additional Comments for your HOD</label>
+          <textarea [(ngModel)]="saComments" placeholder="Any additional context or comments you'd like to share with your HOD..." [disabled]="!canEditFields" rows="3"></textarea>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── 6. Achievements & Challenges ── -->
+  <div class="apr-card apr-card--amber" [@scaleIn] style="animation-delay:0.2s">
+    <div class="apr-card-header" (click)="toggleAchievements()">
+      <div class="apr-card-title">
+        <div class="apr-card-icon-wrap icon-amber"><i class="fas fa-trophy"></i></div>
+        <span>Achievements &amp; Challenges</span>
+      </div>
+      <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showAchievements"></i>
+    </div>
+    @if (showAchievements) {
+      <div class="apr-card-body two-col" [@fadeInUp]>
+        <div class="textarea-group">
+          <label><i class="fas fa-star"></i> Key Achievements &amp; Highlights <span class="req">*</span></label>
+          <textarea [(ngModel)]="annualAchievements" placeholder="Describe your major accomplishments, deliverables and quality outcomes..." [disabled]="!canEditFields" rows="5"></textarea>
+        </div>
+        <div class="textarea-group">
+          <label><i class="fas fa-exclamation-circle"></i> Challenges Faced <span class="req">*</span></label>
+          <textarea [(ngModel)]="annualChallenges" placeholder="Detail the challenges you encountered and the steps taken to address them..." [disabled]="!canEditFields" rows="5"></textarea>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── 7. Training & Development ── -->
+  <div class="apr-card apr-card--green" [@scaleIn] style="animation-delay:0.25s">
+    <div class="apr-card-header" (click)="toggleTraining()">
+      <div class="apr-card-title">
+        <div class="apr-card-icon-wrap icon-green"><i class="fas fa-graduation-cap"></i></div>
+        <span>Training &amp; Development</span>
+      </div>
+      <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showTraining"></i>
+    </div>
+    @if (showTraining) {
+      <div class="apr-card-body" [@fadeInUp]>
+        <p class="apr-section-hint">List training, certifications, or skills gained this year, and what development support you need next year.</p>
+        <div class="training-grid">
+          <div class="textarea-group">
+            <label><i class="fas fa-certificate"></i> Training / Certifications Completed This Year</label>
+            <textarea [(ngModel)]="trainingCompleted" placeholder="e.g. AWS Cloud Practitioner (Mar 2026), Agile workshop (Oct 2025)..." [disabled]="!canEditFields" rows="3"></textarea>
+          </div>
+          <div class="textarea-group">
+            <label><i class="fas fa-lightbulb"></i> Skills Developed <span class="req">*</span></label>
+            <textarea [(ngModel)]="skillsDeveloped" placeholder="e.g. Cloud architecture, CI/CD pipelines, stakeholder communication..." [disabled]="!canEditFields" rows="3"></textarea>
+          </div>
+          <div class="textarea-group full-width">
+            <label><i class="fas fa-road"></i> Training or Development Needed Next Year</label>
+            <textarea [(ngModel)]="trainingNeeded" placeholder="e.g. System design, leadership skills, advanced data analysis..." [disabled]="!canEditFields" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── HOD Evaluation (HOD/CED only, not visible to employee) ── -->
+  @if (showHodEvaluationSection && !isEmployee) {
+    <div class="apr-card apr-card--orange" [@scaleIn] style="animation-delay:0.3s">
+      <div class="apr-card-header" (click)="toggleHodEvaluation()">
+        <div class="apr-card-title">
+          <div class="apr-card-icon-wrap icon-orange"><i class="fas fa-star"></i></div>
+          <span>HOD Evaluation</span>
+        </div>
+        <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showHodEvaluation"></i>
+      </div>
+      @if (showHodEvaluation) {
+        <div class="apr-card-body" [@fadeInUp]>
+
+          <!-- Competency Scores -->
+          <p class="hod-eval-section-label">Competency Scores <span>(1–100 each)</span></p>
+          <div class="hod-scores-grid">
+            <div class="hod-score-item hod-score-main">
+              <label>HOD Overall Rating</label>
+              <input type="number" [(ngModel)]="hodRating" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('hodRating', $event)"
+                (blur)="finalizeRatingInput('hodRating', $event)">
+            </div>
+            <div class="hod-score-item">
+              <label>Quality</label>
+              <input type="number" [(ngModel)]="quality" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('quality', $event)"
+                (blur)="finalizeRatingInput('quality', $event)">
+            </div>
+            <div class="hod-score-item">
+              <label>Timeliness</label>
+              <input type="number" [(ngModel)]="timeliness" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('timeliness', $event)"
+                (blur)="finalizeRatingInput('timeliness', $event)">
+            </div>
+            <div class="hod-score-item">
+              <label>Initiative</label>
+              <input type="number" [(ngModel)]="initiative" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('initiative', $event)"
+                (blur)="finalizeRatingInput('initiative', $event)">
+            </div>
+            <div class="hod-score-item">
+              <label>Communication</label>
+              <input type="number" [(ngModel)]="communication" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('communication', $event)"
+                (blur)="finalizeRatingInput('communication', $event)">
+            </div>
+            <div class="hod-score-item">
+              <label>Team Work</label>
+              <input type="number" [(ngModel)]="teamWork" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('teamWork', $event)"
+                (blur)="finalizeRatingInput('teamWork', $event)">
+            </div>
+            <div class="hod-score-item">
+              <label>Problem Solving</label>
+              <input type="number" [(ngModel)]="problemSolving" min="1" max="100"
+                placeholder="0" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="calculateOverallRating()"
+                (keyup)="validateRatingInput('problemSolving', $event)"
+                (blur)="finalizeRatingInput('problemSolving', $event)">
+            </div>
+          </div>
+
+          <!-- Overall Score Display — CED only -->
+          @if (showOverallRating && isCed) {
+            <div class="hod-overall-row" [@scaleIn]>
+              <div class="hod-overall-circle" [class]="getRatingClass(overallScore)">
+                <span class="hod-overall-score">{{ overallScore }}</span>
+                <span class="hod-overall-label">{{ getRatingText(overallScore) }}</span>
+              </div>
+              <div class="hod-overall-desc">
+                <h4>{{ getRatingText(overallScore) }}</h4>
+                <p>{{ getRatingDescription(overallScore) }}</p>
+              </div>
+              <div class="hod-rating-legend">
+                <span class="legend-dot excellent"></span><span>Excellent (85–100)</span>
+                <span class="legend-dot good"></span><span>Good (70–84)</span>
+                <span class="legend-dot average"></span><span>Average (50–69)</span>
+                <span class="legend-dot below-average"></span><span>Below average (35–49)</span>
+                <span class="legend-dot poor"></span><span>Poor (0–34)</span>
+              </div>
+            </div>
+          }
+
+          <!-- HOD Recommendation -->
+          <p class="hod-eval-section-label" style="margin-top:20px;">HOD Recommendation</p>
+          <div class="hod-recommendation-row">
+            <button class="rec-btn rec-increment" [class.rec-active]="hodRecommendation === 'increment'"
+              [disabled]="!canEditHodEvaluation"
+              (click)="canEditHodEvaluation && (hodRecommendation = 'increment')">
+              <i class="fas fa-arrow-up"></i>
+              <strong>Increment recommended</strong>
+              <span>Employee merits a salary increment</span>
+            </button>
+            <button class="rec-btn rec-promotion" [class.rec-active]="hodRecommendation === 'promotion'"
+              [disabled]="!canEditHodEvaluation"
+              (click)="canEditHodEvaluation && (hodRecommendation = 'promotion')">
+              <i class="fas fa-level-up-alt"></i>
+              <strong>Promotion recommended</strong>
+              <span>Ready for next level role</span>
+            </button>
+            <button class="rec-btn rec-nochange" [class.rec-active]="hodRecommendation === 'no_change'"
+              [disabled]="!canEditHodEvaluation"
+              (click)="canEditHodEvaluation && (hodRecommendation = 'no_change')">
+              <i class="fas fa-minus-circle"></i>
+              <strong>No change</strong>
+              <span>Meets expectations, no change</span>
+            </button>
+          </div>
+
+          <!-- Management Remarks -->
+          <div class="textarea-group" style="margin-top:20px;">
+            <label><i class="fas fa-comment-dots"></i> Management Remarks</label>
+            <textarea [(ngModel)]="hodRemarks"
+              placeholder="Add your overall remarks, observations, and any specific feedback for the employee..."
+              [disabled]="!canEditHodEvaluation" rows="4"></textarea>
+          </div>
+
+          <!-- HOD Evaluation Reviewers -->
+          <div class="reviewer-field" style="margin-top:20px;">
+            <label class="reviewer-label">
+              <i class="fas fa-users"></i> Evaluation Reviewers
+              <span class="reviewer-hint">(Select up to 3)</span>
+            </label>
+
+            <div class="reviewer-chips-wrap" [class.readonly]="!canEditHodEvaluation"
+              (click)="toggleHodReviewerDropdown($event)">
+              @if (selectedHodReviewers.length === 0) {
+                <span class="reviewer-placeholder">Click to select reviewers...</span>
+              }
+              @for (id of selectedHodReviewers; track id) {
+                <span class="reviewer-chip">
+                  <i class="fas fa-user-circle"></i>
+                  {{ getReviewerName(id) }}
+                  @if (canEditHodEvaluation) {
+                    <button class="chip-remove" (click)="removeHodReviewer(id); $event.stopPropagation()">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  }
+                </span>
+              }
+              @if (canEditHodEvaluation && selectedHodReviewers.length < 3) {
+                <span class="reviewer-add-icon"><i class="fas fa-plus"></i></span>
+              }
+            </div>
+
+            @if (hodReviewerDropdownOpen) {
+              <div class="reviewer-backdrop" (click)="closeHodReviewerDropdown()"></div>
+            }
+
+            @if (hodReviewerDropdownOpen && hodReviewerRect) {
+              <div class="hod-reviewer-dropdown-fixed"
+                [style.top.px]="hodReviewerRect.top"
+                [style.left.px]="hodReviewerRect.left"
+                [style.width.px]="hodReviewerRect.width"
+                (click)="$event.stopPropagation()">
+                <div class="reviewer-search-wrap">
+                  <i class="fas fa-search"></i>
+                  <input class="reviewer-search" [(ngModel)]="hodReviewerSearchTerm"
+                    placeholder="Search employee...">
+                </div>
+                <div class="reviewer-list">
+                  @if (filteredHodReviewerList.length === 0) {
+                    <div class="reviewer-empty">No employees found</div>
+                  }
+                  @for (emp of filteredHodReviewerList; track emp.empId || emp.idValue) {
+                    <div class="reviewer-option"
+                      [class.selected]="isHodReviewerSelected(emp.empId || emp.idValue)"
+                      [class.disabled]="!isHodReviewerSelected(emp.empId || emp.idValue) && selectedHodReviewers.length >= 3"
+                      (click)="toggleHodReviewer(emp.empId || emp.idValue)">
+                      <div class="reviewer-option-avatar">
+                        {{ (emp.employeeName || emp.description || '?')[0].toUpperCase() }}
+                      </div>
+                      <span>{{ emp.employeeName || emp.description }}</span>
+                      @if (isHodReviewerSelected(emp.empId || emp.idValue)) {
+                        <i class="fas fa-check reviewer-check"></i>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (selectedHodReviewers.length >= 3) {
+                  <div class="reviewer-max-msg">
+                    <i class="fas fa-info-circle"></i> Maximum 3 reviewers selected
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Action Buttons ── -->
+  <div class="apr-actions" [@scaleIn]>
+    @if (showEmployeeButtons) {
+      <button class="btn-draft" (click)="saveDraft()">
+        <i class="fas fa-save"></i> Save as Draft
+      </button>
+      <button class="btn-submit" (click)="SubmitReview()">
+        <i class="fas fa-check"></i> Submit for Review
+      </button>
+    }
+    @if (showHodButtons) {
+      <button class="btn-approve" (click)="ApproveReview()">
+        <i class="fas fa-thumbs-up"></i> Approve
+      </button>
+      <button class="btn-rework" (click)="ReWorkReview()">
+        <i class="fas fa-undo"></i> Rework
+      </button>
+    }
+  </div>
+
+</div>
+
+<!-- ── ProofHub Modal ── -->
+@if (showModal) {
+  <div class="modal-overlay">
+    <div class="modal-box" [@scaleIn]>
+      <div class="modal-header">
+        <span class="modal-back" (click)="closeModal()"><i class="fas fa-arrow-left"></i></span>
+        <h2>ProofHub Task History</h2>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrap">
+          <table class="apr-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Task Name</th>
+                <th>Description</th>
+                <th>Start</th>
+                <th>Due</th>
+                <th>Est. Hrs</th>
+                <th>Logged Hrs</th>
+                <th>Status</th>
+                <th>Select</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (task of Proofhubtasks; track task.TASK_ID; let i = $index) {
+                <tr>
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ task.TASK_TITLE }}</td>
+                  <td>{{ task.TASK_DESCRIPTION }}</td>
+                  <td>{{ task.START_DATE }}</td>
+                  <td>{{ task.DUE_DATE }}</td>
+                  <td>{{ task.ESTIMATED_HOURS }}</td>
+                  <td>{{ task.LOGGED_HOURS }}</td>
+                  <td>
+                    <span [class]="task.COMPLETED ? 'status-completed' : 'status-incomplete'">
+                      {{ task.COMPLETED ? 'Completed' : 'Incomplete' }}
+                    </span>
+                  </td>
+                  <td><input type="checkbox" [(ngModel)]="task.selected"/></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-box-header">
+            <h3>AI Generated Summary</h3>
+            @if (summaryText) {
+              <button class="btn-copy" (click)="copySummaryToClipboard($event)" title="Copy to clipboard">
+                <i class="fas fa-clipboard"></i>
+              </button>
+            }
+          </div>
+          <textarea readonly [placeholder]="isGeneratingSummary ? 'Generating summary...' : 'Click Generate Summary to create an AI-powered summary of selected tasks...'">{{ summaryText }}</textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-generate" (click)="generateSummary()" [disabled]="isGeneratingSummary">
+            @if (isGeneratingSummary) { <i class="fas fa-spinner fa-spin"></i> Generating... }
+            @else { Generate Summary }
+          </button>
+          <button class="btn-close-modal" (click)="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

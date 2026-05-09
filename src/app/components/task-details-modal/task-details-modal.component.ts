@@ -901,8 +901,58 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           this.loadTaskDetails();
         }
       });
+    } else if (newStatus === 'completed') {
+      // Handle COMPLETED status - pause timer first if task WAS running
+      if (this.previousTaskStatus === 'running') {
+        console.log('Task WAS RUNNING - calling executeTimer with PAUSED before marking as completed');
+
+        const timerRequest = {
+          taskId: this.taskId,
+          userId: this.userId,
+          action: 'PAUSED'
+        };
+
+        this.api.executeTimer(timerRequest).subscribe({
+          next: (response: any) => {
+            if (response && response.success) {
+              console.log('ExecuteTimer PAUSED called successfully, now marking as completed');
+              this.stopTimer();
+
+              this.selectedTaskDetailStatus = 'completed';
+              this.previousTaskStatus = 'completed';
+
+              this.toasterService.showInfo('Task Status Changed', 'Task paused and status changed to Completed');
+
+              // Emit event to parent component
+              this.taskPaused.emit(this.taskId);
+
+              // Recheck AUTO CLOSED count
+              this.checkAutoClosedTasksCount();
+
+              this.cdr.detectChanges();
+            } else {
+              this.toasterService.showError('Status Change Failed', 'Failed to pause task before completing');
+              console.error('Failed to execute timer pause:', response?.message);
+              this.loadTaskDetails();
+            }
+          },
+          error: (error: any) => {
+            console.error('Error executing timer pause before completing:', error);
+            this.toasterService.showError('Error', 'Failed to pause task before completing');
+            this.loadTaskDetails();
+          }
+        });
+      } else {
+        // Task was not running - just change status to completed
+        console.log('Task was not running - changing status to COMPLETED without calling executeTimer');
+        this.stopTimer();
+        this.selectedTaskDetailStatus = 'completed';
+        this.previousTaskStatus = 'completed';
+        this.toasterService.showInfo('Task Status Changed', 'Task status changed to Completed');
+        this.cdr.detectChanges();
+      }
     } else {
-      // For other status changes (not-started, completed), just update the status without calling executeTimer
+      // For other status changes (not-started, etc.), just update the status without calling executeTimer
       this.selectedTaskDetailStatus = newStatus;
       this.previousTaskStatus = newStatus; // Update previous status
       this.toasterService.showInfo('Status Changed', `Task status changed to ${newStatus}`);
