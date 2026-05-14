@@ -780,6 +780,9 @@ export class layout implements OnInit, OnDestroy {
       event.stopPropagation();
     }
 
+    // Close dropdown immediately
+    this.showNotifications = false;
+
     // Mark as read first
     if (!notification.isRead) {
       this.markNotificationAsRead(notification.id);
@@ -787,26 +790,39 @@ export class layout implements OnInit, OnDestroy {
 
     // Navigate to link if available
     if (notification.link && notification.link !== '#') {
-      // Parse the link to separate route from query parameters
       const link = notification.link;
       const [routePath, queryString] = link.split('?');
 
+      // Parse query parameters
+      const queryParams: any = {};
       if (queryString) {
-        // Parse query parameters
-        const queryParams: any = {};
         queryString.split('&').forEach((param: string) => {
           const [key, value] = param.split('=');
-          queryParams[key] = value;
+          if (key) queryParams[decodeURIComponent(key)] = decodeURIComponent(value ?? '');
         });
-
-        // Navigate with proper query parameters
-        this.router.navigate([routePath], { queryParams });
-      } else {
-        // Navigate without query parameters
-        this.router.navigate([routePath]);
       }
 
-      this.showNotifications = false; // Close dropdown after navigation
+      // Check if we are already on the same base route (e.g., /apr/123 → /apr/456).
+      // Angular won't re-initialise the component in that case, so we force a full
+      // page navigation via window.location to guarantee the new record loads.
+      const currentBase = this.router.url.split('?')[0].split('#')[0];
+      const targetBase  = routePath.split('#')[0];
+
+      if (currentBase === targetBase) {
+        // Same route — force a hard navigation so the component re-initialises.
+        // Build the URL using the current origin + Angular base href + target path.
+        const baseEl = document.querySelector('base');
+        const baseHref = (baseEl?.getAttribute('href') || '/').replace(/\/$/, '');
+        const queryStr = queryString ? `?${queryString}` : '';
+        window.location.href = `${window.location.origin}${baseHref}${routePath}${queryStr}`;
+      } else {
+        // Different route — use Angular router normally
+        if (queryString) {
+          this.router.navigate([routePath], { queryParams });
+        } else {
+          this.router.navigate([routePath]);
+        }
+      }
     }
   }
 

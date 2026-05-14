@@ -31,6 +31,8 @@
           <div class="header-controls">
 
             <!-- APR / MPR Toggle -->
+            <!-- MPR tab hidden temporarily — uncomment the ctrl-group block below to re-enable -->
+            <!--
             <div class="ctrl-group">
               <span class="ctrl-label">Report Type</span>
               <div class="form-type-toggle">
@@ -42,6 +44,7 @@
                 </button>
               </div>
             </div>
+            -->
 
             <!-- Month — MPR only -->
             @if (formType === 'M') {
@@ -243,7 +246,7 @@
               <h3>{{ department.department }}</h3>
             </div>
             
-            <div class="stats-grid">
+            <div class="stats-grid" [class.stats-grid--apr]="formType === 'A'">
               <div class="stat-item">
                 <div class="stat-top-row">
                   <div class="stat-icon">
@@ -271,15 +274,17 @@
                 </div>
                 <div class="stat-label">Pending {{ formType === 'A' ? 'APR' : 'MPR' }}</div>
               </div>
-              <div class="stat-item">
-                <div class="stat-top-row">
-                  <div class="stat-icon">
-                    <i [class]="getStatIcon('approvedMPR')"></i>
+              @if (formType !== 'A') {
+                <div class="stat-item">
+                  <div class="stat-top-row">
+                    <div class="stat-icon">
+                      <i [class]="getStatIcon('approvedMPR')"></i>
+                    </div>
+                    <div class="stat-number">{{ department.approvedMPR }}</div>
                   </div>
-                  <div class="stat-number">{{ department.approvedMPR }}</div>
+                  <div class="stat-label">Approved MPR</div>
                 </div>
-                <div class="stat-label">Approved {{ formType === 'A' ? 'APR' : 'MPR' }}</div>
-              </div>
+              }
             </div>
             
             <!-- Progress Bar -->

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest } from '../models/task.model';
+import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest,AppraisalAccessRequest, AppraisalAccessResult, } from '../models/task.model';
 import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
 import { HODDepartmentDashboard } from '../models/dashBoard.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest , EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
@@ -46,7 +46,6 @@ export class Api {
 
 
   insertDpr(review: DPRReview): Observable<any> {
-
     return this.http.post(`${this.apiUrl}/DPRReview/InsertDPREmployeeReviewDetails`, review);
   }
 
@@ -576,6 +575,9 @@ export class Api {
   }
 
 
+  validateAppraisalAccess( request: AppraisalAccessRequest ): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DPRReview/validate-appraisal-access`, request );
+  }
 
 }
 

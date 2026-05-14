@@ -84,6 +84,7 @@ export interface DPRReview {
   designation?: string;
   department?: string;
   emailid?: string;
+  attendanceScore?: number;
   reviewAssessmentList?: ReviewAssessment[];
 }
 
@@ -193,7 +194,19 @@ export interface DPRMonthlyReviewListing {
   updatedAt?: Date;
 }
 
+export interface AppraisalAccessRequest {
+  userId: string;
+  year: number;
+  actionType: 'SUBMIT' | 'APPROVAL';
+}
 
+export interface AppraisalAccessResult {
+  status:    string;
+  message:   string;
+  dprId:     number | null;
+  eventDate: string | null;
+  isAllowed: number;   // 1 = allowed | 0 = blocked
+}
 
 export interface DPRMonthlyReviewListingRequest {
   dprId?: number;
@@ -210,6 +223,7 @@ export interface DPRMonthlyReviewListingRequest {
   items_per_page?: number;
   department?: string;
   formType?: string;
+  reviewerId?: string;   // filter APRs where this user is a reviewer
 }
 
 

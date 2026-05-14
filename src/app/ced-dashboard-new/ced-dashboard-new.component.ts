@@ -110,7 +110,6 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     // Status filter options with API flags
     statusFilters = [
         { value: 'T', label: 'Total Employees', icon: 'fas fa-users' },
-        { value: 'A', label: 'Approved', icon: 'fas fa-check-circle' },
         { value: 'S', label: 'Submitted', icon: 'fas fa-upload' },
         { value: 'P', label: 'Pending', icon: 'fas fa-clock' }
     ];
@@ -657,7 +656,7 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         this.selectedDepartment = null;
         this.searchQuery = '';
         this.filteredEmployees = [];
-        this.selectedStatusFilter = 'approved';
+        this.selectedStatusFilter = 'P';
         this.expandedEmployeeId = null;
     }
 
@@ -747,7 +746,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     getCompletionPercentage(department: Department): number {
-        return Math.round((department.approvedMPR / department.totalEmployees) * 100);
+        // APR: completion = submitted / total  |  MPR: completion = approved / total
+        const numerator = this.formType === 'A' ? department.submittedMPR : department.approvedMPR;
+        if (!department.totalEmployees) return 0;
+        return Math.round((numerator / department.totalEmployees) * 100);
     }
 
     getDepartmentIconColor(departmentName: string): string {
@@ -887,7 +889,8 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     canExpandEmployee(employee: Employee): boolean {
-        return employee.status === 'approved';
+        // Allow expand for approved, submitted (S), and pending (P) — any status with data
+        return employee.status === 'approved' || employee.status === 'submitted' || employee.status === 'pending';
     }
 
     getEmployeeCountByStatus(status: string): number {
@@ -904,8 +907,8 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     getDisplayScore(employee: Employee): number {
-        // Only approved employees show their actual score, others show 0
-        return employee.status === 'approved' ? employee.score : 0;
+        // Show score for any employee who has submitted (has data) — not just approved
+        return employee.score || 0;
     }
 
     getStatIcon(statType: string): string {
@@ -934,10 +937,10 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         return employee.id;
     }
 
-    // Toggle employee details expansion (only for approved employees)
+    // Toggle employee details expansion (for any employee with submitted/pending/approved status)
     toggleEmployeeDetails(employeeId: string, employee: Employee) {
         if (!this.canExpandEmployee(employee)) {
-            return; // Don't expand if not approved
+            return;
         }
         this.expandedEmployeeId = this.expandedEmployeeId === employeeId ? null : employeeId;
     }

@@ -697,6 +697,25 @@
   margin-bottom: 1.5rem;
 }
 
+/* APR mode: 3 stats in one row — no empty cell */
+.stats-grid--apr {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.stats-grid--apr .stat-item {
+  min-height: 80px;
+  padding: 0.85rem 0.6rem;
+  gap: 0.5rem;
+}
+
+.stats-grid--apr .stat-number {
+  font-size: 1.25rem;
+}
+
+.stats-grid--apr .stat-label {
+  font-size: 0.62rem;
+}
+
 .stat-item {
   display: flex;
   flex-direction: column;

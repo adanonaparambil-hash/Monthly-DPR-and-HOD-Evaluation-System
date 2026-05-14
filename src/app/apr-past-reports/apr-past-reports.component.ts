@@ -52,6 +52,9 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   get isHod(): boolean { return this.userType === 'H'; }
   get isCed(): boolean { return this.userType === 'C'; }
 
+  // HOD sees only the team reports tab — no "Pending My Review" tab
+  get showPendingReviewTab(): boolean { return !this.isHod; }
+
   // Filter properties
   filters = {
     employeeName: '',
@@ -77,6 +80,16 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   filteredReports: any[] = [];
   loading = false;
   animationState = 'in';
+
+  // View mode: 'my-reports' | 'pending-review'
+  activeTab: 'my-reports' | 'pending-review' = 'pending-review';
+  reviewerReports: any[] = [];
+  filteredReviewerReports: any[] = [];
+  reviewerLoading = false;
+  pendingReviewCount = 0;
+
+  // Reviewer tab filters
+  reviewerFilters = { year: '', assessmentStatus: '' };
 
   // Search debouncing
   private searchSubject = new Subject<string>();
@@ -108,11 +121,9 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   })();
 
   statuses = [
-    { value: '', label: 'Select status' },
-    { value: 'A', label: 'Approved' },
-    { value: 'D', label: 'Draft' },
-    { value: 'R', label: 'Rework' },
-    { value: 'S', label: 'Submit' }
+    { value: '', label: 'All Statuses' },
+    { value: 'P', label: 'Pending' },
+    { value: 'S', label: 'Submitted' },
   ];
 
   constructor(private api: Api, private toastr: ToastrService, private router: Router) { }
@@ -127,14 +138,15 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       this.loadEmployeeList();
     }
 
-    // Load department list first for CED users, then load reports
+    // CED: load department list first (it calls loadReports internally after setting dept filter)
+    // All others: single loadReports call
     if (this.isCed) {
       this.loadDepartmentList();
     } else {
       this.loadReports();
     }
 
-    // Setup search debouncing
+    // Search debouncing — only fires when user explicitly types
     this.searchSubject.pipe(
       debounceTime(500),
       distinctUntilChanged()
@@ -145,14 +157,10 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
 
   setDefaultPreviousMonth() {
     const today = new Date();
-    // Default to previous year — APR covers Jan–Dec of the prior year
-    // e.g. in 2027 the user reviews 2026 records
     this.filters.year = (today.getFullYear() - 1).toString();
     this.filters.month = '';
-    // HOD default: show Submitted records (pending their review)
-    if (this.isHod) {
-      this.filters.status = 'S';
-    }
+    // Default: Pending (P) — shows records awaiting review
+    this.filters.status = 'P';
   }
 
   initializeUserSession() {
@@ -205,19 +213,20 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       request.department = this.filters.department;
     }
 
-    // Role-based filtering logic
+    // Role-based filtering — always pass the logged-in user's ID in the correct field
     if (this.isEmployee) {
+      // Employee: always filter by their own empId; no hodName
       request.employeeId = this.empId;
-      request.employeeName = this.filters.employeeName || undefined;
-      request.hodName = undefined;
+      request.hodName    = undefined;
     } else if (this.isHod) {
-      request.hodName = this.empId;
-      request.employeeName = this.filters.employeeName || undefined;
+      // HOD: always filter by their own empId as hodName; optional employee filter from dropdown
+      request.hodName    = this.empId;
       request.employeeId = this.filters.employeeId || undefined;
     } else if (this.isCed) {
+      // CED: no fixed user filter — uses dropdown filters only
       request.employeeName = this.filters.employeeName || undefined;
-      request.hodName = this.filters.hodName || undefined;
-      request.employeeId = this.filters.employeeId || undefined;
+      request.hodName      = this.filters.hodName      || undefined;
+      request.employeeId   = this.filters.employeeId   || undefined;
     }
 
     this.api.GetMonthlyReviewListing(request).subscribe({
@@ -277,25 +286,14 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       employeeId: '',
       month: '',
       year: '',
-      status: '',
+      status: 'P',
       hodName: '',
       department: ''
     };
 
-    // Set default previous month and year
     this.setDefaultPreviousMonth();
 
-    // Reset filters based on user role
-    if (this.isEmployee) {
-      this.filters.employeeName = '';
-      this.filters.hodName = '';
-      this.filters.department = '';
-    } else if (this.isHod) {
-      this.filters.hodName = '';
-      this.filters.department = '';
-      this.filters.status = 'S'; // HOD default: submitted records
-    } else if (this.isCed) {
-      // Set IT department as default for CED
+    if (this.isCed) {
       const itDepartment = this.departmentList.find(dept =>
         dept.description?.toUpperCase() === 'IT' ||
         dept.idValue?.toUpperCase() === 'IT'
@@ -305,7 +303,6 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Reset cache and reload
     this.loadReports(true);
   }
 
@@ -337,21 +334,13 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   }
 
   getStatusClass(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'approved':
-      case 'a':
-        return 'status-approved';
-      case 'pending':
-      case 's':
-        return 'status-pending';
-      case 'rejected':
-      case 'r':
-        return 'status-rejected';
-      case 'draft':
-      case 'd':
-        return 'status-draft';
-      default:
-        return '';
+    switch ((status || '').toLowerCase()) {
+      case 'a': return 'status-approved';
+      case 's': return 'status-pending';
+      case 'p': return 'status-pending';
+      case 'r': return 'status-rejected';
+      case 'd': return 'status-draft';
+      default: return '';
     }
   }
 
@@ -364,11 +353,12 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   }
 
   getStatusLabel(status: string): string {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'a': return 'Approved';
       case 'd': return 'Draft';
       case 'r': return 'Rework';
       case 's': return 'Submitted';
+      case 'p': return 'Pending';
       default: return status;
     }
   }
@@ -387,13 +377,25 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   }
 
   viewReport(report: any) {
-
     // Navigate to APR in read-only mode with the selected record ID
     if (report) {
       this.router.navigate(['/apr', report], {
         queryParams: {
           readonly: '1',
           from: 'apr-past-reports'
+        }
+      });
+    } else {
+      this.toastr.error('Invalid report ID', 'Error');
+    }
+  }
+
+  // Open an APR for reviewer assessment (no readonly flag so the reviewer can submit their rating)
+  reviewReport(dprId: any) {
+    if (dprId) {
+      this.router.navigate(['/apr', dprId], {
+        queryParams: {
+          from: 'pending-review'
         }
       });
     } else {
@@ -491,6 +493,62 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
   applyFilters() {
     // Reset cache and call the API with current filter values
     this.loadReports(true);
+  }
+
+  switchTab(tab: 'my-reports' | 'pending-review') {
+    this.activeTab = tab;
+    if (tab === 'pending-review') {
+      this.loadReviewerReports();
+    }
+  }
+  loadReviewerReports() {
+    this.reviewerLoading = true;
+    const request: DPRMonthlyReviewListingRequest = {
+      reviewerId: this.empId,
+      formType: 'A',
+      page_number: 1,
+      items_per_page: 500,
+      row_num: 1,
+    };
+    this.api.GetMonthlyReviewListing(request).subscribe({
+      next: (response: any) => {
+        this.reviewerLoading = false;
+        if (response?.success && response?.data) {
+          this.reviewerReports = response.data;
+          this.pendingReviewCount = this.reviewerReports.filter(
+            (r: any) => r.status === 'S'
+          ).length;
+          this.applyReviewerFilters();
+        } else {
+          this.reviewerReports = [];
+          this.filteredReviewerReports = [];
+          this.pendingReviewCount = 0;
+        }
+      },
+      error: () => {
+        this.reviewerLoading = false;
+        this.reviewerReports = [];
+        this.filteredReviewerReports = [];
+      }
+    });
+  }
+
+  applyReviewerFilters(): void {
+    let result = [...this.reviewerReports];
+    if (this.reviewerFilters.year) {
+      result = result.filter(r => String(r.year) === this.reviewerFilters.year);
+    }
+    if (this.reviewerFilters.assessmentStatus === 'done') {
+      result = result.filter(r => r.myAssessmentStatus === 'done');
+    } else if (this.reviewerFilters.assessmentStatus === 'pending') {
+      result = result.filter(r => r.myAssessmentStatus !== 'done' && r.status === 'S');
+    }
+    this.filteredReviewerReports = result;
+  }
+
+  clearReviewerFilters(): void {
+    this.reviewerFilters = { year: '', assessmentStatus: '' };
+    this.filteredReviewerReports = [...this.reviewerReports];
   }
 
 

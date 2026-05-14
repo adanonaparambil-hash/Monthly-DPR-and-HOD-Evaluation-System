@@ -2743,3 +2743,10 @@ gout button disabled state */
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+
+/* Hide layout header when a modal is open */
+body.modal-open .header {
+  visibility: hidden;
+  pointer-events: none;
+}

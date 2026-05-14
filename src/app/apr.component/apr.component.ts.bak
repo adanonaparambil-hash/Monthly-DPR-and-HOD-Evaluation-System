@@ -1,7 +1,7 @@
 ﻿import { Component } from '@angular/core';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { FormsModule } from '@angular/forms';
-import { DPRTask, DPRKPI, DPRReview, ProofhubTaskDto, DPRComment, ReviewAssessment, AppraisalAccessRequest, AppraisalAccessResult } from '../models/task.model';
+import { DPRTask, DPRKPI, DPRReview, ProofhubTaskDto, DPRComment, ReviewAssessment } from '../models/task.model';
 import { CommonModule, Location } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
@@ -97,18 +97,15 @@ export class AprComponent {
   appraisalPeriod = '';
 
   // Reviewers — up to 3 selected employees
-  selectedReviewers: string[] = [];   // array of empId strings — employee-chosen (userType 'S')
+  selectedReviewers: string[] = [];   // array of empId strings
   reviewerDropdownOpen = false;
   reviewerSearchTerm = '';
   employeeList: any[] = [];           // full employee list for reviewer selection
 
-  // HOD Evaluation reviewers — up to 3 (userType 'H')
+  // HOD Evaluation reviewers — up to 3
   selectedHodReviewers: string[] = [];
   hodReviewerDropdownOpen = false;
   hodReviewerSearchTerm = '';
-
-  // CED-assigned reviewers (userType 'C')
-  selectedCedReviewers: string[] = [];
 
   // CED — assign reviewers modal
   cedAssignModalOpen = false;
@@ -117,9 +114,7 @@ export class AprComponent {
 
   // Reviewer Assessment — when logged-in user is one of the selected reviewers
   isReviewer = false;
-  myReviewerUserType = 'S'; // 'S' = self-appraisal reviewer, 'H' = HOD evaluation reviewer
   myReviewAssessmentId = 0;
-  myReviewAssessmentStatus = ''; // 'P' = pending (assigned, not yet reviewed), 'S' = submitted
   raQuality = 0;
   raTimeliness = 0;
   raInitiative = 0;
@@ -132,8 +127,6 @@ export class AprComponent {
   raOverallReview = 0;
   raComments = '';
   showReviewerAssessment = true;
-  activeAppraisalTab: 'self' | 'reviewer' | 'reviews' = 'self'; // tab inside the unified appraisal card
-  selectedReviewerIndex = 0; // which reviewer is selected in the reviews master-detail
   reviewAssessmentList: any[] = [];
 
   achievements = '';
@@ -190,10 +183,6 @@ export class AprComponent {
 
   // Overall Rating System Properties
   hodEvaluationAverage = 0;
-  reviewerAvg100Display = 0;   // reviewer 50% component (0–100 scale) — for display in breakdown
-  submittedReviewerCount = 0;  // how many reviewers have submitted (status 'S')
-  totalReviewerCount = 0;      // total assigned reviewers across all groups
-  attendanceScore = 0;         // attendance score from API (1–100), contributes 10% to overall
   productivityScore = 0;
   showOverallRating = false;
 
@@ -214,7 +203,7 @@ export class AprComponent {
   }
 
   get canViewEmployeeFields(): boolean {
-    return this.isEmployee && (this.currentStatus === 'S' || this.currentStatus === 'P' || this.currentStatus === 'A');
+    return this.isEmployee && (this.currentStatus === 'S' || this.currentStatus === 'A');
   }
 
   // Status-based access control for HOD
@@ -222,12 +211,12 @@ export class AprComponent {
     if (this.isEmployee) return false; // Employee can never edit HOD evaluation fields
     if (this.isCed) return false; // CED can never edit HOD evaluation fields
     if (this.isHod && this.isHodViewingOwnDpr) return false; // HOD can't edit their own evaluation
-    if (this.isHod && !this.isHodViewingOwnDpr) return this.currentStatus === 'S' || this.currentStatus === 'P'; // HOD can edit when reviewing others' DPRs
+    if (this.isHod && !this.isHodViewingOwnDpr) return this.currentStatus === 'S'; // HOD can edit when reviewing others' DPRs
     return false;
   }
 
   get canViewHodEvaluation(): boolean {
-    return (this.isHod || this.isCed) && (this.currentStatus === 'A' || this.currentStatus === 'R' || this.currentStatus === 'S' || this.currentStatus === 'P');
+    return (this.isHod || this.isCed) && (this.currentStatus === 'A' || this.currentStatus === 'R' || this.currentStatus === 'S');
   }
 
   // Management Remarks visibility - CED should NOT see this
@@ -236,7 +225,7 @@ export class AprComponent {
   }
 
   get canEditManagementRemarks(): boolean {
-    return this.isHod && (this.currentStatus === 'S' || this.currentStatus === 'P');
+    return this.isHod && this.currentStatus === 'S';
   }
 
   // Remarks History visibility
@@ -247,20 +236,18 @@ export class AprComponent {
     return false;
   }
 
-  // Button visibility — single Submit + Cancel for all editable roles
-  // Reviewers who are not the employee or HOD should NOT see these buttons
+  // Button visibility for Employee (Save Draft, Submit)
   get showEmployeeButtons(): boolean {
-    if (this.isReviewer && !this.isEmployee && !this.isHod) return false; // pure reviewer — no main buttons
-    // Only show when status is Draft or Rework — NOT when already submitted (P) or approved (A)
+    // Show for employees OR HOD viewing their own DPR
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
     if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R';
     return false;
   }
 
-  // HOD reviewing someone else's APR — show Submit button only when status is 'P' (employee submitted, awaiting HOD)
-  // Hide once HOD has already submitted ('S') or record is approved ('A')
+  // Button visibility for HOD (Approve, Rework)
   get showHodButtons(): boolean {
-    return this.isHod && !this.isHodViewingOwnDpr && this.currentStatus === 'P';
+    // Only show when HOD is reviewing someone else's DPR
+    return this.isHod && !this.isHodViewingOwnDpr && this.currentStatus === 'S';
   }
 
   // Table action buttons (Add/Delete for tasks and KPIs)
@@ -281,55 +268,9 @@ export class AprComponent {
     return false;
   }
 
-  // Reviewer Assessment — editable when the logged-in user is a reviewer, APR is submitted,
-  // and the reviewer has not yet submitted their assessment (status 'P' or blank = pending)
+  // Reviewer Assessment — editable when the logged-in user is a reviewer and APR is submitted
   get canEditReviewerAssessment(): boolean {
-    if (!this.isReviewer) return false;
-    if (this.currentStatus !== 'S' && this.currentStatus !== 'P' && this.currentStatus !== 'A') return false;
-    // Block once the reviewer has submitted their assessment
-    if (this.myReviewAssessmentStatus === 'S') return false;
-    // Allow editing when pending (P) or not yet started ('')
-    return this.myReviewAssessmentStatus === 'P' || this.myReviewAssessmentStatus === '';
-  }
-
-  // Whether the reviewer has already submitted their assessment
-  get reviewerAssessmentSubmitted(): boolean {
-    return this.isReviewer && this.myReviewAssessmentStatus === 'S';
-  }
-
-  // Get all reviewer assessments that have ratings (for CED/HOD view)
-  // Shows any entry with a reviewerId and at least one rating — regardless of status or userType
-  get submittedReviewerAssessments(): any[] {
-    return this.reviewAssessmentList.filter((ra: any) =>
-      ra.reviewerId &&
-      (ra.raQuality || ra.raTimeliness || ra.raInitiative || ra.raCommunication ||
-       ra.raTeamwork || ra.raProblemSolving || ra.raAdaptability || ra.raLearning ||
-       ra.raGoalAlignment || ra.raOverallReview)
-    );
-  }
-
-  // Get reviewer name by ID
-  getReviewerNameById(reviewerId: string): string {
-    const emp = this.employeeList.find(e => (e.empId || e.idValue) === reviewerId);
-    return emp ? (emp.employeeName || emp.description || reviewerId) : reviewerId;
-  }
-
-  // Get a specific reviewer assessment rating by key
-  getReviewerRating(assessment: any, saKey: string): number {
-    const raKeyMap: Record<string, string> = {
-      saQuality:       'raQuality',
-      saTimeliness:    'raTimeliness',
-      saInitiative:    'raInitiative',
-      saCommunication: 'raCommunication',
-      saTeamwork:      'raTeamwork',
-      saProblemSolving:'raProblemSolving',
-      saAdaptability:  'raAdaptability',
-      saLearning:      'raLearning',
-      saGoalAlignment: 'raGoalAlignment',
-      saOverallSelf:   'raOverallReview',
-    };
-    const raKey = raKeyMap[saKey];
-    return raKey ? (assessment[raKey] || 0) : 0;
+    return this.isReviewer && (this.currentStatus === 'S' || this.currentStatus === 'A');
   }
 
   // Show reviewer assessment section when user is a reviewer (any status after submission)
@@ -432,70 +373,41 @@ export class AprComponent {
 
 
   calculateOverallRating(): void {
-    const qualityScore        = this.quality        || 0;
-    const timelinessScore     = this.timeliness     || 0;
-    const initiativeScore     = this.initiative     || 0;
-    const problemSolvingScore = this.problemSolving || 0;
-    const teamWorkScore       = this.teamWork       || 0;
-    const communicationScore  = this.communication  || 0;
-    const hodRatingValue      = this.hodRating      || 0;
+    const qualityScore       = this.quality       || 0;
+    const timelinessScore    = this.timeliness    || 0;
+    const initiativeScore    = this.initiative    || 0;
+    const problemSolvingScore= this.problemSolving|| 0;
+    const teamWorkScore      = this.teamWork      || 0;
+    const communicationScore = this.communication || 0;
+    const hodRatingValue     = this.hodRating     || 0;
 
-    // ── HOD Evaluation component (40% of final score) ──────────
-    // Average of all non-zero HOD scores (6 competencies + overall HOD rating), on 1–100 scale
-    const hodScores = [
-      qualityScore, timelinessScore, initiativeScore,
-      problemSolvingScore, teamWorkScore, communicationScore,
-      hodRatingValue
-    ].filter(s => s > 0);
-
+    // HOD Evaluation Average (for display only)
+    const hodScores = [qualityScore, timelinessScore, initiativeScore,
+                       problemSolvingScore, teamWorkScore, communicationScore]
+                      .filter(s => s > 0);
     this.hodEvaluationAverage = hodScores.length > 0
       ? Math.round((hodScores.reduce((a, b) => a + b, 0) / hodScores.length) * 100) / 100
       : 0;
 
-    // ── Reviewer Assessment component (60% of final score) ─────
-    // Filter ONLY by status === 'S' (submitted). Do NOT filter by raTotal.
-    // Submitted reviewers always have their scores — divide by submitted count only.
-    const submittedReviews = (this.reviewAssessmentList || [])
-      .filter((ra: any) => ra.status === 'S');
-
-    const reviewerAvg100 = submittedReviews.length > 0
-      ? (submittedReviews.reduce((sum: number, ra: any) => sum + (ra.raTotal || 0), 0)
-          / submittedReviews.length)   // average raTotal (out of 50) — divided by submitted count only
-        / 50 * 100                     // normalise to 100
-      : 0;
-
-    // Store for display in breakdown panel
-    this.reviewerAvg100Display = Math.round(reviewerAvg100 * 100) / 100;
-    this.submittedReviewerCount = submittedReviews.length;
-    this.totalReviewerCount = this.selectedReviewers.length + this.selectedHodReviewers.length;
-
     this.calculateProductivityScore();
 
-    // ── Final weighted score ────────────────────────────────────
-    // HOD Evaluation = 40%,  Reviewer Assessments = 50%,  Attendance = 10%
-    // Only compute if at least one component has data
-    const attendanceVal = this.attendanceScore || 0;  // 1–100 from API
+    // Weightage: HOD Overall Rating = 60%, 6 competencies share 40% (≈6.667% each)
+    const hodWeight         = 0.60;
+    const competencyWeight  = 0.40 / 6; // ≈ 0.06667 each
 
-    const hasHod        = this.hodEvaluationAverage > 0;
-    const hasReviewers  = reviewerAvg100 > 0;
-    const hasAttendance = attendanceVal > 0;
+    const weightedAverage =
+      (hodRatingValue     * hodWeight) +
+      (qualityScore       * competencyWeight) +
+      (timelinessScore    * competencyWeight) +
+      (initiativeScore    * competencyWeight) +
+      (problemSolvingScore* competencyWeight) +
+      (teamWorkScore      * competencyWeight) +
+      (communicationScore * competencyWeight);
 
-    if (hasHod || hasReviewers || hasAttendance) {
-      const hodWeight        = 0.40;
-      const reviewerWeight   = 0.50;
-      const attendanceWeight = 0.10;
-
-      this.overallScore = Math.round(
-        (hasHod        ? this.hodEvaluationAverage * hodWeight        : 0) +
-        (hasReviewers  ? reviewerAvg100            * reviewerWeight   : 0) +
-        (hasAttendance ? attendanceVal             * attendanceWeight : 0)
-      );
-    } else {
-      this.overallScore = 0;
-    }
+    this.overallScore = Math.round(weightedAverage);
 
     this.showOverallRating =
-      this.hodEvaluationAverage > 0 || reviewerAvg100 > 0 || this.hodRating > 0 || attendanceVal > 0;
+      this.hodEvaluationAverage > 0 || this.productivityScore > 0 || this.hodRating > 0;
   }
 
   calculateProductivityScore(): void {
@@ -659,10 +571,6 @@ export class AprComponent {
 
 
 
-  // Access control — set when validateAppraisalAccess blocks the user
-  accessBlocked = false;
-  accessBlockedMessage = '';
-
   // Track navigation source
   private navigationSource: string = '';
 
@@ -679,17 +587,18 @@ export class AprComponent {
   }
 
   SubmitReview(): void {
-    // HOD submitting → 'S' (pending HOD review of others' APRs)
-    // Employee/CED first-time submit → 'P' (pending, awaiting HOD)
-    const status = this.isHod && !this.isHodViewingOwnDpr ? 'S' : 'P';
-    // actionType: employee/own submit = 'SUBMIT', HOD/reviewer submit = 'APPROVAL'
-    const actionType: 'SUBMIT' | 'APPROVAL' = (this.isHod && !this.isHodViewingOwnDpr) ? 'APPROVAL' : 'SUBMIT';
+    this.ApprovalStatus = 'S';
+    this.saveEmployeeDetails();
+  }
 
-    this.checkAppraisalAccess(actionType).then(allowed => {
-      if (!allowed) return;
-      this.ApprovalStatus = status;
-      this.saveEmployeeDetails();
-    });
+  ApproveReview(): void {
+    this.ApprovalStatus = 'A';
+    this.saveEmployeeDetails();
+  }
+
+  ReWorkReview(): void {
+    this.ApprovalStatus = 'R';
+    this.saveEmployeeDetails();
   }
 
   closeModal(): void {
@@ -725,42 +634,6 @@ export class AprComponent {
 
   goBack(): void {
     this.location.back();
-  }
-
-  /**
-   * Calls validateAppraisalAccess and returns true if the action is allowed.
-   * Shows a SweetAlert with the backend message if blocked.
-   */
-  private checkAppraisalAccess(actionType: 'SUBMIT' | 'APPROVAL'): Promise<boolean> {
-    const year = new Date().getFullYear() - 1; // APR is always for the previous year
-    const request: AppraisalAccessRequest = {
-      userId:     this.empId,
-      year,
-      actionType,
-    };
-    return new Promise(resolve => {
-      this.api.validateAppraisalAccess(request).subscribe({
-        next: (res: any) => {
-          const data = res?.data as AppraisalAccessResult;
-          if (res?.success && data?.isAllowed === 1) {
-            resolve(true);
-          } else {
-            const msg = data?.message || res?.message || 'You are not allowed to perform this action.';
-            Swal.fire({
-              title: 'Access Restricted',
-              text: msg,
-              icon: 'warning',
-              confirmButtonText: 'OK',
-            });
-            resolve(false);
-          }
-        },
-        error: () => {
-          // On API error, allow the action to proceed (fail-open)
-          resolve(true);
-        },
-      });
-    });
   }
 
   ngOnInit() {
@@ -820,16 +693,6 @@ export class AprComponent {
         this.GetDPREmployeeReviewDetails(this.dprid);
       }
     });
-
-    // For new APR entry (no dprid), validate the user is allowed to submit this year
-    if (!this.dprid && !this.isReadOnlyMode) {
-      this.checkAppraisalAccess('SUBMIT').then(allowed => {
-        if (!allowed) {
-          // Block the form — navigate back after the alert is dismissed
-          setTimeout(() => this.router.navigate(['/apr-past-reports']), 300);
-        }
-      });
-    }
 
     if (!this.dprid) {
       this.loadKPIs();
@@ -901,32 +764,23 @@ export class AprComponent {
 
   // ── CED Assign Reviewers modal ────────────────────────────────
   openCedAssignModal(): void {
-    // Pre-populate with CED-assigned reviewers only
-    this.cedSelectedReviewers = [...this.selectedCedReviewers];
+    // Pre-populate with current reviewers
+    this.cedSelectedReviewers = [...this.selectedReviewers];
     this.cedAssignSearchTerm = '';
     this.cedAssignModalOpen = true;
-    document.body.classList.add('modal-open');
   }
 
   closeCedAssignModal(): void {
     this.cedAssignModalOpen = false;
     this.cedAssignSearchTerm = '';
-    document.body.classList.remove('modal-open');
   }
 
   get cedFilteredEmployeeList(): any[] {
     const term = this.cedAssignSearchTerm.toLowerCase().trim();
-    // Exclude the appraisee, already-selected CED reviewers, and reviewers from other groups
-    const allAssigned = new Set([
-      this.empId,
-      ...this.cedSelectedReviewers,
-      ...this.selectedReviewers,
-      ...this.selectedHodReviewers,
-    ]);
     return this.employeeList.filter(e => {
       const id   = e.empId || e.idValue || '';
       const name = (e.employeeName || e.description || '').toLowerCase();
-      return !allAssigned.has(id) && (term === '' || name.includes(term));
+      return id !== this.empId && (term === '' || name.includes(term));
     });
   }
 
@@ -938,8 +792,8 @@ export class AprComponent {
     const idx = this.cedSelectedReviewers.indexOf(empId);
     if (idx > -1) {
       this.cedSelectedReviewers.splice(idx, 1);
-    } else {
-      this.cedSelectedReviewers.push(empId);   // no limit for CED
+    } else if (this.cedSelectedReviewers.length < 3) {
+      this.cedSelectedReviewers.push(empId);
     }
   }
 
@@ -953,24 +807,30 @@ export class AprComponent {
       return;
     }
 
-    // Snapshot existing CED reviewer IDs before updating
-    const existingCedIds = new Set(this.selectedCedReviewers);
-
-    // CED-assigned reviewers use userType 'C' — stored separately from employee-chosen ('S')
-    this.selectedCedReviewers = [...this.cedSelectedReviewers];
+    // Apply to the main selectedReviewers and save
+    this.selectedReviewers = [...this.cedSelectedReviewers];
     this.closeCedAssignModal();
 
-    // Use the single full payload builder — preserves all fields and all other reviewers
-    const review = this.buildFullPayload(this.currentStatus);
+    // Save via the existing insertDpr flow — just update reviewer fields
+    const { month } = this.parseMonthYear();
+    const year = new Date().getFullYear() - 1;
+    const review: DPRReview = {
+      employeeId: this.empId,
+      month,
+      year,
+      dprid: this.dprid || 0,
+      formType: 'A',
+      status: this.currentStatus,
+      hodId: this.reportingTo || '',
+      reviewer1Id: this.selectedReviewers[0] || undefined,
+      reviewer2Id: this.selectedReviewers[1] || undefined,
+      reviewer3Id: this.selectedReviewers[2] || undefined,
+    };
 
     this.api.insertDpr(review).subscribe({
       next: (res: any) => {
         if (res.success) {
           this.toastr.success('Reviewers assigned successfully.', 'Saved');
-          // Send emails only to newly added CED reviewers
-          const dprId = res.data || this.dprid;
-          const newCedReviewers = this.selectedCedReviewers.filter(id => !existingCedIds.has(id));
-          this.sendEmailToReviewers(dprId, newCedReviewers);
         } else {
           this.toastr.warning(res.message, 'Warning');
         }
@@ -986,17 +846,10 @@ export class AprComponent {
   // ── Reviewer multi-select helpers ────────────────────────────
   get filteredEmployeeList(): any[] {
     const term = this.reviewerSearchTerm.toLowerCase().trim();
-    // Exclude the appraisee and anyone already assigned in any reviewer group
-    const allAssigned = new Set([
-      this.empId,
-      ...this.selectedReviewers,
-      ...this.selectedCedReviewers,
-      ...this.selectedHodReviewers,
-    ]);
     return this.employeeList.filter(e => {
       const id   = e.empId || e.idValue || '';
       const name = (e.employeeName || e.description || '').toLowerCase();
-      return !allAssigned.has(id) && (term === '' || name.includes(term));
+      return id !== this.empId && (term === '' || name.includes(term));
     });
   }
 
@@ -1038,18 +891,10 @@ export class AprComponent {
     const term = this.hodReviewerSearchTerm.toLowerCase().trim();
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const currentEmpId = currentUser.empId || '';
-    // Exclude the HOD themselves and anyone already assigned in any reviewer group
-    const allAssigned = new Set([
-      currentEmpId,
-      this.empId,
-      ...this.selectedHodReviewers,
-      ...this.selectedReviewers,
-      ...this.selectedCedReviewers,
-    ]);
     return this.employeeList.filter(e => {
       const id   = e.empId || e.idValue || '';
       const name = (e.employeeName || e.description || '').toLowerCase();
-      return !allAssigned.has(id) && (term === '' || name.includes(term));
+      return id !== currentEmpId && (term === '' || name.includes(term));
     });
   }
 
@@ -1107,23 +952,6 @@ export class AprComponent {
     }
   }
 
-  /**
-   * Returns the statement label rewritten in third-person when a reviewer
-   * is reading it about someone else.
-   * e.g. "I consistently delivered..." → "Alex consistently delivered..."
-   */
-  getStatementLabel(label: string, forReviewer: boolean): string {
-    if (!forReviewer) return label;
-    const first = this.empName?.split(' ')[0] || 'They';
-    return label
-      // "Overall, I am" → "Overall, [Name] is"
-      .replace(/^Overall, I am\b/, `Overall, ${first} is`)
-      // "My work was" → "Their work was"
-      .replace(/^My\b/, 'Their')
-      // Leading "I " → "[Name] "
-      .replace(/^I\b/, first);
-  }
-
   get selfAppraisalAnsweredCount(): number {
     return this.selfAppraisalStatements.filter(s => this.getSelfRating(s.key) > 0).length;
   }
@@ -1166,206 +994,7 @@ export class AprComponent {
     return this.selfAppraisalStatements.reduce((sum, s) => sum + this.getRaRating(s.key), 0);
   }
 
-  // ── Build reviewAssessmentList for DPR save payload ─────────
-  // Strategy:
-  //   1. Start with ALL existing entries from the backend (reviewAssessmentList).
-  //      This ensures no other reviewer's data is ever dropped.
-  //   2. If the logged-in user is a reviewer, update their entry in-place with
-  //      current in-memory ratings (so unsaved edits are included).
-  //   3. Add placeholder 'P' entries for any reviewer in selectedReviewers /
-  //      selectedHodReviewers that has no backend record yet.
-  buildReviewAssessmentList(): ReviewAssessment[] {
-    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const currentEmpId = currentUser.empId || '';
-
-    // Deep-clone all existing backend entries so we never mutate the source array
-    const list: ReviewAssessment[] = this.reviewAssessmentList.map(ra => ({ ...ra }));
-
-    // Helper: find index in the working list by reviewerId
-    const findIdx = (reviewerId: string): number =>
-      list.findIndex((ra: any) => ra.reviewerId === reviewerId);
-
-    // ── Step 1: merge current reviewer's in-memory ratings ──────
-    if (this.isReviewer && currentEmpId) {
-      const idx = findIdx(currentEmpId);
-      const inMemory: ReviewAssessment = {
-        reviewAssessmentId: this.myReviewAssessmentId || 0,
-        dprId:              this.dprid || 0,
-        reviewerId:         currentEmpId,
-        userType:           this.myReviewerUserType || 'S',
-        status:             this.myReviewAssessmentStatus || 'P',
-        raQuality:          this.raQuality,
-        raTimeliness:       this.raTimeliness,
-        raInitiative:       this.raInitiative,
-        raCommunication:    this.raCommunication,
-        raTeamwork:         this.raTeamwork,
-        raProblemSolving:   this.raProblemSolving,
-        raAdaptability:     this.raAdaptability,
-        raLearning:         this.raLearning,
-        raGoalAlignment:    this.raGoalAlignment,
-        raOverallReview:    this.raOverallReview,
-        raTotal:            this.raTotal,
-        raComments:         this.raComments,
-      };
-      if (idx > -1) {
-        // Update existing entry — keep reviewAssessmentId from backend
-        list[idx] = {
-          ...list[idx],
-          ...inMemory,
-          reviewAssessmentId: list[idx].reviewAssessmentId || inMemory.reviewAssessmentId,
-        };
-      } else {
-        // No backend record yet — add new entry
-        list.push(inMemory);
-      }
-    }
-
-    // ── Step 2: ensure placeholder entries exist for all assigned reviewers ──
-    // (only adds if not already present — never overwrites existing data)
-    for (const id of this.selectedReviewers) {
-      if (findIdx(id) === -1) {
-        list.push({
-          reviewAssessmentId: 0,
-          dprId:     this.dprid || 0,
-          reviewerId: id,
-          userType:  'S',
-          status:    'P',
-        });
-      }
-    }
-
-    for (const id of this.selectedCedReviewers) {
-      if (findIdx(id) === -1) {
-        list.push({
-          reviewAssessmentId: 0,
-          dprId:     this.dprid || 0,
-          reviewerId: id,
-          userType:  'C',
-          status:    'P',
-        });
-      }
-    }
-
-    for (const id of this.selectedHodReviewers) {
-      if (findIdx(id) === -1) {
-        list.push({
-          reviewAssessmentId: 0,
-          dprId:     this.dprid || 0,
-          reviewerId: id,
-          userType:  'H',
-          status:    'P',
-        });
-      }
-    }
-    return list;
-  }
-
-  // ── Single source of truth for the DPR save payload ────────
-  // Every save path (employee, HOD, reviewer, CED) calls this.
-  // overrideStatus: pass a specific status to use instead of this.ApprovalStatus
-  //                 (e.g. reviewer submitting uses this.currentStatus, not 'S')
-  private buildFullPayload(overrideStatus?: string): DPRReview {
-    const { month } = this.parseMonthYear();
-    const year = new Date().getFullYear() - 1;
-
-    // Always recalculate before building the payload so scoreOverall is up-to-date.
-    // This covers both HOD submission and reviewer assessment submission paths.
-    this.calculateOverallRating();
-    return {
-      employeeId:           this.empId,
-      month,
-      year,
-      dprid:                this.dprid || 0,
-      formType:             'A',
-      status:               overrideStatus ?? this.ApprovalStatus ?? this.currentStatus,
-      hodId:                this.reportingTo || '',
-      appraisalPeriod:      this.appraisalPeriod || '',
-      workedHours:          Number(this.WorkedHours),
-      totalEstimatedhours:  Number(this.TotalEstimatedhours),
-      // Work summary
-      keyResponsibilities:  this.keyResponsibilities,
-      deliverablesOutcomes: this.deliverablesOutcomes,
-      // Self-appraisal
-      saQuality:            this.saQuality,
-      saTimeliness:         this.saTimeliness,
-      saInitiative:         this.saInitiative,
-      saCommunication:      this.saCommunication,
-      saTeamwork:           this.saTeamwork,
-      saProblemSolving:     this.saProblemSolving,
-      saAdaptability:       this.saAdaptability,
-      saLearning:           this.saLearning,
-      saGoalAlignment:      this.saGoalAlignment,
-      saOverallSelf:        this.saOverallSelf,
-      saTotal:              this.selfAppraisalTotal,
-      saComments:           this.saComments,
-      // Achievements
-      achievements:         this.annualAchievements || '',
-      challenges:           this.annualChallenges   || '',
-      supportNeeded:        this.supportNeeded       || '',
-      annualAchievements:   this.annualAchievements,
-      annualChallenges:     this.annualChallenges,
-      // Training
-      trainingCompleted:    this.trainingCompleted,
-      skillsDeveloped:      this.skillsDeveloped,
-      trainingNeeded:       this.trainingNeeded,
-      // Career goals
-      careerGoals:          this.careerGoals,
-      supportNeededAnnual:  this.supportNeededAnnual,
-      // HOD evaluation
-      scoreQuality:         Number(this.quality)       || undefined,
-      scoreTimeliness:      Number(this.timeliness)    || undefined,
-      scoreInitiative:      Number(this.initiative)    || undefined,
-      scoreProblemSolving:  Number(this.problemSolving)|| undefined,
-      scoreTeamWork:        Number(this.teamWork)      || undefined,
-      scoreCommunication:   Number(this.communication) || undefined,
-      hodrating:            Number(this.hodRating)     || undefined,
-      scoreOverall:         Number(this.overallScore)  || undefined,
-      overallValue:         this.overallScore > 0 ? this.getRatingText(this.overallScore) : undefined,
-      hodRecommendation:    this.hodRecommendation     || undefined,
-      hodRemarks:           this.hodRemarks            || undefined,
-      // Reviewer IDs
-      reviewer1Id:          this.selectedReviewers[0]    || undefined,
-      reviewer2Id:          this.selectedReviewers[1]    || undefined,
-      reviewer3Id:          this.selectedReviewers[2]    || undefined,
-      hodReviewer1Id:       this.selectedHodReviewers[0] || undefined,
-      hodReviewer2Id:       this.selectedHodReviewers[1] || undefined,
-      hodReviewer3Id:       this.selectedHodReviewers[2] || undefined,
-      // Full review assessment list — always all entries, never partial
-      reviewAssessmentList: this.buildReviewAssessmentList(),
-      // Tasks & KPIs
-      tasksList: this.tasks.map(t => ({
-        taskName:      t.taskName,
-        description:   t.description,
-        actualHours:   Number(t.actualHours),
-      })),
-      kpiList: this.kpis.map(t => ({
-        kpiId:       Number(t.kpiId),
-        dprId:       Number(this.dprid),
-        employeeId:  t.employeeId,
-        kpiMasterId: t.kpiMasterId,
-        kpiValue:    Number(t.kpiValue),
-        remarks:     t.remarks,
-        description: t.description,
-      })),
-    };
-  }
-
-  submitReviewerAssessment(): void {
-    if (!this.isReviewer) return;
-    if (this.raAnsweredCount < this.selfAppraisalStatements.length) {
-      this.toastr.warning(
-        `Please rate all ${this.selfAppraisalStatements.length} statements before submitting. (${this.raAnsweredCount} of ${this.selfAppraisalStatements.length} answered)`,
-        'Incomplete Assessment'
-      );
-      return;
-    }
-    this.checkAppraisalAccess('APPROVAL').then(allowed => {
-      if (!allowed) return;
-      this._doSaveReviewerAssessment('S');
-    });
-  }
-
-  private _doSaveReviewerAssessment(assessmentStatus: string): void {
+  saveReviewerAssessment(): void {
     if (!this.isReviewer) return;
     if (this.raAnsweredCount < this.selfAppraisalStatements.length) {
       this.toastr.warning(
@@ -1375,117 +1004,64 @@ export class AprComponent {
       return;
     }
 
-    // Stamp the reviewer's status in-memory so buildReviewAssessmentList picks it up
-    this.myReviewAssessmentStatus = assessmentStatus;
-
-    // Also update the reviewer's entry in reviewAssessmentList in-memory NOW,
-    // so calculateOverallRating() inside buildFullPayload sees the correct status
-    // and raTotal before the payload is built and sent to the API.
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const currentEmpId = currentUser.empId || '';
-    const preIdx = this.reviewAssessmentList.findIndex((ra: any) => ra.reviewerId === currentEmpId);
-    const preEntry = {
-      reviewAssessmentId: this.myReviewAssessmentId || 0,
-      dprId:              this.dprid,
-      reviewerId:         currentEmpId,
-      userType:           this.myReviewerUserType,
-      status:             assessmentStatus,
-      raQuality:          this.raQuality,
-      raTimeliness:       this.raTimeliness,
-      raInitiative:       this.raInitiative,
-      raCommunication:    this.raCommunication,
-      raTeamwork:         this.raTeamwork,
-      raProblemSolving:   this.raProblemSolving,
-      raAdaptability:     this.raAdaptability,
-      raLearning:         this.raLearning,
-      raGoalAlignment:    this.raGoalAlignment,
-      raOverallReview:    this.raOverallReview,
-      raTotal:            this.raTotal,
-      raComments:         this.raComments,
+    const assessment: ReviewAssessment = {
+      reviewAssessmentId: this.myReviewAssessmentId,
+      dprId: this.dprid,
+      reviewerId: currentUser.empId || '',
+      raQuality:       this.raQuality,
+      raTimeliness:    this.raTimeliness,
+      raInitiative:    this.raInitiative,
+      raCommunication: this.raCommunication,
+      raTeamwork:      this.raTeamwork,
+      raProblemSolving:this.raProblemSolving,
+      raAdaptability:  this.raAdaptability,
+      raLearning:      this.raLearning,
+      raGoalAlignment: this.raGoalAlignment,
+      raOverallReview: this.raOverallReview,
+      raTotal:         this.raTotal,
+      raComments:      this.raComments,
+      userType:        'R',
     };
-    if (preIdx > -1) {
-      this.reviewAssessmentList[preIdx] = preEntry;
-    } else {
-      this.reviewAssessmentList.push(preEntry);
-    }
 
-    // Use the single full payload builder — preserves all fields and all other reviewers.
-    // calculateOverallRating() is called inside buildFullPayload so scoreOverall is fresh.
-    const review = this.buildFullPayload(this.currentStatus);
+    // Send as part of the DPR payload — reviewAssessmentList carries the reviewer's entry
+    const { month } = this.parseMonthYear();
+    const year = new Date().getFullYear() - 1;
+    const review: DPRReview = {
+      employeeId: this.empId,
+      month,
+      year,
+      dprid: this.dprid || 0,
+      formType: 'A',
+      status: this.currentStatus,
+      hodId: this.reportingTo || '',
+      reviewAssessmentList: [assessment],
+    };
 
-    const isSubmit = assessmentStatus === 'P';
     Swal.fire({
-      title: isSubmit ? 'Submit Assessment?' : 'Save Assessment?',
-      text:  isSubmit
-        ? 'Once submitted, you will not be able to edit your assessment. Proceed?'
-        : 'Save your reviewer assessment?',
+      title: 'Save Assessment?',
+      text: 'Submit your reviewer assessment for this appraisal?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: isSubmit ? 'Yes, Submit!' : 'Yes, Save it!',
+      confirmButtonText: 'Yes, Save it!',
       cancelButtonText: 'Cancel',
     }).then(result => {
       if (result.isConfirmed) {
         this.api.insertDpr(review).subscribe({
           next: (res: any) => {
             if (res.success) {
-              this.toastr.success(
-                isSubmit ? 'Reviewer assessment submitted successfully.' : 'Reviewer assessment saved.',
-                isSubmit ? 'Submitted' : 'Saved'
-              );
-              // Update reviewAssessmentId from API response if returned
+              this.toastr.success('Reviewer assessment saved successfully.', 'Saved');
               if (res.data?.reviewAssessmentId) {
                 this.myReviewAssessmentId = res.data.reviewAssessmentId;
-                // Patch the id into the already-updated list entry
-                const savedIdx = this.reviewAssessmentList.findIndex(
-                  (ra: any) => ra.reviewerId === currentEmpId
-                );
-                if (savedIdx > -1) {
-                  this.reviewAssessmentList[savedIdx].reviewAssessmentId = this.myReviewAssessmentId;
-                }
-              }
-
-              // Recalculate overall score to keep UI in sync (scoreOverall already sent to DB)
-              this.calculateOverallRating();
-
-              if (isSubmit) {
-                setTimeout(() => { this.router.navigate(['/apr-past-reports']); }, 1500);
               }
             } else {
-              // Revert status on failure — restore the pre-entry status to 'P'
-              this.myReviewAssessmentStatus = 'P';
-              const revertIdx = this.reviewAssessmentList.findIndex(
-                (ra: any) => ra.reviewerId === currentEmpId
-              );
-              if (revertIdx > -1) {
-                this.reviewAssessmentList[revertIdx].status = 'P';
-              }
-              this.calculateOverallRating();
               this.toastr.warning(res.message, 'Warning');
             }
           },
-          error: () => {
-            this.myReviewAssessmentStatus = 'P';
-            const revertIdx = this.reviewAssessmentList.findIndex(
-              (ra: any) => ra.reviewerId === currentEmpId
-            );
-            if (revertIdx > -1) {
-              this.reviewAssessmentList[revertIdx].status = 'P';
-            }
-            this.calculateOverallRating();
-            this.toastr.error('Failed to save reviewer assessment.', 'Error');
-          },
+          error: () => this.toastr.error('Failed to save reviewer assessment.', 'Error'),
         });
-      } else {
-        // User cancelled — revert status
-        this.myReviewAssessmentStatus = 'P';
-        const revertIdx = this.reviewAssessmentList.findIndex(
-          (ra: any) => ra.reviewerId === currentEmpId
-        );
-        if (revertIdx > -1) {
-          this.reviewAssessmentList[revertIdx].status = 'P';
-        }
-        this.calculateOverallRating();
-      }    });
+      }
+    });
   }
 
   addNewTask() {
@@ -1756,63 +1332,48 @@ export class AprComponent {
 
   saveEmployeeDetails() {
 
-    if (this.ApprovalStatus === 'S' || this.ApprovalStatus === 'P') {
-      this.ConfirmationMessage = 'Do you want to submit the appraisal?';
+    if (this.ApprovalStatus === 'S') {
+      this.ConfirmationMessage = 'Do you want to submit the review details?';
       this.ConfirmationMessageOnSubmit = 'Yes, Submit it!';
 
-      // HOD submit validation — must have selected exactly 3 evaluation reviewers
-      if (this.ApprovalStatus === 'S' && !this.isHodViewingOwnDpr) {
-        if (this.selectedHodReviewers.length < 3) {
-          this.toastr.warning('Please select exactly 3 Evaluation Reviewers before submitting.', 'Validation Failed');
-          return;
-        }
+      // APR Submit validations — only APR-relevant fields
+      if (!this.reportingTo) {
+        this.toastr.warning('Please select a Reporting Manager before submitting.', 'Validation Failed');
+        return;
       }
 
-      // APR Submit validations — only for employee/own submission (P), not HOD (S)
-      if (this.ApprovalStatus === 'P') {
-        if (!this.reportingTo) {
-          this.toastr.warning('Please select a Reporting Manager before submitting.', 'Validation Failed');
-          return;
-        }
+      if (!this.keyResponsibilities || this.keyResponsibilities.trim() === '') {
+        this.toastr.warning('Please fill in Key Responsibilities in the Work Summary section.', 'Validation Failed');
+        return;
+      }
 
-        if (!this.keyResponsibilities || this.keyResponsibilities.trim() === '') {
-          this.toastr.warning('Please fill in Key Responsibilities in the Work Summary section.', 'Validation Failed');
-          return;
-        }
+      if (!this.deliverablesOutcomes || this.deliverablesOutcomes.trim() === '') {
+        this.toastr.warning('Please fill in Deliverables & Outcomes in the Work Summary section.', 'Validation Failed');
+        return;
+      }
 
-        if (!this.deliverablesOutcomes || this.deliverablesOutcomes.trim() === '') {
-          this.toastr.warning('Please fill in Deliverables & Outcomes in the Work Summary section.', 'Validation Failed');
-          return;
-        }
+      const answeredCount = this.selfAppraisalAnsweredCount;
+      if (answeredCount < this.selfAppraisalStatements.length) {
+        this.toastr.warning(
+          `Please complete all ${this.selfAppraisalStatements.length} self-appraisal statements. (${answeredCount} of ${this.selfAppraisalStatements.length} answered)`,
+          'Validation Failed'
+        );
+        return;
+      }
 
-        const answeredCount = this.selfAppraisalAnsweredCount;
-        if (answeredCount < this.selfAppraisalStatements.length) {
-          this.toastr.warning(
-            `Please complete all ${this.selfAppraisalStatements.length} self-appraisal statements. (${answeredCount} of ${this.selfAppraisalStatements.length} answered)`,
-            'Validation Failed'
-          );
-          return;
-        }
+      if (!this.annualAchievements || this.annualAchievements.trim() === '') {
+        this.toastr.warning('Please fill in Key Achievements & Highlights in the Achievements section.', 'Validation Failed');
+        return;
+      }
 
-        if (!this.annualAchievements || this.annualAchievements.trim() === '') {
-          this.toastr.warning('Please fill in Key Achievements & Highlights in the Achievements section.', 'Validation Failed');
-          return;
-        }
+      if (!this.annualChallenges || this.annualChallenges.trim() === '') {
+        this.toastr.warning('Please fill in Challenges Faced in the Achievements section.', 'Validation Failed');
+        return;
+      }
 
-        if (!this.annualChallenges || this.annualChallenges.trim() === '') {
-          this.toastr.warning('Please fill in Challenges Faced in the Achievements section.', 'Validation Failed');
-          return;
-        }
-
-        if (!this.skillsDeveloped || this.skillsDeveloped.trim() === '') {
-          this.toastr.warning('Please fill in Skills Developed in the Training & Development section.', 'Validation Failed');
-          return;
-        }
-
-        if (this.selectedReviewers.length < 3) {
-          this.toastr.warning('Please select exactly 3 Self-Appraisal Reviewers before submitting.', 'Validation Failed');
-          return;
-        }
+      if (!this.skillsDeveloped || this.skillsDeveloped.trim() === '') {
+        this.toastr.warning('Please fill in Skills Developed in the Training & Development section.', 'Validation Failed');
+        return;
       }
 
     } else if (this.ApprovalStatus === 'A') {
@@ -1831,7 +1392,85 @@ export class AprComponent {
 
     // For APR: year saved = previous year (the year being appraised)
     // e.g. submitting in 2026 → saves year = 2025
-    const review = this.buildFullPayload();
+    const { month } = this.parseMonthYear();
+    const year = new Date().getFullYear() - 1;
+
+    const review: DPRReview = {
+      employeeId: this.empId,
+      month: month,
+      year: year,
+      workedHours: Number(this.WorkedHours),
+      achievements: this.annualAchievements || '',
+      challenges: this.annualChallenges || '',
+      supportNeeded: this.supportNeeded || '',
+      status: this.ApprovalStatus || '',
+      hodId: this.reportingTo || '',
+      dprid: this.dprid || 0,
+      formType: 'A',
+      appraisalPeriod: this.appraisalPeriod || '',
+      totalEstimatedhours: Number(this.TotalEstimatedhours),
+      // Self-appraisal (sa* matches C# field names)
+      saQuality: this.saQuality,
+      saTimeliness: this.saTimeliness,
+      saInitiative: this.saInitiative,
+      saCommunication: this.saCommunication,
+      saTeamwork: this.saTeamwork,
+      saProblemSolving: this.saProblemSolving,
+      saAdaptability: this.saAdaptability,
+      saLearning: this.saLearning,
+      saGoalAlignment: this.saGoalAlignment,
+      saOverallSelf: this.saOverallSelf,
+      saTotal: this.selfAppraisalTotal,
+      saComments: this.saComments,
+      // Work summary
+      keyResponsibilities: this.keyResponsibilities,
+      deliverablesOutcomes: this.deliverablesOutcomes,
+      // Annual achievements
+      annualAchievements: this.annualAchievements,
+      annualChallenges: this.annualChallenges,
+      // Training
+      trainingCompleted: this.trainingCompleted,
+      skillsDeveloped: this.skillsDeveloped,
+      trainingNeeded: this.trainingNeeded,
+
+      // Career goals
+      careerGoals: this.careerGoals,
+      supportNeededAnnual: this.supportNeededAnnual,
+      // HOD evaluation fields (sent when HOD approves/rejects)
+      scoreQuality: Number(this.quality) || undefined,
+      scoreTimeliness: Number(this.timeliness) || undefined,
+      scoreInitiative: Number(this.initiative) || undefined,
+      scoreProblemSolving: Number(this.problemSolving) || undefined,
+      scoreTeamWork: Number(this.teamWork) || undefined,
+      scoreCommunication: Number(this.communication) || undefined,
+      hodrating: Number(this.hodRating) || undefined,
+      scoreOverall: Number(this.overallScore) || undefined,
+      overallValue: this.overallScore > 0 ? this.getRatingText(this.overallScore) : undefined,
+      hodRecommendation: this.hodRecommendation || undefined,
+      hodRemarks: this.hodRemarks || undefined,
+      // Reviewers
+      reviewer1Id: this.selectedReviewers[0] || undefined,
+      reviewer2Id: this.selectedReviewers[1] || undefined,
+      reviewer3Id: this.selectedReviewers[2] || undefined,
+      // HOD Evaluation reviewers
+      hodReviewer1Id: this.selectedHodReviewers[0] || undefined,
+      hodReviewer2Id: this.selectedHodReviewers[1] || undefined,
+      hodReviewer3Id: this.selectedHodReviewers[2] || undefined,
+      tasksList: this.tasks.map((t) => ({
+        taskName: t.taskName,
+        description: t.description,
+        actualHours: Number(t.actualHours),
+      })),
+      kpiList: this.kpis.map((t) => ({
+        kpiId: Number(t.kpiId),
+        dprId: Number(this.dprid),
+        employeeId: t.employeeId,
+        kpiMasterId: t.kpiMasterId,
+        kpiValue: Number(t.kpiValue),
+        remarks: t.remarks,
+        description: t.description,
+      })),
+    };
 
     Swal.fire({
       title: 'Are you sure?',
@@ -1844,14 +1483,6 @@ export class AprComponent {
 
       if (result.isConfirmed) {
 
-        // Snapshot reviewer IDs already in the backend before this save
-        // so we can detect newly added ones after success
-        const existingReviewerIds = new Set(
-          (this.reviewAssessmentList || [])
-            .filter((ra: any) => ra.reviewAssessmentId > 0 && ra.reviewerId)
-            .map((ra: any) => ra.reviewerId as string)
-        );
-
         this.api.insertDpr(review).subscribe({
           next: (res) => {
 
@@ -1859,19 +1490,12 @@ export class AprComponent {
 
               this.toastr.success(res.message, 'Success');
 
-              if ((this.ApprovalStatus === 'S' || this.ApprovalStatus === 'P') && res.success) {
+
+              if (this.ApprovalStatus === 'S' && res.success) {
                 const dprId = res.data || this.dprid;
                 try {
                   this.sendNotificationToHOD(dprId);
                   this.sendNotificationToEmployee(dprId, true);
-
-                  // Send emails to newly added reviewers (all three groups)
-                  const allNewReviewers = [
-                    ...this.selectedReviewers,
-                    ...this.selectedCedReviewers,
-                    ...this.selectedHodReviewers,
-                  ].filter(id => !existingReviewerIds.has(id));
-                  this.sendEmailToReviewers(dprId, allNewReviewers);
                 } catch (error) {
                   console.error('Error sending notifications:', error);
                 }
@@ -2137,7 +1761,6 @@ export class AprComponent {
           this.communication = dpr.scoreCommunication ?? 0;
           this.hodRating = dpr.hodrating ?? 0; // HOD's manual rating (1-5)
           this.overallScore = dpr.scoreOverall ?? 0; // System-generated final score (20-100)
-          this.attendanceScore = dpr.attendanceScore ?? 0; // Attendance score (1–100), 10% weight
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
           this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
@@ -2145,64 +1768,30 @@ export class AprComponent {
           // HOD evaluation
           this.hodRecommendation = (dpr.hodRecommendation as any) ?? '';
           this.hodRemarks        = dpr.hodRemarks ?? '';
+          // Reviewers
+          this.selectedReviewers = [
+            dpr.reviewer1Id,
+            dpr.reviewer2Id,
+            dpr.reviewer3Id
+          ].filter((id): id is string => !!id);
+          // HOD Evaluation reviewers
+          this.selectedHodReviewers = [
+            dpr.hodReviewer1Id,
+            dpr.hodReviewer2Id,
+            dpr.hodReviewer3Id
+          ].filter((id): id is string => !!id);
 
-          // Load reviewAssessmentList first — it is the source of truth
-          this.reviewAssessmentList = dpr.reviewAssessmentList || [];
-
-          // Populate reviewer dropdowns from reviewAssessmentList.
-          // userType may be 'S' (employee-chosen), 'H' (HOD-chosen), 'C' (CED-assigned),
-          // or 'R' (legacy — saved by reviewer before userType was tracked).
-          // Treat 'S' and 'R' as employee-chosen; 'C' as CED-assigned; 'H' as HOD evaluation.
-          const raListS = this.reviewAssessmentList
-            .filter((ra: any) => (ra.userType === 'S' || ra.userType === 'R') && ra.reviewerId)
-            .map((ra: any) => ra.reviewerId as string);
-
-          const raListC = this.reviewAssessmentList
-            .filter((ra: any) => ra.userType === 'C' && ra.reviewerId)
-            .map((ra: any) => ra.reviewerId as string);
-
-          const raListH = this.reviewAssessmentList
-            .filter((ra: any) => ra.userType === 'H' && ra.reviewerId)
-            .map((ra: any) => ra.reviewerId as string);
-
-          this.selectedReviewers = raListS.length > 0
-            ? raListS
-            : [dpr.reviewer1Id, dpr.reviewer2Id, dpr.reviewer3Id]
-                .filter((id): id is string => !!id);
-
-          this.selectedCedReviewers = raListC;
-
-          this.selectedHodReviewers = raListH.length > 0
-            ? raListH
-            : [dpr.hodReviewer1Id, dpr.hodReviewer2Id, dpr.hodReviewer3Id]
-                .filter((id): id is string => !!id);
-
-          // Detect if logged-in user is a reviewer (self-appraisal, CED-assigned, or HOD evaluation list)
+          // Detect if logged-in user is a reviewer and load their existing assessment
           const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
           const currentEmpId = currentUser.empId || '';
-          const isInSelfList = this.selectedReviewers.includes(currentEmpId);
-          const isInCedList  = this.selectedCedReviewers.includes(currentEmpId);
-          const isInHodList  = this.selectedHodReviewers.includes(currentEmpId);
-          this.isReviewer = isInSelfList || isInCedList || isInHodList;
-          // Determine reviewer type — priority: H > C > S
-          if (isInHodList && !isInSelfList && !isInCedList) {
-            this.myReviewerUserType = 'H';
-          } else if (isInCedList && !isInSelfList) {
-            this.myReviewerUserType = 'C';
-          } else {
-            this.myReviewerUserType = 'S';
-          }
-
+          this.isReviewer = this.selectedReviewers.includes(currentEmpId);
+          this.reviewAssessmentList = dpr.reviewAssessmentList || [];
           if (this.isReviewer) {
-            // Auto-switch to reviewer tab so they land on their assessment
-            this.activeAppraisalTab = 'reviewer';
-            // Find by reviewerId only — userType may vary depending on how it was saved
             const myAssessment = this.reviewAssessmentList.find(
               (ra: any) => ra.reviewerId === currentEmpId
             );
             if (myAssessment) {
-              this.myReviewAssessmentId     = myAssessment.reviewAssessmentId || 0;
-              this.myReviewAssessmentStatus = myAssessment.status || 'P';
+              this.myReviewAssessmentId = myAssessment.reviewAssessmentId || 0;
               this.raQuality        = myAssessment.raQuality        ?? 0;
               this.raTimeliness     = myAssessment.raTimeliness     ?? 0;
               this.raInitiative     = myAssessment.raInitiative     ?? 0;
@@ -2214,9 +1803,6 @@ export class AprComponent {
               this.raGoalAlignment  = myAssessment.raGoalAlignment  ?? 0;
               this.raOverallReview  = myAssessment.raOverallReview  ?? 0;
               this.raComments       = myAssessment.raComments       ?? '';
-            } else {
-              // No existing assessment record — reviewer hasn't started yet
-              this.myReviewAssessmentStatus = 'P';
             }
           }
           // Self-appraisal (sa* matches C# field names)
@@ -2553,67 +2139,6 @@ export class AprComponent {
     });
   }
 
-  /**
-   * Send both an in-app notification AND an email to each newly added reviewer.
-   * newReviewerIds: empIds that were NOT in the backend list before this save.
-   */
-  private sendEmailToReviewers(dprId: number, newReviewerIds: string[]): void {
-    if (!newReviewerIds.length) return;
-
-    const baseUrl = this.getBaseUrl();
-    const reviewLink = `${baseUrl}/AdrakMPRUI/apr/${dprId}?from=pending-review`;
-    const reviewLinkRelative = `/apr/${dprId}?from=pending-review`;
-
-    for (const reviewerId of newReviewerIds) {
-      const emp = this.employeeList.find((e: any) => (e.empId || e.idValue) === reviewerId);
-      const reviewerName = emp ? (emp.employeeName || emp.description || reviewerId) : reviewerId;
-
-      // ── In-app notification ──────────────────────────────────
-      const notification: Partial<Notification> = {
-        userId:  reviewerId,
-        title:   `APR Review Assigned — ${this.empName}`,
-        message: `You have been selected as a reviewer for ${this.empName}'s Annual Performance Review (${this.appraisalPeriod || this.monthYear}). Please open the appraisal to submit your assessment.`,
-        link:    reviewLinkRelative,
-        isRead:  false,
-      };
-
-      this.api.createNotification(notification).subscribe({
-        next:  () => this._sendReviewerEmail(dprId, reviewerId, reviewerName, '', reviewLink),
-        error: () => this._sendReviewerEmail(dprId, reviewerId, reviewerName, '', reviewLink),
-      });
-    }
-  }
-
-  private _sendReviewerEmail(
-    dprId: number,
-    reviewerId: string,
-    reviewerName: string,
-    reviewerEmail: string,
-    reviewLink: string
-  ): void {
-    const emailRequest: SendEmailRequest = {
-      templateKey: 'APR_SUBMISSION_HOD',
-      toEmail: reviewerId,             // empId — same pattern as sendEmailToEmployee
-      placeholders: {
-        '[EmployeeName]':          this.empName,
-        '[EmployeeID]':            this.empId,
-        '[ManagerName]':           reviewerName,
-        '[AppraisalPeriod]':       this.appraisalPeriod || this.monthYear,
-        '[ManagerEvaluationLink]': reviewLink,
-        '[ManagerRemarks]':        '',
-        '[AppraisalEditLink]':     reviewLink,
-      }
-    };
-
-    this.api.SendEmail(emailRequest).subscribe({
-      next:  (res) => {
-        if (res.success) console.log(`Reviewer email sent to ${reviewerId}`);
-        else console.error(`Reviewer email failed for ${reviewerId}:`, res);
-      },
-      error: (err) => console.error(`Failed to send reviewer email to ${reviewerId}:`, err),
-    });
-  }
-
   private sendEmailToHOD(dprId: number) {
     // Get HOD info from hodList
     const hodInfo = this.hodList.find(hod => hod.idValue === this.reportingTo);
@@ -2729,5 +2254,6 @@ export class AprComponent {
   }
 
 }
+
 
 

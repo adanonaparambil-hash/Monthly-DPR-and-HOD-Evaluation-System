@@ -1,26 +1,5 @@
 <div class="apr-page" [@slideIn]>
 
-  <!-- ── Performance Badge (approved employees only) ── -->
-  @if (isEmployee && currentStatus === 'A' && overallScore > 0) {
-    <div class="perf-badge-section" [@scaleIn]>
-      <div class="perf-badge" [class]="getRatingClass(overallScore)">
-        <div class="perf-badge-circle">
-          <svg width="110" height="110">
-            <circle class="ring-bg" cx="55" cy="55" r="46"/>
-            <circle class="ring-fill" [class]="getRatingClass(overallScore)" cx="55" cy="55" r="46"
-              [style.stroke-dashoffset]="289 - (289 * overallScore / 100)"/>
-          </svg>
-          <span class="ring-score">{{ overallScore }}</span>
-        </div>
-        <div class="perf-badge-text">
-          <span class="perf-rating-label">{{ getRatingText(overallScore) }}</span>
-          <span class="perf-rating-desc">{{ getRatingDescription(overallScore) }}</span>
-          <span class="perf-period">Annual Performance Review · {{ monthYear }}</span>
-        </div>
-      </div>
-    </div>
-  }
-
   <!-- ── Appraisal Period Header ── -->
   <div class="apr-header-bar" [@scaleIn]>
     <!-- Left: back button + icon + text info -->
@@ -38,16 +17,8 @@
         <span class="apr-period-sub">{{ empName }} &nbsp;·&nbsp; {{ designation }}</span>
       </div>
     </div>
-    <!-- Right: status chip -->
-    <div class="apr-header-right">
-      <div class="apr-status-chip" [class]="'status-chip-' + currentStatus">
-        @if (currentStatus === 'D') { <i class="fas fa-pencil-alt"></i><span>Draft</span> }
-        @else if (currentStatus === 'S') { <i class="fas fa-paper-plane"></i><span>Submitted</span> }
-        @else if (currentStatus === 'R') { <i class="fas fa-undo"></i><span>Rework Required</span> }
-        @else if (currentStatus === 'A') { <i class="fas fa-check-circle"></i><span>Approved</span> }
-        @else { <i class="fas fa-file-alt"></i><span>{{ currentStatus }}</span> }
-      </div>
-    </div>
+    <!-- Right: intentionally empty -->
+    <div class="apr-header-right"></div>
     <!-- Decorative background shape -->
     <div class="apr-header-deco"></div>
   </div>
@@ -115,18 +86,18 @@
         </div>
       </div>
 
-      <!-- Reviewer multi-select (up to 3) -->
+      <!-- Reviewer multi-select (exactly 3 required) -->
       @if (canEditFields) {
         <div class="reviewer-field">
           <label class="reviewer-label">
-            <i class="fas fa-users"></i> Reviewers
-            <span class="reviewer-hint">(Select up to 3)</span>
+            <i class="fas fa-users"></i> Reviewers <span class="req">*</span>
+            <span class="reviewer-hint">(Exactly 3 required — {{ selectedReviewers.length }}/3 selected)</span>
           </label>
 
           <!-- Selected chips -->
           <div class="reviewer-chips-wrap" (click)="toggleReviewerDropdown()">
             @if (selectedReviewers.length === 0) {
-              <span class="reviewer-placeholder">Click to select reviewers...</span>
+              <span class="reviewer-placeholder">Click to select 3 reviewers...</span>
             }
             @for (id of selectedReviewers; track id) {
               <span class="reviewer-chip">
@@ -173,23 +144,94 @@
                     }
                   </div>
                 }
-              </div>              @if (selectedReviewers.length >= 3) {
+              </div>
+              @if (selectedReviewers.length >= 3) {
                 <div class="reviewer-max-msg">
-                  <i class="fas fa-info-circle"></i> Maximum 3 reviewers selected
+                  <i class="fas fa-check-circle" style="color:#22c55e;"></i> All 3 reviewers selected
                 </div>
               }
             </div>
           }
         </div>
-      } @else if (selectedReviewers.length > 0) {
-        <div class="reviewer-field">
-          <label class="reviewer-label"><i class="fas fa-users"></i> Reviewers</label>
-          <div class="reviewer-chips-wrap readonly">
-            @for (id of selectedReviewers; track id) {
-              <span class="reviewer-chip">
-                <i class="fas fa-user-circle"></i>
-                {{ getReviewerName(id) }}
+      } @else if (!isEmployee || selectedReviewers.length > 0) {
+        <!-- Readonly view when not editable — replaced by unified panel below -->
+      }
+
+      <!-- ── Reviewers at a glance — visible to all roles ── -->
+      @if (!canEditFields || selectedReviewers.length > 0 || selectedCedReviewers.length > 0 || selectedHodReviewers.length > 0 || isCed || isHod) {
+        <div class="reviewers-panel">
+          <div class="reviewers-panel-header">
+            <span class="reviewers-panel-title">
+              <i class="fas fa-users-cog"></i> Assigned Reviewers
+            </span>
+            @if (showCedAssignReviewers) {
+              <button class="btn-ced-assign reviewers-panel-assign-btn" (click)="openCedAssignModal()">
+                <i class="fas fa-user-plus"></i>
+                {{ selectedCedReviewers.length > 0 ? 'Add Reviewers' : 'Assign Reviewers' }}
+                @if (selectedCedReviewers.length > 0) {
+                  <span class="ced-assign-count">{{ selectedCedReviewers.length }}</span>
+                }
+              </button>
+            }
+          </div>
+
+          <div class="reviewers-panel-groups">
+            <!-- Group 1: Self-Appraisal Reviewers -->
+            <div class="reviewers-group">
+              <span class="reviewers-group-label reviewers-group-label--self">
+                <i class="fas fa-user-check"></i> Self-Appraisal Reviewers
               </span>
+              <div class="reviewers-group-chips">
+                @if (selectedReviewers.length === 0) {
+                  <span class="reviewers-none">Not assigned yet</span>
+                }
+                @for (id of selectedReviewers; track id) {
+                  <span class="reviewer-panel-chip reviewer-panel-chip--self">
+                    <span class="reviewer-panel-chip-avatar">{{ (getReviewerName(id) || '?')[0].toUpperCase() }}</span>
+                    <span class="reviewer-panel-chip-name">{{ getReviewerName(id) }}</span>
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Group 2: CED-Assigned Reviewers -->
+            @if (selectedCedReviewers.length > 0 || isCed) {
+              <div class="reviewers-group">
+                <span class="reviewers-group-label reviewers-group-label--ced">
+                  <i class="fas fa-user-shield"></i> CED Reviewers
+                </span>
+                <div class="reviewers-group-chips">
+                  @if (selectedCedReviewers.length === 0) {
+                    <span class="reviewers-none">Not assigned yet</span>
+                  }
+                  @for (id of selectedCedReviewers; track id) {
+                    <span class="reviewer-panel-chip reviewer-panel-chip--ced">
+                      <span class="reviewer-panel-chip-avatar">{{ (getReviewerName(id) || '?')[0].toUpperCase() }}</span>
+                      <span class="reviewer-panel-chip-name">{{ getReviewerName(id) }}</span>
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Group 3: HOD Evaluation Reviewers (show when HOD/CED or when reviewers exist) -->
+            @if (selectedHodReviewers.length > 0 || isHod || isCed) {
+              <div class="reviewers-group">
+                <span class="reviewers-group-label reviewers-group-label--hod">
+                  <i class="fas fa-star"></i> Reporting Manager Evaluation Reviewers
+                </span>
+                <div class="reviewers-group-chips">
+                  @if (selectedHodReviewers.length === 0) {
+                    <span class="reviewers-none">Not assigned yet</span>
+                  }
+                  @for (id of selectedHodReviewers; track id) {
+                    <span class="reviewer-panel-chip reviewer-panel-chip--hod">
+                      <span class="reviewer-panel-chip-avatar">{{ (getReviewerName(id) || '?')[0].toUpperCase() }}</span>
+                      <span class="reviewer-panel-chip-name">{{ getReviewerName(id) }}</span>
+                    </span>
+                  }
+                </div>
+              </div>
             }
           </div>
         </div>
@@ -221,64 +263,398 @@
     }
   </div>
 
-  <!-- ── 3. Self Appraisal — Reflection Statements ── -->
-  <div class="apr-card apr-card--teal" [@scaleIn] style="animation-delay:0.15s">
+  <!-- ── 3. Self Appraisal + Reviewer Assessment (unified card) ── -->
+  <div class="apr-card apr-card--teal" [class.apr-card--indigo]="showReviewerAssessmentSection && activeAppraisalTab === 'reviewer'" [@scaleIn] style="animation-delay:0.15s">
+
+    <!-- Card header -->
     <div class="apr-card-header" (click)="toggleSelfAppraisal()">
       <div class="apr-card-title">
-        <div class="apr-card-icon-wrap icon-teal"><i class="fas fa-user-check"></i></div>
-        <span>Self Appraisal <span class="req">*</span></span>
+        <div class="apr-card-icon-wrap icon-teal" [class.icon-indigo]="showReviewerAssessmentSection && activeAppraisalTab === 'reviewer'">
+          <i class="fas" [class.fa-user-check]="activeAppraisalTab === 'self'" [class.fa-user-edit]="activeAppraisalTab === 'reviewer'"></i>
+        </div>
+        <span>
+          @if (!showReviewerAssessmentSection) {
+            Self Appraisal <span class="req">*</span>
+          } @else {
+            Appraisal &amp; Review
+          }
+        </span>
       </div>
       <div class="apr-card-header-right">
-        <span class="completion-chip">{{ selfAppraisalAnsweredCount }} / {{ selfAppraisalStatements.length }} answered</span>
+        @if (activeAppraisalTab === 'self') {
+          <span class="completion-chip">{{ selfAppraisalAnsweredCount }} / {{ selfAppraisalStatements.length }} answered</span>
+        } @else {
+          <span class="completion-chip ra-chip">{{ raAnsweredCount }} / {{ selfAppraisalStatements.length }} rated</span>
+          @if (reviewerAssessmentSubmitted) {
+            <span class="reviewer-badge-submitted"><i class="fas fa-check-circle"></i> Submitted</span>
+          } @else if (canEditReviewerAssessment) {
+            <span class="reviewer-badge-editable"><i class="fas fa-pencil-alt"></i> Editable</span>
+          } @else {
+            <span class="reviewer-badge-readonly"><i class="fas fa-lock"></i> Read-only</span>
+          }
+        }
         <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showSelfAppraisal"></i>
       </div>
     </div>
+
     @if (showSelfAppraisal) {
       <div class="apr-card-body" [@fadeInUp]>
-        <p class="apr-section-hint">Read each statement and rate how strongly it reflects your experience this year. Your responses will be shared with your HOD as part of the evaluation. &nbsp;<strong>1 = Strongly disagree &nbsp; 5 = Strongly agree</strong></p>
 
-        <div class="rating-scale-legend">
-          <span class="legend-left">Strongly disagree</span>
-          <div class="legend-dots">
-            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-          </div>
-          <span class="legend-right">Strongly agree</span>
-        </div>
-
-        <div class="reflection-list">
-          @for (stmt of selfAppraisalStatements; track stmt.key; let i = $index) {
-            <div class="reflection-row" [class.answered]="getSelfRating(stmt.key) > 0">
-              <div class="reflection-num">{{ (i + 1).toString().padStart(2, '0') }}</div>
-              <div class="reflection-content">
-                <p class="reflection-statement">{{ stmt.label }}</p>
-                <span class="reflection-area">{{ stmt.area }}</span>
-              </div>
-              <div class="reflection-rating">
-                @for (star of [1,2,3,4,5]; track star) {
-                  <button class="rating-dot"
-                    [class.selected]="getSelfRating(stmt.key) >= star"
-                    [class.disabled]="!canEditFields"
-                    (click)="setSelfRating(stmt.key, star)"
-                    [title]="star.toString()">
-                    {{ star }}
-                  </button>
+        <!-- ── Tab switcher (only when user is a reviewer or CED/HOD viewing reviews) ── -->
+        @if (showReviewerAssessmentSection || isCed || isHod) {
+          <div class="appraisal-tabs">
+            <button class="appraisal-tab"
+              [class.appraisal-tab--active]="activeAppraisalTab === 'self'"
+              (click)="activeAppraisalTab = 'self'; $event.stopPropagation()">
+              <i class="fas fa-user-check"></i>
+              <span>Self Appraisal</span>
+              <span class="appraisal-tab-chip" [class.chip-done]="selfAppraisalAnsweredCount === selfAppraisalStatements.length">
+                {{ selfAppraisalAnsweredCount }}/{{ selfAppraisalStatements.length }}
+              </span>
+            </button>
+            @if (showReviewerAssessmentSection) {
+              <button class="appraisal-tab appraisal-tab--reviewer"
+                [class.appraisal-tab--active]="activeAppraisalTab === 'reviewer'"
+                (click)="activeAppraisalTab = 'reviewer'; $event.stopPropagation()">
+                <i class="fas fa-user-edit"></i>
+                <span>{{ myReviewerUserType === 'H' ? 'Reporting Manager Review' : myReviewerUserType === 'C' ? 'CED Review' : 'Your Review' }}</span>
+                @if (reviewerAssessmentSubmitted) {
+                  <span class="appraisal-tab-chip chip-submitted"><i class="fas fa-check"></i> Done</span>
+                } @else {
+                  <span class="appraisal-tab-chip" [class.chip-done]="raAnsweredCount === selfAppraisalStatements.length">
+                    {{ raAnsweredCount }}/{{ selfAppraisalStatements.length }}
+                  </span>
                 }
-              </div>
-            </div>
-          }
-        </div>
-
-        @if (selfAppraisalAnsweredCount === selfAppraisalStatements.length) {
-          <div class="self-total-row">
-            <span class="self-total-label">Self-appraisal total</span>
-            <span class="self-total-score">{{ selfAppraisalTotal }} / 50</span>
+              </button>
+            }
+            @if (isCed || isHod) {
+              <button class="appraisal-tab appraisal-tab--reviews"
+                [class.appraisal-tab--active]="activeAppraisalTab === 'reviews'"
+                (click)="activeAppraisalTab = 'reviews'; $event.stopPropagation()">
+                <i class="fas fa-users"></i>
+                <span>Reviewer Assessments</span>
+                <span class="appraisal-tab-chip" [class.chip-done]="submittedReviewerAssessments.length > 0">
+                  {{ submittedReviewerAssessments.length }}
+                  {{ submittedReviewerAssessments.length === 1 ? 'review' : 'reviews' }}
+                </span>
+              </button>
+            }
           </div>
         }
 
-        <div class="textarea-group" style="margin-top: 20px;">
-          <label><i class="fas fa-comment-alt"></i> Additional Comments for your HOD</label>
-          <textarea [(ngModel)]="saComments" placeholder="Any additional context or comments you'd like to share with your HOD..." [disabled]="!canEditFields" rows="3"></textarea>
-        </div>
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- TAB: Self Appraisal                                    -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        @if (activeAppraisalTab === 'self') {
+          <p class="apr-section-hint">
+            Read each statement and rate how strongly it reflects your experience this year.
+            Your responses will be shared with your Reporting Manager as part of the evaluation.
+            &nbsp;<strong>1 = Strongly disagree &nbsp; 5 = Strongly agree</strong>
+          </p>
+
+          <div class="rating-scale-legend">
+            <span class="legend-left">Strongly disagree</span>
+            <div class="legend-dots">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+            <span class="legend-right">Strongly agree</span>
+          </div>
+
+          <div class="reflection-list">
+            @for (stmt of selfAppraisalStatements; track stmt.key; let i = $index) {
+              <div class="reflection-row" [class.answered]="getSelfRating(stmt.key) > 0">
+                <div class="reflection-num">{{ (i + 1).toString().padStart(2, '0') }}</div>
+                <div class="reflection-content">
+                  <p class="reflection-statement">{{ getStatementLabel(stmt.label, false) }}</p>
+                  <span class="reflection-area">{{ stmt.area }}</span>
+                </div>
+                <div class="reflection-rating">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <button class="rating-dot"
+                      [class.selected]="getSelfRating(stmt.key) >= star"
+                      [class.disabled]="!canEditFields"
+                      (click)="setSelfRating(stmt.key, star)"
+                      [title]="star.toString()">
+                      {{ star }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (selfAppraisalAnsweredCount === selfAppraisalStatements.length) {
+            <div class="self-total-row">
+              <span class="self-total-label">Self-appraisal total</span>
+              <span class="self-total-score">{{ selfAppraisalTotal }} / 50</span>
+            </div>
+          }
+
+          <div class="textarea-group" style="margin-top: 20px;">
+            <label><i class="fas fa-comment-alt"></i> Additional Comments for your Reporting Manager</label>
+            <textarea [(ngModel)]="saComments" placeholder="Any additional context or comments you'd like to share with your Reporting Manager..." [disabled]="!canEditFields" rows="3"></textarea>
+          </div>
+
+          <!-- Nudge reviewer to switch tab -->
+          @if (showReviewerAssessmentSection && !reviewerAssessmentSubmitted) {
+            <div class="appraisal-tab-nudge">
+              <i class="fas fa-arrow-right"></i>
+              You are also a reviewer for this appraisal.
+              <button class="nudge-link" (click)="activeAppraisalTab = 'reviewer'; $event.stopPropagation()">
+                Go to Your Review tab
+              </button>
+              to submit your assessment.
+            </div>
+          }
+        }
+
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- TAB: Reviewer Assessment                               -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        @if (activeAppraisalTab === 'reviewer') {
+
+          <!-- Who am I reviewing? -->
+          <div class="ra-reviewing-for">
+            <img class="ra-reviewing-avatar" [src]="profileImage" [alt]="empName" (error)="onAvatarError($event)">
+            <div class="ra-reviewing-info">
+              <span class="ra-reviewing-label">You are reviewing</span>
+              <span class="ra-reviewing-name">{{ empName }}</span>
+              <span class="ra-reviewing-meta">{{ designation }}&nbsp;·&nbsp;{{ department }}</span>
+            </div>
+            <div class="ra-reviewing-period">
+              <i class="fas fa-calendar-alt"></i>
+              <span>{{ appraisalPeriod || monthYear }}</span>
+            </div>
+          </div>
+
+          <p class="apr-section-hint">
+            <i class="fas fa-info-circle" style="color:#6366f1;margin-right:6px;"></i>
+            @if (myReviewerUserType === 'H') {
+              You have been selected as a <strong>Reporting Manager Evaluation Reviewer</strong> for this appraisal. Rate each statement based on your observation of this employee's performance.
+            } @else if (myReviewerUserType === 'C') {
+              You have been selected as a <strong>CED Reviewer</strong> for this appraisal. Rate each statement based on your observation of this employee's performance.
+            } @else {
+              You have been selected as a <strong>Self-Appraisal Reviewer</strong> for this appraisal. Rate each statement based on your observation of this employee's performance.
+            }
+            &nbsp;<strong>1 = Strongly disagree &nbsp; 5 = Strongly agree</strong>
+          </p>
+
+          <div class="reflection-list">
+            @for (stmt of selfAppraisalStatements; track stmt.key; let i = $index) {
+              <div class="reflection-row ra-row" [class.answered]="getRaRating(stmt.key) > 0">
+                <div class="reflection-num">{{ (i + 1).toString().padStart(2, '0') }}</div>
+                <div class="reflection-content">
+                  <p class="reflection-statement">{{ getStatementLabel(stmt.label, true) }}</p>
+                  <span class="reflection-area">{{ stmt.area }}</span>
+                </div>
+                <!-- Employee self rating — compact static badge -->
+                <div class="ra-self-badge-wrap">
+                  <span class="ra-self-badge-label">Self</span>
+                  <span class="ra-self-badge" [class.ra-self-badge--rated]="getSelfRating(stmt.key) > 0"
+                    [title]="'Employee self-rated: ' + getSelfRating(stmt.key) + ' / 5'">
+                    @if (getSelfRating(stmt.key) > 0) {
+                      {{ getSelfRating(stmt.key) }}<span class="ra-self-badge-denom">/5</span>
+                    } @else {
+                      <span class="ra-self-badge-na">—</span>
+                    }
+                  </span>
+                </div>
+                <!-- Reviewer rating — 5 clickable bubbles -->
+                <div class="ra-reviewer-rating">
+                  <span class="ra-reviewer-label">Your rating</span>
+                  <div class="ra-dots-row">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <button class="rating-dot ra-dot"
+                        [class.selected]="getRaRating(stmt.key) >= star"
+                        [class.disabled]="!canEditReviewerAssessment"
+                        (click)="setRaRating(stmt.key, star)"
+                        [title]="star.toString()">
+                        {{ star }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Score summary row -->
+          @if (raAnsweredCount > 0 || selfAppraisalAnsweredCount > 0) {
+            <div class="ra-score-summary">
+              <div class="ra-score-col">
+                <span class="ra-score-label">Employee Self Total</span>
+                <span class="ra-score-val ra-score-self">{{ selfAppraisalTotal }} / 50</span>
+              </div>
+              <div class="ra-score-divider"></div>
+              <div class="ra-score-col">
+                <span class="ra-score-label">Your Assessment Total</span>
+                <span class="ra-score-val ra-score-reviewer">{{ raTotal }} / 50</span>
+              </div>
+            </div>
+          }
+
+          <div class="textarea-group" style="margin-top: 16px;">
+            <label><i class="fas fa-comment-alt" style="color:#6366f1;"></i> Reviewer Comments</label>
+            <textarea [(ngModel)]="raComments"
+              placeholder="Share your observations about this employee's performance..."
+              [disabled]="!canEditReviewerAssessment" rows="3"></textarea>
+          </div>
+
+          @if (canEditReviewerAssessment) {
+            <div class="ra-save-row">
+              <button class="btn-ra-save btn-ra-submit" (click)="submitReviewerAssessment()"
+                [disabled]="raAnsweredCount < selfAppraisalStatements.length"
+                [title]="raAnsweredCount < selfAppraisalStatements.length ? 'Rate all statements to submit' : 'Submit your assessment'">
+                <i class="fas fa-paper-plane"></i> Submit Assessment
+              </button>
+            </div>
+          }
+          @if (reviewerAssessmentSubmitted) {
+            <div class="ra-submitted-notice">
+              <i class="fas fa-check-circle"></i>
+              You have already submitted your assessment for this appraisal.
+            </div>
+          }
+        }
+
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- TAB: Reviewer Assessments (CED / HOD view)             -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        @if (activeAppraisalTab === 'reviews') {
+          @if (submittedReviewerAssessments.length === 0) {
+            <div class="reviews-empty">
+              <i class="fas fa-user-clock"></i>
+              <p>No reviewer assessments have been submitted yet.</p>
+            </div>
+          } @else {
+            <div class="reviews-master-detail">
+
+              <!-- ── Left: reviewer list ── -->
+              <div class="reviews-sidebar">
+                @for (ra of submittedReviewerAssessments; track ra.reviewAssessmentId; let ri = $index) {
+                  <button class="reviews-sidebar-item"
+                    [class.reviews-sidebar-item--active]="selectedReviewerIndex === ri"
+                    (click)="selectedReviewerIndex = ri; $event.stopPropagation()">
+                    <div class="reviews-sidebar-avatar" [class.avatar--self]="ra.userType === 'S' || ra.userType === 'R'" [class.avatar--hod]="ra.userType === 'H'" [class.avatar--ced]="ra.userType === 'C'">
+                      {{ (getReviewerNameById(ra.reviewerId) || '?')[0].toUpperCase() }}
+                    </div>
+                    <div class="reviews-sidebar-info">
+                      <span class="reviews-sidebar-name">{{ getReviewerNameById(ra.reviewerId) }}</span>
+                      <span class="reviews-sidebar-score">
+                        {{ ra.raTotal || 0 }} / 50
+                        &nbsp;·&nbsp;
+                        <span class="reviews-sidebar-type"
+                          [class.type--self]="ra.userType === 'S' || ra.userType === 'R'"
+                          [class.type--hod]="ra.userType === 'H'"
+                          [class.type--ced]="ra.userType === 'C'">
+                          {{ ra.userType === 'H' ? 'RM' : ra.userType === 'C' ? 'CED' : 'Self' }}
+                        </span>
+                      </span>
+                    </div>
+                    <span class="reviews-sidebar-status"
+                      [class.reviews-sidebar-status--done]="ra.status === 'A'">
+                      <i class="fas" [class.fa-check-circle]="ra.status === 'A'" [class.fa-clock]="ra.status !== 'A'"></i>
+                    </span>
+                  </button>
+                }
+              </div>
+
+              <!-- ── Right: selected reviewer detail ── -->
+              @if (submittedReviewerAssessments[selectedReviewerIndex]; as ra) {
+                <div class="reviews-detail">
+                  <!-- Detail header -->
+                  <div class="reviews-detail-header">
+                    <div class="reviewer-card-avatar" [class.avatar--self]="ra.userType === 'S' || ra.userType === 'R'" [class.avatar--hod]="ra.userType === 'H'" [class.avatar--ced]="ra.userType === 'C'">
+                      {{ (getReviewerNameById(ra.reviewerId) || '?')[0].toUpperCase() }}
+                    </div>
+                    <div class="reviews-detail-info">
+                      <span class="reviews-detail-name">{{ getReviewerNameById(ra.reviewerId) }}</span>
+                      <span class="reviews-detail-meta">
+                        Reviewer {{ selectedReviewerIndex + 1 }} of {{ submittedReviewerAssessments.length }}
+                        &nbsp;·&nbsp;
+                        <span [class.text-green]="ra.status === 'A'" [class.text-muted]="ra.status !== 'A'">
+                          {{ ra.status === 'A' ? 'Submitted' : 'Pending' }}
+                        </span>
+                      </span>
+                    </div>
+                    <div class="reviewer-card-total">
+                      <span class="reviewer-card-total-label">Total</span>
+                      <span class="reviewer-card-total-val">{{ ra.raTotal || 0 }} / 50</span>
+                    </div>
+                  </div>
+
+                  <!-- Statement rows -->
+                  <div class="reviewer-card-rows">
+                    @for (stmt of selfAppraisalStatements; track stmt.key; let si = $index) {
+                      <div class="reviewer-card-row">
+                        <span class="reviewer-card-num">{{ (si + 1).toString().padStart(2, '0') }}</span>
+                        <div class="reviewer-card-stmt">
+                          <span class="reviewer-card-stmt-text">{{ getStatementLabel(stmt.label, true) }}</span>
+                          <span class="reviewer-card-area">{{ stmt.area }}</span>
+                        </div>
+                        <!-- Self badge -->
+                        <div class="ra-self-badge-wrap">
+                          <span class="ra-self-badge-label">Self</span>
+                          <span class="ra-self-badge" [class.ra-self-badge--rated]="getSelfRating(stmt.key) > 0">
+                            @if (getSelfRating(stmt.key) > 0) {
+                              {{ getSelfRating(stmt.key) }}<span class="ra-self-badge-denom">/5</span>
+                            } @else {
+                              <span class="ra-self-badge-na">—</span>
+                            }
+                          </span>
+                        </div>
+                        <!-- Reviewer rating badge -->
+                        <div class="ra-self-badge-wrap">
+                          <span class="ra-self-badge-label" style="color:#6366f1">Review</span>
+                          <span class="ra-self-badge"
+                            [class.ra-self-badge--rated]="getReviewerRating(ra, stmt.key) > 0"
+                            [style.background]="getReviewerRating(ra, stmt.key) > 0 ? 'rgba(99,102,241,0.08)' : ''"
+                            [style.border-color]="getReviewerRating(ra, stmt.key) > 0 ? 'rgba(99,102,241,0.3)' : ''"
+                            [style.color]="getReviewerRating(ra, stmt.key) > 0 ? '#4f46e5' : ''">
+                            @if (getReviewerRating(ra, stmt.key) > 0) {
+                              {{ getReviewerRating(ra, stmt.key) }}<span class="ra-self-badge-denom">/5</span>
+                            } @else {
+                              <span class="ra-self-badge-na">—</span>
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Comments -->
+                  @if (ra.raComments) {
+                    <div class="reviewer-card-comments">
+                      <i class="fas fa-comment-alt"></i>
+                      <span>{{ ra.raComments }}</span>
+                    </div>
+                  }
+
+                  <!-- Prev / Next navigation -->
+                  @if (submittedReviewerAssessments.length > 1) {
+                    <div class="reviews-nav">
+                      <button class="reviews-nav-btn"
+                        [disabled]="selectedReviewerIndex === 0"
+                        (click)="selectedReviewerIndex = selectedReviewerIndex - 1; $event.stopPropagation()">
+                        <i class="fas fa-chevron-left"></i> Previous
+                      </button>
+                      <span class="reviews-nav-count">
+                        {{ selectedReviewerIndex + 1 }} / {{ submittedReviewerAssessments.length }}
+                      </span>
+                      <button class="reviews-nav-btn"
+                        [disabled]="selectedReviewerIndex === submittedReviewerAssessments.length - 1"
+                        (click)="selectedReviewerIndex = selectedReviewerIndex + 1; $event.stopPropagation()">
+                        Next <i class="fas fa-chevron-right"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+
+            </div>
+          }
+        }
+
       </div>
     }
   </div>
@@ -327,10 +703,6 @@
             <label><i class="fas fa-lightbulb"></i> Skills Developed <span class="req">*</span></label>
             <textarea [(ngModel)]="skillsDeveloped" placeholder="e.g. Cloud architecture, CI/CD pipelines, stakeholder communication..." [disabled]="!canEditFields" rows="3"></textarea>
           </div>
-          <div class="textarea-group full-width">
-            <label><i class="fas fa-road"></i> Training or Development Needed Next Year</label>
-            <textarea [(ngModel)]="trainingNeeded" placeholder="e.g. System design, leadership skills, advanced data analysis..." [disabled]="!canEditFields" rows="3"></textarea>
-          </div>
         </div>
       </div>
     }
@@ -342,7 +714,7 @@
       <div class="apr-card-header" (click)="toggleHodEvaluation()">
         <div class="apr-card-title">
           <div class="apr-card-icon-wrap icon-orange"><i class="fas fa-star"></i></div>
-          <span>HOD Evaluation</span>
+          <span>Reporting Manager Evaluation</span>
         </div>
         <i class="fas fa-chevron-down apr-chevron" [class.rotated]="showHodEvaluation"></i>
       </div>
@@ -353,7 +725,7 @@
           <p class="hod-eval-section-label">Competency Scores <span>(1–100 each)</span></p>
           <div class="hod-scores-grid">
             <div class="hod-score-item hod-score-main">
-              <label>HOD Overall Rating</label>
+              <label>Reporting Manager Overall Rating</label>
               <input type="number" [(ngModel)]="hodRating" min="1" max="100"
                 placeholder="0" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()"
@@ -420,6 +792,24 @@
               <div class="hod-overall-desc">
                 <h4>{{ getRatingText(overallScore) }}</h4>
                 <p>{{ getRatingDescription(overallScore) }}</p>
+                <!-- Score breakdown -->
+                <div class="overall-score-breakdown">
+                  <div class="score-breakdown-item">
+                    <span class="score-breakdown-label"><i class="fas fa-user-tie"></i> HOD Evaluation (40%)</span>
+                    <span class="score-breakdown-value">{{ hodEvaluationAverage | number:'1.0-1' }}</span>
+                  </div>
+                  <div class="score-breakdown-item">
+                    <span class="score-breakdown-label">
+                      <i class="fas fa-users"></i> Reviewer Average (50%)
+                      <span class="score-breakdown-sub">({{ submittedReviewerCount }} of {{ totalReviewerCount }} submitted)</span>
+                    </span>
+                    <span class="score-breakdown-value">{{ reviewerAvg100Display | number:'1.0-1' }}</span>
+                  </div>
+                  <div class="score-breakdown-item">
+                    <span class="score-breakdown-label"><i class="fas fa-calendar-check"></i> Attendance (10%)</span>
+                    <span class="score-breakdown-value">{{ attendanceScore | number:'1.0-1' }}</span>
+                  </div>
+                </div>
               </div>
               <div class="hod-rating-legend">
                 <span class="legend-dot excellent"></span><span>Excellent (85–100)</span>
@@ -431,35 +821,9 @@
             </div>
           }
 
-          <!-- HOD Recommendation -->
-          <p class="hod-eval-section-label" style="margin-top:20px;">HOD Recommendation</p>
-          <div class="hod-recommendation-row">
-            <button class="rec-btn rec-increment" [class.rec-active]="hodRecommendation === 'increment'"
-              [disabled]="!canEditHodEvaluation"
-              (click)="canEditHodEvaluation && (hodRecommendation = 'increment')">
-              <i class="fas fa-arrow-up"></i>
-              <strong>Increment recommended</strong>
-              <span>Employee merits a salary increment</span>
-            </button>
-            <button class="rec-btn rec-promotion" [class.rec-active]="hodRecommendation === 'promotion'"
-              [disabled]="!canEditHodEvaluation"
-              (click)="canEditHodEvaluation && (hodRecommendation = 'promotion')">
-              <i class="fas fa-level-up-alt"></i>
-              <strong>Promotion recommended</strong>
-              <span>Ready for next level role</span>
-            </button>
-            <button class="rec-btn rec-nochange" [class.rec-active]="hodRecommendation === 'no_change'"
-              [disabled]="!canEditHodEvaluation"
-              (click)="canEditHodEvaluation && (hodRecommendation = 'no_change')">
-              <i class="fas fa-minus-circle"></i>
-              <strong>No change</strong>
-              <span>Meets expectations, no change</span>
-            </button>
-          </div>
-
           <!-- Management Remarks -->
           <div class="textarea-group" style="margin-top:20px;">
-            <label><i class="fas fa-comment-dots"></i> Management Remarks</label>
+            <label><i class="fas fa-comment-dots"></i> Remarks</label>
             <textarea [(ngModel)]="hodRemarks"
               placeholder="Add your overall remarks, observations, and any specific feedback for the employee..."
               [disabled]="!canEditHodEvaluation" rows="4"></textarea>
@@ -468,8 +832,8 @@
           <!-- HOD Evaluation Reviewers -->
           <div class="reviewer-field" style="margin-top:20px;">
             <label class="reviewer-label">
-              <i class="fas fa-users"></i> Evaluation Reviewers
-              <span class="reviewer-hint">(Select up to 3)</span>
+              <i class="fas fa-users"></i> Evaluation Reviewers <span class="req">*</span>
+              <span class="reviewer-hint">(Exactly 3 required — {{ selectedHodReviewers.length }}/3 selected)</span>
             </label>
 
             <div class="reviewer-chips-wrap" [class.readonly]="!canEditHodEvaluation"
@@ -497,12 +861,8 @@
               <div class="reviewer-backdrop" (click)="closeHodReviewerDropdown()"></div>
             }
 
-            @if (hodReviewerDropdownOpen && hodReviewerRect) {
-              <div class="hod-reviewer-dropdown-fixed"
-                [style.top.px]="hodReviewerRect.top"
-                [style.left.px]="hodReviewerRect.left"
-                [style.width.px]="hodReviewerRect.width"
-                (click)="$event.stopPropagation()">
+            @if (hodReviewerDropdownOpen) {
+              <div class="reviewer-dropdown" (click)="$event.stopPropagation()">
                 <div class="reviewer-search-wrap">
                   <i class="fas fa-search"></i>
                   <input class="reviewer-search" [(ngModel)]="hodReviewerSearchTerm"
@@ -529,7 +889,7 @@
                 </div>
                 @if (selectedHodReviewers.length >= 3) {
                   <div class="reviewer-max-msg">
-                    <i class="fas fa-info-circle"></i> Maximum 3 reviewers selected
+                    <i class="fas fa-check-circle" style="color:#22c55e;"></i> All 3 reviewers selected
                   </div>
                 }
               </div>
@@ -543,25 +903,108 @@
 
   <!-- ── Action Buttons ── -->
   <div class="apr-actions" [@scaleIn]>
-    @if (showEmployeeButtons) {
-      <button class="btn-draft" (click)="saveDraft()">
-        <i class="fas fa-save"></i> Save as Draft
+    @if (showEmployeeButtons || showHodButtons) {
+      <button class="btn-cancel" (click)="goBack()">
+        <i class="fas fa-times"></i> Cancel
       </button>
       <button class="btn-submit" (click)="SubmitReview()">
-        <i class="fas fa-check"></i> Submit for Review
-      </button>
-    }
-    @if (showHodButtons) {
-      <button class="btn-approve" (click)="ApproveReview()">
-        <i class="fas fa-thumbs-up"></i> Approve
-      </button>
-      <button class="btn-rework" (click)="ReWorkReview()">
-        <i class="fas fa-undo"></i> Rework
+        <i class="fas fa-paper-plane"></i> Submit
       </button>
     }
   </div>
 
 </div>
+
+<!-- ── CED Assign Reviewers Modal ── -->
+@if (cedAssignModalOpen) {
+  <div class="modal-overlay" (click)="closeCedAssignModal()">
+    <div class="ced-assign-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="ced-assign-header">
+        <div class="ced-assign-header-left">
+          <div class="ced-assign-icon"><i class="fas fa-user-plus"></i></div>
+          <div>
+            <h3 class="ced-assign-title">Assign Reviewers</h3>
+            <p class="ced-assign-sub">{{ empName }} &nbsp;·&nbsp; {{ appraisalPeriod || monthYear }}</p>
+          </div>
+        </div>
+        <button class="ced-assign-close" (click)="closeCedAssignModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="ced-assign-body">
+
+        <!-- Selected chips -->
+        @if (cedSelectedReviewers.length > 0) {
+          <div class="ced-assign-chips">
+            @for (id of cedSelectedReviewers; track id) {
+              <span class="reviewer-chip ced-chip-item">
+                <i class="fas fa-user-circle"></i>
+                {{ getReviewerName(id) }}
+                <button class="chip-remove" (click)="removeCedReviewer(id)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </span>
+            }
+          </div>
+        }
+
+        @if (cedSelectedReviewers.length === 0) {
+          <p class="ced-assign-empty-hint">No reviewers selected yet. Search and pick up to 3 employees below.</p>
+        }
+
+        <!-- Search -->
+        <div class="ced-assign-search-wrap">
+          <i class="fas fa-search"></i>
+          <input class="ced-assign-search" [(ngModel)]="cedAssignSearchTerm"
+            placeholder="Search employee by name...">
+        </div>
+
+        <!-- Employee list -->
+        <div class="ced-assign-list">
+          @if (cedFilteredEmployeeList.length === 0) {
+            <div class="reviewer-empty">No employees found</div>
+          }
+          @for (emp of cedFilteredEmployeeList; track emp.empId || emp.idValue) {
+            <div class="ced-assign-option"
+              [class.selected]="isCedReviewerSelected(emp.empId || emp.idValue)"
+              (click)="toggleCedReviewerSelection(emp.empId || emp.idValue)">
+              <div class="reviewer-option-avatar">
+                {{ (emp.employeeName || emp.description || '?')[0].toUpperCase() }}
+              </div>
+              <div class="ced-assign-option-info">
+                <span class="ced-assign-option-name">{{ emp.employeeName || emp.description }}</span>
+                <span class="ced-assign-option-id">{{ emp.empId || emp.idValue }}</span>
+              </div>
+              @if (isCedReviewerSelected(emp.empId || emp.idValue)) {
+                <i class="fas fa-check-circle ced-assign-check"></i>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="ced-assign-footer">
+        <span class="ced-assign-count-label">
+          {{ cedSelectedReviewers.length }} selected
+        </span>
+        <div class="ced-assign-actions">
+          <button class="btn-close-modal" (click)="closeCedAssignModal()">Cancel</button>
+          <button class="btn-ced-submit" (click)="submitCedAssignment()"
+            [disabled]="cedSelectedReviewers.length === 0">
+            <i class="fas fa-paper-plane"></i> Assign &amp; Save
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+}
 
 <!-- ── ProofHub Modal ── -->
 @if (showModal) {

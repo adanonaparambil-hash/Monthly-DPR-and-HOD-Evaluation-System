@@ -213,9 +213,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color: #fff;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
-  border-bottom: none;
+  color: #0f5f52;
+  background: #e6f4f1;
+  border-bottom: 2px solid #a7d9d1;
   white-space: nowrap;
 }
 .apr-table th:first-child { border-radius: 0; }
@@ -544,4 +544,153 @@
   .filter-field { min-width: 100%; }
   .btn-view span { display: none; }
   .btn-view { padding: 7px 10px; }
+}
+
+
+/* ── Tab Switcher ── */
+.apr-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+.apr-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.apr-tab:hover { color: #1e293b; background: rgba(255,255,255,0.6); }
+.apr-tab-active {
+  background: #fff;
+  color: #138271;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  font-weight: 700;
+}
+.apr-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 50px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Reviewer Tab ── */
+.reviewer-tab-body { animation: fadeInUp 0.3s ease-out; }
+.reviewer-tab-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(99,102,241,0.06);
+  border-left: 3px solid #6366f1;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.82rem;
+  color: #4f46e5;
+  margin-bottom: 14px;
+}
+.btn-review-action {
+  background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+}
+.btn-review-action:hover { box-shadow: 0 4px 14px rgba(99,102,241,0.4) !important; }
+
+/* Assessment status badges */
+.ra-status-done {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.75rem; font-weight: 700; color: #059669;
+  background: #d1fae5; padding: 3px 10px; border-radius: 50px;
+  border: 1px solid #a7f3d0;
+}
+.ra-status-pending {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.75rem; font-weight: 700; color: #d97706;
+  background: #fef3c7; padding: 3px 10px; border-radius: 50px;
+  border: 1px solid #fde68a;
+}
+.ra-status-na { color: #94a3b8; font-size: 0.82rem; }
+
+/* ── Section headings (replaces tabs) ── */
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0 2px;
+}
+
+.section-heading--reports {
+  margin-top: 12px;
+}
+
+.section-heading-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-heading-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(99,102,241,0.1);
+  border: 1.5px solid rgba(99,102,241,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.section-heading-icon--reports {
+  background: rgba(19,130,113,0.1);
+  border-color: rgba(19,130,113,0.2);
+  color: #138271;
+}
+
+.section-heading-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.section-heading-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 500;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 50px;
+  background: rgba(239,68,68,0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239,68,68,0.2);
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
