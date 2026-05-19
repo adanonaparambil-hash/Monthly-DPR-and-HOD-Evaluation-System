@@ -529,11 +529,11 @@ export class MyLoggedHoursComponent implements OnInit {
     this.employees = [];
     this.taskCategories = [];
     
-    // Load employees for the selected department
-    this.loadEmployeesByDepartment(Number(this.selectedDepartment));
-    
-    // Load task categories for the selected department
-    this.loadDepartmentTaskCategories(Number(this.selectedDepartment));
+    // Only load department-specific dropdowns when a specific department is selected
+    if (this.selectedDepartment !== '' && this.selectedDepartment !== null) {
+      this.loadEmployeesByDepartment(Number(this.selectedDepartment));
+      this.loadDepartmentTaskCategories(Number(this.selectedDepartment));
+    }
   }
 
   // Apply filters - called when user clicks Apply button
@@ -725,8 +725,10 @@ export class MyLoggedHoursComponent implements OnInit {
       request.userId = userId;
     }
     
-    // Always add departmentId since "All Departments" option is removed
-    request.departmentId = Number(this.selectedDepartment);
+    // Only add departmentId when a specific department is selected; pass undefined for "All Departments"
+    if (this.selectedDepartment !== '' && this.selectedDepartment !== null) {
+      request.departmentId = Number(this.selectedDepartment);
+    }
     
     // Only add employeeId if a specific employee is selected (not "All Employees")
     if (this.selectedEmployee !== 'all') {
@@ -1011,8 +1013,8 @@ export class MyLoggedHoursComponent implements OnInit {
     // Determine userId based on employee and department selection
     let userId = undefined;
     
-    // Only set userId if a specific employee is selected AND department is not "all"
-    if (this.selectedEmployee !== 'all' && this.selectedDepartment !== 'all') {
+    // Only set userId if a specific employee is selected AND a specific department is selected
+    if (this.selectedEmployee !== 'all' && this.selectedDepartment !== '' && this.selectedDepartment !== null) {
       userId = this.selectedEmployee;
     } else {
       userId = undefined;
@@ -1052,8 +1054,10 @@ export class MyLoggedHoursComponent implements OnInit {
       exportRequest.userId = userId;
     }
     
-    // Always add departmentId since "All Departments" option is removed
-    exportRequest.departmentId = Number(this.selectedDepartment);
+    // Only add departmentId when a specific department is selected; pass undefined for "All Departments"
+    if (this.selectedDepartment !== '' && this.selectedDepartment !== null) {
+      exportRequest.departmentId = Number(this.selectedDepartment);
+    }
     
     // Only add employeeId if a specific employee is selected (not "All Employees")
     if (this.selectedEmployee !== 'all') {

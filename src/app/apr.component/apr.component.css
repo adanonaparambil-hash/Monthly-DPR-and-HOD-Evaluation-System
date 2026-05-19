@@ -255,6 +255,15 @@
 .hod-eval-section-label{font-size:0.72rem;font-weight:700;color:var(--apr-text-muted);text-transform:uppercase;letter-spacing:0.7px;margin:0 0 12px;}
 .hod-eval-section-label span{font-weight:500;text-transform:none;letter-spacing:0;}
 
+/* Rating Legend */
+.hod-rating-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.hod-legend-item{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;white-space:nowrap;}
+.legend-excellent{background:#d1fae5;color:#065f46;}
+.legend-good{background:#dbeafe;color:#1e40af;}
+.legend-average{background:#fef9c3;color:#854d0e;}
+.legend-below{background:#ffedd5;color:#9a3412;}
+.legend-poor{background:#fee2e2;color:#991b1b;}
+
 .hod-scores-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 .hod-score-item{display:flex;flex-direction:column;gap:5px;}
 .hod-score-main{grid-column:1/-1;}

@@ -202,10 +202,27 @@ export class AprComponent {
   isReadOnlyMode: boolean = false;
   currentStatus: string = 'D'; // D, R, S, A
   isHodViewingOwnDpr: boolean = false; // Track if HOD is viewing their own DPR
+  loggedInEmpId: string = ''; // Logged-in user's empId (set in ngOnInit)
 
   get isEmployee(): boolean { return this.userType === 'E'; }
   get isHod(): boolean { return this.userType === 'H'; }
   get isCed(): boolean { return this.userType === 'C'; }
+
+  // Universal: logged-in user IS the Reporting Manager (hodId) of this DPR
+  // Role-agnostic — works for HOD, CED, or any user type
+  get isLoggedInUserTheRM(): boolean {
+    return !!this.loggedInEmpId && this.reportingTo === this.loggedInEmpId;
+  }
+
+  // True when the logged-in HOD is the RM — kept for HOD-specific logic (e.g. not own DPR)
+  get isHodTheReportingManager(): boolean {
+    return this.isHod && !this.isHodViewingOwnDpr && this.isLoggedInUserTheRM;
+  }
+
+  // True when CED is the RM — for CED-specific edit/submit (status P only)
+  get isCedActingAsHod(): boolean {
+    return this.isCed && this.currentStatus === 'P' && this.isLoggedInUserTheRM;
+  }
 
   // Status-based access control for Employees
   get canEditEmployeeFields(): boolean {
@@ -217,22 +234,24 @@ export class AprComponent {
     return this.isEmployee && (this.currentStatus === 'S' || this.currentStatus === 'P' || this.currentStatus === 'A');
   }
 
-  // Status-based access control for HOD
+  // Reporting Manager Evaluation — editable when logged-in user is the RM and status is P
+  // (works for any role: HOD, CED, or otherwise)
   get canEditHodEvaluation(): boolean {
-    if (this.isEmployee) return false; // Employee can never edit HOD evaluation fields
-    if (this.isCed) return false; // CED can never edit HOD evaluation fields
-    if (this.isHod && this.isHodViewingOwnDpr) return false; // HOD can't edit their own evaluation
-    if (this.isHod && !this.isHodViewingOwnDpr) return this.currentStatus === 'S' || this.currentStatus === 'P'; // HOD can edit when reviewing others' DPRs
+    if (this.isCed) return this.isCedActingAsHod;
+    if (this.isHod && this.isHodViewingOwnDpr) return false; // HOD can't evaluate their own DPR
+    // Any user who is the RM: editable at status P or S
+    if (this.isLoggedInUserTheRM) return this.currentStatus === 'P' || this.currentStatus === 'S';
     return false;
   }
 
   get canViewHodEvaluation(): boolean {
-    return (this.isHod || this.isCed) && (this.currentStatus === 'A' || this.currentStatus === 'R' || this.currentStatus === 'S' || this.currentStatus === 'P');
+    if (this.isCed) return true; // CED always sees it
+    return this.isLoggedInUserTheRM; // Any RM can view
   }
 
   // Management Remarks visibility - CED should NOT see this
   get canViewManagementRemarks(): boolean {
-    return this.isHod && !this.isCed; // Only HOD can see, not CED
+    return this.isHod && !this.isCed;
   }
 
   get canEditManagementRemarks(): boolean {
@@ -241,43 +260,41 @@ export class AprComponent {
 
   // Remarks History visibility
   get canViewRemarksHistory(): boolean {
-    if (this.isCed) return true; // CED can always see remarks history
-    if (this.isHod) return true; // HOD can always see remarks history
-    if (this.isEmployee) return this.currentStatus === 'R' || this.currentStatus === 'A'; // Employee when rework or approved
+    if (this.isCed) return true;
+    if (this.isHod) return true;
+    if (this.isEmployee) return this.currentStatus === 'R' || this.currentStatus === 'A';
     return false;
   }
 
-  // Button visibility — single Submit + Cancel for all editable roles
-  // Reviewers who are not the employee or HOD should NOT see these buttons
+  // Button visibility — Submit + Cancel for employee/own DPR
   get showEmployeeButtons(): boolean {
-    if (this.isReviewer && !this.isEmployee && !this.isHod) return false; // pure reviewer — no main buttons
-    // Only show when status is Draft or Rework — NOT when already submitted (P) or approved (A)
+    if (this.isReviewer && !this.isEmployee && !this.isHod) return false;
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
     if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R';
     return false;
   }
 
-  // HOD reviewing someone else's APR — show Submit button only when status is 'P' (employee submitted, awaiting HOD)
-  // Hide once HOD has already submitted ('S') or record is approved ('A')
+  // Show Submit button when logged-in user is the RM and status is P (any role)
   get showHodButtons(): boolean {
-    return this.isHod && !this.isHodViewingOwnDpr && this.currentStatus === 'P';
+    if (this.isHodViewingOwnDpr) return false; // HOD never submits their own DPR as RM
+    return this.isLoggedInUserTheRM && this.currentStatus === 'P';
   }
 
-  // Table action buttons (Add/Delete for tasks and KPIs)
+  // Table action buttons
   get showTableActions(): boolean {
-    if (this.isCed) return false; // CED never sees action buttons
+    if (this.isCed) return false;
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
-    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R'; // HOD can edit their own DPR
-    if (this.isHod && !this.isHodViewingOwnDpr) return false; // HOD can't edit others' tables
+    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R';
+    if (this.isHod && !this.isHodViewingOwnDpr) return false;
     return false;
   }
 
-  // Field editability for different roles and statuses
+  // Field editability
   get canEditFields(): boolean {
-    if (this.isCed) return false; // CED can never edit anything
+    if (this.isCed) return false;
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
-    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R'; // HOD can edit their own DPR
-    if (this.isHod && !this.isHodViewingOwnDpr) return false; // HOD can't edit others' employee fields
+    if (this.isHod && this.isHodViewingOwnDpr) return this.currentStatus === 'D' || this.currentStatus === 'R';
+    if (this.isHod && !this.isHodViewingOwnDpr) return false;
     return false;
   }
 
@@ -332,9 +349,15 @@ export class AprComponent {
     return raKey ? (assessment[raKey] || 0) : 0;
   }
 
-  // Show reviewer assessment section when user is a reviewer (any status after submission)
+  // Show reviewer assessment section:
+  // - Any user in the reviewer list — any status after Draft
+  // - HOD who is NOT the RM of this DPR — show their reviewer assessment section
   get showReviewerAssessmentSection(): boolean {
-    return this.isReviewer && this.currentStatus !== 'D';
+    if (this.isReviewer && this.currentStatus !== 'D') return true;
+    if (this.isHod && !this.isHodViewingOwnDpr && !this.isHodTheReportingManager) {
+      return this.currentStatus !== 'D';
+    }
+    return false;
   }
 
   // CED — assign reviewers: visible when CED views any APR
@@ -343,10 +366,16 @@ export class AprComponent {
   }
 
   // HOD Evaluation section visibility
+  // Rule: show when logged-in user IS the RM (hodId === loggedInEmpId) AND status is 'P'
+  // CED: always sees it (read-only view of all data)
+  // Employee: only when approved (read-only)
   get showHodEvaluationSection(): boolean {
-    if (this.isEmployee) return this.currentStatus === 'A'; // Employee can see HOD evaluation only when approved
-    if (this.isHod && this.isHodViewingOwnDpr) return false; // HOD doesn't evaluate their own DPR
-    return this.isHod || this.isCed; // HOD and CED can see it for others' DPRs
+    if (this.isEmployee && !this.isLoggedInUserTheRM) return this.currentStatus === 'A';
+    if (this.isCed) return true; // CED always sees it
+    if (this.isHodViewingOwnDpr) return false; // Never evaluate your own DPR
+    // Any user who is the RM: show when status is P (editable) or S/A (read-only after submission)
+    if (this.isLoggedInUserTheRM) return this.currentStatus === 'P' || this.currentStatus === 'S' || this.currentStatus === 'A';
+    return false;
   }
 
   // Management Remarks section visibility
@@ -680,10 +709,11 @@ export class AprComponent {
 
   SubmitReview(): void {
     // HOD submitting → 'S' (pending HOD review of others' APRs)
-    // Employee/CED first-time submit → 'P' (pending, awaiting HOD)
-    const status = this.isHod && !this.isHodViewingOwnDpr ? 'S' : 'P';
-    // actionType: employee/own submit = 'SUBMIT', HOD/reviewer submit = 'APPROVAL'
-    const actionType: 'SUBMIT' | 'APPROVAL' = (this.isHod && !this.isHodViewingOwnDpr) ? 'APPROVAL' : 'SUBMIT';
+    // HOD is the RM → 'S'; CED acting as HOD → 'S'; Employee/own submit → 'P'
+    const isHodAction = this.isHodTheReportingManager || this.isCedActingAsHod;
+    const status = isHodAction ? 'S' : 'P';
+    // actionType: employee/own submit = 'SUBMIT', HOD-as-RM/CED-as-HOD submit = 'APPROVAL'
+    const actionType: 'SUBMIT' | 'APPROVAL' = isHodAction ? 'APPROVAL' : 'SUBMIT';
 
     this.checkAppraisalAccess(actionType).then(allowed => {
       if (!allowed) return;
@@ -733,8 +763,10 @@ export class AprComponent {
    */
   private checkAppraisalAccess(actionType: 'SUBMIT' | 'APPROVAL'): Promise<boolean> {
     const year = new Date().getFullYear() - 1; // APR is always for the previous year
+    // Always use the logged-in user's empId — this.empId gets overwritten with the
+    // employee's ID when HOD/CED opens someone else's DPR
     const request: AppraisalAccessRequest = {
-      userId:     this.empId,
+      userId:     this.loggedInEmpId || this.empId,
       year,
       actionType,
     };
@@ -798,6 +830,8 @@ export class AprComponent {
       } else {
         this.userType = 'E';
       }
+
+      this.loggedInEmpId = user.empId || '';
 
       // Load full profile from API to enrich profile fields
       if (!this.dprid && this.empId) {
@@ -1111,17 +1145,28 @@ export class AprComponent {
    * Returns the statement label rewritten in third-person when a reviewer
    * is reading it about someone else.
    * e.g. "I consistently delivered..." → "Alex consistently delivered..."
+   * The 10th statement (saOverallSelf) gets a completely different reviewer sentence.
    */
   getStatementLabel(label: string, forReviewer: boolean): string {
     if (!forReviewer) return label;
     const first = this.empName?.split(' ')[0] || 'They';
+
+    // 10th statement — use a dedicated reviewer-specific sentence
+    if (label.startsWith('Overall, I am satisfied')) {
+      return `Overall performance and contributions made by ${first} during this appraisal year are appreciated and recognized.`;
+    }
+
     return label
       // "Overall, I am" → "Overall, [Name] is"
       .replace(/^Overall, I am\b/, `Overall, ${first} is`)
-      // "My work was" → "Their work was"
+      // Leading "My " → "Their "
       .replace(/^My\b/, 'Their')
       // Leading "I " → "[Name] "
-      .replace(/^I\b/, first);
+      .replace(/^I\b/, first)
+      // Mid-sentence " my " → " their "
+      .replace(/\bmy\b/g, 'their')
+      // Mid-sentence " I " → " they "  (e.g. "and I resolved")
+      .replace(/\bI\b/g, 'they');
   }
 
   get selfAppraisalAnsweredCount(): number {
@@ -1760,16 +1805,17 @@ export class AprComponent {
       this.ConfirmationMessage = 'Do you want to submit the appraisal?';
       this.ConfirmationMessageOnSubmit = 'Yes, Submit it!';
 
-      // HOD submit validation — must have selected exactly 3 evaluation reviewers
-      if (this.ApprovalStatus === 'S' && !this.isHodViewingOwnDpr) {
+      // RM submit validation — must have selected exactly 3 evaluation reviewers
+      // Applies to any user who is the RM (HOD or CED acting as RM)
+      if (this.ApprovalStatus === 'S' && (this.isHodTheReportingManager || this.isCedActingAsHod)) {
         if (this.selectedHodReviewers.length < 3) {
           this.toastr.warning('Please select exactly 3 Evaluation Reviewers before submitting.', 'Validation Failed');
           return;
         }
       }
 
-      // APR Submit validations — only for employee/own submission (P), not HOD (S)
-      if (this.ApprovalStatus === 'P') {
+      // APR Submit validations — only for employee/own submission (P), not HOD (S) or CED-as-HOD (S)
+      if (this.ApprovalStatus === 'P' && !this.isCedActingAsHod) {
         if (!this.reportingTo) {
           this.toastr.warning('Please select a Reporting Manager before submitting.', 'Validation Failed');
           return;

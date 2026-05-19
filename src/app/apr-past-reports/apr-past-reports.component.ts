@@ -138,13 +138,11 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       this.loadEmployeeList();
     }
 
-    // CED: load department list first (it calls loadReports internally after setting dept filter)
-    // All others: single loadReports call
+    // CED: load department list for the dropdown (non-blocking), then load reports immediately
     if (this.isCed) {
       this.loadDepartmentList();
-    } else {
-      this.loadReports();
     }
+    this.loadReports();
 
     // Search debouncing — only fires when user explicitly types
     this.searchSubject.pipe(
@@ -208,7 +206,7 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       formType: 'A'
     };
 
-    // Add department filter for CED users
+    // Add department filter for CED users — only when explicitly selected
     if (this.isCed && this.filters.department) {
       request.department = this.filters.department;
     }
@@ -219,14 +217,14 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
       request.employeeId = this.empId;
       request.hodName    = undefined;
     } else if (this.isHod) {
-      // HOD: always filter by their own empId as hodName; optional employee filter from dropdown
+      // HOD: always filter by their own empId as both hodName and employeeId (unless employee search is active)
       request.hodName    = this.empId;
-      request.employeeId = this.filters.employeeId || undefined;
+      request.employeeId = this.filters.employeeId || this.empId;
     } else if (this.isCed) {
-      // CED: no fixed user filter — uses dropdown filters only
+      // CED: always pass own empId as hodName; employeeId defaults to own empId unless filter is set
+      request.hodName      = this.empId;
+      request.employeeId   = this.filters.employeeId || this.empId;
       request.employeeName = this.filters.employeeName || undefined;
-      request.hodName      = this.filters.hodName      || undefined;
-      request.employeeId   = this.filters.employeeId   || undefined;
     }
 
     this.api.GetMonthlyReviewListing(request).subscribe({
@@ -292,17 +290,6 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
     };
 
     this.setDefaultPreviousMonth();
-
-    if (this.isCed) {
-      const itDepartment = this.departmentList.find(dept =>
-        dept.description?.toUpperCase() === 'IT' ||
-        dept.idValue?.toUpperCase() === 'IT'
-      );
-      if (itDepartment && itDepartment.idValue) {
-        this.filters.department = itDepartment.idValue;
-      }
-    }
-
     this.loadReports(true);
   }
 
@@ -458,34 +445,12 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
         if (response && response.success && response.data) {
           this.departmentList = response.data;
           console.log('Department list loaded:', this.departmentList);
-
-          // Set IT department as default if CED user
-          if (this.isCed) {
-            const itDepartment = this.departmentList.find(dept =>
-              dept.description?.toUpperCase() === 'IT' ||
-              dept.idValue?.toUpperCase() === 'IT'
-            );
-            console.log('IT Department found:', itDepartment);
-            if (itDepartment && itDepartment.idValue) {
-              this.filters.department = itDepartment.idValue;
-              console.log('Department filter set to:', this.filters.department);
-            } else {
-              console.warn('IT department not found in list');
-            }
-          }
-
-          // Load reports after department is set
-          this.loadReports();
         } else {
           console.warn('No Department records found or API call failed');
-          // Load reports anyway even if department list fails
-          this.loadReports();
         }
       },
       (error) => {
         console.error('Error fetching Department list:', error);
-        // Load reports anyway even if department list fails
-        this.loadReports();
       }
     );
   }

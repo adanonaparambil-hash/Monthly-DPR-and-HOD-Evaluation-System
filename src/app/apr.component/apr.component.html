@@ -300,8 +300,8 @@
     @if (showSelfAppraisal) {
       <div class="apr-card-body" [@fadeInUp]>
 
-        <!-- ── Tab switcher (only when user is a reviewer or CED/HOD viewing reviews) ── -->
-        @if (showReviewerAssessmentSection || isCed || isHod) {
+        <!-- ── Tab switcher (only when user is a reviewer, the RM, or CED) ── -->
+        @if (showReviewerAssessmentSection || isCed || isLoggedInUserTheRM) {
           <div class="appraisal-tabs">
             <button class="appraisal-tab"
               [class.appraisal-tab--active]="activeAppraisalTab === 'self'"
@@ -327,7 +327,7 @@
                 }
               </button>
             }
-            @if (isCed || isHod) {
+            @if (isCed || isLoggedInUserTheRM) {
               <button class="appraisal-tab appraisal-tab--reviews"
                 [class.appraisal-tab--active]="activeAppraisalTab === 'reviews'"
                 (click)="activeAppraisalTab = 'reviews'; $event.stopPropagation()">
@@ -720,6 +720,15 @@
       </div>
       @if (showHodEvaluation) {
         <div class="apr-card-body" [@fadeInUp]>
+
+          <!-- Rating Legend -->
+          <div class="hod-rating-legend">
+            <span class="hod-legend-item legend-excellent">Excellent (85–100)</span>
+            <span class="hod-legend-item legend-good">Good (70–84)</span>
+            <span class="hod-legend-item legend-average">Average (50–69)</span>
+            <span class="hod-legend-item legend-below">Below Average (35–49)</span>
+            <span class="hod-legend-item legend-poor">Poor (0–34)</span>
+          </div>
 
           <!-- Competency Scores -->
           <p class="hod-eval-section-label">Competency Scores <span>(1–100 each)</span></p>
