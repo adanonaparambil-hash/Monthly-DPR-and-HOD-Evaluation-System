@@ -242,13 +242,13 @@ export class MyLoggedHoursComponent implements OnInit {
   };
   
   availableColumns: ColumnDefinition[] = [
+    { key: 'loggedBy', label: 'Logged By', visible: true, width: '180px', type: 'text', required: true },
     { key: 'category', label: 'Task Category', visible: true, width: '280px', type: 'select', required: true },
     { key: 'taskId', label: 'Task ID', visible: false, width: '120px', type: 'text' },
     { key: 'title', label: 'Task Title', visible: true, width: '250px', type: 'text', required: true },
-    { key: 'description', label: 'Description', visible: true, width: '150px', type: 'text', required: true },
-    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '150px', type: 'text' },
+    { key: 'description', label: 'Description', visible: true, width: '100px', type: 'text', required: true },
+    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '220px', type: 'text' },
     { key: 'projectName', label: 'Project Name', visible: true, width: '180px', type: 'text' },
-    { key: 'loggedBy', label: 'Logged By', visible: true, width: '150px', type: 'text', required: true },
     { key: 'type', label: 'Type', visible: false, width: '120px', type: 'select' },
     { key: 'process', label: 'Process', visible: false, width: '150px', type: 'text' },
     { key: 'assignedTo', label: 'Assigned To', visible: false, width: '150px', type: 'text' },
@@ -1019,6 +1019,16 @@ export class MyLoggedHoursComponent implements OnInit {
     } else {
       userId = undefined;
     }
+
+    // Resolve employeeId to always pass in the export request:
+    // 1. If a specific employee is selected in the filter, use that.
+    // 2. Otherwise, pick the userId from the first loaded list item (all records belong to the same user in that case).
+    // 3. Fall back to the logged-in user's empId.
+    let resolvedEmployeeId: string | undefined =
+      (this.selectedEmployee !== 'all' ? String(this.selectedEmployee) : undefined)
+      || (this.loggedHours.length > 0 ? (this.loggedHours[0].userId || undefined) : undefined)
+      || currentUserId
+      || undefined;
     
     // Get all visible column names mapped to API field names
     const allColumns = this.getAllVisibleColumns();
@@ -1036,6 +1046,13 @@ export class MyLoggedHoursComponent implements OnInit {
     if (!selectedColumns.includes('LogDate')) {
       selectedColumns.push('LogDate');
     }
+
+    // Always include UserId right after LoggedBy so the export shows
+    // the employee's ID next to their name — value comes from the list's userId field.
+    if (selectedColumns.includes('LoggedBy') && !selectedColumns.includes('UserId')) {
+      const loggedByIdx = selectedColumns.indexOf('LoggedBy');
+      selectedColumns.splice(loggedByIdx + 1, 0, 'UserId');
+    }
     
     // Build export request object
     const exportRequest: any = {
@@ -1046,7 +1063,9 @@ export class MyLoggedHoursComponent implements OnInit {
       pageNumber: 0,  // Always 0 for export
       pageSize: 0,    // Always 0 for export
       isExport: 'Y',  // 'Y' for export
-      selectedColumns: selectedColumns  // Array of API field names with first letter capitalized
+      selectedColumns: selectedColumns,  // Array of API field names with first letter capitalized
+      // Always pass employeeId — resolved from filter selection, list data, or logged-in user
+      employeeId: resolvedEmployeeId
     };
     
     // Only add userId if it's defined (specific employee selected)
@@ -1273,11 +1292,13 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'title':
           return '300px'; // Wider for title + description
         case 'description':
-          return '350px'; // Wide for description text
+          return '150px'; // Reduced — description is short
         case 'category':
           return '180px';
         case 'loggedBy':
-          return '150px';
+          return '200px'; // Increased for full employee name
+        case 'dailyComment':
+          return '260px'; // Increased for daily comment text
         case 'duration':
           return '120px';
         case 'progress':
@@ -2594,11 +2615,13 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'title':
           return '300px';
         case 'description':
-          return '350px';
+          return '150px';
         case 'category':
           return '180px';
         case 'loggedBy':
-          return '150px';
+          return '200px';
+        case 'dailyComment':
+          return '260px';
         case 'duration':
           return '120px';
         case 'progress':

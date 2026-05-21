@@ -188,6 +188,12 @@ export class AprComponent {
   dprid = 0;
   hoursExceeded: boolean = false;
 
+  // Timesheet Accuracy Report — CED only
+  timesheetAccuracyReport: any = null;
+
+  // ProofHub Accuracy Report — CED only
+  proofhubAccuracyReport: any = null;
+
   // Overall Rating System Properties
   hodEvaluationAverage = 0;
   reviewerAvg100Display = 0;   // reviewer 50% component (0–100 scale) — for display in breakdown
@@ -2336,6 +2342,14 @@ export class AprComponent {
 
           this.remarksHistory = dpr.commentsList?.length ? dpr.commentsList : [];
 
+          // Store timesheet accuracy report (first entry) — CED only
+          const tsReports = (dpr as any).timesheetAccuracyReports;
+          this.timesheetAccuracyReport = (tsReports && tsReports.length > 0) ? tsReports[0] : null;
+
+          // Store proofhub accuracy report (first entry) — CED only
+          const phReports = (dpr as any).proofhubAccuracyReports;
+          this.proofhubAccuracyReport = (phReports && phReports.length > 0) ? phReports[0] : null;
+
           // Calculate overall rating after loading all data
           this.calculateOverallRating();
 
@@ -2387,6 +2401,12 @@ export class AprComponent {
     });
   }
 
+
+  // Parse accuracy percentage string like "70.8%" → 70.8
+  getPhAccuracyNum(): number {
+    const raw = this.proofhubAccuracyReport?.accuracyPct || '0%';
+    return parseFloat(raw.replace('%', '')) || 0;
+  }
 
   getRatingLabel(score: number): { text: string; color: string } {
 

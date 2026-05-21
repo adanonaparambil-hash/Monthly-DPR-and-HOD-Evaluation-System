@@ -23,6 +23,45 @@
     <div class="apr-header-deco"></div>
   </div>
 
+  <!-- ── CED Overall Score Hero Banner ── -->
+  @if (isCed && overallScore > 0) {
+    <div class="ced-score-banner" [class]="'ced-banner-' + getRatingClass(overallScore)" [@scaleIn]>
+      <!-- Small animated ring -->
+      <div class="ced-score-ring-wrap">
+        <svg class="ced-score-svg" viewBox="0 0 76 76">
+          <circle class="ced-ring-bg" cx="38" cy="38" r="30"/>
+          <circle class="ced-ring-fill" cx="38" cy="38" r="30"
+            [style.stroke-dashoffset]="188 - (188 * overallScore / 100)"
+            [class]="'ced-fill-' + getRatingClass(overallScore)"/>
+        </svg>
+        <div class="ced-score-inner">
+          <span class="ced-score-num">{{ overallScore }}</span>
+        </div>
+      </div>
+      <!-- Verdict + pills inline -->
+      <div class="ced-score-text">
+        <div class="ced-score-top-row">
+          <span class="ced-score-eyebrow">Overall Score</span>
+          <span class="ced-score-verdict" [class]="'ced-verdict-' + getRatingClass(overallScore)">
+            {{ getRatingText(overallScore) }}
+          </span>
+        </div>
+        <div class="ced-score-pills">
+          <span class="ced-pill ced-pill-hod">
+            <i class="fas fa-user-tie"></i> HOD <strong>{{ hodEvaluationAverage | number:'1.0-1' }}</strong><span class="ced-pill-weight">40%</span>
+          </span>
+          <span class="ced-pill ced-pill-rev">
+            <i class="fas fa-users"></i> Reviewers <strong>{{ reviewerAvg100Display | number:'1.0-1' }}</strong><span class="ced-pill-weight">50%</span>
+          </span>
+          <span class="ced-pill ced-pill-att">
+            <i class="fas fa-calendar-check"></i> Attendance <strong>{{ attendanceScore | number:'1.0-1' }}</strong><span class="ced-pill-weight">10%</span>
+          </span>
+        </div>
+      </div>
+      <div class="ced-banner-glow"></div>
+    </div>
+  }
+
   <!-- ── 1. Employee Profile ── -->
   <div class="apr-card apr-card--blue" [@scaleIn] style="animation-delay:0.05s">
     <div class="apr-card-header">
@@ -907,6 +946,280 @@
 
         </div>
       }
+    </div>
+  }
+
+  <!-- ── CED Only: Timesheet Accuracy Report ── -->
+  @if (isCed && timesheetAccuracyReport) {
+    <div class="apr-card apr-card--slate" [@scaleIn] style="animation-delay:0.35s">
+      <div class="apr-card-header">
+        <div class="apr-card-title">
+          <div class="apr-card-icon-wrap icon-slate"><i class="fas fa-clock"></i></div>
+          <span>Timesheet Accuracy Report</span>
+        </div>
+        <span class="apr-card-badge" style="background:rgba(71,85,105,0.1);color:#475569;">CED View Only</span>
+      </div>
+      <div class="apr-card-body">
+
+        <!-- ── Total Score hero ── -->
+        <div class="ts-total-hero">
+          <div class="ts-total-circle">
+            <span class="ts-total-num">{{ timesheetAccuracyReport.totalPerformanceScore | number:'1.1-1' }}</span>
+            <span class="ts-total-denom">/ 100</span>
+          </div>
+          <div class="ts-total-meta">
+            <span class="ts-total-title">Total Accuracy Score</span>
+            <span class="ts-total-sub">Sum of four components &nbsp;·&nbsp; max 25 each</span>
+            <!-- mini bar -->
+            <div class="ts-total-bar-wrap">
+              <div class="ts-total-bar-fill" [style.width.%]="timesheetAccuracyReport.totalPerformanceScore"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Four component cards (each /25) ── -->
+        <div class="ts-components-grid">
+
+          <!-- 1. Attendance -->
+          <div class="ts-comp-card ts-comp-attendance">
+            <div class="ts-comp-header">
+              <span class="ts-comp-icon"><i class="fas fa-calendar-check"></i></span>
+              <div class="ts-comp-title-wrap">
+                <span class="ts-comp-title">Attendance</span>
+                <span class="ts-comp-weight">max 25</span>
+              </div>
+              <span class="ts-comp-score">{{ timesheetAccuracyReport.scoreAttendance | number:'1.1-1' }}</span>
+            </div>
+            <div class="ts-comp-bar-wrap">
+              <div class="ts-comp-bar-fill ts-bar-attendance" [style.width.%]="(timesheetAccuracyReport.scoreAttendance / 25) * 100"></div>
+            </div>
+            <div class="ts-comp-details">
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-calendar-alt"></i> Official Weekdays</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.omanOfficialWeekdays }}</span>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-plane-departure"></i> Leave Days</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.leaveDaysOnWorkdays }}</span>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-check-circle"></i> Eligible Weekdays</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.employeeEligibleWeekDays }}</span>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-fingerprint"></i> Punched Days</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.punchedDays }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. OT / Late-Out -->
+          <div class="ts-comp-card ts-comp-ot">
+            <div class="ts-comp-header">
+              <span class="ts-comp-icon"><i class="fas fa-moon"></i></span>
+              <div class="ts-comp-title-wrap">
+                <span class="ts-comp-title">OT / Late-Out</span>
+                <span class="ts-comp-weight">max 25</span>
+              </div>
+              <span class="ts-comp-score">{{ timesheetAccuracyReport.scoreOtLateOut | number:'1.1-1' }}</span>
+            </div>
+            <div class="ts-comp-bar-wrap">
+              <div class="ts-comp-bar-fill ts-bar-ot" [style.width.%]="(timesheetAccuracyReport.scoreOtLateOut / 25) * 100"></div>
+            </div>
+            <div class="ts-comp-details">
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-business-time"></i> OT Days</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.otDays }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Saturday Punch -->
+          <div class="ts-comp-card ts-comp-saturday">
+            <div class="ts-comp-header">
+              <span class="ts-comp-icon"><i class="fas fa-calendar-week"></i></span>
+              <div class="ts-comp-title-wrap">
+                <span class="ts-comp-title">Saturday Punch</span>
+                <span class="ts-comp-weight">max 25</span>
+              </div>
+              <span class="ts-comp-score">{{ timesheetAccuracyReport.scoreSaturdayPunch | number:'1.1-1' }}</span>
+            </div>
+            <div class="ts-comp-bar-wrap">
+              <div class="ts-comp-bar-fill ts-bar-saturday" [style.width.%]="(timesheetAccuracyReport.scoreSaturdayPunch / 25) * 100"></div>
+            </div>
+            <div class="ts-comp-details">
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-calendar-alt"></i> Eligible Saturdays</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.eligibleSaturdays }}</span>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-fingerprint"></i> Punched Saturdays</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.punchedSaturdays }}</span>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-calendar-alt"></i> Eligible Fridays</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.eligibleFridays }}</span>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-fingerprint"></i> Punched Fridays</span>
+                <span class="ts-detail-val">{{ timesheetAccuracyReport.punchedFridays }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Punctuality -->
+          <div class="ts-comp-card ts-comp-punctuality">
+            <div class="ts-comp-header">
+              <span class="ts-comp-icon"><i class="fas fa-stopwatch"></i></span>
+              <div class="ts-comp-title-wrap">
+                <span class="ts-comp-title">Punctuality</span>
+                <span class="ts-comp-weight">max 25</span>
+              </div>
+              <span class="ts-comp-score">{{ (timesheetAccuracyReport.scorePunctuality0806To0814 + timesheetAccuracyReport.scorePunctuality0815To0829 + timesheetAccuracyReport.scorePunctualityAfter0830) | number:'1.1-1' }}</span>
+            </div>
+            <div class="ts-comp-bar-wrap">
+              <div class="ts-comp-bar-fill ts-bar-punctuality" [style.width.%]="((timesheetAccuracyReport.scorePunctuality0806To0814 + timesheetAccuracyReport.scorePunctuality0815To0829 + timesheetAccuracyReport.scorePunctualityAfter0830) / 25) * 100"></div>
+            </div>
+            <div class="ts-comp-details">
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-clock"></i> Late 08:06–08:14</span>
+                <div class="ts-detail-right">
+                  <span class="ts-detail-days">{{ timesheetAccuracyReport.lateIn0806To0814Days }}d</span>
+                  <span class="ts-detail-score ts-score-warn">{{ timesheetAccuracyReport.scorePunctuality0806To0814 | number:'1.1-1' }}</span>
+                </div>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-clock"></i> Late 08:15–08:29</span>
+                <div class="ts-detail-right">
+                  <span class="ts-detail-days">{{ timesheetAccuracyReport.lateIn0815To0829Days }}d</span>
+                  <span class="ts-detail-score ts-score-warn">{{ timesheetAccuracyReport.scorePunctuality0815To0829 | number:'1.1-1' }}</span>
+                </div>
+              </div>
+              <div class="ts-detail-row">
+                <span class="ts-detail-label"><i class="fas fa-clock"></i> Late after 08:30</span>
+                <div class="ts-detail-right">
+                  <span class="ts-detail-days">{{ timesheetAccuracyReport.lateInAfter0830Days }}d</span>
+                  <span class="ts-detail-score ts-score-bad">{{ timesheetAccuracyReport.scorePunctualityAfter0830 | number:'1.1-1' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Vehicle violations (only if any) -->
+        @if (timesheetAccuracyReport.vehicleViolations > 0) {
+          <div class="ts-violation-row">
+            <i class="fas fa-car-crash"></i>
+            <span>Vehicle Violations: <strong>{{ timesheetAccuracyReport.vehicleViolations }}</strong></span>
+          </div>
+        }
+
+      </div>
+    </div>
+  }
+
+  <!-- ── CED Only: ProofHub Accuracy Report ── -->
+  @if (isCed && proofhubAccuracyReport) {
+    <div class="apr-card apr-card--indigo" [@scaleIn] style="animation-delay:0.4s">
+      <div class="apr-card-header">
+        <div class="apr-card-title">
+          <div class="apr-card-icon-wrap icon-indigo"><i class="fas fa-chart-bar"></i></div>
+          <span>ProofHub Accuracy Report</span>
+        </div>
+        <span class="apr-card-badge" style="background:rgba(99,102,241,0.1);color:#4f46e5;">CED View Only</span>
+      </div>
+      <div class="apr-card-body">
+
+        <!-- ── Main content row ── -->
+        <div class="ph-main-row">
+
+          <!-- Left: accuracy ring -->
+          <div class="ph-ring-wrap">
+            <div class="ph-ring"
+              [class.ph-ring-good]="getPhAccuracyNum() >= 80"
+              [class.ph-ring-warn]="getPhAccuracyNum() >= 60 && getPhAccuracyNum() < 80"
+              [class.ph-ring-bad]="getPhAccuracyNum() < 60">
+              <span class="ph-ring-pct">{{ proofhubAccuracyReport.accuracyPct }}</span>
+              <span class="ph-ring-lbl">Accuracy</span>
+            </div>
+            <!-- Status badge below ring -->
+            <span class="ph-status-pill"
+              [class.ph-pill-over]="proofhubAccuracyReport.discrepancyStatus?.includes('OVER')"
+              [class.ph-pill-under]="proofhubAccuracyReport.discrepancyStatus?.includes('UNDER')"
+              [class.ph-pill-ok]="proofhubAccuracyReport.discrepancyStatus?.includes('OK') || proofhubAccuracyReport.discrepancyStatus?.includes('✓')">
+              {{ proofhubAccuracyReport.discrepancyStatus }}
+            </span>
+          </div>
+
+          <!-- Right: metrics + remark -->
+          <div class="ph-right">
+
+            <!-- Three metric tiles -->
+            <div class="ph-tiles">
+              <div class="ph-tile ph-tile-ph">
+                <div class="ph-tile-icon"><i class="fas fa-clock"></i></div>
+                <div class="ph-tile-body">
+                  <span class="ph-tile-label">ProofHub Hours</span>
+                  <span class="ph-tile-val">{{ proofhubAccuracyReport.proofhubHrs }}</span>
+                </div>
+              </div>
+              <div class="ph-tile ph-tile-live">
+                <div class="ph-tile-icon"><i class="fas fa-stopwatch"></i></div>
+                <div class="ph-tile-body">
+                  <span class="ph-tile-label">Adrak Live Hours</span>
+                  <span class="ph-tile-val">{{ proofhubAccuracyReport.adrakLiveHrs }}</span>
+                </div>
+              </div>
+              <div class="ph-tile"
+                [class.ph-tile-over]="proofhubAccuracyReport.difference?.startsWith('+')"
+                [class.ph-tile-under]="!proofhubAccuracyReport.difference?.startsWith('+')">
+                <div class="ph-tile-icon">
+                  <i class="fas"
+                    [class.fa-arrow-trend-up]="proofhubAccuracyReport.difference?.startsWith('+')"
+                    [class.fa-arrow-trend-down]="!proofhubAccuracyReport.difference?.startsWith('+')"></i>
+                </div>
+                <div class="ph-tile-body">
+                  <span class="ph-tile-label">Difference</span>
+                  <span class="ph-tile-val"
+                    [class.ph-over-text]="proofhubAccuracyReport.difference?.startsWith('+')"
+                    [class.ph-under-text]="!proofhubAccuracyReport.difference?.startsWith('+')">
+                    {{ proofhubAccuracyReport.difference }}
+                    <span class="ph-tile-pct">{{ proofhubAccuracyReport.diffPct }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Period + remark row -->
+            <div class="ph-footer-row">
+              @if (proofhubAccuracyReport.phStartDate) {
+                <span class="ph-period-chip">
+                  <i class="fas fa-calendar-alt"></i>
+                  Period from {{ proofhubAccuracyReport.phStartDate | date:'dd MMM yyyy' }}
+                </span>
+              }
+              @if (proofhubAccuracyReport.empStatus) {
+                <span class="ph-emp-chip"
+                  [class.ph-emp-chip-active]="proofhubAccuracyReport.empStatus === 'ACTIVE'">
+                  <i class="fas fa-circle" style="font-size:0.45rem;"></i>
+                  {{ proofhubAccuracyReport.empStatus }}
+                </span>
+              }
+              @if (proofhubAccuracyReport.remark) {
+                <span class="ph-remark-chip"
+                  [class.ph-remark-over]="proofhubAccuracyReport.difference?.startsWith('+')"
+                  [class.ph-remark-under]="!proofhubAccuracyReport.difference?.startsWith('+')">
+                  <i class="fas fa-info-circle"></i>
+                  {{ proofhubAccuracyReport.remark }}
+                </span>
+              }
+            </div>
+
+          </div>
+        </div>
+
+      </div>
     </div>
   }
 
