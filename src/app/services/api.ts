@@ -579,5 +579,11 @@ export class Api {
     return this.http.post(`${this.apiUrl}/DPRReview/validate-appraisal-access`, request );
   }
 
+
+  getUserMenus(userId: number): Observable<any> {
+    return this.http.get(`General/GetUserMenus?userId=${userId}` );
+  }
+  
+
 }
 

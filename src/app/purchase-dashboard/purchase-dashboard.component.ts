@@ -52,30 +52,54 @@ const centerLabelPlugin = {
     if (!chartArea) return;
     const cx = (chartArea.left + chartArea.right) / 2;
     const cy = (chartArea.top  + chartArea.bottom) / 2;
-    const total = (chart.data.datasets[0]?.data as number[]).reduce((a, b) => a + b, 0);
+    const rawData: number[] = chart.data.datasets[0]?.data ?? [];
+    const total = rawData.reduce((a: number, b: number) => a + b, 0);
+    const isNoData = total === 0;
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = 'bold 22px Roboto,sans-serif'; ctx.fillStyle = '#1e293b';
-    ctx.fillText(total.toFixed(1) + ' M', cx, cy - 10);
-    ctx.font = '11px Roboto,sans-serif'; ctx.fillStyle = '#94a3b8';
-    ctx.fillText('Total OMR', cx, cy + 12);
+    if (isNoData) {
+      ctx.font = 'bold 15px Roboto,sans-serif'; ctx.fillStyle = '#94a3b8';
+      ctx.fillText('No Data', cx, cy - 8);
+      ctx.font = '11px Roboto,sans-serif'; ctx.fillStyle = '#cbd5e1';
+      ctx.fillText('Available', cx, cy + 12);
+    } else {
+      // Outer glow ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, 44, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(245,158,11,0.07)';
+      ctx.fill();
+      // Total value
+      ctx.font = 'bold 22px Roboto,sans-serif';
+      ctx.fillStyle = '#1e293b';
+      ctx.fillText(total.toFixed(2) + ' M', cx, cy - 12);
+      // Label
+      ctx.font = '600 11px Roboto,sans-serif';
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('Total OMR', cx, cy + 12);
+    }
     ctx.restore();
   }
 };
 
 // ── Modern vivid palette (light-friendly) ───────────────────────────────────
-const P_EMERALD = '#10b981'; const P_EMERALD_L = '#34d399';
-const P_INDIGO  = '#6366f1'; const P_INDIGO_L  = '#818cf8';
-const P_SKY     = '#0ea5e9'; const P_SKY_L     = '#38bdf8';
-const P_AMBER   = '#f59e0b'; const P_AMBER_L   = '#fbbf24';
-const P_VIOLET  = '#8b5cf6'; const P_VIOLET_L  = '#a78bfa';
+const P_INDIGO  = '#6366f1';
+const P_SKY     = '#0ea5e9';
+const P_VIOLET  = '#8b5cf6';
+const P_ROSE    = '#f43f5e'; const P_TEAL      = '#14b8a6';
+const P_ORANGE  = '#f97316'; const P_CYAN      = '#06b6d4';
 
-const DONUT_VIVID = [
-  '#10b981','#6366f1','#f59e0b','#0ea5e9','#8b5cf6',
-  '#ef4444','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'
+// Rich multi-colour palette for LPO bars — each bar gets its own vivid colour
+const LPO_BAR_COLORS = [
+  '#6366f1','#10b981','#f59e0b','#0ea5e9',
+  '#8b5cf6','#f43f5e','#14b8a6','#f97316',
+  '#06b6d4','#84cc16','#ec4899','#3b82f6'
 ];
 
-const LPO_BAR_COLORS = ['#10b981','#34d399','#059669','#6ee7b7'];
+// Vivid doughnut palette — rich, well-separated hues
+const DONUT_VIVID = [
+  '#6366f1','#10b981','#f59e0b','#f43f5e','#0ea5e9',
+  '#8b5cf6','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'
+];
 
 // ── Fallback mock data (used when API has no data) ───────────────────────────
 const MONTHS_ALL = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -111,11 +135,11 @@ const MAIN_FACILITIES = [
 
 // ── Chart info metadata ──────────────────────────────────────────────────────
 const CHART_META: Record<string,{title:string,icon:string,type:string,clr:string}> = {
-  lpo:       {title:'Monthly LPO',          icon:'fas fa-shopping-cart', type:'3D Bar + Trend',  clr:'emerald'},
-  grn:       {title:'GRN Value (Yearly)',   icon:'fas fa-receipt',        type:'Area Chart',      clr:'indigo'},
-  projects:  {title:'Main Projects',        icon:'fas fa-project-diagram',type:'Bar + Line',      clr:'sky'},
-  suppliers: {title:'Top Suppliers',        icon:'fas fa-industry',       type:'Doughnut',        clr:'amber'},
-  facilities:{title:'Main Facilities',      icon:'fas fa-building',       type:'Grouped H. Bar',  clr:'violet'},
+  lpo:       {title:'Monthly LPO',                      icon:'fas fa-shopping-cart', type:'3D Bar + Trend',    clr:'emerald'},
+  grn:       {title:'GRN Value (Yearly)',               icon:'fas fa-receipt',        type:'Area Chart',        clr:'indigo'},
+  projects:  {title:'Main Projects — PO vs GRN',        icon:'fas fa-project-diagram',type:'Grouped H. Bar',   clr:'teal'},
+  suppliers: {title:'Top Suppliers',                    icon:'fas fa-industry',       type:'Doughnut',          clr:'amber'},
+  facilities:{title:'Main Facilities — PO vs GRN',      icon:'fas fa-building',       type:'Grouped H. Bar',   clr:'teal'},
 };
 
 @Component({
@@ -148,6 +172,15 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   lpoCoOpen=false; grnCoOpen=false; projCoOpen=false; projPrOpen=false;
   suppCoOpen=false; facilCoOpen=false; facilPrOpen=false;
 
+  // ── Combined Projects & Facilities tab ──────────────────────────────────────
+  pfTab: 'projects' | 'facilities' = 'projects';
+
+  switchPFTab(tab: 'projects' | 'facilities') {
+    this.pfTab = tab;
+    // Rebuild the chart for the newly visible tab after Angular re-renders the canvas
+    setTimeout(() => this.build(tab), 50);
+  }
+
   // ── Dropdown options from API ────────────────────────────────────────────────
   companies:  string[] = [];
   projects:   string[] = [];
@@ -166,7 +199,15 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   facilProjects:  string[] = [];
 
   // ── Other LPO/GRN/Supp scalar filters ───────────────────────────────────────
-  lpoYear=2026; lpoMonthFrom=0; lpoMonthTo=3; lpoView:'monthly'|'yearly'='monthly';
+  // Current date constants — used to cap the month slider
+  readonly TODAY        = new Date();
+  readonly CURRENT_YEAR = this.TODAY.getFullYear();
+  readonly CURRENT_MONTH_IDX = this.TODAY.getMonth(); // 0-based (Jan=0 … Dec=11)
+
+  lpoYear      = this.CURRENT_YEAR;
+  lpoMonthFrom = 0;
+  lpoMonthTo   = this.CURRENT_MONTH_IDX; // default: Jan → current month
+  lpoView: 'monthly' | 'yearly' = 'monthly';
   lpoYearFrom=0; lpoYearTo=3; // yearly-mode year range (index into lpoYears)
   grnYearFrom=0; grnYearTo=9; grnMonthFrom=0; grnMonthTo=11; grnView:'yearly'|'monthly'='yearly';
   suppYearFrom=0; suppYearTo=16; suppCount=10;
@@ -174,6 +215,32 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   readonly lpoYears    = [2023,2024,2025,2026];
   readonly monthLabels = MONTHS_ALL;
   readonly grnYears    = GRN_YEARLY.years;
+
+  /** Max index the "To Month" slider can reach for the LPO chart.
+   *  Current year → capped at today's month; any past year → full 12 months (index 11). */
+  get lpoMaxMonth(): number {
+    return this.lpoYear === this.CURRENT_YEAR ? this.CURRENT_MONTH_IDX : 11;
+  }
+
+  /** Clear company filter for the combined PF card */
+  clearPFCompany() {
+    if (this.pfTab === 'projects') { this.projCompanies = []; this.loadProjects(); this.onProj(); }
+    else                           { this.facilCompanies = []; this.loadProjects(); this.onFacil(); }
+  }
+
+  /** Clear company filter from modal (uses expandedChart) */
+  clearPFCompanyModal() {
+    if (this.expandedChart === 'projects') { this.projCompanies = []; this.loadProjects(); this.onProj(); }
+    else                                   { this.facilCompanies = []; this.loadProjects(); this.onFacil(); }
+  }
+
+  /** Called whenever the year dropdown changes — clamps both sliders to the new max. */
+  onLpoYearChange() {
+    const max = this.lpoMaxMonth;
+    if (this.lpoMonthTo > max)   this.lpoMonthTo   = max;
+    if (this.lpoMonthFrom > max) this.lpoMonthFrom = max;
+    this.onLPO();
+  }
 
   // ── Chart data from API ──────────────────────────────────────────────────────
   private lpoChartLabels: string[] = [];
@@ -185,8 +252,20 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   private facilChartData: any[] | null = null;
 
   // ── Computed display values ──────────────────────────────────────────────────
-  get lpoTotal()    { const v = this.lpoChartValues.length ? this.lpoChartValues : LPO_ALL_VALUES.slice(Math.min(this.lpoMonthFrom,this.lpoMonthTo),Math.max(this.lpoMonthFrom,this.lpoMonthTo)+1); return Math.round(v.reduce((a,b)=>a+b,0)*100)/100; }
-  get grnTotal()    { const v = this.grnChartValues.length ? this.grnChartValues : GRN_YEARLY.values.slice(this.grnYearFrom,this.grnYearTo+1); return Math.round(v.reduce((a,b)=>a+b,0)*100)/100; }
+  get lpoTotal() {
+    // lpoChartValues are already in millions (M); sum them directly
+    const v = this.lpoChartValues.length
+      ? this.lpoChartValues
+      : LPO_ALL_VALUES.slice(Math.min(this.lpoMonthFrom,this.lpoMonthTo), Math.max(this.lpoMonthFrom,this.lpoMonthTo)+1);
+    return Math.round(v.reduce((a,b)=>a+b,0)*1000)/1000;
+  }
+  get grnTotal() {
+    // grnChartValues are already in millions after conversion
+    const v = this.grnChartValues.length
+      ? this.grnChartValues
+      : GRN_YEARLY.values.slice(this.grnYearFrom, this.grnYearTo+1);
+    return Math.round(v.reduce((a,b)=>a+b,0)*1000)/1000;
+  }
   get lpoFromLbl()     { return MONTHS_ALL[Math.min(this.lpoMonthFrom,this.lpoMonthTo)]; }
   get lpoToLbl()       { return MONTHS_ALL[Math.max(this.lpoMonthFrom,this.lpoMonthTo)]; }
   get lpoFromYearLbl() { return this.lpoYears[Math.min(this.lpoYearFrom,this.lpoYearTo)]; }
@@ -198,10 +277,10 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   get suppFromYear(){ return 2010+this.suppYearFrom; }
   get suppToYear()  { return 2010+this.suppYearTo; }
 
+  // formatM: input is already in millions (M units)
   formatM(val: number): string {
-    if (val >= 1_000_000) return (val / 1_000_000).toFixed(2) + ' M';
-    if (val >= 1_000)     return (val / 1_000).toFixed(2) + ' K';
-    return val.toFixed(2) + ' M';
+    if (val >= 1000) return (val / 1000).toFixed(2) + ' B';  // billions edge case
+    return val.toFixed(3) + ' M';
   }
 
   // ── Multi-select helpers ─────────────────────────────────────────────────────
@@ -293,8 +372,15 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     this.api.GetLpoDashboard(req).subscribe({
       next: (res) => {
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
-        this.lpoChartLabels = data.map((d: any) => d.label ?? d.month ?? String(d.year) ?? '');
-        this.lpoChartValues = data.map((d: any) => +(d.value ?? d.lpoAmount ?? d.amount ?? 0));
+        // Label: prefer monthName (monthly view) → year (yearly view) → label fallback
+        this.lpoChartLabels = data.map((d: any) =>
+          d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
+        );
+        // Amount comes in raw OMR — convert to millions for chart display
+        this.lpoChartValues = data.map((d: any) => {
+          const raw = +(d.amount ?? d.value ?? d.lpoAmount ?? 0);
+          return raw >= 1000 ? +(raw / 1_000_000).toFixed(4) : raw; // already in M if small
+        });
         this.build('lpo');
         if (this.expandedChart === 'lpo') this.buildModal();
       },
@@ -320,8 +406,14 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     this.api.GetGrnDashboard(req).subscribe({
       next: (res) => {
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
-        this.grnChartLabels = data.map((d: any) => d.label ?? String(d.year ?? d.month ?? ''));
-        this.grnChartValues = data.map((d: any) => +(d.value ?? d.grnAmount ?? d.amount ?? 0));
+        this.grnChartLabels = data.map((d: any) =>
+          d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
+        );
+        // Convert raw OMR → millions, same as LPO
+        this.grnChartValues = data.map((d: any) => {
+          const raw = +(d.amount ?? d.value ?? d.grnAmount ?? 0);
+          return raw >= 1000 ? +(raw / 1_000_000).toFixed(4) : raw;
+        });
         this.build('grn');
         if (this.expandedChart === 'grn') this.buildModal();
       },
@@ -417,24 +509,34 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     const labels = this.lpoChartLabels.length ? this.lpoChartLabels : MONTHS_ALL.slice(from,to+1);
     const bars   = this.lpoChartValues.length ? this.lpoChartValues : LPO_ALL_VALUES.slice(from,to+1);
     const colors = labels.map((_,i)=>LPO_BAR_COLORS[i%LPO_BAR_COLORS.length]);
+    // Build per-bar gradients for a richer look
+    const bgColors = colors.map(clr => {
+      const g = ctx.createLinearGradient(0, 0, 0, 260);
+      g.addColorStop(0, clr);
+      g.addColorStop(1, clr + '88');
+      return g;
+    });
     return new Chart(ctx,{
       type:'bar', plugins:[threedBarPlugin],
       data:{ labels, datasets:[
-        {type:'bar' as any, label:'LPO Amount', data:bars, backgroundColor:colors, borderColor:colors, borderWidth:1, borderRadius:5, order:2},
-        {type:'line' as any, label:'Trend', data:bars, borderColor:P_INDIGO, borderWidth:2.5, borderDash:[5,4],
-         pointBackgroundColor:P_INDIGO, pointBorderColor:'#fff', pointBorderWidth:2, pointRadius:6,
-         fill:false, tension:0.4, order:1}
+        {type:'bar' as any, label:'LPO Amount', data:bars,
+         backgroundColor:bgColors as any, borderColor:colors, borderWidth:1.5,
+         borderRadius:7, order:2},
+        {type:'line' as any, label:'Trend', data:bars,
+         borderColor:P_ROSE, borderWidth:3, borderDash:[6,4],
+         pointBackgroundColor:P_ROSE, pointBorderColor:'#fff', pointBorderWidth:2.5,
+         pointRadius:7, fill:false, tension:0.45, order:1}
       ]},
       options:{
         responsive:true, maintainAspectRatio:false,
         animation:{duration:1600,easing:'easeOutBounce',delay:(c:any)=>(c.dataIndex??0)*180},
         plugins:{
-          legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:11},color:'#374151'}},
-          tooltip:{callbacks:{label:(c:any)=>` ${c.parsed.y} M OMR`}}
+          legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:11},color:'#374151',usePointStyle:true}},
+          tooltip:{callbacks:{label:(c:any)=>` ${(+c.parsed.y).toFixed(3)} M OMR`}}
         },
         scales:{
           x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:12,weight:'bold'}}},
-          y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#6b7280',callback:(v:any)=>v+'M'}}
+          y:{beginAtZero:true,grid:{color:'rgba(99,102,241,0.06)'},ticks:{color:'#6b7280',callback:(v:any)=>(+v).toFixed(2)+'M'}}
         }
       }
     });
@@ -446,16 +548,17 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     const labels = this.grnChartLabels.length ? this.grnChartLabels : GRN_YEARLY.years.slice(from,to+1);
     const values = this.grnChartValues.length ? this.grnChartValues : GRN_YEARLY.values.slice(from,to+1);
     const grad = ctx.createLinearGradient(0,0,0,350);
-    grad.addColorStop(0,'rgba(99,102,241,0.7)');
-    grad.addColorStop(0.6,'rgba(99,102,241,0.15)');
+    grad.addColorStop(0,'rgba(99,102,241,0.75)');
+    grad.addColorStop(0.5,'rgba(139,92,246,0.35)');
     grad.addColorStop(1,'rgba(99,102,241,0)');
     return new Chart(ctx,{
       type:'line',
       data:{labels,datasets:[{
         label:'GRN Value (M)',data:values,fill:true,backgroundColor:grad,
-        borderColor:P_INDIGO,borderWidth:3,
-        pointBackgroundColor:P_INDIGO,pointBorderColor:'#fff',pointBorderWidth:2.5,
-        pointRadius:7,pointHoverRadius:10,tension:0.4
+        borderColor:P_INDIGO,borderWidth:3.5,
+        pointBackgroundColor:DONUT_VIVID.slice(0,values.length),
+        pointBorderColor:'#fff',pointBorderWidth:2.5,
+        pointRadius:8,pointHoverRadius:11,tension:0.45
       }]},
       options:{
         responsive:true,maintainAspectRatio:false,
@@ -466,7 +569,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         },
         scales:{
           x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:11}}},
-          y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#6b7280',callback:(v:any)=>v+'M'}}
+          y:{beginAtZero:true,grid:{color:'rgba(99,102,241,0.07)'},ticks:{color:'#6b7280',callback:(v:any)=>(+v).toFixed(2)+'M'}}
         }
       }
     });
@@ -474,29 +577,61 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private makeProjects(ctx: CanvasRenderingContext2D): Chart {
     const data = this.projChartData;
-    const labels   = data?.map((d: any) => d.shortLabel ?? d.projectName ?? d.name ?? '') ?? MAIN_PROJECTS.shortLabels;
-    const poValues = data?.map((d: any) => +(d.poValue ?? d.po ?? 0)) ?? MAIN_PROJECTS.poValues;
-    const grnValues= data?.map((d: any) => +(d.grnValue ?? d.grn ?? 0)) ?? MAIN_PROJECTS.grnValues;
-    return new Chart(ctx,{
-      type:'bar', plugins:[threedBarPlugin],
-      data:{labels,datasets:[
-        {type:'bar' as any,label:'PO Value',data:poValues,
-         backgroundColor:P_SKY,borderColor:P_SKY,borderWidth:1,borderRadius:4,order:2},
-        {type:'line' as any,label:'GRN Value',data:grnValues,
-         borderColor:P_AMBER,borderWidth:2.5,backgroundColor:'rgba(245,158,11,0.1)',
-         pointBackgroundColor:P_AMBER,pointBorderColor:'#fff',pointBorderWidth:2,
-         pointRadius:6,fill:true,tension:0.35,order:1}
-      ]},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        animation:{duration:1500,easing:'easeOutQuart',delay:(c:any)=>(c.dataIndex??0)*60},
-        plugins:{
-          legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:11},color:'#374151'}},
-          tooltip:{callbacks:{label:(c:any)=>` ${c.dataset.label}: ${c.parsed.y} M OMR`}}
+    const rawLabels = data?.map((d: any) =>
+      d.projectName ?? d.shortLabel ?? d.name ?? d.project ?? d.description ?? ''
+    ) ?? MAIN_PROJECTS.shortLabels;
+    const labels = rawLabels.map((l: string) => l.length > 22 ? l.substring(0, 21) + '…' : l);
+
+    // Smart conversion: only divide by 1M if value looks like raw OMR (>= 100,000)
+    const toM = (v: number) => v >= 100_000 ? +(v / 1_000_000).toFixed(4) : v;
+    const poValues  = data?.map((d: any) =>
+      toM(+(d.poAmount ?? d.poValue ?? d.po ?? d.purchaseOrderAmount ?? d.totalPoAmount ?? 0))
+    ) ?? MAIN_PROJECTS.poValues;
+    const grnValues = data?.map((d: any) =>
+      toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
+    ) ?? MAIN_PROJECTS.grnValues;
+
+    // Vertical gradients (top → bottom)
+    const poGrad = ctx.createLinearGradient(0, 0, 0, 320);
+    poGrad.addColorStop(0, 'rgba(14,165,233,0.95)');
+    poGrad.addColorStop(1, 'rgba(14,165,233,0.35)');
+    const grnGrad = ctx.createLinearGradient(0, 0, 0, 320);
+    grnGrad.addColorStop(0, 'rgba(16,185,129,0.95)');
+    grnGrad.addColorStop(1, 'rgba(16,185,129,0.35)');
+
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'PO Value',  data: poValues,
+            backgroundColor: poGrad,  borderColor: P_SKY,  borderWidth: 1.5,
+            borderRadius: 6, borderSkipped: 'bottom' as any },
+          { label: 'GRN Value', data: grnValues,
+            backgroundColor: grnGrad, borderColor: P_TEAL, borderWidth: 1.5,
+            borderRadius: 6, borderSkipped: 'bottom' as any }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 1400, easing: 'easeOutQuart', delay: (c: any) => (c.dataIndex ?? 0) * 50 },
+        plugins: {
+          legend: { display: true, position: 'top',
+            labels: { boxWidth: 12, font: { size: 11 }, color: '#374151', usePointStyle: true } },
+          tooltip: { callbacks: {
+            title: (items: any[]) => rawLabels[items[0]?.dataIndex] ?? '',
+            label: (c: any) => ` ${c.dataset.label}: ${(+c.parsed.y).toFixed(3)} M OMR`
+          }}
         },
-        scales:{
-          x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:9},maxRotation:40,minRotation:30}},
-          y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#6b7280',callback:(v:any)=>v+'M'}}
+        scales: {
+          x: { grid: { display: false },
+               ticks: { color: '#374151', font: { size: 9, weight: 'bold' },
+                        maxRotation: 45, minRotation: 30 },
+               border: { display: false } },
+          y: { beginAtZero: true,
+               grid: { color: 'rgba(14,165,233,0.07)' },
+               ticks: { color: '#6b7280', callback: (v: any) => (+v).toFixed(2) + 'M' },
+               border: { display: false } }
         }
       }
     });
@@ -505,31 +640,57 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   private makeSuppliers(ctx: CanvasRenderingContext2D): Chart {
     const data = this.suppChartData;
     const n      = Math.min(this.suppCount, data?.length ?? TOP_SUPPLIERS.labels.length);
-    const labels = data?.slice(0,n).map((d: any) => d.supplierName ?? d.name ?? '') ?? TOP_SUPPLIERS.labels.slice(0,n);
-    const values = data?.slice(0,n).map((d: any) => +(d.totalValue ?? d.value ?? d.amount ?? 0)) ?? TOP_SUPPLIERS.values.slice(0,n);
-    const colors = DONUT_VIVID.slice(0,n);
+    const labels = data?.slice(0,n).map((d: any) => d.vendorName ?? d.supplierName ?? d.name ?? '') ?? TOP_SUPPLIERS.labels.slice(0,n);
+    const toM = (v: number) => v >= 1000 ? +(v / 1_000_000).toFixed(4) : v;
+    const rawValues = data?.slice(0,n).map((d: any) => toM(+(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0))) ?? TOP_SUPPLIERS.values.slice(0,n);
+
+    // When all values are 0, Chart.js renders nothing — use equal placeholder segments
+    const total = rawValues.reduce((a, b) => a + b, 0);
+    const isNoData = total === 0;
+    const chartValues = isNoData ? rawValues.map(() => 1) : rawValues;
+
+    // Muted colors for no-data state, vivid for real data
+    const vividColors = DONUT_VIVID.slice(0, n);
+    const mutedColors = DONUT_VIVID.slice(0, n).map(c => c + '55'); // 33% opacity
+    const colors = isNoData ? mutedColors : vividColors;
+
     return new Chart(ctx,{
       type:'doughnut', plugins:[centerLabelPlugin],
-      data:{labels,datasets:[{
-        data:values,backgroundColor:colors,borderColor:'#fff',borderWidth:3,hoverBorderWidth:4,hoverOffset:12
+      data:{labels, datasets:[{
+        data: chartValues,
+        backgroundColor: colors,
+        borderColor: isNoData ? '#f1f5f9' : '#fff',
+        borderWidth: isNoData ? 2 : 4,
+        hoverBorderColor: isNoData ? colors : vividColors,
+        hoverBorderWidth: isNoData ? 2 : 6,
+        hoverOffset: isNoData ? 0 : 22
       }]},
       options:{
-        responsive:true,maintainAspectRatio:false,cutout:'60%',
-        animation:{animateRotate:true,animateScale:true,duration:1800,easing:'easeOutCirc'},
+        responsive:true, maintainAspectRatio:false, cutout:'58%',
+        animation:{
+          animateRotate: true,
+          animateScale: true,
+          duration: 2200,
+          easing: 'easeOutElastic' as any,
+          delay: (ctx2: any) => ctx2.dataIndex * 80
+        },
         plugins:{
-          legend:{
-            display:true,position:'right',
-            labels:{boxWidth:11,font:{size:9},color:'#374151',padding:8,
-              generateLabels:(chart:any)=>chart.data.labels.map((lbl:string,i:number)=>({
-                text:`${lbl.length>22?lbl.substring(0,21)+'…':lbl}  (${chart.data.datasets[0].data[i]}M)`,
-                fillStyle:chart.data.datasets[0].backgroundColor[i],strokeStyle:'#fff',lineWidth:1,index:i
-              }))
+          legend:{ display: false },
+          tooltip:{
+            enabled: !isNoData,
+            backgroundColor: 'rgba(15,23,42,0.88)',
+            titleColor: '#f1f5f9',
+            bodyColor: '#cbd5e1',
+            padding: 12,
+            cornerRadius: 10,
+            callbacks:{
+              label:(c:any)=>` ${c.label}: ${(+(rawValues[c.dataIndex]??0)).toFixed(3)} M OMR`,
+              afterLabel:(c:any)=>{
+                const t = rawValues.reduce((a:number,b:number)=>a+b,0);
+                return t > 0 ? ` Share: ${(((rawValues[c.dataIndex]??0)/t)*100).toFixed(1)}%` : '';
+              }
             }
-          },
-          tooltip:{callbacks:{
-            label:(c:any)=>` ${c.label}: ${c.parsed} M OMR`,
-            afterLabel:(c:any)=>{const t=(c.dataset.data as number[]).reduce((a:number,b:number)=>a+b,0);return ` Share: ${((c.parsed/t)*100).toFixed(1)}%`;}
-          }}
+          }
         }
       }
     });
@@ -537,43 +698,61 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private makeFacilities(ctx: CanvasRenderingContext2D): Chart {
     const data = this.facilChartData;
-    const labels   = data?.map((d: any) => d.facilityName ?? d.projectName ?? d.name ?? '') ?? MAIN_FACILITIES.map(f=>f.name);
-    const poValues = data?.map((d: any) => +(d.poValue ?? d.po ?? 0)) ?? MAIN_FACILITIES.map(f=>f.po);
-    const grnValues= data?.map((d: any) => +(d.grnValue ?? d.grn ?? 0)) ?? MAIN_FACILITIES.map(f=>f.grn);
-    const poGrad = ctx.createLinearGradient(300,0,0,0);
-    poGrad.addColorStop(0,'rgba(139,92,246,0.9)');
-    poGrad.addColorStop(1,'rgba(139,92,246,0.5)');
-    const grnGrad = ctx.createLinearGradient(300,0,0,0);
-    grnGrad.addColorStop(0,'rgba(14,165,233,0.9)');
-    grnGrad.addColorStop(1,'rgba(14,165,233,0.5)');
-    return new Chart(ctx,{
-      type:'bar',
-      data:{
+    const rawLabels = data?.map((d: any) =>
+      d.facilityName ?? d.projectName ?? d.name ?? d.facility ?? d.description ?? ''
+    ) ?? MAIN_FACILITIES.map(f => f.name);
+    const labels = rawLabels.map((l: string) => l.length > 22 ? l.substring(0, 21) + '…' : l);
+
+    // Smart conversion: only divide by 1M if value looks like raw OMR (>= 100,000)
+    const toM = (v: number) => v >= 100_000 ? +(v / 1_000_000).toFixed(4) : v;
+    const poValues  = data?.map((d: any) =>
+      toM(+(d.poAmount ?? d.poValue ?? d.po ?? d.purchaseOrderAmount ?? d.totalPoAmount ?? 0))
+    ) ?? MAIN_FACILITIES.map(f => f.po);
+    const grnValues = data?.map((d: any) =>
+      toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
+    ) ?? MAIN_FACILITIES.map(f => f.grn);
+
+    // Vertical gradients (top → bottom)
+    const poGrad = ctx.createLinearGradient(0, 0, 0, 320);
+    poGrad.addColorStop(0, 'rgba(139,92,246,0.95)');
+    poGrad.addColorStop(1, 'rgba(139,92,246,0.35)');
+    const grnGrad = ctx.createLinearGradient(0, 0, 0, 320);
+    grnGrad.addColorStop(0, 'rgba(20,184,166,0.95)');
+    grnGrad.addColorStop(1, 'rgba(20,184,166,0.35)');
+
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
         labels,
-        datasets:[
-          {label:'PO Value', data:poValues,
-           backgroundColor:poGrad, borderColor:P_VIOLET, borderWidth:1.5,
-           borderRadius:6, borderSkipped:false},
-          {label:'GRN Value',data:grnValues,
-           backgroundColor:grnGrad, borderColor:P_SKY, borderWidth:1.5,
-           borderRadius:6, borderSkipped:false}
+        datasets: [
+          { label: 'PO Value',  data: poValues,
+            backgroundColor: poGrad,  borderColor: P_VIOLET, borderWidth: 1.5,
+            borderRadius: 6, borderSkipped: 'bottom' as any },
+          { label: 'GRN Value', data: grnValues,
+            backgroundColor: grnGrad, borderColor: P_TEAL,   borderWidth: 1.5,
+            borderRadius: 6, borderSkipped: 'bottom' as any }
         ]
       },
-      options:{
-        indexAxis:'y' as any,
-        responsive:true, maintainAspectRatio:false,
-        animation:{duration:1600, easing:'easeOutQuart', delay:(c:any)=>(c.dataIndex??0)*55},
-        plugins:{
-          legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:11},color:'#374151'}},
-          tooltip:{callbacks:{label:(c:any)=>` ${c.dataset.label}: ${c.parsed.x} M OMR`}}
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 1400, easing: 'easeOutQuart', delay: (c: any) => (c.dataIndex ?? 0) * 50 },
+        plugins: {
+          legend: { display: true, position: 'top',
+            labels: { boxWidth: 12, font: { size: 11 }, color: '#374151', usePointStyle: true } },
+          tooltip: { callbacks: {
+            title: (items: any[]) => rawLabels[items[0]?.dataIndex] ?? '',
+            label: (c: any) => ` ${c.dataset.label}: ${(+c.parsed.y).toFixed(3)} M OMR`
+          }}
         },
-        scales:{
-          x:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},
-             ticks:{color:'#6b7280',callback:(v:any)=>v+'M'},
-             border:{display:false}},
-          y:{grid:{display:false},
-             ticks:{color:'#374151',font:{size:10,weight:'bold'}},
-             border:{display:false}}
+        scales: {
+          x: { grid: { display: false },
+               ticks: { color: '#374151', font: { size: 9, weight: 'bold' },
+                        maxRotation: 45, minRotation: 30 },
+               border: { display: false } },
+          y: { beginAtZero: true,
+               grid: { color: 'rgba(139,92,246,0.07)' },
+               ticks: { color: '#6b7280', callback: (v: any) => (+v).toFixed(2) + 'M' },
+               border: { display: false } }
         }
       }
     });
@@ -636,6 +815,39 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   downloadExcel() { alert('Excel download will be available after API integration.'); }
+
+  // ── Supplier table helpers ───────────────────────────────────────────────────
+  get suppDisplayData(): any[] {
+    const data = this.suppChartData ?? [];
+    return data.slice(0, this.suppCount);
+  }
+
+  private suppTotalM(): number {
+    return this.suppDisplayData.reduce((sum, d) => {
+      const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
+      return sum + (raw >= 1000 ? raw / 1_000_000 : raw);
+    }, 0);
+  }
+
+  suppAmtM(d: any): string {
+    const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
+    const m = raw >= 1000 ? raw / 1_000_000 : raw;
+    return m.toFixed(3) + ' M';
+  }
+
+  suppShare(d: any): number {
+    const total = this.suppTotalM();
+    if (total === 0) return 0;
+    const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
+    const m = raw >= 1000 ? raw / 1_000_000 : raw;
+    return Math.min(100, (m / total) * 100);
+  }
+
+  suppRankColor(i: number): string {
+    const colors = ['#f59e0b','#6366f1','#10b981','#f43f5e','#0ea5e9',
+                    '#8b5cf6','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'];
+    return colors[i % colors.length];
+  }
 
   private runGSAP() {
     gsap.fromTo('.pd-card',{opacity:0,y:40,scale:0.95},{opacity:1,y:0,scale:1,duration:0.7,stagger:0.12,ease:'back.out(1.3)'});
