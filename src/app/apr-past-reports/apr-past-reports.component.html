@@ -5,7 +5,7 @@
     <div class="filter-bar-inner">
 
       @if (!isEmployee) {
-        <div class="filter-field">
+        <div class="filter-field" style="display:none">
           <label class="filter-label"><i class="fas fa-user"></i> Employee</label>
           <div class="select-wrap">
             <select [(ngModel)]="filters.employeeId" (change)="applyFilters()" class="filter-select">
@@ -50,7 +50,7 @@
       </div>
 
       @if (isCed) {
-        <div class="filter-field">
+        <div class="filter-field" style="display:none">
           <label class="filter-label"><i class="fas fa-building"></i> Department</label>
           <div class="select-wrap">
             <select [(ngModel)]="filters.department" (change)="applyFilters()" class="filter-select">
@@ -71,6 +71,11 @@
         <button class="btn-reset" (click)="clearFilters()" title="Clear filters">
           <i class="fas fa-rotate-left"></i>
         </button>
+        @if (isCed) {
+          <button class="btn-hod-report" (click)="openHodReportModal()">
+            <i class="fas fa-user-tie"></i><span>HOD Report</span>
+          </button>
+        }
       </div>
 
     </div>
@@ -171,3 +176,99 @@
   }
 
 </div>
+
+<!-- ── HOD Report Modal (CED only) ── -->
+@if (hodReportModalOpen) {
+  <div class="hod-modal-overlay" (click)="closeHodReportModal()">
+    <div class="hod-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="hod-modal-header">
+        <div class="hod-modal-header-left">
+          <div class="hod-modal-icon"><i class="fas fa-user-tie"></i></div>
+          <div>
+            <h3 class="hod-modal-title">HOD Report</h3>
+            <p class="hod-modal-sub">Annual Performance Review — Reporting Managers</p>
+          </div>
+        </div>
+        <button class="hod-modal-close" (click)="closeHodReportModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="hod-modal-filters">
+        <div class="hod-filter-field">
+          <label class="filter-label"><i class="fas fa-calendar-alt"></i> Year</label>
+          <div class="select-wrap">
+            <select [(ngModel)]="hodFilters.year" class="filter-select">
+              @for (year of years; track year.value) {
+                <option [value]="year.value">{{ year.label }}</option>
+              }
+            </select>
+            <i class="fas fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+        <div class="hod-filter-actions">
+          <button class="btn-apply" (click)="loadHodReport()">
+            <i class="fas fa-search"></i><span>Search</span>
+          </button>
+          <button class="btn-hod-export" (click)="exportHodReport()" [disabled]="hodReportExporting || hodReportData.length === 0">
+            <i class="fas" [class.fa-file-excel]="!hodReportExporting" [class.fa-spinner]="hodReportExporting" [class.fa-spin]="hodReportExporting"></i>
+            <span>{{ hodReportExporting ? 'Exporting...' : 'Export' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="hod-modal-body">
+        @if (hodReportLoading) {
+          <div class="hod-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading HOD report...</span>
+          </div>
+        } @else if (hodReportData.length === 0) {
+          <div class="hod-empty">
+            <i class="fas fa-folder-open"></i>
+            <p>No records found. Adjust filters and search.</p>
+          </div>
+        } @else {
+          <div class="hod-table-wrap">
+            <table class="apr-table">
+              <thead>
+                <tr>
+                  <th class="th-sl">#</th>
+                  <th>Employee</th>
+                  <th>Designation</th>
+                  <th>Department</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of hodReportData; track row.empId || row.employeeId; let i = $index) {
+                  <tr class="data-row" [style.--row-index]="i">
+                    <td class="td-sl">{{ i + 1 }}</td>
+                    <td>
+                      <div class="emp-cell">
+                        <div class="emp-avatar">{{ (row.employeeName || row.name || '?')[0].toUpperCase() }}</div>
+                        <div>
+                          <div class="td-name">{{ row.employeeName || row.name }}</div>
+                          <div class="td-hod">{{ row.empId || row.employeeId }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="td-hod">{{ row.designation || '—' }}</td>
+                    <td class="td-hod">{{ row.department || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="hod-record-count">
+            <i class="fas fa-list"></i> {{ hodReportData.length }} record{{ hodReportData.length !== 1 ? 's' : '' }} found
+          </div>
+        }
+      </div>
+
+    </div>
+  </div>
+}

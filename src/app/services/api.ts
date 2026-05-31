@@ -191,7 +191,7 @@ export class Api {
   }
 
 
-  GetEmployeeDetailsForcedDashboard(month: number, year: number, statusCondition: string, department: string, formType: string): Observable<any> {
+  GetEmployeeDetailsForcedDashboard(month: number, year: number, statusCondition: string, department: string | null, formType: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DashBoard/GetEmployeeDetailsForcedDashboard/${month}/${year}/${statusCondition}/${department}/${formType}`);
   }
 
@@ -504,7 +504,7 @@ export class Api {
   //RejoinForm 
 
 
-  saveEmployeeRejoining(request: EmployeeRejoiningDto): Observable<any> {
+  saveEmployeeRejoining(request: EmployeeRejoiningDto): Observable<any> { 
     return this.http.post(`${this.apiUrl}/EmpExitForm/SaveEmployeeRejoining`, request);
   }
   
@@ -569,7 +569,7 @@ export class Api {
   }
 
 
-  exportAPRUserReport( month: number, year: number, statusCondition: string, department: string, formType: string ): Observable<Blob> {
+  exportAPRUserReport( month: number, year: number, statusCondition: string, department: string | null, formType: string ): Observable<Blob> {
     return this.http.get( `${this.apiUrl}/DashBoard/exportEmployeeAppraisal/${month}/${year}/${statusCondition}/${department}/${formType}`, 
       {responseType: 'blob'});
   }

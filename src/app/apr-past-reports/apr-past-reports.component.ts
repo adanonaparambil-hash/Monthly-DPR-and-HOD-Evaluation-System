@@ -455,6 +455,66 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
     );
   }
 
+  // HOD Report Modal (CED only)
+  hodReportModalOpen = false;
+  hodReportLoading = false;
+  hodReportExporting = false;
+  hodReportData: any[] = [];
+  hodFilters = {
+    year: (new Date().getFullYear() - 1).toString()
+  };
+
+  openHodReportModal(): void {
+    this.hodReportModalOpen = true;
+    this.hodReportData = [];
+    this.loadHodReport();
+  }
+
+  closeHodReportModal(): void {
+    this.hodReportModalOpen = false;
+  }
+
+  loadHodReport(): void {
+    this.hodReportLoading = true;
+    this.hodReportData = [];
+    const year   = this.hodFilters.year ? Number(this.hodFilters.year) : new Date().getFullYear() - 1;
+    // month = 0 (all months), status = 'S' (hardcoded), department = null (no filter), formType = 'H'
+    this.api.GetEmployeeDetailsForcedDashboard(0, year, 'S', null, 'H').subscribe({
+      next: (res: any) => {
+        this.hodReportLoading = false;
+        if (res?.success && res?.data) {
+          this.hodReportData = res.data;
+        } else {
+          this.hodReportData = [];
+        }
+      },
+      error: () => {
+        this.hodReportLoading = false;
+        this.hodReportData = [];
+      }
+    });
+  }
+
+  exportHodReport(): void {
+    this.hodReportExporting = true;
+    const year = this.hodFilters.year ? Number(this.hodFilters.year) : new Date().getFullYear() - 1;
+    this.api.exportAPRUserReport(0, year, 'S', null, 'H').subscribe({
+      next: (blob: Blob) => {
+        const url  = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href  = url;
+        link.download = `HOD_APR_Report_${year}.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.hodReportExporting = false;
+      },
+      error: () => {
+        this.hodReportExporting = false;
+        this.toastr.error('Export failed. Please try again.', 'Error');
+      }
+    });
+  }
+
   applyFilters() {
     // Reset cache and call the API with current filter values
     this.loadReports(true);

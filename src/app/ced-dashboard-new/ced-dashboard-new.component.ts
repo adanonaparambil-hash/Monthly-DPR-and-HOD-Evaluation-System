@@ -661,6 +661,27 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     isExporting: boolean = false;
+    isExportingAll: boolean = false;
+
+    exportAllUsersReport(): void {
+        if (!this.selectedYear) return;
+        this.isExportingAll = true;
+        // month=0, status='S', department=null, formType='T'
+        this.apiService.exportAPRUserReport(0, this.selectedYear, 'S', null, 'T').subscribe({
+            next: (blob: Blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `All_Users_APR_Report_${this.selectedYear}.xlsx`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.isExportingAll = false;
+            },
+            error: () => {
+                this.isExportingAll = false;
+            }
+        });
+    }
 
     exportListing(): void {
         if (!this.selectedDepartment) return;

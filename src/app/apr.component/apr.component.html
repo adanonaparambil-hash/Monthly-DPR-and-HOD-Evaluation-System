@@ -1105,6 +1105,36 @@
             </div>
           </div>
 
+          <!-- 5. TBT Score -->
+          <div class="ts-comp-card ts-comp-tbt">
+            <div class="ts-comp-header">
+              <span class="ts-comp-icon"><i class="fas fa-shield-alt"></i></span>
+              <div class="ts-comp-title-wrap">
+                <span class="ts-comp-title">TBT Score</span>
+                <span class="ts-comp-weight">score</span>
+              </div>
+              <span class="ts-comp-score">{{ timesheetAccuracyReport.tbtScore != null ? (timesheetAccuracyReport.tbtScore | number:'1.1-1') : '—' }}</span>
+            </div>
+            <div class="ts-comp-bar-wrap">
+              <div class="ts-comp-bar-fill ts-bar-tbt" [style.width.%]="timesheetAccuracyReport.tbtScore || 0"></div>
+            </div>
+          </div>
+
+          <!-- 6. Site Coordination Score -->
+          <div class="ts-comp-card ts-comp-site">
+            <div class="ts-comp-header">
+              <span class="ts-comp-icon"><i class="fas fa-hard-hat"></i></span>
+              <div class="ts-comp-title-wrap">
+                <span class="ts-comp-title">Site Coordination</span>
+                <span class="ts-comp-weight">score</span>
+              </div>
+              <span class="ts-comp-score">{{ timesheetAccuracyReport.siteCordinationScore != null ? (timesheetAccuracyReport.siteCordinationScore | number:'1.1-1') : '—' }}</span>
+            </div>
+            <div class="ts-comp-bar-wrap">
+              <div class="ts-comp-bar-fill ts-bar-site" [style.width.%]="timesheetAccuracyReport.siteCordinationScore || 0"></div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Vehicle violations (only if any) -->

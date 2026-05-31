@@ -2289,6 +2289,8 @@
 .ts-comp-ot          { border-color: rgba(99,102,241,0.25); }
 .ts-comp-saturday    { border-color: rgba(245,158,11,0.25); }
 .ts-comp-punctuality { border-color: rgba(239,68,68,0.2); }
+.ts-comp-tbt         { border-color: rgba(168,85,247,0.25); }
+.ts-comp-site        { border-color: rgba(20,184,166,0.25); }
 
 .ts-comp-header {
   display: flex;
@@ -2310,6 +2312,8 @@
 .ts-comp-ot          .ts-comp-icon { background: rgba(99,102,241,0.12); color: #4f46e5; }
 .ts-comp-saturday    .ts-comp-icon { background: rgba(245,158,11,0.12); color: #d97706; }
 .ts-comp-punctuality .ts-comp-icon { background: rgba(239,68,68,0.1);  color: #dc2626; }
+.ts-comp-tbt         .ts-comp-icon { background: rgba(168,85,247,0.12); color: #9333ea; }
+.ts-comp-site        .ts-comp-icon { background: rgba(20,184,166,0.12); color: #0d9488; }
 
 .ts-comp-title-wrap {
   flex: 1;
@@ -2350,6 +2354,8 @@
 .ts-bar-ot          { background: linear-gradient(90deg, #4f46e5, #6366f1); }
 .ts-bar-saturday    { background: linear-gradient(90deg, #d97706, #f59e0b); }
 .ts-bar-punctuality { background: linear-gradient(90deg, #dc2626, #ef4444); }
+.ts-bar-tbt         { background: linear-gradient(90deg, #9333ea, #a855f7); }
+.ts-bar-site        { background: linear-gradient(90deg, #0d9488, #14b8a6); }
 
 /* Detail rows inside each card */
 .ts-comp-details {
