@@ -78,6 +78,30 @@ export class layout implements OnInit, OnDestroy {
     return code === 'C';
   }
 
+  /** Purchase Dashboard visibility — driven by getUserMenus API response */
+  isPurchaseDashboardUser = false;
+
+  /** Load user menus and set purchase dashboard visibility */
+  private loadUserMenus(): void {
+    const userId = this.userSession?.userId ?? this.userSession?.id ?? this.userSession?.empId;
+    if (!userId) return;
+    this.api.getUserMenus(userId).subscribe({
+      next: (res: any) => {
+        const menus: any[] = Array.isArray(res) ? res : (res?.data ?? []);
+        // Show Purchase Dashboard if any menu entry has the purchase-dashboard URL and canView = 'Y'
+        this.isPurchaseDashboardUser = menus.some((m: any) =>
+          (m.menuUrl ?? '').toLowerCase().includes('purchase-dashboard') &&
+          (m.canView ?? 'Y') === 'Y' &&
+          (m.isActive ?? 'Y') === 'Y'
+        );
+      },
+      error: () => {
+        // On error, default to no access (secure by default)
+        this.isPurchaseDashboardUser = false;
+      }
+    });
+  }
+
 
   userProfile = {
     name: this.userSession.employeeName || '',
@@ -130,6 +154,9 @@ export class layout implements OnInit, OnDestroy {
 
     // Initialize sidebar state based on screen size
     this.initializeSidebarState();
+
+    // Load user menus to determine feature access (e.g. Purchase Dashboard)
+    this.loadUserMenus();
 
     // Track route changes for page title
     this.router.events.pipe(

@@ -580,9 +580,10 @@ export class Api {
   }
 
 
-  getUserMenus(userId: number): Observable<any> {
-    return this.http.get(`General/GetUserMenus?userId=${userId}` );
+  getUserMenus(userId: number | string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetUserMenus?userId=${userId}`);
   }
+  
   
 
 }

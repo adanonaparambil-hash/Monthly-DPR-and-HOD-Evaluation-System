@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnDestroy, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
@@ -13,7 +13,14 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 Chart.register(...registerables);
 
-// ── 3-D bar faces plugin ────────────────────────────────────────────────────
+// ── Unified OMR → Millions converter ────────────────────────────────────────
+// Values from the API can be either raw OMR (e.g. 2,566,220.49) or already
+// expressed in millions (e.g. 2.57).  We treat anything >= 500 as raw OMR
+// and divide by 1,000,000.  Values < 500 are already in M.
+function toMillions(v: number): number {
+  if (!isFinite(v) || isNaN(v)) return 0;
+  return v >= 500 ? +(v / 1_000_000).toFixed(4) : +v.toFixed(4);
+}
 const threedBarPlugin = {
   id: 'threedBar',
   afterDatasetDraw(chart: any) {
@@ -172,6 +179,23 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   lpoCoOpen=false; grnCoOpen=false; projCoOpen=false; projPrOpen=false;
   suppCoOpen=false; facilCoOpen=false; facilPrOpen=false;
 
+  // ── Dropdown search terms ────────────────────────────────────────────────────
+  lpoCoSearch=''; grnCoSearch=''; projCoSearch=''; projPrSearch=''; suppCoSearch='';
+
+  /** Close all dropdowns when clicking outside any dropdown wrapper */
+  @HostListener('document:click')
+  closeAllDropdowns() {
+    this.lpoCoOpen = this.grnCoOpen = this.projCoOpen = this.projPrOpen =
+    this.suppCoOpen = this.facilCoOpen = this.facilPrOpen = false;
+  }
+
+  /** Filter a string list by a search term (case-insensitive) */
+  filterList(list: string[], term: string): string[] {
+    if (!term.trim()) return list;
+    const t = term.toLowerCase();
+    return list.filter(item => item.toLowerCase().includes(t));
+  }
+
   // ── Combined Projects & Facilities tab ──────────────────────────────────────
   pfTab: 'projects' | 'facilities' = 'projects';
 
@@ -288,7 +312,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   getLabel(arr: string[], placeholder: string): string {
     if (!arr.length) return placeholder;
-    if (arr.length === 1) return arr[0].length > 16 ? arr[0].slice(0,15)+'…' : arr[0];
+    if (arr.length === 1) return arr[0].length > 28 ? arr[0].slice(0, 27) + '…' : arr[0];
     return `${arr.length} selected`;
   }
 
@@ -322,9 +346,15 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
         this.companyNameToCode.clear();
         data.forEach((d: any) => {
-          this.companyNameToCode.set(d.name, d.code);
+          // Support multiple possible field name shapes from the API
+          const name = d.name ?? d.companyName ?? d.description ?? d.label ?? '';
+          const code = d.code ?? d.companyCode ?? d.id ?? d.value ?? name;
+          if (name) this.companyNameToCode.set(name, code);
         });
-        this.companies = ['All Companies', ...data.map((d: any) => d.name).filter(Boolean)];
+        const names = data
+          .map((d: any) => d.name ?? d.companyName ?? d.description ?? d.label ?? '')
+          .filter(Boolean);
+        this.companies = ['All Companies', ...names];
       },
       error: () => { /* keep defaults */ }
     });
@@ -336,9 +366,14 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
         this.projectNameToCode.clear();
         data.forEach((d: any) => {
-          this.projectNameToCode.set(d.name, d.code);
+          // Support multiple possible field name shapes from the API
+          const name = d.name ?? d.projectName ?? d.description ?? d.label ?? '';
+          const code = d.code ?? d.projectCode ?? d.id ?? d.value ?? name;
+          if (name) this.projectNameToCode.set(name, code);
         });
-        const names = data.map((d: any) => d.name).filter(Boolean);
+        const names = data
+          .map((d: any) => d.name ?? d.projectName ?? d.description ?? d.label ?? '')
+          .filter(Boolean);
         this.projects   = names;
         this.facilities = names;
       },
@@ -377,9 +412,12 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
           d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
         );
         // Amount comes in raw OMR — convert to millions for chart display
+        console.log('[LPO] raw API data sample:', data.slice(0, 2));
         this.lpoChartValues = data.map((d: any) => {
           const raw = +(d.amount ?? d.value ?? d.lpoAmount ?? 0);
-          return raw >= 1000 ? +(raw / 1_000_000).toFixed(4) : raw; // already in M if small
+          const converted = toMillions(raw);
+          console.log(`[LPO] raw=${raw} → converted=${converted}`);
+          return converted;
         });
         this.build('lpo');
         if (this.expandedChart === 'lpo') this.buildModal();
@@ -410,9 +448,12 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
           d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
         );
         // Convert raw OMR → millions, same as LPO
+        console.log('[GRN] raw API data sample:', data.slice(0, 2));
         this.grnChartValues = data.map((d: any) => {
           const raw = +(d.amount ?? d.value ?? d.grnAmount ?? 0);
-          return raw >= 1000 ? +(raw / 1_000_000).toFixed(4) : raw;
+          const converted = toMillions(raw);
+          console.log(`[GRN] raw=${raw} → converted=${converted}`);
+          return converted;
         });
         this.build('grn');
         if (this.expandedChart === 'grn') this.buildModal();
@@ -427,8 +468,8 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   onProj() {
     const req: ProjectDashboardRequest = {
-      companies: this.getCodes(this.projCompanies),
-      projects:  this.getProjCodes(this.projProjects),
+      companies: this.projCompanies.length ? this.projCompanies : null,
+      projects:  this.projProjects.length  ? this.projProjects  : null,
       year: null
     };
     this.api.GetProjectDashboard(req).subscribe({
@@ -460,8 +501,8 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   onFacil() {
     const req: FacilitiesDashboardRequest = {
-      projects: this.getProjCodes(this.facilProjects),
-      vendors:  this.getCodes(this.facilCompanies),
+      projects: this.facilProjects.length  ? this.facilProjects  : null,
+      vendors:  this.facilCompanies.length ? this.facilCompanies : null,
       year: null,
       month: null
     };
@@ -577,13 +618,14 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private makeProjects(ctx: CanvasRenderingContext2D): Chart {
     const data = this.projChartData;
+    console.log('[PROJECTS] raw API data sample:', (data ?? []).slice(0, 2));
     const rawLabels = data?.map((d: any) =>
       d.projectName ?? d.shortLabel ?? d.name ?? d.project ?? d.description ?? ''
     ) ?? MAIN_PROJECTS.shortLabels;
     const labels = rawLabels.map((l: string) => l.length > 22 ? l.substring(0, 21) + '…' : l);
 
     // Smart conversion: only divide by 1M if value looks like raw OMR (>= 100,000)
-    const toM = (v: number) => v >= 100_000 ? +(v / 1_000_000).toFixed(4) : v;
+    const toM = (v: number) => toMillions(v);
     const poValues  = data?.map((d: any) =>
       toM(+(d.poAmount ?? d.poValue ?? d.po ?? d.purchaseOrderAmount ?? d.totalPoAmount ?? 0))
     ) ?? MAIN_PROJECTS.poValues;
@@ -641,7 +683,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     const data = this.suppChartData;
     const n      = Math.min(this.suppCount, data?.length ?? TOP_SUPPLIERS.labels.length);
     const labels = data?.slice(0,n).map((d: any) => d.vendorName ?? d.supplierName ?? d.name ?? '') ?? TOP_SUPPLIERS.labels.slice(0,n);
-    const toM = (v: number) => v >= 1000 ? +(v / 1_000_000).toFixed(4) : v;
+    const toM = (v: number) => toMillions(v);
     const rawValues = data?.slice(0,n).map((d: any) => toM(+(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0))) ?? TOP_SUPPLIERS.values.slice(0,n);
 
     // When all values are 0, Chart.js renders nothing — use equal placeholder segments
@@ -698,13 +740,14 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private makeFacilities(ctx: CanvasRenderingContext2D): Chart {
     const data = this.facilChartData;
+    console.log('[FACILITIES] raw API data sample:', (data ?? []).slice(0, 2));
     const rawLabels = data?.map((d: any) =>
       d.facilityName ?? d.projectName ?? d.name ?? d.facility ?? d.description ?? ''
     ) ?? MAIN_FACILITIES.map(f => f.name);
     const labels = rawLabels.map((l: string) => l.length > 22 ? l.substring(0, 21) + '…' : l);
 
     // Smart conversion: only divide by 1M if value looks like raw OMR (>= 100,000)
-    const toM = (v: number) => v >= 100_000 ? +(v / 1_000_000).toFixed(4) : v;
+    const toM = (v: number) => toMillions(v);
     const poValues  = data?.map((d: any) =>
       toM(+(d.poAmount ?? d.poValue ?? d.po ?? d.purchaseOrderAmount ?? d.totalPoAmount ?? 0))
     ) ?? MAIN_FACILITIES.map(f => f.po);
@@ -782,6 +825,12 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     const all=['lpoCoOpen','grnCoOpen','projCoOpen','projPrOpen','suppCoOpen','facilCoOpen','facilPrOpen'];
     all.forEach(k=>{ if(k!==f)(this as any)[k]=false; });
     (this as any)[f]=!(this as any)[f];
+    // Reset search when opening
+    const searchMap: Record<string,string> = {
+      lpoCoOpen:'lpoCoSearch', grnCoOpen:'grnCoSearch',
+      projCoOpen:'projCoSearch', projPrOpen:'projPrSearch', suppCoOpen:'suppCoSearch'
+    };
+    if ((this as any)[f] && searchMap[f]) (this as any)[searchMap[f]] = '';
   }
 
   // Multi-select toggle — each field is a string[]
@@ -797,15 +846,17 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   toggleProjCompany(name: string) {
     this.projCompanies = this.toggleMulti(this.projCompanies, name);
-    const codes = this.getCodes(this.projCompanies);
-    this.loadProjects(codes);
+    // Pass names directly — the API expects company names, not codes
+    const names = this.projCompanies.length ? this.projCompanies : null;
+    this.loadProjects(names);
     this.onProj();
   }
 
   toggleFacilCompany(name: string) {
     this.facilCompanies = this.toggleMulti(this.facilCompanies, name);
-    const codes = this.getCodes(this.facilCompanies);
-    this.loadProjects(codes);
+    // Pass names directly — the API expects company names, not codes
+    const names = this.facilCompanies.length ? this.facilCompanies : null;
+    this.loadProjects(names);
     this.onFacil();
   }
 
@@ -825,22 +876,20 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   private suppTotalM(): number {
     return this.suppDisplayData.reduce((sum, d) => {
       const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
-      return sum + (raw >= 1000 ? raw / 1_000_000 : raw);
+      return sum + toMillions(raw);
     }, 0);
   }
 
   suppAmtM(d: any): string {
     const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
-    const m = raw >= 1000 ? raw / 1_000_000 : raw;
-    return m.toFixed(3) + ' M';
+    return toMillions(raw).toFixed(3) + ' M';
   }
 
   suppShare(d: any): number {
     const total = this.suppTotalM();
     if (total === 0) return 0;
     const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
-    const m = raw >= 1000 ? raw / 1_000_000 : raw;
-    return Math.min(100, (m / total) * 100);
+    return Math.min(100, (toMillions(raw) / total) * 100);
   }
 
   suppRankColor(i: number): string {

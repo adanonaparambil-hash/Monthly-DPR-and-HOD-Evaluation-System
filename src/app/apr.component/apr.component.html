@@ -880,8 +880,17 @@
           <!-- HOD Evaluation Reviewers -->
           <div class="reviewer-field" style="margin-top:20px;">
             <label class="reviewer-label">
-              <i class="fas fa-users"></i> Evaluation Reviewers <span class="req">*</span>
-              <span class="reviewer-hint">(Exactly 3 required — {{ selectedHodReviewers.length }}/3 selected)</span>
+              <i class="fas fa-users"></i> Evaluation Reviewers
+              @if (!isCedActingAsHod) {
+                <span class="req">*</span>
+              }
+              <span class="reviewer-hint">
+                @if (isCedActingAsHod) {
+                  (Optional — {{ selectedHodReviewers.length }}/3 selected)
+                } @else {
+                  (Exactly 3 required — {{ selectedHodReviewers.length }}/3 selected)
+                }
+              </span>
             </label>
 
             <div class="reviewer-chips-wrap" [class.readonly]="!canEditHodEvaluation"

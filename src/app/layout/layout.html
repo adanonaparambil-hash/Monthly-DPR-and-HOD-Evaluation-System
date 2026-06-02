@@ -21,8 +21,8 @@
         <i class="fas fa-chart-line"></i> Dashboard
       </a>
 
-      <!-- Purchase Dashboard — HOD and CED only -->
-      <a *ngIf="!isDPROnlyMode && (isHod || isCed)" routerLink="/purchase-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <!-- Purchase Dashboard — specific users only (ITS48, ITS41, AIS557) -->
+      <a *ngIf="!isDPROnlyMode && isPurchaseDashboardUser" routerLink="/purchase-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-shopping-bag"></i> Purchase Dashboard
       </a>
 

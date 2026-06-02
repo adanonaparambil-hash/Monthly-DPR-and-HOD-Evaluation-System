@@ -25,6 +25,7 @@ import { PurchaseDashboardComponent } from './purchase-dashboard/purchase-dashbo
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
+import { PurchaseDashboardGuard } from './guards/purchase-dashboard.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -62,7 +63,11 @@ export const routes: Routes = [
       { path: 'hod-master', component: HodMasterComponent },
       { path: 'employee-master', component: EmployeeMasterComponent },
       { path: 'byod-form', component: ByodFormComponent },
-      { path: 'purchase-dashboard', component: PurchaseDashboardComponent },
+      {
+        path: 'purchase-dashboard',
+        component: PurchaseDashboardComponent,
+        canActivate: [PurchaseDashboardGuard]
+      },
     ]
   },
   { path: '**', redirectTo: 'login' },

@@ -1812,8 +1812,8 @@ export class AprComponent {
       this.ConfirmationMessageOnSubmit = 'Yes, Submit it!';
 
       // RM submit validation — must have selected exactly 3 evaluation reviewers
-      // Applies to any user who is the RM (HOD or CED acting as RM)
-      if (this.ApprovalStatus === 'S' && (this.isHodTheReportingManager || this.isCedActingAsHod)) {
+      // Applies only to HOD acting as RM — CED acting as RM is exempt from this requirement
+      if (this.ApprovalStatus === 'S' && this.isHodTheReportingManager) {
         if (this.selectedHodReviewers.length < 3) {
           this.toastr.warning('Please select exactly 3 Evaluation Reviewers before submitting.', 'Validation Failed');
           return;
@@ -1914,16 +1914,20 @@ export class AprComponent {
               if ((this.ApprovalStatus === 'S' || this.ApprovalStatus === 'P') && res.success) {
                 const dprId = res.data || this.dprid;
                 try {
-                  this.sendNotificationToHOD(dprId);
-                  this.sendNotificationToEmployee(dprId, true);
+                  // Skip all notifications/emails when CED is submitting the RM evaluation
+                  // (CED acting as RM — no email/notification needed for this action)
+                  if (!this.isCedActingAsHod) {
+                    this.sendNotificationToHOD(dprId);
+                    this.sendNotificationToEmployee(dprId, true);
 
-                  // Send emails to newly added reviewers (all three groups)
-                  const allNewReviewers = [
-                    ...this.selectedReviewers,
-                    ...this.selectedCedReviewers,
-                    ...this.selectedHodReviewers,
-                  ].filter(id => !existingReviewerIds.has(id));
-                  this.sendEmailToReviewers(dprId, allNewReviewers);
+                    // Send emails to newly added reviewers (all three groups)
+                    const allNewReviewers = [
+                      ...this.selectedReviewers,
+                      ...this.selectedCedReviewers,
+                      ...this.selectedHodReviewers,
+                    ].filter(id => !existingReviewerIds.has(id));
+                    this.sendEmailToReviewers(dprId, allNewReviewers);
+                  }
                 } catch (error) {
                   console.error('Error sending notifications:', error);
                 }

@@ -61,10 +61,11 @@
             <i class="fas fa-chevron-down pd-chev" [class.open]="lpoCoOpen"></i>
           </button>
           <div class="pd-ddm" *ngIf="lpoCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="lpoCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
             <div class="pd-ddi pd-ddi-clear" *ngIf="lpoCompanies.length" (click)="clearFilter('lpoCompanies', onLPO.bind(this))">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
-            <div class="pd-ddi" *ngFor="let c of companies"
+            <div class="pd-ddi" *ngFor="let c of filterList(companies, lpoCoSearch)"
                  [class.pd-ddi-active]="isSelected(lpoCompanies, c)"
                  (click)="toggleCompany('lpoCompanies', c, onLPO.bind(this))">
               <span class="pd-ddi-cb"></span>
@@ -131,10 +132,11 @@
             <i class="fas fa-chevron-down pd-chev" [class.open]="grnCoOpen"></i>
           </button>
           <div class="pd-ddm" *ngIf="grnCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="grnCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
             <div class="pd-ddi pd-ddi-clear" *ngIf="grnCompanies.length" (click)="clearFilter('grnCompanies', onGRN.bind(this))">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
-            <div class="pd-ddi" *ngFor="let c of companies"
+            <div class="pd-ddi" *ngFor="let c of filterList(companies, grnCoSearch)"
                  [class.pd-ddi-active]="isSelected(grnCompanies, c)"
                  (click)="toggleCompany('grnCompanies', c, onGRN.bind(this))">
               <span class="pd-ddi-cb"></span>
@@ -177,10 +179,11 @@
             <i class="fas fa-chevron-down pd-chev" [class.open]="suppCoOpen"></i>
           </button>
           <div class="pd-ddm" *ngIf="suppCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="suppCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
             <div class="pd-ddi pd-ddi-clear" *ngIf="suppCompanies.length" (click)="clearFilter('suppCompanies', onSupp.bind(this))">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
-            <div class="pd-ddi" *ngFor="let c of companies"
+            <div class="pd-ddi" *ngFor="let c of filterList(companies, suppCoSearch)"
                  [class.pd-ddi-active]="isSelected(suppCompanies, c)"
                  (click)="toggleCompany('suppCompanies', c, onSupp.bind(this))">
               <span class="pd-ddi-cb"></span>{{ c }}
@@ -269,11 +272,12 @@
             <i class="fas fa-chevron-down pd-chev" [class.open]="projCoOpen"></i>
           </button>
           <div class="pd-ddm" *ngIf="projCoOpen" (click)="$event.stopPropagation()">
+            <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="projCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
             <div class="pd-ddi pd-ddi-clear" *ngIf="projCompanies.length"
                  (click)="projCompanies=[]; loadProjects(); onProj(); onFacil()">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
-            <div class="pd-ddi" *ngFor="let c of companies"
+            <div class="pd-ddi" *ngFor="let c of filterList(companies, projCoSearch)"
                  [class.pd-ddi-active]="isSelected(projCompanies, c)"
                  (click)="toggleProjCompany(c)">
               <span class="pd-ddi-cb"></span>{{ c }}
@@ -289,11 +293,12 @@
             <i class="fas fa-chevron-down pd-chev" [class.open]="projPrOpen"></i>
           </button>
           <div class="pd-ddm" *ngIf="projPrOpen" (click)="$event.stopPropagation()">
+            <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="projPrSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
             <div class="pd-ddi pd-ddi-clear" *ngIf="projProjects.length"
                  (click)="clearFilter('projProjects', onProj.bind(this))">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
-            <div class="pd-ddi" *ngFor="let p of projects"
+            <div class="pd-ddi" *ngFor="let p of filterList(projects, projPrSearch)"
                  [class.pd-ddi-active]="isSelected(projProjects, p)"
                  (click)="toggleProject('projProjects', p, onProj.bind(this))">
               <span class="pd-ddi-cb"></span>{{ p }}
@@ -377,10 +382,11 @@
               <i class="fas fa-chevron-down pd-chev" [class.open]="lpoCoOpen"></i>
             </button>
             <div class="pd-ddm pd-ddm--modal" *ngIf="lpoCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="lpoCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
               <div class="pd-ddi pd-ddi-clear" *ngIf="lpoCompanies.length" (click)="clearFilter('lpoCompanies', onLPO.bind(this))">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
-              <div class="pd-ddi" *ngFor="let c of companies"
+              <div class="pd-ddi" *ngFor="let c of filterList(companies, lpoCoSearch)"
                    [class.pd-ddi-active]="isSelected(lpoCompanies, c)"
                    (click)="toggleCompany('lpoCompanies', c, onLPO.bind(this))">
                 <span class="pd-ddi-cb"></span>
@@ -428,10 +434,11 @@
               <i class="fas fa-chevron-down pd-chev" [class.open]="grnCoOpen"></i>
             </button>
             <div class="pd-ddm pd-ddm--modal" *ngIf="grnCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="grnCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
               <div class="pd-ddi pd-ddi-clear" *ngIf="grnCompanies.length" (click)="clearFilter('grnCompanies', onGRN.bind(this))">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
-              <div class="pd-ddi" *ngFor="let c of companies"
+              <div class="pd-ddi" *ngFor="let c of filterList(companies, grnCoSearch)"
                    [class.pd-ddi-active]="isSelected(grnCompanies, c)"
                    (click)="toggleCompany('grnCompanies', c, onGRN.bind(this))">
                 <span class="pd-ddi-cb"></span>
@@ -460,11 +467,12 @@
               <i class="fas fa-chevron-down pd-chev" [class.open]="projCoOpen"></i>
             </button>
             <div class="pd-ddm pd-ddm--modal" *ngIf="projCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="projCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
               <div class="pd-ddi pd-ddi-clear" *ngIf="projCompanies.length"
                    (click)="projCompanies=[]; loadProjects(); onProj(); onFacil()">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
-              <div class="pd-ddi" *ngFor="let c of companies"
+              <div class="pd-ddi" *ngFor="let c of filterList(companies, projCoSearch)"
                    [class.pd-ddi-active]="isSelected(projCompanies, c)"
                    (click)="toggleProjCompany(c)">
                 <span class="pd-ddi-cb"></span>{{ c }}
@@ -479,11 +487,12 @@
               <i class="fas fa-chevron-down pd-chev" [class.open]="projPrOpen"></i>
             </button>
             <div class="pd-ddm pd-ddm--modal" *ngIf="projPrOpen" (click)="$event.stopPropagation()">
+              <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="projPrSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
               <div class="pd-ddi pd-ddi-clear" *ngIf="projProjects.length"
                    (click)="clearFilter('projProjects', onProj.bind(this))">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
-              <div class="pd-ddi" *ngFor="let p of projects"
+              <div class="pd-ddi" *ngFor="let p of filterList(projects, projPrSearch)"
                    [class.pd-ddi-active]="isSelected(projProjects, p)"
                    (click)="toggleProject('projProjects', p, onProj.bind(this))">
                 <span class="pd-ddi-cb"></span>{{ p }}
@@ -503,10 +512,11 @@
               <i class="fas fa-chevron-down pd-chev" [class.open]="suppCoOpen"></i>
             </button>
             <div class="pd-ddm pd-ddm--modal" *ngIf="suppCoOpen" (click)="$event.stopPropagation()">
+              <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="suppCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
               <div class="pd-ddi pd-ddi-clear" *ngIf="suppCompanies.length" (click)="clearFilter('suppCompanies', onSupp.bind(this))">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
-              <div class="pd-ddi" *ngFor="let c of companies"
+              <div class="pd-ddi" *ngFor="let c of filterList(companies, suppCoSearch)"
                    [class.pd-ddi-active]="isSelected(suppCompanies, c)"
                    (click)="toggleCompany('suppCompanies', c, onSupp.bind(this))">
                 <span class="pd-ddi-cb"></span>
