@@ -232,16 +232,25 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   lpoView: 'monthly' | 'yearly' = 'monthly';
   lpoYearFrom=0; lpoYearTo=3; // yearly-mode year range (index into lpoYears)
   grnYearFrom=0; grnYearTo=9; grnMonthFrom=0; grnMonthTo=11; grnView:'yearly'|'monthly'='yearly';
+  // GRN monthly-mode: single year dropdown (mirrors lpoYear logic)
+  grnYear = this.CURRENT_YEAR;
   suppYearFrom=0; suppYearTo=16; suppCount=10;
 
   readonly lpoYears    = [2023,2024,2025,2026];
   readonly monthLabels = MONTHS_ALL;
   readonly grnYears    = GRN_YEARLY.years;
+  // GRN year dropdown options — same range as grnYears array values
+  readonly grnYearOptions = GRN_YEARLY.years.map(y => +y);
 
   /** Max index the "To Month" slider can reach for the LPO chart.
    *  Current year → capped at today's month; any past year → full 12 months (index 11). */
   get lpoMaxMonth(): number {
     return this.lpoYear === this.CURRENT_YEAR ? this.CURRENT_MONTH_IDX : 11;
+  }
+
+  /** Max month index for the GRN monthly slider — mirrors LPO logic. */
+  get grnMaxMonth(): number {
+    return this.grnYear === this.CURRENT_YEAR ? this.CURRENT_MONTH_IDX : 11;
   }
 
   /** Clear company filter for the combined PF card */
@@ -256,12 +265,31 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     else                                   { this.facilCompanies = []; this.loadProjects(); this.onFacil(); }
   }
 
-  /** Called whenever the year dropdown changes — clamps both sliders to the new max. */
+  /** Called whenever the year dropdown changes — resets month range to full year for past years,
+   *  or clamps to current month for the current year. */
   onLpoYearChange() {
-    const max = this.lpoMaxMonth;
-    if (this.lpoMonthTo > max)   this.lpoMonthTo   = max;
-    if (this.lpoMonthFrom > max) this.lpoMonthFrom = max;
+    if (this.lpoYear === this.CURRENT_YEAR) {
+      // Current year: show Jan → current month
+      this.lpoMonthFrom = 0;
+      this.lpoMonthTo   = this.CURRENT_MONTH_IDX;
+    } else {
+      // Past year: show full year Jan → Dec
+      this.lpoMonthFrom = 0;
+      this.lpoMonthTo   = 11;
+    }
     this.onLPO();
+  }
+
+  /** Called whenever the GRN year dropdown changes in monthly mode. */
+  onGrnYearChange() {
+    if (this.grnYear === this.CURRENT_YEAR) {
+      this.grnMonthFrom = 0;
+      this.grnMonthTo   = this.CURRENT_MONTH_IDX;
+    } else {
+      this.grnMonthFrom = 0;
+      this.grnMonthTo   = 11;
+    }
+    this.onGRN();
   }
 
   // ── Chart data from API ──────────────────────────────────────────────────────
@@ -429,15 +457,16 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   onGRN() {
+    const isMonthly = this.grnView === 'monthly';
     const fromIdx = Math.min(this.grnYearFrom,this.grnYearTo);
     const toIdx   = Math.max(this.grnYearFrom,this.grnYearTo);
     const req: GrnDashboardRequest = {
-      fromYear:  parseInt(GRN_YEARLY.years[fromIdx]),
-      toYear:    parseInt(GRN_YEARLY.years[toIdx]),
-      fromMonth: this.grnView === 'monthly' ? Math.min(this.grnMonthFrom,this.grnMonthTo)+1 : null,
-      toMonth:   this.grnView === 'monthly' ? Math.max(this.grnMonthFrom,this.grnMonthTo)+1 : null,
+      fromYear:  isMonthly ? this.grnYear : parseInt(GRN_YEARLY.years[fromIdx]),
+      toYear:    isMonthly ? this.grnYear : parseInt(GRN_YEARLY.years[toIdx]),
+      fromMonth: isMonthly ? Math.min(this.grnMonthFrom,this.grnMonthTo)+1 : null,
+      toMonth:   isMonthly ? Math.max(this.grnMonthFrom,this.grnMonthTo)+1 : null,
       companies: this.getCodes(this.grnCompanies),
-      viewType:  this.grnView === 'monthly' ? 'M' : 'Y'
+      viewType:  isMonthly ? 'M' : 'Y'
     };
     this.api.GetGrnDashboard(req).subscribe({
       next: (res) => {

@@ -29,8 +29,8 @@
             <span class="pd-fl">{{ lpoFromLbl }} – {{ lpoToLbl }}</span>
             <div class="dw">
               <div class="dt"><div class="df"
-                [style.left.%]="(lpoMonthFrom/lpoMaxMonth)*100"
-                [style.right.%]="100-(lpoMonthTo/lpoMaxMonth)*100"></div></div>
+                [style.left.%]="(lpoMonthFrom/11)*100"
+                [style.right.%]="100-(lpoMonthTo/11)*100"></div></div>
               <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" class="ta">
               <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthTo"   (ngModelChange)="onLPO()" class="tb">
             </div>
@@ -101,8 +101,8 @@
       </div>
 
       <div class="pd-filters">
-        <!-- Year dual slider -->
-        <div class="pd-fg">
+        <!-- Yearly: year range slider only -->
+        <div class="pd-fg" *ngIf="grnView === 'yearly'">
           <span class="pd-fl">{{ grnFromYear }} – {{ grnToYear }}</span>
           <div class="dw">
             <div class="dt"><div class="df"
@@ -112,17 +112,24 @@
             <input type="range" min="0" max="9" [(ngModel)]="grnYearTo"   (ngModelChange)="onGRN()" class="tb">
           </div>
         </div>
-        <!-- Month dual slider (monthly view only) -->
-        <div class="pd-fg" *ngIf="grnView === 'monthly'">
-          <span class="pd-fl">{{ grnFromMonth }} – {{ grnToMonth }}</span>
-          <div class="dw">
-            <div class="dt"><div class="df"
-              [style.left.%]="(grnMonthFrom/11)*100"
-              [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
-            <input type="range" min="0" max="11" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
-            <input type="range" min="0" max="11" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
+        <!-- Monthly: year dropdown + month range slider -->
+        <ng-container *ngIf="grnView === 'monthly'">
+          <div class="pd-fg">
+            <span class="pd-fl">{{ grnFromMonth }} – {{ grnToMonth }}</span>
+            <div class="dw">
+              <div class="dt"><div class="df"
+                [style.left.%]="(grnMonthFrom/11)*100"
+                [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
+              <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
+              <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
+            </div>
           </div>
-        </div>
+          <div class="pd-fg">
+            <select class="pd-sel" [(ngModel)]="grnYear" (ngModelChange)="onGrnYearChange()">
+              <option *ngFor="let y of grnYearOptions" [value]="y">{{ y }}</option>
+            </select>
+          </div>
+        </ng-container>
         <!-- Company multi-select -->
         <div class="pd-fg pd-ddw">
           <button class="pd-ddb" (click)="toggleDD('grnCoOpen');$event.stopPropagation()">
@@ -351,8 +358,8 @@
               <span class="pd-fl">Months: {{ lpoFromLbl }} – {{ lpoToLbl }}</span>
               <div class="dw">
                 <div class="dt"><div class="df"
-                  [style.left.%]="(lpoMonthFrom/lpoMaxMonth)*100"
-                  [style.right.%]="100-(lpoMonthTo/lpoMaxMonth)*100"></div></div>
+                  [style.left.%]="(lpoMonthFrom/11)*100"
+                  [style.right.%]="100-(lpoMonthTo/11)*100"></div></div>
                 <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" class="ta">
                 <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthTo"   (ngModelChange)="onLPO()" class="tb">
               </div>
@@ -406,9 +413,10 @@
 
         <!-- GRN filters -->
         <ng-container *ngIf="expandedChart === 'grn'">
-          <div class="pd-fg">
+          <!-- Yearly: year range slider only -->
+          <div class="pd-fg" *ngIf="grnView === 'yearly'">
             <span class="pd-fl">Year Range: {{ grnFromYear }} – {{ grnToYear }}</span>
-            <div class="dw">
+            <div class="dw dw--lg">
               <div class="dt"><div class="df"
                 [style.left.%]="(grnYearFrom/9)*100"
                 [style.right.%]="100-(grnYearTo/9)*100"></div></div>
@@ -416,16 +424,24 @@
               <input type="range" min="0" max="9" [(ngModel)]="grnYearTo"   (ngModelChange)="onGRN()" class="tb">
             </div>
           </div>
-          <div class="pd-fg" *ngIf="grnView === 'monthly'">
-            <span class="pd-fl">Month Range: {{ grnFromMonth }} – {{ grnToMonth }}</span>
-            <div class="dw">
-              <div class="dt"><div class="df"
-                [style.left.%]="(grnMonthFrom/11)*100"
-                [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
-              <input type="range" min="0" max="11" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
-              <input type="range" min="0" max="11" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
+          <!-- Monthly: month range slider + year dropdown -->
+          <ng-container *ngIf="grnView === 'monthly'">
+            <div class="pd-fg">
+              <span class="pd-fl">Months: {{ grnFromMonth }} – {{ grnToMonth }}</span>
+              <div class="dw dw--lg">
+                <div class="dt"><div class="df"
+                  [style.left.%]="(grnMonthFrom/11)*100"
+                  [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
+                <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
+                <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
+              </div>
             </div>
-          </div>
+            <div class="pd-fg">
+              <select class="pd-sel" [(ngModel)]="grnYear" (ngModelChange)="onGrnYearChange()">
+                <option *ngFor="let y of grnYearOptions" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+          </ng-container>
           <div class="pd-fg pd-ddw">
             <button class="pd-ddb" (click)="toggleDD('grnCoOpen');$event.stopPropagation()">
               <i class="fas fa-building"></i>

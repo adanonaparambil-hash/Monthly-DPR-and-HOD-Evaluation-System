@@ -377,6 +377,23 @@ export class AprPastReportsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** CED: navigate to APR read-only view for a HOD from the HOD Report modal */
+  viewHodReport(row: any): void {
+    // The row may carry dprid / dprId / id — try all common field names
+    const dprId = row.dprid ?? row.dprId ?? row.dPRId ?? row.id ?? null;
+    if (dprId) {
+      this.closeHodReportModal();
+      this.router.navigate(['/apr', dprId], {
+        queryParams: {
+          readonly: '1',
+          from: 'hod-report'
+        }
+      });
+    } else {
+      this.toastr.error('No APR record found for this employee.', 'Error');
+    }
+  }
+
   // Open an APR for reviewer assessment (no readonly flag so the reviewer can submit their rating)
   reviewReport(dprId: any) {
     if (dprId) {

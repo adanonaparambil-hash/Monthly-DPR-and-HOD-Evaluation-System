@@ -241,6 +241,7 @@
                   <th>Employee</th>
                   <th>Designation</th>
                   <th>Department</th>
+                  <th class="th-action">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -258,6 +259,11 @@
                     </td>
                     <td class="td-hod">{{ row.designation || '—' }}</td>
                     <td class="td-hod">{{ row.department || '—' }}</td>
+                    <td class="td-action">
+                      <button class="btn-view" (click)="viewHodReport(row)" title="View APR">
+                        <i class="fas fa-eye"></i><span>View</span>
+                      </button>
+                    </td>
                   </tr>
                 }
               </tbody>
