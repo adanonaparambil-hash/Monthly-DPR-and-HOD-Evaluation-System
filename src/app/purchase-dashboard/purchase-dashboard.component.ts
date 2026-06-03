@@ -14,12 +14,10 @@ gsap.registerPlugin(ScrollTrigger);
 Chart.register(...registerables);
 
 // ── Unified OMR → Millions converter ────────────────────────────────────────
-// Values from the API can be either raw OMR (e.g. 2,566,220.49) or already
-// expressed in millions (e.g. 2.57).  We treat anything >= 500 as raw OMR
-// and divide by 1,000,000.  Values < 500 are already in M.
+// API always returns raw OMR values; divide by 1,000,000 to get millions.
 function toMillions(v: number): number {
   if (!isFinite(v) || isNaN(v)) return 0;
-  return v >= 500 ? +(v / 1_000_000).toFixed(4) : +v.toFixed(4);
+  return +(v / 1_000_000).toFixed(4);
 }
 const threedBarPlugin = {
   id: 'threedBar',

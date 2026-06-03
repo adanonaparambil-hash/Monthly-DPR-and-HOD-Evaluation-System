@@ -2273,10 +2273,10 @@
   transition: width 0.6s ease;
 }
 
-/* Four component cards */
+/* Three component cards */
 .ts-components-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 .ts-comp-card {
@@ -2401,6 +2401,28 @@
 .ts-score-warn  { background: rgba(245,158,11,0.1);  color: #d97706; }
 .ts-score-bad   { background: rgba(239,68,68,0.1);   color: #dc2626; }
 
+/* Max label inside punctuality sub-score chips */
+.ts-score-max {
+  font-size: 0.65rem;
+  font-weight: 500;
+  opacity: 0.6;
+  margin-left: 1px;
+}
+
+/* Per-row mini progress bar inside Punctuality card */
+.ts-punct-bar-wrap {
+  height: 3px;
+  background: rgba(239,68,68,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 2px 0 6px;
+}
+.ts-punct-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
 /* Vehicle violation banner */
 .ts-violation-row {
   display: flex;
@@ -2416,12 +2438,74 @@
 }
 .ts-violation-row i { font-size: 0.9rem; }
 
+/* ── Extra scores row (TBT + Site Coordination) ── */
+.ts-extras-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.ts-extra-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+  background: #f8fafc;
+  border: 1px solid rgba(71,85,105,0.12);
+  border-radius: 8px;
+  padding: 7px 12px;
+}
+.ts-extra-tbt  { border-color: rgba(168,85,247,0.25); }
+.ts-extra-site { border-color: rgba(20,184,166,0.25); }
+
+.ts-extra-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+.ts-extra-tbt  .ts-extra-icon { background: rgba(168,85,247,0.12); color: #9333ea; }
+.ts-extra-site .ts-extra-icon { background: rgba(20,184,166,0.12);  color: #0d9488; }
+
+.ts-extra-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+.ts-extra-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: rgba(71,85,105,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ts-extra-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.ts-extra-score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  min-width: 28px;
+  text-align: right;
+}
+
 @media (max-width: 900px) {
   .ts-components-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) {
   .ts-total-hero { flex-direction: column; text-align: center; }
-  .ts-components-grid { grid-template-columns: 1fr 1fr; }
+  .ts-components-grid { grid-template-columns: 1fr; }
+  .ts-extra-chip { min-width: 100%; }
 }
 
 /* ── CED ProofHub Accuracy Report ── */
@@ -2630,16 +2714,16 @@
 .ced-banner-rating-below-average{ background: rgba(249,115,22,0.06); border-color: rgba(249,115,22,0.22); }
 .ced-banner-rating-poor         { background: rgba(239,68,68,0.06);  border-color: rgba(239,68,68,0.22); }
 
-/* SVG ring — medium size */
+/* SVG ring — enlarged to fit decimal score */
 .ced-score-ring-wrap {
   position: relative;
-  width: 76px;
-  height: 76px;
+  width: 96px;
+  height: 96px;
   flex-shrink: 0;
 }
 .ced-score-svg {
-  width: 76px;
-  height: 76px;
+  width: 96px;
+  height: 96px;
   transform: rotate(-90deg);
 }
 .ced-ring-bg {
@@ -2670,10 +2754,11 @@
   gap: 0;
 }
 .ced-score-num {
-  font-size: 1.45rem;
+  font-size: 1.05rem;
   font-weight: 900;
   color: #1e293b;
   line-height: 1;
+  letter-spacing: -0.5px;
   animation: cedNumPop 0.5s 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 @keyframes cedNumPop {

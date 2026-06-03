@@ -214,6 +214,61 @@ export class AprComponent {
   get isHod(): boolean { return this.userType === 'H'; }
   get isCed(): boolean { return this.userType === 'C'; }
 
+  // ── Timesheet Accuracy: OT redistribution + weighted scoring ────────────────
+  // OT / Late-Out (max 25) is hidden; its score is split equally among the
+  // three visible components.  Each component then contributes a fixed % to
+  // the Total Accuracy Score:  Attendance 35% · Saturday Punch 35% · Punctuality 30%
+  readonly tsCompMax = 100 / 3; // ≈ 33.33 — raw adjusted max per component
+
+  get tsOtShare(): number {
+    const ot = this.timesheetAccuracyReport?.scoreOtLateOut ?? 0;
+    return ot / 3;
+  }
+  // Raw adjusted scores (out of tsCompMax ≈ 33.33)
+  get tsAttendanceAdj(): number {
+    return (this.timesheetAccuracyReport?.scoreAttendance ?? 0) + this.tsOtShare;
+  }
+  get tsSaturdayAdj(): number {
+    return (this.timesheetAccuracyReport?.scoreSaturdayPunch ?? 0) + this.tsOtShare;
+  }
+  get tsPunctualityAdj(): number {
+    const r = this.timesheetAccuracyReport;
+    const base = r
+      ? (r.scorePunctuality0806To0814 + r.scorePunctuality0815To0829 + r.scorePunctualityAfter0830)
+      : 0;
+    return base + this.tsOtShare;
+  }
+  // Weighted scores: scaled to each component's max contribution
+  get tsAttendanceScore(): number {  // out of 35  →  PunchedDays / EligibleWeekdays × 35
+    const r = this.timesheetAccuracyReport;
+    if (!r) return 0;
+    const eligible = r.employeeEligibleWeekDays ?? 0;
+    const punched  = r.punchedDays ?? 0;
+    if (eligible <= 0) return 0;
+    return Math.min((punched / eligible) * 35, 35);
+  }
+  get tsSaturdayScore(): number {    // out of 35  →  PunchedSaturdays / EligibleSaturdays × 35
+    const r = this.timesheetAccuracyReport;
+    if (!r) return 0;
+    const eligible = r.eligibleSaturdays ?? 0;
+    const punched  = r.punchedSaturdays  ?? 0;
+    if (eligible <= 0) return 0;
+    return Math.min((punched / eligible) * 35, 35);
+  }
+  // Punctuality sub-scores already carry their own maxes (6 + 9.5 + 14.5 = 30)
+  // so the total is simply their direct sum — no scaling needed.
+  get tsPunctualityScore(): number { // out of 30
+    const r = this.timesheetAccuracyReport;
+    if (!r) return 0;
+    return (r.scorePunctuality0806To0814 ?? 0)
+         + (r.scorePunctuality0815To0829 ?? 0)
+         + (r.scorePunctualityAfter0830  ?? 0);
+  }
+  // Final total out of 100
+  get tsTotalAccuracyScore(): number {
+    return this.tsAttendanceScore + this.tsSaturdayScore + this.tsPunctualityScore;
+  }
+
   // Universal: logged-in user IS the Reporting Manager (hodId) of this DPR
   // Role-agnostic — works for HOD, CED, or any user type
   get isLoggedInUserTheRM(): boolean {
@@ -483,8 +538,9 @@ export class AprComponent {
       hodRatingValue
     ].filter(s => s > 0);
 
+    // Keep full float precision — rounding happens only at display via pipe
     this.hodEvaluationAverage = hodScores.length > 0
-      ? Math.round((hodScores.reduce((a, b) => a + b, 0) / hodScores.length) * 100) / 100
+      ? hodScores.reduce((a, b) => a + b, 0) / hodScores.length
       : 0;
 
     // ── Reviewer Assessment component (60% of final score) ─────
@@ -499,8 +555,8 @@ export class AprComponent {
         / 50 * 100                     // normalise to 100
       : 0;
 
-    // Store for display in breakdown panel
-    this.reviewerAvg100Display = Math.round(reviewerAvg100 * 100) / 100;
+    // Store for display in breakdown panel — full precision, pipe formats it
+    this.reviewerAvg100Display = reviewerAvg100;
     this.submittedReviewerCount = submittedReviews.length;
     this.totalReviewerCount = this.selectedReviewers.length + this.selectedHodReviewers.length;
 
@@ -516,15 +572,25 @@ export class AprComponent {
     const hasAttendance = attendanceVal > 0;
 
     if (hasHod || hasReviewers || hasAttendance) {
-      const hodWeight        = 0.40;
-      const reviewerWeight   = 0.50;
-      const attendanceWeight = 0.10;
+      // Fixed weights: HOD 40%, Reviewers 50%, Attendance 10%
+      const wHod  = 0.40;
+      const wRev  = 0.50;
+      const wAtt  = 0.10;
 
-      this.overallScore = Math.round(
-        (hasHod        ? this.hodEvaluationAverage * hodWeight        : 0) +
-        (hasReviewers  ? reviewerAvg100            * reviewerWeight   : 0) +
-        (hasAttendance ? attendanceVal             * attendanceWeight : 0)
-      );
+      // Compute weighted sum using full float values from each component.
+      // Normalise by the total active weight so missing components don't understate the score.
+      const activeWeight =
+        (hasHod        ? wHod  : 0) +
+        (hasReviewers  ? wRev  : 0) +
+        (hasAttendance ? wAtt  : 0);
+
+      const weightedSum =
+        (hasHod        ? this.hodEvaluationAverage * wHod  : 0) +
+        (hasReviewers  ? reviewerAvg100            * wRev  : 0) +
+        (hasAttendance ? attendanceVal             * wAtt  : 0);
+
+      // Divide by activeWeight so the result is always on a true 0–100 scale
+      this.overallScore = weightedSum / activeWeight;
     } else {
       this.overallScore = 0;
     }
@@ -2192,7 +2258,8 @@ export class AprComponent {
           this.teamWork = dpr.scoreTeamWork ?? 0;
           this.communication = dpr.scoreCommunication ?? 0;
           this.hodRating = dpr.hodrating ?? 0; // HOD's manual rating (1-5)
-          this.overallScore = dpr.scoreOverall ?? 0; // System-generated final score (20-100)
+          // Do NOT load dpr.scoreOverall — it may be stale (saved with old rounding logic).
+          // calculateOverallRating() called below always recomputes from raw component scores.
           this.attendanceScore = dpr.attendanceScore ?? 0; // Attendance score (1–100), 10% weight
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
