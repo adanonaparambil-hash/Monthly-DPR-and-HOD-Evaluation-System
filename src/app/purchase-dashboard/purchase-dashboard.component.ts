@@ -230,13 +230,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   lpoMonthFrom = 0;
   lpoMonthTo   = this.CURRENT_MONTH_IDX; // default: Jan → current month
   lpoView: 'monthly' | 'yearly' = 'monthly';
-  lpoYearFrom=0; lpoYearTo=3; // yearly-mode year range (index into lpoYears)
-  grnYearFrom=0; grnYearTo=9; grnMonthFrom=0; grnMonthTo=11; grnView:'yearly'|'monthly'='yearly';
+  lpoYearFrom=0; lpoYearTo=this.CURRENT_YEAR - 2017; // yearly-mode year range (index into lpoYears)
+  grnYearFrom=0; grnYearTo=9; grnMonthFrom=0; grnMonthTo=this.CURRENT_MONTH_IDX; grnView:'yearly'|'monthly'='yearly';
   // GRN monthly-mode: single year dropdown (mirrors lpoYear logic)
   grnYear = this.CURRENT_YEAR;
-  suppYearFrom=0; suppYearTo=16; suppCount=10;
+  suppYearFrom=0; suppYearTo=9; suppCount=10;
 
-  readonly lpoYears    = [2023,2024,2025,2026];
+  readonly lpoYears    = Array.from({ length: this.CURRENT_YEAR - 2017 + 1 }, (_, i) => 2017 + i);
   readonly monthLabels = MONTHS_ALL;
   readonly grnYears    = GRN_YEARLY.years;
   // GRN year dropdown options — same range as grnYears array values
@@ -263,6 +263,32 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   clearPFCompanyModal() {
     if (this.expandedChart === 'projects') { this.projCompanies = []; this.loadProjects(); this.onProj(); }
     else                                   { this.facilCompanies = []; this.loadProjects(); this.onFacil(); }
+  }
+
+  /** Called when LPO view radio (Monthly/Yearly) changes — resets sliders to sensible defaults. */
+  onLpoViewChange() {
+    if (this.lpoView === 'monthly') {
+      this.lpoYear = this.CURRENT_YEAR;
+      this.lpoMonthFrom = 0;
+      this.lpoMonthTo   = this.CURRENT_MONTH_IDX;
+    } else {
+      this.lpoYearFrom = 0;
+      this.lpoYearTo   = this.lpoYears.length - 1;
+    }
+    this.onLPO();
+  }
+
+  /** Called when GRN view radio (Yearly/Monthly) changes — resets sliders to sensible defaults. */
+  onGrnViewChange() {
+    if (this.grnView === 'yearly') {
+      this.grnYearFrom = 0;
+      this.grnYearTo   = 9;
+    } else {
+      this.grnYear      = this.CURRENT_YEAR;
+      this.grnMonthFrom = 0;
+      this.grnMonthTo   = this.CURRENT_MONTH_IDX;
+    }
+    this.onGRN();
   }
 
   /** Called whenever the year dropdown changes — resets month range to full year for past years,
@@ -324,8 +350,8 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   get grnToYear()   { return GRN_YEARLY.years[Math.max(this.grnYearFrom,this.grnYearTo)]; }
   get grnFromMonth(){ return MONTHS_ALL[Math.min(this.grnMonthFrom,this.grnMonthTo)]; }
   get grnToMonth()  { return MONTHS_ALL[Math.max(this.grnMonthFrom,this.grnMonthTo)]; }
-  get suppFromYear(){ return 2010+this.suppYearFrom; }
-  get suppToYear()  { return 2010+this.suppYearTo; }
+  get suppFromYear(){ return 2017+this.suppYearFrom; }
+  get suppToYear()  { return 2017+this.suppYearTo; }
 
   // formatM: input is already in millions (M units)
   formatM(val: number): string {
@@ -893,6 +919,96 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   downloadExcel() { alert('Excel download will be available after API integration.'); }
+
+  // ── Per-chart CSV export ──────────────────────────────────────────────────────
+  private exportCSV(filename: string, rows: string[][]): void {
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv, /* BOM for Excel UTF-8 */], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  exportLPO(): void {
+    const from = Math.min(this.lpoMonthFrom, this.lpoMonthTo);
+    const to   = Math.max(this.lpoMonthFrom, this.lpoMonthTo);
+    const labels = this.lpoChartLabels.length ? this.lpoChartLabels : MONTHS_ALL.slice(from, to + 1);
+    const values = this.lpoChartValues.length ? this.lpoChartValues : LPO_ALL_VALUES.slice(from, to + 1);
+    const view = this.lpoView === 'monthly' ? `${this.lpoYear} (${this.lpoFromLbl}-${this.lpoToLbl})` : `${this.lpoFromYearLbl}-${this.lpoToYearLbl}`;
+    const rows: string[][] = [
+      ['Monthly LPO Export', view],
+      [],
+      ['Period', 'LPO Amount (M OMR)'],
+      ...labels.map((l, i) => [l, values[i]?.toFixed(4) ?? '0']),
+      [],
+      ['Total', values.reduce((a, b) => a + b, 0).toFixed(4)]
+    ];
+    this.exportCSV(`LPO_${this.lpoYear}_${Date.now()}.csv`, rows);
+  }
+
+  exportGRN(): void {
+    const from = Math.min(this.grnYearFrom, this.grnYearTo);
+    const to   = Math.max(this.grnYearFrom, this.grnYearTo);
+    const labels = this.grnChartLabels.length ? this.grnChartLabels : GRN_YEARLY.years.slice(from, to + 1);
+    const values = this.grnChartValues.length ? this.grnChartValues : GRN_YEARLY.values.slice(from, to + 1);
+    const view = this.grnView === 'monthly' ? `${this.grnYear} (${this.grnFromMonth}-${this.grnToMonth})` : `${this.grnFromYear}-${this.grnToYear}`;
+    const rows: string[][] = [
+      ['GRN Value Export', view],
+      [],
+      ['Period', 'GRN Amount (M OMR)'],
+      ...labels.map((l, i) => [l, values[i]?.toFixed(4) ?? '0']),
+      [],
+      ['Total', values.reduce((a, b) => a + b, 0).toFixed(4)]
+    ];
+    this.exportCSV(`GRN_${Date.now()}.csv`, rows);
+  }
+
+  exportProjects(): void {
+    const data = this.projChartData ?? [];
+    const rows: string[][] = [
+      ['Main Projects — PO vs GRN'],
+      [],
+      ['Project', 'PO Value (M OMR)', 'GRN Value (M OMR)'],
+      ...data.map((d: any) => [
+        d.projectName ?? d.name ?? '',
+        toMillions(+(d.poAmount ?? d.poValue ?? d.po ?? 0)).toFixed(4),
+        toMillions(+(d.grnAmount ?? d.grnValue ?? d.grn ?? 0)).toFixed(4)
+      ])
+    ];
+    this.exportCSV(`Projects_${Date.now()}.csv`, rows);
+  }
+
+  exportSuppliers(): void {
+    const data = this.suppDisplayData;
+    const rows: string[][] = [
+      [`Top ${this.suppCount} Suppliers (${this.suppFromYear}-${this.suppToYear})`],
+      [],
+      ['Rank', 'Supplier Name', 'Amount (M OMR)', 'Share %'],
+      ...data.map((d: any, i: number) => [
+        String(i + 1),
+        d.vendorName ?? d.supplierName ?? d.name ?? '',
+        this.suppAmtM(d),
+        this.suppShare(d).toFixed(1) + '%'
+      ])
+    ];
+    this.exportCSV(`Suppliers_${Date.now()}.csv`, rows);
+  }
+
+  exportFacilities(): void {
+    const data = this.facilChartData ?? [];
+    const rows: string[][] = [
+      ['Main Facilities — PO vs GRN'],
+      [],
+      ['Facility', 'PO Value (M OMR)', 'GRN Value (M OMR)'],
+      ...data.map((d: any) => [
+        d.facilityName ?? d.projectName ?? d.name ?? '',
+        toMillions(+(d.poAmount ?? d.poValue ?? d.po ?? 0)).toFixed(4),
+        toMillions(+(d.grnAmount ?? d.grnValue ?? d.grn ?? 0)).toFixed(4)
+      ])
+    ];
+    this.exportCSV(`Facilities_${Date.now()}.csv`, rows);
+  }
 
   // ── Supplier table helpers ───────────────────────────────────────────────────
   get suppDisplayData(): any[] {

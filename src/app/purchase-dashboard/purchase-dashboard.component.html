@@ -29,8 +29,8 @@
             <span class="pd-fl">{{ lpoFromLbl }} – {{ lpoToLbl }}</span>
             <div class="dw">
               <div class="dt"><div class="df"
-                [style.left.%]="(lpoMonthFrom/11)*100"
-                [style.right.%]="100-(lpoMonthTo/11)*100"></div></div>
+                [style.left.%]="(lpoMonthFrom/lpoMaxMonth)*100"
+                [style.right.%]="100-(lpoMonthTo/lpoMaxMonth)*100"></div></div>
               <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" class="ta">
               <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthTo"   (ngModelChange)="onLPO()" class="tb">
             </div>
@@ -46,10 +46,10 @@
           <span class="pd-fl">{{ lpoFromYearLbl }} – {{ lpoToYearLbl }}</span>
           <div class="dw">
             <div class="dt"><div class="df"
-              [style.left.%]="(lpoYearFrom/3)*100"
-              [style.right.%]="100-(lpoYearTo/3)*100"></div></div>
-            <input type="range" min="0" max="3" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" class="ta">
-            <input type="range" min="0" max="3" [(ngModel)]="lpoYearTo"   (ngModelChange)="onLPO()" class="tb">
+              [style.left.%]="(lpoYearFrom/(lpoYears.length-1))*100"
+              [style.right.%]="100-(lpoYearTo/(lpoYears.length-1))*100"></div></div>
+            <input type="range" min="0" [max]="lpoYears.length-1" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" class="ta">
+            <input type="range" min="0" [max]="lpoYears.length-1" [(ngModel)]="lpoYearTo"   (ngModelChange)="onLPO()" class="tb">
           </div>
         </div>
         <!-- Company multi-select -->
@@ -75,9 +75,10 @@
         </div>
         <!-- View radios -->
         <div class="pd-fg pd-radios">
-          <label class="pd-radio"><input type="radio" name="lpoV" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Monthly</label>
-          <label class="pd-radio"><input type="radio" name="lpoV" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Yearly</label>
+          <label class="pd-radio"><input type="radio" name="lpoV" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Monthly</label>
+          <label class="pd-radio"><input type="radio" name="lpoV" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Yearly</label>
         </div>
+        <button class="pd-dl" (click)="exportLPO()"><i class="fas fa-file-excel"></i> Excel</button>
       </div>
 
       <div class="pd-cw"><canvas #lpoCanvas></canvas></div>
@@ -118,8 +119,8 @@
             <span class="pd-fl">{{ grnFromMonth }} – {{ grnToMonth }}</span>
             <div class="dw">
               <div class="dt"><div class="df"
-                [style.left.%]="(grnMonthFrom/11)*100"
-                [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
+                [style.left.%]="(grnMonthFrom/grnMaxMonth)*100"
+                [style.right.%]="100-(grnMonthTo/grnMaxMonth)*100"></div></div>
               <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
               <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
             </div>
@@ -153,11 +154,11 @@
         </div>
         <!-- View radios -->
         <div class="pd-fg pd-radios">
-          <label class="pd-radio"><input type="radio" name="grnV" value="yearly"  [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Yearly</label>
-          <label class="pd-radio"><input type="radio" name="grnV" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Monthly</label>
+          <label class="pd-radio"><input type="radio" name="grnV" value="yearly"  [(ngModel)]="grnView" (ngModelChange)="onGrnViewChange()"> Yearly</label>
+          <label class="pd-radio"><input type="radio" name="grnV" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGrnViewChange()"> Monthly</label>
         </div>
         <!-- Download -->
-        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+        <button class="pd-dl" (click)="exportGRN()"><i class="fas fa-file-excel"></i> Excel</button>
       </div>
 
       <div class="pd-cw"><canvas #grnCanvas></canvas></div>
@@ -202,10 +203,10 @@
           <span class="pd-fl">{{ suppFromYear }} – {{ suppToYear }}</span>
           <div class="dw">
             <div class="dt"><div class="df"
-              [style.left.%]="(suppYearFrom/16)*100"
-              [style.right.%]="100-(suppYearTo/16)*100"></div></div>
-            <input type="range" min="0" max="16" [(ngModel)]="suppYearFrom" (ngModelChange)="onSupp()" class="ta">
-            <input type="range" min="0" max="16" [(ngModel)]="suppYearTo"   (ngModelChange)="onSupp()" class="tb">
+              [style.left.%]="(suppYearFrom/9)*100"
+              [style.right.%]="100-(suppYearTo/9)*100"></div></div>
+            <input type="range" min="0" max="9" [(ngModel)]="suppYearFrom" (ngModelChange)="onSupp()" class="ta">
+            <input type="range" min="0" max="9" [(ngModel)]="suppYearTo"   (ngModelChange)="onSupp()" class="tb">
           </div>
         </div>
         <!-- Count slider -->
@@ -213,7 +214,7 @@
           <span class="pd-fl">Top {{ suppCount }}</span>
           <input type="range" min="1" max="12" [(ngModel)]="suppCount" (ngModelChange)="onSupp()" class="pd-sr">
         </div>
-        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+        <button class="pd-dl" (click)="exportSuppliers()"><i class="fas fa-file-excel"></i> Excel</button>
       </div>
 
       <!-- Split layout: doughnut left + table right -->
@@ -312,7 +313,7 @@
             </div>
           </div>
         </div>
-        <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+        <button class="pd-dl" (click)="exportProjects()"><i class="fas fa-file-excel"></i> Excel</button>
       </div>
 
       <!-- Single canvas — Projects chart only -->
@@ -358,8 +359,8 @@
               <span class="pd-fl">Months: {{ lpoFromLbl }} – {{ lpoToLbl }}</span>
               <div class="dw">
                 <div class="dt"><div class="df"
-                  [style.left.%]="(lpoMonthFrom/11)*100"
-                  [style.right.%]="100-(lpoMonthTo/11)*100"></div></div>
+                  [style.left.%]="(lpoMonthFrom/lpoMaxMonth)*100"
+                  [style.right.%]="100-(lpoMonthTo/lpoMaxMonth)*100"></div></div>
                 <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" class="ta">
                 <input type="range" min="0" [max]="lpoMaxMonth" [(ngModel)]="lpoMonthTo"   (ngModelChange)="onLPO()" class="tb">
               </div>
@@ -375,10 +376,10 @@
             <span class="pd-fl">Year Range: {{ lpoFromYearLbl }} – {{ lpoToYearLbl }}</span>
             <div class="dw dw--lg">
               <div class="dt"><div class="df"
-                [style.left.%]="(lpoYearFrom/3)*100"
-                [style.right.%]="100-(lpoYearTo/3)*100"></div></div>
-              <input type="range" min="0" max="3" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" class="ta">
-              <input type="range" min="0" max="3" [(ngModel)]="lpoYearTo"   (ngModelChange)="onLPO()" class="tb">
+                [style.left.%]="(lpoYearFrom/(lpoYears.length-1))*100"
+                [style.right.%]="100-(lpoYearTo/(lpoYears.length-1))*100"></div></div>
+              <input type="range" min="0" [max]="lpoYears.length-1" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" class="ta">
+              <input type="range" min="0" [max]="lpoYears.length-1" [(ngModel)]="lpoYearTo"   (ngModelChange)="onLPO()" class="tb">
             </div>
           </div>
           <div class="pd-fg pd-ddw">
@@ -402,8 +403,8 @@
             </div>
           </div>
           <div class="pd-fg pd-radios">
-            <label class="pd-radio"><input type="radio" name="lpoVm" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Monthly</label>
-            <label class="pd-radio"><input type="radio" name="lpoVm" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLPO()"> Yearly</label>
+            <label class="pd-radio"><input type="radio" name="lpoVm" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Monthly</label>
+            <label class="pd-radio"><input type="radio" name="lpoVm" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Yearly</label>
           </div>
           <div class="pd-modal-kpi">
             <span class="pd-kpi-lbl">LPO Amount</span>
@@ -430,8 +431,8 @@
               <span class="pd-fl">Months: {{ grnFromMonth }} – {{ grnToMonth }}</span>
               <div class="dw dw--lg">
                 <div class="dt"><div class="df"
-                  [style.left.%]="(grnMonthFrom/11)*100"
-                  [style.right.%]="100-(grnMonthTo/11)*100"></div></div>
+                  [style.left.%]="(grnMonthFrom/grnMaxMonth)*100"
+                  [style.right.%]="100-(grnMonthTo/grnMaxMonth)*100"></div></div>
                 <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" class="ta">
                 <input type="range" min="0" [max]="grnMaxMonth" [(ngModel)]="grnMonthTo"   (ngModelChange)="onGRN()" class="tb">
               </div>
@@ -463,14 +464,14 @@
             </div>
           </div>
           <div class="pd-fg pd-radios">
-            <label class="pd-radio"><input type="radio" name="grnVm" value="yearly"  [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Yearly</label>
-            <label class="pd-radio"><input type="radio" name="grnVm" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGRN()"> Monthly</label>
+            <label class="pd-radio"><input type="radio" name="grnVm" value="yearly"  [(ngModel)]="grnView" (ngModelChange)="onGrnViewChange()"> Yearly</label>
+            <label class="pd-radio"><input type="radio" name="grnVm" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGrnViewChange()"> Monthly</label>
           </div>
           <div class="pd-modal-kpi">
             <span class="pd-kpi-lbl">GRN Amount</span>
             <span class="pd-kpi-val">{{ formatM(grnTotal) }}</span>
           </div>
-          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+          <button class="pd-dl" (click)="exportGRN()"><i class="fas fa-file-excel"></i> Excel</button>
         </ng-container>
 
         <!-- Projects / Facilities combined filters -->
@@ -515,7 +516,7 @@
               </div>
             </div>
           </div>
-          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+          <button class="pd-dl" (click)="exportProjects()"><i class="fas fa-file-excel"></i> Excel</button>
         </ng-container>
 
         <!-- Suppliers filters -->
@@ -544,17 +545,17 @@
             <span class="pd-fl">Year Range: {{ suppFromYear }} – {{ suppToYear }}</span>
             <div class="dw dw--lg">
               <div class="dt"><div class="df"
-                [style.left.%]="(suppYearFrom/16)*100"
-                [style.right.%]="100-(suppYearTo/16)*100"></div></div>
-              <input type="range" min="0" max="16" [(ngModel)]="suppYearFrom" (ngModelChange)="onSupp()" class="ta">
-              <input type="range" min="0" max="16" [(ngModel)]="suppYearTo"   (ngModelChange)="onSupp()" class="tb">
+                [style.left.%]="(suppYearFrom/9)*100"
+                [style.right.%]="100-(suppYearTo/9)*100"></div></div>
+              <input type="range" min="0" max="9" [(ngModel)]="suppYearFrom" (ngModelChange)="onSupp()" class="ta">
+              <input type="range" min="0" max="9" [(ngModel)]="suppYearTo"   (ngModelChange)="onSupp()" class="tb">
             </div>
           </div>
           <div class="pd-fg">
             <span class="pd-fl">Number of Suppliers: {{ suppCount }}</span>
             <input type="range" min="1" max="12" [(ngModel)]="suppCount" (ngModelChange)="onSupp()" class="pd-sr pd-sr--lg">
           </div>
-          <button class="pd-dl" (click)="downloadExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+          <button class="pd-dl" (click)="exportSuppliers()"><i class="fas fa-file-excel"></i> Excel</button>
         </ng-container>
 
       </div><!-- /pd-modal-filters -->
