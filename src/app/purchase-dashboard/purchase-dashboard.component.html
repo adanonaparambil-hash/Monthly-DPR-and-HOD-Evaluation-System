@@ -217,42 +217,133 @@
         <button class="pd-dl" (click)="exportSuppliers()"><i class="fas fa-file-excel"></i> Excel</button>
       </div>
 
-      <!-- Split layout: doughnut left + table right -->
-      <div class="pd-supp-split">
-        <!-- Left: doughnut -->
-        <div class="pd-supp-chart">
+      <!-- ══ KPI pills row ══ -->
+      <div class="pd-supp-kpi-row">
+        <div class="pd-supp-kpi-pill pd-supp-kpi-pill--amber">
+          <div class="pd-supp-kpi-icon"><i class="fas fa-coins"></i></div>
+          <div class="pd-supp-kpi-body">
+            <span class="pd-supp-kpi-lbl">Total Amount</span>
+            <span class="pd-supp-kpi-big">{{ suppTotalDisplay }}</span>
+            <span class="pd-supp-kpi-sub">OMR</span>
+          </div>
+        </div>
+        <div class="pd-supp-kpi-pill pd-supp-kpi-pill--indigo">
+          <div class="pd-supp-kpi-icon"><i class="fas fa-chart-pie"></i></div>
+          <div class="pd-supp-kpi-body">
+            <span class="pd-supp-kpi-lbl">Top 3 Share</span>
+            <span class="pd-supp-kpi-big">{{ suppTop3Share }}</span>
+            <span class="pd-supp-kpi-sub">of Total</span>
+          </div>
+        </div>
+        <div class="pd-supp-kpi-pill pd-supp-kpi-pill--violet">
+          <div class="pd-supp-kpi-icon"><i class="fas fa-crown"></i></div>
+          <div class="pd-supp-kpi-body">
+            <span class="pd-supp-kpi-lbl">Top 1 Share</span>
+            <span class="pd-supp-kpi-big">{{ suppTopShare }}</span>
+            <span class="pd-supp-kpi-sub">of Total</span>
+          </div>
+        </div>
+        <div class="pd-supp-kpi-pill pd-supp-kpi-pill--teal">
+          <div class="pd-supp-kpi-icon"><i class="fas fa-users"></i></div>
+          <div class="pd-supp-kpi-body">
+            <span class="pd-supp-kpi-lbl">Suppliers</span>
+            <span class="pd-supp-kpi-big">{{ suppCount }}</span>
+            <span class="pd-supp-kpi-sub">Total</span>
+          </div>
+        </div>
+        <div class="pd-supp-kpi-pill pd-supp-kpi-pill--rose">
+          <div class="pd-supp-kpi-icon"><i class="fas fa-exclamation-circle"></i></div>
+          <div class="pd-supp-kpi-body">
+            <span class="pd-supp-kpi-lbl">Concentration</span>
+            <span class="pd-supp-kpi-big pd-supp-conc" [ngClass]="'pd-supp-conc--'+suppConcentrationClass">{{ suppConcentration }}</span>
+            <span class="pd-supp-kpi-sub">Top 3 Suppliers</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Main body: donut left · ranked list right ══ -->
+      <div class="pd-supp-body">
+        <!-- Left: donut chart -->
+        <div class="pd-supp-donut-zone">
           <canvas #suppliersCanvas></canvas>
         </div>
-        <!-- Right: ranked table -->
-        <div class="pd-supp-table-wrap">
-          <table class="pd-supp-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Supplier Name</th>
-                <th>Amount (M OMR)</th>
-                <th>Share %</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let s of suppDisplayData; let i = index">
-                <td>
-                  <span class="pd-supp-rank" [style.background]="suppRankColor(i)">{{ i + 1 }}</span>
-                </td>
-                <td class="pd-supp-name">{{ s.vendorName ?? s.supplierName ?? s.name ?? '—' }}</td>
-                <td class="pd-supp-amt">{{ suppAmtM(s) }}</td>
-                <td>
-                  <div class="pd-supp-bar-wrap">
-                    <div class="pd-supp-bar" [style.width.%]="suppShare(s)" [style.background]="suppRankColor(i)"></div>
-                    <span class="pd-supp-pct">{{ suppShare(s).toFixed(1) }}%</span>
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="!suppDisplayData.length">
-                <td colspan="4" class="pd-supp-empty">No supplier data available</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Right: ranked list -->
+        <div class="pd-supp-ranked">
+          <div class="pd-supp-ranked-hdr">
+            <i class="fas fa-list-ol" style="color:#f59e0b;margin-right:7px;"></i>
+            Top {{ suppCount }} Suppliers by Amount (M OMR)
+          </div>
+          <div class="pd-supp-ranked-list">
+            <div class="pd-supp-item" *ngFor="let s of suppDisplayData; let i = index">
+              <span class="pd-supp-num" [style.background]="suppRankColor(i)">{{ i + 1 }}</span>
+              <div class="pd-supp-item-body">
+                <div class="pd-supp-item-row1">
+                  <span class="pd-supp-item-name" [title]="s.vendorName ?? s.supplierName ?? s.name ?? '—'">
+                    {{ s.vendorName ?? s.supplierName ?? s.name ?? '—' }}
+                  </span>
+                  <span class="pd-supp-item-amt">{{ suppAmtM(s) }}</span>
+                  <span class="pd-supp-item-pct" [style.color]="suppRankColor(i)">{{ suppShare(s).toFixed(1) }}%</span>
+                </div>
+                <div class="pd-supp-item-bar" [style.background]="suppRankColor(i)+'22'">
+                  <div class="pd-supp-item-bar-fill"
+                       [style.width.%]="suppShare(s)"
+                       [style.background]="suppRankColor(i)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="pd-supp-empty-msg" *ngIf="!suppDisplayData.length">
+              <i class="fas fa-inbox" style="font-size:28px;color:#cbd5e1;display:block;margin-bottom:8px;"></i>
+              No supplier data available
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Bottom stat cards ══ -->
+      <div class="pd-supp-stats">
+        <div class="pd-supp-stat pd-supp-stat--amber">
+          <div class="pd-supp-stat-icon"><i class="fas fa-trophy"></i></div>
+          <div class="pd-supp-stat-body">
+            <span class="pd-supp-stat-lbl">Top Supplier</span>
+            <span class="pd-supp-stat-name">{{ suppTop1Name }}</span>
+            <span class="pd-supp-stat-big">{{ suppTop1Amt }}</span>
+            <span class="pd-supp-stat-sub">{{ suppTopShare }} of Total</span>
+          </div>
+        </div>
+        <div class="pd-supp-stat pd-supp-stat--indigo">
+          <div class="pd-supp-stat-icon"><i class="fas fa-chart-pie"></i></div>
+          <div class="pd-supp-stat-body">
+            <span class="pd-supp-stat-lbl">Top 3 Share</span>
+            <span class="pd-supp-stat-big pd-supp-stat-big--green">{{ suppTop3Share }}</span>
+            <span class="pd-supp-stat-sub">of Total Amount</span>
+          </div>
+        </div>
+        <div class="pd-supp-stat pd-supp-stat--violet">
+          <div class="pd-supp-stat-icon"><i class="fas fa-crown"></i></div>
+          <div class="pd-supp-stat-body">
+            <span class="pd-supp-stat-lbl">Top 1 Share</span>
+            <span class="pd-supp-stat-big pd-supp-stat-big--purple">{{ suppTopShare }}</span>
+            <span class="pd-supp-stat-sub">of Total Amount</span>
+          </div>
+        </div>
+        <div class="pd-supp-stat pd-supp-stat--teal">
+          <div class="pd-supp-stat-icon"><i class="fas fa-chart-line"></i></div>
+          <div class="pd-supp-stat-body">
+            <span class="pd-supp-stat-lbl">Trend</span>
+            <span class="pd-supp-stat-big" [style.color]="suppTrendPct >= 0 ? '#10b981' : '#ef4444'">
+              {{ suppTrendPct >= 0 ? '+' : '' }}{{ suppTrendPct }}%
+            </span>
+            <span class="pd-supp-stat-sub">vs Avg Others</span>
+          </div>
+        </div>
+        <div class="pd-supp-stat pd-supp-stat--rose">
+          <div class="pd-supp-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+          <div class="pd-supp-stat-body">
+            <span class="pd-supp-stat-lbl">Concentration</span>
+            <span class="pd-supp-stat-big pd-supp-conc" [ngClass]="'pd-supp-conc--'+suppConcentrationClass"
+                  [style.color]="suppConcentrationColor">{{ suppConcentration }}</span>
+            <span class="pd-supp-stat-sub">Top 3 Suppliers</span>
+          </div>
         </div>
       </div>
     </div>
@@ -567,43 +658,82 @@
         </div>
       </ng-container>
 
-      <!-- Suppliers expanded: same split layout as card -->
+      <!-- Suppliers expanded: donut + ranked list -->
       <ng-container *ngIf="expandedChart === 'suppliers'">
+        <!-- KPI pills in modal -->
+        <div class="pd-supp-kpi-row pd-supp-kpi-row--modal">
+          <div class="pd-supp-kpi-pill pd-supp-kpi-pill--amber">
+            <div class="pd-supp-kpi-icon"><i class="fas fa-coins"></i></div>
+            <div class="pd-supp-kpi-body">
+              <span class="pd-supp-kpi-lbl">Total Amount</span>
+              <span class="pd-supp-kpi-big">{{ suppTotalDisplay }}</span>
+              <span class="pd-supp-kpi-sub">OMR</span>
+            </div>
+          </div>
+          <div class="pd-supp-kpi-pill pd-supp-kpi-pill--indigo">
+            <div class="pd-supp-kpi-icon"><i class="fas fa-chart-pie"></i></div>
+            <div class="pd-supp-kpi-body">
+              <span class="pd-supp-kpi-lbl">Top 3 Share</span>
+              <span class="pd-supp-kpi-big">{{ suppTop3Share }}</span>
+              <span class="pd-supp-kpi-sub">of Total</span>
+            </div>
+          </div>
+          <div class="pd-supp-kpi-pill pd-supp-kpi-pill--violet">
+            <div class="pd-supp-kpi-icon"><i class="fas fa-crown"></i></div>
+            <div class="pd-supp-kpi-body">
+              <span class="pd-supp-kpi-lbl">Top 1 Share</span>
+              <span class="pd-supp-kpi-big">{{ suppTopShare }}</span>
+              <span class="pd-supp-kpi-sub">of Total</span>
+            </div>
+          </div>
+          <div class="pd-supp-kpi-pill pd-supp-kpi-pill--teal">
+            <div class="pd-supp-kpi-icon"><i class="fas fa-users"></i></div>
+            <div class="pd-supp-kpi-body">
+              <span class="pd-supp-kpi-lbl">Suppliers</span>
+              <span class="pd-supp-kpi-big">{{ suppCount }}</span>
+              <span class="pd-supp-kpi-sub">Total</span>
+            </div>
+          </div>
+          <div class="pd-supp-kpi-pill pd-supp-kpi-pill--rose">
+            <div class="pd-supp-kpi-icon"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="pd-supp-kpi-body">
+              <span class="pd-supp-kpi-lbl">Concentration</span>
+              <span class="pd-supp-kpi-big pd-supp-conc" [ngClass]="'pd-supp-conc--'+suppConcentrationClass">{{ suppConcentration }}</span>
+              <span class="pd-supp-kpi-sub">Top 3 Suppliers</span>
+            </div>
+          </div>
+        </div>
         <div class="pd-modal-supp-split">
           <!-- Left: doughnut -->
           <div class="pd-modal-supp-chart">
             <canvas #modalCanvas></canvas>
           </div>
-          <!-- Right: ranked table -->
-          <div class="pd-supp-table-wrap pd-modal-supp-table">
-            <table class="pd-supp-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Supplier Name</th>
-                  <th>Amount (M OMR)</th>
-                  <th>Share %</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let s of suppDisplayData; let i = index">
-                  <td>
-                    <span class="pd-supp-rank" [style.background]="suppRankColor(i)">{{ i + 1 }}</span>
-                  </td>
-                  <td class="pd-supp-name">{{ s.vendorName ?? s.supplierName ?? s.name ?? '—' }}</td>
-                  <td class="pd-supp-amt">{{ suppAmtM(s) }}</td>
-                  <td>
-                    <div class="pd-supp-bar-wrap">
-                      <div class="pd-supp-bar" [style.width.%]="suppShare(s)" [style.background]="suppRankColor(i)"></div>
-                      <span class="pd-supp-pct">{{ suppShare(s).toFixed(1) }}%</span>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="!suppDisplayData.length">
-                  <td colspan="4" class="pd-supp-empty">No supplier data available</td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Right: ranked list -->
+          <div class="pd-supp-ranked" style="min-width:0;overflow-y:auto;">
+            <div class="pd-supp-ranked-hdr">
+              <i class="fas fa-list-ol" style="color:#f59e0b;margin-right:7px;"></i>
+              Top {{ suppCount }} Suppliers by Amount (M OMR)
+            </div>
+            <div class="pd-supp-ranked-list" style="max-height:calc(96vh - 340px);">
+              <div class="pd-supp-item" *ngFor="let s of suppDisplayData; let i = index">
+                <span class="pd-supp-num" [style.background]="suppRankColor(i)">{{ i + 1 }}</span>
+                <div class="pd-supp-item-body">
+                  <div class="pd-supp-item-row1">
+                    <span class="pd-supp-item-name" [title]="s.vendorName ?? s.supplierName ?? s.name ?? '—'">
+                      {{ s.vendorName ?? s.supplierName ?? s.name ?? '—' }}
+                    </span>
+                    <span class="pd-supp-item-amt">{{ suppAmtM(s) }}</span>
+                    <span class="pd-supp-item-pct" [style.color]="suppRankColor(i)">{{ suppShare(s).toFixed(1) }}%</span>
+                  </div>
+                  <div class="pd-supp-item-bar" [style.background]="suppRankColor(i)+'22'">
+                    <div class="pd-supp-item-bar-fill"
+                         [style.width.%]="suppShare(s)"
+                         [style.background]="suppRankColor(i)"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="pd-supp-empty-msg" *ngIf="!suppDisplayData.length">No supplier data available</div>
+            </div>
           </div>
         </div>
       </ng-container>

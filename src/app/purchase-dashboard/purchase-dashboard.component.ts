@@ -1041,6 +1041,72 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     return colors[i % colors.length];
   }
 
+  suppAmtNum(d: any): number {
+    return toMillions(+(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0));
+  }
+
+  // ── Supplier KPI getters (used by KPI pills row + bottom stat cards) ──────────
+  get suppTotalDisplay(): string { return this.formatM(this.suppTotalM()); }
+
+  get suppTopShare(): string {
+    const data = this.suppDisplayData;
+    if (!data.length) return '—';
+    const total = this.suppTotalM();
+    if (total === 0) return '—';
+    const top = this.suppAmtNum(data[0]);
+    return (top / total * 100).toFixed(1) + '%';
+  }
+
+  get suppTop3Share(): string {
+    const data = this.suppDisplayData;
+    if (!data.length) return '—';
+    const total = this.suppTotalM();
+    if (total === 0) return '—';
+    const top3 = data.slice(0, 3).reduce((s, d) => s + this.suppAmtNum(d), 0);
+    return (top3 / total * 100).toFixed(1) + '%';
+  }
+
+  get suppTop1Name(): string {
+    const d = this.suppDisplayData;
+    if (!d.length) return '—';
+    const name = d[0].vendorName ?? d[0].supplierName ?? d[0].name ?? '—';
+    return name.length > 32 ? name.slice(0, 31) + '…' : name;
+  }
+
+  get suppTop1Amt(): string {
+    const d = this.suppDisplayData;
+    return d.length ? this.suppAmtM(d[0]) : '—';
+  }
+
+  get suppConcentration(): string {
+    const data = this.suppDisplayData;
+    if (!data.length) return '—';
+    const total = this.suppTotalM();
+    if (total === 0) return '—';
+    const top3 = data.slice(0, 3).reduce((s, d) => s + this.suppAmtNum(d), 0);
+    const pct = top3 / total * 100;
+    return pct >= 60 ? 'High' : pct >= 40 ? 'Medium' : 'Low';
+  }
+
+  get suppConcentrationClass(): string {
+    const c = this.suppConcentration;
+    return c === 'High' ? 'high' : c === 'Medium' ? 'medium' : 'low';
+  }
+
+  get suppConcentrationColor(): string {
+    const c = this.suppConcentration;
+    return c === 'High' ? '#ef4444' : c === 'Medium' ? '#f59e0b' : '#10b981';
+  }
+
+  get suppTrendPct(): number {
+    const data = this.suppDisplayData;
+    if (data.length < 2) return 0;
+    const top1 = this.suppAmtNum(data[0]);
+    const rest = data.slice(1).reduce((s, d) => s + this.suppAmtNum(d), 0) / (data.length - 1);
+    if (rest === 0) return 0;
+    return +((top1 / rest - 1) * 100).toFixed(1);
+  }
+
   private runGSAP() {
     gsap.fromTo('.pd-card',{opacity:0,y:40,scale:0.95},{opacity:1,y:0,scale:1,duration:0.7,stagger:0.12,ease:'back.out(1.3)'});
   }
