@@ -26,6 +26,21 @@
         <i class="fas fa-shopping-bag"></i> Purchase Dashboard
       </a>
 
+      <!-- Dynamic Menu Items from API -->
+      <ng-container *ngFor="let menu of userMenus">
+        <!-- Skip the existing purchase dashboard to avoid duplicates -->
+        <a *ngIf="!isDPROnlyMode && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')" 
+           [routerLink]="menu.isExternal === 'Y' ? null : menu.menuUrl"
+           [class.active]="menu.isExternal === 'N' && currentRoute.includes(menu.menuUrl)"
+           (click)="handleMenuClick(menu, $event)"
+           [title]="formatMenuName(menu.menuName)"
+           [href]="menu.isExternal === 'Y' ? 'javascript:void(0)' : null">
+          <i class="fas fa-external-link-alt" *ngIf="menu.isExternal === 'Y'"></i>
+          <i class="fas fa-tachometer-alt" *ngIf="menu.isExternal === 'N'"></i>
+          {{ formatMenuName(menu.menuName) }}
+        </a>
+      </ng-container>
+
       <!-- Productivity Menu with MPR and APR sub-menus (hidden in DPR-only mode) -->
       <!-- Productivity Menu with direct MPR and APR links (hidden in DPR-only mode) -->
       <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">

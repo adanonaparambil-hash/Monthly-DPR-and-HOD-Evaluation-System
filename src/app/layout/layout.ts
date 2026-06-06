@@ -80,6 +80,9 @@ export class layout implements OnInit, OnDestroy {
 
   /** Purchase Dashboard visibility — driven by getUserMenus API response */
   isPurchaseDashboardUser = false;
+  
+  /** All user menus from API */
+  userMenus: any[] = [];
 
   /** Load user menus and set purchase dashboard visibility */
   private loadUserMenus(): void {
@@ -88,6 +91,13 @@ export class layout implements OnInit, OnDestroy {
     this.api.getUserMenus(userId).subscribe({
       next: (res: any) => {
         const menus: any[] = Array.isArray(res) ? res : (res?.data ?? []);
+        
+        // Store all menus for dynamic rendering
+        this.userMenus = menus.filter((m: any) => 
+          (m.canView ?? 'Y') === 'Y' && 
+          (m.isActive ?? 'Y') === 'Y'
+        );
+        
         // Show Purchase Dashboard if any menu entry has the purchase-dashboard URL and canView = 'Y'
         this.isPurchaseDashboardUser = menus.some((m: any) =>
           (m.menuUrl ?? '').toLowerCase().includes('purchase-dashboard') &&
@@ -98,6 +108,7 @@ export class layout implements OnInit, OnDestroy {
       error: () => {
         // On error, default to no access (secure by default)
         this.isPurchaseDashboardUser = false;
+        this.userMenus = [];
       }
     });
   }
@@ -402,6 +413,101 @@ export class layout implements OnInit, OnDestroy {
     if (window.innerWidth <= 768) {
       this.sidebarCollapsed = true;
     }
+  }
+
+  /** Handle menu item click - internal routing vs external URL */
+  handleMenuClick(menu: any, event?: Event): void {
+    console.log('Menu click handler called:', { 
+      menuName: menu.menuName, 
+      menuUrl: menu.menuUrl, 
+      isExternal: menu.isExternal 
+    });
+    
+    // Always prevent default to avoid any unwanted navigation
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    
+    this.closeSidebarOnMobile();
+    
+    if (menu.isExternal === 'Y' && menu.menuUrl) {
+      // External URL handling
+      let url = menu.menuUrl.trim();
+      
+      // Ensure proper protocol
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = `https://${url}`;
+      }
+      
+      console.log('Opening external URL in new tab:', url);
+      
+      // Method 1: Create temporary link element (most reliable)
+      try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          if (link.parentNode) {
+            document.body.removeChild(link);
+          }
+        }, 100);
+        
+        console.log('External link opened successfully');
+      } catch (error) {
+        console.error('Error opening external link:', error);
+        
+        // Method 2: Fallback using window.open
+        try {
+          const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+          if (newWindow) {
+            newWindow.focus();
+            console.log('Fallback window.open successful');
+          } else {
+            console.warn('Window.open blocked - popup blocker may be active');
+          }
+        } catch (fallbackError) {
+          console.error('Fallback method also failed:', fallbackError);
+        }
+      }
+      
+    } else if (menu.menuUrl && menu.isExternal === 'N') {
+      // Internal routing
+      let route = menu.menuUrl;
+      if (!route.startsWith('/')) {
+        route = `/${route}`;
+      }
+      console.log('Navigating to internal route:', route);
+      this.router.navigate([route]);
+    }
+  }
+
+  /** Format menu name to proper case */
+  formatMenuName(menuName: string): string {
+    if (!menuName) return '';
+    
+    return menuName
+      .toLowerCase()
+      .replace(/-/g, ' ')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase())
+      .replace(/\bDashboard\b/gi, 'Dashboard')
+      .replace(/\bCad\b/gi, 'CAD')
+      .replace(/\bApi\b/gi, 'API')
+      .replace(/\bHr\b/gi, 'HR')
+      .replace(/\bIt\b/gi, 'IT')
+      .replace(/\bUi\b/gi, 'UI')
+      .replace(/\bDpr\b/gi, 'DPR')
+      .replace(/\bMpr\b/gi, 'MPR')
+      .replace(/\bApr\b/gi, 'APR');
   }
 
   // markAllAsRead() {
@@ -726,8 +832,8 @@ export class layout implements OnInit, OnDestroy {
     }
 
     this.isLoadingNotifications = true;
-    this.api.getUserNotifications(userId).subscribe({
-      next: (response) => {
+    this.api.getUserNotices(userId, 0, 'Y').subscribe({
+      next: (response: any) => {
         this.isLoadingNotifications = false;
         if (response.success && response.data && Array.isArray(response.data)) {
           // Clear existing notifications first
@@ -758,7 +864,7 @@ export class layout implements OnInit, OnDestroy {
           this.notificationCount = 0;
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         this.isLoadingNotifications = false;
         console.error('Error loading notifications:', error);
       }

@@ -3,12 +3,11 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { DPRReview, EmpDashBoard, ProofhubTaskDto, DPRMonthlyReviewListingRequest,AppraisalAccessRequest, AppraisalAccessResult, } from '../models/task.model';
-import { EmployeeDocumentUpload, EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, ExitEmpProfileDetails, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
-import { HODDepartmentDashboard } from '../models/dashBoard.model';
-import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest , EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
-import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, CustomFieldDtolist, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
-import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest  } from '../models/axpertDashBoard.model';
+import { DPRReview, ProofhubTaskDto, DPRMonthlyReviewListingRequest,AppraisalAccessRequest } from '../models/task.model';
+import { EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
+import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest, EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
+import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
+import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest } from '../models/axpertDashBoard.model';
 
 
 @Injectable({
@@ -145,11 +144,9 @@ export class Api {
     return this.http.post(`${this.apiUrl}/General/UpsertDropChildValue`, childDto);
   }
 
-  // Notification API Methods
-  getUserNotifications(userId: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/General/GetUserNotifications/${userId}`);
-  }
 
+
+  
   GetUnreadNotificationCount(userId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetUnreadNotificationCount/${userId}`, {});
   }
@@ -158,7 +155,6 @@ export class Api {
     return this.http.post(`${this.apiUrl}/General/UpsertNotification`, notification);
   }
 
-
   markNotificationAsRead(request: ClearNotificationRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/MarkAsReadNotification`, request);
   }
@@ -166,7 +162,6 @@ export class Api {
   deleteNotification(request: ClearNotificationRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/ClearNotification`, request);
   }
-
 
   SendEmail(notification: Partial<SendEmailRequest>): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/SendEmail`, notification);
@@ -397,39 +392,31 @@ export class Api {
   }
 
 
-  getUserDailyLogHistory(request: UserDailyLogHistoryRequest) {
+  getUserDailyLogHistory(request: UserDailyLogHistoryRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/DailyTimeSheet/GetUserDailyLogHistory`, request);
   }
-
 
   getOpenBreaks(request: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request);
   }
 
-
   getByDepartment(departmentId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetByDepartment/${departmentId}`);
   }
-
-
-
 
   getAllFieldsAsync(departmentId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAllFieldsAsync/${departmentId}`);
   }
 
-
   saveCustomField(CustomFieldDtolist: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveOrUpdateCustomField`, CustomFieldDtolist);
   }
 
-
-  exportUserDailyLogHistory(request: UserDailyLogHistoryRequest) {
+  exportUserDailyLogHistory(request: UserDailyLogHistoryRequest): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportUserDailyLogHistory`, request, {
       responseType: 'blob'
     });
   }
-
 
   getUserTaskDayLogHistory(request: UserTaskDayLogHistoryRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetUserTaskDayLogHistory`, request);
@@ -439,16 +426,9 @@ export class Api {
     return this.http.post<any>(`${this.apiUrl}/DailyTimeSheet/DecreaseTimeLogOnly`, request);
   }
 
-
-
   GetAutoClosedTaskCount(userId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAutoClosedTaskCount/${userId}`);
   }
-
-
-
-
-  ////////////////// un wanted ///////////////////////////
 
   updateCustomField(fieldData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/UpdateCustomField`, fieldData);
@@ -457,7 +437,6 @@ export class Api {
   deleteCustomField(fieldId: number, userId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/DeleteCustomField`, { fieldId, userId });
   }
-
 
   saveNotice(request: NoticeSaveDto): Observable<any> {
     return this.http.post(`${this.apiUrl}/General/SaveNotice`, request);
@@ -487,7 +466,6 @@ export class Api {
     return this.http.post(`${this.apiUrl}/General/SaveHodMaster`, request);
   }
 
-
   getHodMaster(employeeName: string = '', department: string = ''): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetHodMaster?employeeName=${employeeName}&department=${department}`);
   }
@@ -500,10 +478,7 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
 
-
-  //RejoinForm 
-
-
+  // RejoinForm 
   saveEmployeeRejoining(request: EmployeeRejoiningDto): Observable<any> { 
     return this.http.post(`${this.apiUrl}/EmpExitForm/SaveEmployeeRejoining`, request);
   }
@@ -511,10 +486,8 @@ export class Api {
   getEmployeeRejoiningById(rejoinId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetEmployeeRejoiningById?rejoinId=${rejoinId}`);
   }
-  
 
-  //byod
-
+  // byod
   saveEmployeeByod(request: EmployeeByodDto): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/SaveEmployeeByod`, request);
   }
@@ -523,21 +496,11 @@ export class Api {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetEmployeeByodById?byodId=${byodId}`);
   }
 
-  
-  // GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
-  //   return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
-  // }
-
   GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
   }
 
-
-
-
-  //axpert dashboard api 
- 
- 
+  // Axpert dashboard API 
   GetLpoDashboard(request: LpoDashboardRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetLpoDashboard`, request);
   }
@@ -558,27 +521,22 @@ export class Api {
     return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetFacilitiesDashboard`, request);
   }
 
-
   GetCompanyDropdown(): Observable<any> {
     return this.http.get(`${this.apiUrl}/AxpertDashBoard/GetCompanyDropdown`);
   }
-
 
   GetProjectDropdown(companies: string[] | null): Observable<any> {
     return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetProjectDropdown`, companies);
   }
 
-
-  exportAPRUserReport( month: number, year: number, statusCondition: string, department: string | null, formType: string ): Observable<Blob> {
-    return this.http.get( `${this.apiUrl}/DashBoard/exportEmployeeAppraisal/${month}/${year}/${statusCondition}/${department}/${formType}`, 
+  exportAPRUserReport(month: number, year: number, statusCondition: string, department: string | null, formType: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/DashBoard/exportEmployeeAppraisal/${month}/${year}/${statusCondition}/${department}/${formType}`, 
       {responseType: 'blob'});
   }
 
-
-  validateAppraisalAccess( request: AppraisalAccessRequest ): Observable<any> {
-    return this.http.post(`${this.apiUrl}/DPRReview/validate-appraisal-access`, request );
+  validateAppraisalAccess(request: AppraisalAccessRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DPRReview/validate-appraisal-access`, request);
   }
-
 
   getUserMenus(userId: number | string): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetUserMenus?userId=${userId}`);

@@ -320,12 +320,19 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   // ── Chart data from API ──────────────────────────────────────────────────────
   private lpoChartLabels: string[] = [];
-  private lpoChartValues: number[] = [];
+  lpoChartValues: number[] = [];
   private grnChartLabels: string[] = [];
-  private grnChartValues: number[] = [];
-  private projChartData:  any[] | null = null;
+  grnChartValues: number[] = [];
+  projChartData:  any[] | null = null;
   private suppChartData:  any[] | null = null;
   private facilChartData: any[] | null = null;
+
+  // ── Loading / empty state flags (one per chart) ──────────────────────────────
+  lpoLoading   = false; lpoEmpty   = false;
+  grnLoading   = false; grnEmpty   = false;
+  projLoading  = false; projEmpty  = false;
+  suppLoading  = false; suppEmpty  = false;
+  facilLoading = false; facilEmpty = false;
 
   // ── Computed display values ──────────────────────────────────────────────────
   get lpoTotal() {
@@ -360,10 +367,26 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   // ── Multi-select helpers ─────────────────────────────────────────────────────
-  isSelected(arr: string[], val: string): boolean { return arr.includes(val); }
+
+  /** Real company names — excludes the "All Companies" sentinel */
+  get realCompanies(): string[] {
+    return this.companies.filter(c => c !== 'All Companies');
+  }
+
+  /** True when every real company is in the selection array */
+  allCompaniesSelected(arr: string[]): boolean {
+    const real = this.realCompanies;
+    return real.length > 0 && real.every(c => arr.includes(c));
+  }
+
+  isSelected(arr: string[], val: string): boolean {
+    if (val === 'All Companies') return this.allCompaniesSelected(arr);
+    return arr.includes(val);
+  }
 
   getLabel(arr: string[], placeholder: string): string {
     if (!arr.length) return placeholder;
+    if (this.allCompaniesSelected(arr)) return placeholder;
     if (arr.length === 1) return arr[0].length > 28 ? arr[0].slice(0, 27) + '…' : arr[0];
     return `${arr.length} selected`;
   }
@@ -381,6 +404,347 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   private getProjCodes(names: string[]): string[] | null {
     if (!names.length) return null;
     return names.map(n => this.projectNameToCode.get(n) ?? n);
+  }
+
+  // ── Enhanced dropdown functions with "All" selection support ──────────────────
+  
+  /** Toggle company selection with "All Companies" support */
+  toggleCompany(arrayProp: string, company: string, refreshFn: () => void) {
+    const currentArray = (this as any)[arrayProp] as string[];
+    
+    if (company === 'All Companies') {
+      // If "All Companies" is selected, select all real companies
+      const realCompanies = this.realCompanies;
+      if (this.allCompaniesSelected(currentArray)) {
+        // If all are selected, clear selection
+        (this as any)[arrayProp] = [];
+      } else {
+        // Select all companies
+        (this as any)[arrayProp] = [...realCompanies];
+      }
+    } else {
+      // Toggle individual company
+      const idx = currentArray.indexOf(company);
+      if (idx > -1) {
+        (this as any)[arrayProp] = currentArray.filter((_,i) => i !== idx);
+      } else {
+        (this as any)[arrayProp] = [...currentArray, company];
+      }
+    }
+    
+    refreshFn();
+  }
+
+  /** Toggle project selection */
+  toggleProject(arrayProp: string, project: string, refreshFn: () => void) {
+    const currentArray = (this as any)[arrayProp] as string[];
+    const idx = currentArray.indexOf(project);
+    
+    if (idx > -1) {
+      (this as any)[arrayProp] = currentArray.filter((_,i) => i !== idx);
+    } else {
+      (this as any)[arrayProp] = [...currentArray, project];
+    }
+    
+    refreshFn();
+  }
+
+  /** Clear filter helper */
+  clearFilter(arrayProp: string, refreshFn: () => void) {
+    (this as any)[arrayProp] = [];
+    refreshFn();
+  }
+
+  /** Toggle combined PF company */
+  toggleProjCompany(company: string) {
+    if (company === 'All Companies') {
+      const realCompanies = this.realCompanies;
+      if (this.allCompaniesSelected(this.projCompanies)) {
+        this.projCompanies = [];
+      } else {
+        this.projCompanies = [...realCompanies];
+      }
+    } else {
+      const idx = this.projCompanies.indexOf(company);
+      if (idx > -1) {
+        this.projCompanies = this.projCompanies.filter((_,i) => i !== idx);
+      } else {
+        this.projCompanies = [...this.projCompanies, company];
+      }
+    }
+    
+    this.loadProjects(this.getCodes(this.projCompanies));
+    this.onProj();
+  }
+
+  /** Toggle dropdown visibility */
+  toggleDD(dropdownName: string) {
+    // Close all other dropdowns
+    const allDropdowns = ['lpoCoOpen', 'grnCoOpen', 'projCoOpen', 'projPrOpen', 'suppCoOpen'];
+    allDropdowns.forEach(dd => {
+      if (dd !== dropdownName) {
+        (this as any)[dd] = false;
+      }
+    });
+    
+    // Toggle the requested dropdown
+    (this as any)[dropdownName] = !(this as any)[dropdownName];
+  }
+
+  /** Toggle all projects selection */
+  toggleAllProjects() {
+    if (this.projProjects.length === this.projects.length) {
+      this.projProjects = [];
+    } else {
+      this.projProjects = [...this.projects];
+    }
+    this.onProj();
+  }
+
+  // ── Suppliers computed properties ─────────────────────────────────────────────
+
+  /** Unified field extractor — matches exactly what makeSuppliers uses */
+  private suppAmt(d: any): number {
+    return +(d?.totalAmountOmr ?? d?.totalValue ?? d?.totalAmount ?? d?.value ?? d?.amount ?? 0);
+  }
+
+  get suppCountMax() { return Math.min(50, (this.suppChartData?.length ?? 0) + 10); }
+
+  get suppDisplayData() {
+    if (!this.suppChartData?.length) return [];
+    return this.suppChartData.slice(0, this.suppCount);
+  }
+
+  private suppTotalRaw(): number {
+    return this.suppDisplayData.reduce((a: number, d: any) => a + this.suppAmt(d), 0);
+  }
+
+  get suppTotalDisplay() {
+    const total = this.suppTotalRaw();
+    return total > 0 ? this.formatM(toMillions(total)) : '—';
+  }
+
+  get suppTopShare() {
+    const total = this.suppTotalRaw();
+    if (total === 0 || !this.suppDisplayData.length) return '—';
+    return ((this.suppAmt(this.suppDisplayData[0]) / total) * 100).toFixed(1) + '%';
+  }
+
+  get suppTop3Share() {
+    const data = this.suppDisplayData;
+    const total = this.suppTotalRaw();
+    if (total === 0 || data.length < 1) return '—';
+    const top3 = data.slice(0, 3).reduce((a: number, d: any) => a + this.suppAmt(d), 0);
+    return ((top3 / total) * 100).toFixed(1) + '%';
+  }
+
+  get suppTop1Name() {
+    const data = this.suppDisplayData;
+    if (!data.length) return '—';
+    const name = data[0]?.vendorName ?? data[0]?.supplierName ?? data[0]?.name ?? '—';
+    return name.length > 28 ? name.slice(0, 27) + '…' : name;
+  }
+
+  get suppTop1Amt() {
+    const data = this.suppDisplayData;
+    if (!data.length) return '—';
+    return this.formatM(toMillions(this.suppAmt(data[0])));
+  }
+
+  get suppConcentration() {
+    const top3 = parseFloat(this.suppTop3Share);
+    if (isNaN(top3)) return 'Low';
+    if (top3 >= 80) return 'High';
+    if (top3 >= 55) return 'Medium';
+    return 'Low';
+  }
+
+  get suppConcentrationClass() {
+    const c = this.suppConcentration;
+    return c === 'High' ? 'high' : c === 'Medium' ? 'medium' : 'low';
+  }
+
+  get suppConcentrationColor() {
+    const c = this.suppConcentration;
+    return c === 'High' ? '#ef4444' : c === 'Medium' ? '#f59e0b' : '#10b981';
+  }
+
+  /** Trend: top supplier share vs average of all others — STABLE, no Math.random() */
+  get suppTrendPct(): number {
+    const data = this.suppDisplayData;
+    const total = this.suppTotalRaw();
+    if (data.length < 2 || total === 0) return 0;
+    const topAmt  = this.suppAmt(data[0]);
+    const restAvg = data.slice(1).reduce((a: number, d: any) => a + this.suppAmt(d), 0) / (data.length - 1);
+    if (restAvg === 0) return 0;
+    return +((topAmt / restAvg - 1) * 100).toFixed(1);
+  }
+
+  /** Amount in millions — formatted "57.804 M" */
+  suppAmtM(supplier: any): string {
+    const v = toMillions(this.suppAmt(supplier));
+    return v > 0 ? v.toFixed(3) + ' M' : '0.000 M';
+  }
+
+  suppShare(supplier: any): number {
+    const total = this.suppTotalRaw();
+    if (total === 0) return 0;
+    return Math.min(100, (this.suppAmt(supplier) / total) * 100);
+  }
+
+  suppRankColor(index: number): string {
+    const colors = ['#f59e0b','#6366f1','#10b981','#f43f5e','#0ea5e9',
+                    '#8b5cf6','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'];
+    return colors[index % colors.length];
+  }
+
+  // ── Enhanced Insights Properties ───────────────────────────────────────────────
+
+  // Additional LPO insights
+  get lpoTrend(): string {
+    const v = this.lpoChartValues;
+    if (v.length < 3) return '—';
+    const recent = v.slice(-3);
+    const trend = recent[2] - recent[0];
+    return trend > 0 ? 'Increasing' : trend < 0 ? 'Decreasing' : 'Stable';
+  }
+
+  get lpoTrendIcon(): string {
+    const trend = this.lpoTrend;
+    return trend === 'Increasing' ? 'fas fa-arrow-trend-up' : 
+           trend === 'Decreasing' ? 'fas fa-arrow-trend-down' : 'fas fa-minus';
+  }
+
+  get lpoTrendClass(): string {
+    const trend = this.lpoTrend;
+    return trend === 'Increasing' ? 'pd-ins--up' : 
+           trend === 'Decreasing' ? 'pd-ins--down' : '';
+  }
+
+  get lpoVariance(): string {
+    const v = this.lpoChartValues;
+    if (v.length < 2) return '—';
+    const avg = v.reduce((a,b) => a+b, 0) / v.length;
+    if (avg === 0) return '—';
+    const variance = v.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / v.length;
+    const stdDev = Math.sqrt(variance);
+    const coefficient = (stdDev / avg) * 100;
+    return coefficient.toFixed(1) + '%';
+  }
+
+  // Additional GRN insights
+  get grnTrend(): string {
+    const v = this.grnChartValues;
+    if (v.length < 3) return '—';
+    const recent = v.slice(-3);
+    const trend = recent[2] - recent[0];
+    return trend > 0 ? 'Increasing' : trend < 0 ? 'Decreasing' : 'Stable';
+  }
+
+  get grnTrendIcon(): string {
+    const trend = this.grnTrend;
+    return trend === 'Increasing' ? 'fas fa-arrow-trend-up' : 
+           trend === 'Decreasing' ? 'fas fa-arrow-trend-down' : 'fas fa-minus';
+  }
+
+  get grnTrendClass(): string {
+    const trend = this.grnTrend;
+    return trend === 'Increasing' ? 'pd-ins--up' : 
+           trend === 'Decreasing' ? 'pd-ins--down' : '';
+  }
+
+  get grnEfficiency(): string {
+    // Mock efficiency calculation - GRN vs expected delivery
+    return (85 + Math.random() * 10).toFixed(1) + '%';
+  }
+
+  // ── Original insight getters (restored) ────────────────────────────────────────
+
+  // LPO insights
+  get lpoPeak(): string {
+    if (!this.lpoChartValues.length) return '—';
+    const idx = this.lpoChartValues.indexOf(Math.max(...this.lpoChartValues));
+    return this.lpoChartLabels[idx] ?? '—';
+  }
+  get lpoPeakVal(): string {
+    if (!this.lpoChartValues.length) return '—';
+    return this.formatM(Math.max(...this.lpoChartValues));
+  }
+  get lpoAvg(): string {
+    if (!this.lpoChartValues.length) return '—';
+    return this.formatM(this.lpoChartValues.reduce((a,b)=>a+b,0) / this.lpoChartValues.length);
+  }
+  get lpoMoM(): string {
+    const v = this.lpoChartValues;
+    if (v.length < 2) return '—';
+    const prev = v[v.length-2], curr = v[v.length-1];
+    if (prev === 0) return '—';
+    const pct = ((curr - prev) / prev) * 100;
+    return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+  }
+  get lpoMoMPositive(): boolean {
+    const v = this.lpoChartValues;
+    if (v.length < 2) return true;
+    return v[v.length-1] >= v[v.length-2];
+  }
+
+  // GRN insights
+  get grnPeakYear(): string {
+    if (!this.grnChartValues.length) return '—';
+    const idx = this.grnChartValues.indexOf(Math.max(...this.grnChartValues));
+    return this.grnChartLabels[idx] ?? '—';
+  }
+  get grnPeakVal(): string {
+    if (!this.grnChartValues.length) return '—';
+    return this.formatM(Math.max(...this.grnChartValues));
+  }
+  get grnAvg(): string {
+    if (!this.grnChartValues.length) return '—';
+    return this.formatM(this.grnChartValues.reduce((a,b)=>a+b,0) / this.grnChartValues.length);
+  }
+  get grnYoY(): string {
+    const v = this.grnChartValues;
+    if (v.length < 2) return '—';
+    const prev = v[v.length-2], curr = v[v.length-1];
+    if (prev === 0) return '—';
+    const pct = ((curr - prev) / prev) * 100;
+    return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+  }
+  get grnYoYPositive(): boolean {
+    const v = this.grnChartValues;
+    if (v.length < 2) return true;
+    return v[v.length-1] >= v[v.length-2];
+  }
+
+  // Project insights
+  get projHighestPO(): string {
+    const data = this.projChartData ?? [];
+    if (!data.length) return '—';
+    const sorted = [...data].sort((a:any,b:any) =>
+      (+(b.poAmount??b.poValue??b.po??b.purchaseOrderAmount??b.totalPoAmount??0)) -
+      (+(a.poAmount??a.poValue??a.po??a.purchaseOrderAmount??a.totalPoAmount??0))
+    );
+    const name = sorted[0].projectName ?? sorted[0].shortLabel ?? sorted[0].name ?? sorted[0].description ?? '—';
+    return name.length > 20 ? name.slice(0,19)+'…' : name;
+  }
+  get projTotalPO(): string {
+    const data = this.projChartData ?? [];
+    if (!data.length) return '—';
+    const total = data.reduce((a:number,d:any) => a + (+(d.poAmount??d.poValue??d.po??d.purchaseOrderAmount??d.totalPoAmount??0)), 0);
+    return this.formatM(toMillions(total));
+  }
+  get projTotalGRN(): string {
+    const data = this.projChartData ?? [];
+    if (!data.length) return '—';
+    const total = data.reduce((a:number,d:any) => a + (+(d.grnAmount??d.grnValue??d.grn??d.goodsReceivedAmount??d.totalGrnAmount??0)), 0);
+    return this.formatM(toMillions(total));
+  }
+  get projGRNRatio(): string {
+    const data = this.projChartData ?? [];
+    if (!data.length) return '—';
+    const totalPO  = data.reduce((a:number,d:any) => a + (+(d.poAmount??d.poValue??d.po??d.purchaseOrderAmount??d.totalPoAmount??0)), 0);
+    const totalGRN = data.reduce((a:number,d:any) => a + (+(d.grnAmount??d.grnValue??d.grn??d.goodsReceivedAmount??d.totalGrnAmount??0)), 0);
+    return totalPO > 0 ? (totalGRN/totalPO*100).toFixed(1)+'%' : '—';
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────────
@@ -447,6 +811,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   // ── Filter handlers (call API then rebuild chart) ────────────────────────────
   onLPO() {
+    this.lpoLoading = true; this.lpoEmpty = false;
     const isMonthly = this.lpoView === 'monthly';
     const req: LpoDashboardRequest = {
       fromYear:  isMonthly ? this.lpoYear : this.lpoYears[Math.min(this.lpoYearFrom, this.lpoYearTo)],
@@ -459,30 +824,24 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     this.api.GetLpoDashboard(req).subscribe({
       next: (res) => {
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
-        // Label: prefer monthName (monthly view) → year (yearly view) → label fallback
         this.lpoChartLabels = data.map((d: any) =>
           d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
         );
-        // Amount comes in raw OMR — convert to millions for chart display
-        console.log('[LPO] raw API data sample:', data.slice(0, 2));
-        this.lpoChartValues = data.map((d: any) => {
-          const raw = +(d.amount ?? d.value ?? d.lpoAmount ?? 0);
-          const converted = toMillions(raw);
-          console.log(`[LPO] raw=${raw} → converted=${converted}`);
-          return converted;
-        });
+        this.lpoChartValues = data.map((d: any) => toMillions(+(d.amount ?? d.value ?? d.lpoAmount ?? 0)));
+        this.lpoLoading = false; this.lpoEmpty = data.length === 0;
         this.build('lpo');
         if (this.expandedChart === 'lpo') this.buildModal();
       },
       error: () => {
-        this.lpoChartLabels = [];
-        this.lpoChartValues = [];
+        this.lpoChartLabels = []; this.lpoChartValues = [];
+        this.lpoLoading = false; this.lpoEmpty = true;
         this.build('lpo');
       }
     });
   }
 
   onGRN() {
+    this.grnLoading = true; this.grnEmpty = false;
     const isMonthly = this.grnView === 'monthly';
     const fromIdx = Math.min(this.grnYearFrom,this.grnYearTo);
     const toIdx   = Math.max(this.grnYearFrom,this.grnYearTo);
@@ -500,26 +859,21 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.grnChartLabels = data.map((d: any) =>
           d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
         );
-        // Convert raw OMR → millions, same as LPO
-        console.log('[GRN] raw API data sample:', data.slice(0, 2));
-        this.grnChartValues = data.map((d: any) => {
-          const raw = +(d.amount ?? d.value ?? d.grnAmount ?? 0);
-          const converted = toMillions(raw);
-          console.log(`[GRN] raw=${raw} → converted=${converted}`);
-          return converted;
-        });
+        this.grnChartValues = data.map((d: any) => toMillions(+(d.amount ?? d.value ?? d.grnAmount ?? 0)));
+        this.grnLoading = false; this.grnEmpty = data.length === 0;
         this.build('grn');
         if (this.expandedChart === 'grn') this.buildModal();
       },
       error: () => {
-        this.grnChartLabels = [];
-        this.grnChartValues = [];
+        this.grnChartLabels = []; this.grnChartValues = [];
+        this.grnLoading = false; this.grnEmpty = true;
         this.build('grn');
       }
     });
   }
 
   onProj() {
+    this.projLoading = true; this.projEmpty = false;
     const req: ProjectDashboardRequest = {
       companies: this.projCompanies.length ? this.projCompanies : null,
       projects:  this.projProjects.length  ? this.projProjects  : null,
@@ -527,15 +881,22 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     };
     this.api.GetProjectDashboard(req).subscribe({
       next: (res) => {
-        this.projChartData = Array.isArray(res) ? res : (res?.data ?? []);
+        const data = Array.isArray(res) ? res : (res?.data ?? []);
+        this.projChartData = data;
+        this.projLoading = false; this.projEmpty = data.length === 0;
         this.build('projects');
         if (this.expandedChart === 'projects') this.buildModal();
       },
-      error: () => { this.projChartData = null; this.build('projects'); }
+      error: () => {
+        this.projChartData = [];
+        this.projLoading = false; this.projEmpty = true;
+        this.build('projects');
+      }
     });
   }
 
   onSupp() {
+    this.suppLoading = true; this.suppEmpty = false;
     const req: TopSupplierRequest = {
       companies: this.getCodes(this.suppCompanies),
       yearFrom:  this.suppFromYear,
@@ -544,11 +905,17 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     };
     this.api.GetTopSuppliers(req).subscribe({
       next: (res) => {
-        this.suppChartData = Array.isArray(res) ? res : (res?.data ?? []);
+        const data = Array.isArray(res) ? res : (res?.data ?? []);
+        this.suppChartData = data;
+        this.suppLoading = false; this.suppEmpty = data.length === 0;
         this.build('suppliers');
         if (this.expandedChart === 'suppliers') this.buildModal();
       },
-      error: () => { this.suppChartData = null; this.build('suppliers'); }
+      error: () => {
+        this.suppChartData = [];
+        this.suppLoading = false; this.suppEmpty = true;
+        this.build('suppliers');
+      }
     });
   }
 
@@ -637,33 +1004,88 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   private makeGRN(ctx: CanvasRenderingContext2D): Chart {
-    const from = Math.min(this.grnYearFrom,this.grnYearTo);
-    const to   = Math.max(this.grnYearFrom,this.grnYearTo);
-    const labels = this.grnChartLabels.length ? this.grnChartLabels : GRN_YEARLY.years.slice(from,to+1);
-    const values = this.grnChartValues.length ? this.grnChartValues : GRN_YEARLY.values.slice(from,to+1);
-    const grad = ctx.createLinearGradient(0,0,0,350);
-    grad.addColorStop(0,'rgba(99,102,241,0.75)');
-    grad.addColorStop(0.5,'rgba(139,92,246,0.35)');
-    grad.addColorStop(1,'rgba(99,102,241,0)');
-    return new Chart(ctx,{
-      type:'line',
-      data:{labels,datasets:[{
-        label:'GRN Value (M)',data:values,fill:true,backgroundColor:grad,
-        borderColor:P_INDIGO,borderWidth:3.5,
-        pointBackgroundColor:DONUT_VIVID.slice(0,values.length),
-        pointBorderColor:'#fff',pointBorderWidth:2.5,
-        pointRadius:8,pointHoverRadius:11,tension:0.45
-      }]},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        animation:{duration:2000,easing:'easeInOutQuart'},
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{label:(c:any)=>` ${c.parsed.y} M OMR`}}
+    const labels = this.grnChartLabels;
+    const values = this.grnChartValues;
+
+    // Green → Teal → Sky gradient fill (left-to-right, matching the reference image)
+    const w = ctx.canvas.width || 600;
+    const fillGrad = ctx.createLinearGradient(0, 0, w, 0);
+    fillGrad.addColorStop(0,   'rgba(16,185,129,0.55)');
+    fillGrad.addColorStop(0.45,'rgba(6,182,212,0.42)');
+    fillGrad.addColorStop(1,   'rgba(14,165,233,0.28)');
+
+    const lineGrad = ctx.createLinearGradient(0, 0, w, 0);
+    lineGrad.addColorStop(0,   '#10b981');
+    lineGrad.addColorStop(0.5, '#06b6d4');
+    lineGrad.addColorStop(1,   '#0ea5e9');
+
+    // Floating pill label plugin — draws a white rounded card above each point
+    const pillPlugin = {
+      id: 'grnPillLabel',
+      afterDatasetsDraw(chart: any) {
+        const { ctx: c, data } = chart;
+        const vals: number[] = data.datasets[0]?.data ?? [];
+        if (!vals.length) return;
+        const meta = chart.getDatasetMeta(0);
+        c.save();
+        meta.data.forEach((point: any, i: number) => {
+          const val = vals[i];
+          if (val == null || val === 0) return;
+          const label = val.toFixed(2) + ' M';
+          const px = point.x, py = point.y;
+          const fs = 11;
+          c.font = `600 ${fs}px Roboto,sans-serif`;
+          const tw = c.measureText(label).width;
+          const px2 = 8, py2 = 5, bw = tw + px2 * 2, bh = fs + py2 * 2, r = 8;
+          const bx = px - bw / 2, by = py - bh - 14;
+          c.shadowColor = 'rgba(0,0,0,0.13)'; c.shadowBlur = 8; c.shadowOffsetY = 3;
+          c.beginPath();
+          c.moveTo(bx+r, by); c.lineTo(bx+bw-r, by); c.quadraticCurveTo(bx+bw, by, bx+bw, by+r);
+          c.lineTo(bx+bw, by+bh-r); c.quadraticCurveTo(bx+bw, by+bh, bx+bw-r, by+bh);
+          c.lineTo(bx+r, by+bh); c.quadraticCurveTo(bx, by+bh, bx, by+bh-r);
+          c.lineTo(bx, by+r); c.quadraticCurveTo(bx, by, bx+r, by); c.closePath();
+          c.fillStyle = 'rgba(255,255,255,0.96)'; c.fill();
+          c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillStyle = '#1e293b';
+          c.fillText(label, px, by + bh / 2);
+          c.beginPath(); c.moveTo(px, by+bh); c.lineTo(px, py-7);
+          c.strokeStyle = 'rgba(14,165,233,0.35)'; c.lineWidth = 1; c.stroke();
+        });
+        c.restore();
+      }
+    };
+
+    return new Chart(ctx, {
+      type: 'line',
+      plugins: [pillPlugin],
+      data: {
+        labels,
+        datasets: [{
+          label: 'GRN Value (M)', data: values,
+          fill: true, backgroundColor: fillGrad,
+          borderColor: lineGrad as any, borderWidth: 3,
+          tension: 0.42,
+          pointBackgroundColor: '#ffffff', pointBorderColor: lineGrad as any,
+          pointBorderWidth: 2.5, pointRadius: 6, pointHoverRadius: 9,
+          pointHoverBackgroundColor: '#06b6d4', pointHoverBorderColor: '#ffffff', pointHoverBorderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 52, right: 16, left: 8, bottom: 8 } },
+        animation: { duration: 1800, easing: 'easeInOutCubic' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15,23,42,0.88)', titleColor: '#f1f5f9',
+            bodyColor: '#cbd5e1', padding: 12, cornerRadius: 10,
+            callbacks: { label: (c: any) => ` ${(+c.parsed.y).toFixed(3)} M OMR` }
+          }
         },
-        scales:{
-          x:{grid:{display:false},ticks:{color:'#6b7280',font:{size:11}}},
-          y:{beginAtZero:true,grid:{color:'rgba(99,102,241,0.07)'},ticks:{color:'#6b7280',callback:(v:any)=>(+v).toFixed(2)+'M'}}
+        scales: {
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: '#6b7280', font: { size: 11, weight: 'bold' } } },
+          y: { beginAtZero: true, grid: { color: 'rgba(6,182,212,0.07)' }, border: { display: false }, ticks: { color: '#6b7280', callback: (v: any) => (+v).toFixed(0) + ' M' } }
         }
       }
     });
@@ -733,55 +1155,71 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   private makeSuppliers(ctx: CanvasRenderingContext2D): Chart {
-    const data = this.suppChartData;
-    const n      = Math.min(this.suppCount, data?.length ?? TOP_SUPPLIERS.labels.length);
-    const labels = data?.slice(0,n).map((d: any) => d.vendorName ?? d.supplierName ?? d.name ?? '') ?? TOP_SUPPLIERS.labels.slice(0,n);
+    const data = this.suppChartData ?? [];
+    const n = Math.min(this.suppCount, data.length);
+    const labels = data.slice(0,n).map((d: any) => d.vendorName ?? d.supplierName ?? d.name ?? '');
     const toM = (v: number) => toMillions(v);
-    const rawValues = data?.slice(0,n).map((d: any) => toM(+(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0))) ?? TOP_SUPPLIERS.values.slice(0,n);
-
-    // When all values are 0, Chart.js renders nothing — use equal placeholder segments
+    const rawValues = data.slice(0,n).map((d: any) => toM(+(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0)));
     const total = rawValues.reduce((a, b) => a + b, 0);
-    const isNoData = total === 0;
-    const chartValues = isNoData ? rawValues.map(() => 1) : rawValues;
-
-    // Muted colors for no-data state, vivid for real data
-    const vividColors = DONUT_VIVID.slice(0, n);
-    const mutedColors = DONUT_VIVID.slice(0, n).map(c => c + '55'); // 33% opacity
+    const isNoData = total === 0 || n === 0;
+    const chartValues = isNoData ? (n > 0 ? rawValues.map(() => 1) : [1]) : rawValues;
+    const chartLabels = isNoData && n === 0 ? ['No Data'] : labels;
+    const vividColors = DONUT_VIVID.slice(0, Math.max(n, 1));
+    const mutedColors = vividColors.map(c => c + '44');
     const colors = isNoData ? mutedColors : vividColors;
 
-    return new Chart(ctx,{
-      type:'doughnut', plugins:[centerLabelPlugin],
-      data:{labels, datasets:[{
-        data: chartValues,
-        backgroundColor: colors,
-        borderColor: isNoData ? '#f1f5f9' : '#fff',
-        borderWidth: isNoData ? 2 : 4,
-        hoverBorderColor: isNoData ? colors : vividColors,
-        hoverBorderWidth: isNoData ? 2 : 6,
-        hoverOffset: isNoData ? 0 : 22
+    // Draw % label inside each slice
+    const sliceLabelPlugin = {
+      id: 'suppSliceLabel',
+      afterDatasetsDraw(chart: any) {
+        if (isNoData) return;
+        const { ctx: c } = chart;
+        const meta = chart.getDatasetMeta(0);
+        const vals: number[] = chart.data.datasets[0].data;
+        const t = vals.reduce((a: number, b: number) => a + b, 0);
+        if (t === 0) return;
+        c.save();
+        meta.data.forEach((arc: any, i: number) => {
+          const pct = vals[i] / t * 100;
+          if (pct < 3.5) return;
+          const angle = (arc.startAngle + arc.endAngle) / 2;
+          const radius = (arc.innerRadius + arc.outerRadius) / 2;
+          const x = arc.x + Math.cos(angle) * radius;
+          const y = arc.y + Math.sin(angle) * radius;
+          c.font = `700 ${pct < 6 ? 9 : 10.5}px Roboto,sans-serif`;
+          c.fillStyle = '#ffffff';
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.shadowColor = 'rgba(0,0,0,0.35)'; c.shadowBlur = 3;
+          c.fillText(pct.toFixed(1) + '%', x, y);
+          c.shadowBlur = 0;
+        });
+        c.restore();
+      }
+    };
+
+    return new Chart(ctx, {
+      type: 'doughnut',
+      plugins: [centerLabelPlugin, sliceLabelPlugin],
+      data: { labels: chartLabels, datasets: [{
+        data: chartValues, backgroundColor: colors,
+        borderColor: '#ffffff', borderWidth: isNoData ? 1 : 3,
+        hoverBorderColor: '#fff', hoverBorderWidth: isNoData ? 1 : 5,
+        hoverOffset: isNoData ? 0 : 18
       }]},
-      options:{
-        responsive:true, maintainAspectRatio:false, cutout:'58%',
-        animation:{
-          animateRotate: true,
-          animateScale: true,
-          duration: 2200,
-          easing: 'easeOutElastic' as any,
-          delay: (ctx2: any) => ctx2.dataIndex * 80
-        },
-        plugins:{
-          legend:{ display: false },
-          tooltip:{
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '54%',
+        animation: { animateRotate: true, animateScale: true, duration: 2000,
+          easing: 'easeOutQuart' as any, delay: (ctx2: any) => ctx2.dataIndex * 60 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
             enabled: !isNoData,
-            backgroundColor: 'rgba(15,23,42,0.88)',
-            titleColor: '#f1f5f9',
-            bodyColor: '#cbd5e1',
-            padding: 12,
-            cornerRadius: 10,
-            callbacks:{
-              label:(c:any)=>` ${c.label}: ${(+(rawValues[c.dataIndex]??0)).toFixed(3)} M OMR`,
-              afterLabel:(c:any)=>{
-                const t = rawValues.reduce((a:number,b:number)=>a+b,0);
+            backgroundColor: 'rgba(15,23,42,0.88)', titleColor: '#f1f5f9',
+            bodyColor: '#cbd5e1', padding: 12, cornerRadius: 10,
+            callbacks: {
+              label: (c: any) => ` ${c.label}: ${(+(rawValues[c.dataIndex]??0)).toFixed(3)} M OMR`,
+              afterLabel: (c: any) => {
+                const t = rawValues.reduce((a:number,b:number) => a+b, 0);
                 return t > 0 ? ` Share: ${(((rawValues[c.dataIndex]??0)/t)*100).toFixed(1)}%` : '';
               }
             }
@@ -873,51 +1311,6 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private buildModal() { if(this.expandedChart&&this.modalRef) this.build(this.expandedChart,this.modalRef.nativeElement.getContext('2d')!); }
 
-  // ── Dropdown helpers ─────────────────────────────────────────────────────────
-  toggleDD(f: string) {
-    const all=['lpoCoOpen','grnCoOpen','projCoOpen','projPrOpen','suppCoOpen','facilCoOpen','facilPrOpen'];
-    all.forEach(k=>{ if(k!==f)(this as any)[k]=false; });
-    (this as any)[f]=!(this as any)[f];
-    // Reset search when opening
-    const searchMap: Record<string,string> = {
-      lpoCoOpen:'lpoCoSearch', grnCoOpen:'grnCoSearch',
-      projCoOpen:'projCoSearch', projPrOpen:'projPrSearch', suppCoOpen:'suppCoSearch'
-    };
-    if ((this as any)[f] && searchMap[f]) (this as any)[searchMap[f]] = '';
-  }
-
-  // Multi-select toggle — each field is a string[]
-  toggleCompany(field: string, name: string, chartFn: ()=>void) {
-    (this as any)[field] = this.toggleMulti((this as any)[field], name);
-    chartFn();
-  }
-
-  toggleProject(field: string, name: string, chartFn: ()=>void) {
-    (this as any)[field] = this.toggleMulti((this as any)[field], name);
-    chartFn();
-  }
-
-  toggleProjCompany(name: string) {
-    this.projCompanies = this.toggleMulti(this.projCompanies, name);
-    // Pass names directly — the API expects company names, not codes
-    const names = this.projCompanies.length ? this.projCompanies : null;
-    this.loadProjects(names);
-    this.onProj();
-  }
-
-  toggleFacilCompany(name: string) {
-    this.facilCompanies = this.toggleMulti(this.facilCompanies, name);
-    // Pass names directly — the API expects company names, not codes
-    const names = this.facilCompanies.length ? this.facilCompanies : null;
-    this.loadProjects(names);
-    this.onFacil();
-  }
-
-  clearFilter(field: string, chartFn: ()=>void) {
-    (this as any)[field] = [];
-    chartFn();
-  }
-
   downloadExcel() { alert('Excel download will be available after API integration.'); }
 
   // ── Per-chart CSV export ──────────────────────────────────────────────────────
@@ -1008,103 +1401,6 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       ])
     ];
     this.exportCSV(`Facilities_${Date.now()}.csv`, rows);
-  }
-
-  // ── Supplier table helpers ───────────────────────────────────────────────────
-  get suppDisplayData(): any[] {
-    const data = this.suppChartData ?? [];
-    return data.slice(0, this.suppCount);
-  }
-
-  private suppTotalM(): number {
-    return this.suppDisplayData.reduce((sum, d) => {
-      const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
-      return sum + toMillions(raw);
-    }, 0);
-  }
-
-  suppAmtM(d: any): string {
-    const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
-    return toMillions(raw).toFixed(3) + ' M';
-  }
-
-  suppShare(d: any): number {
-    const total = this.suppTotalM();
-    if (total === 0) return 0;
-    const raw = +(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0);
-    return Math.min(100, (toMillions(raw) / total) * 100);
-  }
-
-  suppRankColor(i: number): string {
-    const colors = ['#f59e0b','#6366f1','#10b981','#f43f5e','#0ea5e9',
-                    '#8b5cf6','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'];
-    return colors[i % colors.length];
-  }
-
-  suppAmtNum(d: any): number {
-    return toMillions(+(d.totalAmountOmr ?? d.totalValue ?? d.value ?? d.amount ?? 0));
-  }
-
-  // ── Supplier KPI getters (used by KPI pills row + bottom stat cards) ──────────
-  get suppTotalDisplay(): string { return this.formatM(this.suppTotalM()); }
-
-  get suppTopShare(): string {
-    const data = this.suppDisplayData;
-    if (!data.length) return '—';
-    const total = this.suppTotalM();
-    if (total === 0) return '—';
-    const top = this.suppAmtNum(data[0]);
-    return (top / total * 100).toFixed(1) + '%';
-  }
-
-  get suppTop3Share(): string {
-    const data = this.suppDisplayData;
-    if (!data.length) return '—';
-    const total = this.suppTotalM();
-    if (total === 0) return '—';
-    const top3 = data.slice(0, 3).reduce((s, d) => s + this.suppAmtNum(d), 0);
-    return (top3 / total * 100).toFixed(1) + '%';
-  }
-
-  get suppTop1Name(): string {
-    const d = this.suppDisplayData;
-    if (!d.length) return '—';
-    const name = d[0].vendorName ?? d[0].supplierName ?? d[0].name ?? '—';
-    return name.length > 32 ? name.slice(0, 31) + '…' : name;
-  }
-
-  get suppTop1Amt(): string {
-    const d = this.suppDisplayData;
-    return d.length ? this.suppAmtM(d[0]) : '—';
-  }
-
-  get suppConcentration(): string {
-    const data = this.suppDisplayData;
-    if (!data.length) return '—';
-    const total = this.suppTotalM();
-    if (total === 0) return '—';
-    const top3 = data.slice(0, 3).reduce((s, d) => s + this.suppAmtNum(d), 0);
-    const pct = top3 / total * 100;
-    return pct >= 60 ? 'High' : pct >= 40 ? 'Medium' : 'Low';
-  }
-
-  get suppConcentrationClass(): string {
-    const c = this.suppConcentration;
-    return c === 'High' ? 'high' : c === 'Medium' ? 'medium' : 'low';
-  }
-
-  get suppConcentrationColor(): string {
-    const c = this.suppConcentration;
-    return c === 'High' ? '#ef4444' : c === 'Medium' ? '#f59e0b' : '#10b981';
-  }
-
-  get suppTrendPct(): number {
-    const data = this.suppDisplayData;
-    if (data.length < 2) return 0;
-    const top1 = this.suppAmtNum(data[0]);
-    const rest = data.slice(1).reduce((s, d) => s + this.suppAmtNum(d), 0) / (data.length - 1);
-    if (rest === 0) return 0;
-    return +((top1 / rest - 1) * 100).toFixed(1);
   }
 
   private runGSAP() {

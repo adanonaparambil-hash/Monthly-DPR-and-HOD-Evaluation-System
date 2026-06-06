@@ -4,7 +4,9 @@
       "Bash(xargs grep *)",
       "Bash(awk '{print $NF}')",
       "Bash(npx ng *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(netstat -ano)"
     ]
   }
 }
