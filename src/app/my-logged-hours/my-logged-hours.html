@@ -62,7 +62,7 @@
         </div>
       </div>
 
-      @if (isHOD || isSurveillance) {
+      @if (isHOD || (isSurveillance && !isHOD)) {
       <div class="filter-group">
         <label class="filter-label">Department</label>
         <div class="filter-input-wrapper">
@@ -77,7 +77,7 @@
       </div>
       }
 
-      @if (isHOD || isSurveillance || isMasOrPurchase) {
+      @if (isHOD || (isSurveillance && !isHOD) || isMasOrPurchase) {
         <div class="filter-group">
           <label class="filter-label">Employee</label>
           <div class="filter-input-wrapper">
@@ -434,7 +434,7 @@
             </div>
           </div>
 
-          <div class="filter-group" *ngIf="isHOD || isSurveillance">
+          <div class="filter-group" *ngIf="isHOD || (isSurveillance && !isHOD)">
             <label class="filter-label">Department</label>
             <div class="filter-input-wrapper">
               <i class="fas fa-building filter-icon"></i>
@@ -447,7 +447,7 @@
             </div>
           </div>
 
-          <div class="filter-group" *ngIf="isHOD || isSurveillance || isMasOrPurchase">
+          <div class="filter-group" *ngIf="isHOD || (isSurveillance && !isHOD) || isMasOrPurchase">
             <label class="filter-label">Employee</label>
             <div class="filter-input-wrapper">
               <i class="fas fa-user filter-icon"></i>
