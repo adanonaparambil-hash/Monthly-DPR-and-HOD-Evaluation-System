@@ -90,6 +90,10 @@
               <i class="fas fa-clock"></i>
               <span>Log History</span>
             </a>
+            <a *ngIf="isLogAnalyticsUser" routerLink="/log-analytics" routerLinkActive="active" (click)="navigateDPRRoute('/log-analytics')">
+              <i class="fas fa-chart-line"></i>
+              <span>Log Analytics</span>
+            </a>
             <!-- DPR Approval - Only visible for HOD -->
             <a *ngIf="isHod" routerLink="/dpr-approval" routerLinkActive="active" (click)="navigateDPRRoute('/dpr-approval')">
               <i class="fas fa-tasks"></i>

@@ -1,0 +1,364 @@
+<!-- Log Analytics Component -->
+<div class="log-analytics-container">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input 
+        type="text" 
+        placeholder="Search employees, projects, tasks..." 
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+        class="search-input">
+    </div>
+    
+    <div class="top-actions">
+      <button class="btn btn-filter" (click)="toggleFilters()">
+        <i class="fas fa-filter"></i>
+        Filters
+        @if (showFilters) {
+          <i class="fas fa-chevron-up"></i>
+        } @else {
+          <i class="fas fa-chevron-down"></i>
+        }
+      </button>
+      
+      <div class="group-selector">
+        <i class="fas fa-layer-group"></i>
+        <span>Group By:</span>
+        <select class="group-select">
+          <option value="task-category">Task Category</option>
+          <option value="employee">Employee</option>
+          <option value="department">Department</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-columns" (click)="toggleColumnsPanel()">
+        <i class="fas fa-columns"></i>
+        Columns
+      </button>
+      
+      <button class="btn btn-export" (click)="exportData()">
+        <i class="fas fa-download"></i>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Panel -->
+  @if (showFilters) {
+    <div class="filters-panel">
+      <div class="filters-container">
+        <div class="filter-row">
+          <div class="filter-item">
+            <label>Date Range</label>
+            <div class="date-range-picker">
+              <input type="date" [(ngModel)]="filters.dateRange.from" class="date-input">
+              <span class="date-separator">to</span>
+              <input type="date" [(ngModel)]="filters.dateRange.to" class="date-input">
+            </div>
+          </div>
+
+          <div class="filter-item">
+            <label>Department</label>
+            <select [(ngModel)]="filters.department" class="filter-dropdown">
+              <option value="">All Departments</option>
+              <option value="IT">IT</option>
+              <option value="Development">Development</option>
+              <option value="Support">Support</option>
+              <option value="Network">Network</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Employee</label>
+            <select [(ngModel)]="filters.employee" class="filter-dropdown">
+              <option value="">All Employees</option>
+              @for (emp of employees; track emp.id) {
+                <option [value]="emp.id">{{emp.name}}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Project</label>
+            <select [(ngModel)]="filters.project" class="filter-dropdown">
+              <option value="">All Projects</option>
+              <option value="Axpert">Axpert</option>
+              <option value="Adraklive">Adraklive</option>
+              <option value="HR Portal">HR Portal</option>
+              <option value="Infrastructure">Infrastructure</option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Task Category</label>
+            <select [(ngModel)]="filters.taskCategory" class="filter-dropdown">
+              <option value="">All Categories</option>
+              @for (category of taskCategories; track category.id) {
+                <option [value]="category.name">{{getCategoryShortName(category.name)}}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button class="apply-filters-btn" (click)="applyFilters()">
+              <i class="fas fa-check"></i>
+              Apply Filters
+            </button>
+            <button class="clear-all-btn" (click)="clearAllFilters()">
+              <i class="fas fa-times"></i>
+              Clear All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <!-- Main Data Table -->
+  <div class="main-table">
+    <!-- Categories -->
+    @for (category of taskCategories; track category.id) {
+      <div class="category-section">
+        <!-- Category Header -->
+        <div class="category-header" (click)="toggleCategory(category.name)">
+          <div class="category-left">
+            <i class="fas fa-chevron-down category-toggle" 
+               [class.rotated]="!expandedCategories[category.name]"></i>
+            <span class="category-name">{{category.name}}</span>
+            <span class="task-count">{{category.taskCount}} tasks</span>
+          </div>
+          <div class="category-right">
+            <div class="time-summary">
+              <i class="fas fa-clock"></i>
+              <span>{{getTotalHoursForCategory(category.name)}} hrs</span>
+            </div>
+            <span class="task-summary">{{category.taskCount}} Tasks</span>
+          </div>
+        </div>
+
+        <!-- Category Data Table -->
+        @if (expandedCategories[category.name]) {
+          <div class="data-table">
+            <!-- Table Header -->
+            <div class="data-table-header">
+              <div class="table-columns" [style.grid-template-columns]="getGridTemplateColumns()">
+                <div class="col col-employee" (click)="sortBy('employee')">
+                  <span>Employee</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'employee' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'employee' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer" 
+                       (mousedown)="startResize($event, 'employee')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-category" (click)="sortBy('category')">
+                  <span>Category</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'category' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'category' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer" 
+                       (mousedown)="startResize($event, 'category')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-title" (click)="sortBy('taskTitle')">
+                  <span>Task Title</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'taskTitle' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'taskTitle' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer" 
+                       (mousedown)="startResize($event, 'taskTitle')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-project" (click)="sortBy('project')">
+                  <span>Project</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'project' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'project' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer" 
+                       (mousedown)="startResize($event, 'project')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-description" (click)="sortBy('description')">
+                  <span>Description</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'description' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'description' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer" 
+                       (mousedown)="startResize($event, 'description')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-comment" (click)="sortBy('dailyComment')">
+                  <span>Daily Comment</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'dailyComment' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'dailyComment' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer" 
+                       (mousedown)="startResize($event, 'dailyComment')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-time" (click)="sortBy('logTime')">
+                  <span>Log Time</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'logTime' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'logTime' && sortDirection === 'desc'"></i>
+                  </div>
+                  <div class="column-resizer"
+                       (mousedown)="startResize($event, 'logTime')"
+                       title="Drag to resize"></div>
+                </div>
+                <div class="col col-status" (click)="sortBy('approvalStatus')">
+                  <span>Status</span>
+                  <div class="sort-icons">
+                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'approvalStatus' && sortDirection === 'asc'"></i>
+                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'approvalStatus' && sortDirection === 'desc'"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Table Rows -->
+            <div class="data-table-body">
+              @for (entry of getEntriesForCategory(category.name); track entry.id; let i = $index) {
+                <div class="table-row-data" [class.even]="i % 2 === 0">
+                  <div class="table-columns" [style.grid-template-columns]="getGridTemplateColumns()">
+                    <div class="col col-employee" data-label="Employee">
+                      <div class="employee-info">
+                        <div class="employee-avatar" [style.background]="getEmployeeColor(entry.employee.name)">
+                          {{getEmployeeInitials(entry.employee.name)}}
+                        </div>
+                        <span class="employee-name">{{entry.employee.name}}</span>
+                      </div>
+                    </div>
+
+                    <div class="col col-category" data-label="Category">
+                      <span class="category-tag" [style.background]="getCategoryColor(entry.taskCategory.name)">
+                        {{getCategoryShortName(entry.taskCategory.name)}}
+                      </span>
+                    </div>
+
+                    <div class="col col-title" data-label="Task Title">
+                      <span class="task-title" [title]="entry.taskTitle">{{entry.taskTitle}}</span>
+                    </div>
+
+                    <div class="col col-project" data-label="Project">
+                      <div class="project-display">
+                        <div class="project-dot" [style.background]="getProjectColor(entry.project)"></div>
+                        <span class="project-name">{{entry.project}}</span>
+                      </div>
+                    </div>
+
+                    <div class="col col-description" data-label="Description">
+                      <span class="description-text" [title]="entry.description || '—'">{{entry.description || '—'}}</span>
+                    </div>
+
+                    <div class="col col-comment" data-label="Daily Comment">
+                      <span class="comment-text" [title]="entry.dailyComment || '—'">{{entry.dailyComment || '—'}}</span>
+                    </div>
+
+                    <div class="col col-time" data-label="Log Time">
+                      <span class="time-display">{{entry.logTime}}</span>
+                    </div>
+                    <div class="col col-status" data-label="Status">
+                      <span class="status-badge status-{{entry.approvalStatus}}">
+                        <i class="fas" [ngClass]="{
+                          'fa-play-circle':  entry.approvalStatus === 'running',
+                          'fa-check-circle': entry.approvalStatus === 'completed',
+                          'fa-pause-circle': entry.approvalStatus === 'paused',
+                          'fa-lock':         entry.approvalStatus === 'closed'
+                        }"></i>
+                        {{entry.approvalStatus | titlecase}}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+    <!-- Pagination Footer -->
+    <div class="pagination-footer">
+      <div class="pagination-info">
+        <span>Showing</span>
+        <select class="rows-select" [(ngModel)]="pageSize">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+        <span>of 36 entries</span>
+      </div>
+      
+      <div class="pagination-nav">
+        <span>Rows per page:</span>
+        <select class="page-size-select" [(ngModel)]="pageSize">
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        
+        <div class="page-controls">
+          <button class="btn-page" (click)="previousPage()" [disabled]="currentPage === 1">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="page-numbers">{{currentPage}}</span>
+          <button class="btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columns Panel -->
+  @if (showColumnsPanel) {
+    <div class="columns-panel">
+      <div class="panel-header">
+        <h3>Columns</h3>
+        <button class="btn-close" (click)="showColumnsPanel = false">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="panel-body">
+        <p>Drag to reorder columns:</p>
+        
+        @for (column of availableColumns; track column.key) {
+          <div class="column-item">
+            <i class="fas fa-grip-vertical drag-handle"></i>
+            <label class="column-label">
+              <input type="checkbox" 
+                     [(ngModel)]="visibleColumns[column.key]"
+                     class="column-check">
+              {{column.label}}
+            </label>
+            <div class="column-toggle" 
+                 [class.active]="visibleColumns[column.key]"
+                 (click)="toggleColumn(column.key)">
+              <div class="toggle-dot"></div>
+            </div>
+          </div>
+        }
+      </div>
+      
+      <div class="panel-footer">
+        <button class="btn btn-reset" (click)="resetColumnsToDefault()">
+          Reset to Default
+        </button>
+        <button class="btn btn-save" (click)="saveColumnsSettings()">
+          Save Columns
+        </button>
+      </div>
+    </div>
+    
+    <div class="overlay" (click)="showColumnsPanel = false"></div>
+  }
+</div>

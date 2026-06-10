@@ -22,10 +22,12 @@ import { HodMasterComponent } from './hod-master/hod-master.component';
 import { EmployeeMasterComponent } from './employee-master/employee-master.component';
 import { ByodFormComponent } from './byod-form/byod-form.component';
 import { PurchaseDashboardComponent } from './purchase-dashboard/purchase-dashboard.component';
+import { LogAnalyticsComponent } from './log-analytics/log-analytics.component';
 
 import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
 import { PurchaseDashboardGuard } from './guards/purchase-dashboard.guard';
+import { LogAnalyticsGuard } from './guards/log-analytics.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -59,6 +61,7 @@ export const routes: Routes = [
       { path: 'chat', component: ChatComponent },
       { path: 'my-task', component: MyTaskComponent },
       { path: 'my-logged-hours', component: MyLoggedHoursComponent },
+      { path: 'log-analytics', component: LogAnalyticsComponent, canActivate: [LogAnalyticsGuard] },
       { path: 'notice-management', component: NoticeManagementComponent },
       { path: 'hod-master', component: HodMasterComponent },
       { path: 'employee-master', component: EmployeeMasterComponent },

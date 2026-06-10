@@ -1398,12 +1398,12 @@
 
 /* Description Section - Reduced Spacing */
 .description-section {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 /* Task Description Section - Reduced Spacing */
 .task-description-section {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .section-label {
@@ -1412,30 +1412,32 @@
   color: #000000;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   display: block;
 }
 
 .description-card {
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.9) 0%, 
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.9) 0%,
     rgba(248, 250, 252, 0.8) 100%);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  padding: 16px 20px;
+  border: 1px solid rgba(203, 213, 225, 0.5);
+  border-radius: 10px;
+  padding: 10px 14px;
   color: #64748b;
-  line-height: 1.6;
-  font-size: 13px;
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.08),
+  line-height: 1.5;
+  font-size: 12.5px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
     inset 0 1px 2px rgba(255, 255, 255, 0.8);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Compact description textarea — smaller height */
 .description-card.editable-description {
   width: 100%;
-  min-height: 100px;
+  min-height: 56px;
+  max-height: 90px;
   resize: vertical;
   font-family: inherit;
   outline: none;
@@ -1443,17 +1445,115 @@
 
 .description-card.editable-description:focus {
   border-color: #10b981;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.95) 0%, 
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.95) 0%,
     rgba(240, 253, 244, 0.9) 100%);
-  box-shadow: 
-    0 12px 32px rgba(16, 185, 129, 0.15),
+  box-shadow:
+    0 6px 16px rgba(16, 185, 129, 0.12),
     inset 0 1px 2px rgba(255, 255, 255, 0.9),
-    0 0 0 3px rgba(16, 185, 129, 0.1);
-  transform: translateY(-1px);
+    0 0 0 2px rgba(16, 185, 129, 0.1);
 }
 
-/* Daily Remarks - Compact Version */
+/* ============================================================
+   Daily Remarks — New Modern Prominent Section
+   ============================================================ */
+.daily-remarks-section {
+  margin: 14px 0;
+  background: linear-gradient(145deg,
+    rgba(240, 253, 244, 0.8) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow:
+    0 4px 16px rgba(16, 185, 129, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.daily-remarks-section:focus-within {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.14),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    0 0 0 3px rgba(16, 185, 129, 0.07);
+}
+
+.remarks-section-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #065f46;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+}
+
+.remarks-section-label i {
+  font-size: 12px;
+  color: #10b981;
+}
+
+.remarks-section-label .required-indicator {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.remarks-textarea-container {
+  position: relative;
+}
+
+.remarks-textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1f2937;
+  line-height: 1.6;
+  transition: all 0.25s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.remarks-textarea::placeholder {
+  color: #9ca3af;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.remarks-textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 0 0 3px rgba(16, 185, 129, 0.1),
+    inset 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.remarks-char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+
+.daily-remarks-section:focus-within .remarks-char-count {
+  color: #10b981;
+}
+
+/* Legacy compact remarks — kept for any older references */
 .daily-remarks-compact {
   margin: 16px 0;
   display: flex;
@@ -1480,8 +1580,8 @@
 .remarks-input {
   flex: 1;
   padding: 10px 14px;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.95) 0%, 
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.95) 0%,
     rgba(248, 250, 252, 0.9) 100%);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(203, 213, 225, 0.6);
@@ -1489,7 +1589,7 @@
   font-size: 13px;
   color: #374151;
   transition: all 0.3s ease;
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.04),
     inset 0 1px 2px rgba(255, 255, 255, 0.8);
 }
@@ -1502,17 +1602,63 @@
 .remarks-input:focus {
   outline: none;
   border-color: #10b981;
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.98) 0%, 
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.98) 0%,
     rgba(240, 253, 244, 0.95) 100%);
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(16, 185, 129, 0.12),
     inset 0 1px 2px rgba(255, 255, 255, 0.9),
     0 0 0 3px rgba(16, 185, 129, 0.08);
   transform: translateY(-1px);
 }
 
-/* Dark mode support for Daily Remarks Compact */
+/* ============================================================
+   Dark mode — Remarks & Description
+   ============================================================ */
+.task-board-container.dark-mode .daily-remarks-section {
+  background: linear-gradient(145deg,
+    rgba(6, 78, 59, 0.18) 0%,
+    rgba(17, 24, 39, 0.6) 100%);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.task-board-container.dark-mode .daily-remarks-section:focus-within {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.task-board-container.dark-mode .remarks-section-label {
+  color: #6ee7b7;
+}
+
+.task-board-container.dark-mode .remarks-textarea {
+  background: rgba(31, 41, 55, 0.6);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #e5e7eb;
+}
+
+.task-board-container.dark-mode .remarks-textarea::placeholder {
+  color: #6b7280;
+}
+
+.task-board-container.dark-mode .remarks-textarea:focus {
+  background: rgba(31, 41, 55, 0.85);
+  border-color: #10b981;
+}
+
+.task-board-container.dark-mode .remarks-char-count {
+  color: #6b7280;
+}
+
+.task-board-container.dark-mode .daily-remarks-section:focus-within .remarks-char-count {
+  color: #34d399;
+}
+
+.task-board-container.dark-mode .description-card {
+  background: rgba(31, 41, 55, 0.5);
+  border-color: rgba(75, 85, 99, 0.4);
+  color: #d1d5db;
+}
+
 .task-board-container.dark-mode .remarks-label {
   color: #e5e7eb;
 }
@@ -1532,16 +1678,24 @@
   border-color: #10b981;
 }
 
-/* Responsive for Daily Remarks */
+/* Responsive */
 @media (max-width: 768px) {
   .daily-remarks-compact {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
-  
+
   .remarks-label {
     min-width: auto;
+  }
+
+  .daily-remarks-section {
+    padding: 12px 14px;
+  }
+
+  .remarks-textarea {
+    min-height: 80px;
   }
 }
 

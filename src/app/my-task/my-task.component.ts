@@ -180,6 +180,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   activeTab = 'MY TASKS';
   myTasksCount = 13;
   assignedToOthersCount = 8;
+  scheduledTasksCount = 0;
   searchTerm = '';
 
   // Pagination
@@ -884,8 +885,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.assignedByMeList = data.assignedByMe || [];
           
           // Update task counts
-          this.myTasksCount = this.myTasksList.length;
+          this.updateMyTasksCount();
           this.assignedToOthersCount = this.assignedByMeList.length;
+          this.updateScheduledTasksCount();
           
           // Update pagination based on actual data
           this.totalTasks = this.tasks.length;
@@ -1013,8 +1015,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           this.assignedByMeList = data.assignedByMe || [];
           
           // Update task counts
-          this.myTasksCount = this.myTasksList.length;
+          this.updateMyTasksCount();
           this.assignedToOthersCount = this.assignedByMeList.length;
+          this.updateScheduledTasksCount();
           
           // Update pagination based on actual data
           this.totalTasks = this.tasks.length;
@@ -1398,16 +1401,74 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
+  // Update the count of scheduled tasks (future dates with NOT STARTED status)
+  updateScheduledTasksCount(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    
+    this.scheduledTasksCount = this.myTasksList.filter(task => {
+      if (task.status !== 'NOT STARTED') return false;
+      
+      if (task.startDate) {
+        const taskStartDate = new Date(task.startDate);
+        taskStartDate.setHours(0, 0, 0, 0); // Set to start of task date
+        return taskStartDate > today; // Task starts in the future
+      }
+      return false;
+    }).length;
+  }
+
+  // Update the count of current tasks (today or past dates, excluding scheduled future tasks)
+  updateMyTasksCount(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    
+    this.myTasksCount = this.myTasksList.filter(task => {
+      // Include tasks that are NOT scheduled for future dates
+      if (task.startDate) {
+        const taskStartDate = new Date(task.startDate);
+        taskStartDate.setHours(0, 0, 0, 0); // Set to start of task date
+        return taskStartDate <= today; // Task starts today or in the past
+      }
+      return true; // Include tasks without start date
+    }).length;
+  }
+
   getFilteredTasks(): Task[] {
     // First filter by active tab
     let tasksToFilter: Task[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
     
     if (this.activeTab === 'MY TASKS') {
-      // Convert myTasksList to Task format
-      tasksToFilter = this.convertActiveTasksToTasks(this.myTasksList);
+      // Convert myTasksList to Task format and filter out future scheduled tasks
+      const allMyTasks = this.convertActiveTasksToTasks(this.myTasksList);
+      tasksToFilter = allMyTasks.filter(task => {
+        // Only show tasks that are NOT scheduled for future dates
+        if (task.startDate) {
+          const taskStartDate = new Date(task.startDate);
+          taskStartDate.setHours(0, 0, 0, 0); // Set to start of task date
+          return taskStartDate <= today; // Task starts today or in the past
+        }
+        return true; // Include tasks without start date
+      });
     } else if (this.activeTab === 'ASSIGNED TO OTHERS') {
-      // Convert assignedByMeList to Task format
+      // Convert assignedByMeList to Task format (no date filtering for assigned tasks)
       tasksToFilter = this.convertActiveTasksToTasks(this.assignedByMeList);
+    } else if (this.activeTab === 'SCHEDULED TASKS') {
+      // Filter tasks that are scheduled for future dates and not started
+      const allMyTasks = this.convertActiveTasksToTasks(this.myTasksList);
+      
+      tasksToFilter = allMyTasks.filter(task => {
+        if (task.status !== 'NOT STARTED') return false;
+        
+        if (task.startDate) {
+          const taskStartDate = new Date(task.startDate);
+          taskStartDate.setHours(0, 0, 0, 0); // Set to start of task date
+          return taskStartDate > today; // Task starts in the future
+        }
+        return false;
+      });
     } else {
       // Fallback to all tasks
       tasksToFilter = this.tasks;
@@ -1796,6 +1857,19 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  editTask(taskId: number) {
+    // Find the task by ID
+    const task = this.tasks.find(t => t.id === taskId);
+    if (!task) {
+      this.toasterService.showError('Error', 'Task not found');
+      return;
+    }
+    
+    // Set selected task and open task details modal in edit mode
+    this.selectedTask = task;
+    this.openTaskDetailsModal(task);
   }
 
   updateTaskCounts() {

@@ -446,6 +446,10 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetUserNotices?userId=${userId}&noticeId=${noticeId}&IsOnLoad=${isOnLoad}`);
   }
 
+  getUserNotifications(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetUserNotifications/${userId}`);
+  }
+
   getNoticeById(noticeId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetNoticeById?noticeId=${noticeId}`);
   }
@@ -543,6 +547,8 @@ export class Api {
   }
   
   //chnages for dpr
+
+  
 
 }
 

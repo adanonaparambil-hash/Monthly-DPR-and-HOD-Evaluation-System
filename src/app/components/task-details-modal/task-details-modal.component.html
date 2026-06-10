@@ -1,6 +1,6 @@
 <!-- Task Details Modal -->
 <div class="modal-overlay" (click)="close()">
-  <div class="task-modal-container" (click)="$event.stopPropagation()">
+  <div class="task-modal-container" (click)="$event.stopPropagation(); hideAssigneeDropdown()">
 
     <!-- Header -->
     <header class="modal-task-header">
@@ -236,26 +236,27 @@
         <!-- Task Description -->
         <div class="description-section">
           <label class="section-label">Task Description</label>
-          <textarea class="description-card editable-description" [(ngModel)]="editableTaskDescription"
+          <textarea class="description-card editable-description description-compact" [(ngModel)]="editableTaskDescription"
             placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
         <!-- Daily Remarks - Always visible -->
         @if (!isViewOnly) {
-          <div class="daily-remarks-compact">
-            <label class="remarks-label">
-              <i class="fas fa-comment-dots"></i>
-              Remarks
+          <div class="daily-remarks-section">
+            <label class="remarks-section-label">
+              <i class="fas fa-pen-to-square"></i>
+              Daily Remarks
               <span class="required-indicator">*</span>
             </label>
-            <div class="remarks-input-container">
-              <input 
-                type="text" 
-                class="remarks-input" 
+            <div class="remarks-textarea-container">
+              <textarea
+                class="remarks-textarea"
                 [(ngModel)]="dailyRemarks"
-                placeholder="Add today's progress notes or updates..."
-                maxlength="200"
-              />
+                placeholder="Describe today's progress, blockers, or updates..."
+                maxlength="500"
+                rows="4"
+              ></textarea>
+              <div class="remarks-char-count">{{ (dailyRemarks || '').length }}/500</div>
             </div>
           </div>
         }
@@ -268,41 +269,110 @@
 
           <div class="metadata-grid">
 
-            <!-- Assigned To -->
+            <!-- Assigned By (single select, defaults to logged-in user) -->
+            <div class="metadata-card created-by-dropdown-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-user-check label-icon"></i>
+                  Assigned By
+                </p>
+                @if (isViewOnly) {
+                  <div class="assignee-view-only">{{ getCreatedByDisplayName() }}</div>
+                } @else {
+                  <div class="created-by-dropdown searchable-dropdown" (click)="$event.stopPropagation()">
+                    <input
+                      type="text"
+                      class="dropdown-input"
+                      [value]="isCreatedByDropdownVisible ? createdBySearchTerm : getCreatedByDisplayName()"
+                      [placeholder]="employeeMasterList.length === 0 ? 'Loading...' : 'Search user...'"
+                      (input)="onCreatedBySearchInputChange($event)"
+                      (focus)="showCreatedByDropdown()"
+                      (blur)="hideCreatedByDropdown()"
+                      autocomplete="off">
+                    <div class="dropdown-icon">
+                      <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-list created-by-list" *ngIf="isCreatedByDropdownVisible">
+                      <div
+                        class="dropdown-item"
+                        *ngFor="let employee of getFilteredCreatedByList()"
+                        (mousedown)="selectCreatedBy(employee)"
+                        [class.selected]="isCreatedBySelected(employee)">
+                        <div class="employee-avatar-small">{{ (employee.description || '?')[0].toUpperCase() }}</div>
+                        <span class="employee-name-only">{{ employee.description || '' }}</span>
+                        <i class="fas fa-check check-icon" *ngIf="isCreatedBySelected(employee)"></i>
+                      </div>
+                      <div class="no-results" *ngIf="getFilteredCreatedByList().length === 0">
+                        No employees found
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Assigned To (multi-select) -->
             <div class="metadata-card assignee-dropdown-card">
               <div class="metadata-content">
                 <p class="metadata-label">
-                  <i class="fas fa-user label-icon"></i>
+                  <i class="fas fa-users label-icon"></i>
                   Assigned To
                   <span class="required-indicator">*</span>
                 </p>
-                <div class="searchable-dropdown">
-                  <input 
-                    type="text" 
-                    [value]="isAssigneeDropdownVisible ? assigneeSearchTerm : getAssigneeDisplayName()"
-                    [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select assignee...'"
-                    class="dropdown-input"
-                    (input)="onAssigneeSearchInputChange($event)"
-                    (focus)="showAssigneeDropdown()"
-                    (blur)="hideAssigneeDropdown()"
-                    [readonly]="isViewOnly"
-                    autocomplete="off">
-                  <div class="dropdown-icon">
-                    <i class="fas fa-chevron-down"></i>
+
+                <!-- View-only: show names as plain text -->
+                @if (isViewOnly) {
+                  <div class="assignee-view-only">
+                    {{ getAssigneeDisplayName() }}
                   </div>
-                  <div class="dropdown-list assignee-dropdown" *ngIf="isAssigneeDropdownVisible">
-                    <div 
-                      class="dropdown-item" 
-                      *ngFor="let employee of getFilteredAssignees()"
-                      (mousedown)="selectAssignee(employee)"
-                      [class.selected]="isAssigneeSelected(employee)">
-                      <div class="employee-name-only">{{ employee.description || '' }}</div>
+                } @else {
+                  <!-- Multi-select assignee dropdown -->
+                  <div class="multi-assignee-dropdown" [class.open]="isAssigneeDropdownVisible" (click)="$event.stopPropagation()">
+
+                    <!-- Selected chips + search input -->
+                    <div class="assignee-input-area" (click)="toggleAssigneeDropdown($event)">
+                      <!-- Selected chips -->
+                      <span
+                        class="assignee-chip"
+                        *ngFor="let id of selectedAssigneeIds"
+                        (click)="$event.stopPropagation()">
+                        <span class="chip-name">{{ getAssigneeName(id) }}</span>
+                        <button class="chip-remove" (click)="removeAssignee(id); $event.stopPropagation()" type="button" title="Remove">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </span>
+
+                      <!-- Search input -->
+                      <input
+                        type="text"
+                        class="assignee-search-input"
+                        [(ngModel)]="assigneeSearchTerm"
+                        (click)="$event.stopPropagation(); showAssigneeDropdown()"
+                        (input)="onAssigneeSearchInputChange($event)"
+                        [placeholder]="selectedAssigneeIds.length === 0 ? (employeeMasterList.length === 0 ? 'Loading...' : 'Search assignees...') : 'Add more...'"
+                        autocomplete="off">
+
+                      <div class="assignee-dropdown-icon" (click)="toggleAssigneeDropdown($event)">
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
                     </div>
-                    <div class="no-results" *ngIf="getFilteredAssignees().length === 0">
-                      No employees found
+
+                    <!-- Dropdown list -->
+                    <div class="assignee-dropdown-list" *ngIf="isAssigneeDropdownVisible" (click)="$event.stopPropagation()">
+                      <div
+                        class="assignee-dropdown-item"
+                        *ngFor="let employee of getFilteredAssignees()"
+                        (click)="selectAssignee(employee, $event)">
+                        <div class="assignee-avatar">{{ (employee.description || '?')[0].toUpperCase() }}</div>
+                        <span class="assignee-item-name">{{ employee.description || '' }}</span>
+                        <i class="fas fa-plus assignee-add-icon"></i>
+                      </div>
+                      <div class="no-results" *ngIf="getFilteredAssignees().length === 0">
+                        {{ assigneeSearchTerm ? 'No employees found' : 'All employees selected' }}
+                      </div>
                     </div>
                   </div>
-                </div>
+                }
               </div>
             </div>
 
@@ -528,6 +598,8 @@
             (click)="setActiveSidebarTab('comments')">COMMENTS</button>
           <button class="comment-tab" [class.active]="activeSidebarTab === 'history'"
             (click)="setActiveSidebarTab('history')">ACTIVITY LOG</button>
+          <button class="comment-tab" [class.active]="activeSidebarTab === 'timelog'"
+            (click)="setActiveSidebarTab('timelog')">TIME DISTRIBUTION</button>
         </div>
 
         <!-- Comments Content -->
@@ -591,6 +663,71 @@
             <div class="no-activity" *ngIf="activityLogs.length === 0">
               <i class="fas fa-history"></i>
               <p>No activity yet</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Distribution Content -->
+        <div class="timelog-content" *ngIf="activeSidebarTab === 'timelog'">
+          <!-- Summary header cards -->
+          <div class="timelog-summary-cards" *ngIf="timeLogSummary.length > 0">
+            <div class="timelog-summary-card">
+              <div class="timelog-summary-icon total">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="timelog-summary-info">
+                <span class="timelog-summary-value">{{ formatDecimalHours(getTimeLogTotalHours()) }}</span>
+                <span class="timelog-summary-label">Total Logged</span>
+              </div>
+            </div>
+            <div class="timelog-summary-card">
+              <div class="timelog-summary-icon users">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="timelog-summary-info">
+                <span class="timelog-summary-value">{{ getTimeLogUserCount() }}</span>
+                <span class="timelog-summary-label">Member(s)</span>
+              </div>
+            </div>
+            <div class="timelog-summary-card">
+              <div class="timelog-summary-icon entries">
+                <i class="fas fa-list-check"></i>
+              </div>
+              <div class="timelog-summary-info">
+                <span class="timelog-summary-value">{{ timeLogSummary.length }}</span>
+                <span class="timelog-summary-label">Entries</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Time log entries list -->
+          <div class="timelog-list">
+            <div class="timelog-item" *ngFor="let log of timeLogSummary">
+              <div class="timelog-avatar" *ngIf="!log.profileImageBase64">{{ getInitials(log.userName) }}</div>
+              <img class="timelog-avatar timelog-avatar-img" *ngIf="log.profileImageBase64"
+                [src]="log.profileImageBase64" [alt]="log.userName" />
+              <div class="timelog-details">
+                <div class="timelog-row">
+                  <span class="timelog-user-name">{{ log.userName }}</span>
+                  <span class="timelog-hours-badge">{{ formatDecimalHours(log.totalHours) }}</span>
+                </div>
+                <div class="timelog-row">
+                  <span class="timelog-date">
+                    <i class="fas fa-calendar-day"></i>
+                    {{ formatLogDate(log.logDate) }}
+                  </span>
+                </div>
+                <div class="timelog-bar-track">
+                  <div class="timelog-bar-fill" [style.width.%]="getTimeLogBarWidth(log.totalHours)"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div class="no-timelog" *ngIf="timeLogSummary.length === 0">
+              <i class="fas fa-chart-pie"></i>
+              <p>No time logged yet</p>
+              <span>Time entries will appear here once logged</span>
             </div>
           </div>
         </div>

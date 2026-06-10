@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../services/api';
@@ -89,7 +89,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   selectedTaskEstimatedHours: number = 0;
   estimatedHoursDisplay: string = ''; // HH:MM display format
   selectedProjectId: string = '';
-  selectedAssigneeId: string = '';
+  selectedAssigneeId: string = '';         // kept for legacy read (single, e.g. view-only)
+  selectedAssigneeIds: string[] = [];      // multi-select assignee IDs
+  selectedCreatedById: string = '';        // Assigned By (single select) → maps to createdBy
+  createdBySearchTerm: string = '';
+  isCreatedByDropdownVisible: boolean = false;
   
   // Custom fields
   selectedCustomFields: CustomField[] = [];
@@ -102,10 +106,13 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   uploadedFiles: UploadedFile[] = [];
   
   // Comments and Activity
-  activeSidebarTab: 'comments' | 'history' = 'comments';
+  activeSidebarTab: 'comments' | 'history' | 'timelog' = 'comments';
   taskComments: TaskCommentDto[] = [];
   activityLogs: TaskActivityDto[] = [];
   newComment = '';
+
+  // Time Distribution (timeLogSummary from GetTaskById)
+  timeLogSummary: any[] = [];
   
   // Dropdowns
   projectsList: any[] = [];
@@ -138,6 +145,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       userId: this.userId,
       categoryId: this.categoryId
     });
+    
+    // Set Assigned By to logged-in user by default
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    this.selectedCreatedById = (currentUser.empId || currentUser.employeeId || this.userId || '').toString();
     
     // Check AUTO CLOSED tasks count
     this.checkAutoClosedTasksCount();
@@ -222,10 +233,29 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           this.estimatedHoursDisplay = this.minutesToHHMM(this.selectedTaskEstimatedHours);
           this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
           
-          // Bind assignee - API returns 'assignee' field (could be userId or employeeId)
-          // Convert to string to match employeeMasterList idValue format
-          const assigneeValue = taskDetails.assignee || taskDetails.assigneeId || taskDetails.userId || '';
-          this.selectedAssigneeId = assigneeValue ? assigneeValue.toString() : '';
+          // Bind Assigned By from createdBy in the API response
+          if (taskDetails.createdBy) {
+            this.selectedCreatedById = taskDetails.createdBy.toString();
+          }
+
+          // Bind Assigned To (multi-select) from the assignees list in the API response
+          if (taskDetails.assignees && Array.isArray(taskDetails.assignees) && taskDetails.assignees.length > 0) {
+            this.selectedAssigneeIds = taskDetails.assignees
+              .map((a: any) => (a.userId || '').toString())
+              .filter((id: string) => id !== '');
+            this.selectedAssigneeId = this.selectedAssigneeIds[0] || '';
+          } else {
+            // Fallback to legacy single-assignee fields
+            const assigneeValue = taskDetails.assignee || taskDetails.assigneeId || taskDetails.userId || '';
+            this.selectedAssigneeId = assigneeValue ? assigneeValue.toString() : '';
+            this.selectedAssigneeIds = this.selectedAssigneeId ? [this.selectedAssigneeId] : [];
+          }
+
+          // Bind Time Distribution from timeLogSummary (latest first)
+          this.timeLogSummary = (taskDetails.timeLogSummary && Array.isArray(taskDetails.timeLogSummary))
+            ? [...taskDetails.timeLogSummary].sort((a: any, b: any) =>
+                new Date(b.logDate || 0).getTime() - new Date(a.logDate || 0).getTime())
+            : [];
           
           this.dailyRemarks = taskDetails.dailyRemarks || '';
           
@@ -530,10 +560,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     this.clearValidationErrors();
     
     // Validate Assignee is selected (mandatory)
-    if (!this.selectedAssigneeId || this.selectedAssigneeId.trim() === '') {
+    if (!this.selectedAssigneeIds || this.selectedAssigneeIds.length === 0) {
       this.toasterService.showError(
         'Validation Error', 
-        'Assigned To is mandatory. Please select an assignee.'
+        'Assigned To is mandatory. Please select at least one assignee.'
       );
       return;
     }
@@ -586,8 +616,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     const apiStatus = statusMap[this.selectedTaskDetailStatus] || 'NOT STARTED';
     
-    // Prepare assignees array - filter out empty values
-    const assignees = this.selectedAssigneeId ? [this.selectedAssigneeId] : [];
+    // Prepare assignees array - use multi-select list
+    const assignees = this.selectedAssigneeIds.filter(id => id && id.trim() !== '');
     
     // Format dates properly for API (YYYY-MM-DD format)
     const formatDateForApi = (date: string | Date | undefined): string | undefined => {
@@ -618,7 +648,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       progress: this.taskProgress || 0,
       estimatedHours: this.selectedTaskEstimatedHours || 0,
       status: apiStatus,
-      createdBy: userId,
+      createdBy: this.selectedCreatedById || userId,
       assignees: assignees,
       customFields: this.selectedCustomFields.map(field => ({
         fieldId: field.fieldId || 0,
@@ -646,7 +676,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           
           // Check if we need to call saveTaskFieldMapping
           // Only for new tasks (taskId === 0) when assigning to a different user
-          const assignedUserId = this.selectedAssigneeId;
+          const assignedUserId = this.selectedAssigneeIds[0] || '';
           const sessionUserId = userId;
           const isDifferentUser = assignedUserId && assignedUserId !== sessionUserId;
           
@@ -1420,29 +1450,43 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   showAssigneeDropdown() {
-    if (this.isViewOnly) return; // Prevent dropdown in view-only mode
+    if (this.isViewOnly) return;
     this.isAssigneeDropdownVisible = true;
-    // If an assignee is already selected, show their name in search term for editing
-    // Otherwise, keep it empty for new search
-    if (this.selectedAssigneeId) {
-      const selectedAssignee = this.employeeMasterList.find(emp => emp.idValue?.toString() === this.selectedAssigneeId?.toString());
-      this.assigneeSearchTerm = selectedAssignee?.description || '';
+    // Don't reset the search term here — user may already be typing
+  }
+
+  hideAssigneeDropdown() {
+    this.isAssigneeDropdownVisible = false;
+    this.assigneeSearchTerm = '';
+  }
+
+  toggleAssigneeDropdown(event: MouseEvent) {
+    event.stopPropagation();
+    if (this.isViewOnly) return;
+    if (this.isAssigneeDropdownVisible) {
+      this.hideAssigneeDropdown();
     } else {
+      this.isAssigneeDropdownVisible = true;
       this.assigneeSearchTerm = '';
     }
   }
 
-  hideAssigneeDropdown() {
-    setTimeout(() => {
+  /** Close dropdowns when clicking anywhere outside the component */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.multi-assignee-dropdown')) {
       this.isAssigneeDropdownVisible = false;
-      this.assigneeSearchTerm = ''; // Clear search term when closing dropdown
-    }, 200);
+      this.assigneeSearchTerm = '';
+    }
+    if (!target.closest('.created-by-dropdown')) {
+      this.isCreatedByDropdownVisible = false;
+      this.createdBySearchTerm = '';
+    }
   }
 
   // Check if Start Date should be disabled
   isStartDateDisabled(): boolean {
-    // Start Date is only editable when status is "NOT STARTED"
-    // For all other statuses (RUNNING, PAUSED, CLOSED, AUTO CLOSED), it should be disabled
     return this.selectedTaskDetailStatus !== 'not-started';
   }
 
@@ -1456,16 +1500,19 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   getFilteredProjects() {
     if (!this.projectSearchTerm) return this.projectsList;
-    return this.projectsList.filter(p => 
+    return this.projectsList.filter(p =>
       p.projectName?.toLowerCase().includes(this.projectSearchTerm.toLowerCase())
     );
   }
 
   getFilteredAssignees() {
-    if (!this.assigneeSearchTerm) return this.employeeMasterList;
-    return this.employeeMasterList.filter(e => 
-      e.description?.toLowerCase().includes(this.assigneeSearchTerm.toLowerCase())
-    );
+    const list = this.assigneeSearchTerm
+      ? this.employeeMasterList.filter(e =>
+          e.description?.toLowerCase().includes(this.assigneeSearchTerm.toLowerCase())
+        )
+      : this.employeeMasterList;
+    // Exclude already-selected assignees from the dropdown list
+    return list.filter(e => !this.selectedAssigneeIds.includes(e.idValue?.toString() || ''));
   }
 
   selectProject(project: any) {
@@ -1474,10 +1521,19 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     this.isProjectDropdownVisible = false;
   }
 
-  selectAssignee(employee: any) {
-    this.selectedAssigneeId = employee.idValue?.toString() || '';
+  selectAssignee(employee: any, event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    const id = employee.idValue?.toString() || '';
+    if (id && !this.selectedAssigneeIds.includes(id)) {
+      this.selectedAssigneeIds = [...this.selectedAssigneeIds, id];
+    }
     this.assigneeSearchTerm = '';
-    this.isAssigneeDropdownVisible = false;
+    // Keep dropdown open so user can add more
+  }
+
+  removeAssignee(id: string) {
+    this.selectedAssigneeIds = this.selectedAssigneeIds.filter(a => a !== id);
   }
 
   isProjectSelected(project: any): boolean {
@@ -1485,28 +1541,110 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   isAssigneeSelected(employee: any): boolean {
-    return this.selectedAssigneeId?.toString() === employee.idValue?.toString();
+    return this.selectedAssigneeIds.includes(employee.idValue?.toString() || '');
+  }
+
+  getAssigneeName(id: string): string {
+    const emp = this.employeeMasterList.find(e => e.idValue?.toString() === id);
+    return emp?.description || id;
   }
 
   getProjectDisplayName(): string {
-    if (!this.selectedProjectId) {
-      return 'Select project...';
-    }
+    if (!this.selectedProjectId) return 'Select project...';
     const project = this.projectsList.find(p => p.projectId?.toString() === this.selectedProjectId);
     return project?.projectName || 'Select project...';
   }
 
   getAssigneeDisplayName(): string {
-    if (!this.selectedAssigneeId) {
-      return 'Select assignee...';
-    }
-    const selected = this.employeeMasterList.find(emp => emp.idValue?.toString() === this.selectedAssigneeId?.toString());
-    return selected ? selected.description : 'Select assignee...';
+    if (!this.selectedAssigneeIds || this.selectedAssigneeIds.length === 0) return 'Select assignee...';
+    return this.selectedAssigneeIds
+      .map(id => this.getAssigneeName(id))
+      .join(', ');
+  }
+
+  // ── Assigned By (single select, defaults to logged-in user) ──────────────
+
+  showCreatedByDropdown() {
+    if (this.isViewOnly) return;
+    this.isCreatedByDropdownVisible = true;
+    this.createdBySearchTerm = '';
+  }
+
+  hideCreatedByDropdown() {
+    setTimeout(() => {
+      this.isCreatedByDropdownVisible = false;
+      this.createdBySearchTerm = '';
+    }, 200);
+  }
+
+  onCreatedBySearchInputChange(event: any) {
+    this.createdBySearchTerm = event.target.value;
+  }
+
+  getFilteredCreatedByList() {
+    if (!this.createdBySearchTerm) return this.employeeMasterList;
+    return this.employeeMasterList.filter(e =>
+      e.description?.toLowerCase().includes(this.createdBySearchTerm.toLowerCase())
+    );
+  }
+
+  selectCreatedBy(employee: any) {
+    this.selectedCreatedById = employee.idValue?.toString() || '';
+    this.createdBySearchTerm = '';
+    this.isCreatedByDropdownVisible = false;
+  }
+
+  isCreatedBySelected(employee: any): boolean {
+    return this.selectedCreatedById === employee.idValue?.toString();
+  }
+
+  getCreatedByDisplayName(): string {
+    if (!this.selectedCreatedById) return 'Select user...';
+    const emp = this.employeeMasterList.find(e => e.idValue?.toString() === this.selectedCreatedById);
+    return emp?.description || this.selectedCreatedById;
   }
 
   // Sidebar tab management
-  setActiveSidebarTab(tab: 'comments' | 'history') {
+  setActiveSidebarTab(tab: 'comments' | 'history' | 'timelog') {
     this.activeSidebarTab = tab;
+  }
+
+  // ── Time Distribution helpers (timeLogSummary) ──────────────────────────
+
+  // Total hours across all time log entries
+  getTimeLogTotalHours(): number {
+    return this.timeLogSummary.reduce((sum, log) => sum + (log.totalHours || 0), 0);
+  }
+
+  // Number of distinct users in the time log summary
+  getTimeLogUserCount(): number {
+    return new Set(this.timeLogSummary.map(log => log.userId)).size;
+  }
+
+  // Bar width (%) of an entry relative to the highest entry
+  getTimeLogBarWidth(hours: number): number {
+    const max = Math.max(...this.timeLogSummary.map(log => log.totalHours || 0), 0);
+    if (max <= 0) return 0;
+    return Math.max(Math.round(((hours || 0) / max) * 100), 2);
+  }
+
+  // Format decimal hours as "Xh Ym" (e.g. 11.62 -> "11h 37m")
+  formatDecimalHours(hours: number): string {
+    if (!hours || hours <= 0) return '0m';
+    const totalMinutes = Math.round(hours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (h === 0) return `${m}m`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+  }
+
+  // Format log date as "May 06, 2026"
+  formatLogDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
   }
 
   // Utility methods

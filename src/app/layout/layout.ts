@@ -81,6 +81,21 @@ export class layout implements OnInit, OnDestroy {
   /** Purchase Dashboard visibility — driven by getUserMenus API response */
   isPurchaseDashboardUser = false;
   
+  /** Log Analytics visibility — only for user ITS41 */
+  get isLogAnalyticsUser(): boolean {
+    const userId = this.userSession?.userId ?? this.userSession?.id ?? this.userSession?.empId;
+    const hasAccess = userId === 'ITS41';
+    
+    // Debug logging for testing
+    console.log('Log Analytics Access Check:', {
+      userId,
+      hasAccess,
+      sessionKeys: Object.keys(this.userSession)
+    });
+    
+    return hasAccess;
+  }
+  
   /** All user menus from API */
   userMenus: any[] = [];
 
@@ -261,6 +276,7 @@ export class layout implements OnInit, OnDestroy {
     // (but only if we're not navigating to another DPR route)
     const isDPRRoute = window.location.pathname.includes('/my-task') || 
                        window.location.pathname.includes('/my-logged-hours') || 
+                       window.location.pathname.includes('/log-analytics') ||
                        window.location.pathname.includes('/dpr-approval');
     
     if (!isDPRRoute) {
@@ -302,6 +318,7 @@ export class layout implements OnInit, OnDestroy {
       '/chat': 'Internal Communications',
       '/my-task': 'My Task Management',
       '/my-logged-hours': 'Log History',
+      '/log-analytics': 'Log Analytics',
       '/notice-management': 'Communication Master',
       '/hod-master': 'HOD Master',
       '/employee-master': 'Employee Master',
@@ -388,8 +405,8 @@ export class layout implements OnInit, OnDestroy {
     this.showNotifications = !this.showNotifications;
     this.showProfile = false;
 
-    // Load full notifications only when dropdown is opened and not already loaded
-    if (this.showNotifications && !this.notificationsLoaded) {
+    // Load full notifications every time when dropdown is opened to ensure fresh data
+    if (this.showNotifications) {
       this.loadFullNotifications();
     }
 
@@ -618,6 +635,7 @@ export class layout implements OnInit, OnDestroy {
   isDPRRouteActive(): boolean {
     return this.currentRoute.includes('/my-task') || 
            this.currentRoute.includes('/my-logged-hours') || 
+           this.currentRoute.includes('/log-analytics') ||
            this.currentRoute.includes('/dpr');
   }
 
@@ -832,7 +850,7 @@ export class layout implements OnInit, OnDestroy {
     }
 
     this.isLoadingNotifications = true;
-    this.api.getUserNotices(userId, 0, 'Y').subscribe({
+    this.api.getUserNotifications(userId).subscribe({
       next: (response: any) => {
         this.isLoadingNotifications = false;
         if (response.success && response.data && Array.isArray(response.data)) {
@@ -1134,6 +1152,7 @@ export class layout implements OnInit, OnDestroy {
     const cleanRoute = this.currentRoute.split('?')[0].split('#')[0];
     const isDPRRoute = cleanRoute === '/my-task' || 
                        cleanRoute === '/my-logged-hours' || 
+                       cleanRoute === '/log-analytics' ||
                        cleanRoute === '/dpr-approval';
     
     if (isDPRRoute) {
