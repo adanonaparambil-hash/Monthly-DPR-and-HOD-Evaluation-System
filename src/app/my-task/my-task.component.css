@@ -17972,3 +17972,204 @@ body.modal-open {
     font-size: 10px;
   }
 }
+/* ============================================================
+   Task table — horizontal scroll so every column stays reachable.
+   The grid rows are normally width:100% (capped to the container),
+   so overflowing columns were clipped. Giving them a min-width makes
+   the table wider than the container when needed, which surfaces a
+   single horizontal scrollbar at the bottom. Header + body share the
+   same scroll container, so they scroll together and stay aligned.
+   Only applies above 768px — at/below that the table becomes cards.
+   ============================================================ */
+@media (min-width: 769px) {
+  .task-table {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+
+  .task-table .table-header,
+  .task-table .table-body,
+  .task-table .table-row {
+    min-width: 1240px;
+    max-width: none;
+  }
+
+  /* Visible, themed horizontal scrollbar */
+  .task-table::-webkit-scrollbar {
+    height: 10px;
+  }
+  .task-table::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+  }
+  .task-table::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    border-radius: 6px;
+  }
+  .task-table::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #16a34a, #059669);
+  }
+
+  .task-board-container.dark-mode .task-table::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Tablet column set is narrower, so it needs less min-width */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .task-table .table-header,
+  .task-table .table-body,
+  .task-table .table-row {
+    min-width: 1000px;
+  }
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE POLISH — My Task Management page.
+   Loaded last so these win over earlier @media blocks.
+   ============================================================ */
+
+/* Never let the page itself scroll sideways (the table scrolls internally) */
+.task-board-container {
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  /* --- Tabs: horizontally scrollable strip, search below --- */
+  .task-section {
+    border-radius: 14px;
+  }
+  .task-tabs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .tabs-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    scrollbar-width: thin;
+  }
+  .tabs-container::-webkit-scrollbar {
+    height: 4px;
+  }
+  .tabs-container::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 4px;
+  }
+  .tab-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .tab-btn:first-child {
+    padding-left: 4px;
+  }
+  /* underline indicator sits right under the button on mobile */
+  .tab-btn.active::after {
+    bottom: -10px;
+  }
+  .tab-actions,
+  .search-box,
+  .search-box input {
+    width: 100%;
+  }
+
+  /* --- Table → readable labelled cards --- */
+  .task-table {
+    overflow: visible !important;
+    box-shadow: none;
+  }
+  .table-header {
+    display: none;
+  }
+  .table-body {
+    gap: 12px;
+  }
+  .table-row {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0;
+    padding: 4px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 0;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  .table-row:hover {
+    transform: none;
+  }
+  /* each cell: label on the left, value on the right */
+  .table-row .cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px dashed #eef2f7;
+    min-height: 0;
+    width: 100%;
+    text-align: right;
+  }
+  .table-row .cell:last-child {
+    border-bottom: none;
+  }
+  .table-row .cell::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex: 0 0 auto;
+    text-align: left;
+  }
+  /* Title cell stacks full width (label on top) */
+  .table-row .cell.title {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .table-row .cell.title .task-title-cell h4 {
+    font-size: 14px;
+  }
+  .table-row .cell.assignee .assignee-info {
+    justify-content: flex-end;
+  }
+  /* Action row: buttons right-aligned, no squashing */
+  .table-row .cell.action .action-buttons {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  /* Dark mode cards */
+  .task-board-container.dark-mode .table-row {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  .task-board-container.dark-mode .table-row .cell {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+  .task-board-container.dark-mode .table-row .cell::before {
+    color: #94a3b8;
+  }
+}
+
+/* Small phones: tighten spacing further */
+@media (max-width: 480px) {
+  .tab-btn {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  .table-row .cell.title .task-title-cell h4 {
+    font-size: 13px;
+  }
+  .table-row .cell {
+    font-size: 12px;
+    padding: 8px 0;
+  }
+}

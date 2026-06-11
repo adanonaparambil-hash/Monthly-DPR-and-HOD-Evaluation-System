@@ -496,3 +496,634 @@ img[src*="default-avatar.svg"] {
 .swal2-backdrop-show {
   z-index: 100004 !important;
 }
+
+/* ============================================================
+   GLOBAL DARK MODE — Task Details Modal + My Task table.
+   The modal component's own dark rules use a `.task-board-container.dark-mode`
+   ancestor selector, but Angular view-encapsulation scopes that ancestor to
+   the wrong component, so those rules never match. These GLOBAL rules key off
+   body.dark-theme (set reliably by the Theme service) so they always apply.
+   ============================================================ */
+
+/* ---------- Task Details Modal ---------- */
+body.dark-theme .task-modal-container {
+  background: #111827 !important;
+  border: 1px solid #374151 !important;
+  color: #e5e7eb !important;
+}
+
+body.dark-theme .modal-task-header {
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%) !important;
+  border-bottom: 1px solid #374151 !important;
+}
+
+body.dark-theme .task-main-panel {
+  background: #111827 !important;
+}
+
+body.dark-theme .comments-panel {
+  background: #1a2230 !important;
+  border-left: 1px solid #374151 !important;
+}
+
+/* Headings / labels / generic text */
+body.dark-theme .task-modal-container .section-label,
+body.dark-theme .task-modal-container .metadata-label,
+body.dark-theme .task-modal-container .remarks-section-label,
+body.dark-theme .task-modal-container .progress-control-label,
+body.dark-theme .task-modal-container .progress-label,
+body.dark-theme .task-modal-container .hours-label,
+body.dark-theme .task-modal-container .timer-label {
+  color: #cbd5e1 !important;
+}
+
+body.dark-theme .task-modal-container .modal-category-badge {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+}
+
+/* Inputs / textareas / selects */
+body.dark-theme .task-modal-container .editable-title,
+body.dark-theme .task-modal-container .editable-description,
+body.dark-theme .task-modal-container .description-card,
+body.dark-theme .task-modal-container .remarks-textarea,
+body.dark-theme .task-modal-container .metadata-input,
+body.dark-theme .task-modal-container .metadata-select,
+body.dark-theme .task-modal-container .metadata-textarea,
+body.dark-theme .task-modal-container .dropdown-input,
+body.dark-theme .task-modal-container .assignee-search-input,
+body.dark-theme .task-modal-container .comment-input,
+body.dark-theme .task-modal-container .comment-input-textarea {
+  background: #0b1220 !important;
+  color: #f1f5f9 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container input::placeholder,
+body.dark-theme .task-modal-container textarea::placeholder {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container input[type="date"] {
+  color-scheme: dark;
+}
+
+/* Metadata cards */
+body.dark-theme .task-modal-container .metadata-card,
+body.dark-theme .task-modal-container .add-field-card {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .daily-remarks-section {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+/* Assignee chips */
+body.dark-theme .task-modal-container .assignee-chip {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Dropdown lists */
+body.dark-theme .task-modal-container .dropdown-list,
+body.dark-theme .task-modal-container .assignee-dropdown-list,
+body.dark-theme .mention-dropdown-list,
+body.dark-theme .task-modal-container .created-by-list {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .employee-name-only,
+body.dark-theme .task-modal-container .assignee-item-name,
+body.dark-theme .task-modal-container .project-name-only,
+body.dark-theme .mention-name {
+  color: #f1f5f9 !important;
+}
+
+/* Comments tabs */
+body.dark-theme .task-modal-container .comments-tabs {
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .comment-tab {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container .comment-tab.active {
+  color: #34d399 !important;
+}
+
+/* Comment bubbles + text */
+body.dark-theme .task-modal-container .comment-message,
+body.dark-theme .task-modal-container .comment-author,
+body.dark-theme .task-modal-container .activity-description {
+  color: #e5e7eb !important;
+}
+body.dark-theme .task-modal-container .comment-time,
+body.dark-theme .task-modal-container .activity-time,
+body.dark-theme .task-modal-container .activity-user {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container .comment-message {
+  background: #273140 !important;
+  border-color: #374151 !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+body.dark-theme .task-modal-container .comment-own .comment-message {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(16, 185, 129, 0.10) 100%) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+body.dark-theme .task-modal-container .comment-author {
+  color: #f1f5f9 !important;
+}
+
+/* Comments / activity / time-distribution scroll areas */
+body.dark-theme .task-modal-container .comments-content,
+body.dark-theme .task-modal-container .activity-log-content,
+body.dark-theme .task-modal-container .timelog-content,
+body.dark-theme .task-modal-container .add-comment {
+  background: #1a2230 !important;
+}
+
+/* Time distribution cards */
+body.dark-theme .task-modal-container .timelog-summary-card,
+body.dark-theme .task-modal-container .timelog-item,
+body.dark-theme .task-modal-container .timelog-assignee-item {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .timelog-summary-value,
+body.dark-theme .task-modal-container .timelog-user-name {
+  color: #f9fafb !important;
+}
+body.dark-theme .task-modal-container .timelog-summary-label,
+body.dark-theme .task-modal-container .timelog-date,
+body.dark-theme .task-modal-container .timelog-assigned-date {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container .timelog-section-header {
+  color: #d1d5db !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .timelog-bar-track {
+  background: #374151 !important;
+}
+body.dark-theme .task-modal-container .time-subtabs {
+  background: #0f1623 !important;
+}
+body.dark-theme .task-modal-container .time-subtab {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container .time-subtab.active {
+  background: #1f2937 !important;
+  color: #10b981 !important;
+}
+body.dark-theme .task-modal-container .time-subtab:hover:not(.active) {
+  background: rgba(255,255,255,0.05) !important;
+  color: #d1d5db !important;
+}
+
+/* Attachments */
+body.dark-theme .task-modal-container .integrated-upload-area,
+body.dark-theme .task-modal-container .file-item {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .file-name {
+  color: #f1f5f9 !important;
+}
+
+/* ---------- My Task tabs bar + search ---------- */
+body.dark-theme .task-section {
+  background: transparent !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-tabs {
+  background: #1f2937 !important;
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .tab-btn {
+  color: #94a3b8 !important;
+}
+body.dark-theme .tab-btn.active {
+  color: #34d399 !important;
+}
+body.dark-theme .tab-btn.active::after {
+  background: #34d399 !important;
+}
+body.dark-theme .search-box {
+  background: #0b1220 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .search-box input {
+  background: transparent !important;
+  color: #f1f5f9 !important;
+}
+body.dark-theme .search-box input::placeholder {
+  color: #94a3b8 !important;
+}
+body.dark-theme .search-box i {
+  color: #94a3b8 !important;
+}
+
+/* ---------- My Task table ---------- */
+/* Task title uses gradient-clipped text; a plain color won't show. Override
+   the text fill to a solid light color so it's visible on dark rows. */
+body.dark-theme .task-table .task-title-cell h4 {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  color: #f1f5f9 !important;
+  animation: none !important;
+}
+
+body.dark-theme .task-table .table-row {
+  background: #1f2937 !important;
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .task-table .table-row:nth-child(even) {
+  background: #1a2230 !important;
+}
+body.dark-theme .task-table .table-row:hover {
+  background: #273140 !important;
+}
+body.dark-theme .task-table .cell,
+body.dark-theme .task-table .task-title-cell h4,
+body.dark-theme .task-table .cell.start-date,
+body.dark-theme .task-table .cell.logged,
+body.dark-theme .task-table .cell.total,
+body.dark-theme .task-table .progress-text-only,
+body.dark-theme .task-table .assignee-info span {
+  color: #e5e7eb !important;
+}
+body.dark-theme .task-table .task-title-cell p {
+  color: #94a3b8 !important;
+}
+/* Mobile card labels in dark mode */
+body.dark-theme .task-table .table-row .cell::before {
+  color: #94a3b8 !important;
+}
+
+/* ============================================================
+   DARK MODE — high-specificity text-visibility fixes.
+   Some component rules carry !important with high specificity
+   (e.g. the dropdown value color forced for light mode), so these
+   overrides add extra ancestor classes to out-specify them.
+   ============================================================ */
+
+/* Dropdown values: Assigned By + Project (component forces near-black text) */
+body.dark-theme .modal-overlay .task-modal-container .searchable-dropdown .dropdown-input,
+body.dark-theme .modal-overlay .task-modal-container .created-by-dropdown .dropdown-input,
+body.dark-theme .modal-overlay .task-modal-container .project-dropdown-card .dropdown-input {
+  color: #f1f5f9 !important;
+  background: #0b1220 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .modal-overlay .task-modal-container .dropdown-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Comment bubbles — readable on dark for both sides */
+body.dark-theme .task-modal-container .comment-message {
+  background: #273140 !important;
+  border-color: #374151 !important;
+  color: #e5e7eb !important;
+}
+body.dark-theme .task-modal-container .comment-own .comment-message {
+  background: #0f3d33 !important;
+  color: #ecfdf5 !important;
+}
+
+/* Attachments upload area text */
+body.dark-theme .task-modal-container .upload-primary {
+  color: #e5e7eb !important;
+}
+body.dark-theme .task-modal-container .upload-secondary {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container .upload-action-btn {
+  color: #ffffff !important;
+}
+
+/* Section headings / badges brighter */
+body.dark-theme .task-modal-container .section-label {
+  color: #e5e7eb !important;
+}
+body.dark-theme .task-modal-container .section-badge {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+}
+
+/* Progress + timer / hours readout text */
+body.dark-theme .task-modal-container .progress-percentage,
+body.dark-theme .task-modal-container .progress-value,
+body.dark-theme .task-modal-container .hours-text,
+body.dark-theme .task-modal-container .timer-text,
+body.dark-theme .task-modal-container .remarks-char-count {
+  color: #f1f5f9 !important;
+}
+
+/* Quick progress buttons */
+body.dark-theme .task-modal-container .progress-quick-btn-modern {
+  background: #1f2937 !important;
+  color: #cbd5e1 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .progress-quick-btn-modern.active {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+}
+
+/* ---------- Activity Log cards (were white boxes in dark mode) ---------- */
+body.dark-theme .task-modal-container .activity-item-enhanced {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .activity-item-enhanced:hover {
+  background: #273140 !important;
+}
+body.dark-theme .task-modal-container .activity-description {
+  color: #e5e7eb !important;
+}
+body.dark-theme .task-modal-container .activity-user,
+body.dark-theme .task-modal-container .activity-time {
+  color: #94a3b8 !important;
+}
+body.dark-theme .task-modal-container .no-activity,
+body.dark-theme .task-modal-container .no-comments {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #94a3b8 !important;
+}
+/* Comment author / avatars text */
+body.dark-theme .task-modal-container .comment-author {
+  color: #f1f5f9 !important;
+}
+
+/* ---------- Remaining light panels inside the modal ---------- */
+/* Adjust Progress card */
+body.dark-theme .task-modal-container .modern-progress-section {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .progress-slider-track {
+  background: #374151 !important;
+}
+body.dark-theme .task-modal-container .progress-percentage,
+body.dark-theme .task-modal-container .progress-label {
+  color: #f1f5f9 !important;
+}
+
+/* Attachments section card + content */
+body.dark-theme .task-modal-container .subtasks-section,
+body.dark-theme .task-modal-container .subtasks-section-compact {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .integrated-upload-area,
+body.dark-theme .task-modal-container .files-upload-area {
+  background: #111827 !important;
+  border-color: #374151 !important;
+}
+
+/* Assigned To multi-select chip box */
+body.dark-theme .task-modal-container .assignee-input-area {
+  background: #0b1220 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .task-modal-container .assignee-search-input {
+  background: transparent !important;
+  color: #f1f5f9 !important;
+}
+body.dark-theme .task-modal-container .assignee-search-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* ============================================================
+   DARK MODE — Select Task / Manage Tasks modal.
+   Titles are <h4> that inherit the global light gradient text in
+   dark theme; on the white modal they vanish. Darken the modal
+   surfaces and pin the title fill so everything is readable.
+   ============================================================ */
+body.dark-theme .select-task-modal {
+  background: #111827 !important;
+  border: 1px solid #374151 !important;
+}
+body.dark-theme .select-modal-header {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .select-modal-subtitle {
+  color: #94a3b8 !important;
+}
+body.dark-theme .select-search-box {
+  background: #0b1220 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .select-search-input {
+  background: transparent !important;
+  color: #f1f5f9 !important;
+}
+body.dark-theme .select-search-input::placeholder {
+  color: #94a3b8 !important;
+}
+body.dark-theme .select-search-box .search-icon {
+  color: #94a3b8 !important;
+}
+body.dark-theme .select-tabs {
+  background: #0f1623 !important;
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .select-tab-btn {
+  color: #94a3b8 !important;
+}
+body.dark-theme .select-tab-btn.active {
+  color: #34d399 !important;
+}
+body.dark-theme .select-tab-btn .tab-count {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+}
+body.dark-theme .select-tab-content {
+  background: transparent !important;
+}
+
+/* Task rows */
+body.dark-theme .select-task-modal .task-item {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .select-task-modal .task-item:hover {
+  background: #273140 !important;
+}
+body.dark-theme .select-task-modal .task-item.has-existing-task {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+body.dark-theme .select-task-modal .task-item-title {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  background: none !important;
+}
+body.dark-theme .select-task-modal .task-item-dept {
+  color: #94a3b8 !important;
+}
+body.dark-theme .select-task-modal .star-icon {
+  color: #6b7280 !important;
+}
+body.dark-theme .select-task-modal .star-icon.active {
+  color: #fbbf24 !important;
+}
+
+/* Empty states */
+body.dark-theme .select-task-modal .empty-state {
+  color: #94a3b8 !important;
+}
+body.dark-theme .select-task-modal .empty-state p {
+  color: #cbd5e1 !important;
+}
+
+/* Close button */
+body.dark-theme .select-task-modal .modal-close-btn {
+  color: #94a3b8 !important;
+}
+
+/* ---------- Add Field modal (inside Task Details) ---------- */
+body.dark-theme .add-field-modal {
+  background: #111827 !important;
+  border: 1px solid #374151 !important;
+}
+body.dark-theme .add-field-modal-subtitle {
+  color: #94a3b8 !important;
+}
+body.dark-theme .add-field-modal-header {
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .field-checkbox-item {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .field-checkbox-name {
+  color: #f1f5f9 !important;
+}
+body.dark-theme .field-checkbox-description {
+  color: #94a3b8 !important;
+}
+body.dark-theme .add-field-modal-footer {
+  border-top-color: #374151 !important;
+}
+body.dark-theme .selected-count {
+  color: #cbd5e1 !important;
+}
+
+/* ============================================================
+   DARK MODE — Manage Task Categories modal.
+   ============================================================ */
+body.dark-theme .manage-tasks-modal {
+  background: #111827 !important;
+  border: 1px solid #374151 !important;
+}
+body.dark-theme .manage-modal-header {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+  border-bottom-color: #374151 !important;
+}
+body.dark-theme .manage-modal-subtitle {
+  color: #94a3b8 !important;
+}
+body.dark-theme .manage-action-bar {
+  background: transparent !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .manage-categories-content {
+  background: transparent !important;
+}
+body.dark-theme .categories-section-title {
+  color: #cbd5e1 !important;
+}
+body.dark-theme .filter-dept-label {
+  color: #94a3b8 !important;
+}
+body.dark-theme .filter-dept-select {
+  background: #0b1220 !important;
+  color: #f1f5f9 !important;
+  border-color: #374151 !important;
+}
+
+/* Add/Edit category form (was cream) */
+body.dark-theme .category-edit-form,
+body.dark-theme .cat-edit-form-row {
+  background: #1f2937 !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+body.dark-theme .field-label {
+  color: #cbd5e1 !important;
+}
+body.dark-theme .field-input {
+  background: #0b1220 !important;
+  color: #f1f5f9 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .field-input::placeholder {
+  color: #94a3b8 !important;
+}
+body.dark-theme .selected-fields-box {
+  background: #0b1220 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .no-fields-hint {
+  color: #94a3b8 !important;
+}
+body.dark-theme .selected-field-tag {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+}
+body.dark-theme .fields-dropdown-trigger {
+  background: #0b1220 !important;
+  color: #f1f5f9 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .fields-dropdown-panel {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .fields-search-box {
+  background: #0b1220 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .fields-search-input {
+  background: transparent !important;
+  color: #f1f5f9 !important;
+}
+body.dark-theme .field-checkbox-label {
+  color: #e5e7eb !important;
+}
+body.dark-theme .field-checkbox-item.checked {
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+body.dark-theme .btn-form-cancel {
+  background: #1f2937 !important;
+  color: #e5e7eb !important;
+  border-color: #374151 !important;
+}
+
+/* Categories table */
+body.dark-theme .cat-table-header {
+  background: #0f1623 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .cat-table-header > div {
+  color: #94a3b8 !important;
+}
+body.dark-theme .cat-table-row {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+body.dark-theme .cat-table-row:hover {
+  background: #273140 !important;
+}
+body.dark-theme .cat-col-name {
+  color: #f1f5f9 !important;
+}
+body.dark-theme .field-pill {
+  background: #374151 !important;
+  color: #e5e7eb !important;
+}

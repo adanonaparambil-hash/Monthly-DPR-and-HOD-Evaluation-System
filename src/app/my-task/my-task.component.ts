@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
@@ -351,7 +352,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private sessionService: SessionService,
     private toasterService: ToasterService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit() {
@@ -391,9 +393,22 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     // Set logged-in user as default assignee
     this.setLoggedInUserAsDefaultAssignee();
 
+    // If opened from an assignment notification (?taskId=...), remember which task
+    // to auto-open once the task list finishes loading.
+    this.route.queryParams.subscribe(params => {
+      const id = parseInt(params['taskId'], 10);
+      if (!isNaN(id) && id > 0) {
+        this.pendingOpenTaskId = id;
+        // If the list is already loaded, open immediately; otherwise the load callback handles it.
+        if (this.tasks && this.tasks.length > 0) {
+          this.handlePendingTaskOpen();
+        }
+      }
+    });
+
     // Load active tasks from API - this will set the active task if one is running
     this.loadActiveTasks();
-    
+
     // Check AUTO CLOSED tasks count
     this.checkAutoClosedTasksCount();
   }
@@ -1093,17 +1108,42 @@ export class MyTaskComponent implements OnInit, OnDestroy {
             }
           }
           
-          console.log('Active tasks loaded (direct response):', 
-            'My Tasks:', this.myTasksList.length, 
+          console.log('Active tasks loaded (direct response):',
+            'My Tasks:', this.myTasksList.length,
             'Assigned By Me:', this.assignedByMeList.length,
             'Has Active Task:', this.hasActiveTask);
         }
+
+        // If we arrived here from a notification link (?taskId=...), open that task now
+        this.handlePendingTaskOpen();
       },
       error: (error: any) => {
         console.error('Error loading active tasks:', error);
         // Keep existing data if API fails
       }
     });
+  }
+
+  // Task id requested via ?taskId= query param (from an assignment notification)
+  private pendingOpenTaskId: number = 0;
+
+  // Open the task requested by a notification link, once the task list has loaded
+  private handlePendingTaskOpen(): void {
+    if (!this.pendingOpenTaskId) return;
+
+    const targetId = this.pendingOpenTaskId;
+    // Find the task in the loaded lists (prefer "My Tasks")
+    const match = this.tasks.find(t => t.id === targetId);
+
+    if (match) {
+      this.pendingOpenTaskId = 0; // consume it so we don't reopen on the next refresh
+      // Make sure we're on the MY TASKS tab so the modal opens in editable mode
+      this.activeTab = 'MY TASKS';
+      this.openTaskDetailsModal(match);
+    } else {
+      console.warn('Notification task not found in loaded list:', targetId);
+      this.pendingOpenTaskId = 0;
+    }
   }
 
   // Convert ActiveTaskDto to Task interface for display

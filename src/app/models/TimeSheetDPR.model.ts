@@ -34,6 +34,8 @@ export interface TaskSaveDto {
   assignees: string[];
   customFields: CustomFieldInputDto[];
   dailyRemarks?: string;
+  taskChanges?: string;
+  userID?: string;
 }
 
 export interface TaskSaveResponseDto {

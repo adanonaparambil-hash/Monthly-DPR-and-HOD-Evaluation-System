@@ -181,9 +181,9 @@
                   <!-- Background Circle -->
                   <circle class="progress-ring-bg" cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" stroke-width="8" />
                   <!-- Progress Circle -->
-                  <circle class="progress-ring-fill" cx="60" cy="60" r="52" fill="none" 
+                  <circle class="progress-ring-fill" cx="60" cy="60" r="52" fill="none"
                     stroke="url(#progressGradient)" stroke-width="8" stroke-linecap="round"
-                    [style.stroke-dasharray]="326.73" 
+                    [style.stroke-dasharray]="326.73"
                     [style.stroke-dashoffset]="326.73 - (selectedTaskProgress / 100) * 326.73"
                     transform="rotate(-90 60 60)" />
                 </svg>
@@ -621,9 +621,7 @@
                   {{ getTimeAgo(comment.submittedOn) }}
                 </span>
               </div>
-              <div class="comment-message">
-                {{ comment.comments }}
-              </div>
+              <div class="comment-message" [innerHTML]="formatCommentText(comment.comments)"></div>
             </div>
           </div>
           
@@ -669,74 +667,109 @@
 
         <!-- Time Distribution Content -->
         <div class="timelog-content" *ngIf="activeSidebarTab === 'timelog'">
-          <!-- Summary header cards -->
-          <div class="timelog-summary-cards" *ngIf="timeLogSummary.length > 0">
-            <div class="timelog-summary-card">
-              <div class="timelog-summary-icon total">
-                <i class="fas fa-clock"></i>
-              </div>
-              <div class="timelog-summary-info">
-                <span class="timelog-summary-value">{{ formatDecimalHours(getTimeLogTotalHours()) }}</span>
-                <span class="timelog-summary-label">Total Logged</span>
+
+          <!-- Inner sub-tabs -->
+          <div class="time-subtabs">
+            <button class="time-subtab" [class.active]="activeTimeTab === 'team'" (click)="activeTimeTab = 'team'">
+              <i class="fas fa-users"></i>
+              Team Status
+              <span class="subtab-count">{{ taskAssignees.length }}</span>
+            </button>
+            <button class="time-subtab" [class.active]="activeTimeTab === 'log'" (click)="activeTimeTab = 'log'">
+              <i class="fas fa-clock"></i>
+              Time Log
+              <span class="subtab-count">{{ timeLogSummary.length }}</span>
+            </button>
+          </div>
+
+          <!-- ── Team Status panel ── -->
+          <div class="timelog-panel" *ngIf="activeTimeTab === 'team'">
+            <div class="timelog-assignee-list" *ngIf="taskAssignees.length > 0">
+              <div class="timelog-assignee-item" *ngFor="let a of taskAssignees">
+                <div class="timelog-avatar" *ngIf="!a.profileImageBase64">{{ getInitials(a.userName) }}</div>
+                <img class="timelog-avatar timelog-avatar-img" *ngIf="a.profileImageBase64"
+                  [src]="a.profileImageBase64" [alt]="a.userName" />
+                <div class="timelog-details">
+                  <div class="timelog-row">
+                    <span class="timelog-user-name">{{ a.userName }}</span>
+                    <span class="timelog-hours-badge">{{ formatDecimalHours(a.totalHours) }}</span>
+                  </div>
+                  <div class="timelog-row timelog-meta-row">
+                    <span [class]="getAssigneeStatusClass(a.status)">{{ a.status }}</span>
+                    <span class="timelog-assigned-date" *ngIf="a.assignedDate">
+                      <i class="fas fa-calendar-plus"></i>
+                      Assigned: {{ formatLogDate(a.assignedDate) }}
+                    </span>
+                  </div>
+                  <div class="timelog-bar-track">
+                    <div class="timelog-bar-fill" [style.width.%]="getAssigneeBarWidth(a.totalHours)"></div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="timelog-summary-card">
-              <div class="timelog-summary-icon users">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="timelog-summary-info">
-                <span class="timelog-summary-value">{{ getTimeLogUserCount() }}</span>
-                <span class="timelog-summary-label">Member(s)</span>
-              </div>
-            </div>
-            <div class="timelog-summary-card">
-              <div class="timelog-summary-icon entries">
-                <i class="fas fa-list-check"></i>
-              </div>
-              <div class="timelog-summary-info">
-                <span class="timelog-summary-value">{{ timeLogSummary.length }}</span>
-                <span class="timelog-summary-label">Entries</span>
-              </div>
+            <div class="no-timelog" *ngIf="taskAssignees.length === 0">
+              <i class="fas fa-user-slash"></i>
+              <p>No assignees</p>
             </div>
           </div>
 
-          <!-- Time log entries list -->
-          <div class="timelog-list">
-            <div class="timelog-item" *ngFor="let log of timeLogSummary">
-              <div class="timelog-avatar" *ngIf="!log.profileImageBase64">{{ getInitials(log.userName) }}</div>
-              <img class="timelog-avatar timelog-avatar-img" *ngIf="log.profileImageBase64"
-                [src]="log.profileImageBase64" [alt]="log.userName" />
-              <div class="timelog-details">
-                <div class="timelog-row">
-                  <span class="timelog-user-name">{{ log.userName }}</span>
-                  <span class="timelog-hours-badge">{{ formatDecimalHours(log.totalHours) }}</span>
-                </div>
-                <div class="timelog-row">
-                  <span class="timelog-date">
-                    <i class="fas fa-calendar-day"></i>
-                    {{ formatLogDate(log.logDate) }}
-                  </span>
-                </div>
-                <div class="timelog-bar-track">
-                  <div class="timelog-bar-fill" [style.width.%]="getTimeLogBarWidth(log.totalHours)"></div>
+          <!-- ── Time Log panel ── -->
+          <div class="timelog-panel" *ngIf="activeTimeTab === 'log'">
+            <div class="timelog-list" *ngIf="timeLogSummary.length > 0">
+              <div class="timelog-item" *ngFor="let log of timeLogSummary">
+                <div class="timelog-avatar" *ngIf="!log.profileImageBase64">{{ getInitials(log.userName) }}</div>
+                <img class="timelog-avatar timelog-avatar-img" *ngIf="log.profileImageBase64"
+                  [src]="log.profileImageBase64" [alt]="log.userName" />
+                <div class="timelog-details">
+                  <div class="timelog-row">
+                    <span class="timelog-user-name">{{ log.userName }}</span>
+                    <span class="timelog-hours-badge">{{ formatDecimalHours(log.totalHours) }}</span>
+                  </div>
+                  <div class="timelog-row">
+                    <span class="timelog-date">
+                      <i class="fas fa-calendar-day"></i>
+                      Logged: {{ formatLogDate(log.logDate) }}
+                    </span>
+                  </div>
+                  <div class="timelog-bar-track">
+                    <div class="timelog-bar-fill" [style.width.%]="getTimeLogBarWidth(log.totalHours)"></div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <!-- Empty state -->
             <div class="no-timelog" *ngIf="timeLogSummary.length === 0">
               <i class="fas fa-chart-pie"></i>
               <p>No time logged yet</p>
               <span>Time entries will appear here once logged</span>
             </div>
           </div>
+
         </div>
 
         <!-- Add Comment (only show for comments tab) -->
         <div class="add-comment" *ngIf="activeSidebarTab === 'comments'">
           <div class="comment-input-container">
-            <input type="text" class="comment-input" placeholder="Add a comment..." [(ngModel)]="newComment"
-              (keyup.enter)="addComment()">
+            <!-- @mention user dropdown -->
+            <div class="mention-dropdown-list" *ngIf="showMentionDropdown && getFilteredMentionList().length > 0">
+              <div class="mention-dropdown-item"
+                   *ngFor="let employee of getFilteredMentionList()"
+                   (mousedown)="selectMention(employee)">
+                <div class="mention-avatar" *ngIf="!employee.profileImageBase64">
+                  {{ (employee.description || '?')[0].toUpperCase() }}
+                </div>
+                <img class="mention-avatar mention-avatar-img" *ngIf="employee.profileImageBase64"
+                  [src]="employee.profileImageBase64" [alt]="employee.description" />
+                <span class="mention-name">{{ employee.description }}</span>
+                <i class="fas fa-at mention-at-icon"></i>
+              </div>
+            </div>
+
+            <textarea class="comment-input comment-input-textarea" placeholder="Add a comment... type @ to mention"
+              [(ngModel)]="newComment"
+              rows="3"
+              (input)="onCommentInput($event)"
+              (keydown.enter)="onCommentEnter($event)"
+              (blur)="hideMentionDropdown()"></textarea>
             <button class="send-button" (click)="addComment()" [disabled]="!newComment.trim()">
               <i class="fas fa-paper-plane"></i>
             </button>

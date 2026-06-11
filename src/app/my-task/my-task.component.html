@@ -320,19 +320,19 @@
       <div class="table-body">
         @for (task of getFilteredTasks(); track task.id) {
         <div class="table-row" (click)="openTaskDetailsModal(task)">
-          <div class="cell category">
+          <div class="cell category" data-label="Category">
             <span class="category-badge" [class]="getCategoryClass(task.category)">
               {{ task.category }}
             </span>
           </div>
-          <div class="cell title">
+          <div class="cell title" data-label="Task">
             <div class="task-title-cell">
               <h4>{{ task.title }}</h4>
               <p>{{ task.description }}</p>
             </div>
           </div>
-          <div class="cell start-date">{{ task.startDate | date:'MMM dd, yyyy' }}</div>
-          <div class="cell assignee">
+          <div class="cell start-date" data-label="Start Date">{{ task.startDate | date:'MMM dd, yyyy' }}</div>
+          <div class="cell assignee" data-label="Assignee">
             <div class="assignee-info">
               <div class="assignee-avatar" *ngIf="!task.assigneeImage">{{ task.assignee.charAt(0) }}</div>
               <img *ngIf="task.assigneeImage" [src]="task.assigneeImage" alt="{{ task.assignee }}"
@@ -340,12 +340,12 @@
               <span>{{ task.assignee }}</span>
             </div>
           </div>
-          <div class="cell logged">{{ task.loggedHours }}</div>
-          <div class="cell total">{{ task.totalHours }}</div>
-          <div class="cell progress">
+          <div class="cell logged" data-label="Log Time">{{ task.loggedHours }}</div>
+          <div class="cell total" data-label="Total Hours">{{ task.totalHours }}</div>
+          <div class="cell progress" data-label="Progress">
             <span class="progress-text-only">{{ task.progress }}%</span>
           </div>
-          <div class="cell status">
+          <div class="cell status" data-label="Status">
             <span class="status-badge" [class]="getStatusClass(task.status)">
               <i class="fas fa-flag" *ngIf="task.status === 'AUTO CLOSED'"
                 style="color: #ef4444; margin-right: 4px;"></i>
@@ -353,7 +353,7 @@
               {{ task.status }}
             </span>
           </div>
-          <div class="cell action" (click)="$event.stopPropagation()">
+          <div class="cell action" data-label="Action" (click)="$event.stopPropagation()">
             <div class="action-buttons">
               <!-- Show all action buttons for MY TASKS tab -->
               @if (activeTab === 'MY TASKS') {

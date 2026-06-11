@@ -7,7 +7,8 @@
       "Bash(npx tsc *)",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "Bash(netstat -ano)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakProjects\\\\DPR\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\components\\\\task-details-modal\\\\\" -File)"
     ]
   }
 }

@@ -5,6 +5,26 @@
 
 /* Additional component-specific styles can be added here if needed */
 
+/* @mention highlight inside a displayed comment.
+   The mention span is injected via [innerHTML], so it does NOT get this
+   component's view-encapsulation attribute — ::ng-deep is required for the
+   style to reach it. */
+.comment-message {
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* The chip carries its own solid background, so dark-green text stays readable
+   on every bubble (left or right side). */
+.comment-message ::ng-deep .comment-mention {
+  display: inline;
+  font-weight: 700;
+  color: #047857 !important;
+  background: #d1fae5 !important;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
 /* Prevent neighboring grid cards from stretching tall when assignee chips grow */
 .metadata-grid {
   align-items: start !important;
@@ -13,6 +33,28 @@
 /* Ensure assignee card's dropdown list floats above other cards */
 .assignee-dropdown-card {
   z-index: 10 !important;
+}
+
+/* Larger, multi-line comment box so long comments (and @mentions) stay visible */
+.task-modal-container .comment-input-container .comment-input-textarea {
+  width: 100%;
+  min-height: 84px;
+  max-height: 180px;
+  padding: 12px 48px 12px 14px;
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+  display: block;
+}
+
+/* With a taller textarea, pin the send button to the bottom-right corner.
+   (An imported rule sets transform: translateY(-1px) on hover, which would
+   shift it — neutralize the transform so it stays put.) */
+.task-modal-container .comment-input-container .send-button,
+.task-modal-container .comment-input-container .send-button:hover {
+  top: auto !important;
+  bottom: 10px !important;
+  transform: none !important;
 }
 
 /* ============================================================
@@ -174,6 +216,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   max-height: 220px;
   overflow-y: auto;
+  overflow-x: hidden; /* no horizontal scrollbar */
   z-index: 1000;
   padding: 4px;
 }
@@ -227,17 +270,23 @@
   opacity: 1;
 }
 
+/* Scrollbar — same green style as the other dropdown lists */
 .assignee-dropdown-list::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
 }
 
 .assignee-dropdown-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
 }
 
 .assignee-dropdown-list::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: linear-gradient(135deg, #22c55e, #10b981);
   border-radius: 4px;
+}
+
+.assignee-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #16a34a, #059669);
 }
 
 /* Dark mode */
@@ -3017,6 +3066,50 @@ textarea.editable-description[readonly] {
    Assigned By dropdown — single-select with avatar + checkmark
    ============================================================ */
 
+/* Allow the dropdown list to escape the card (metadata-card has overflow:hidden) */
+.created-by-dropdown-card {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+/* While the list is open, lift the whole card above ALL sibling cards
+   (Project card has z-index 999, so this must be higher) */
+.created-by-dropdown-card:has(.created-by-list) {
+  z-index: 99999 !important;
+}
+
+.created-by-dropdown-card .metadata-content {
+  overflow: visible !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+.created-by-dropdown-card .searchable-dropdown {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 2147483645 !important;
+}
+
+/* Selected value must always be readable — the theme var (--text-primary)
+   resolves to near-white in dark theme while the card stays white */
+.task-modal-container .dropdown-input {
+  color: #111827 !important;
+}
+
+.task-modal-container .dropdown-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.created-by-list {
+  max-height: 220px !important;
+  border-radius: 12px !important;
+  border-top: 2px solid rgba(34, 197, 94, 0.3) !important;
+  margin-top: 6px !important;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18) !important;
+  overflow-x: hidden !important; /* no horizontal scrollbar */
+}
+
 .created-by-list .dropdown-item {
   display: flex;
   align-items: center;
@@ -3052,6 +3145,17 @@ textarea.editable-description[readonly] {
     rgba(167, 243, 208, 0.3) 100%);
 }
 
+/* The light selected background needs dark text — the base glassmorphism
+   rule forces white text, which is invisible here. Override it. */
+.created-by-list .dropdown-item.selected .employee-name-only {
+  color: #064e3b !important;
+  font-weight: 700;
+}
+
+.created-by-list .dropdown-item.selected .check-icon {
+  color: #059669 !important;
+}
+
 /* Dark mode */
 .task-board-container.dark-mode .employee-avatar-small {
   background: linear-gradient(135deg, #374151 0%, #065f46 100%);
@@ -3071,13 +3175,13 @@ textarea.editable-description[readonly] {
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+  background: transparent;
 }
 
 /* Summary cards row */
 .timelog-summary-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
@@ -3281,6 +3385,196 @@ textarea.editable-description[readonly] {
   color: #9ca3af;
 }
 
+/* ── Inner sub-tabs (Team Status / Time Log) ── */
+.time-subtabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.time-subtab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.time-subtab i {
+  font-size: 11px;
+}
+
+.time-subtab .subtab-count {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.time-subtab.active {
+  background: #ffffff;
+  color: #10b981;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.time-subtab.active i {
+  color: #10b981;
+}
+
+.time-subtab.active .subtab-count {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.time-subtab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.6);
+  color: #374151;
+}
+
+.timelog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+/* ── Section wrapper (Assignees / Time Log) ── */
+.timelog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timelog-section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 0 4px 2px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timelog-section-header i {
+  font-size: 12px;
+  color: #10b981;
+}
+
+.timelog-section-count {
+  margin-left: auto;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+/* Assignee items reuse .timelog-item styles; add this class for semantics */
+.timelog-assignee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timelog-assignee-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.timelog-assignee-item:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Meta row (status + assigned date) */
+.timelog-meta-row {
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+
+.timelog-assigned-date {
+  font-size: 11px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timelog-assigned-date i {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+/* Status pills for assignee rows */
+.status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-pill.running {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill.paused {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-pill.completed {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-pill.closed {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.status-pill.not-started {
+  background: rgba(156, 163, 175, 0.12);
+  color: #9ca3af;
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
 /* Scrollbar to match activity log */
 .timelog-content::-webkit-scrollbar {
   width: 8px;
@@ -3341,4 +3635,395 @@ textarea.editable-description[readonly] {
 .dark-mode .timelog-avatar-img {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== @mention dropdown in comment box ===== */
+.mention-dropdown-list {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.16);
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 100000;
+  padding: 4px;
+}
+
+.mention-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.mention-dropdown-item:hover {
+  background: linear-gradient(135deg,
+    rgba(209, 250, 229, 0.6) 0%,
+    rgba(167, 243, 208, 0.4) 100%);
+}
+
+.mention-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.mention-avatar-img {
+  object-fit: cover;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.mention-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mention-at-icon {
+  font-size: 11px;
+  color: #10b981;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mention-dropdown-item:hover .mention-at-icon {
+  opacity: 1;
+}
+
+/* Scrollbar — match the other modal dropdowns */
+.mention-dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mention-dropdown-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.mention-dropdown-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #22c55e, #10b981);
+  border-radius: 4px;
+}
+
+/* Dark mode */
+.dark-mode .mention-dropdown-list {
+  background: #1f2937;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .mention-name {
+  color: #f9fafb;
+}
+
+/* ============================================================
+   DARK MODE POLISH — ensure every surface/text in the modal is
+   readable. Uses the .task-board-container.dark-mode prefix (the
+   modal renders inside that container) and overrides the few
+   light-locked rules added earlier.
+   ============================================================ */
+
+/* Searchable dropdown inputs (Assigned By, Project) — earlier we force dark
+   text for light mode; in dark mode that would be invisible, so flip it. */
+.task-board-container.dark-mode .task-modal-container .dropdown-input {
+  color: #f1f5f9 !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+.task-board-container.dark-mode .task-modal-container .dropdown-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Comment box (now a textarea) */
+.task-board-container.dark-mode .comment-input,
+.task-board-container.dark-mode .comment-input-textarea {
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+.task-board-container.dark-mode .comment-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Editable title / description / remarks / metadata fields */
+.task-board-container.dark-mode .editable-title,
+.task-board-container.dark-mode .editable-description,
+.task-board-container.dark-mode .remarks-textarea,
+.task-board-container.dark-mode .metadata-input,
+.task-board-container.dark-mode .metadata-select,
+.task-board-container.dark-mode .metadata-textarea {
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.task-board-container.dark-mode .editable-title::placeholder,
+.task-board-container.dark-mode .editable-description::placeholder,
+.task-board-container.dark-mode .remarks-textarea::placeholder,
+.task-board-container.dark-mode .metadata-input::placeholder,
+.task-board-container.dark-mode .metadata-textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Make the native date picker UI dark-friendly */
+.task-board-container.dark-mode input[type="date"] {
+  color-scheme: dark;
+}
+
+/* Dropdown lists (Assigned By, Assignee, Mention) */
+.task-board-container.dark-mode .dropdown-list,
+.task-board-container.dark-mode .assignee-dropdown-list,
+.task-board-container.dark-mode .mention-dropdown-list,
+.task-board-container.dark-mode .created-by-list {
+  background: #1f2937 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.task-board-container.dark-mode .employee-name-only,
+.task-board-container.dark-mode .assignee-item-name,
+.task-board-container.dark-mode .mention-name,
+.task-board-container.dark-mode .project-name-only {
+  color: #f1f5f9 !important;
+}
+.task-board-container.dark-mode .dropdown-item:hover,
+.task-board-container.dark-mode .assignee-dropdown-item:hover,
+.task-board-container.dark-mode .mention-dropdown-item:hover {
+  background: rgba(16, 185, 129, 0.18) !important;
+}
+
+/* Labels & section headings */
+.task-board-container.dark-mode .section-label,
+.task-board-container.dark-mode .metadata-label,
+.task-board-container.dark-mode .remarks-section-label,
+.task-board-container.dark-mode .progress-control-label,
+.task-board-container.dark-mode .progress-label {
+  color: #cbd5e1 !important;
+}
+
+/* Comment message + names */
+.task-board-container.dark-mode .comment-message,
+.task-board-container.dark-mode .comment-author,
+.task-board-container.dark-mode .activity-description {
+  color: #e5e7eb !important;
+}
+.task-board-container.dark-mode .comment-time,
+.task-board-container.dark-mode .activity-time,
+.task-board-container.dark-mode .activity-user {
+  color: #94a3b8 !important;
+}
+
+/* Selected assignee chips */
+.task-board-container.dark-mode .assignee-chip {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+/* Time Distribution cards in dark mode */
+.task-board-container.dark-mode .timelog-summary-card,
+.task-board-container.dark-mode .timelog-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.task-board-container.dark-mode .timelog-summary-value,
+.task-board-container.dark-mode .timelog-user-name {
+  color: #f9fafb;
+}
+.task-board-container.dark-mode .timelog-summary-label,
+.task-board-container.dark-mode .timelog-date {
+  color: #9ca3af;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE — the current modal uses .task-content as the
+   side-by-side flex row; the imported rules forgot to stack it.
+   These rules target the real class names used in the template.
+   ============================================================ */
+
+/* Tablet / small laptop: stack the two panels vertically */
+@media (max-width: 1024px) {
+  .task-content {
+    flex-direction: column !important;
+    overflow-y: auto;
+  }
+  .task-main-panel {
+    overflow-y: visible;
+  }
+  .comments-panel {
+    width: 100% !important;
+    max-height: 480px;
+    border-left: none !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .task-board-container.dark-mode .comments-panel {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Phones: full-screen modal, compact header, 2-column metadata */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0 !important;
+  }
+  .task-modal-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .modal-task-header {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  .modal-header-left,
+  .modal-header-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .metadata-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .comments-panel {
+    max-height: 55vh;
+  }
+  /* Keep all three tabs on one row on narrow screens */
+  .comment-tab {
+    font-size: 10px;
+    padding: 12px 6px;
+    letter-spacing: 0;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .metadata-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .modal-task-title,
+  .editable-title {
+    font-size: 18px;
+  }
+  .modern-progress-section {
+    width: 100%;
+  }
+  .progress-quick-actions {
+    flex-wrap: wrap;
+  }
+  .comments-panel {
+    max-height: 50vh;
+  }
+  .timelog-summary-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   Wider side panel on desktop so the Comments / Activity Log /
+   Time Distribution content fits comfortably. Tab styling kept as
+   original. Scoped to >1024px so the mobile full-width rule stays.
+   ============================================================ */
+@media (min-width: 1025px) {
+  .comments-panel {
+    width: 320px !important;
+  }
+}
+
+/* ============================================================
+   Comments — cleaner, modern chat styling
+   ============================================================ */
+.comments-content {
+  padding: 16px 14px !important;
+  gap: 16px !important;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.comment-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
+}
+
+.comment-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.comment-author {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comment-time {
+  font-size: 10px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Modern bubble: soft card with a flat top-left corner */
+.comment-message {
+  background: #ffffff !important;
+  border: 1px solid #eef2f7 !important;
+  border-radius: 4px 14px 14px 14px !important;
+  padding: 11px 13px !important;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #374151;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  word-break: break-word;
+}
+
+/* Subtle green tint for the current user's own comments */
+.comment-own .comment-message {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }

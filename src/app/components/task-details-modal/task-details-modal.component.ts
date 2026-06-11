@@ -91,6 +91,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   selectedProjectId: string = '';
   selectedAssigneeId: string = '';         // kept for legacy read (single, e.g. view-only)
   selectedAssigneeIds: string[] = [];      // multi-select assignee IDs
+  originalAssigneeIds: string[] = [];      // assignees present when the task loaded (to detect newly added ones)
+  private originalTaskSnapshot: any = null; // snapshot of all editable fields at load (for the change summary)
   selectedCreatedById: string = '';        // Assigned By (single select) → maps to createdBy
   createdBySearchTerm: string = '';
   isCreatedByDropdownVisible: boolean = false;
@@ -111,8 +113,16 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   activityLogs: TaskActivityDto[] = [];
   newComment = '';
 
-  // Time Distribution (timeLogSummary from GetTaskById)
+  // @mention support in the comment box
+  showMentionDropdown = false;
+  mentionSearchTerm = '';
+  private mentionStartPos = -1;
+  mentionedUsers: { id: string; name: string }[] = [];
+
+  // Time Distribution (timeLogSummary and assignees from GetTaskById)
   timeLogSummary: any[] = [];
+  taskAssignees: any[] = [];
+  activeTimeTab: 'team' | 'log' = 'team';
   
   // Dropdowns
   projectsList: any[] = [];
@@ -251,6 +261,15 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             this.selectedAssigneeIds = this.selectedAssigneeId ? [this.selectedAssigneeId] : [];
           }
 
+          // Snapshot the assignees that already existed on the task, so on save we
+          // only notify users who are newly added (first time assigned).
+          this.originalAssigneeIds = [...this.selectedAssigneeIds];
+
+          // Bind assignees list for Time Distribution tab
+          this.taskAssignees = (taskDetails.assignees && Array.isArray(taskDetails.assignees))
+            ? taskDetails.assignees
+            : [];
+
           // Bind Time Distribution from timeLogSummary (latest first)
           this.timeLogSummary = (taskDetails.timeLogSummary && Array.isArray(taskDetails.timeLogSummary))
             ? [...taskDetails.timeLogSummary].sort((a: any, b: any) =>
@@ -307,12 +326,16 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
               });
           }
           
+          // Snapshot all editable fields now (after everything is bound) so we can
+          // build a before/after change summary when the user saves.
+          this.captureTaskSnapshot();
+
           // Start timer if task is running
           if (this.selectedTaskDetailStatus === 'running') {
             const runningSeconds = (taskDetails.todayTotalMinutes || 0) * 60;
             this.startTimer(runningSeconds);
           }
-          
+
           console.log('=== Task details loaded successfully ===');
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -618,6 +641,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     // Prepare assignees array - use multi-select list
     const assignees = this.selectedAssigneeIds.filter(id => id && id.trim() !== '');
+
+    // Build a human-readable summary of everything the user changed in this edit
+    const taskChangesSummary = this.buildTaskChangesSummary(userId);
     
     // Format dates properly for API (YYYY-MM-DD format)
     const formatDateForApi = (date: string | Date | undefined): string | undefined => {
@@ -654,7 +680,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         fieldId: field.fieldId || 0,
         value: field.value?.toString() || ''
       })),
-      dailyRemarks: this.dailyRemarks?.trim() || ''
+      dailyRemarks: this.dailyRemarks?.trim() || '',
+      taskChanges: taskChangesSummary,
+      userID: userId
     };
     
     console.log('Task save request:', taskSaveRequest);
@@ -712,6 +740,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
             }
           }
           
+          // Notify users who were newly added as assignees (first time assigned)
+          const savedTaskId = response?.data?.taskId || response?.data?.id || this.taskId;
+          this.notifyNewlyAddedAssignees(savedTaskId, sessionUserId, taskSaveRequest.taskTitle);
+
           // Emit task updated event to parent component to refresh listing
           this.taskUpdated.emit(taskSaveRequest);
           console.log('Task saved successfully - emitting taskUpdated event');
@@ -736,6 +768,178 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         this.toasterService.showError('Error', errorMessage);
       }
     });
+  }
+
+  /**
+   * Send an in-app notification to every assignee who was newly added during this
+   * save (present in the current list but not in the snapshot taken when the task
+   * loaded). The session user is skipped — no need to notify yourself. Clicking the
+   * notification opens the task via the /my-task?taskId=... link.
+   */
+  private notifyNewlyAddedAssignees(taskId: number, sessionUserId: string, taskTitle: string) {
+    if (!taskId) return;
+
+    const newlyAdded = this.selectedAssigneeIds.filter(id =>
+      id &&
+      !this.originalAssigneeIds.includes(id) &&
+      id !== sessionUserId
+    );
+
+    if (newlyAdded.length === 0) return;
+
+    const assignedByName = this.getCreatedByDisplayName();
+    const title = (taskTitle || '').trim() || `Task #${taskId}`;
+
+    newlyAdded.forEach(assigneeId => {
+      const notification = {
+        userId: assigneeId,
+        title: 'New Task Assigned',
+        message: `You have been assigned to the task "${title}" by ${assignedByName}. Click to view.`,
+        link: `/my-task?taskId=${taskId}`,
+        isRead: false
+      };
+
+      this.api.createNotification(notification).subscribe({
+        next: (res: any) => console.log('Assignment notification sent to', assigneeId, res),
+        error: (err: any) => console.error('Failed to send assignment notification to', assigneeId, err)
+      });
+    });
+
+    // Update the snapshot so a subsequent save in the same session won't re-notify
+    this.originalAssigneeIds = [...this.selectedAssigneeIds];
+  }
+
+  // ── Task change tracking (for the Activity Log "taskChanges" summary) ─────
+
+  /** Snapshot every editable field at load time so we can diff against it on save */
+  private captureTaskSnapshot() {
+    this.originalTaskSnapshot = {
+      title: this.editableTaskTitle || '',
+      description: this.editableTaskDescription || '',
+      status: this.selectedTaskDetailStatus,
+      progress: this.taskProgress || 0,
+      projectId: (this.selectedProjectId || '').toString(),
+      startDate: this.selectedTaskStartDate || '',
+      targetDate: this.selectedTaskEndDate || '',
+      estimatedMinutes: this.selectedTaskEstimatedHours || 0,
+      createdById: (this.selectedCreatedById || '').toString(),
+      assigneeIds: [...this.selectedAssigneeIds],
+      customFields: this.selectedCustomFields.map(f => ({
+        key: f.key,
+        label: f.label,
+        value: (f.value ?? '').toString()
+      }))
+    };
+  }
+
+  /** Project name for a given id (for readable change text) */
+  private getProjectNameById(projectId: string): string {
+    if (!projectId) return '(none)';
+    const p = this.projectsList.find(pr => pr.projectId?.toString() === projectId.toString());
+    return p?.projectName || projectId.toString();
+  }
+
+  /** Employee name for a given id */
+  private getEmpNameById(empId: string): string {
+    if (!empId) return '(none)';
+    const e = this.employeeMasterList.find(emp => emp.idValue?.toString() === empId.toString());
+    return e?.description || empId.toString();
+  }
+
+  /** Render a custom-field value for display (maps dropdown index → option text) */
+  private displayFieldValue(field: any, val: any): string {
+    if (val === null || val === undefined || val.toString().trim() === '') return '(empty)';
+    if (field?.type === 'dropdown' && Array.isArray(field.options) && field.options.length) {
+      const idx = parseInt(val, 10);
+      if (!isNaN(idx) && field.options[idx] !== undefined) return field.options[idx];
+    }
+    return val.toString();
+  }
+
+  /**
+   * Compare the current modal state against the snapshot taken at load and
+   * produce a single readable summary of what changed. Sent as `taskChanges`
+   * and shown in the Activity Log.
+   */
+  private buildTaskChangesSummary(userId: string): string {
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const who = sessionUser.employeeName || sessionUser.empName || userId || 'User';
+    const snap = this.originalTaskSnapshot;
+
+    // New task (no snapshot to diff against)
+    if (!snap) {
+      return `${who} created the task.`;
+    }
+
+    const changes: string[] = [];
+
+    if ((this.editableTaskTitle || '') !== snap.title) {
+      changes.push(`Title changed from "${snap.title || '(empty)'}" to "${this.editableTaskTitle || '(empty)'}"`);
+    }
+    if ((this.editableTaskDescription || '') !== snap.description) {
+      changes.push('Description updated');
+    }
+    if (this.selectedTaskDetailStatus !== snap.status) {
+      changes.push(`Status changed from "${this.getStatusDisplayText(snap.status)}" to "${this.getStatusDisplayText(this.selectedTaskDetailStatus)}"`);
+    }
+    if ((this.taskProgress || 0) !== (snap.progress || 0)) {
+      changes.push(`Progress changed from ${snap.progress || 0}% to ${this.taskProgress || 0}%`);
+    }
+    if ((this.selectedProjectId || '').toString() !== (snap.projectId || '')) {
+      changes.push(`Project changed from "${this.getProjectNameById(snap.projectId)}" to "${this.getProjectNameById(this.selectedProjectId)}"`);
+    }
+    if ((this.selectedTaskStartDate || '') !== (snap.startDate || '')) {
+      changes.push(`Start Date changed from "${snap.startDate || '(none)'}" to "${this.selectedTaskStartDate || '(none)'}"`);
+    }
+    if ((this.selectedTaskEndDate || '') !== (snap.targetDate || '')) {
+      changes.push(`Target Date changed from "${snap.targetDate || '(none)'}" to "${this.selectedTaskEndDate || '(none)'}"`);
+    }
+    if ((this.selectedTaskEstimatedHours || 0) !== (snap.estimatedMinutes || 0)) {
+      changes.push(`Estimated Hours changed from ${this.minutesToHHMM(snap.estimatedMinutes) || '0:00'} to ${this.minutesToHHMM(this.selectedTaskEstimatedHours) || '0:00'}`);
+    }
+    if ((this.selectedCreatedById || '').toString() !== (snap.createdById || '')) {
+      changes.push(`Assigned By changed from "${this.getEmpNameById(snap.createdById)}" to "${this.getEmpNameById(this.selectedCreatedById)}"`);
+    }
+
+    // Assignees added / removed
+    const added = this.selectedAssigneeIds.filter(id => !snap.assigneeIds.includes(id));
+    const removed = snap.assigneeIds.filter((id: string) => !this.selectedAssigneeIds.includes(id));
+    if (added.length) {
+      changes.push(`Assignee(s) added: ${added.map(id => this.getEmpNameById(id)).join(', ')}`);
+    }
+    if (removed.length) {
+      changes.push(`Assignee(s) removed: ${removed.map((id: string) => this.getEmpNameById(id)).join(', ')}`);
+    }
+
+    // Custom fields: changed / added
+    const snapByKey: { [k: string]: any } = {};
+    (snap.customFields || []).forEach((f: any) => { snapByKey[f.key] = f; });
+    this.selectedCustomFields.forEach(f => {
+      const curRaw = (f.value ?? '').toString();
+      const old = snapByKey[f.key];
+      if (!old) {
+        changes.push(`Field "${f.label}" added with value "${this.displayFieldValue(f, curRaw)}"`);
+      } else if ((old.value || '') !== curRaw) {
+        changes.push(`Field "${f.label}" changed from "${this.displayFieldValue(f, old.value)}" to "${this.displayFieldValue(f, curRaw)}"`);
+      }
+    });
+    // Custom fields removed
+    (snap.customFields || []).forEach((of: any) => {
+      if (!this.selectedCustomFields.some(f => f.key === of.key)) {
+        changes.push(`Field "${of.label}" removed`);
+      }
+    });
+
+    // Daily remarks (a per-save note)
+    if ((this.dailyRemarks || '').trim()) {
+      changes.push(`Daily remarks added: "${this.dailyRemarks.trim()}"`);
+    }
+
+    if (changes.length === 0) {
+      return `${who} saved the task with no field changes.`;
+    }
+
+    return `${who} updated the task — ${changes.join('; ')}.`;
   }
 
   // Timer management
@@ -1178,16 +1382,21 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Add comment
   addComment() {
+    // Don't submit while the mention dropdown is open (Enter is used to pick)
+    if (this.showMentionDropdown) return;
     if (!this.newComment.trim()) return;
 
     const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const sessionUserId = sessionUser.empId || sessionUser.employeeId || this.userId;
 
+    // Capture text + mentions before we clear the box
+    const commentText = this.newComment;
+
     const commentData: TaskCommentDto = {
       commentId: 0,
       taskId: this.taskId,
       userId: sessionUserId,
-      comments: this.newComment,
+      comments: commentText,
       submittedOn: new Date().toISOString(),
       empName: '',
       profileImage: undefined,
@@ -1198,6 +1407,8 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         if (response && response.success) {
           this.toasterService.showSuccess('Success', 'Comment added');
+          // Notify any users that were @mentioned in this comment
+          this.notifyMentionedUsers(commentText, sessionUserId);
           this.newComment = '';
           this.loadComments(this.taskId);
         }
@@ -1207,6 +1418,115 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         this.toasterService.showError('Error', 'Failed to add comment');
       }
     });
+  }
+
+  // ── @mention in comments ─────────────────────────────────────────────────
+
+  /** Enter submits the comment; Shift+Enter inserts a new line */
+  onCommentEnter(event: any) {
+    if (event.shiftKey) return;           // allow multi-line with Shift+Enter
+    if (this.showMentionDropdown) {       // Enter shouldn't submit mid-mention
+      event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    this.addComment();
+  }
+
+  /** Detect an in-progress "@..." token at the cursor and open the user dropdown */
+  onCommentInput(event: any) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value ?? '';
+    const cursorPos = input.selectionStart ?? value.length;
+    this.newComment = value;
+
+    const textBeforeCursor = value.substring(0, cursorPos);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (atIndex >= 0) {
+      const charBefore = atIndex > 0 ? textBeforeCursor[atIndex - 1] : ' ';
+      const term = textBeforeCursor.substring(atIndex + 1);
+      // Valid mention: '@' at start or after whitespace, and no space typed yet
+      if ((atIndex === 0 || /\s/.test(charBefore)) && !/\s/.test(term)) {
+        this.mentionStartPos = atIndex;
+        this.mentionSearchTerm = term;
+        this.showMentionDropdown = true;
+        return;
+      }
+    }
+    this.closeMentionDropdown();
+  }
+
+  /** Employees matching the text typed after '@' (capped for performance) */
+  getFilteredMentionList() {
+    const term = this.mentionSearchTerm.toLowerCase();
+    const list = !term
+      ? this.employeeMasterList
+      : this.employeeMasterList.filter(e => e.description?.toLowerCase().includes(term));
+    return list.slice(0, 50);
+  }
+
+  /** Replace the in-progress "@token" with the chosen user's name and remember them */
+  selectMention(employee: any) {
+    const name = (employee.description || '').toString();
+    const id = (employee.idValue || '').toString();
+    if (this.mentionStartPos < 0) {
+      this.closeMentionDropdown();
+      return;
+    }
+
+    const before = this.newComment.substring(0, this.mentionStartPos);
+    const afterStart = this.mentionStartPos + 1 + this.mentionSearchTerm.length;
+    const after = this.newComment.substring(afterStart);
+    this.newComment = `${before}@${name} ${after}`;
+
+    if (id && !this.mentionedUsers.some(u => u.id === id)) {
+      this.mentionedUsers.push({ id, name });
+    }
+    this.closeMentionDropdown();
+  }
+
+  hideMentionDropdown() {
+    // Delay so a click/mousedown on a list item registers before we hide
+    setTimeout(() => this.closeMentionDropdown(), 200);
+  }
+
+  private closeMentionDropdown() {
+    this.showMentionDropdown = false;
+    this.mentionSearchTerm = '';
+    this.mentionStartPos = -1;
+  }
+
+  /** Send a notification to each user @mentioned in the submitted comment */
+  private notifyMentionedUsers(commentText: string, sessionUserId: string) {
+    if (!this.mentionedUsers.length) {
+      return;
+    }
+
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const fromName = sessionUser.employeeName || sessionUser.empName || sessionUserId;
+    const title = (this.editableTaskTitle || '').trim() || `Task #${this.taskId}`;
+
+    // Only notify users still present in the text, not yourself, and de-duped
+    const toNotify = this.mentionedUsers.filter(u =>
+      u.id && u.id !== sessionUserId && commentText.includes(`@${u.name}`)
+    );
+
+    toNotify.forEach(u => {
+      const notification = {
+        userId: u.id,
+        title: 'You were mentioned in a comment',
+        message: `${fromName} mentioned you in a comment on the task "${title}". Click to view.`,
+        link: `/my-task?taskId=${this.taskId}`,
+        isRead: false
+      };
+      this.api.createNotification(notification).subscribe({
+        next: (res: any) => console.log('Mention notification sent to', u.id, res),
+        error: (err: any) => console.error('Failed to send mention notification to', u.id, err)
+      });
+    });
+
+    this.mentionedUsers = [];
   }
 
   // File upload methods
@@ -1567,7 +1887,14 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   showCreatedByDropdown() {
     if (this.isViewOnly) return;
     this.isCreatedByDropdownVisible = true;
-    this.createdBySearchTerm = '';
+    // Pre-fill the search box with the currently selected user's name so it
+    // stays visible on focus (same behavior as the Project dropdown)
+    if (this.selectedCreatedById) {
+      const emp = this.employeeMasterList.find(e => e.idValue?.toString() === this.selectedCreatedById);
+      this.createdBySearchTerm = emp?.description || '';
+    } else {
+      this.createdBySearchTerm = '';
+    }
   }
 
   hideCreatedByDropdown() {
@@ -1645,6 +1972,28 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
     return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  }
+
+  // CSS class for assignee status pill in Time Distribution tab
+  getAssigneeStatusClass(status: string): string {
+    const s = (status || '').toUpperCase();
+    if (s === 'RUNNING') return 'status-pill running';
+    if (s === 'PAUSED') return 'status-pill paused';
+    if (s === 'COMPLETED') return 'status-pill completed';
+    if (s === 'CLOSED') return 'status-pill closed';
+    return 'status-pill not-started';
+  }
+
+  // Total hours across all assignees (for summary card in Time Distribution)
+  getAssigneesTotalHours(): number {
+    return this.taskAssignees.reduce((sum, a) => sum + (a.totalHours || 0), 0);
+  }
+
+  // Bar width (%) of an assignee's hours relative to the highest among all assignees
+  getAssigneeBarWidth(hours: number): number {
+    const max = Math.max(...this.taskAssignees.map(a => a.totalHours || 0), 0);
+    if (max <= 0) return 0;
+    return Math.max(Math.round(((hours || 0) / max) * 100), 2);
   }
 
   // Utility methods
@@ -1859,6 +2208,38 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     // Fallback: if no userId in comment, return false (show on right side)
     return false;
+  }
+
+  /**
+   * Render a comment for display: HTML-escape the text, then highlight any
+   * "@<employee name>" mentions as a styled chip. Bound via [innerHTML].
+   */
+  formatCommentText(text: string): string {
+    if (!text) return '';
+
+    const escapeHtml = (s: string) => s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    let html = escapeHtml(text);
+
+    // Match longest names first so a full name wins over a shorter prefix
+    const names = this.employeeMasterList
+      .map(e => (e.description || '').toString())
+      .filter(n => n)
+      .sort((a, b) => b.length - a.length);
+
+    for (const name of names) {
+      const token = '@' + escapeHtml(name);
+      if (html.includes(token)) {
+        // Show just the readable name (drop the " | IDxx" suffix) in the chip
+        const display = escapeHtml('@' + name.split('|')[0].trim());
+        html = html.split(token).join(`<span class="comment-mention">${display}</span>`);
+      }
+    }
+
+    return html;
   }
 
   // Close modal
