@@ -4262,18 +4262,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   private readonly CHART_W = 340;
   private readonly CHART_H = 112;
-  private readonly CHART_PAD_X = 32;     // left: room for Y-axis labels
-  private readonly CHART_PAD_RIGHT = 4;  // right margin
-  private readonly CHART_PAD_TOP = 8;    // top: aligns with 24h tick
-  private readonly CHART_PAD_BOTTOM = 16; // bottom: aligns with 0h tick (baseline at y=96)
+  private readonly CHART_PAD_X = 38;     // left: enough room for "18" label + tick
+  private readonly CHART_PAD_RIGHT = 10; // right: stop short of edge so labels fit
+  private readonly CHART_PAD_TOP = 10;   // top: aligns with 24h tick
+  private readonly CHART_PAD_BOTTOM = 16; // bottom: baseline at y=96
 
-  /** Fixed max = 24h so the Y axis always reads 0–24 */
+  /** Fixed max = 24h */
   getChartMax(): number {
     return 24;
   }
 
   private getChartPlotHeight(): number {
-    // Plot area between y=8 (24h) and y=96 (0h) = 88px
     return this.CHART_H - this.CHART_PAD_TOP - this.CHART_PAD_BOTTOM;
   }
 
@@ -4355,9 +4354,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return this.getChartPoints()[i]?.y ?? 0;
   }
 
-  /** X position as % for HTML overlay labels */
+  /** X position as % for HTML overlay labels — clamped so labels stay inside container */
   getChartXPercent(i: number): number {
-    return +(this.getChartX(i) / this.CHART_W * 100).toFixed(2);
+    const raw = +(this.getChartX(i) / this.CHART_W * 100).toFixed(2);
+    // Clamp: keep label pill (approx 22% wide) fully inside [0,100]
+    return Math.min(Math.max(raw, 13), 87);
   }
 
   /** Place label below dot when point is near top of chart */

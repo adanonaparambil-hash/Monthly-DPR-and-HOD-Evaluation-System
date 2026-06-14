@@ -2102,8 +2102,8 @@
 }
 
 .lh-axis-label {
-  font-size: 8.5px;
-  fill: #64748b;
+  font-size: 9px;
+  fill: #475569;
   font-weight: 700;
   font-family: inherit;
   dominant-baseline: middle;
@@ -2152,7 +2152,7 @@
 
 @keyframes lhDrawLine {
   from { width: 0; }
-  to   { width: 340px; }
+  to   { width: 292px; }
 }
 
 /* ── Dots ── */

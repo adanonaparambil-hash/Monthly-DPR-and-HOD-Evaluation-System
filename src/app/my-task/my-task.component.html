@@ -234,35 +234,35 @@
               <stop offset="100%" stop-color="#047857"/>
             </linearGradient>
             <clipPath id="chartClip">
-              <rect x="32" y="0" width="308" height="112" class="lh-clip-rect"/>
+              <rect x="38" y="0" width="292" height="112" class="lh-clip-rect"/>
             </clipPath>
           </defs>
 
           <!-- Y-axis line -->
-          <line class="lh-axis-line" x1="32" y1="8" x2="32" y2="96"/>
+          <line class="lh-axis-line" x1="38" y1="10" x2="38" y2="96"/>
           <!-- X-axis line -->
-          <line class="lh-axis-line" x1="32" y1="96" x2="336" y2="96"/>
+          <line class="lh-axis-line" x1="38" y1="96" x2="330" y2="96"/>
 
           <!-- Y-axis tick labels: 0, 6, 12, 18, 24 -->
-          <text class="lh-axis-label" x="29" y="97" text-anchor="end">0</text>
-          <text class="lh-axis-label" x="29" y="74" text-anchor="end">6</text>
-          <text class="lh-axis-label" x="29" y="50" text-anchor="end">12</text>
-          <text class="lh-axis-label" x="29" y="27" text-anchor="end">18</text>
-          <text class="lh-axis-label" x="29" y="10" text-anchor="end">24</text>
+          <text class="lh-axis-label" x="35" y="97" text-anchor="end">0</text>
+          <text class="lh-axis-label" x="35" y="74" text-anchor="end">6</text>
+          <text class="lh-axis-label" x="35" y="50" text-anchor="end">12</text>
+          <text class="lh-axis-label" x="35" y="27" text-anchor="end">18</text>
+          <text class="lh-axis-label" x="35" y="11" text-anchor="end">24</text>
 
-          <!-- Horizontal grid lines aligned to 0/6/12/18/24 h ticks -->
-          <line class="lh-grid-line" x1="32" y1="96" x2="336" y2="96"/>
-          <line class="lh-grid-line" x1="32" y1="72" x2="336" y2="72"/>
-          <line class="lh-grid-line" x1="32" y1="48" x2="336" y2="48"/>
-          <line class="lh-grid-line" x1="32" y1="24" x2="336" y2="24"/>
-          <line class="lh-grid-line" x1="32" y1="8"  x2="336" y2="8"/>
+          <!-- Horizontal grid lines -->
+          <line class="lh-grid-line" x1="38" y1="96" x2="330" y2="96"/>
+          <line class="lh-grid-line" x1="38" y1="72" x2="330" y2="72"/>
+          <line class="lh-grid-line" x1="38" y1="48" x2="330" y2="48"/>
+          <line class="lh-grid-line" x1="38" y1="24" x2="330" y2="24"/>
+          <line class="lh-grid-line" x1="38" y1="10" x2="330" y2="10"/>
 
           <!-- Filled area under line -->
           <path [attr.d]="getChartFillPath()" fill="url(#chartFillGrad2)" class="lh-fill-area"/>
 
           <!-- Average dashed line -->
           @if (avgDailyHours > 0) {
-            <line class="lh-avg-line" x1="32" [attr.y1]="getAvgLineY()" x2="336" [attr.y2]="getAvgLineY()"/>
+            <line class="lh-avg-line" x1="38" [attr.y1]="getAvgLineY()" x2="330" [attr.y2]="getAvgLineY()"/>
           }
 
           <!-- Line with glow, clipped -->
