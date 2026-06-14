@@ -4203,57 +4203,125 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
-  private readonly CHART_W = 300;
-  private readonly CHART_H = 96;
-  private readonly CHART_PAD_X = 12;
-  private readonly CHART_PAD_TOP = 18;
-  private readonly CHART_PAD_BOTTOM = 14;
+  /** Weekly total hours (sum of all 7 days) */
+  get weeklyTotal(): number {
+    if (!this.weeklyHours?.length) return 0;
+    return this.weeklyHours.reduce((s: number, d: any) => s + (d.loggedHours ?? 0), 0);
+  }
+
+  /** Peak day hours */
+  get weeklyPeak(): number {
+    if (!this.weeklyHours?.length) return 0;
+    return Math.max(...this.weeklyHours.map((d: any) => d.loggedHours ?? 0));
+  }
+
+  /** Number of days with any logged hours */
+  get weeklyActiveDays(): number {
+    if (!this.weeklyHours?.length) return 0;
+    return this.weeklyHours.filter((d: any) => (d.loggedHours ?? 0) > 0).length;
+  }
+
+  /**
+   * Trend: compare second half of week vs first half.
+   * Positive = improving, negative = declining.
+   */
+  get weeklyTrend(): number {
+    if (!this.weeklyHours || this.weeklyHours.length < 2) return 0;
+    const mid = Math.floor(this.weeklyHours.length / 2);
+    const first = this.weeklyHours.slice(0, mid).reduce((s: number, d: any) => s + (d.loggedHours ?? 0), 0);
+    const second = this.weeklyHours.slice(mid).reduce((s: number, d: any) => s + (d.loggedHours ?? 0), 0);
+    return second - first;
+  }
+
+  /** Trend label showing percentage change */
+  get weeklyTrendLabel(): string {
+    if (!this.weeklyHours || this.weeklyHours.length < 2) return '—';
+    const mid = Math.floor(this.weeklyHours.length / 2);
+    const first = this.weeklyHours.slice(0, mid).reduce((s: number, d: any) => s + (d.loggedHours ?? 0), 0);
+    const second = this.weeklyHours.slice(mid).reduce((s: number, d: any) => s + (d.loggedHours ?? 0), 0);
+    if (first === 0) return second > 0 ? '+100%' : '0%';
+    const pct = Math.round(((second - first) / first) * 100);
+    return (pct >= 0 ? '+' : '') + pct + '%';
+  }
+
+  private readonly CHART_W = 320;
+  private readonly CHART_H = 110;
+  private readonly CHART_PAD_X = 14;
+  private readonly CHART_PAD_TOP = 26;   // extra top room for above-dot labels
+  private readonly CHART_PAD_BOTTOM = 22; // extra bottom room — low points still label above dot
 
   /** Max Y scale — includes avg line and headroom for value labels */
   getChartMax(): number {
     if (!this.weeklyHours?.length) return 1;
     const dataMax = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours ?? 0));
     const avg = this.avgDailyHours ?? 0;
-    return Math.max(dataMax, avg, 0.25) * 1.2;
+    return Math.max(dataMax, avg, 0.25) * 1.28;
   }
 
   private getChartPlotHeight(): number {
     return this.CHART_H - this.CHART_PAD_TOP - this.CHART_PAD_BOTTOM;
   }
 
-  /** SVG polyline points string for the line chart (viewBox 0 0 240 102) */
-  getChartPolyline(): string {
-    if (!this.weeklyHours?.length) return '';
-    const max = this.getChartMax();
-    const step = (this.CHART_W - this.CHART_PAD_X * 2) / (this.weeklyHours.length - 1 || 1);
-    const plotH = this.getChartPlotHeight();
-    return this.weeklyHours.map((d: any, i: number) => {
-      const x = this.CHART_PAD_X + i * step;
-      const y = this.CHART_H - this.CHART_PAD_BOTTOM - ((d.loggedHours ?? 0) / max) * plotH;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-  }
-
-  /** SVG filled-area path below the line */
-  getChartFillPath(): string {
-    if (!this.weeklyHours?.length) return '';
+  private getChartPoints(): Array<{ x: number; y: number }> {
+    if (!this.weeklyHours?.length) return [];
     const max = this.getChartMax();
     const step = (this.CHART_W - this.CHART_PAD_X * 2) / (this.weeklyHours.length - 1 || 1);
     const plotH = this.getChartPlotHeight();
     const baseline = this.CHART_H - this.CHART_PAD_BOTTOM;
-    const pts = this.weeklyHours.map((d: any, i: number) => {
-      const x = this.CHART_PAD_X + i * step;
-      const y = baseline - ((d.loggedHours ?? 0) / max) * plotH;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
-    const first = pts[0].split(',');
-    const last = pts[pts.length - 1].split(',');
-    return `M ${pts.join(' L ')} L ${last[0]},${baseline} L ${first[0]},${baseline} Z`;
+    return this.weeklyHours.map((d: any, i: number) => ({
+      x: +(this.CHART_PAD_X + i * step).toFixed(1),
+      y: +(baseline - ((d.loggedHours ?? 0) / max) * plotH).toFixed(1),
+    }));
+  }
+
+  /** Smooth cubic bezier path for the line chart */
+  getChartPolyline(): string {
+    const pts = this.getChartPoints();
+    if (!pts.length) return '';
+    if (pts.length === 1) return `${pts[0].x},${pts[0].y}`;
+    // Build smooth curve using catmull-rom → cubic bezier conversion
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(i - 1, 0)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(i + 2, pts.length - 1)];
+      const tension = 0.4;
+      const cp1x = p1.x + (p2.x - p0.x) * tension;
+      const cp1y = p1.y + (p2.y - p0.y) * tension;
+      const cp2x = p2.x - (p3.x - p1.x) * tension;
+      const cp2y = p2.y - (p3.y - p1.y) * tension;
+      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x},${p2.y}`;
+    }
+    return d;
+  }
+
+  /** SVG filled-area path below the smooth curve */
+  getChartFillPath(): string {
+    const pts = this.getChartPoints();
+    if (!pts.length) return '';
+    const baseline = this.CHART_H - this.CHART_PAD_BOTTOM;
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(i - 1, 0)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(i + 2, pts.length - 1)];
+      const tension = 0.4;
+      const cp1x = p1.x + (p2.x - p0.x) * tension;
+      const cp1y = p1.y + (p2.y - p0.y) * tension;
+      const cp2x = p2.x - (p3.x - p1.x) * tension;
+      const cp2y = p2.y - (p3.y - p1.y) * tension;
+      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x},${p2.y}`;
+    }
+    const last = pts[pts.length - 1];
+    d += ` L ${last.x},${baseline} L ${pts[0].x},${baseline} Z`;
+    return d;
   }
 
   /** Y coordinate for the average dashed line */
   getAvgLineY(): number {
-    if (!this.weeklyHours?.length) return 48;
+    if (!this.weeklyHours?.length) return 55;
     const max = this.getChartMax();
     const plotH = this.getChartPlotHeight();
     const avg = this.avgDailyHours ?? 0;
@@ -4262,16 +4330,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   /** X position of a point by index (for dot placement) */
   getChartX(i: number): number {
-    const step = (this.CHART_W - this.CHART_PAD_X * 2) / ((this.weeklyHours.length - 1) || 1);
-    return +(this.CHART_PAD_X + i * step).toFixed(1);
+    return this.getChartPoints()[i]?.x ?? 0;
   }
 
   /** Y position of a point by index */
   getChartY(i: number): number {
-    const max = this.getChartMax();
-    const plotH = this.getChartPlotHeight();
-    const v = this.weeklyHours[i]?.loggedHours ?? 0;
-    return +(this.CHART_H - this.CHART_PAD_BOTTOM - (v / max) * plotH).toFixed(1);
+    return this.getChartPoints()[i]?.y ?? 0;
   }
 
   /** X position as % for HTML overlay labels */
@@ -4279,15 +4343,26 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return +(this.getChartX(i) / this.CHART_W * 100).toFixed(2);
   }
 
-  /** Place label below dot when point is near top of chart */
+  /** Place label below dot when point is near top of chart (within top padding zone) */
   isChartLabelBelow(i: number): boolean {
-    return this.getChartY(i) < this.CHART_PAD_TOP + 14;
+    return this.getChartY(i) < this.CHART_PAD_TOP + 12;
   }
 
-  /** Top position as % for HTML overlay labels */
+  /** Top position as % for HTML overlay labels — always kept inside chart bounds */
   getChartLabelTopPercent(i: number): number {
     const y = this.getChartY(i);
-    const labelY = this.isChartLabelBelow(i) ? y + 10 : y - 2;
+    // Above dot: anchor is transform(-50%, -110%) so we want the dot Y minus a small gap
+    // Below dot: anchor is transform(-50%, 5px) so just place at dot Y
+    const LABEL_H_PX = 14; // approx label height in SVG units
+    let labelY: number;
+    if (this.isChartLabelBelow(i)) {
+      labelY = y + 6; // below the dot
+    } else {
+      labelY = y - 6; // above the dot — transform handles the rest
+    }
+    // Clamp so label never goes below the chart bottom (leave 4px margin)
+    const maxY = this.CHART_H - LABEL_H_PX - 4;
+    labelY = Math.min(labelY, maxY);
     return +(labelY / this.CHART_H * 100).toFixed(2);
   }
 

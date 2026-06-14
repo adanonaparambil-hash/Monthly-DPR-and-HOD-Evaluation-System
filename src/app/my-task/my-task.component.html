@@ -176,63 +176,126 @@
 
     <!-- Weekly Logged Hours Chart Card -->
     <div class="logged-hours-card">
+
+      <!-- Header: title + trend badge + avg pill -->
       <div class="lh-header">
         <div class="lh-title-group">
-          <i class="fas fa-chart-line lh-icon"></i>
+          <div class="lh-icon-wrap">
+            <i class="fas fa-chart-line lh-icon"></i>
+          </div>
           <div>
             <div class="lh-label">LOGGED HOURS</div>
             <div class="lh-sublabel">Last 7 Days</div>
           </div>
         </div>
-        <div class="lh-avg-badge">
-          <span class="lh-avg-label">AVG LOGGED</span>
-          <span class="lh-avg-value">{{ formatAvgHours(avgDailyHours) }}<span class="lh-avg-unit">/day</span></span>
+        <div class="lh-header-right">
+          <!-- Trend indicator -->
+          <div class="lh-trend-chip" [class.lh-trend-up]="weeklyTrend >= 0" [class.lh-trend-down]="weeklyTrend < 0">
+            <i [class]="weeklyTrend >= 0 ? 'fas fa-arrow-trend-up' : 'fas fa-arrow-trend-down'"></i>
+            <span>{{ weeklyTrendLabel }}</span>
+          </div>
+          <!-- Avg badge -->
+          <div class="lh-avg-badge">
+            <span class="lh-avg-label">AVG / DAY</span>
+            <span class="lh-avg-value">{{ formatAvgHours(avgDailyHours) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Micro stats row -->
+      <div class="lh-micro-stats">
+        <div class="lh-micro-item">
+          <span class="lh-micro-val lh-micro-total">{{ formatAvgHours(weeklyTotal) }}</span>
+          <span class="lh-micro-lbl">Total</span>
+        </div>
+        <div class="lh-micro-sep"></div>
+        <div class="lh-micro-item">
+          <span class="lh-micro-val lh-micro-peak">{{ formatAvgHours(weeklyPeak) }}</span>
+          <span class="lh-micro-lbl">Peak</span>
+        </div>
+        <div class="lh-micro-sep"></div>
+        <div class="lh-micro-item">
+          <span class="lh-micro-val lh-micro-active">{{ weeklyActiveDays }}</span>
+          <span class="lh-micro-lbl">Active Days</span>
         </div>
       </div>
 
       <!-- SVG Line Chart -->
       <div class="lh-chart-wrap">
-        <svg viewBox="0 0 300 96" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
+        <svg viewBox="0 0 320 110" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
           <defs>
-            <linearGradient id="chartFillGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#10b981" stop-opacity="0.38"/>
-              <stop offset="55%" stop-color="#34d399" stop-opacity="0.14"/>
+            <!-- Area fill gradient -->
+            <linearGradient id="chartFillGrad2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#10b981" stop-opacity="0.30"/>
+              <stop offset="60%"  stop-color="#34d399" stop-opacity="0.08"/>
               <stop offset="100%" stop-color="#ecfdf5" stop-opacity="0"/>
             </linearGradient>
-            <linearGradient id="chartLineGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#6ee7b7"/>
-              <stop offset="50%" stop-color="#10b981"/>
+            <!-- Line gradient -->
+            <linearGradient id="chartLineGrad2" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stop-color="#6ee7b7"/>
+              <stop offset="45%"  stop-color="#10b981"/>
               <stop offset="100%" stop-color="#047857"/>
             </linearGradient>
+            <!-- Glow filter -->
+            <filter id="lineGlow" x="-20%" y="-60%" width="140%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <!-- Clip path for draw animation -->
+            <clipPath id="chartClip">
+              <rect x="0" y="0" width="320" height="110" class="lh-clip-rect"/>
+            </clipPath>
           </defs>
-          <!-- Grid lines -->
-          <line class="lh-grid-line" x1="12" y1="26" x2="288" y2="26"/>
-          <line class="lh-grid-line" x1="12" y1="46" x2="288" y2="46"/>
-          <line class="lh-grid-line" x1="12" y1="66" x2="288" y2="66"/>
-          <!-- Filled area -->
-          <path [attr.d]="getChartFillPath()" fill="url(#chartFillGrad)" />
+
+          <!-- Horizontal grid lines -->
+          <line class="lh-grid-line" x1="14" y1="22" x2="306" y2="22"/>
+          <line class="lh-grid-line" x1="14" y1="44" x2="306" y2="44"/>
+          <line class="lh-grid-line" x1="14" y1="66" x2="306" y2="66"/>
+          <line class="lh-grid-line" x1="14" y1="88" x2="306" y2="88"/>
+
+          <!-- Filled area under line -->
+          <path [attr.d]="getChartFillPath()" fill="url(#chartFillGrad2)" class="lh-fill-area"/>
+
           <!-- Average dashed line -->
           @if (avgDailyHours > 0) {
-            <line class="lh-avg-line" x1="12" [attr.y1]="getAvgLineY()" x2="288" [attr.y2]="getAvgLineY()"/>
+            <line class="lh-avg-line" x1="14" [attr.y1]="getAvgLineY()" x2="306" [attr.y2]="getAvgLineY()"/>
           }
-          <!-- Glow + main line -->
-          <polyline class="lh-line-glow" [attr.points]="getChartPolyline()"/>
-          <polyline class="lh-line-main" [attr.points]="getChartPolyline()"/>
-          <!-- Dots -->
+
+          <!-- Line with glow, clipped for draw-on animation -->
+          <g clip-path="url(#chartClip)">
+            <path class="lh-line-glow" [attr.d]="getChartPolyline()" filter="url(#lineGlow)"/>
+            <path class="lh-line-main" [attr.d]="getChartPolyline()"/>
+          </g>
+
+          <!-- Dots with staggered fade-in -->
           @for (day of weeklyHours; track day.logDate; let i = $index) {
-            <circle [attr.cx]="getChartX(i)" [attr.cy]="getChartY(i)" [attr.r]="day.isToday === 'Y' ? 4.5 : 3.5"
-                    [class.lh-dot-today]="day.isToday === 'Y'"
-                    [class.lh-dot]="day.isToday !== 'Y'"
-                    [attr.fill]="day.isToday === 'Y' ? '#059669' : '#ffffff'"/>
+            <g class="lh-dot-group" [style.animation-delay]="(0.15 + i * 0.09) + 's'">
+              @if (day.isToday === 'Y') {
+                <circle [attr.cx]="getChartX(i)" [attr.cy]="getChartY(i)" r="8" class="lh-dot-pulse"/>
+              }
+              <circle
+                [attr.cx]="getChartX(i)"
+                [attr.cy]="getChartY(i)"
+                [attr.r]="day.isToday === 'Y' ? 5 : 4"
+                [class.lh-dot-today]="day.isToday === 'Y'"
+                [class.lh-dot]="day.isToday !== 'Y'"
+              />
+            </g>
           }
         </svg>
-        <!-- HTML value labels — crisp readable text -->
+
+        <!-- Value labels -->
         <div class="lh-chart-overlay" aria-hidden="true">
           @for (day of weeklyHours; track day.logDate; let i = $index) {
             <span class="lh-value-tag"
                   [class.lh-value-tag-below]="isChartLabelBelow(i)"
+                  [class.lh-value-tag-today]="day.isToday === 'Y'"
                   [style.left.%]="getChartXPercent(i)"
-                  [style.top.%]="getChartLabelTopPercent(i)">
+                  [style.top.%]="getChartLabelTopPercent(i)"
+                  [style.animation-delay]="(0.2 + i * 0.09) + 's'">
               {{ formatAvgHours(day.loggedHours) }}
             </span>
           }
@@ -241,7 +304,7 @@
 
       <!-- Day + date labels -->
       <div class="lh-days">
-        @for (day of weeklyHours; track day.logDate) {
+        @for (day of weeklyHours; track day.logDate; let i = $index) {
           <div class="lh-day-col" [class.lh-day-today]="day.isToday === 'Y'">
             <span class="lh-day-name">{{ day.dayName }}</span>
             <span class="lh-day-date">{{ day.dayLabel }}</span>
