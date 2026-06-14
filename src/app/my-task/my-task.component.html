@@ -192,7 +192,7 @@
 
       <!-- SVG Line Chart -->
       <div class="lh-chart-wrap">
-        <svg viewBox="0 0 220 88" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
+        <svg viewBox="0 0 300 96" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
           <defs>
             <linearGradient id="chartFillGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#10b981" stop-opacity="0.38"/>
@@ -206,32 +206,46 @@
             </linearGradient>
           </defs>
           <!-- Grid lines -->
-          <line class="lh-grid-line" x1="12" y1="22" x2="208" y2="22"/>
-          <line class="lh-grid-line" x1="12" y1="44" x2="208" y2="44"/>
-          <line class="lh-grid-line" x1="12" y1="66" x2="208" y2="66"/>
+          <line class="lh-grid-line" x1="12" y1="26" x2="288" y2="26"/>
+          <line class="lh-grid-line" x1="12" y1="46" x2="288" y2="46"/>
+          <line class="lh-grid-line" x1="12" y1="66" x2="288" y2="66"/>
           <!-- Filled area -->
           <path [attr.d]="getChartFillPath()" fill="url(#chartFillGrad)" />
           <!-- Average dashed line -->
           @if (avgDailyHours > 0) {
-            <line class="lh-avg-line" x1="12" [attr.y1]="getAvgLineY()" x2="208" [attr.y2]="getAvgLineY()"/>
+            <line class="lh-avg-line" x1="12" [attr.y1]="getAvgLineY()" x2="288" [attr.y2]="getAvgLineY()"/>
           }
           <!-- Glow + main line -->
           <polyline class="lh-line-glow" [attr.points]="getChartPolyline()"/>
           <polyline class="lh-line-main" [attr.points]="getChartPolyline()"/>
           <!-- Dots -->
-          @for (day of weeklyHours; track day.dayName; let i = $index) {
+          @for (day of weeklyHours; track day.logDate; let i = $index) {
             <circle [attr.cx]="getChartX(i)" [attr.cy]="getChartY(i)" [attr.r]="day.isToday === 'Y' ? 4.5 : 3.5"
                     [class.lh-dot-today]="day.isToday === 'Y'"
                     [class.lh-dot]="day.isToday !== 'Y'"
                     [attr.fill]="day.isToday === 'Y' ? '#059669' : '#ffffff'"/>
           }
         </svg>
+        <!-- HTML value labels — crisp readable text -->
+        <div class="lh-chart-overlay" aria-hidden="true">
+          @for (day of weeklyHours; track day.logDate; let i = $index) {
+            <span class="lh-value-tag"
+                  [class.lh-value-tag-below]="isChartLabelBelow(i)"
+                  [style.left.%]="getChartXPercent(i)"
+                  [style.top.%]="getChartLabelTopPercent(i)">
+              {{ formatAvgHours(day.loggedHours) }}
+            </span>
+          }
+        </div>
       </div>
 
-      <!-- Day labels -->
+      <!-- Day + date labels -->
       <div class="lh-days">
-        @for (day of weeklyHours; track day.dayName) {
-          <span [class.lh-day-today]="day.isToday === 'Y'">{{ day.dayName }}</span>
+        @for (day of weeklyHours; track day.logDate) {
+          <div class="lh-day-col" [class.lh-day-today]="day.isToday === 'Y'">
+            <span class="lh-day-name">{{ day.dayName }}</span>
+            <span class="lh-day-date">{{ day.dayLabel }}</span>
+          </div>
         }
       </div>
     </div>

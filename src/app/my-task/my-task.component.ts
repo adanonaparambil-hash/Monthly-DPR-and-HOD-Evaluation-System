@@ -4203,57 +4203,92 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
-  /** SVG polyline points string for the line chart (viewBox 0 0 220 88) */
+  private readonly CHART_W = 300;
+  private readonly CHART_H = 96;
+  private readonly CHART_PAD_X = 12;
+  private readonly CHART_PAD_TOP = 18;
+  private readonly CHART_PAD_BOTTOM = 14;
+
+  /** Max Y scale — includes avg line and headroom for value labels */
+  getChartMax(): number {
+    if (!this.weeklyHours?.length) return 1;
+    const dataMax = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours ?? 0));
+    const avg = this.avgDailyHours ?? 0;
+    return Math.max(dataMax, avg, 0.25) * 1.2;
+  }
+
+  private getChartPlotHeight(): number {
+    return this.CHART_H - this.CHART_PAD_TOP - this.CHART_PAD_BOTTOM;
+  }
+
+  /** SVG polyline points string for the line chart (viewBox 0 0 240 102) */
   getChartPolyline(): string {
-    if (!this.weeklyHours || this.weeklyHours.length === 0) return '';
-    const W = 220, H = 88, PAD = 12;
-    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
-    const step = (W - PAD * 2) / (this.weeklyHours.length - 1 || 1);
+    if (!this.weeklyHours?.length) return '';
+    const max = this.getChartMax();
+    const step = (this.CHART_W - this.CHART_PAD_X * 2) / (this.weeklyHours.length - 1 || 1);
+    const plotH = this.getChartPlotHeight();
     return this.weeklyHours.map((d: any, i: number) => {
-      const x = PAD + i * step;
-      const y = H - PAD - ((d.loggedHours || 0) / max) * (H - PAD * 2);
+      const x = this.CHART_PAD_X + i * step;
+      const y = this.CHART_H - this.CHART_PAD_BOTTOM - ((d.loggedHours ?? 0) / max) * plotH;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
   }
 
   /** SVG filled-area path below the line */
   getChartFillPath(): string {
-    if (!this.weeklyHours || this.weeklyHours.length === 0) return '';
-    const W = 220, H = 88, PAD = 12;
-    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
-    const step = (W - PAD * 2) / (this.weeklyHours.length - 1 || 1);
+    if (!this.weeklyHours?.length) return '';
+    const max = this.getChartMax();
+    const step = (this.CHART_W - this.CHART_PAD_X * 2) / (this.weeklyHours.length - 1 || 1);
+    const plotH = this.getChartPlotHeight();
+    const baseline = this.CHART_H - this.CHART_PAD_BOTTOM;
     const pts = this.weeklyHours.map((d: any, i: number) => {
-      const x = PAD + i * step;
-      const y = H - PAD - ((d.loggedHours || 0) / max) * (H - PAD * 2);
+      const x = this.CHART_PAD_X + i * step;
+      const y = baseline - ((d.loggedHours ?? 0) / max) * plotH;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     });
     const first = pts[0].split(',');
     const last = pts[pts.length - 1].split(',');
-    return `M ${pts.join(' L ')} L ${last[0]},${H - PAD} L ${first[0]},${H - PAD} Z`;
+    return `M ${pts.join(' L ')} L ${last[0]},${baseline} L ${first[0]},${baseline} Z`;
   }
 
   /** Y coordinate for the average dashed line */
   getAvgLineY(): number {
-    if (!this.weeklyHours || this.weeklyHours.length === 0) return 44;
-    const H = 88, PAD = 12;
-    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
-    const avg = this.avgDailyHours || 0;
-    return +(H - PAD - (avg / max) * (H - PAD * 2)).toFixed(1);
+    if (!this.weeklyHours?.length) return 48;
+    const max = this.getChartMax();
+    const plotH = this.getChartPlotHeight();
+    const avg = this.avgDailyHours ?? 0;
+    return +(this.CHART_H - this.CHART_PAD_BOTTOM - (avg / max) * plotH).toFixed(1);
   }
 
   /** X position of a point by index (for dot placement) */
   getChartX(i: number): number {
-    const W = 220, PAD = 12;
-    const step = (W - PAD * 2) / ((this.weeklyHours.length - 1) || 1);
-    return +(PAD + i * step).toFixed(1);
+    const step = (this.CHART_W - this.CHART_PAD_X * 2) / ((this.weeklyHours.length - 1) || 1);
+    return +(this.CHART_PAD_X + i * step).toFixed(1);
   }
 
   /** Y position of a point by index */
   getChartY(i: number): number {
-    const H = 88, PAD = 12;
-    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
-    const v = this.weeklyHours[i]?.loggedHours || 0;
-    return +(H - PAD - (v / max) * (H - PAD * 2)).toFixed(1);
+    const max = this.getChartMax();
+    const plotH = this.getChartPlotHeight();
+    const v = this.weeklyHours[i]?.loggedHours ?? 0;
+    return +(this.CHART_H - this.CHART_PAD_BOTTOM - (v / max) * plotH).toFixed(1);
+  }
+
+  /** X position as % for HTML overlay labels */
+  getChartXPercent(i: number): number {
+    return +(this.getChartX(i) / this.CHART_W * 100).toFixed(2);
+  }
+
+  /** Place label below dot when point is near top of chart */
+  isChartLabelBelow(i: number): boolean {
+    return this.getChartY(i) < this.CHART_PAD_TOP + 14;
+  }
+
+  /** Top position as % for HTML overlay labels */
+  getChartLabelTopPercent(i: number): number {
+    const y = this.getChartY(i);
+    const labelY = this.isChartLabelBelow(i) ? y + 10 : y - 2;
+    return +(labelY / this.CHART_H * 100).toFixed(2);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
