@@ -19,13 +19,14 @@ interface Task {
   description: string;
   status: 'NOT STARTED' | 'RUNNING' | 'COMPLETED' | 'PAUSED' | 'CLOSED' | 'AUTO CLOSED' | 'RE OPEN';
   category: string;
-  categoryId?: number; // Add categoryId property
+  categoryId?: number;
   loggedHours: string;
   totalHours: string;
   startDate: string;
   assignee: string;
-  assigneeId?: string; // Add assigneeId property
+  assigneeId?: string;
   assigneeImage?: string;
+  assignees?: { userId: string; name: string; imageBase64?: string }[]; // multi-assignee (assignedByMe)
   progress: number;
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
   isFavorite?: boolean;
@@ -150,6 +151,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   breakTime = '00:00';
   todayTotalHours = 0;
   lastPunchTime = '';
+
+  // Weekly chart data from API
+  weeklyHours: any[] = [];
+  avgDailyHours: number = 0;
 
   
   // Active task timer management
@@ -873,13 +878,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           const breakTimeTaken = data.breakTimeTacken || data.breakTimeTaken || 0;
           this.travelTime = this.formatMinutesToTime(travelTimeTaken);
           this.breakTime = this.formatMinutesToTime(breakTimeTaken);
-          
+
+          // Weekly chart
+          this.weeklyHours = data.weeklyHours || [];
+          this.avgDailyHours = data.avgDailyHours || 0;
+
           // Update break info from API
           this.breakStatus = data.breakStatus || 'NONE';
           this.breakReason = data.breakReason || null;
           this.breakRemarks = data.breakRemarks || '';
           this.breakId = data.breakId || null;
-          
+
           // Set selected break type based on breakReason
           if (this.breakReason) {
             const reasonLower = this.breakReason.toLowerCase();
@@ -1003,13 +1012,17 @@ export class MyTaskComponent implements OnInit, OnDestroy {
           const breakTimeTaken = data.breakTimeTacken || data.breakTimeTaken || 0;
           this.travelTime = this.formatMinutesToTime(travelTimeTaken);
           this.breakTime = this.formatMinutesToTime(breakTimeTaken);
-          
+
+          // Weekly chart
+          this.weeklyHours = data.weeklyHours || [];
+          this.avgDailyHours = data.avgDailyHours || 0;
+
           // Update break info from API
           this.breakStatus = data.breakStatus || 'NONE';
           this.breakReason = data.breakReason || null;
           this.breakRemarks = data.breakRemarks || '';
           this.breakId = data.breakId || null;
-          
+
           // Set selected break type based on breakReason
           if (this.breakReason) {
             const reasonLower = this.breakReason.toLowerCase();
@@ -1132,17 +1145,26 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     if (!this.pendingOpenTaskId) return;
 
     const targetId = this.pendingOpenTaskId;
-    // Find the task in the loaded lists (prefer "My Tasks")
+    this.pendingOpenTaskId = 0; // consume so it doesn't re-trigger on next refresh
+
+    // Try to find the task in the loaded list (user is an assignee)
     const match = this.tasks.find(t => t.id === targetId);
 
     if (match) {
-      this.pendingOpenTaskId = 0; // consume it so we don't reopen on the next refresh
-      // Make sure we're on the MY TASKS tab so the modal opens in editable mode
+      // Task is in the user's own list — open in editable mode
       this.activeTab = 'MY TASKS';
       this.openTaskDetailsModal(match);
     } else {
-      console.warn('Notification task not found in loaded list:', targetId);
-      this.pendingOpenTaskId = 0;
+      // Task is NOT in the user's list (user was only mentioned, not assigned).
+      // Open the modal directly by taskId so they can still view it.
+      const currentUser = this.sessionService.getCurrentUser();
+      const userId = currentUser?.empId || currentUser?.employeeId || '';
+      this.selectedTaskIdForModal = targetId;
+      this.selectedUserIdForModal = userId;
+      this.selectedCategoryIdForModal = 0;
+      this.isTaskModalViewOnly = true; // view-only since user is not an assignee
+      this.showTaskDetailsModal = true;
+      document.body.style.overflow = 'hidden';
     }
   }
 
@@ -1187,6 +1209,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         assignee: assigneeName || 'Unassigned',
         assigneeId: assigneeId,
         assigneeImage: assigneeImage,
+        assignees: task.assignees || [],
         progress: task.progress || 0,
         isFavorite: false
       };
@@ -3038,80 +3061,72 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   // Add task to My Tasks list
   addTaskToMyList(category: TaskCategory): void {
-    console.log('Adding task to My Tasks:', category.categoryName, 'estimatedHours:', category.sequenceNumber);
-    
-    // Get current user from session
+    // Get current user from session — same derivation as selectTask (ASSIGN flow)
     const currentUser = this.sessionService.getCurrentUser();
-    const createdBy = currentUser?.empId || currentUser?.id || currentUser?.employeeId || '';
-    
+    const createdBy = currentUser?.empId || currentUser?.employeeId || '';
+
+    // Full dump so we can see exactly what fields exist on the user object
+    console.log('[ADD] currentUser from session:', JSON.stringify(currentUser));
+    console.log('[ADD] resolved createdBy:', createdBy);
+
     if (!createdBy) {
       this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
       return;
     }
-    
-    // Create the task save request payload
+
     const taskSaveRequest: TaskSaveDto = {
-      taskId: 0, // New task
+      taskId: 0,
       categoryId: category.categoryId,
-      taskTitle: '',
-      description: '', // Empty description for new task from category
-      projectId: 0, // Default project
+      taskTitle: category.categoryName || 'New Task',
+      description: '',
+      projectId: 0,
       departmentId: category.departmentId || 0,
+      count: 0,
+      dailyCount: 0,
       targetDate: undefined,
-      startDate: undefined, // No start date, will be set when user starts the task
-      progress: 0, // Not started
-      status: 'NOT STARTED', // Initial status
+      startDate: undefined,
+      progress: 0,
+      status: 'NOT STARTED',
       createdBy: createdBy,
-      assignees: [createdBy], // Assign to self by default
-      customFields: [], // Empty custom fields
-      estimatedHours: category.sequenceNumber || 0 // Use category's estimated hours
+      assignees: [createdBy],
+      customFields: [],
+      estimatedHours: category.sequenceNumber || 0,
+      userID: createdBy
     };
-    
-    console.log('Task save request with estimatedHours:', taskSaveRequest.estimatedHours);
-    
-    // Call the API to save the task
+
+    // Full payload dump — compare this with what the ASSIGN flow sends
+    console.log('[ADD] payload being sent to SaveTaskBulk:', JSON.stringify(taskSaveRequest));
+
     this.api.saveTaskBulk(taskSaveRequest).subscribe({
       next: (response: any) => {
-        console.log('Task saved successfully:', response);
-        
-        // Show success toaster message at top right
-        this.toasterService.showSuccess(
-          'Task Added',
-          `"${category.categoryName}" has been successfully added to your tasks!`
-        );
-        
-        // Reload active tasks from API to get the latest list
+        console.log('[ADD] saved successfully:', response);
+        this.toasterService.showSuccess('Task Added', `"${category.categoryName}" has been added to your tasks!`);
         this.loadActiveTasks();
-        
-        console.log('Task list refreshed from API');
-        
-        // NOTE: Modal stays open to allow adding more tasks
       },
       error: (error: any) => {
-        console.error('Error saving task:', error);
-        this.toasterService.showError(
-          'Error',
-          'Failed to add task. Please try again.'
-        );
+        // Full error dump so we can see the exact backend validation message
+        console.error('[ADD] SaveTaskBulk error — status:', error?.status);
+        console.error('[ADD] error.error (backend body):', JSON.stringify(error?.error));
+        console.error('[ADD] error.message:', error?.message);
+
+        const msg = error?.error?.message || error?.error?.title || error?.message || 'Failed to add task. Please try again.';
+        const alreadyExists = msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist');
+        if (alreadyExists) {
+          this.toasterService.showWarning('Already Added', `"${category.categoryName}" is already in your tasks list.`);
+        } else {
+          this.toasterService.showError('Error', msg);
+        }
       }
     });
   }
 
   openTaskDetailsModal(task: Task) {
-    // For "ASSIGNED TO OTHERS" tab, use the assignee's userId from the task
-    // For "MY TASKS" tab, use the current user's userId from session
-    let userId: string;
-    
-    if (this.activeTab === 'ASSIGNED TO OTHERS') {
-      // Use the assigneeId from the task (the person the task is assigned to)
-      userId = task.assigneeId || '';
-      console.log('Opening task from ASSIGNED TO OTHERS - using assigneeId:', userId);
-    } else {
-      // Use current user's ID from session
-      const currentUser = this.sessionService.getCurrentUser();
-      userId = currentUser?.empId || currentUser?.employeeId || '';
-      console.log('Opening task from MY TASKS - using session userId:', userId);
-    }
+    // Always use the logged-in user's session ID as userId.
+    // GetTaskById uses P_USER_ID to load the viewer's time logs and department —
+    // it should always be the person currently viewing, not a third-party assignee.
+    const currentUser = this.sessionService.getCurrentUser();
+    const userId = currentUser?.empId || currentUser?.employeeId || '';
+    console.log('Opening task details modal - userId:', userId, 'tab:', this.activeTab);
     
     // Get category ID from the task directly or from lookup
     let categoryId = task.categoryId || this.getCategoryIdFromTask(task);
@@ -3448,6 +3463,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       description: this.editableTaskDescription?.trim() || '',
       projectId: parseInt(this.selectedProjectId) || 0,
       departmentId: 0, // Will be derived from category on backend
+      count: 0,
+      dailyCount: 0,
       targetDate: this.selectedTaskEndDate || undefined,
       startDate: this.selectedTaskStartDate || undefined,
       progress: this.taskProgress,
@@ -4175,6 +4192,71 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   }
+
+  // ── Weekly chart helpers ─────────────────────────────────────────────────
+
+  /** Format decimal hours → HH:MM string (e.g. 6.75 → "06:45") */
+  formatAvgHours(hours: number): string {
+    if (!hours) return '00:00';
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  /** SVG polyline points string for the line chart (viewBox 0 0 220 88) */
+  getChartPolyline(): string {
+    if (!this.weeklyHours || this.weeklyHours.length === 0) return '';
+    const W = 220, H = 88, PAD = 12;
+    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
+    const step = (W - PAD * 2) / (this.weeklyHours.length - 1 || 1);
+    return this.weeklyHours.map((d: any, i: number) => {
+      const x = PAD + i * step;
+      const y = H - PAD - ((d.loggedHours || 0) / max) * (H - PAD * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  /** SVG filled-area path below the line */
+  getChartFillPath(): string {
+    if (!this.weeklyHours || this.weeklyHours.length === 0) return '';
+    const W = 220, H = 88, PAD = 12;
+    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
+    const step = (W - PAD * 2) / (this.weeklyHours.length - 1 || 1);
+    const pts = this.weeklyHours.map((d: any, i: number) => {
+      const x = PAD + i * step;
+      const y = H - PAD - ((d.loggedHours || 0) / max) * (H - PAD * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const first = pts[0].split(',');
+    const last = pts[pts.length - 1].split(',');
+    return `M ${pts.join(' L ')} L ${last[0]},${H - PAD} L ${first[0]},${H - PAD} Z`;
+  }
+
+  /** Y coordinate for the average dashed line */
+  getAvgLineY(): number {
+    if (!this.weeklyHours || this.weeklyHours.length === 0) return 44;
+    const H = 88, PAD = 12;
+    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
+    const avg = this.avgDailyHours || 0;
+    return +(H - PAD - (avg / max) * (H - PAD * 2)).toFixed(1);
+  }
+
+  /** X position of a point by index (for dot placement) */
+  getChartX(i: number): number {
+    const W = 220, PAD = 12;
+    const step = (W - PAD * 2) / ((this.weeklyHours.length - 1) || 1);
+    return +(PAD + i * step).toFixed(1);
+  }
+
+  /** Y position of a point by index */
+  getChartY(i: number): number {
+    const H = 88, PAD = 12;
+    const max = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours || 0), 0.1);
+    const v = this.weeklyHours[i]?.loggedHours || 0;
+    return +(H - PAD - (v / max) * (H - PAD * 2)).toFixed(1);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Sort tasks with priority: AUTO CLOSED first, then preserve original order
   sortTasksByPriority(tasks: Task[]): Task[] {

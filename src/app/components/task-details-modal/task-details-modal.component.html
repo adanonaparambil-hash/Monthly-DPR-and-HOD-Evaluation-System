@@ -51,8 +51,8 @@
           </div>
         }
         
-        <!-- Timer Control Buttons (Start/Pause/Resume) - Icon Only - Only show if NOT in view-only mode -->
-        @if (!isViewOnly && taskId && taskId > 0) {
+        <!-- Timer Control Buttons (Start/Pause/Resume) - Only show if session user is in the Assigned To list -->
+        @if (!isViewOnly && taskId && taskId > 0 && isCurrentUserAssignee()) {
           <div class="header-timer-controls">
             <!-- Show Start button when task is NOT STARTED or RE-OPENED -->
             <button class="timer-control-icon start-icon" 
@@ -94,6 +94,15 @@
             <i class="fas fa-save"></i>
             <span>Save</span>
           </button>
+        }
+
+        <!-- Team Status badge — only when 2+ assignees -->
+        @if (taskAssignees.length > 1) {
+          <div [class]="getTeamStatusClass()" title="Overall team status">
+            <i class="fas fa-users"></i>
+            <span class="team-status-label">Team</span>
+            <span class="team-status-value">{{ getTeamStatus() }}</span>
+          </div>
         }
       </div>
 
@@ -166,10 +175,11 @@
               placeholder="Enter task title..." [readonly]="isViewOnly">
           </div>
 
-          <!-- Modern Combined Progress Component -->
+          <!-- Overall Progress Card -->
           <div class="modern-progress-section">
-            <!-- Progress Circle with Percentage -->
-            <div class="progress-circle-wrapper">
+
+            <!-- Left: Circle -->
+            <div class="progress-circle-wrapper" [class.is-complete]="selectedTaskProgress === 100">
               <div class="progress-circle-modern">
                 <svg class="progress-ring" viewBox="0 0 120 120">
                   <defs>
@@ -177,59 +187,139 @@
                       <stop offset="0%" style="stop-color:#10b981" />
                       <stop offset="100%" style="stop-color:#34d399" />
                     </linearGradient>
+                    <linearGradient id="cometGradient" gradientUnits="userSpaceOnUse" x1="60" y1="3" x2="117" y2="60">
+                      <stop offset="0%"   stop-color="#fde68a" stop-opacity="1" />
+                      <stop offset="50%"  stop-color="#f59e0b" stop-opacity="0.8" />
+                      <stop offset="100%" stop-color="#d97706" stop-opacity="0" />
+                    </linearGradient>
+                    <radialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.18" />
+                      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                    </radialGradient>
                   </defs>
-                  <!-- Background Circle -->
+
+                  <!-- Pulsing outer glow ring -->
+                  <circle class="pulse-ring-outer" cx="60" cy="60" r="56" fill="none"
+                    stroke="rgba(16,185,129,0.25)" stroke-width="2" />
+
+                  <!-- Slow-rotating dashed outer ring (clockwise) -->
+                  <circle class="progress-deco-ring" cx="60" cy="60" r="52" fill="none"
+                    stroke="rgba(16,185,129,0.18)" stroke-width="1.5" stroke-dasharray="5 9" />
+
+                  <!-- Counter-rotating inner dashed ring -->
+                  <circle class="progress-deco-ring-2" cx="60" cy="60" r="46" fill="none"
+                    stroke="rgba(16,185,129,0.1)" stroke-width="1" stroke-dasharray="3 11" />
+
+                  <!-- Soft inner glow (breathing) -->
+                  <circle class="progress-inner-glow" cx="60" cy="60" r="42" fill="url(#innerGlow)" />
+
+                  <!-- Background track -->
                   <circle class="progress-ring-bg" cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" stroke-width="8" />
-                  <!-- Progress Circle -->
+
+                  <!-- Always-on orbiting green dot -->
+                  <circle class="orbit-dot-1" cx="60" cy="4" r="3.5" fill="#10b981" />
+                  <!-- Second dot going opposite direction -->
+                  <circle class="orbit-dot-2" cx="60" cy="116" r="2.5" fill="#34d399" />
+
+                  <!-- Progress fill -->
                   <circle class="progress-ring-fill" cx="60" cy="60" r="52" fill="none"
                     stroke="url(#progressGradient)" stroke-width="8" stroke-linecap="round"
                     [style.stroke-dasharray]="326.73"
                     [style.stroke-dashoffset]="326.73 - (selectedTaskProgress / 100) * 326.73"
                     transform="rotate(-90 60 60)" />
+
+                  <!-- Gold comet orbiting outside -->
+                  <circle class="progress-orbit-arc" cx="60" cy="60" r="57" fill="none"
+                    stroke="url(#cometGradient)" stroke-width="3" stroke-linecap="round"
+                    stroke-dasharray="40 318.3" />
+
+                  <!-- 100% completion sparkles -->
+                  @if (selectedTaskProgress === 100) {
+                    <circle class="spark spark-n"  cx="60"  cy="4"   r="3.5" fill="#fbbf24" />
+                    <circle class="spark spark-ne" cx="102" cy="18"  r="2.5" fill="#34d399" />
+                    <circle class="spark spark-e"  cx="116" cy="60"  r="3.5" fill="#10b981" />
+                    <circle class="spark spark-se" cx="102" cy="102" r="2.5" fill="#fbbf24" />
+                    <circle class="spark spark-s"  cx="60"  cy="116" r="3.5" fill="#34d399" />
+                    <circle class="spark spark-sw" cx="18"  cy="102" r="2.5" fill="#10b981" />
+                    <circle class="spark spark-w"  cx="4"   cy="60"  r="3.5" fill="#fbbf24" />
+                    <circle class="spark spark-nw" cx="18"  cy="18"  r="2.5" fill="#34d399" />
+                  }
                 </svg>
                 <div class="progress-circle-content">
                   <span class="progress-percentage">{{ selectedTaskProgress }}%</span>
                 </div>
               </div>
-              <span class="progress-label">Complete</span>
+              <!-- Status badge below circle -->
+              <div class="progress-status-badge">
+                <span class="progress-status-dot"></span>
+                <span class="progress-status-text">{{ getProgressLabel() }}</span>
+              </div>
             </div>
 
-            <!-- Progress Controls (only in edit mode) -->
+            <!-- Right: Controls -->
             @if (!isViewOnly) {
               <div class="progress-controls-modern">
-                <label class="progress-control-label">Adjust Progress</label>
-                
-                <!-- Slider -->
+
+                <!-- Header row -->
+                <div class="progress-controls-header">
+                  <div>
+                    <h4 class="progress-main-title">Overall Progress</h4>
+                    <p class="progress-subtitle">Track the completion status of this task in real-time.</p>
+                  </div>
+                  <div class="progress-trend-icon">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
+                </div>
+
+                <!-- Slider row -->
                 <div class="progress-slider-container">
-                  <input type="range" class="progress-slider" 
+                  <input type="range" class="progress-slider"
                     [(ngModel)]="taskProgress"
                     (input)="onManualProgressChange($event)"
                     min="0" max="100" step="1">
                   <div class="progress-slider-track">
                     <div class="progress-slider-fill" [style.width.%]="taskProgress"></div>
                   </div>
+                  <span class="progress-slider-value">{{ taskProgress }}%</span>
                 </div>
 
                 <!-- Quick Buttons -->
                 <div class="progress-quick-actions">
-                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(0)" [class.active]="taskProgress === 0">
-                    0%
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(0)"   [class.active]="taskProgress === 0">
+                    <span class="quick-btn-radio"></span>0%
                   </button>
-                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(25)" [class.active]="taskProgress === 25">
-                    25%
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(25)"  [class.active]="taskProgress === 25">
+                    <span class="quick-btn-radio"></span>25%
                   </button>
-                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(50)" [class.active]="taskProgress === 50">
-                    50%
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(50)"  [class.active]="taskProgress === 50">
+                    <span class="quick-btn-radio"></span>50%
                   </button>
-                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(75)" [class.active]="taskProgress === 75">
-                    75%
+                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(75)"  [class.active]="taskProgress === 75">
+                    <span class="quick-btn-radio"></span>75%
                   </button>
-                  <button class="progress-quick-btn-modern" (click)="setQuickProgress(100)" [class.active]="taskProgress === 100">
-                    <i class="fas fa-check"></i> 100%
+                  <button class="progress-quick-btn-modern progress-flag-btn" (click)="setQuickProgress(100)" [class.active]="taskProgress === 100">
+                    <i class="fas fa-flag"></i>100%
                   </button>
+                </div>
+
+              </div>
+            }
+
+            <!-- View-only: just show the label -->
+            @if (isViewOnly) {
+              <div class="progress-controls-modern">
+                <div class="progress-controls-header">
+                  <div>
+                    <h4 class="progress-main-title">Overall Progress</h4>
+                    <p class="progress-subtitle">Track the completion status of this task in real-time.</p>
+                  </div>
+                  <div class="progress-trend-icon">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
                 </div>
               </div>
             }
+
           </div>
         </div>
 
@@ -240,23 +330,43 @@
             placeholder="Enter task description..." [readonly]="isViewOnly"></textarea>
         </div>
 
-        <!-- Daily Remarks - Always visible -->
-        @if (!isViewOnly) {
+        <!-- Daily Remarks + Daily Count — only shown to users who are in the Assignee list -->
+        @if (!isViewOnly && isCurrentUserAssignee()) {
           <div class="daily-remarks-section">
-            <label class="remarks-section-label">
-              <i class="fas fa-pen-to-square"></i>
-              Daily Remarks
-              <span class="required-indicator">*</span>
-            </label>
-            <div class="remarks-textarea-container">
-              <textarea
-                class="remarks-textarea"
-                [(ngModel)]="dailyRemarks"
-                placeholder="Describe today's progress, blockers, or updates..."
-                maxlength="500"
-                rows="4"
-              ></textarea>
-              <div class="remarks-char-count">{{ (dailyRemarks || '').length }}/500</div>
+            <div class="daily-remarks-row">
+              <!-- Remarks textarea (compact) -->
+              <div class="remarks-main">
+                <label class="remarks-section-label">
+                  <i class="fas fa-pen-to-square"></i>
+                  Daily Remarks
+                  <span class="required-indicator">*</span>
+                </label>
+                <div class="remarks-textarea-container">
+                  <textarea
+                    class="remarks-textarea"
+                    [(ngModel)]="dailyRemarks"
+                    placeholder="Describe today's progress, blockers, or updates..."
+                    maxlength="500"
+                    rows="2"
+                  ></textarea>
+                  <div class="remarks-char-count">{{ (dailyRemarks || '').length }}/500</div>
+                </div>
+              </div>
+              <!-- Daily Count (small, beside remarks) -->
+              <div class="daily-count-field">
+                <label class="remarks-section-label">
+                  <i class="fas fa-hashtag"></i>
+                  Daily Count
+                </label>
+                <input
+                  type="number"
+                  class="daily-count-input"
+                  [(ngModel)]="dailyCount"
+                  min="0"
+                  placeholder="0"
+                  (keypress)="$event.charCode >= 48 && $event.charCode <= 57"
+                >
+              </div>
             </div>
           </div>
         }
@@ -265,6 +375,12 @@
         <div class="metadata-section">
           <div class="metadata-header">
             <h3 class="section-label">Task Details</h3>
+            @if (!isViewOnly) {
+              <button class="add-field-header-btn" (click)="openAddFieldModal()">
+                <i class="fas fa-plus"></i>
+                Add Field
+              </button>
+            }
           </div>
 
           <div class="metadata-grid">
@@ -439,6 +555,24 @@
               </div>
             </div>
 
+            <!-- Count -->
+            <div class="metadata-card">
+              <div class="metadata-content">
+                <p class="metadata-label">
+                  <i class="fas fa-hashtag label-icon purple"></i>
+                  Count
+                </p>
+                <input
+                  type="number"
+                  class="metadata-input"
+                  [(ngModel)]="selectedTaskCount"
+                  min="0"
+                  placeholder="0"
+                  (keypress)="$event.charCode >= 48 && $event.charCode <= 57"
+                >
+              </div>
+            </div>
+
             <!-- Estimated Hours -->
             <div class="metadata-card estimated-hours">
               <div class="metadata-content">
@@ -503,13 +637,6 @@
             </div>
             }
 
-            <!-- Add Field Button - Always at the end, hide in view-only mode -->
-            @if (!isViewOnly) {
-              <button class="add-field-card" (click)="openAddFieldModal()">
-                <i class="fas fa-plus-circle"></i>
-                <span class="add-field-text">Add Field</span>
-              </button>
-            }
           </div>
         </div>
 

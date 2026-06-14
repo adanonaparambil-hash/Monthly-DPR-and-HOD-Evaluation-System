@@ -681,6 +681,38 @@ body.dark-theme .task-modal-container .time-subtab:hover:not(.active) {
   color: #d1d5db !important;
 }
 
+/* Team status badge — dark mode */
+body.dark-theme .team-status-badge.team-running {
+  background: rgba(16,185,129,0.18) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16,185,129,0.35) !important;
+}
+body.dark-theme .team-status-badge.team-paused {
+  background: rgba(245,158,11,0.18) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245,158,11,0.35) !important;
+}
+body.dark-theme .team-status-badge.team-completed {
+  background: rgba(59,130,246,0.18) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59,130,246,0.35) !important;
+}
+body.dark-theme .team-status-badge.team-closed {
+  background: rgba(107,114,128,0.18) !important;
+  color: #9ca3af !important;
+  border-color: rgba(107,114,128,0.3) !important;
+}
+body.dark-theme .team-status-badge.team-in-progress {
+  background: rgba(139,92,246,0.18) !important;
+  color: #c4b5fd !important;
+  border-color: rgba(139,92,246,0.35) !important;
+}
+body.dark-theme .team-status-badge.team-not-started {
+  background: rgba(156,163,175,0.15) !important;
+  color: #9ca3af !important;
+  border-color: rgba(156,163,175,0.25) !important;
+}
+
 /* Attachments */
 body.dark-theme .task-modal-container .integrated-upload-area,
 body.dark-theme .task-modal-container .file-item {

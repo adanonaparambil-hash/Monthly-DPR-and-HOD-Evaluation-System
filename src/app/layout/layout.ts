@@ -81,19 +81,9 @@ export class layout implements OnInit, OnDestroy {
   /** Purchase Dashboard visibility — driven by getUserMenus API response */
   isPurchaseDashboardUser = false;
   
-  /** Log Analytics visibility — only for user ITS41 */
+  /** Log Analytics visibility — accessible to all users */
   get isLogAnalyticsUser(): boolean {
-    const userId = this.userSession?.userId ?? this.userSession?.id ?? this.userSession?.empId;
-    const hasAccess = userId === 'ITS41';
-    
-    // Debug logging for testing
-    console.log('Log Analytics Access Check:', {
-      userId,
-      hasAccess,
-      sessionKeys: Object.keys(this.userSession)
-    });
-    
-    return hasAccess;
+    return true;
   }
   
   /** All user menus from API */

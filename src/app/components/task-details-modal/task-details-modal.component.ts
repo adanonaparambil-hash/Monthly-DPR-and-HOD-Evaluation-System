@@ -82,10 +82,12 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   editableTaskTitle = '';
   editableTaskDescription = '';
   dailyRemarks = '';
-  
+  dailyCount: number = 0;
+
   // Metadata fields
   selectedTaskStartDate = '';
   selectedTaskEndDate = '';
+  selectedTaskCount: number = 0;
   selectedTaskEstimatedHours: number = 0;
   estimatedHoursDisplay: string = ''; // HH:MM display format
   selectedProjectId: string = '';
@@ -122,6 +124,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   // Time Distribution (timeLogSummary and assignees from GetTaskById)
   timeLogSummary: any[] = [];
   taskAssignees: any[] = [];
+  apiTeamStatus: string = ''; // teamStatus field from GetTaskById response
   activeTimeTab: 'team' | 'log' = 'team';
   
   // Dropdowns
@@ -156,9 +159,10 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       categoryId: this.categoryId
     });
     
-    // Set Assigned By to logged-in user by default
+    // Set Assigned By and Assignee to logged-in user by default
     const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    this.selectedCreatedById = (currentUser.empId || currentUser.employeeId || this.userId || '').toString();
+    const loggedInId = (currentUser.empId || currentUser.employeeId || this.userId || '').toString();
+    this.selectedCreatedById = loggedInId;
     
     // Check AUTO CLOSED tasks count
     this.checkAutoClosedTasksCount();
@@ -184,11 +188,18 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       this.selectedTaskCategory = this.categoryName || ''; // Set category name for new tasks
       this.selectedTaskEstimatedHours = this.estimatedHours || 0; // Set estimated hours from category
       this.estimatedHoursDisplay = this.minutesToHHMM(this.selectedTaskEstimatedHours);
+      this.selectedTaskCount = 0;
       this.editableTaskTitle = '';
       this.editableTaskDescription = '';
       this.dailyRemarks = '';
+      this.dailyCount = 0;
       this.selectedTaskProgress = 0;
       this.taskProgress = 0;
+      // Pre-populate both Assigned By and Assignee with the logged-in user
+      if (loggedInId) {
+        this.selectedAssigneeIds = [loggedInId];
+        this.originalAssigneeIds = [loggedInId];
+      }
     } else {
       console.error('Missing required inputs:', {
         hasTaskId: !!this.taskId,
@@ -239,6 +250,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           // Bind Project Metadata fields
           this.selectedTaskStartDate = taskDetails.startDate ? this.formatDateForInput(taskDetails.startDate) : '';
           this.selectedTaskEndDate = taskDetails.targetDate ? this.formatDateForInput(taskDetails.targetDate) : '';
+          this.selectedTaskCount = taskDetails.count || 0;
           this.selectedTaskEstimatedHours = taskDetails.estimtedHours || taskDetails.estimatedHours || 0;
           this.estimatedHoursDisplay = this.minutesToHHMM(this.selectedTaskEstimatedHours);
           this.selectedProjectId = taskDetails.projectId ? taskDetails.projectId.toString() : '';
@@ -269,6 +281,9 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           this.taskAssignees = (taskDetails.assignees && Array.isArray(taskDetails.assignees))
             ? taskDetails.assignees
             : [];
+
+          // Bind teamStatus directly from API response for the header badge
+          this.apiTeamStatus = (taskDetails.teamStatus || taskDetails.TeamStatus || '').toString().toUpperCase();
 
           // Bind Time Distribution from timeLogSummary (latest first)
           this.timeLogSummary = (taskDetails.timeLogSummary && Array.isArray(taskDetails.timeLogSummary))
@@ -591,10 +606,18 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // Check if status is CLOSED or COMPLETED and Daily Remarks is mandatory
-    if ((this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') && !this.dailyRemarks.trim()) {
+    // Daily Remarks is mandatory only when the logged-in user is an assignee.
+    // If the user is only in "Assigned By" (they created the task for someone else),
+    // they are not required to fill daily remarks.
+    const currentUserForValidation = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const loggedInIdForValidation = (currentUserForValidation.empId || currentUserForValidation.employeeId || this.userId || '').toString();
+    const loggedInUserIsAssignee = this.selectedAssigneeIds.some(id => id.toString() === loggedInIdForValidation);
+
+    if (loggedInUserIsAssignee &&
+        (this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') &&
+        !this.dailyRemarks.trim()) {
       this.toasterService.showError(
-        'Validation Error', 
+        'Validation Error',
         'Daily Remarks is mandatory when closing or completing a task'
       );
       return;
@@ -669,6 +692,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       description: this.editableTaskDescription?.trim() || '',
       projectId: parseInt(this.selectedProjectId) || 0,
       departmentId: 0, // Will be set by backend based on category
+      count: this.selectedTaskCount || 0,
       targetDate: formatDateForApi(this.selectedTaskEndDate),
       startDate: formatDateForApi(this.selectedTaskStartDate),
       progress: this.taskProgress || 0,
@@ -681,6 +705,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
         value: field.value?.toString() || ''
       })),
       dailyRemarks: this.dailyRemarks?.trim() || '',
+      dailyCount: this.dailyCount || 0,
       taskChanges: taskChangesSummary,
       userID: userId
     };
@@ -1664,6 +1689,16 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     this.selectedTaskProgress = value;
   }
 
+  getProgressLabel(): string {
+    const p = this.selectedTaskProgress;
+    if (p === 0)   return 'Just getting started';
+    if (p <= 25)   return 'Making progress';
+    if (p <= 50)   return 'Halfway there';
+    if (p <= 75)   return 'Almost done';
+    if (p < 100)   return 'Final stretch';
+    return 'Completed!';
+  }
+
   // Custom fields management
   openAddFieldModal() {
     this.showAddFieldModal = true;
@@ -1994,6 +2029,42 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     const max = Math.max(...this.taskAssignees.map(a => a.totalHours || 0), 0);
     if (max <= 0) return 0;
     return Math.max(Math.round(((hours || 0) / max) * 100), 2);
+  }
+
+  // Returns true only if the session user is in the Assigned To list.
+  // Timer controls (Start/Pause/Resume) should be hidden when this returns false.
+  isCurrentUserAssignee(): boolean {
+    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionId = (currentUser.empId || currentUser.employeeId || this.userId || '').toString().trim().toUpperCase();
+    if (!sessionId) return false;
+    return this.selectedAssigneeIds.some(id => (id || '').toString().trim().toUpperCase() === sessionId);
+  }
+
+  // Overall team status — shown in header; uses API-provided teamStatus when available
+  getTeamStatus(): string {
+    // Prefer the value from GetTaskById response (TeamStatus column)
+    if (this.apiTeamStatus) return this.apiTeamStatus;
+
+    // Fallback: derive from assignee statuses
+    if (!this.taskAssignees || this.taskAssignees.length === 0) return '';
+    const statuses = this.taskAssignees.map(a => (a.status || '').toUpperCase());
+    if (statuses.every(s => s === 'CLOSED'))                    return 'CLOSED';
+    if (statuses.every(s => s === 'COMPLETED'))                  return 'COMPLETED';
+    if (statuses.some(s => s === 'RUNNING'))                     return 'RUNNING';
+    if (statuses.some(s => s === 'PAUSED'))                      return 'PAUSED';
+    if (statuses.every(s => s === 'NOT STARTED' || s === ''))    return 'NOT STARTED';
+    return 'IN PROGRESS';
+  }
+
+  // CSS class for the team-status badge in the header
+  getTeamStatusClass(): string {
+    const s = this.getTeamStatus();
+    if (s === 'RUNNING')     return 'team-status-badge team-running';
+    if (s === 'PAUSED')      return 'team-status-badge team-paused';
+    if (s === 'COMPLETED')   return 'team-status-badge team-completed';
+    if (s === 'CLOSED')      return 'team-status-badge team-closed';
+    if (s === 'IN PROGRESS') return 'team-status-badge team-in-progress';
+    return 'team-status-badge team-not-started';
   }
 
   // Utility methods

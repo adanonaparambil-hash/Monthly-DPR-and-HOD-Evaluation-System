@@ -25,6 +25,8 @@ export interface TaskSaveDto {
   description: string;
   projectId: number;
   departmentId: number;
+  count: number;
+  dailyCount: number;
   targetDate?: string | Date;
   startDate?: string | Date;
   progress: number;
@@ -173,6 +175,12 @@ export interface UserBreakRequest {
   reason?: string;
 }
 
+export interface ActiveTaskAssigneeDto {
+  userId: string;
+  name: string;
+  imageBase64?: string;
+}
+
 export interface ActiveTaskDto {
   taskId: number;
   taskCategory: string;
@@ -196,6 +204,8 @@ export interface ActiveTaskDto {
   assigneeName: string;
   assigneeImage?: string;
   assigneeImageBase64?: string;
+
+  assignees?: ActiveTaskAssigneeDto[];
 }
 
 export interface ActiveTaskListResponse {

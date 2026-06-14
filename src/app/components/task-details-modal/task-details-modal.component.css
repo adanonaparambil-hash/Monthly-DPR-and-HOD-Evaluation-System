@@ -30,6 +30,96 @@
   align-items: start !important;
 }
 
+/* ============================================================
+   GLASSMORPHISM — field-level glass only; panels use base CSS
+   ============================================================ */
+
+/* Inputs & selects — glass tint, text stays readable */
+.metadata-input,
+.metadata-select {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(200, 215, 210, 0.6) !important;
+  color: #1e293b !important;
+}
+
+.metadata-input:focus,
+.metadata-select:focus {
+  background: rgba(255, 255, 255, 0.80) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12) !important;
+}
+
+/* Remarks textarea */
+.remarks-textarea {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.2) !important;
+  color: #1e293b !important;
+}
+
+.remarks-textarea:focus {
+  background: rgba(255, 255, 255, 0.80) !important;
+}
+
+/* Daily count input */
+.daily-count-input {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
+  color: #065f46 !important;
+}
+
+.daily-count-input:focus {
+  background: rgba(255, 255, 255, 0.80) !important;
+}
+
+/* ADD FIELD — compact but bold inline button in the Task Details header */
+.add-field-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  background: rgba(16, 185, 129, 0.09);
+  border: 2px dashed rgba(16, 185, 129, 0.5);
+  border-radius: 8px;
+  color: #059669;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-field-header-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10b981;
+  border-style: solid;
+  color: #047857;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.add-field-header-btn i {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* Compact Daily Remarks section */
+.daily-remarks-section {
+  margin: 8px 0 !important;
+  padding: 10px 12px !important;
+}
+
+.remarks-textarea {
+  min-height: 80px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+}
+
+.remarks-section-label {
+  margin-bottom: 6px !important;
+  font-size: 9px !important;
+}
+
 /* Ensure assignee card's dropdown list floats above other cards */
 .assignee-dropdown-card {
   z-index: 10 !important;
@@ -1169,6 +1259,77 @@ textarea[readonly] {
   font-size: 13px;
 }
 
+/* Daily Remarks + Daily Count side-by-side row */
+.daily-remarks-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;   /* both columns same height */
+}
+
+.remarks-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.remarks-textarea-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.remarks-textarea {
+  flex: 1;
+}
+
+.daily-count-field {
+  width: 96px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.daily-count-field .remarks-section-label {
+  white-space: nowrap;
+}
+
+.daily-count-input {
+  flex: 1;
+  width: 100%;
+  min-height: 54px;
+  /* exact same border/background as .remarks-textarea */
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  color: #065f46;
+  background: rgba(255, 255, 255, 0.9);
+  outline: none;
+  transition: all 0.25s ease;
+  -moz-appearance: textfield;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+  font-family: inherit;
+}
+
+.daily-count-input::-webkit-outer-spin-button,
+.daily-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.daily-count-input:focus {
+  outline: none;
+  border-color: #10b981;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1),
+              inset 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
 /* Daily Remarks Input Container with Button */
 .remarks-input-container {
   flex: 1;
@@ -1292,20 +1453,15 @@ textarea[readonly] {
   }
 }
 
-/* Own comments (current user) - Left side */
-.comment-item.comment-own {
+/* All comments — unified left-aligned feed */
+.comment-item.comment-own,
+.comment-item.comment-other {
   flex-direction: row;
   justify-content: flex-start;
 }
 
-/* Other users' comments - Right side */
-.comment-item.comment-other {
-  flex-direction: row-reverse;
-  justify-content: flex-start;
-}
-
 .comment-item.comment-other .comment-content {
-  text-align: right;
+  text-align: left;
 }
 
 .comment-avatar {
@@ -1343,7 +1499,7 @@ textarea[readonly] {
 }
 
 .comment-item.comment-other .comment-header {
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .comment-author {
@@ -1465,6 +1621,376 @@ textarea[readonly] {
   75% {
     transform: translateY(-3px) translateZ(5px) rotateZ(-2deg);
   }
+}
+
+/* ============================================================
+   Overall Progress — compact card beside the task title
+   ============================================================ */
+
+.modern-progress-section {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+  background: #ffffff !important;
+  border: 1px solid #e8f5f0 !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.07) !important;
+  width: 320px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ── Left: Circle ── */
+.progress-circle-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  transform-style: flat !important;
+  animation: none !important;
+}
+
+.progress-circle-modern {
+  position: relative !important;
+  width: 72px !important;
+  height: 72px !important;
+  transform-style: flat !important;
+  animation: none !important;
+}
+
+.progress-circle-content {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  width: 100% !important;
+}
+
+.progress-percentage {
+  display: block !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #10b981 !important;
+  line-height: 1 !important;
+}
+
+.progress-complete-label {
+  font-size: 7px !important;
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+}
+
+.progress-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  padding: 2px 7px;
+}
+
+.progress-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  flex-shrink: 0;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+  50%       { box-shadow: 0 0 0 3px rgba(16,185,129,0); }
+}
+
+.progress-status-text {
+  font-size: 9px;
+  font-weight: 600;
+  color: #059669;
+  white-space: nowrap;
+}
+
+/* ── Right: Controls ── */
+.progress-controls-modern {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+
+.progress-controls-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.progress-main-title {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  margin: 0 0 1px 0 !important;
+  line-height: 1.2 !important;
+}
+
+.progress-subtitle {
+  font-size: 10px !important;
+  color: #9ca3af !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+}
+
+.progress-trend-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #10b981;
+  font-size: 11px;
+}
+
+/* Slider */
+.progress-slider-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: auto !important;
+  perspective: none !important;
+  transform-style: flat !important;
+  position: relative !important;
+}
+
+.progress-slider-value {
+  font-size: 10px;
+  font-weight: 700;
+  color: #10b981;
+  min-width: 26px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Quick buttons */
+.progress-quick-actions {
+  display: flex !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+}
+
+.progress-quick-btn-modern {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 5px 2px !important;
+  background: #f9fafb !important;
+  border: 1.5px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  min-width: 0 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.progress-quick-btn-modern:hover {
+  border-color: #10b981 !important;
+  background: #f0fdf4 !important;
+  color: #059669 !important;
+}
+
+.progress-quick-btn-modern.active {
+  background: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #059669 !important;
+  box-shadow: 0 0 0 2px rgba(16,185,129,0.12) !important;
+}
+
+.quick-btn-radio {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  display: block;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+
+.progress-quick-btn-modern.active .quick-btn-radio {
+  border-color: #10b981;
+  background: #10b981;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+.progress-flag-btn i {
+  font-size: 11px;
+  color: #10b981;
+}
+
+.progress-flag-btn.active {
+  background: #059669 !important;
+  color: #fff !important;
+  border-color: #059669 !important;
+}
+
+.progress-flag-btn.active i {
+  color: #fff;
+}
+
+/* Kill old glow / tilt animations */
+.progress-circle-modern::before,
+.progress-circle-modern::after,
+.progress-circle-wrapper::before {
+  display: none !important;
+}
+
+/* ── Pulsing outer glow ring ── */
+.pulse-ring-outer {
+  animation: pulse-outer 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-outer {
+  0%, 100% { opacity: 0.25; stroke-width: 1.5; }
+  50%       { opacity: 0.7;  stroke-width: 3;   }
+}
+
+/* ── Decorative slow-rotating dashed ring (clockwise) ── */
+.progress-deco-ring {
+  transform-origin: 60px 60px;
+  animation: deco-rotate 10s linear infinite;
+}
+
+@keyframes deco-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Counter-rotating inner dashed ring ── */
+.progress-deco-ring-2 {
+  transform-origin: 60px 60px;
+  animation: deco-rotate-rev 15s linear infinite;
+}
+
+@keyframes deco-rotate-rev {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+/* ── Orbiting dots ── */
+.orbit-dot-1 {
+  transform-origin: 60px 60px;
+  animation: orbit-cw 3s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.9));
+}
+
+.orbit-dot-2 {
+  transform-origin: 60px 60px;
+  animation: orbit-ccw 4.5s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(52, 211, 153, 0.7));
+}
+
+@keyframes orbit-cw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes orbit-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+/* ── Soft inner glow breathing — opacity only, no scale overflow ── */
+.progress-inner-glow {
+  animation: glow-breathe 3s ease-in-out infinite;
+}
+
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1;   }
+}
+
+/* ── Progress fill — spring transition when value changes ── */
+.progress-ring-fill {
+  transition: stroke-dashoffset 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) !important;
+}
+
+/* ── 100% completion glow on the fill ── */
+.is-complete .progress-ring-fill {
+  animation: completion-glow 0.8s ease-out forwards !important;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9));
+}
+
+@keyframes completion-glow {
+  0%   { filter: drop-shadow(0 0 2px rgba(16,185,129,0.4)); }
+  40%  { filter: drop-shadow(0 0 18px rgba(16,185,129,1));  }
+  100% { filter: drop-shadow(0 0 8px rgba(16,185,129,0.7)); }
+}
+
+/* ── 100% wrapper pulse ── */
+.is-complete .progress-circle-modern {
+  animation: complete-ring-pulse 0.6s ease-out;
+}
+
+@keyframes complete-ring-pulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.08); }
+  65%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+/* ── Completion sparkles ── */
+.spark {
+  transform-origin: 60px 60px;
+  opacity: 0;
+}
+
+.spark-n  { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0s   forwards; }
+.spark-ne { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0.05s forwards; }
+.spark-e  { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0.1s  forwards; }
+.spark-se { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s forwards; }
+.spark-s  { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s  forwards; }
+.spark-sw { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0.1s  forwards; }
+.spark-w  { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0.05s forwards; }
+.spark-nw { animation: spark-fly 0.9s cubic-bezier(0.22,1,0.36,1) 0s    forwards; }
+
+@keyframes spark-fly {
+  0%   { opacity: 0; transform: scale(0) rotate(0deg); }
+  25%  { opacity: 1; transform: scale(1.8) rotate(45deg); }
+  60%  { opacity: 0.8; }
+  100% { opacity: 0; transform: scale(0.4) rotate(180deg); }
+}
+
+/* ── Comet arc that orbits continuously around the outside rim ── */
+.progress-orbit-arc {
+  transform-origin: 60px 60px;   /* SVG viewBox centre (0 0 120 120) */
+  animation: orbit-comet 2s linear infinite;
+  filter: drop-shadow(0 0 5px rgba(253, 230, 138, 1)) drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+}
+
+@keyframes orbit-comet {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .progress-ring {
@@ -3954,27 +4480,41 @@ textarea.editable-description[readonly] {
 }
 
 /* ============================================================
-   Comments — cleaner, modern chat styling
+   Comments — unified left-feed chat styling
    ============================================================ */
 .comments-content {
-  padding: 16px 14px !important;
-  gap: 16px !important;
+  padding: 14px 12px !important;
+  gap: 0 !important;
 }
 
 .comment-item {
   display: flex;
   gap: 10px;
   align-items: flex-start;
+  margin-bottom: 14px;
 }
 
 .comment-avatar {
   width: 34px;
   height: 34px;
+  min-width: 34px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(16, 185, 129, 0.35);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Green ring for own comments avatar */
+.comment-own .comment-avatar {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .comment-content {
@@ -3986,44 +4526,130 @@ textarea.editable-description[readonly] {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .comment-author {
   font-size: 12px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Green name for own comments */
+.comment-own .comment-author {
+  color: #059669;
+}
+
 .comment-time {
   font-size: 10px;
-  color: #9ca3af;
+  color: #94a3b8;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
-/* Modern bubble: soft card with a flat top-left corner */
+/* Bubble for other users — white card */
 .comment-message {
   background: #ffffff !important;
-  border: 1px solid #eef2f7 !important;
-  border-radius: 4px 14px 14px 14px !important;
-  padding: 11px 13px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 2px 12px 12px 12px !important;
+  padding: 10px 13px !important;
   font-size: 13px;
   line-height: 1.55;
   color: #374151;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   word-break: break-word;
+  display: inline-block;
+  max-width: 95%;
 }
 
-/* Subtle green tint for the current user's own comments */
-.comment-own .comment-message {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+/* ── Team Status badge (header, read-only, 2+ assignees only) ── */
+.team-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
 }
+
+.team-status-badge i {
+  font-size: 11px;
+}
+
+.team-status-label {
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.team-status-value {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Status colour variants — solid gradients with white text */
+.team-status-badge.team-running {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.4);
+}
+
+.team-status-badge.team-paused {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.4);
+}
+
+.team-status-badge.team-completed {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+}
+
+.team-status-badge.team-closed {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.4);
+}
+
+.team-status-badge.team-in-progress {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+}
+
+.team-status-badge.team-not-started {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(107,114,128,0.35);
+}
+
+/* Green-tinted bubble for own comments */
+.comment-own .comment-message {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #065f46 !important;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.12) !important;
+}
+
