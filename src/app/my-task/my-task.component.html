@@ -220,23 +220,20 @@
         </div>
       </div>
 
-      <!-- SVG Line Chart -->
+      <!-- SVG Line Chart with Y-axis -->
       <div class="lh-chart-wrap">
-        <svg viewBox="0 0 320 110" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
+        <svg viewBox="0 0 340 112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
           <defs>
-            <!-- Area fill gradient -->
             <linearGradient id="chartFillGrad2" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%"   stop-color="#10b981" stop-opacity="0.30"/>
               <stop offset="60%"  stop-color="#34d399" stop-opacity="0.08"/>
               <stop offset="100%" stop-color="#ecfdf5" stop-opacity="0"/>
             </linearGradient>
-            <!-- Line gradient -->
             <linearGradient id="chartLineGrad2" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%"   stop-color="#6ee7b7"/>
               <stop offset="45%"  stop-color="#10b981"/>
               <stop offset="100%" stop-color="#047857"/>
             </linearGradient>
-            <!-- Glow filter -->
             <filter id="lineGlow" x="-20%" y="-60%" width="140%" height="220%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
               <feMerge>
@@ -244,27 +241,39 @@
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
-            <!-- Clip path for draw animation -->
             <clipPath id="chartClip">
-              <rect x="0" y="0" width="320" height="110" class="lh-clip-rect"/>
+              <rect x="32" y="0" width="308" height="112" class="lh-clip-rect"/>
             </clipPath>
           </defs>
 
-          <!-- Horizontal grid lines -->
-          <line class="lh-grid-line" x1="14" y1="22" x2="306" y2="22"/>
-          <line class="lh-grid-line" x1="14" y1="44" x2="306" y2="44"/>
-          <line class="lh-grid-line" x1="14" y1="66" x2="306" y2="66"/>
-          <line class="lh-grid-line" x1="14" y1="88" x2="306" y2="88"/>
+          <!-- Y-axis line -->
+          <line class="lh-axis-line" x1="32" y1="8" x2="32" y2="96"/>
+          <!-- X-axis line -->
+          <line class="lh-axis-line" x1="32" y1="96" x2="336" y2="96"/>
+
+          <!-- Y-axis tick labels: 0, 6, 12, 18, 24 -->
+          <text class="lh-axis-label" x="29" y="97" text-anchor="end">0</text>
+          <text class="lh-axis-label" x="29" y="74" text-anchor="end">6</text>
+          <text class="lh-axis-label" x="29" y="50" text-anchor="end">12</text>
+          <text class="lh-axis-label" x="29" y="27" text-anchor="end">18</text>
+          <text class="lh-axis-label" x="29" y="10" text-anchor="end">24</text>
+
+          <!-- Horizontal grid lines aligned to 0/6/12/18/24 h ticks -->
+          <line class="lh-grid-line" x1="32" y1="96" x2="336" y2="96"/>
+          <line class="lh-grid-line" x1="32" y1="72" x2="336" y2="72"/>
+          <line class="lh-grid-line" x1="32" y1="48" x2="336" y2="48"/>
+          <line class="lh-grid-line" x1="32" y1="24" x2="336" y2="24"/>
+          <line class="lh-grid-line" x1="32" y1="8"  x2="336" y2="8"/>
 
           <!-- Filled area under line -->
           <path [attr.d]="getChartFillPath()" fill="url(#chartFillGrad2)" class="lh-fill-area"/>
 
           <!-- Average dashed line -->
           @if (avgDailyHours > 0) {
-            <line class="lh-avg-line" x1="14" [attr.y1]="getAvgLineY()" x2="306" [attr.y2]="getAvgLineY()"/>
+            <line class="lh-avg-line" x1="32" [attr.y1]="getAvgLineY()" x2="336" [attr.y2]="getAvgLineY()"/>
           }
 
-          <!-- Line with glow, clipped for draw-on animation -->
+          <!-- Line with glow, clipped -->
           <g clip-path="url(#chartClip)">
             <path class="lh-line-glow" [attr.d]="getChartPolyline()" filter="url(#lineGlow)"/>
             <path class="lh-line-main" [attr.d]="getChartPolyline()"/>
@@ -413,7 +422,7 @@
               <i class="fas fa-clock"></i>
             </div>
           </div>
-          <div class="stat-value" style="text-align:center;">{{ lastPunchTime || '00:00' }}</div>
+          <div class="stat-value" style="text-align:center;">{{ formatTo12Hour(lastPunchTime) || '--:--' }}</div>
         </div>
 
       </div>

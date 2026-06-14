@@ -4203,6 +4203,22 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
+  /**
+   * Convert a 24h time string (HH:mm or HH:mm:ss) to 12-hour format.
+   * e.g. "14:03:36" → "02:03 PM",  "09:05:00" → "09:05 AM"
+   */
+  formatTo12Hour(time: string): string {
+    if (!time) return '--:--';
+    const parts = time.split(':');
+    if (parts.length < 2) return time;
+    let hours = parseInt(parts[0], 10);
+    const minutes = parts[1].padStart(2, '0');
+    if (isNaN(hours)) return time;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // convert 0 → 12, 13 → 1, etc.
+    return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;
+  }
+
   /** Weekly total hours (sum of all 7 days) */
   get weeklyTotal(): number {
     if (!this.weeklyHours?.length) return 0;
@@ -4244,30 +4260,30 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return (pct >= 0 ? '+' : '') + pct + '%';
   }
 
-  private readonly CHART_W = 320;
-  private readonly CHART_H = 110;
-  private readonly CHART_PAD_X = 14;
-  private readonly CHART_PAD_TOP = 26;   // extra top room for above-dot labels
-  private readonly CHART_PAD_BOTTOM = 22; // extra bottom room — low points still label above dot
+  private readonly CHART_W = 340;
+  private readonly CHART_H = 112;
+  private readonly CHART_PAD_X = 32;     // left: room for Y-axis labels
+  private readonly CHART_PAD_RIGHT = 4;  // right margin
+  private readonly CHART_PAD_TOP = 8;    // top: aligns with 24h tick
+  private readonly CHART_PAD_BOTTOM = 16; // bottom: aligns with 0h tick (baseline at y=96)
 
-  /** Max Y scale — includes avg line and headroom for value labels */
+  /** Fixed max = 24h so the Y axis always reads 0–24 */
   getChartMax(): number {
-    if (!this.weeklyHours?.length) return 1;
-    const dataMax = Math.max(...this.weeklyHours.map((d: any) => d.loggedHours ?? 0));
-    const avg = this.avgDailyHours ?? 0;
-    return Math.max(dataMax, avg, 0.25) * 1.28;
+    return 24;
   }
 
   private getChartPlotHeight(): number {
+    // Plot area between y=8 (24h) and y=96 (0h) = 88px
     return this.CHART_H - this.CHART_PAD_TOP - this.CHART_PAD_BOTTOM;
   }
 
   private getChartPoints(): Array<{ x: number; y: number }> {
     if (!this.weeklyHours?.length) return [];
     const max = this.getChartMax();
-    const step = (this.CHART_W - this.CHART_PAD_X * 2) / (this.weeklyHours.length - 1 || 1);
+    const plotW = this.CHART_W - this.CHART_PAD_X - this.CHART_PAD_RIGHT;
+    const step = plotW / (this.weeklyHours.length - 1 || 1);
     const plotH = this.getChartPlotHeight();
-    const baseline = this.CHART_H - this.CHART_PAD_BOTTOM;
+    const baseline = this.CHART_H - this.CHART_PAD_BOTTOM; // y=96
     return this.weeklyHours.map((d: any, i: number) => ({
       x: +(this.CHART_PAD_X + i * step).toFixed(1),
       y: +(baseline - ((d.loggedHours ?? 0) / max) * plotH).toFixed(1),
@@ -4321,11 +4337,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   /** Y coordinate for the average dashed line */
   getAvgLineY(): number {
-    if (!this.weeklyHours?.length) return 55;
+    if (!this.weeklyHours?.length) return 96;
     const max = this.getChartMax();
     const plotH = this.getChartPlotHeight();
     const avg = this.avgDailyHours ?? 0;
-    return +(this.CHART_H - this.CHART_PAD_BOTTOM - (avg / max) * plotH).toFixed(1);
+    const baseline = this.CHART_H - this.CHART_PAD_BOTTOM;
+    return +(baseline - (avg / max) * plotH).toFixed(1);
   }
 
   /** X position of a point by index (for dot placement) */
@@ -4343,24 +4360,21 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     return +(this.getChartX(i) / this.CHART_W * 100).toFixed(2);
   }
 
-  /** Place label below dot when point is near top of chart (within top padding zone) */
+  /** Place label below dot when point is near top of chart */
   isChartLabelBelow(i: number): boolean {
-    return this.getChartY(i) < this.CHART_PAD_TOP + 12;
+    return this.getChartY(i) < this.CHART_PAD_TOP + 14;
   }
 
   /** Top position as % for HTML overlay labels — always kept inside chart bounds */
   getChartLabelTopPercent(i: number): number {
     const y = this.getChartY(i);
-    // Above dot: anchor is transform(-50%, -110%) so we want the dot Y minus a small gap
-    // Below dot: anchor is transform(-50%, 5px) so just place at dot Y
-    const LABEL_H_PX = 14; // approx label height in SVG units
+    const LABEL_H_PX = 14;
     let labelY: number;
     if (this.isChartLabelBelow(i)) {
-      labelY = y + 6; // below the dot
+      labelY = y + 6;
     } else {
-      labelY = y - 6; // above the dot — transform handles the rest
+      labelY = y - 6;
     }
-    // Clamp so label never goes below the chart bottom (leave 4px margin)
     const maxY = this.CHART_H - LABEL_H_PX - 4;
     labelY = Math.min(labelY, maxY);
     return +(labelY / this.CHART_H * 100).toFixed(2);
