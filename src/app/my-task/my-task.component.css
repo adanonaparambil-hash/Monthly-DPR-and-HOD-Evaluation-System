@@ -6,7 +6,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #f8fafc;
   min-height: 100vh;
-  padding: 24px;
+  padding: 14px 24px 24px;
   color: #1e293b;
   overflow-x: hidden;
   max-width: 100%;
@@ -40,7 +40,7 @@
   justify-content: space-between;
   min-width: 0;
   width: 100%;
-  min-height: 120px;
+  min-height: 104px;
   box-sizing: border-box;
   grid-column: 1;
 }
@@ -53,13 +53,13 @@
 .top-right-panels .logged-hours-card {
   grid-column: 2;
   min-width: 0;
-  min-height: 120px;
+  min-height: 104px;
 }
 
 .top-right-panels .break-tracker-section {
   grid-column: 3;
   min-width: 0;
-  min-height: 120px;
+  min-height: 104px;
   display: flex;
   align-items: stretch;
 }
@@ -67,7 +67,7 @@
 .top-right-panels .right-section {
   grid-column: 4;
   min-width: 0;
-  min-height: 120px;
+  min-height: 104px;
 }
 
 /* Mobile Responsive - Tablet */
@@ -2075,64 +2075,64 @@
 /* ── Chart Wrap ── */
 .lh-chart-wrap {
   flex: 1 1 auto;
-  min-height: 72px;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
+  height: 108px;
+  min-height: 90px;
+  max-height: 130px;
+  display: block;
   position: relative;
-  background: rgba(255,255,255,0.55);
+  background: #ffffff;
   border-radius: 10px;
-  padding: 2px;
-  border: 1px solid rgba(16, 185, 129, 0.09);
+  padding: 0;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  box-shadow: inset 0 1px 4px rgba(16, 185, 129, 0.06);
   overflow: visible;
 }
 
 .lh-svg {
+  display: block;
   width: 100%;
   height: 100%;
-  min-height: 72px;
-  display: block;
   overflow: visible;
 }
 
 /* ── Y-axis ── */
 .lh-axis-line {
-  stroke: rgba(16, 185, 129, 0.22);
-  stroke-width: 1;
+  stroke: #cbd5e1;
+  stroke-width: 1.2;
 }
 
 .lh-axis-label {
-  font-size: 7px;
-  fill: #9ca3af;
-  font-weight: 600;
+  font-size: 8.5px;
+  fill: #64748b;
+  font-weight: 700;
   font-family: inherit;
   dominant-baseline: middle;
 }
 
-/* ── Grid & Lines ── */
+/* ── Grid Lines ── */
 .lh-grid-line {
-  stroke: rgba(16, 185, 129, 0.10);
-  stroke-width: 0.7;
-  stroke-dasharray: 4 5;
+  stroke: #e2e8f0;
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
 }
 
 .lh-avg-line {
-  stroke: rgba(107, 114, 128, 0.40);
-  stroke-width: 1;
+  stroke: #94a3b8;
+  stroke-width: 1.2;
   stroke-dasharray: 6 4;
 }
 
-/* ── Smooth filled area: fade up from baseline ── */
+/* ── Filled area ── */
 .lh-fill-area {
   opacity: 0;
   animation: lhFillFadeIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
 }
 
-/* ── Line ── */
+/* ── Line — NO glow filter, clean crisp stroke ── */
 .lh-line-glow {
   fill: none;
-  stroke: rgba(16, 185, 129, 0.40);
-  stroke-width: 6;
+  stroke: rgba(16, 185, 129, 0.18);
+  stroke-width: 4;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -2140,7 +2140,7 @@
 .lh-line-main {
   fill: none;
   stroke: url(#chartLineGrad2);
-  stroke-width: 2.5;
+  stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -2163,34 +2163,32 @@
 
 .lh-dot {
   fill: #ffffff;
-  stroke: #10b981;
-  stroke-width: 2;
-  filter: drop-shadow(0 1px 3px rgba(5, 150, 105, 0.30));
+  stroke: #059669;
+  stroke-width: 1.8;
 }
 
 .lh-dot-today {
   fill: #059669;
   stroke: #ffffff;
-  stroke-width: 2.5;
-  filter: drop-shadow(0 0 5px rgba(5, 150, 105, 0.60));
+  stroke-width: 2;
 }
 
 .lh-dot-pulse {
-  fill: rgba(16, 185, 129, 0.15);
-  stroke: rgba(16, 185, 129, 0.35);
+  fill: rgba(16, 185, 129, 0.12);
+  stroke: rgba(16, 185, 129, 0.30);
   stroke-width: 1;
   animation: lhPulse 2s ease-in-out 1s infinite;
 }
 
 @keyframes lhDotPop {
   0%   { opacity: 0; transform: scale(0); }
-  80%  { transform: scale(1.25); }
+  80%  { transform: scale(1.2); }
   100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes lhPulse {
-  0%, 100% { r: 7; opacity: 0.5; }
-  50%       { r: 10; opacity: 0.15; }
+  0%, 100% { r: 6; opacity: 0.5; }
+  50%       { r: 9; opacity: 0.15; }
 }
 
 @keyframes lhFillFadeIn {
@@ -2203,23 +2201,23 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
+  z-index: 5;
   overflow: visible;
 }
 
 .lh-value-tag {
   position: absolute;
-  transform: translate(-50%, -110%);
-  font-size: 8px;
+  transform: translate(-50%, -115%);
+  font-size: 8.5px;
   font-weight: 800;
-  color: #065f46;
-  background: rgba(255, 255, 255, 0.97);
-  padding: 1.5px 4px;
+  color: #064e3b;
+  background: #ffffff;
+  padding: 2px 5px;
   border-radius: 5px;
   line-height: 1.3;
   white-space: nowrap;
-  border: 1px solid rgba(16, 185, 129, 0.28);
-  box-shadow: 0 1px 4px rgba(5, 150, 105, 0.14), 0 0 0 1px rgba(255,255,255,0.8);
+  border: 1.5px solid rgba(16, 185, 129, 0.40);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
   letter-spacing: 0.2px;
   opacity: 0;
   animation: lhTagFadeIn 0.35s ease forwards;
@@ -2227,7 +2225,7 @@
 }
 
 .lh-value-tag.lh-value-tag-below {
-  transform: translate(-50%, 5px);
+  transform: translate(-50%, 8px);
 }
 
 .lh-value-tag.lh-value-tag-today {

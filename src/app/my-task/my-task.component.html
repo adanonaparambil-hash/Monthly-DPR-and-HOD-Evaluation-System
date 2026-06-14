@@ -222,25 +222,17 @@
 
       <!-- SVG Line Chart with Y-axis -->
       <div class="lh-chart-wrap">
-        <svg viewBox="0 0 340 112" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
+        <svg viewBox="0 0 340 112" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" class="lh-svg">
           <defs>
             <linearGradient id="chartFillGrad2" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stop-color="#10b981" stop-opacity="0.30"/>
-              <stop offset="60%"  stop-color="#34d399" stop-opacity="0.08"/>
-              <stop offset="100%" stop-color="#ecfdf5" stop-opacity="0"/>
+              <stop offset="0%"   stop-color="#10b981" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#10b981" stop-opacity="0.02"/>
             </linearGradient>
             <linearGradient id="chartLineGrad2" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"   stop-color="#6ee7b7"/>
-              <stop offset="45%"  stop-color="#10b981"/>
+              <stop offset="0%"   stop-color="#34d399"/>
+              <stop offset="50%"  stop-color="#059669"/>
               <stop offset="100%" stop-color="#047857"/>
             </linearGradient>
-            <filter id="lineGlow" x="-20%" y="-60%" width="140%" height="220%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
             <clipPath id="chartClip">
               <rect x="32" y="0" width="308" height="112" class="lh-clip-rect"/>
             </clipPath>
@@ -275,7 +267,7 @@
 
           <!-- Line with glow, clipped -->
           <g clip-path="url(#chartClip)">
-            <path class="lh-line-glow" [attr.d]="getChartPolyline()" filter="url(#lineGlow)"/>
+            <path class="lh-line-glow" [attr.d]="getChartPolyline()"/>
             <path class="lh-line-main" [attr.d]="getChartPolyline()"/>
           </g>
 
@@ -462,7 +454,9 @@
         <div class="header-cell category">TASK CATEGORY</div>
         <div class="header-cell title">TASK TITLE</div>
         <div class="header-cell start-date">START DATE</div>
-        <div class="header-cell assignee">ASSIGNEE</div>
+        <div class="header-cell assignee">
+          {{ activeTab === 'ASSIGNED TO OTHERS' ? 'ASSIGNED TO' : 'ASSIGNED BY' }}
+        </div>
         <div class="header-cell logged">LOG TIME</div>
         <div class="header-cell total">TOTAL HOURS</div>
         <div class="header-cell progress">PROGRESS</div>

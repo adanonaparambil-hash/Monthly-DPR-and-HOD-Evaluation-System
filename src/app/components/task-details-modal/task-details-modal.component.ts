@@ -728,40 +728,52 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           this.checkAutoClosedTasksCount();
           
           // Check if we need to call saveTaskFieldMapping
-          // Only for new tasks (taskId === 0) when assigning to a different user
-          const assignedUserId = this.selectedAssigneeIds[0] || '';
+          // For ANY save (new or existing task): call for every newly added assignee
+          // who was not previously mapped (not in originalAssigneeIds at load time).
           const sessionUserId = userId;
-          const isDifferentUser = assignedUserId && assignedUserId !== sessionUserId;
-          
-          if (isNewTask && isDifferentUser && this.selectedCustomFields.length > 0) {
-            console.log('New task assigned to different user - calling saveTaskFieldMapping');
-            
-            // Extract field IDs from custom fields
-            const fieldIds = this.selectedCustomFields
-              .filter(field => field.fieldId && field.fieldId > 0)
-              .map(field => field.fieldId!);
-            
-            if (fieldIds.length > 0) {
-              const fieldMappingRequest: any = {
-                categoryId: this.categoryId,
-                fieldIds: fieldIds,
-                userId: assignedUserId
-              };
-              
-              console.log('Field mapping request:', fieldMappingRequest);
-              
-              this.api.saveTaskFieldMapping(fieldMappingRequest).subscribe({
-                next: (mappingResponse: any) => {
-                  if (mappingResponse && mappingResponse.success) {
-                    console.log('Field mapping saved successfully');
-                  } else {
-                    console.warn('Field mapping failed:', mappingResponse?.message);
+
+          // Collect field IDs that are currently mapped for this category
+          const fieldIds = this.selectedCustomFields
+            .filter(field => field.fieldId && field.fieldId > 0)
+            .map(field => field.fieldId!);
+
+          if (fieldIds.length > 0) {
+            // Determine which assignees are truly NEW (not in the snapshot taken at load)
+            const newlyAddedAssignees = this.selectedAssigneeIds.filter(id =>
+              id &&
+              id.trim() !== '' &&
+              !this.originalAssigneeIds.includes(id)
+            );
+
+            // For a brand-new task (taskId === 0) all assignees are new
+            const assigneesToMap = isNewTask
+              ? this.selectedAssigneeIds.filter(id => id && id.trim() !== '')
+              : newlyAddedAssignees;
+
+            if (assigneesToMap.length > 0) {
+              console.log(`saveTaskFieldMapping → calling for ${assigneesToMap.length} new assignee(s):`, assigneesToMap);
+              assigneesToMap.forEach(assigneeUserId => {
+                const fieldMappingRequest: any = {
+                  categoryId: this.categoryId,
+                  fieldIds: fieldIds,
+                  userId: assigneeUserId
+                };
+                console.log('Field mapping request for user', assigneeUserId, ':', fieldMappingRequest);
+                this.api.saveTaskFieldMapping(fieldMappingRequest).subscribe({
+                  next: (mappingResponse: any) => {
+                    if (mappingResponse && mappingResponse.success) {
+                      console.log('Field mapping saved for user:', assigneeUserId);
+                    } else {
+                      console.warn('Field mapping failed for user:', assigneeUserId, mappingResponse?.message);
+                    }
+                  },
+                  error: (mappingError: any) => {
+                    console.error('Error saving field mapping for user:', assigneeUserId, mappingError);
                   }
-                },
-                error: (mappingError: any) => {
-                  console.error('Error saving field mapping:', mappingError);
-                }
+                });
               });
+            } else {
+              console.log('saveTaskFieldMapping → no new assignees to map, skipping.');
             }
           }
           
