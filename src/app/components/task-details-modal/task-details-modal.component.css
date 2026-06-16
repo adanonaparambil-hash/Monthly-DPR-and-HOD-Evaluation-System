@@ -4101,6 +4101,24 @@ textarea.editable-description[readonly] {
   border: 1px solid rgba(156, 163, 175, 0.3);
 }
 
+.status-pill.auto-closed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pill.in-progress {
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.status-pill.re-open {
+  background: rgba(249, 115, 22, 0.12);
+  color: #ea580c;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
 /* Scrollbar to match activity log */
 .timelog-content::-webkit-scrollbar {
   width: 8px;

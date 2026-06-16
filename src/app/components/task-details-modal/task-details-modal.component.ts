@@ -1878,8 +1878,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           e.description?.toLowerCase().includes(this.assigneeSearchTerm.toLowerCase())
         )
       : this.employeeMasterList;
-    // Exclude already-selected assignees from the dropdown list
-    return list.filter(e => !this.selectedAssigneeIds.includes(e.idValue?.toString() || ''));
+    // Exclude already-selected assignees and inactive employees (isActive === 'N') from the dropdown list
+    return list.filter(e =>
+      !this.selectedAssigneeIds.includes(e.idValue?.toString() || '') &&
+      (e.isActive || '').toString().toUpperCase() !== 'N'
+    );
   }
 
   selectProject(project: any) {
@@ -1900,6 +1903,21 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   removeAssignee(id: string) {
+    // Check if this assignee is currently RUNNING — block removal if so
+    const assignee = this.taskAssignees.find(
+      (a: any) => (a.userId || '').toString().trim().toUpperCase() === id.toString().trim().toUpperCase()
+    );
+    if (assignee && (assignee.status || '').toUpperCase().trim() === 'RUNNING') {
+      const name = assignee.userName || id;
+      Swal.fire({
+        icon: 'warning',
+        title: 'Cannot Remove Assignee',
+        html: `<strong>${name}</strong> is currently running this task.<br>Please wait until they stop or pause before removing them.`,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
     this.selectedAssigneeIds = this.selectedAssigneeIds.filter(a => a !== id);
   }
 
@@ -1914,6 +1932,19 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   getAssigneeName(id: string): string {
     const emp = this.employeeMasterList.find(e => e.idValue?.toString() === id);
     return emp?.description || id;
+  }
+
+  isAssigneeActive(id: string): boolean {
+    // Check isActive from taskAssignees (API response) — this is the source of truth
+    // Note: API returns "Y " or "N " with possible trailing space, so always trim
+    const assignee = this.taskAssignees.find(
+      (a: any) => (a.userId || '').toString().trim().toUpperCase() === id.toString().trim().toUpperCase()
+    );
+    if (assignee) {
+      return (assignee.isActive || '').toString().trim().toUpperCase() !== 'N';
+    }
+    // If not in taskAssignees (e.g. newly added this session), default to visible
+    return true;
   }
 
   getProjectDisplayName(): string {
@@ -2023,11 +2054,14 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // CSS class for assignee status pill in Time Distribution tab
   getAssigneeStatusClass(status: string): string {
-    const s = (status || '').toUpperCase();
-    if (s === 'RUNNING') return 'status-pill running';
-    if (s === 'PAUSED') return 'status-pill paused';
-    if (s === 'COMPLETED') return 'status-pill completed';
-    if (s === 'CLOSED') return 'status-pill closed';
+    const s = (status || '').toUpperCase().trim();
+    if (s === 'RUNNING')     return 'status-pill running';
+    if (s === 'PAUSED')      return 'status-pill paused';
+    if (s === 'COMPLETED')   return 'status-pill completed';
+    if (s === 'CLOSED')      return 'status-pill closed';
+    if (s === 'AUTO CLOSED') return 'status-pill auto-closed';
+    if (s === 'IN PROGRESS') return 'status-pill in-progress';
+    if (s === 'RE OPEN')     return 'status-pill re-open';
     return 'status-pill not-started';
   }
 
@@ -2347,12 +2381,16 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
 
   // Check AUTO CLOSED tasks count from API
   checkAutoClosedTasksCount() {
-    if (!this.userId) {
+    // Always check against the session (logged-in) user, not the task owner's userId
+    const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const sessionUserId = (sessionUser.empId || sessionUser.employeeId || this.userId || '').toString().trim();
+
+    if (!sessionUserId) {
       console.warn('No user ID found for AUTO CLOSED check');
       return;
     }
     
-    this.api.GetAutoClosedTaskCount(this.userId).subscribe({
+    this.api.GetAutoClosedTaskCount(sessionUserId).subscribe({
       next: (response: any) => {
         console.log('AUTO CLOSED task count response (Task Modal):', response);
         
@@ -2383,12 +2421,27 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     const timeLogStatus = (taskDetails.timeLogStatus || '').toUpperCase().trim();
     if (timeLogStatus !== 'AUTO CLOSED') return;
 
-    // Only show when the logged-in session user matches the task assignee
+    // Get the logged-in session user
     const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
     const sessionUserId = (sessionUser.empId || sessionUser.employeeId || '').toString().trim();
-    const taskAssignee = (taskDetails.assignee || '').toString().trim();
 
-    if (!sessionUserId || sessionUserId !== taskAssignee) return;
+    if (!sessionUserId) return;
+
+    // Check if session user matches timeLogUserId (the user whose time log is AUTO CLOSED)
+    const timeLogUserId = (taskDetails.timeLogUserId || '').toString().trim();
+
+    // Also check if session user is in the assignees array with AUTO CLOSED status
+    const assignees: any[] = taskDetails.assignees || [];
+    const userAssignee = assignees.find(
+      (a: any) => (a.userId || '').toString().trim().toUpperCase() === sessionUserId.toUpperCase()
+    );
+
+    // Show popup only if session user is the one whose time log is AUTO CLOSED
+    // Either via timeLogUserId match OR via assignee status being AUTO CLOSED
+    const isTimeLogOwner = timeLogUserId && timeLogUserId.toUpperCase() === sessionUserId.toUpperCase();
+    const isAssigneeAutoClose = userAssignee && (userAssignee.status || '').toUpperCase().trim() === 'AUTO CLOSED';
+
+    if (!isTimeLogOwner && !isAssigneeAutoClose) return;
 
     // Store timeLogID for the submit call
     this.logTimeTimeLogId = taskDetails.timeLogID || taskDetails.timeLogId || 0;

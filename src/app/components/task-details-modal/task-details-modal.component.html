@@ -447,10 +447,11 @@
 
                     <!-- Selected chips + search input -->
                     <div class="assignee-input-area" (click)="toggleAssigneeDropdown($event)">
-                      <!-- Selected chips -->
+                      <!-- Selected chips — hide inactive employees (isActive='N') but keep in selectedAssigneeIds -->
                       <span
                         class="assignee-chip"
                         *ngFor="let id of selectedAssigneeIds"
+                        [style.display]="isAssigneeActive(id) ? '' : 'none'"
                         (click)="$event.stopPropagation()">
                         <span class="chip-name">{{ getAssigneeName(id) }}</span>
                         <button class="chip-remove" (click)="removeAssignee(id); $event.stopPropagation()" type="button" title="Remove">

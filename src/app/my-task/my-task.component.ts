@@ -156,6 +156,27 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   weeklyHours: any[] = [];
   avgDailyHours: number = 0;
 
+  // Chart dot tooltip
+  chartTooltip: { visible: boolean; x: number; y: number; day: any } = { visible: false, x: 0, y: 0, day: null };
+
+  showChartTooltip(event: MouseEvent, day: any, index: number) {
+    const wrap = (event.currentTarget as SVGElement).closest('.lh-chart-wrap') as HTMLElement;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const svgEl = wrap.querySelector('svg') as SVGSVGElement;
+    const svgRect = svgEl ? svgEl.getBoundingClientRect() : rect;
+    const cx = this.getChartX(index);
+    const cy = this.getChartY(index);
+    // Map SVG coords to percentage of svg element width/height
+    const xPct = (cx / 340) * 100;
+    const yPct = (cy / 112) * 100;
+    this.chartTooltip = { visible: true, x: xPct, y: yPct, day };
+  }
+
+  hideChartTooltip() {
+    this.chartTooltip = { ...this.chartTooltip, visible: false };
+  }
+
   
   // Active task timer management
   activeTaskTimerInterval: any = null;
@@ -1566,13 +1587,14 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   getStatusClass(status: string): string {
     switch (status) {
       case 'NOT STARTED': return 'not-started';
-      case 'RUNNING': return 'in-progress';
-      case 'PAUSED': return 'pending';
-      case 'CLOSED': return 'on-hold';
-      case 'COMPLETED': return 'completed';
+      case 'RUNNING':     return 'in-progress';
+      case 'IN PROGRESS': return 'in-progress';
+      case 'PAUSED':      return 'pending';
+      case 'CLOSED':      return 'on-hold';
+      case 'COMPLETED':   return 'completed';
       case 'AUTO CLOSED': return 'auto-closed';
-      case 'RE OPEN': return 're-open';
-      default: return 'default';
+      case 'RE OPEN':     return 're-open';
+      default:            return 'default';
     }
   }
 

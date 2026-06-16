@@ -273,10 +273,15 @@
 
           <!-- Dots with staggered fade-in -->
           @for (day of weeklyHours; track day.logDate; let i = $index) {
-            <g class="lh-dot-group" [style.animation-delay]="(0.15 + i * 0.09) + 's'">
+            <g class="lh-dot-group" [style.animation-delay]="(0.15 + i * 0.09) + 's'"
+               (mouseenter)="showChartTooltip($event, day, i)"
+               (mouseleave)="hideChartTooltip()"
+               style="cursor:pointer">
               @if (day.isToday === 'Y') {
                 <circle [attr.cx]="getChartX(i)" [attr.cy]="getChartY(i)" r="8" class="lh-dot-pulse"/>
               }
+              <!-- Invisible wider hit area for easier hover -->
+              <circle [attr.cx]="getChartX(i)" [attr.cy]="getChartY(i)" r="10" fill="transparent" stroke="none"/>
               <circle
                 [attr.cx]="getChartX(i)"
                 [attr.cy]="getChartY(i)"
@@ -299,6 +304,27 @@
                   [style.animation-delay]="(0.2 + i * 0.09) + 's'">
               {{ formatAvgHours(day.loggedHours) }}
             </span>
+          }
+
+          <!-- Dot hover tooltip -->
+          @if (chartTooltip.visible && chartTooltip.day) {
+            <div class="lh-dot-tooltip"
+                 [class.lh-dot-tooltip-today]="chartTooltip.day.isToday === 'Y'"
+                 [style.left.%]="chartTooltip.x"
+                 [style.top.%]="chartTooltip.y">
+              <div class="lh-dot-tooltip-header">
+                <i class="fas fa-calendar-day"></i>
+                <span>{{ chartTooltip.day.dayName }}, {{ chartTooltip.day.dayLabel }}</span>
+                @if (chartTooltip.day.isToday === 'Y') {
+                  <span class="lh-dot-tooltip-today-badge">Today</span>
+                }
+              </div>
+              <div class="lh-dot-tooltip-row">
+                <i class="fas fa-clock"></i>
+                <span class="lh-dot-tooltip-label">Logged</span>
+                <span class="lh-dot-tooltip-val">{{ formatAvgHours(chartTooltip.day.loggedHours) }}</span>
+              </div>
+            </div>
           }
         </div>
       </div>
