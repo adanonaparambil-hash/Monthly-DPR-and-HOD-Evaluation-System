@@ -211,6 +211,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private companyNameToCode = new Map<string, string>();
   private projectNameToCode = new Map<string, string>();
+  private projectNameToRank = new Map<string, string>();
 
   // ── Multi-select filter arrays (empty = all) ─────────────────────────────────
   lpoCompanies:   string[] = [];
@@ -606,6 +607,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   suppTxError       = false;
   suppTxCompany     = '';
   suppTxRecords: any[] = [];
+  suppTxSortCol     = '';
+  suppTxSortDir: 'asc' | 'desc' = 'asc';
+  suppTxFilterProject  = '';
+  suppTxFilterTransType = '';
+  suppTxFilterItem     = '';
+  suppTxFilterMonth    = '';
+  suppTxFilterDocId    = '';
   suppTxTotalCount  = 0;
   suppTxHasMore     = false;
   suppTxCurrentBatch = 0;   // which batch we are on (1-based display)
@@ -648,6 +656,11 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     this.suppTxOffset      = 0;
     this.suppTxCurrentBatch = 0;
     this.suppTxError       = false;
+    this.suppTxFilterProject   = '';
+    this.suppTxFilterTransType = '';
+    this.suppTxFilterItem      = '';
+    this.suppTxFilterMonth     = '';
+    this.suppTxFilterDocId     = '';
     this.suppTxModalOpen   = true;
     this.suppTxLoading     = true;
     document.body.style.overflow = 'hidden';
@@ -656,11 +669,16 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private fetchSupplierTransactions() {
     const req: SupplierTransactionRequest = {
-      company:   this.suppTxCompany,
-      yearFrom:  this.suppFromYear,
-      yearTo:    this.suppToYear,
-      offset:    this.suppTxOffset,
-      batchSize: this.SUPP_TX_BATCH
+      company:     this.suppTxCompany,
+      yearFrom:    this.suppFromYear,
+      yearTo:      this.suppToYear,
+      projectCode: this.suppTxFilterProject   || undefined,
+      transType:   this.suppTxFilterTransType || undefined,
+      item:        this.suppTxFilterItem      || undefined,
+      month:       this.suppTxFilterMonth     || undefined,
+      docId:       this.suppTxFilterDocId     || undefined,
+      offset:      this.suppTxOffset,
+      batchSize:   this.SUPP_TX_BATCH
     };
     this.api.getSupplierTransactions(req).subscribe({
       next: (res: any) => {
@@ -726,6 +744,17 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     if (!this.expandedChart) document.body.style.overflow = '';
   }
 
+  applyTxFilter() {
+    this.suppTxRecords      = [];
+    this.suppTxTotalCount   = 0;
+    this.suppTxHasMore      = false;
+    this.suppTxOffset       = 0;
+    this.suppTxCurrentBatch = 0;
+    this.suppTxError        = false;
+    this.suppTxLoading      = true;
+    this.fetchSupplierTransactions();
+  }
+
   // ── Export to Excel ───────────────────────────────────────────
   suppTxExporting = false;
 
@@ -751,6 +780,41 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       },
       error: () => { this.suppTxExporting = false; }
     });
+  }
+
+  suppTxSortBy(col: string) {
+    if (this.suppTxSortCol === col) {
+      this.suppTxSortDir = this.suppTxSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.suppTxSortCol = col;
+      this.suppTxSortDir = 'asc';
+    }
+    const dir = this.suppTxSortDir === 'asc' ? 1 : -1;
+    this.suppTxRecords = [...this.suppTxRecords].sort((a, b) => {
+      let av = a[col] ?? '';
+      let bv = b[col] ?? '';
+      // Numeric columns
+      if (col === 'amount_Omr' || col === 'vatAmount') {
+        return (+(av) - +(bv)) * dir;
+      }
+      // Date column
+      if (col === 'docDate') {
+        const ad = new Date(av).getTime() || 0;
+        const bd = new Date(bv).getTime() || 0;
+        return (ad - bd) * dir;
+      }
+      // Numeric-ish year/month
+      if (col === 'year' || col === 'month') {
+        return (+(av) - +(bv)) * dir;
+      }
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }
+
+  fmtDocDate(val: string): string {
+    if (!val) return '—';
+    // Strip time portion — keep only the date part before the space
+    return val.split(' ')[0] || '—';
   }
 
   suppTxAmtFmt(val: number): string {
@@ -932,10 +996,9 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   // ── Lifecycle ────────────────────────────────────────────────────────────────
   ngOnInit() {
     this.loadCompanies();
-    this.loadProjects();
   }
 
-  ngAfterViewInit() { setTimeout(()=>{ this.loadAllCharts(); this.runGSAP(); },150); }
+  ngAfterViewInit() { setTimeout(()=>{ this.runGSAP(); },150); }
 
   // ── Dropdown loaders ─────────────────────────────────────────────────────────
   private loadCompanies() {
@@ -953,31 +1016,58 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
           .map((d: any) => d.name ?? d.companyName ?? d.description ?? d.label ?? '')
           .filter(Boolean);
         this.companies = ['All Companies', ...names];
+
+        // Auto-select the default company on page load
+        const DEFAULT_COMPANY = 'AL ADRAK TRADING AND CONTRACTING COMPANY LLC';
+        if (names.includes(DEFAULT_COMPANY)) {
+          this.lpoCompanies   = [DEFAULT_COMPANY];
+          this.grnCompanies   = [DEFAULT_COMPANY];
+          this.projCompanies  = [DEFAULT_COMPANY];
+          this.suppCompanies  = [DEFAULT_COMPANY];
+          this.facilCompanies = [DEFAULT_COMPANY];
+        }
+        // Fire LPO / GRN / Suppliers immediately (don't wait for projects)
+        this.onLPO();
+        this.onGRN();
+        this.onSupp();
+        // Load projects with rank-1 auto-select; onProj + onFacil fire inside that callback
+        const projCodes: string[] | null = this.getCodes(this.projCompanies);
+        this.loadProjects(projCodes?.length ? projCodes : null, true);
       },
-      error: () => { /* keep defaults */ }
+      error: () => { this.onLPO(); this.onGRN(); this.onSupp(); this.loadProjects(null, true); }
     });
   }
 
-  loadProjects(companyCodes: string[] | null = null) {
+  loadProjects(companyCodes: string[] | null = null, autoSelectRank1 = false) {
     this.api.GetProjectDropdown(companyCodes).subscribe({
       next: (res) => {
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
         this.projectNameToCode.clear();
+        this.projectNameToRank.clear();
         data.forEach((d: any) => {
-          // Support multiple possible field name shapes from the API
           const name = d.name ?? d.projectName ?? d.description ?? d.label ?? '';
           const code = d.code ?? d.projectCode ?? d.id ?? d.value ?? name;
-          if (name) this.projectNameToCode.set(name, code);
+          const rank = d.rank ?? '';
+          if (name) {
+            this.projectNameToCode.set(name, code);
+            this.projectNameToRank.set(name, String(rank));
+          }
         });
         const names = data
           .map((d: any) => d.name ?? d.projectName ?? d.description ?? d.label ?? '')
           .filter(Boolean);
         this.projects   = names;
         this.facilities = names;
+        if (autoSelectRank1) {
+          this.projProjects = names.filter(n => this.projectNameToRank.get(n) === '1');
+          this.onProj();
+          this.onFacil();
+        }
       },
       error: () => {
         this.projects   = [];
         this.facilities = [];
+        if (autoSelectRank1) { this.onProj(); this.onFacil(); }
       }
     });
   }
@@ -1290,13 +1380,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
     ) ?? MAIN_PROJECTS.grnValues;
 
-    // Vertical gradients (top → bottom)
+    // Vertical gradients — deep violet for PO, warm amber for GRN
     const poGrad = ctx.createLinearGradient(0, 0, 0, 320);
-    poGrad.addColorStop(0, 'rgba(14,165,233,0.95)');
-    poGrad.addColorStop(1, 'rgba(14,165,233,0.35)');
+    poGrad.addColorStop(0, 'rgba(99,102,241,1)');
+    poGrad.addColorStop(1, 'rgba(139,92,246,0.55)');
     const grnGrad = ctx.createLinearGradient(0, 0, 0, 320);
-    grnGrad.addColorStop(0, 'rgba(16,185,129,0.95)');
-    grnGrad.addColorStop(1, 'rgba(16,185,129,0.35)');
+    grnGrad.addColorStop(0, 'rgba(245,158,11,1)');
+    grnGrad.addColorStop(1, 'rgba(251,191,36,0.45)');
 
     return new Chart(ctx, {
       type: 'bar',
@@ -1304,10 +1394,10 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         labels,
         datasets: [
           { label: 'PO Value',  data: poValues,
-            backgroundColor: poGrad,  borderColor: P_SKY,  borderWidth: 1.5,
+            backgroundColor: poGrad,  borderColor: '#6366f1', borderWidth: 1.5,
             borderRadius: 6, borderSkipped: 'bottom' as any },
           { label: 'GRN Value', data: grnValues,
-            backgroundColor: grnGrad, borderColor: P_TEAL, borderWidth: 1.5,
+            backgroundColor: grnGrad, borderColor: '#f59e0b', borderWidth: 1.5,
             borderRadius: 6, borderSkipped: 'bottom' as any }
         ]
       },
@@ -1328,7 +1418,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
                         maxRotation: 45, minRotation: 30 },
                border: { display: false } },
           y: { beginAtZero: true,
-               grid: { color: 'rgba(14,165,233,0.07)' },
+               grid: { color: 'rgba(99,102,241,0.08)' },
                ticks: { color: '#6b7280', callback: (v: any) => (+v).toFixed(2) + 'M' },
                border: { display: false } }
         }

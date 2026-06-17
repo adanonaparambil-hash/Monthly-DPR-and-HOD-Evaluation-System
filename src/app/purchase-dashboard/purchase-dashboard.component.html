@@ -375,15 +375,6 @@
             <span class="pd-insight-value">{{ suppTop3Share }}</span>
           </div>
         </div>
-        <div class="pd-insight-card" [ngClass]="suppTrendPct >= 0 ? 'pd-insight-card--positive' : 'pd-insight-card--negative'">
-          <div class="pd-insight-icon" [ngClass]="suppTrendPct >= 0 ? 'pd-insight-icon--positive' : 'pd-insight-icon--negative'">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Trend</span>
-            <span class="pd-insight-value">{{ suppTrendPct >= 0 ? '+' : '' }}{{ suppTrendPct }}%</span>
-          </div>
-        </div>
       </div>
 
       <!-- ══ Main body: donut left · ranked list right ══ -->
@@ -1130,6 +1121,48 @@
       </div>
     </div>
 
+    <!-- Filter Bar -->
+    <div class="stx-filters">
+      <div class="stx-filter-field">
+        <label class="stx-filter-lbl"><i class="fas fa-folder-open"></i> Project</label>
+        <div class="stx-filter-input-wrap">
+          <input class="stx-filter-input" [(ngModel)]="suppTxFilterProject" placeholder="Filter project…" (keyup.enter)="applyTxFilter()" />
+          <button class="stx-filter-go" (click)="applyTxFilter()" title="Apply"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="stx-filter-field">
+        <label class="stx-filter-lbl"><i class="fas fa-tag"></i> Screen / Type</label>
+        <div class="stx-filter-input-wrap">
+          <input class="stx-filter-input" [(ngModel)]="suppTxFilterTransType" placeholder="Filter type…" (keyup.enter)="applyTxFilter()" />
+          <button class="stx-filter-go" (click)="applyTxFilter()" title="Apply"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="stx-filter-field">
+        <label class="stx-filter-lbl"><i class="fas fa-box"></i> Item</label>
+        <div class="stx-filter-input-wrap">
+          <input class="stx-filter-input" [(ngModel)]="suppTxFilterItem" placeholder="Filter item…" (keyup.enter)="applyTxFilter()" />
+          <button class="stx-filter-go" (click)="applyTxFilter()" title="Apply"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="stx-filter-field">
+        <label class="stx-filter-lbl"><i class="fas fa-calendar"></i> Month</label>
+        <div class="stx-filter-input-wrap">
+          <input class="stx-filter-input" [(ngModel)]="suppTxFilterMonth" placeholder="e.g. 3" (keyup.enter)="applyTxFilter()" />
+          <button class="stx-filter-go" (click)="applyTxFilter()" title="Apply"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="stx-filter-field">
+        <label class="stx-filter-lbl"><i class="fas fa-file-alt"></i> Doc ID</label>
+        <div class="stx-filter-input-wrap">
+          <input class="stx-filter-input" [(ngModel)]="suppTxFilterDocId" placeholder="Filter doc ID…" (keyup.enter)="applyTxFilter()" />
+          <button class="stx-filter-go" (click)="applyTxFilter()" title="Apply"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <button class="stx-filter-clear" (click)="suppTxFilterProject='';suppTxFilterTransType='';suppTxFilterItem='';suppTxFilterMonth='';suppTxFilterDocId='';applyTxFilter()" title="Clear all filters">
+        <i class="fas fa-times-circle"></i> Clear
+      </button>
+    </div>
+
     <!-- Loading state -->
     <div class="stx-state-center" *ngIf="suppTxLoading">
       <div class="stx-spinner"></div>
@@ -1148,16 +1181,17 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Year</th>
-            <th>Month</th>
-            <th>Screen</th>
-            <th>Doc ID</th>
-            <th>Branch</th>
-            <th>Project</th>
-            <th>Item</th>
-            <th>Currency</th>
-            <th class="stx-num">Amount (OMR)</th>
-            <th class="stx-num">VAT</th>
+            <th class="stx-sortable" (click)="suppTxSortBy('year')">Year <i class="fas" [class.fa-sort]="suppTxSortCol!=='year'" [class.fa-sort-up]="suppTxSortCol==='year'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='year'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('month')">Month <i class="fas" [class.fa-sort]="suppTxSortCol!=='month'" [class.fa-sort-up]="suppTxSortCol==='month'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='month'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('transaction_Type')">Screen <i class="fas" [class.fa-sort]="suppTxSortCol!=='transaction_Type'" [class.fa-sort-up]="suppTxSortCol==='transaction_Type'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='transaction_Type'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('docDate')">Doc Date <i class="fas" [class.fa-sort]="suppTxSortCol!=='docDate'" [class.fa-sort-up]="suppTxSortCol==='docDate'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='docDate'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('docId')">Doc ID <i class="fas" [class.fa-sort]="suppTxSortCol!=='docId'" [class.fa-sort-up]="suppTxSortCol==='docId'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='docId'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('branchName')">Branch <i class="fas" [class.fa-sort]="suppTxSortCol!=='branchName'" [class.fa-sort-up]="suppTxSortCol==='branchName'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='branchName'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('projectCode')">Project <i class="fas" [class.fa-sort]="suppTxSortCol!=='projectCode'" [class.fa-sort-up]="suppTxSortCol==='projectCode'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='projectCode'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('itemName')">Item <i class="fas" [class.fa-sort]="suppTxSortCol!=='itemName'" [class.fa-sort-up]="suppTxSortCol==='itemName'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='itemName'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-sortable" (click)="suppTxSortBy('currency')">Currency <i class="fas" [class.fa-sort]="suppTxSortCol!=='currency'" [class.fa-sort-up]="suppTxSortCol==='currency'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='currency'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-num stx-sortable" (click)="suppTxSortBy('amount_Omr')">Amount (OMR) <i class="fas" [class.fa-sort]="suppTxSortCol!=='amount_Omr'" [class.fa-sort-up]="suppTxSortCol==='amount_Omr'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='amount_Omr'&&suppTxSortDir==='desc'"></i></th>
+            <th class="stx-num stx-sortable" (click)="suppTxSortBy('vatAmount')">VAT <i class="fas" [class.fa-sort]="suppTxSortCol!=='vatAmount'" [class.fa-sort-up]="suppTxSortCol==='vatAmount'&&suppTxSortDir==='asc'" [class.fa-sort-down]="suppTxSortCol==='vatAmount'&&suppTxSortDir==='desc'"></i></th>
           </tr>
         </thead>
         <tbody>
@@ -1168,6 +1202,7 @@
             <td><span class="stx-tag stx-tag--type" [ngClass]="suppTxTypeClass(r.transaction_Type)">
               <i [class]="suppTxTypeIcon(r.transaction_Type)"></i>{{ r.transaction_Type }}
             </span></td>
+            <td [title]="r.docDate">{{ fmtDocDate(r.docDate) }}</td>
             <td class="stx-docid" [title]="r.docId">{{ r.docId }}</td>
             <td class="stx-branch" [title]="r.branchName">{{ r.branchName }}</td>
             <td class="stx-proj" [title]="r.projectCode">{{ r.projectCode }}</td>
