@@ -35,3 +35,12 @@ export interface FacilitiesDashboardRequest {
   year?: string | null;
   month?: string | null;
 }
+
+export interface SupplierTransactionRequest {
+  company:    string;
+  yearFrom?:  number;
+  yearTo?:    number;
+  offset:     number;
+  batchSize:  number;
+  isExport?:  boolean;
+}

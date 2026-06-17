@@ -7,7 +7,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Api } from '../services/api';
 import {
   LpoDashboardRequest, GrnDashboardRequest,
-  ProjectDashboardRequest, TopSupplierRequest, FacilitiesDashboardRequest
+  ProjectDashboardRequest, TopSupplierRequest, FacilitiesDashboardRequest,
+  SupplierTransactionRequest
 } from '../models/axpertDashBoard.model';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -596,6 +597,187 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     const colors = ['#f59e0b','#6366f1','#10b981','#f43f5e','#0ea5e9',
                     '#8b5cf6','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'];
     return colors[index % colors.length];
+  }
+
+  // ── Supplier Transactions Modal ───────────────────────────────────────────────
+  suppTxModalOpen   = false;
+  suppTxLoading     = false;
+  suppTxLoadingMore = false;
+  suppTxError       = false;
+  suppTxCompany     = '';
+  suppTxRecords: any[] = [];
+  suppTxTotalCount  = 0;
+  suppTxHasMore     = false;
+  suppTxCurrentBatch = 0;   // which batch we are on (1-based display)
+  private suppTxOffset = 0;
+  readonly SUPP_TX_BATCH = 500;   // public so template can reference it
+
+  /** How many batches total (rounded up) */
+  get suppTxTotalBatches(): number {
+    if (!this.suppTxTotalCount) return 1;
+    return Math.ceil(this.suppTxTotalCount / this.SUPP_TX_BATCH);
+  }
+
+  /** Records remaining after current loaded set */
+  get suppTxRemaining(): number {
+    return Math.max(0, this.suppTxTotalCount - this.suppTxRecords.length);
+  }
+
+  /** Pill numbers to show in pagination — e.g. [1,2,3,-1,8] where -1 = "…" */
+  get suppTxBatchPills(): number[] {
+    const total   = this.suppTxTotalBatches;
+    const current = this.suppTxCurrentBatch;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pills: number[] = [];
+    const add = (n: number) => { if (!pills.includes(n) && n >= 1 && n <= total) pills.push(n); };
+    add(1);
+    if (current > 3) pills.push(-1);           // leading ellipsis
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) add(i);
+    if (current < total - 2) pills.push(-1);   // trailing ellipsis
+    add(total);
+    return pills;
+  }
+
+  openSupplierTransactions(supplier: any) {
+    const company = supplier?.vendorName ?? supplier?.supplierName ?? supplier?.name ?? '';
+    if (!company) return;
+    this.suppTxCompany     = company;
+    this.suppTxRecords     = [];
+    this.suppTxTotalCount  = 0;
+    this.suppTxHasMore     = false;
+    this.suppTxOffset      = 0;
+    this.suppTxCurrentBatch = 0;
+    this.suppTxError       = false;
+    this.suppTxModalOpen   = true;
+    this.suppTxLoading     = true;
+    document.body.style.overflow = 'hidden';
+    this.fetchSupplierTransactions();
+  }
+
+  private fetchSupplierTransactions() {
+    const req: SupplierTransactionRequest = {
+      company:   this.suppTxCompany,
+      yearFrom:  this.suppFromYear,
+      yearTo:    this.suppToYear,
+      offset:    this.suppTxOffset,
+      batchSize: this.SUPP_TX_BATCH
+    };
+    this.api.getSupplierTransactions(req).subscribe({
+      next: (res: any) => {
+        const payload     = res?.data ?? res;
+        const rows: any[] = payload?.data ?? [];
+
+        // hasMore: API flag is the source of truth.
+        // If missing, assume more records exist whenever we got a full batch back.
+        const apiHasMore = payload?.hasMore;
+        this.suppTxHasMore = apiHasMore != null
+          ? !!apiHasMore
+          : rows.length >= this.SUPP_TX_BATCH;
+
+        // totalCount: use API value only when it is meaningfully larger than one batch.
+        // If API echoes back the batch size as totalCount (common bug), treat it as unknown
+        // and show an open-ended count so the Next button stays enabled.
+        const apiTotal = +(payload?.totalCount ?? 0);
+        if (apiTotal > rows.length) {
+          this.suppTxTotalCount = apiTotal;
+        } else if (this.suppTxHasMore) {
+          // We know there's more but totalCount isn't reliable — show open-ended estimate
+          this.suppTxTotalCount = this.suppTxOffset + rows.length + this.SUPP_TX_BATCH;
+        } else {
+          this.suppTxTotalCount = this.suppTxOffset + rows.length;
+        }
+
+        this.suppTxRecords      = rows;
+        this.suppTxOffset      += rows.length;
+        this.suppTxCurrentBatch++;
+        this.suppTxLoading      = false;
+        this.suppTxLoadingMore  = false;
+      },
+      error: () => {
+        this.suppTxLoading     = false;
+        this.suppTxLoadingMore = false;
+        this.suppTxError       = true;
+      }
+    });
+  }
+
+  loadNextBatch() {
+    // Enable if API said hasMore=true, OR if we received a full batch (likely more exist)
+    const canGoNext = this.suppTxHasMore || this.suppTxRecords.length >= this.SUPP_TX_BATCH;
+    if (this.suppTxLoadingMore || !canGoNext) return;
+    this.suppTxLoadingMore = true;
+    this.fetchSupplierTransactions();
+  }
+
+  loadPrevBatch() {
+    // Go back: offset moves back 2 batches (we already advanced 1 batch forward after last fetch)
+    if (this.suppTxCurrentBatch <= 1) return;
+    const prevOffset = (this.suppTxCurrentBatch - 2) * this.SUPP_TX_BATCH;
+    this.suppTxOffset      = prevOffset;
+    this.suppTxCurrentBatch -= 2;  // fetchSupplierTransactions will increment it back by 1
+    this.suppTxLoadingMore  = true;
+    this.suppTxHasMore      = true;
+    this.fetchSupplierTransactions();
+  }
+
+  closeSupplierTransactions() {
+    this.suppTxModalOpen = false;
+    this.suppTxRecords   = [];
+    if (!this.expandedChart) document.body.style.overflow = '';
+  }
+
+  // ── Export to Excel ───────────────────────────────────────────
+  suppTxExporting = false;
+
+  exportSupplierTransactionsExcel() {
+    if (this.suppTxExporting) return;
+    this.suppTxExporting = true;
+    const req: SupplierTransactionRequest = {
+      company:   this.suppTxCompany,
+      yearFrom:  this.suppFromYear,
+      yearTo:    this.suppToYear,
+      offset:    0,
+      batchSize: 99999   // full export — backend uses isExport=true so this may be ignored
+    };
+    this.api.exportSupplierTransactions(req).subscribe({
+      next: (blob: Blob) => {
+        const url  = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href     = url;
+        link.download = `Supplier_Transactions_${this.suppTxCompany}_${this.suppFromYear}-${this.suppToYear}.xlsx`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        this.suppTxExporting = false;
+      },
+      error: () => { this.suppTxExporting = false; }
+    });
+  }
+
+  suppTxAmtFmt(val: number): string {
+    if (val == null || isNaN(val)) return '—';
+    return val.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
+
+  suppTxTypeClass(type: string): string {
+    if (!type) return 'type-other';
+    const t = type.toLowerCase();
+    if (t.includes('direct') || t.includes('dp'))           return 'type-dp';
+    if (t.includes('grn')    || t.includes('goods'))        return 'type-grn';
+    if (t.includes('lpo')    || t.includes('order'))        return 'type-lpo';
+    if (t.includes('return') || t.includes('credit'))       return 'type-ret';
+    if (t.includes('service')|| t.includes('svc'))          return 'type-svc';
+    return 'type-other';
+  }
+
+  suppTxTypeIcon(type: string): string {
+    if (!type) return 'fas fa-tag';
+    const t = type.toLowerCase();
+    if (t.includes('direct') || t.includes('dp'))           return 'fas fa-shopping-cart';
+    if (t.includes('grn')    || t.includes('goods'))        return 'fas fa-box-open';
+    if (t.includes('lpo')    || t.includes('order'))        return 'fas fa-file-invoice';
+    if (t.includes('return') || t.includes('credit'))       return 'fas fa-undo';
+    if (t.includes('service')|| t.includes('svc'))          return 'fas fa-tools';
+    return 'fas fa-tag';
   }
 
   // ── Enhanced Insights Properties ───────────────────────────────────────────────

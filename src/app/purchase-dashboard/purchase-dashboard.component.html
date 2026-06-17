@@ -413,6 +413,11 @@
                   </span>
                   <span class="pd-supp-item-amt">{{ suppAmtM(s) }}</span>
                   <span class="pd-supp-item-pct" [style.color]="suppRankColor(i)">{{ suppShare(s).toFixed(1) }}%</span>
+                  <button class="pd-supp-item-drill"
+                          (click)="openSupplierTransactions(s)"
+                          title="View transactions">
+                    <i class="fas fa-eye"></i>
+                  </button>
                 </div>
                 <div class="pd-supp-item-bar" [style.background]="suppRankColor(i)+'22'">
                   <div class="pd-supp-item-bar-fill"
@@ -1091,3 +1096,134 @@
   </div>
 
 </div><!-- /pd-wrap -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Supplier Transactions Glassmorphism Modal
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="stx-overlay" *ngIf="suppTxModalOpen" (click)="closeSupplierTransactions()">
+  <div class="stx-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="stx-header">
+      <div class="stx-header-left">
+        <div class="stx-header-icon"><i class="fas fa-industry"></i></div>
+        <div class="stx-header-info">
+          <h2 class="stx-title">Transaction Details</h2>
+          <p class="stx-subtitle" [title]="suppTxCompany">{{ suppTxCompany }}</p>
+        </div>
+      </div>
+      <div class="stx-header-right">
+        <span class="stx-badge-year">{{ suppFromYear }} – {{ suppToYear }}</span>
+        <span class="stx-badge-count" *ngIf="suppTxTotalCount">
+          <i class="fas fa-database"></i> {{ suppTxTotalCount | number }} records
+        </span>
+        <button class="stx-export-btn"
+                (click)="exportSupplierTransactionsExcel()"
+                [disabled]="suppTxExporting"
+                title="Export all transactions to Excel">
+          <i [class]="suppTxExporting ? 'fas fa-spinner fa-spin' : 'fas fa-file-excel'"></i>
+          <span>{{ suppTxExporting ? 'Exporting…' : 'Export Excel' }}</span>
+        </button>
+        <button class="stx-close" (click)="closeSupplierTransactions()" title="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="stx-state-center" *ngIf="suppTxLoading">
+      <div class="stx-spinner"></div>
+      <span class="stx-state-txt">Loading transactions…</span>
+    </div>
+
+    <!-- Error state -->
+    <div class="stx-state-center" *ngIf="!suppTxLoading && suppTxError">
+      <i class="fas fa-exclamation-circle stx-error-icon"></i>
+      <span class="stx-state-txt">Failed to load transactions. Please try again.</span>
+    </div>
+
+    <!-- Table -->
+    <div class="stx-table-wrap" *ngIf="!suppTxLoading && !suppTxError">
+      <table class="stx-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Year</th>
+            <th>Month</th>
+            <th>Screen</th>
+            <th>Doc ID</th>
+            <th>Branch</th>
+            <th>Project</th>
+            <th>Item</th>
+            <th>Currency</th>
+            <th class="stx-num">Amount (OMR)</th>
+            <th class="stx-num">VAT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of suppTxRecords; let i = index" [class.stx-row-alt]="i % 2 !== 0">
+            <td class="stx-seq">{{ i + 1 }}</td>
+            <td><span class="stx-tag stx-tag--year">{{ r.year }}</span></td>
+            <td><span class="stx-tag stx-tag--month">{{ r.month }}</span></td>
+            <td><span class="stx-tag stx-tag--type" [ngClass]="suppTxTypeClass(r.transaction_Type)">
+              <i [class]="suppTxTypeIcon(r.transaction_Type)"></i>{{ r.transaction_Type }}
+            </span></td>
+            <td class="stx-docid" [title]="r.docId">{{ r.docId }}</td>
+            <td class="stx-branch" [title]="r.branchName">{{ r.branchName }}</td>
+            <td class="stx-proj" [title]="r.projectCode">{{ r.projectCode }}</td>
+            <td class="stx-item" [title]="r.itemName">{{ r.itemName }}</td>
+            <td>{{ r.currency }}</td>
+            <td class="stx-num stx-amt">{{ suppTxAmtFmt(r.amount_Omr) }}</td>
+            <td class="stx-num stx-vat">{{ suppTxAmtFmt(r.vatAmount) }}</td>
+          </tr>
+          <tr *ngIf="suppTxRecords.length === 0 && !suppTxLoadingMore">
+            <td colspan="11" class="stx-empty-row">
+              <i class="fas fa-inbox"></i> No transactions found for the selected period.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Batch loading indicator ── -->
+    <div class="stx-batch-loading" *ngIf="!suppTxLoading && !suppTxError && suppTxLoadingMore">
+      <div class="stx-spinner stx-spinner--sm"></div>
+      <span>Loading batch {{ suppTxCurrentBatch + 1 }}…</span>
+    </div>
+
+    <!-- ── Footer: row count + Prev/Next — always pinned, never scrolls ── -->
+    <div class="stx-footer"
+         *ngIf="!suppTxLoading && !suppTxError && !suppTxLoadingMore && suppTxRecords.length > 0">
+
+      <!-- Left: record info -->
+      <span class="stx-footer-info">
+        <i class="fas fa-table"></i>
+        <strong>{{ suppTxRecords.length | number }}</strong> rows &nbsp;·&nbsp;
+        Batch <strong>{{ suppTxCurrentBatch }}</strong> of <strong>{{ suppTxTotalBatches }}</strong>
+        &nbsp;·&nbsp;
+        <strong>{{ suppTxTotalCount | number }}</strong> total records
+      </span>
+
+      <!-- Right: nav buttons -->
+      <div class="stx-footer-nav">
+        <button class="stx-nav-btn stx-nav-btn--prev"
+                [disabled]="suppTxCurrentBatch <= 1"
+                (click)="loadPrevBatch()"
+                title="Load previous 500 records">
+          <i class="fas fa-chevron-left"></i> Prev 500
+        </button>
+
+        <span class="stx-nav-sep">|</span>
+
+        <button class="stx-nav-btn stx-nav-btn--next"
+                [disabled]="!suppTxHasMore && suppTxRecords.length < SUPP_TX_BATCH"
+                (click)="loadNextBatch()"
+                title="Load next 500 records">
+          Next 500 <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -7,7 +7,7 @@ import { DPRReview, ProofhubTaskDto, DPRMonthlyReviewListingRequest,AppraisalAcc
 import { EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest, EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
-import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest } from '../models/axpertDashBoard.model';
+import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest,SupplierTransactionRequest } from '../models/axpertDashBoard.model';
 
 
 @Injectable({
@@ -541,7 +541,21 @@ export class Api {
   getUserMenus(userId: number | string): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetUserMenus?userId=${userId}`);
   }
+
+  getSupplierTransactions(request: SupplierTransactionRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetSupplierTransactions`, { ...request, isExport: false });
+  }
+
   
+  exportSupplierTransactions(request: SupplierTransactionRequest): Observable<Blob> {
+    return this.http.post(
+      `${this.apiUrl}/AxpertDashBoard/GetSupplierTransactionsExport`,
+      { ...request, isExport: true },
+      { responseType: 'blob' }  
+    );
+  }
+
+
   //chnages for dpr
 
 }
