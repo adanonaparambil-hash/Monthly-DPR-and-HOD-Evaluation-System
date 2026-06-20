@@ -7,7 +7,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Api } from '../services/api';
 import {
   LpoDashboardRequest, GrnDashboardRequest,
-  ProjectDashboardRequest, TopSupplierRequest, FacilitiesDashboardRequest
+  ProjectDashboardRequest, TopSupplierRequest, FacilitiesDashboardRequest,
+  SupplierTransactionRequest
 } from '../models/axpertDashBoard.model';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -210,6 +211,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   private companyNameToCode = new Map<string, string>();
   private projectNameToCode = new Map<string, string>();
+  private projectNameToRank = new Map<string, string>();
 
   // ── Multi-select filter arrays (empty = all) ─────────────────────────────────
   lpoCompanies:   string[] = [];
@@ -598,6 +600,250 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     return colors[index % colors.length];
   }
 
+  // ── Supplier Transactions Modal ───────────────────────────────────────────────
+  suppTxModalOpen   = false;
+  suppTxLoading     = false;
+  suppTxLoadingMore = false;
+  suppTxError       = false;
+  suppTxCompany     = '';
+  suppTxRecords: any[] = [];
+  suppTxSortCol     = '';
+  suppTxSortDir: 'asc' | 'desc' = 'asc';
+  suppTxFilterProject  = '';
+  suppTxFilterTransType = '';
+  suppTxFilterItem     = '';
+  suppTxFilterMonth    = '';
+  suppTxFilterDocId    = '';
+  suppTxTotalCount  = 0;
+  suppTxHasMore     = false;
+  suppTxCurrentBatch = 0;   // which batch we are on (1-based display)
+  private suppTxOffset = 0;
+  readonly SUPP_TX_BATCH = 500;   // public so template can reference it
+
+  /** How many batches total (rounded up) */
+  get suppTxTotalBatches(): number {
+    if (!this.suppTxTotalCount) return 1;
+    return Math.ceil(this.suppTxTotalCount / this.SUPP_TX_BATCH);
+  }
+
+  /** Records remaining after current loaded set */
+  get suppTxRemaining(): number {
+    return Math.max(0, this.suppTxTotalCount - this.suppTxRecords.length);
+  }
+
+  /** Pill numbers to show in pagination — e.g. [1,2,3,-1,8] where -1 = "…" */
+  get suppTxBatchPills(): number[] {
+    const total   = this.suppTxTotalBatches;
+    const current = this.suppTxCurrentBatch;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pills: number[] = [];
+    const add = (n: number) => { if (!pills.includes(n) && n >= 1 && n <= total) pills.push(n); };
+    add(1);
+    if (current > 3) pills.push(-1);           // leading ellipsis
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) add(i);
+    if (current < total - 2) pills.push(-1);   // trailing ellipsis
+    add(total);
+    return pills;
+  }
+
+  openSupplierTransactions(supplier: any) {
+    const company = supplier?.vendorName ?? supplier?.supplierName ?? supplier?.name ?? '';
+    if (!company) return;
+    this.suppTxCompany     = company;
+    this.suppTxRecords     = [];
+    this.suppTxTotalCount  = 0;
+    this.suppTxHasMore     = false;
+    this.suppTxOffset      = 0;
+    this.suppTxCurrentBatch = 0;
+    this.suppTxError       = false;
+    this.suppTxFilterProject   = '';
+    this.suppTxFilterTransType = '';
+    this.suppTxFilterItem      = '';
+    this.suppTxFilterMonth     = '';
+    this.suppTxFilterDocId     = '';
+    this.suppTxModalOpen   = true;
+    this.suppTxLoading     = true;
+    document.body.style.overflow = 'hidden';
+    this.fetchSupplierTransactions();
+  }
+
+  private fetchSupplierTransactions() {
+    const req: SupplierTransactionRequest = {
+      company:     this.suppTxCompany,
+      yearFrom:    this.suppFromYear,
+      yearTo:      this.suppToYear,
+      projectCode: this.suppTxFilterProject   || undefined,
+      transType:   this.suppTxFilterTransType || undefined,
+      item:        this.suppTxFilterItem      || undefined,
+      month:       this.suppTxFilterMonth     || undefined,
+      docId:       this.suppTxFilterDocId     || undefined,
+      offset:      this.suppTxOffset,
+      batchSize:   this.SUPP_TX_BATCH
+    };
+    this.api.getSupplierTransactions(req).subscribe({
+      next: (res: any) => {
+        const payload     = res?.data ?? res;
+        const rows: any[] = payload?.data ?? [];
+
+        // hasMore: API flag is the source of truth.
+        // If missing, assume more records exist whenever we got a full batch back.
+        const apiHasMore = payload?.hasMore;
+        this.suppTxHasMore = apiHasMore != null
+          ? !!apiHasMore
+          : rows.length >= this.SUPP_TX_BATCH;
+
+        // totalCount: use API value only when it is meaningfully larger than one batch.
+        // If API echoes back the batch size as totalCount (common bug), treat it as unknown
+        // and show an open-ended count so the Next button stays enabled.
+        const apiTotal = +(payload?.totalCount ?? 0);
+        if (apiTotal > rows.length) {
+          this.suppTxTotalCount = apiTotal;
+        } else if (this.suppTxHasMore) {
+          // We know there's more but totalCount isn't reliable — show open-ended estimate
+          this.suppTxTotalCount = this.suppTxOffset + rows.length + this.SUPP_TX_BATCH;
+        } else {
+          this.suppTxTotalCount = this.suppTxOffset + rows.length;
+        }
+
+        this.suppTxRecords      = rows;
+        this.suppTxOffset      += rows.length;
+        this.suppTxCurrentBatch++;
+        this.suppTxLoading      = false;
+        this.suppTxLoadingMore  = false;
+      },
+      error: () => {
+        this.suppTxLoading     = false;
+        this.suppTxLoadingMore = false;
+        this.suppTxError       = true;
+      }
+    });
+  }
+
+  loadNextBatch() {
+    // Enable if API said hasMore=true, OR if we received a full batch (likely more exist)
+    const canGoNext = this.suppTxHasMore || this.suppTxRecords.length >= this.SUPP_TX_BATCH;
+    if (this.suppTxLoadingMore || !canGoNext) return;
+    this.suppTxLoadingMore = true;
+    this.fetchSupplierTransactions();
+  }
+
+  loadPrevBatch() {
+    // Go back: offset moves back 2 batches (we already advanced 1 batch forward after last fetch)
+    if (this.suppTxCurrentBatch <= 1) return;
+    const prevOffset = (this.suppTxCurrentBatch - 2) * this.SUPP_TX_BATCH;
+    this.suppTxOffset      = prevOffset;
+    this.suppTxCurrentBatch -= 2;  // fetchSupplierTransactions will increment it back by 1
+    this.suppTxLoadingMore  = true;
+    this.suppTxHasMore      = true;
+    this.fetchSupplierTransactions();
+  }
+
+  closeSupplierTransactions() {
+    this.suppTxModalOpen = false;
+    this.suppTxRecords   = [];
+    if (!this.expandedChart) document.body.style.overflow = '';
+  }
+
+  applyTxFilter() {
+    this.suppTxRecords      = [];
+    this.suppTxTotalCount   = 0;
+    this.suppTxHasMore      = false;
+    this.suppTxOffset       = 0;
+    this.suppTxCurrentBatch = 0;
+    this.suppTxError        = false;
+    this.suppTxLoading      = true;
+    this.fetchSupplierTransactions();
+  }
+
+  // ── Export to Excel ───────────────────────────────────────────
+  suppTxExporting = false;
+
+  exportSupplierTransactionsExcel() {
+    if (this.suppTxExporting) return;
+    this.suppTxExporting = true;
+    const req: SupplierTransactionRequest = {
+      company:   this.suppTxCompany,
+      yearFrom:  this.suppFromYear,
+      yearTo:    this.suppToYear,
+      offset:    0,
+      batchSize: 99999   // full export — backend uses isExport=true so this may be ignored
+    };
+    this.api.exportSupplierTransactions(req).subscribe({
+      next: (blob: Blob) => {
+        const url  = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href     = url;
+        link.download = `Supplier_Transactions_${this.suppTxCompany}_${this.suppFromYear}-${this.suppToYear}.xlsx`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        this.suppTxExporting = false;
+      },
+      error: () => { this.suppTxExporting = false; }
+    });
+  }
+
+  suppTxSortBy(col: string) {
+    if (this.suppTxSortCol === col) {
+      this.suppTxSortDir = this.suppTxSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.suppTxSortCol = col;
+      this.suppTxSortDir = 'asc';
+    }
+    const dir = this.suppTxSortDir === 'asc' ? 1 : -1;
+    this.suppTxRecords = [...this.suppTxRecords].sort((a, b) => {
+      let av = a[col] ?? '';
+      let bv = b[col] ?? '';
+      // Numeric columns
+      if (col === 'amount_Omr' || col === 'vatAmount') {
+        return (+(av) - +(bv)) * dir;
+      }
+      // Date column
+      if (col === 'docDate') {
+        const ad = new Date(av).getTime() || 0;
+        const bd = new Date(bv).getTime() || 0;
+        return (ad - bd) * dir;
+      }
+      // Numeric-ish year/month
+      if (col === 'year' || col === 'month') {
+        return (+(av) - +(bv)) * dir;
+      }
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }
+
+  fmtDocDate(val: string): string {
+    if (!val) return '—';
+    // Strip time portion — keep only the date part before the space
+    return val.split(' ')[0] || '—';
+  }
+
+  suppTxAmtFmt(val: number): string {
+    if (val == null || isNaN(val)) return '—';
+    return val.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
+
+  suppTxTypeClass(type: string): string {
+    if (!type) return 'type-other';
+    const t = type.toLowerCase();
+    if (t.includes('direct') || t.includes('dp'))           return 'type-dp';
+    if (t.includes('grn')    || t.includes('goods'))        return 'type-grn';
+    if (t.includes('lpo')    || t.includes('order'))        return 'type-lpo';
+    if (t.includes('return') || t.includes('credit'))       return 'type-ret';
+    if (t.includes('service')|| t.includes('svc'))          return 'type-svc';
+    return 'type-other';
+  }
+
+  suppTxTypeIcon(type: string): string {
+    if (!type) return 'fas fa-tag';
+    const t = type.toLowerCase();
+    if (t.includes('direct') || t.includes('dp'))           return 'fas fa-shopping-cart';
+    if (t.includes('grn')    || t.includes('goods'))        return 'fas fa-box-open';
+    if (t.includes('lpo')    || t.includes('order'))        return 'fas fa-file-invoice';
+    if (t.includes('return') || t.includes('credit'))       return 'fas fa-undo';
+    if (t.includes('service')|| t.includes('svc'))          return 'fas fa-tools';
+    return 'fas fa-tag';
+  }
+
   // ── Enhanced Insights Properties ───────────────────────────────────────────────
 
   // Additional LPO insights
@@ -750,10 +996,9 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   // ── Lifecycle ────────────────────────────────────────────────────────────────
   ngOnInit() {
     this.loadCompanies();
-    this.loadProjects();
   }
 
-  ngAfterViewInit() { setTimeout(()=>{ this.loadAllCharts(); this.runGSAP(); },150); }
+  ngAfterViewInit() { setTimeout(()=>{ this.runGSAP(); },150); }
 
   // ── Dropdown loaders ─────────────────────────────────────────────────────────
   private loadCompanies() {
@@ -771,31 +1016,58 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
           .map((d: any) => d.name ?? d.companyName ?? d.description ?? d.label ?? '')
           .filter(Boolean);
         this.companies = ['All Companies', ...names];
+
+        // Auto-select the default company on page load
+        const DEFAULT_COMPANY = 'AL ADRAK TRADING AND CONTRACTING COMPANY LLC';
+        if (names.includes(DEFAULT_COMPANY)) {
+          this.lpoCompanies   = [DEFAULT_COMPANY];
+          this.grnCompanies   = [DEFAULT_COMPANY];
+          this.projCompanies  = [DEFAULT_COMPANY];
+          this.suppCompanies  = [DEFAULT_COMPANY];
+          this.facilCompanies = [DEFAULT_COMPANY];
+        }
+        // Fire LPO / GRN / Suppliers immediately (don't wait for projects)
+        this.onLPO();
+        this.onGRN();
+        this.onSupp();
+        // Load projects with rank-1 auto-select; onProj + onFacil fire inside that callback
+        const projCodes: string[] | null = this.getCodes(this.projCompanies);
+        this.loadProjects(projCodes?.length ? projCodes : null, true);
       },
-      error: () => { /* keep defaults */ }
+      error: () => { this.onLPO(); this.onGRN(); this.onSupp(); this.loadProjects(null, true); }
     });
   }
 
-  loadProjects(companyCodes: string[] | null = null) {
+  loadProjects(companyCodes: string[] | null = null, autoSelectRank1 = false) {
     this.api.GetProjectDropdown(companyCodes).subscribe({
       next: (res) => {
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
         this.projectNameToCode.clear();
+        this.projectNameToRank.clear();
         data.forEach((d: any) => {
-          // Support multiple possible field name shapes from the API
           const name = d.name ?? d.projectName ?? d.description ?? d.label ?? '';
           const code = d.code ?? d.projectCode ?? d.id ?? d.value ?? name;
-          if (name) this.projectNameToCode.set(name, code);
+          const rank = d.rank ?? '';
+          if (name) {
+            this.projectNameToCode.set(name, code);
+            this.projectNameToRank.set(name, String(rank));
+          }
         });
         const names = data
           .map((d: any) => d.name ?? d.projectName ?? d.description ?? d.label ?? '')
           .filter(Boolean);
         this.projects   = names;
         this.facilities = names;
+        if (autoSelectRank1) {
+          this.projProjects = names.filter(n => this.projectNameToRank.get(n) === '1');
+          this.onProj();
+          this.onFacil();
+        }
       },
       error: () => {
         this.projects   = [];
         this.facilities = [];
+        if (autoSelectRank1) { this.onProj(); this.onFacil(); }
       }
     });
   }
@@ -1108,13 +1380,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
     ) ?? MAIN_PROJECTS.grnValues;
 
-    // Vertical gradients (top → bottom)
+    // Vertical gradients — deep violet for PO, warm amber for GRN
     const poGrad = ctx.createLinearGradient(0, 0, 0, 320);
-    poGrad.addColorStop(0, 'rgba(14,165,233,0.95)');
-    poGrad.addColorStop(1, 'rgba(14,165,233,0.35)');
+    poGrad.addColorStop(0, 'rgba(99,102,241,1)');
+    poGrad.addColorStop(1, 'rgba(139,92,246,0.55)');
     const grnGrad = ctx.createLinearGradient(0, 0, 0, 320);
-    grnGrad.addColorStop(0, 'rgba(16,185,129,0.95)');
-    grnGrad.addColorStop(1, 'rgba(16,185,129,0.35)');
+    grnGrad.addColorStop(0, 'rgba(245,158,11,1)');
+    grnGrad.addColorStop(1, 'rgba(251,191,36,0.45)');
 
     return new Chart(ctx, {
       type: 'bar',
@@ -1122,10 +1394,10 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         labels,
         datasets: [
           { label: 'PO Value',  data: poValues,
-            backgroundColor: poGrad,  borderColor: P_SKY,  borderWidth: 1.5,
+            backgroundColor: poGrad,  borderColor: '#6366f1', borderWidth: 1.5,
             borderRadius: 6, borderSkipped: 'bottom' as any },
           { label: 'GRN Value', data: grnValues,
-            backgroundColor: grnGrad, borderColor: P_TEAL, borderWidth: 1.5,
+            backgroundColor: grnGrad, borderColor: '#f59e0b', borderWidth: 1.5,
             borderRadius: 6, borderSkipped: 'bottom' as any }
         ]
       },
@@ -1146,7 +1418,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
                         maxRotation: 45, minRotation: 30 },
                border: { display: false } },
           y: { beginAtZero: true,
-               grid: { color: 'rgba(14,165,233,0.07)' },
+               grid: { color: 'rgba(99,102,241,0.08)' },
                ticks: { color: '#6b7280', callback: (v: any) => (+v).toFixed(2) + 'M' },
                border: { display: false } }
         }
