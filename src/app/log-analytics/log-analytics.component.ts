@@ -50,7 +50,8 @@ export class LogAnalyticsComponent implements OnInit {
   groupBy = 'taskCategory';
 
   // ── Column filter dropdowns ───────────────────────────────────────────────
-  openFilterCol: string | null = null;   // which column dropdown is open
+  openFilterCol: string | null = null;
+  filterDropdownPos = { top: 0, left: 0 };  // position for the fixed portal
   colFilters: { [col: string]: ColFilter } = {};
 
   // ── Column definitions ────────────────────────────────────────────────────
@@ -209,9 +210,19 @@ export class LogAnalyticsComponent implements OnInit {
     event.stopPropagation();
     if (this.openFilterCol === col) {
       this.openFilterCol = null;
-    } else {
-      this.openFilterCol = col;
-      // Pre-select all if nothing selected yet
+      return;
+    }
+    // Capture button position to anchor the portal
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    // Position below the button, aligned to its left edge
+    // Clamp right edge so the 260px panel doesn't overflow the viewport
+    const panelWidth = 260;
+    const left = Math.min(rect.left, window.innerWidth - panelWidth - 8);
+    this.filterDropdownPos = { top: rect.bottom + 6, left: Math.max(4, left) };
+
+    this.openFilterCol = col;
+    if (!this.isTextSearchCol(col) && !this.isDateCol(col) && !this.isTimeFilterCol(col)) {
       if (this.colFilters[col].selectedValues.size === 0) {
         this.getUniqueValues(col).forEach(v => this.colFilters[col].selectedValues.add(v));
       }

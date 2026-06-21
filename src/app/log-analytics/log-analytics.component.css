@@ -786,3 +786,20 @@
   color: #4338ca;
 }
 .cfp-time-preview i { font-size: 11px; }
+
+/* ── FILTER PORTAL (single fixed instance replaces per-th dropdown) ───────── */
+.cfp-portal {
+  position: fixed;        /* detached from scroll / table structure */
+  z-index: 9999;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.16);
+  overflow: hidden;
+}
+
+/* Remove old col-filter-panel absolute positioning — portal handles it */
+.col-filter-panel {
+  display: none !important;  /* safety: hide any leftover instances */
+}

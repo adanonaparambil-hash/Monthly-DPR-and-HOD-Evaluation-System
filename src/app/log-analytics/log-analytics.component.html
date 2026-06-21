@@ -121,156 +121,6 @@
                           <div class="resize-handle"
                                (mousedown)="startResize($event, col.key)"></div>
                         </div>
-
-                        <!-- ── FILTER DROPDOWN ── -->
-                        @if (openFilterCol === col.key) {
-                          <div class="col-filter-panel" (click)="$event.stopPropagation()">
-
-                            @if (isTimeFilterCol(col.key)) {
-                              <!-- ── LOG TIME ARITHMETIC FILTER ── -->
-                              <div class="cfp-date-header">
-                                <i class="fas fa-clock"></i>
-                                <span>Filter by hours</span>
-                              </div>
-                              <div class="cfp-sort-row">
-                                <button class="cfp-sort-btn"
-                                        [class.active]="colFilters[col.key].sortDir==='asc'"
-                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='asc'; applyFilters()">
-                                  <i class="fas fa-sort-amount-up-alt"></i> Shortest first
-                                </button>
-                                <button class="cfp-sort-btn"
-                                        [class.active]="colFilters[col.key].sortDir==='desc'"
-                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='desc'; applyFilters()">
-                                  <i class="fas fa-sort-amount-down-alt"></i> Longest first
-                                </button>
-                              </div>
-                              <div class="cfp-divider"></div>
-                              <div class="cfp-time-body">
-                                <label class="cfp-time-label">Show rows where Log Time is:</label>
-                                <div class="cfp-time-row">
-                                  <select class="cfp-time-op"
-                                          [(ngModel)]="colFilters[col.key].timeOp"
-                                          (change)="applyFilters()">
-                                    <option value=">">&gt; greater than</option>
-                                    <option value=">=">&ge; at least</option>
-                                    <option value="<">&lt; less than</option>
-                                    <option value="<=">&le; at most</option>
-                                    <option value="=">=&nbsp;exactly</option>
-                                  </select>
-                                  <div class="cfp-time-input-wrap">
-                                    <input type="number" class="cfp-time-val" min="0" step="0.5"
-                                           placeholder="e.g. 5"
-                                           [(ngModel)]="colFilters[col.key].timeVal"
-                                           (input)="applyFilters()">
-                                    <span class="cfp-time-unit">hrs</span>
-                                  </div>
-                                </div>
-                                @if (colFilters[col.key].timeVal !== null) {
-                                  <div class="cfp-time-preview">
-                                    <i class="fas fa-filter"></i>
-                                    Log Time
-                                    <strong>{{colFilters[col.key].timeOp}}</strong>
-                                    <strong>{{colFilters[col.key].timeVal}} hrs</strong>
-                                  </div>
-                                }
-                              </div>
-
-                            } @else if (isDateCol(col.key)) {
-                              <!-- ── DATE RANGE FILTER ── -->
-                              <div class="cfp-date-header">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Filter by date range</span>
-                              </div>
-                              <div class="cfp-sort-row">
-                                <button class="cfp-sort-btn"
-                                        [class.active]="colFilters[col.key].sortDir==='asc'"
-                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='asc'; applyFilters()">
-                                  <i class="fas fa-sort-amount-up-alt"></i> Oldest first
-                                </button>
-                                <button class="cfp-sort-btn"
-                                        [class.active]="colFilters[col.key].sortDir==='desc'"
-                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='desc'; applyFilters()">
-                                  <i class="fas fa-sort-amount-down-alt"></i> Newest first
-                                </button>
-                              </div>
-                              <div class="cfp-divider"></div>
-                              <div class="cfp-date-body">
-                                <div class="cfp-date-field">
-                                  <label>From</label>
-                                  <input type="date"
-                                         [(ngModel)]="colFilters[col.key].dateFrom"
-                                         (change)="applyFilters()">
-                                </div>
-                                <div class="cfp-date-arrow">
-                                  <i class="fas fa-arrow-down"></i>
-                                </div>
-                                <div class="cfp-date-field">
-                                  <label>To</label>
-                                  <input type="date"
-                                         [(ngModel)]="colFilters[col.key].dateTo"
-                                         (change)="applyFilters()">
-                                </div>
-                              </div>
-
-                            } @else {
-                              <!-- ── TEXT / CHECKBOX FILTER ── -->
-                              <!-- Search inside dropdown -->
-                              <div class="cfp-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Search…"
-                                       [(ngModel)]="colFilters[col.key].searchText"
-                                       (input)="applyFilters()">
-                              </div>
-
-                              <!-- Sort buttons -->
-                              <div class="cfp-sort-row">
-                                <button class="cfp-sort-btn"
-                                        [class.active]="colFilters[col.key].sortDir==='asc'"
-                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='asc'; applyFilters()">
-                                  <i class="fas fa-sort-amount-up-alt"></i> Sort A → Z
-                                </button>
-                                <button class="cfp-sort-btn"
-                                        [class.active]="colFilters[col.key].sortDir==='desc'"
-                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='desc'; applyFilters()">
-                                  <i class="fas fa-sort-amount-down-alt"></i> Sort Z → A
-                                </button>
-                              </div>
-
-                              <div class="cfp-divider"></div>
-
-                              @if (!isTextSearchCol(col.key)) {
-                                <!-- Select all -->
-                                <label class="cfp-row cfp-select-all">
-                                  <input type="checkbox"
-                                         [checked]="allSelected(col.key)"
-                                         (change)="toggleSelectAll(col.key)">
-                                  <span>(Select All)</span>
-                                </label>
-
-                                <!-- Individual checkboxes -->
-                                <div class="cfp-list">
-                                  @for (val of getFilteredUniqueValues(col.key); track val) {
-                                    <label class="cfp-row">
-                                      <input type="checkbox"
-                                             [checked]="colFilters[col.key].selectedValues.has(val)"
-                                             (change)="toggleValue(col.key, val)">
-                                      <span class="cfp-val" [title]="val">{{val}}</span>
-                                    </label>
-                                  }
-                                </div>
-                              }
-                            }
-
-                            <div class="cfp-footer">
-                              <button class="cfp-clear" (click)="clearColFilter(col.key, $event)">
-                                Clear Filter
-                              </button>
-                              <button class="cfp-close" (click)="openFilterCol = null">
-                                Close
-                              </button>
-                            </div>
-                          </div>
-                        }
                       </th>
                     }
                   </tr>
@@ -528,6 +378,140 @@
       <div class="col-panel-foot">
         <button class="cp-reset" (click)="resetColumnsToDefault()">Reset</button>
         <button class="cp-save"  (click)="saveColumnsSettings()">Apply</button>
+      </div>
+    </div>
+  }
+
+  <!-- ══ FILTER DROPDOWN PORTAL (single instance, fixed position) ═════════ -->
+  @if (openFilterCol) {
+    <div class="cfp-portal" (click)="$event.stopPropagation()"
+         [style.top.px]="filterDropdownPos.top"
+         [style.left.px]="filterDropdownPos.left">
+
+      @if (isTimeFilterCol(openFilterCol)) {
+        <!-- ── LOG TIME ARITHMETIC FILTER ── -->
+        <div class="cfp-date-header">
+          <i class="fas fa-clock"></i>
+          <span>Filter by hours</span>
+        </div>
+        <div class="cfp-sort-row">
+          <button class="cfp-sort-btn"
+                  [class.active]="colFilters[openFilterCol].sortDir==='asc'"
+                  (click)="sortBy(openFilterCol, $event); colFilters[openFilterCol].sortDir='asc'; applyFilters()">
+            <i class="fas fa-sort-amount-up-alt"></i> Shortest first
+          </button>
+          <button class="cfp-sort-btn"
+                  [class.active]="colFilters[openFilterCol].sortDir==='desc'"
+                  (click)="sortBy(openFilterCol, $event); colFilters[openFilterCol].sortDir='desc'; applyFilters()">
+            <i class="fas fa-sort-amount-down-alt"></i> Longest first
+          </button>
+        </div>
+        <div class="cfp-divider"></div>
+        <div class="cfp-time-body">
+          <label class="cfp-time-label">Show rows where Log Time is:</label>
+          <div class="cfp-time-row">
+            <select class="cfp-time-op"
+                    [(ngModel)]="colFilters[openFilterCol].timeOp"
+                    (change)="applyFilters()">
+              <option value=">">&gt; greater than</option>
+              <option value=">=">&ge; at least</option>
+              <option value="<">&lt; less than</option>
+              <option value="<=">&le; at most</option>
+              <option value="=">=&nbsp;exactly</option>
+            </select>
+            <div class="cfp-time-input-wrap">
+              <input type="number" class="cfp-time-val" min="0" step="0.5"
+                     placeholder="e.g. 5"
+                     [(ngModel)]="colFilters[openFilterCol].timeVal"
+                     (input)="applyFilters()">
+              <span class="cfp-time-unit">hrs</span>
+            </div>
+          </div>
+          @if (colFilters[openFilterCol].timeVal !== null) {
+            <div class="cfp-time-preview">
+              <i class="fas fa-filter"></i>
+              Log Time
+              <strong>{{colFilters[openFilterCol].timeOp}}</strong>
+              <strong>{{colFilters[openFilterCol].timeVal}} hrs</strong>
+            </div>
+          }
+        </div>
+
+      } @else if (isDateCol(openFilterCol)) {
+        <!-- ── DATE RANGE FILTER ── -->
+        <div class="cfp-date-header">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Filter by date range</span>
+        </div>
+        <div class="cfp-sort-row">
+          <button class="cfp-sort-btn"
+                  [class.active]="colFilters[openFilterCol].sortDir==='asc'"
+                  (click)="sortBy(openFilterCol, $event); colFilters[openFilterCol].sortDir='asc'; applyFilters()">
+            <i class="fas fa-sort-amount-up-alt"></i> Oldest first
+          </button>
+          <button class="cfp-sort-btn"
+                  [class.active]="colFilters[openFilterCol].sortDir==='desc'"
+                  (click)="sortBy(openFilterCol, $event); colFilters[openFilterCol].sortDir='desc'; applyFilters()">
+            <i class="fas fa-sort-amount-down-alt"></i> Newest first
+          </button>
+        </div>
+        <div class="cfp-divider"></div>
+        <div class="cfp-date-body">
+          <div class="cfp-date-field">
+            <label>From</label>
+            <input type="date" [(ngModel)]="colFilters[openFilterCol].dateFrom" (change)="applyFilters()">
+          </div>
+          <div class="cfp-date-arrow"><i class="fas fa-arrow-down"></i></div>
+          <div class="cfp-date-field">
+            <label>To</label>
+            <input type="date" [(ngModel)]="colFilters[openFilterCol].dateTo" (change)="applyFilters()">
+          </div>
+        </div>
+
+      } @else {
+        <!-- ── TEXT / CHECKBOX FILTER ── -->
+        <div class="cfp-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search…"
+                 [(ngModel)]="colFilters[openFilterCol].searchText"
+                 (input)="applyFilters()">
+        </div>
+        <div class="cfp-sort-row">
+          <button class="cfp-sort-btn"
+                  [class.active]="colFilters[openFilterCol].sortDir==='asc'"
+                  (click)="sortBy(openFilterCol, $event); colFilters[openFilterCol].sortDir='asc'; applyFilters()">
+            <i class="fas fa-sort-amount-up-alt"></i> Sort A → Z
+          </button>
+          <button class="cfp-sort-btn"
+                  [class.active]="colFilters[openFilterCol].sortDir==='desc'"
+                  (click)="sortBy(openFilterCol, $event); colFilters[openFilterCol].sortDir='desc'; applyFilters()">
+            <i class="fas fa-sort-amount-down-alt"></i> Sort Z → A
+          </button>
+        </div>
+        <div class="cfp-divider"></div>
+        @if (!isTextSearchCol(openFilterCol)) {
+          <label class="cfp-row cfp-select-all">
+            <input type="checkbox"
+                   [checked]="allSelected(openFilterCol)"
+                   (change)="toggleSelectAll(openFilterCol)">
+            <span>(Select All)</span>
+          </label>
+          <div class="cfp-list">
+            @for (val of getFilteredUniqueValues(openFilterCol); track val) {
+              <label class="cfp-row">
+                <input type="checkbox"
+                       [checked]="colFilters[openFilterCol].selectedValues.has(val)"
+                       (change)="toggleValue(openFilterCol, val)">
+                <span class="cfp-val" [title]="val">{{val}}</span>
+              </label>
+            }
+          </div>
+        }
+      }
+
+      <div class="cfp-footer">
+        <button class="cfp-clear" (click)="clearColFilter(openFilterCol, $event)">Clear Filter</button>
+        <button class="cfp-close" (click)="openFilterCol = null">Close</button>
       </div>
     </div>
   }
