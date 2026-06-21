@@ -662,6 +662,13 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
     
     const apiStatus = statusMap[this.selectedTaskDetailStatus] || 'NOT STARTED';
     
+    // When status is Closed or Completed, add dailyCount to the existing count
+    const isClosingStatus = this.selectedTaskDetailStatus === 'not-closed' || 
+                            this.selectedTaskDetailStatus === 'completed';
+    const computedCount = isClosingStatus
+      ? (this.selectedTaskCount || 0) + (this.dailyCount || 0)
+      : (this.selectedTaskCount || 0);
+    
     // Prepare assignees array - use multi-select list
     const assignees = this.selectedAssigneeIds.filter(id => id && id.trim() !== '');
 
@@ -692,7 +699,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       description: this.editableTaskDescription?.trim() || '',
       projectId: parseInt(this.selectedProjectId) || 0,
       departmentId: 0, // Will be set by backend based on category
-      count: this.selectedTaskCount || 0,
+      count: computedCount,
       targetDate: formatDateForApi(this.selectedTaskEndDate),
       startDate: formatDateForApi(this.selectedTaskStartDate),
       progress: this.taskProgress || 0,

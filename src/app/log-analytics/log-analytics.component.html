@@ -1,364 +1,535 @@
-<!-- Log Analytics Component -->
-<div class="log-analytics-container">
-  <!-- Top Bar -->
+<div class="la-root" (click)="closeAllDropdowns()">
+
+  <!-- ══ TOP BAR ══════════════════════════════════════════════════════════ -->
   <div class="top-bar">
-    <div class="search-container">
-      <i class="fas fa-search search-icon"></i>
-      <input 
-        type="text" 
-        placeholder="Search employees, projects, tasks..." 
-        [(ngModel)]="searchTerm"
-        (keyup.enter)="onSearch()"
-        class="search-input">
+    <div class="search-wrap">
+      <i class="fas fa-search search-ico"></i>
+      <input type="text" class="search-input"
+             placeholder="Search employees, projects, tasks…"
+             [(ngModel)]="searchTerm" (input)="onSearch()">
     </div>
-    
+
     <div class="top-actions">
-      <button class="btn btn-filter" (click)="toggleFilters()">
-        <i class="fas fa-filter"></i>
-        Filters
-        @if (showFilters) {
-          <i class="fas fa-chevron-up"></i>
-        } @else {
-          <i class="fas fa-chevron-down"></i>
-        }
-      </button>
-      
-      <div class="group-selector">
-        <i class="fas fa-layer-group"></i>
-        <span>Group By:</span>
-        <select class="group-select">
-          <option value="task-category">Task Category</option>
-          <option value="employee">Employee</option>
-          <option value="department">Department</option>
-        </select>
-      </div>
-      
-      <button class="btn btn-columns" (click)="toggleColumnsPanel()">
-        <i class="fas fa-columns"></i>
-        Columns
-      </button>
-      
-      <button class="btn btn-export" (click)="exportData()">
-        <i class="fas fa-download"></i>
-        Export
-      </button>
-    </div>
-  </div>
+      <!-- Active filter chips -->
+      @if (activeFiltersCount > 0) {
+        <button class="chip-clear" (click)="clearAllFilters()">
+          <i class="fas fa-times"></i> Clear filters ({{activeFiltersCount}})
+        </button>
+      }
 
-  <!-- Filters Panel -->
-  @if (showFilters) {
-    <div class="filters-panel">
-      <div class="filters-container">
-        <div class="filter-row">
-          <div class="filter-item">
-            <label>Date Range</label>
-            <div class="date-range-picker">
-              <input type="date" [(ngModel)]="filters.dateRange.from" class="date-input">
-              <span class="date-separator">to</span>
-              <input type="date" [(ngModel)]="filters.dateRange.to" class="date-input">
-            </div>
-          </div>
-
-          <div class="filter-item">
-            <label>Department</label>
-            <select [(ngModel)]="filters.department" class="filter-dropdown">
-              <option value="">All Departments</option>
-              <option value="IT">IT</option>
-              <option value="Development">Development</option>
-              <option value="Support">Support</option>
-              <option value="Network">Network</option>
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Employee</label>
-            <select [(ngModel)]="filters.employee" class="filter-dropdown">
-              <option value="">All Employees</option>
-              @for (emp of employees; track emp.id) {
-                <option [value]="emp.id">{{emp.name}}</option>
-              }
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Project</label>
-            <select [(ngModel)]="filters.project" class="filter-dropdown">
-              <option value="">All Projects</option>
-              <option value="Axpert">Axpert</option>
-              <option value="Adraklive">Adraklive</option>
-              <option value="HR Portal">HR Portal</option>
-              <option value="Infrastructure">Infrastructure</option>
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Task Category</label>
-            <select [(ngModel)]="filters.taskCategory" class="filter-dropdown">
-              <option value="">All Categories</option>
-              @for (category of taskCategories; track category.id) {
-                <option [value]="category.name">{{getCategoryShortName(category.name)}}</option>
-              }
-            </select>
-          </div>
-
-          <div class="filter-actions">
-            <button class="apply-filters-btn" (click)="applyFilters()">
-              <i class="fas fa-check"></i>
-              Apply Filters
-            </button>
-            <button class="clear-all-btn" (click)="clearAllFilters()">
-              <i class="fas fa-times"></i>
-              Clear All
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  }
-  <!-- Main Data Table -->
-  <div class="main-table">
-    <!-- Categories -->
-    @for (category of taskCategories; track category.id) {
-      <div class="category-section">
-        <!-- Category Header -->
-        <div class="category-header" (click)="toggleCategory(category.name)">
-          <div class="category-left">
-            <i class="fas fa-chevron-down category-toggle" 
-               [class.rotated]="!expandedCategories[category.name]"></i>
-            <span class="category-name">{{category.name}}</span>
-            <span class="task-count">{{category.taskCount}} tasks</span>
-          </div>
-          <div class="category-right">
-            <div class="time-summary">
-              <i class="fas fa-clock"></i>
-              <span>{{getTotalHoursForCategory(category.name)}} hrs</span>
-            </div>
-            <span class="task-summary">{{category.taskCount}} Tasks</span>
-          </div>
-        </div>
-
-        <!-- Category Data Table -->
-        @if (expandedCategories[category.name]) {
-          <div class="data-table">
-            <!-- Table Header -->
-            <div class="data-table-header">
-              <div class="table-columns" [style.grid-template-columns]="getGridTemplateColumns()">
-                <div class="col col-employee" (click)="sortBy('employee')">
-                  <span>Employee</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'employee' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'employee' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer" 
-                       (mousedown)="startResize($event, 'employee')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-category" (click)="sortBy('category')">
-                  <span>Category</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'category' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'category' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer" 
-                       (mousedown)="startResize($event, 'category')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-title" (click)="sortBy('taskTitle')">
-                  <span>Task Title</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'taskTitle' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'taskTitle' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer" 
-                       (mousedown)="startResize($event, 'taskTitle')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-project" (click)="sortBy('project')">
-                  <span>Project</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'project' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'project' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer" 
-                       (mousedown)="startResize($event, 'project')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-description" (click)="sortBy('description')">
-                  <span>Description</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'description' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'description' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer" 
-                       (mousedown)="startResize($event, 'description')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-comment" (click)="sortBy('dailyComment')">
-                  <span>Daily Comment</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'dailyComment' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'dailyComment' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer" 
-                       (mousedown)="startResize($event, 'dailyComment')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-time" (click)="sortBy('logTime')">
-                  <span>Log Time</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'logTime' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'logTime' && sortDirection === 'desc'"></i>
-                  </div>
-                  <div class="column-resizer"
-                       (mousedown)="startResize($event, 'logTime')"
-                       title="Drag to resize"></div>
-                </div>
-                <div class="col col-status" (click)="sortBy('approvalStatus')">
-                  <span>Status</span>
-                  <div class="sort-icons">
-                    <i class="fas fa-sort-up" [class.active]="sortColumn === 'approvalStatus' && sortDirection === 'asc'"></i>
-                    <i class="fas fa-sort-down" [class.active]="sortColumn === 'approvalStatus' && sortDirection === 'desc'"></i>
-                  </div>
-                </div>
+      <!-- Group by -->
+      <div class="group-wrap" (click)="$event.stopPropagation()">
+        <button class="tb-btn" (click)="toggleGroupByMenu($event)">
+          <i class="fas fa-layer-group"></i> Group By:
+          <strong>{{groupByLabel}}</strong>
+          <i class="fas fa-chevron-down tb-arrow"></i>
+        </button>
+        @if (showGroupByMenu) {
+          <div class="tb-dropdown">
+            @for (opt of groupByOptions; track opt.value) {
+              <div class="tb-dd-item" [class.active]="groupBy === opt.value"
+                   (click)="setGroupBy(opt.value, $event)">
+                <i class="fas {{opt.icon}}"></i> {{opt.label}}
               </div>
-            </div>
-
-            <!-- Table Rows -->
-            <div class="data-table-body">
-              @for (entry of getEntriesForCategory(category.name); track entry.id; let i = $index) {
-                <div class="table-row-data" [class.even]="i % 2 === 0">
-                  <div class="table-columns" [style.grid-template-columns]="getGridTemplateColumns()">
-                    <div class="col col-employee" data-label="Employee">
-                      <div class="employee-info">
-                        <div class="employee-avatar" [style.background]="getEmployeeColor(entry.employee.name)">
-                          {{getEmployeeInitials(entry.employee.name)}}
-                        </div>
-                        <span class="employee-name">{{entry.employee.name}}</span>
-                      </div>
-                    </div>
-
-                    <div class="col col-category" data-label="Category">
-                      <span class="category-tag" [style.background]="getCategoryColor(entry.taskCategory.name)">
-                        {{getCategoryShortName(entry.taskCategory.name)}}
-                      </span>
-                    </div>
-
-                    <div class="col col-title" data-label="Task Title">
-                      <span class="task-title" [title]="entry.taskTitle">{{entry.taskTitle}}</span>
-                    </div>
-
-                    <div class="col col-project" data-label="Project">
-                      <div class="project-display">
-                        <div class="project-dot" [style.background]="getProjectColor(entry.project)"></div>
-                        <span class="project-name">{{entry.project}}</span>
-                      </div>
-                    </div>
-
-                    <div class="col col-description" data-label="Description">
-                      <span class="description-text" [title]="entry.description || '—'">{{entry.description || '—'}}</span>
-                    </div>
-
-                    <div class="col col-comment" data-label="Daily Comment">
-                      <span class="comment-text" [title]="entry.dailyComment || '—'">{{entry.dailyComment || '—'}}</span>
-                    </div>
-
-                    <div class="col col-time" data-label="Log Time">
-                      <span class="time-display">{{entry.logTime}}</span>
-                    </div>
-                    <div class="col col-status" data-label="Status">
-                      <span class="status-badge status-{{entry.approvalStatus}}">
-                        <i class="fas" [ngClass]="{
-                          'fa-play-circle':  entry.approvalStatus === 'running',
-                          'fa-check-circle': entry.approvalStatus === 'completed',
-                          'fa-pause-circle': entry.approvalStatus === 'paused',
-                          'fa-lock':         entry.approvalStatus === 'closed'
-                        }"></i>
-                        {{entry.approvalStatus | titlecase}}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-
+            }
           </div>
         }
       </div>
-    }
-    <!-- Pagination Footer -->
-    <div class="pagination-footer">
-      <div class="pagination-info">
-        <span>Showing</span>
-        <select class="rows-select" [(ngModel)]="pageSize">
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-        </select>
-        <span>of 36 entries</span>
-      </div>
-      
-      <div class="pagination-nav">
-        <span>Rows per page:</span>
-        <select class="page-size-select" [(ngModel)]="pageSize">
-          <option value="20">20</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
-        
-        <div class="page-controls">
-          <button class="btn-page" (click)="previousPage()" [disabled]="currentPage === 1">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="page-numbers">{{currentPage}}</span>
-          <button class="btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+
+      <button class="tb-btn" (click)="toggleColumnsPanel()">
+        <i class="fas fa-columns"></i> Columns
+      </button>
+      <button class="tb-btn" (click)="exportData()">
+        <i class="fas fa-download"></i> Export
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ TABLE AREA ═══════════════════════════════════════════════════════ -->
+  <div class="table-area">
+    @for (group of dynamicGroups; track group) {
+      @if (getGroupedEntriesForGroup(group).length > 0) {
+        <div class="cat-block">
+
+          <!-- Group header row -->
+          <div class="cat-header" (click)="toggleCategory(group)">
+            <div class="cat-left">
+              <i class="fas fa-chevron-down cat-chevron"
+                 [class.collapsed]="!expandedCategories[group]"></i>
+              <!-- Employee group: show avatar -->
+              @if (groupBy === 'employee') {
+                <div class="grp-avatar" [style.background]="getGroupAvatar(group)">
+                  {{getEmployeeInitials(group)}}
+                </div>
+              } @else {
+                <i class="fas {{groupByIcon}} grp-icon"></i>
+              }
+              <span class="cat-name">{{group}}</span>
+              <span class="cat-badge">{{getGroupedEntriesForGroup(group).length}} tasks</span>
+            </div>
+            <div class="cat-right">
+              <i class="fas fa-clock"></i>
+              <span class="cat-hours">{{getGroupTotalTime(group)}} hrs</span>
+            </div>
+          </div>
+
+          @if (expandedCategories[group]) {
+            <!-- Scrollable table wrapper -->
+            <div class="tbl-scroll">
+              <table class="la-table" [style.min-width]="visibleCols.length * 120 + 'px'">
+
+                <!-- ── HEADER ── -->
+                <thead>
+                  <tr>
+                    @for (col of visibleCols; track col.key) {
+                      <th class="th-cell"
+                          [style.width]="columnWidths[col.key] + 'px'"
+                          [style.min-width]="columnWidths[col.key] + 'px'"
+                          draggable="true"
+                          (dragstart)="onColDragStart($event, col.key)"
+                          (dragover)="onColDragOver($event, col.key)"
+                          (dragleave)="onColDragLeave(col.key)"
+                          (drop)="onColDrop($event, col.key)"
+                          (dragend)="onColDragEnd()"
+                          [class.col-dragging]="dragSourceKey === col.key"
+                          [class.col-drop-left]="dragOverKey === col.key && dragOverSide === 'left'"
+                          [class.col-drop-right]="dragOverKey === col.key && dragOverSide === 'right'">
+
+                        <!-- Column label + sort -->
+                        <div class="th-inner">
+                          <i class="fas fa-grip-vertical col-drag-handle" title="Drag to reorder"></i>
+                          <span class="th-label" (click)="sortBy(col.key, $event)">
+                            {{col.label}}
+                            @if (colFilters[col.key]?.sortDir === 'asc') {
+                              <i class="fas fa-sort-up sort-active"></i>
+                            } @else if (colFilters[col.key]?.sortDir === 'desc') {
+                              <i class="fas fa-sort-down sort-active"></i>
+                            } @else {
+                              <i class="fas fa-sort sort-idle"></i>
+                            }
+                          </span>
+
+                          <!-- Filter icon -->
+                          <button class="filter-btn"
+                                  [class.filter-active]="isFiltered(col.key)"
+                                  (click)="toggleColFilter(col.key, $event)"
+                                  [title]="'Filter ' + col.label">
+                            <i class="fas fa-filter"></i>
+                          </button>
+
+                          <!-- Resize handle -->
+                          <div class="resize-handle"
+                               (mousedown)="startResize($event, col.key)"></div>
+                        </div>
+
+                        <!-- ── FILTER DROPDOWN ── -->
+                        @if (openFilterCol === col.key) {
+                          <div class="col-filter-panel" (click)="$event.stopPropagation()">
+
+                            @if (isTimeFilterCol(col.key)) {
+                              <!-- ── LOG TIME ARITHMETIC FILTER ── -->
+                              <div class="cfp-date-header">
+                                <i class="fas fa-clock"></i>
+                                <span>Filter by hours</span>
+                              </div>
+                              <div class="cfp-sort-row">
+                                <button class="cfp-sort-btn"
+                                        [class.active]="colFilters[col.key].sortDir==='asc'"
+                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='asc'; applyFilters()">
+                                  <i class="fas fa-sort-amount-up-alt"></i> Shortest first
+                                </button>
+                                <button class="cfp-sort-btn"
+                                        [class.active]="colFilters[col.key].sortDir==='desc'"
+                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='desc'; applyFilters()">
+                                  <i class="fas fa-sort-amount-down-alt"></i> Longest first
+                                </button>
+                              </div>
+                              <div class="cfp-divider"></div>
+                              <div class="cfp-time-body">
+                                <label class="cfp-time-label">Show rows where Log Time is:</label>
+                                <div class="cfp-time-row">
+                                  <select class="cfp-time-op"
+                                          [(ngModel)]="colFilters[col.key].timeOp"
+                                          (change)="applyFilters()">
+                                    <option value=">">&gt; greater than</option>
+                                    <option value=">=">&ge; at least</option>
+                                    <option value="<">&lt; less than</option>
+                                    <option value="<=">&le; at most</option>
+                                    <option value="=">=&nbsp;exactly</option>
+                                  </select>
+                                  <div class="cfp-time-input-wrap">
+                                    <input type="number" class="cfp-time-val" min="0" step="0.5"
+                                           placeholder="e.g. 5"
+                                           [(ngModel)]="colFilters[col.key].timeVal"
+                                           (input)="applyFilters()">
+                                    <span class="cfp-time-unit">hrs</span>
+                                  </div>
+                                </div>
+                                @if (colFilters[col.key].timeVal !== null) {
+                                  <div class="cfp-time-preview">
+                                    <i class="fas fa-filter"></i>
+                                    Log Time
+                                    <strong>{{colFilters[col.key].timeOp}}</strong>
+                                    <strong>{{colFilters[col.key].timeVal}} hrs</strong>
+                                  </div>
+                                }
+                              </div>
+
+                            } @else if (isDateCol(col.key)) {
+                              <!-- ── DATE RANGE FILTER ── -->
+                              <div class="cfp-date-header">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Filter by date range</span>
+                              </div>
+                              <div class="cfp-sort-row">
+                                <button class="cfp-sort-btn"
+                                        [class.active]="colFilters[col.key].sortDir==='asc'"
+                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='asc'; applyFilters()">
+                                  <i class="fas fa-sort-amount-up-alt"></i> Oldest first
+                                </button>
+                                <button class="cfp-sort-btn"
+                                        [class.active]="colFilters[col.key].sortDir==='desc'"
+                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='desc'; applyFilters()">
+                                  <i class="fas fa-sort-amount-down-alt"></i> Newest first
+                                </button>
+                              </div>
+                              <div class="cfp-divider"></div>
+                              <div class="cfp-date-body">
+                                <div class="cfp-date-field">
+                                  <label>From</label>
+                                  <input type="date"
+                                         [(ngModel)]="colFilters[col.key].dateFrom"
+                                         (change)="applyFilters()">
+                                </div>
+                                <div class="cfp-date-arrow">
+                                  <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div class="cfp-date-field">
+                                  <label>To</label>
+                                  <input type="date"
+                                         [(ngModel)]="colFilters[col.key].dateTo"
+                                         (change)="applyFilters()">
+                                </div>
+                              </div>
+
+                            } @else {
+                              <!-- ── TEXT / CHECKBOX FILTER ── -->
+                              <!-- Search inside dropdown -->
+                              <div class="cfp-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search…"
+                                       [(ngModel)]="colFilters[col.key].searchText"
+                                       (input)="applyFilters()">
+                              </div>
+
+                              <!-- Sort buttons -->
+                              <div class="cfp-sort-row">
+                                <button class="cfp-sort-btn"
+                                        [class.active]="colFilters[col.key].sortDir==='asc'"
+                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='asc'; applyFilters()">
+                                  <i class="fas fa-sort-amount-up-alt"></i> Sort A → Z
+                                </button>
+                                <button class="cfp-sort-btn"
+                                        [class.active]="colFilters[col.key].sortDir==='desc'"
+                                        (click)="sortBy(col.key, $event); colFilters[col.key].sortDir='desc'; applyFilters()">
+                                  <i class="fas fa-sort-amount-down-alt"></i> Sort Z → A
+                                </button>
+                              </div>
+
+                              <div class="cfp-divider"></div>
+
+                              @if (!isTextSearchCol(col.key)) {
+                                <!-- Select all -->
+                                <label class="cfp-row cfp-select-all">
+                                  <input type="checkbox"
+                                         [checked]="allSelected(col.key)"
+                                         (change)="toggleSelectAll(col.key)">
+                                  <span>(Select All)</span>
+                                </label>
+
+                                <!-- Individual checkboxes -->
+                                <div class="cfp-list">
+                                  @for (val of getFilteredUniqueValues(col.key); track val) {
+                                    <label class="cfp-row">
+                                      <input type="checkbox"
+                                             [checked]="colFilters[col.key].selectedValues.has(val)"
+                                             (change)="toggleValue(col.key, val)">
+                                      <span class="cfp-val" [title]="val">{{val}}</span>
+                                    </label>
+                                  }
+                                </div>
+                              }
+                            }
+
+                            <div class="cfp-footer">
+                              <button class="cfp-clear" (click)="clearColFilter(col.key, $event)">
+                                Clear Filter
+                              </button>
+                              <button class="cfp-close" (click)="openFilterCol = null">
+                                Close
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      </th>
+                    }
+                  </tr>
+                </thead>
+
+                <!-- ── BODY ── -->
+                <tbody>
+                  @for (entry of getGroupedEntriesForGroup(group); track entry.id; let i = $index) {
+                    <tr class="td-row" [class.row-alt]="i % 2 !== 0">
+
+                      @for (col of visibleCols; track col.key) {
+                        <td class="td-cell"
+                            [style.width]="columnWidths[col.key] + 'px'"
+                            [style.min-width]="columnWidths[col.key] + 'px'">
+
+                          @switch (col.key) {
+
+                            @case ('employee') {
+                              @if (entry.employees.length === 1) {
+                                <!-- Single employee — original layout -->
+                                <div class="emp-cell">
+                                  <div class="emp-avatar"
+                                       [style.background]="getAvatarColor(entry.employee.name)">
+                                    {{getEmployeeInitials(entry.employee.name)}}
+                                  </div>
+                                  <span class="emp-name" [title]="entry.employee.name">
+                                    {{entry.employee.name}}
+                                  </span>
+                                </div>
+                              } @else {
+                                <!-- Multiple employees — stacked avatars + names -->
+                                <div class="multi-emp-cell">
+                                  <div class="multi-emp-avatars">
+                                    @for (emp of entry.employees; track emp.id; let ei = $index) {
+                                      @if (ei < 3) {
+                                        <div class="emp-avatar multi-avatar"
+                                             [style.background]="getAvatarColor(emp.name)"
+                                             [style.z-index]="10 - ei"
+                                             [style.margin-left]="ei === 0 ? '0' : '-8px'"
+                                             [title]="emp.name">
+                                          {{getEmployeeInitials(emp.name)}}
+                                        </div>
+                                      }
+                                    }
+                                    @if (entry.employees.length > 3) {
+                                      <div class="emp-avatar multi-avatar multi-more"
+                                           [style.margin-left]="'-8px'"
+                                           [title]="getOverflowEmpNames(entry)">
+                                        +{{entry.employees.length - 3}}
+                                      </div>
+                                    }
+                                  </div>
+                                  <div class="multi-emp-names">
+                                    @for (emp of entry.employees.slice(0, 2); track emp.id) {
+                                      <span class="multi-emp-name-item" [title]="emp.name">
+                                        {{emp.name}}
+                                      </span>
+                                    }
+                                    @if (entry.employees.length > 2) {
+                                      <span class="multi-emp-more">
+                                        +{{entry.employees.length - 2}} more
+                                      </span>
+                                    }
+                                  </div>
+                                </div>
+                              }
+                            }
+
+                            @case ('taskCategory') {
+                              <span class="cat-pill"
+                                    [style.background]="getCategoryBg(entry.taskCategory.name)"
+                                    [style.color]="getCategoryTxt(entry.taskCategory.name)">
+                                {{getCategoryShortLabel(entry.taskCategory.name)}}
+                              </span>
+                            }
+
+                            @case ('taskTitle') {
+                              <span class="cell-title" [title]="entry.taskTitle">
+                                {{entry.taskTitle}}
+                              </span>
+                            }
+
+                            @case ('project') {
+                              <div class="proj-cell">
+                                <span class="proj-dot"
+                                      [style.background]="getProjectColor(entry.project)"></span>
+                                <span [title]="entry.project">{{entry.project}}</span>
+                              </div>
+                            }
+
+                            @case ('description') {
+                              <span class="cell-muted" [title]="entry.description">
+                                {{entry.description || '—'}}
+                              </span>
+                            }
+
+                            @case ('dailyComment') {
+                              <span class="cell-muted" [title]="entry.dailyComment">
+                                {{entry.dailyComment || '—'}}
+                              </span>
+                            }
+
+                            @case ('logTime') {
+                              <div class="time-cell">
+                                <span class="time-val">{{entry.employees.length > 1 ? entry.totalLogTime : entry.logTime}}</span>
+                                @if (entry.employees.length > 1) {
+                                  <span class="time-breakdown" [title]="getTimeBreakdown(entry)">
+                                    <i class="fas fa-info-circle"></i>
+                                  </span>
+                                }
+                              </div>
+                            }
+
+                            @case ('approvalStatus') {
+                              <span class="status-badge status-{{entry.approvalStatus}}">
+                                <i class="fas" [ngClass]="{
+                                  'fa-play-circle':  entry.approvalStatus==='running',
+                                  'fa-check-circle': entry.approvalStatus==='completed',
+                                  'fa-pause-circle': entry.approvalStatus==='paused',
+                                  'fa-lock':         entry.approvalStatus==='closed'
+                                }"></i>
+                                {{entry.approvalStatus | titlecase}}
+                              </span>
+                            }
+
+                            @case ('department') {
+                              <span [title]="entry.department">{{entry.department}}</span>
+                            }
+
+                            @case ('location') {
+                              <span [title]="entry.location">{{entry.location}}</span>
+                            }
+
+                            @case ('dprId') {
+                              <span class="dpr-id">{{entry.dprId}}</span>
+                            }
+
+                            @case ('startDate') {
+                              <span class="date-val">
+                                <i class="fas fa-calendar-plus date-ico"></i>
+                                {{entry.startDate || '—'}}
+                              </span>
+                            }
+
+                            @case ('targetDate') {
+                              <span class="date-val">
+                                <i class="fas fa-calendar-check date-ico"></i>
+                                {{entry.targetDate || '—'}}
+                              </span>
+                            }
+
+                            @case ('createdDate') {
+                              <span class="date-val">
+                                <i class="fas fa-calendar date-ico"></i>
+                                {{entry.createdDate || '—'}}
+                              </span>
+                            }
+
+                            @case ('assignedBy') {
+                              <span class="assigned-val" [title]="entry.assignedBy">
+                                <i class="fas fa-user-tie assigned-ico"></i>
+                                {{entry.assignedBy || '—'}}
+                              </span>
+                            }
+
+                            @case ('progress') {
+                              <div class="progress-cell">
+                                <div class="progress-bar-wrap">
+                                  <div class="progress-bar-fill"
+                                       [style.width]="entry.progress + '%'"
+                                       [class.prog-low]="entry.progress < 40"
+                                       [class.prog-mid]="entry.progress >= 40 && entry.progress < 80"
+                                       [class.prog-high]="entry.progress >= 80"></div>
+                                </div>
+                                <span class="progress-pct">{{entry.progress}}%</span>
+                              </div>
+                            }
+
+                            @case ('dailyCount') {
+                              <span class="daily-count-val">
+                                <i class="fas fa-hashtag dc-ico"></i>
+                                {{entry.dailyCount}}
+                              </span>
+                            }
+
+                          }
+                        </td>
+                      }
+
+                    </tr>
+                  }
+                </tbody>
+
+              </table>
+            </div>
+          }
+
         </div>
+      }
+    }
+
+    <!-- ── PAGINATION ── -->
+    <div class="pager">
+      <span class="pager-info">
+        Showing {{totalRecords}} of {{logEntries.length}} entries
+      </span>
+      <div class="pager-controls">
+        <select class="pager-select" [(ngModel)]="pageSize">
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+        <span class="pager-per">per page</span>
+        <button class="pager-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="pager-page">{{currentPage}} / {{totalPages}}</span>
+        <button class="pager-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Columns Panel -->
+  <!-- ══ COLUMNS PANEL ════════════════════════════════════════════════════ -->
   @if (showColumnsPanel) {
-    <div class="columns-panel">
-      <div class="panel-header">
-        <h3>Columns</h3>
-        <button class="btn-close" (click)="showColumnsPanel = false">
+    <div class="col-panel-overlay" (click)="showColumnsPanel = false"></div>
+    <div class="col-panel" (click)="$event.stopPropagation()">
+      <div class="col-panel-head">
+        <span>Columns</span>
+        <button class="cp-close" (click)="showColumnsPanel = false">
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
-      <div class="panel-body">
-        <p>Drag to reorder columns:</p>
-        
-        @for (column of availableColumns; track column.key) {
-          <div class="column-item">
-            <i class="fas fa-grip-vertical drag-handle"></i>
-            <label class="column-label">
-              <input type="checkbox" 
-                     [(ngModel)]="visibleColumns[column.key]"
-                     class="column-check">
-              {{column.label}}
-            </label>
-            <div class="column-toggle" 
-                 [class.active]="visibleColumns[column.key]"
-                 (click)="toggleColumn(column.key)">
-              <div class="toggle-dot"></div>
-            </div>
-          </div>
+      <div class="col-panel-body">
+        @for (col of allColumns; track col.key) {
+          <label class="cp-row"
+                 draggable="true"
+                 (dragstart)="onColDragStart($event, col.key)"
+                 (dragover)="onColDragOver($event, col.key)"
+                 (dragleave)="onColDragLeave(col.key)"
+                 (drop)="onColDrop($event, col.key)"
+                 (dragend)="onColDragEnd()"
+                 [class.cp-row-dragging]="dragSourceKey === col.key"
+                 [class.cp-row-drop-above]="dragOverKey === col.key && dragOverSide === 'left'"
+                 [class.cp-row-drop-below]="dragOverKey === col.key && dragOverSide === 'right'">
+            <i class="fas fa-grip-vertical cp-grip"></i>
+            <input type="checkbox" [(ngModel)]="visibleColumns[col.key]">
+            <i class="fas {{col.icon}}"></i>
+            <span>{{col.label}}</span>
+          </label>
         }
       </div>
-      
-      <div class="panel-footer">
-        <button class="btn btn-reset" (click)="resetColumnsToDefault()">
-          Reset to Default
-        </button>
-        <button class="btn btn-save" (click)="saveColumnsSettings()">
-          Save Columns
-        </button>
+      <div class="col-panel-foot">
+        <button class="cp-reset" (click)="resetColumnsToDefault()">Reset</button>
+        <button class="cp-save"  (click)="saveColumnsSettings()">Apply</button>
       </div>
     </div>
-    
-    <div class="overlay" (click)="showColumnsPanel = false"></div>
   }
+
 </div>
