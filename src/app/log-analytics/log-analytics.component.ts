@@ -46,6 +46,7 @@ interface LogAnalyticsRow {
   employeeCount:  number;
   employeeNames:  string;
   dailyComment:   string;
+  dailyCount:     number;
 }
 
 interface SummaryRow {
@@ -83,6 +84,7 @@ interface LogEntry {
   groupKey:       string;
   groupLabel:     string;
   customFields:   { [fieldId: number]: string | null };
+  assigneeIds:    string[];  // all active assignee IDs — used for modal userId & edit permission
 }
 
 // ── Per-column filter state ───────────────────────────────────────────────────
@@ -166,9 +168,10 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   empPopupPos   = { top: 0, left: 0 };
 
   // ── Column filter dropdowns ───────────────────────────────────────────────
-  openFilterCol:    string | null = null;
-  filterDropdownPos = { top: 0, left: 0 };
-  colFilters: { [col: string]: ColFilter } = {};
+  openFilterCol:       string | null = null;
+  filterDropdownPos    = { top: 0, left: 0 };
+  filterDropdownItems: string[] = [];
+  colFilters:          { [col: string]: ColFilter } = {};
 
   // ── Column definitions ────────────────────────────────────────────────────
   allColumns = [
@@ -184,6 +187,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     { key: 'targetDate',     label: 'Target Date',    icon: 'fa-calendar-check', textSearch: false, dateFilter: true  },
     { key: 'createdDate',    label: 'Created Date',   icon: 'fa-calendar',       textSearch: false, dateFilter: true  },
     { key: 'assignedBy',     label: 'Assigned By',    icon: 'fa-user-tie',       textSearch: false },
+    { key: 'dailyCount',    label: 'Daily Count',    icon: 'fa-hashtag',        textSearch: false },
     { key: 'progress',       label: 'Progress',       icon: 'fa-chart-line',     textSearch: false },
     { key: 'department',     label: 'Department',     icon: 'fa-building',       textSearch: false },
     { key: 'dprId',          label: 'DPR ID',         icon: 'fa-hashtag',        textSearch: false },
@@ -193,7 +197,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     employee: true, taskCategory: true, taskTitle: true, project: true,
     description: true, dailyComment: true, logTime: true,
     approvalStatus: true, startDate: false, targetDate: false,
-    createdDate: false, assignedBy: false, progress: false,
+    createdDate: false, assignedBy: false, dailyCount: false, progress: false,
     department: false, dprId: false
   };
 
@@ -201,7 +205,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     employee: 200, taskCategory: 120, taskTitle: 190, project: 140,
     description: 260, dailyComment: 200, logTime: 100,
     approvalStatus: 120, startDate: 120, targetDate: 120,
-    createdDate: 120, assignedBy: 160, progress: 130,
+    createdDate: 120, assignedBy: 160, dailyCount: 100, progress: 130,
     department: 130, dprId: 100
   };
 
@@ -244,6 +248,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   // ── Active filter params ──────────────────────────────────────────────────
   activeFilters = {
     employeeIds:       [] as string[],
+    assignedByIds:     [] as string[],
     categoryIds:       [] as number[],
     projectIds:        [] as number[],
     statuses:          [] as string[],
@@ -444,6 +449,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
       userId:          this.userId,
       groupBy:         this.groupBy,
       employeeIds:     effectiveEmployeeIds,
+      assignedByIds:   f.assignedByIds.length  ? f.assignedByIds.join(',')  : null,
       categoryIds:     f.categoryIds.length    ? f.categoryIds.join(',')    : null,
       projectIds:      f.projectIds.length     ? f.projectIds.join(',')     : null,
       statuses:        f.statuses.length       ? f.statuses.join(',')       : null,
@@ -504,22 +510,40 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   // ── Transform API rows to display-friendly entries ────────────────────────
   private transformRows(rows: LogAnalyticsRow[]): LogEntry[] {
-    const shouldMerge = this.groupBy === 'taskCategory' || this.groupBy === 'project';
+    const shouldMerge = this.groupBy === 'taskCategory' || this.groupBy === 'project' || this.groupBy === 'department';
 
     if (!shouldMerge) {
-      return rows.map(r => this.toEntry(r, [{ id: r.employeeId, name: r.employeeName }],
-        this.minsToHHMM(r.totalMin), this.minsToHHMM(r.totalMin)));
+      return rows.map(r => {
+        const entry = this.toEntry(r, [{ id: r.employeeId, name: r.employeeName }],
+          this.minsToHHMM(r.totalMin), this.minsToHHMM(r.totalMin));
+        entry.assigneeIds = r.employeeId ? [r.employeeId] : [];
+        return entry;
+      });
     }
+
+    // Collect all distinct employee IDs per task from raw rows (needed for edit permission)
+    const taskEmpIds = new Map<number, string[]>();
+    rows.forEach(r => {
+      if (!taskEmpIds.has(r.taskId)) taskEmpIds.set(r.taskId, []);
+      if (r.employeeId && !taskEmpIds.get(r.taskId)!.includes(r.employeeId)) {
+        taskEmpIds.get(r.taskId)!.push(r.employeeId);
+      }
+    });
 
     // Merge per-task: one display row per task (employees merged from employeeNames)
     const map = new Map<number, LogEntry>();
     rows.forEach(r => {
       if (!map.has(r.taskId)) {
-        const empList = r.employeeNames
-          ? r.employeeNames.split(', ').map(n => ({ id: '', name: n.trim() }))
-          : [{ id: r.employeeId, name: r.employeeName }];
+        const allIds  = taskEmpIds.get(r.taskId) ?? [];
+        const names   = r.employeeNames
+          ? r.employeeNames.split(', ').map(n => n.trim())
+          : [r.employeeName];
+        // Pair names with IDs positionally (both built from same LISTAGG ORDER BY employeeName)
+        const empList = names.map((name, i) => ({ id: allIds[i] ?? '', name }));
         const logTimeFormatted = this.minsToHHMM(r.totalMin);
-        map.set(r.taskId, this.toEntry(r, empList, logTimeFormatted, logTimeFormatted));
+        const entry = this.toEntry(r, empList, logTimeFormatted, logTimeFormatted);
+        entry.assigneeIds = allIds;
+        map.set(r.taskId, entry);
       }
     });
     return Array.from(map.values());
@@ -562,11 +586,12 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
       progress:       r.progress ?? 0,
       department:     r.deptName,
       dprId:          String(r.taskId),
-      dailyCount:     1,
+      dailyCount:     r.dailyCount ?? 0,
       location:       '',
       groupKey,
       groupLabel,
       customFields,
+      assigneeIds:    [],   // filled by transformRows after toEntry
     };
   }
 
@@ -602,18 +627,37 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   // ── Properties/methods used by the HTML template ──────────────────────────
 
+  /** Client-side filtered entries based on the search box */
+  get filteredEntries(): LogEntry[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return this.logEntries;
+    return this.logEntries.filter(entry => {
+      const employeeNames = entry.employees.map(e => e.name).join(' ');
+      return [
+        entry.employee?.name,
+        employeeNames,
+        entry.taskTitle,
+        entry.project,
+        entry.taskCategory?.name,
+        entry.description,
+        entry.dailyComment,
+        entry.department
+      ].some(v => v && v.toLowerCase().includes(term));
+    });
+  }
+
   /** Ordered list of distinct group labels for current page data */
   get dynamicGroups(): string[] {
     const seen = new Set<string>();
     const result: string[] = [];
-    for (const e of this.logEntries) {
+    for (const e of this.filteredEntries) {
       if (!seen.has(e.groupLabel)) { seen.add(e.groupLabel); result.push(e.groupLabel); }
     }
     return result;
   }
 
   getGroupedEntriesForGroup(groupLabel: string): LogEntry[] {
-    return this.logEntries.filter(e => e.groupLabel === groupLabel);
+    return this.filteredEntries.filter(e => e.groupLabel === groupLabel);
   }
 
   toggleCategory(groupLabel: string): void {
@@ -673,6 +717,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   private getRawFilterValues(col: string): string[] {
     switch (col) {
       case 'employee':       return this.filterEmployees.map(e => e.employeeName);
+      case 'assignedBy':     return this.filterEmployees.map(e => e.employeeName);
       case 'taskCategory':   return this.filterCategories.map(c => c.categoryName);
       case 'project':        return this.filterProjects.map(p => p.projectName);
       case 'approvalStatus': return this.filterStatuses;
@@ -721,6 +766,11 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     switch (col) {
       case 'employee':
         this.activeFilters.employeeIds = this.filterEmployees
+          .filter(e => selectedLabels.includes(e.employeeName))
+          .map(e => e.employeeId);
+        break;
+      case 'assignedBy':
+        this.activeFilters.assignedByIds = this.filterEmployees
           .filter(e => selectedLabels.includes(e.employeeName))
           .map(e => e.employeeId);
         break;
@@ -821,6 +871,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     f.timeVal  = null; f.timeOp = '>';
 
     if      (col === 'employee')       this.activeFilters.employeeIds       = [];
+    else if (col === 'assignedBy')     this.activeFilters.assignedByIds     = [];
     else if (col === 'taskCategory')   this.activeFilters.categoryIds       = [];
     else if (col === 'project')        this.activeFilters.projectIds        = [];
     else if (col === 'approvalStatus') this.activeFilters.statuses          = [];
@@ -841,7 +892,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   clearAllFilters(): void {
     this.searchTerm = '';
     this.activeFilters = {
-      employeeIds: [], categoryIds: [], projectIds: [],
+      employeeIds: [], assignedByIds: [], categoryIds: [], projectIds: [],
       statuses: [], deptIds: [],
       taskTitleSearch: '', descriptionSearch: '', commentSearch: '',
       logTimeOp: '', logTimeMin: null,
@@ -865,6 +916,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     const f = this.activeFilters;
     let n = 0;
     if (f.employeeIds.length)     n++;
+    if (f.assignedByIds.length)   n++;
     if (f.categoryIds.length)     n++;
     if (f.projectIds.length)      n++;
     if (f.statuses.length)        n++;
@@ -899,7 +951,9 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     const panelWidth = 260;
     const left = Math.min(rect.left, window.innerWidth - panelWidth - 8);
     this.filterDropdownPos = { top: rect.bottom + 6, left: Math.max(4, left) };
-    this.openFilterCol     = col;
+    if (this.colFilters[col]) { this.colFilters[col].searchText = ''; }
+    this.openFilterCol = col;
+    this.filterDropdownItems = this.getFilteredUniqueValues(col);
   }
 
   closeAllDropdowns(): void { this.openFilterCol = null; this.showGroupByMenu = false; this.empPopupEntry = null; }
@@ -909,13 +963,16 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.selectedTaskIdForModal     = entry.id;
     this.selectedCategoryIdForModal = entry.taskCategory?.id ?? 0;
-    // Use the task owner's ID (matches how dpr-approval / my-logged-hours call GetTaskById)
-    this.selectedUserIdForModal     = entry.employee?.id || this.userId;
-    // Editable only if the logged-in user is one of this task's assignees
-    this.isTaskModalViewOnly        = !entry.employees.some(e => e.id === this.userId);
-    this.showTaskDetailsModal       = true;
+    // Pass logged-in user if they are an assignee, otherwise pass any valid assignee ID
+    // (modal needs a valid assignee userId for the GetTaskById API call)
+    const isAssignee = entry.assigneeIds.includes(this.userId);
+    this.selectedUserIdForModal  = isAssignee
+      ? this.userId
+      : (entry.assigneeIds[0] || entry.employee?.id || this.userId);
+    this.isTaskModalViewOnly     = !isAssignee;
+    this.showTaskDetailsModal    = true;
     document.body.classList.add('modal-open');
-    document.body.style.overflow    = 'hidden';
+    document.body.style.overflow = 'hidden';
   }
 
   closeTaskDetailsModal(): void {
@@ -924,8 +981,22 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     document.body.style.overflow = '';
   }
 
-  // ── Global search ─────────────────────────────────────────────────────────
-  onSearch(): void { this.searchSubject.next(); }
+  // Keep modal open for AUTO CLOSED tasks — the modal handles log-time internally
+  onModalShowLogTime(_data: any): void { }
+
+  // ── Global search (client-side only — no backend call) ───────────────────
+  onSearch(): void { /* filtering handled reactively by filteredEntries getter */ }
+
+  // ── Filter dropdown search input ──────────────────────────────────────────
+  onFilterSearch(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    if (!this.openFilterCol) return;
+    this.colFilters[this.openFilterCol].searchText = val;
+    this.filterDropdownItems = this.getFilteredUniqueValues(this.openFilterCol);
+    if (this.isTextSearchCol(this.openFilterCol)) {
+      this.applyFilters();
+    }
+  }
 
   // ── GroupBy ───────────────────────────────────────────────────────────────
   get groupByLabel(): string { return this.groupByOptions.find(o => o.value === this.groupBy)?.label ?? 'Task Category'; }

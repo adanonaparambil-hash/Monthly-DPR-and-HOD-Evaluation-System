@@ -341,7 +341,7 @@
     <!-- ── PAGINATION ── -->
     <div class="pager">
       <span class="pager-info">
-        Showing {{logEntries.length}} of {{totalRecords}} entries
+        Showing {{filteredEntries.length}}{{searchTerm ? ' (filtered)' : ''}} of {{totalRecords}} entries
       </span>
       <div class="pager-controls">
         <select class="pager-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
@@ -490,9 +490,8 @@
         <!-- ── TEXT / CHECKBOX FILTER ── -->
         <div class="cfp-search">
           <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search…"
-                 [(ngModel)]="colFilters[openFilterCol].searchText"
-                 (input)="applyFilters()">
+          <input type="text" placeholder="Search…" autocomplete="off"
+                 (input)="onFilterSearch($event)">
         </div>
         <div class="cfp-sort-row">
           <button class="cfp-sort-btn"
@@ -515,7 +514,7 @@
             <span>(Select All)</span>
           </label>
           <div class="cfp-list">
-            @for (val of getFilteredUniqueValues(openFilterCol); track val) {
+            @for (val of filterDropdownItems; track val) {
               <label class="cfp-row">
                 <input type="checkbox"
                        [checked]="colFilters[openFilterCol].selectedValues.has(val)"
@@ -546,7 +545,7 @@
     (taskPaused)="closeTaskDetailsModal()"
     (taskResumed)="closeTaskDetailsModal()"
     (taskStopped)="closeTaskDetailsModal()"
-    (showLogTime)="closeTaskDetailsModal()">
+    (showLogTime)="onModalShowLogTime($event)">
   </app-task-details-modal>
 
   <!-- ══ EMPLOYEE POPUP (fixed, not clipped by table overflow) ════════════ -->

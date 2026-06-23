@@ -247,8 +247,8 @@ export class MyLoggedHoursComponent implements OnInit {
     { key: 'taskId', label: 'Task ID', visible: false, width: '120px', type: 'text' },
     { key: 'title', label: 'Task Title', visible: true, width: '280px', type: 'text', required: true },
     { key: 'description', label: 'Description', visible: true, width: '180px', type: 'text', required: true },
-    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '250px', type: 'text' },
-    { key: 'projectName', label: 'Project Name', visible: true, width: '160px', type: 'text' },
+    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '280px', type: 'text' },
+    { key: 'projectName', label: 'Project Name', visible: true, width: '190px', type: 'text' },
     { key: 'type', label: 'Type', visible: false, width: '120px', type: 'select' },
     { key: 'process', label: 'Process', visible: false, width: '150px', type: 'text' },
     { key: 'assignedTo', label: 'Assigned To', visible: false, width: '150px', type: 'text' },
@@ -1298,7 +1298,7 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'loggedBy':
           return '220px';
         case 'dailyComment':
-          return '240px';
+          return '280px';
         case 'duration':
           return '140px';
         case 'progress':
@@ -1321,7 +1321,7 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'project':
         case 'projectName':
         case 'workPlace':
-          return '160px';
+          return '190px';
         case 'process':
         case 'instruction':
         case 'remarks':
@@ -2707,7 +2707,7 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'loggedBy':
           return '220px';
         case 'dailyComment':
-          return '240px';
+          return '280px';
         case 'duration':
           return '140px';
         case 'progress':
@@ -2730,7 +2730,7 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'project':
         case 'projectName':
         case 'workPlace':
-          return '160px';
+          return '190px';
         case 'process':
         case 'instruction':
         case 'remarks':
