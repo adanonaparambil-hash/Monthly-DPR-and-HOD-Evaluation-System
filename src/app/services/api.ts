@@ -400,6 +400,12 @@ export class Api {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request);
   }
 
+  exportOpenBreaks(request: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request, {
+      responseType: 'blob'
+    });
+  }
+
   getByDepartment(departmentId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/EmpExitForm/GetByDepartment/${departmentId}`);
   }
@@ -562,7 +568,37 @@ export class Api {
 
   //chnages for dpr
 
-  
+  // ── Log Analytics ─────────────────────────────────────────────────────────
+
+  getLogFilterOptions(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetFilterOptions/${userId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getLogColPrefs(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetColPrefs/${userId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  saveLogColPrefs(request: { userId: string; prefs: any[] }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveColPrefs`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getAnalyticsSettings(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DailyTimeSheet/GetAnalyticsSettings/${userId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  saveAnalyticsSetting(request: { userId: string; settingKey: string; settingValue: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/SaveAnalyticsSetting`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getLogAnalytics(request: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetLogAnalytics`, request)
+      .pipe(catchError(this.handleError));
+  }
 
 }
 

@@ -11,7 +11,10 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakProjects\\\\DPR\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\components\\\\task-details-modal\\\\\" -File)",
       "Bash(ng build *)",
       "Bash(ls ngsw-config.json src/ngsw-config.json)",
-      "Bash(grep -l \"serviceWorker\" angular.json)"
+      "Bash(grep -l \"serviceWorker\" angular.json)",
+      "Bash(find \"C:/Users/ITS48/Desktop/AdrakPortal\" -name \"*.cs\" 2>/dev/null | head -20)",
+      "Bash(find \"C:/Users/ITS48/Desktop\" -maxdepth 4 -name \"*.cs\" 2>/dev/null | grep -v node_modules | head -20)",
+      "PowerShell(cd \"C:\\\\Users\\\\ITS48\\\\source\\\\repos\\\\TimeSheetAPI\\\\TimeSheetAPI\"; dotnet build --no-restore -v quiet 2>&1 | Where-Object { $_ -match \" error \" } | Select-Object -Last 5)"
     ]
   }
 }

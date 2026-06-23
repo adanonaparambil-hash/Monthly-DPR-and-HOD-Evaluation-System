@@ -26,7 +26,7 @@
         </button>
         @if (showGroupByMenu) {
           <div class="tb-dropdown">
-            @for (opt of groupByOptions; track opt.value) {
+            @for (opt of availableGroupByOptions; track opt.value) {
               <div class="tb-dd-item" [class.active]="groupBy === opt.value"
                    (click)="setGroupBy(opt.value, $event)">
                 <i class="fas {{opt.icon}}"></i> {{opt.label}}
@@ -39,8 +39,12 @@
       <button class="tb-btn" (click)="toggleColumnsPanel()">
         <i class="fas fa-columns"></i> Columns
       </button>
-      <button class="tb-btn" (click)="exportData()">
-        <i class="fas fa-download"></i> Export
+      <button class="tb-btn" (click)="exportData()" [disabled]="exportLoading">
+        @if (exportLoading) {
+          <i class="fas fa-spinner fa-spin"></i> Exporting...
+        } @else {
+          <i class="fas fa-download"></i> Export
+        }
       </button>
     </div>
   </div>
@@ -109,13 +113,15 @@
                             }
                           </span>
 
-                          <!-- Filter icon -->
-                          <button class="filter-btn"
-                                  [class.filter-active]="isFiltered(col.key)"
-                                  (click)="toggleColFilter(col.key, $event)"
-                                  [title]="'Filter ' + col.label">
-                            <i class="fas fa-filter"></i>
-                          </button>
+                          <!-- Filter icon (hidden for restricted cols) -->
+                          @if (canFilterCol(col.key)) {
+                            <button class="filter-btn"
+                                    [class.filter-active]="isFiltered(col.key)"
+                                    (click)="toggleColFilter(col.key, $event)"
+                                    [title]="'Filter ' + col.label">
+                              <i class="fas fa-filter"></i>
+                            </button>
+                          }
 
                           <!-- Resize handle -->
                           <div class="resize-handle"
@@ -129,7 +135,8 @@
                 <!-- ── BODY ── -->
                 <tbody>
                   @for (entry of getGroupedEntriesForGroup(group); track entry.id; let i = $index) {
-                    <tr class="td-row" [class.row-alt]="i % 2 !== 0">
+                    <tr class="td-row" [class.row-alt]="i % 2 !== 0"
+                        (click)="openTaskModal(entry, $event)" style="cursor:pointer">
 
                       @for (col of visibleCols; track col.key) {
                         <td class="td-cell"
@@ -180,7 +187,8 @@
                                       </span>
                                     }
                                     @if (entry.employees.length > 2) {
-                                      <span class="multi-emp-more">
+                                      <span class="multi-emp-more"
+                                            (click)="toggleEmpPopup(entry, $event)">
                                         +{{entry.employees.length - 2}} more
                                       </span>
                                     }
@@ -235,13 +243,11 @@
                             }
 
                             @case ('approvalStatus') {
-                              <span class="status-badge status-{{entry.approvalStatus}}">
-                                <i class="fas" [ngClass]="{
-                                  'fa-play-circle':  entry.approvalStatus==='running',
-                                  'fa-check-circle': entry.approvalStatus==='completed',
-                                  'fa-pause-circle': entry.approvalStatus==='paused',
-                                  'fa-lock':         entry.approvalStatus==='closed'
-                                }"></i>
+                              <span class="status-badge"
+                                    [style.background]="getStatusBg(entry.approvalStatus)"
+                                    [style.color]="getStatusTxt(entry.approvalStatus)"
+                                    [style.border-color]="getStatusBorder(entry.approvalStatus)">
+                                <i class="fas" [ngClass]="getStatusIcon(entry.approvalStatus)"></i>
                                 {{entry.approvalStatus | titlecase}}
                               </span>
                             }
@@ -306,6 +312,16 @@
                               </span>
                             }
 
+                            @default {
+                              <!-- Custom field column (cf_<fieldId>) -->
+                              @if (col.key.startsWith('cf_')) {
+                                <span class="cf-cell"
+                                      [title]="entry.customFields[+col.key.replace('cf_','')] ?? ''">
+                                  {{entry.customFields[+col.key.replace('cf_','')] || '—'}}
+                                </span>
+                              }
+                            }
+
                           }
                         </td>
                       }
@@ -325,14 +341,16 @@
     <!-- ── PAGINATION ── -->
     <div class="pager">
       <span class="pager-info">
-        Showing {{totalRecords}} of {{logEntries.length}} entries
+        Showing {{logEntries.length}} of {{totalRecords}} entries
       </span>
       <div class="pager-controls">
-        <select class="pager-select" [(ngModel)]="pageSize">
-          <option [value]="10">10</option>
-          <option [value]="20">20</option>
-          <option [value]="50">50</option>
-          <option [value]="100">100</option>
+        <select class="pager-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="25">25</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+          <option [ngValue]="250">250</option>
+          <option [ngValue]="500">500</option>
         </select>
         <span class="pager-per">per page</span>
         <button class="pager-btn" (click)="previousPage()" [disabled]="currentPage === 1">
@@ -357,7 +375,7 @@
         </button>
       </div>
       <div class="col-panel-body">
-        @for (col of allColumns; track col.key) {
+        @for (col of manageableCols; track col.key) {
           <label class="cp-row"
                  draggable="true"
                  (dragstart)="onColDragStart($event, col.key)"
@@ -512,6 +530,50 @@
       <div class="cfp-footer">
         <button class="cfp-clear" (click)="clearColFilter(openFilterCol, $event)">Clear Filter</button>
         <button class="cfp-close" (click)="openFilterCol = null">Close</button>
+      </div>
+    </div>
+  }
+
+  <!-- ══ TASK DETAIL MODAL ════════════════════════════════════════════════ -->
+  <app-task-details-modal
+    *ngIf="showTaskDetailsModal"
+    [taskId]="selectedTaskIdForModal"
+    [userId]="selectedUserIdForModal"
+    [categoryId]="selectedCategoryIdForModal"
+    [isViewOnly]="isTaskModalViewOnly"
+    (closeModal)="closeTaskDetailsModal()"
+    (taskUpdated)="closeTaskDetailsModal()"
+    (taskPaused)="closeTaskDetailsModal()"
+    (taskResumed)="closeTaskDetailsModal()"
+    (taskStopped)="closeTaskDetailsModal()"
+    (showLogTime)="closeTaskDetailsModal()">
+  </app-task-details-modal>
+
+  <!-- ══ EMPLOYEE POPUP (fixed, not clipped by table overflow) ════════════ -->
+  @if (empPopupEntry) {
+    <div class="emp-popup"
+         [style.top.px]="empPopupPos.top"
+         [style.left.px]="empPopupPos.left"
+         (click)="$event.stopPropagation()">
+      <div class="emp-popup-header">
+        <div class="emp-popup-title">
+          <i class="fas fa-users"></i>
+          All Employees
+          <span class="emp-popup-count">{{empPopupEntry.employees.length}}</span>
+        </div>
+        <button class="emp-popup-close" (click)="empPopupEntry = null">✕</button>
+      </div>
+      <div class="emp-popup-list">
+        @for (emp of empPopupEntry.employees; track emp.id; let i = $index) {
+          <div class="emp-popup-row">
+            <div class="emp-popup-avatar" [style.background]="getAvatarColor(emp.name)">
+              {{getEmployeeInitials(emp.name)}}
+            </div>
+            <div class="emp-popup-info">
+              <span class="emp-popup-name">{{emp.name}}</span>
+            </div>
+          </div>
+        }
       </div>
     </div>
   }

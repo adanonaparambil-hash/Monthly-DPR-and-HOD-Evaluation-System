@@ -242,13 +242,13 @@ export class MyLoggedHoursComponent implements OnInit {
   };
   
   availableColumns: ColumnDefinition[] = [
-    { key: 'loggedBy', label: 'Logged By', visible: true, width: '180px', type: 'text', required: true },
-    { key: 'category', label: 'Task Category', visible: true, width: '280px', type: 'select', required: true },
+    { key: 'loggedBy', label: 'Logged By', visible: true, width: '220px', type: 'text', required: true },
+    { key: 'category', label: 'Task Category', visible: true, width: '220px', type: 'select', required: true },
     { key: 'taskId', label: 'Task ID', visible: false, width: '120px', type: 'text' },
-    { key: 'title', label: 'Task Title', visible: true, width: '250px', type: 'text', required: true },
-    { key: 'description', label: 'Description', visible: true, width: '100px', type: 'text', required: true },
-    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '220px', type: 'text' },
-    { key: 'projectName', label: 'Project Name', visible: true, width: '180px', type: 'text' },
+    { key: 'title', label: 'Task Title', visible: true, width: '280px', type: 'text', required: true },
+    { key: 'description', label: 'Description', visible: true, width: '180px', type: 'text', required: true },
+    { key: 'dailyComment', label: 'Daily Comment', visible: true, width: '250px', type: 'text' },
+    { key: 'projectName', label: 'Project Name', visible: true, width: '160px', type: 'text' },
     { key: 'type', label: 'Type', visible: false, width: '120px', type: 'select' },
     { key: 'process', label: 'Process', visible: false, width: '150px', type: 'text' },
     { key: 'assignedTo', label: 'Assigned To', visible: false, width: '150px', type: 'text' },
@@ -1284,23 +1284,23 @@ export class MyLoggedHoursComponent implements OnInit {
 
   getGridTemplateColumns(): string {
     const visibleColumns = this.getVisibleColumns();
-    
+
     // Calculate dynamic widths based on column content and type
     return visibleColumns.map(col => {
       // Set specific widths for different column types
       switch (col.key) {
         case 'title':
-          return '300px'; // Wider for title + description
+          return 'minmax(200px, 1fr)';
         case 'description':
-          return '150px'; // Reduced — description is short
-        case 'category':
           return '180px';
+        case 'category':
+          return '220px';
         case 'loggedBy':
-          return '200px'; // Increased for full employee name
+          return '220px';
         case 'dailyComment':
-          return '260px'; // Increased for daily comment text
+          return '240px';
         case 'duration':
-          return '120px';
+          return '140px';
         case 'progress':
           return '140px';
         case 'taskId':
@@ -1319,8 +1319,9 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'department':
           return '150px';
         case 'project':
+        case 'projectName':
         case 'workPlace':
-          return '180px';
+          return '160px';
         case 'process':
         case 'instruction':
         case 'remarks':
@@ -1550,7 +1551,8 @@ export class MyLoggedHoursComponent implements OnInit {
       departmentId: this.breakHistorySelectedDepartment ? Number(this.breakHistorySelectedDepartment) : 0,
       breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null,
       pageNumber: this.breakHistoryPageNumber,
-      pageSize: this.breakHistoryPageSize
+      pageSize: this.breakHistoryPageSize,
+      isExport: 'N'
     };
     
     console.log('Loading break history with params:', params);
@@ -1584,6 +1586,90 @@ export class MyLoggedHoursComponent implements OnInit {
         this.isLoadingBreaks = false;
       }
     });
+  }
+
+  isExportingBreaks = false;
+
+  exportBreakHistory(): void {
+    this.isExportingBreaks = true;
+
+    const params = {
+      userId: this.breakHistorySelectedEmployee || '',
+      fromDate: this.breakHistoryFromDate || '',
+      toDate: this.breakHistoryToDate || '',
+      departmentId: this.breakHistorySelectedDepartment ? Number(this.breakHistorySelectedDepartment) : 0,
+      breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null,
+      pageNumber: 1,
+      pageSize: 999999,
+      isExport: 'Y'
+    };
+
+    this.api.getOpenBreaks(params).subscribe({
+      next: (response: any) => {
+        const data: any[] = response?.data || [];
+        if (data.length === 0) {
+          this.toasterService.showInfo('Export', 'No records to export');
+          this.isExportingBreaks = false;
+          return;
+        }
+        this.downloadBreakHistoryAsExcel(data);
+        this.isExportingBreaks = false;
+      },
+      error: (error: any) => {
+        console.error('Error exporting break history:', error);
+        this.toasterService.showError('Export Failed', 'Failed to export. Please try again.');
+        this.isExportingBreaks = false;
+      }
+    });
+  }
+
+  private downloadBreakHistoryAsExcel(data: any[]): void {
+    const headers = [
+      'Employee Name', 'Employee ID', 'Department', 'Designation',
+      'Break Reason', 'Break Date', 'Start Time', 'End Time', 'Duration', 'Status'
+    ];
+
+    const rows = data.map(r => [
+      r.employeeName || '',
+      r.employeeId || '',
+      r.department || '',
+      r.designation || '',
+      r.breakReason || '',
+      r.breakDate ? this.formatBreakDate(r.breakDate) : '-',
+      r.breakStartTime ? this.formatBreakTime(r.breakStartTime) : '-',
+      r.breakEndTime ? this.formatBreakTime(r.breakEndTime) : '-',
+      r.breakDurationMinutes != null ? this.formatDuration(r.breakDurationMinutes) : '-',
+      r.status || 'Open'
+    ]);
+
+    const headerRow = headers.map(h => `<th><b>${h}</b></th>`).join('');
+    const bodyRows = rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('');
+
+    const tableHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head><meta charset="UTF-8"></head>
+        <body>
+          <table>
+            <thead><tr>${headerRow}</tr></thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fromLabel = this.breakHistoryFromDate || 'start';
+    const toLabel = this.breakHistoryToDate || 'end';
+    link.download = `Travel_Break_History_${fromLabel}_to_${toLabel}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    this.toasterService.showSuccess('Export Complete', `${data.length} record(s) exported successfully`);
   }
 
   breakHistoryNextPage() {
@@ -2613,17 +2699,17 @@ export class MyLoggedHoursComponent implements OnInit {
       // Set specific widths for different column types
       switch (col.key) {
         case 'title':
-          return '300px';
+          return 'minmax(200px, 1fr)';
         case 'description':
-          return '150px';
-        case 'category':
           return '180px';
+        case 'category':
+          return '220px';
         case 'loggedBy':
-          return '200px';
+          return '220px';
         case 'dailyComment':
-          return '260px';
+          return '240px';
         case 'duration':
-          return '120px';
+          return '140px';
         case 'progress':
           return '140px';
         case 'taskId':
@@ -2642,8 +2728,9 @@ export class MyLoggedHoursComponent implements OnInit {
         case 'department':
           return '150px';
         case 'project':
+        case 'projectName':
         case 'workPlace':
-          return '180px';
+          return '160px';
         case 'process':
         case 'instruction':
         case 'remarks':

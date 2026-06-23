@@ -410,9 +410,15 @@
             <p class="modal-subtitle-large">View and filter travel and break sessions</p>
           </div>
         </div>
-        <button class="close-btn-large" (click)="closeBreakHistoryModal()">
-          <i class="fas fa-times"></i>
-        </button>
+        <div class="modal-header-actions">
+          <button class="break-export-btn" (click)="exportBreakHistory()" [disabled]="isExportingBreaks" title="Export to Excel">
+            <i class="fas" [ngClass]="isExportingBreaks ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+            <span>{{ isExportingBreaks ? 'Exporting...' : 'Export' }}</span>
+          </button>
+          <button class="close-btn-large" (click)="closeBreakHistoryModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Filter Section -->

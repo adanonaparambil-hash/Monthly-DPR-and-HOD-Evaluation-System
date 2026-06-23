@@ -1623,11 +1623,11 @@
   cursor: default;
 }
 
-/* Special handling for title column to allow wrapping */
+/* Special handling for title column */
 .record-col.title {
   white-space: normal;
-  overflow: visible;
-  min-width: 300px; /* Ensure minimum width for title column */
+  overflow: hidden;
+  min-width: 200px;
 }
 
 .title-column-content {
@@ -1664,7 +1664,7 @@
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 150px;
+  min-width: 180px;
   max-height: 40px;
 }
 
@@ -1684,19 +1684,19 @@
 
 /* Category column styling */
 .record-col.category {
-  min-width: 180px;
+  min-width: 220px;
   white-space: normal; /* Allow wrapping for badges */
 }
 
 /* Logged By column styling */
 .record-col.loggedBy {
-  min-width: 150px;
+  min-width: 220px;
 }
 
 /* Duration column styling */
 .record-col.duration {
-  min-width: 120px;
-  justify-content: space-between;
+  min-width: 140px;
+  justify-content: flex-start;
 }
 
 /* Scroll indicator */
@@ -2700,6 +2700,45 @@
 .close-btn-large:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.05);
+}
+
+/* Modal header right-side actions (export + close) */
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Export button inside Break History modal header */
+.break-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.break-export-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.break-export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.break-export-btn i {
+  font-size: 13px;
 }
 
 .modal-body-large {
@@ -4046,12 +4085,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
+  overflow: hidden;
 }
 
 .duration-text {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .more-btn {
