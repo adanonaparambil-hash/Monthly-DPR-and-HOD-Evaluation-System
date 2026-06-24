@@ -278,7 +278,7 @@
 
 <!-- Column Management Modal -->
 @if (showColumnModal) {
-  <div class="column-modal-overlay" (click)="closeColumnModal()">
+  <div class="column-modal-overlay">
     <div class="column-modal-container" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="column-modal-header">
@@ -399,7 +399,7 @@
 
 <!-- Break History Modal - Large Table Design -->
 @if (showBreakHistoryModal) {
-  <div class="modal-overlay-large" (click)="closeBreakHistoryModal()">
+  <div class="modal-overlay-large">
     <div class="break-history-modal-large" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="modal-header-large">
@@ -639,7 +639,7 @@
 
 <!-- Manage Fields Modal - Modern Clean Design -->
 @if (showManageFieldsModal) {
-  <div class="modal-overlay-fields" (click)="closeManageFieldsModal()">
+  <div class="modal-overlay-fields">
     <div class="manage-fields-modal-ultra" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="fields-modal-header">
@@ -767,7 +767,7 @@
 
 <!-- Add/Edit Field Modal - Separate Modal -->
 @if (showAddFieldModal) {
-  <div class="modal-overlay-add-field" (click)="closeAddFieldModal()">
+  <div class="modal-overlay-add-field">
     <div class="add-field-modal-ultra" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="add-field-header">
@@ -916,7 +916,7 @@
 
 <!-- Custom Fields Modal -->
 @if (showCustomFieldsModal) {
-  <div class="modal-overlay-fields" (click)="closeCustomFieldsModal()">
+  <div class="modal-overlay-fields">
     <div class="custom-fields-modal" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="fields-modal-header">
@@ -996,7 +996,7 @@
 
 <!-- Day Log History Modal -->
 @if (showDayLogHistoryModal) {
-  <div class="modal-overlay-large" (click)="closeDayLogHistoryModal()">
+  <div class="modal-overlay-large">
     <div class="day-log-history-modal-large" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="modal-header-large">
@@ -1108,7 +1108,7 @@
 
       <!-- Log Time Popup (inside Day Log History modal) -->
       @if (showLogTimePopup) {
-        <div class="ltp-modal-overlay" (click)="closeLogTimePopup()">
+        <div class="ltp-modal-overlay">
           <div class="log-time-popup" (click)="$event.stopPropagation()">
             <div class="ltp-header">
               <div class="ltp-title">

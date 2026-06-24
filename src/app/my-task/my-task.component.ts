@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Theme } from '../services/theme';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
@@ -379,7 +379,8 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     private sessionService: SessionService,
     private toasterService: ToasterService,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -3081,15 +3082,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     document.body.style.overflow = 'hidden';
   }
 
-  // Add task to My Tasks list
+  // Add task to My Tasks list — directly saves without modal
   addTaskToMyList(category: TaskCategory): void {
-    // Get current user from session — same derivation as selectTask (ASSIGN flow)
     const currentUser = this.sessionService.getCurrentUser();
     const createdBy = currentUser?.empId || currentUser?.employeeId || '';
-
-    // Full dump so we can see exactly what fields exist on the user object
-    console.log('[ADD] currentUser from session:', JSON.stringify(currentUser));
-    console.log('[ADD] resolved createdBy:', createdBy);
 
     if (!createdBy) {
       this.toasterService.showError('Error', 'Unable to identify current user. Please log in again.');
@@ -3099,7 +3095,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
     const taskSaveRequest: TaskSaveDto = {
       taskId: 0,
       categoryId: category.categoryId,
-      taskTitle: category.categoryName || 'New Task',
+      taskTitle: '',
       description: '',
       projectId: 0,
       departmentId: category.departmentId || 0,
@@ -3116,25 +3112,16 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       userID: createdBy
     };
 
-    // Full payload dump — compare this with what the ASSIGN flow sends
-    console.log('[ADD] payload being sent to SaveTaskBulk:', JSON.stringify(taskSaveRequest));
-
     this.api.saveTaskBulk(taskSaveRequest).subscribe({
-      next: (response: any) => {
-        console.log('[ADD] saved successfully:', response);
-        this.toasterService.showSuccess('Task Added', `"${category.categoryName}" has been added to your tasks!`);
+      next: (_response: any) => {
+        this.toasterService.showSuccess('Task Added', 'Task has been added to your list!');
         this.loadActiveTasks();
       },
       error: (error: any) => {
-        // Full error dump so we can see the exact backend validation message
-        console.error('[ADD] SaveTaskBulk error — status:', error?.status);
-        console.error('[ADD] error.error (backend body):', JSON.stringify(error?.error));
-        console.error('[ADD] error.message:', error?.message);
-
         const msg = error?.error?.message || error?.error?.title || error?.message || 'Failed to add task. Please try again.';
         const alreadyExists = msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist');
         if (alreadyExists) {
-          this.toasterService.showWarning('Already Added', `"${category.categoryName}" is already in your tasks list.`);
+          this.toasterService.showWarning('Already Added', 'This task is already in your list.');
         } else {
           this.toasterService.showError('Error', msg);
         }
@@ -3283,9 +3270,10 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   closeTaskDetailsModal() {
     this.showTaskDetailsModal = false;
-    this.isTaskModalViewOnly = false; // Reset view-only mode
-    // Restore body scroll
+    this.isTaskModalViewOnly = false;
     document.body.style.overflow = 'auto';
+    // Clear taskId query param so refresh does not reopen the modal
+    this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
   }
   
   // Handle task updated event from modal

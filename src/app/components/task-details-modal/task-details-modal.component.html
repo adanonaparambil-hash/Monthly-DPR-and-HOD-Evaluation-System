@@ -1,5 +1,5 @@
 <!-- Task Details Modal -->
-<div class="modal-overlay" (click)="close()">
+<div class="modal-overlay">
   <div class="task-modal-container" (click)="$event.stopPropagation(); hideAssigneeDropdown()">
 
     <!-- Header -->
@@ -331,7 +331,7 @@
         </div>
 
         <!-- Daily Remarks + Daily Count — only shown to users who are in the Assignee list -->
-        @if (!isViewOnly && isCurrentUserAssignee()) {
+        @if (!isViewOnly && isUserAnAssignee) {
           <div class="daily-remarks-section">
             <div class="daily-remarks-row">
               <!-- Remarks textarea (compact) -->
@@ -593,8 +593,9 @@
               </div>
             </div>
 
-            <!-- Added Custom Fields -->
+            <!-- Added Custom Fields (skip Count — already shown as built-in field) -->
             @for (field of selectedCustomFields; track field.key) {
+            @if ((field.label || '').trim().toLowerCase() !== 'count') {
             <div class="metadata-card custom-field-card" [class.field-error]="hasFieldError(field.key)">
               <div class="metadata-content">
                 <p class="metadata-label">
@@ -636,6 +637,7 @@
               </button>
               }
             </div>
+            }
             }
 
           </div>
@@ -910,7 +912,7 @@
 
 <!-- Add Field Modal - Small Popup -->
 @if (showAddFieldModal) {
-<div class="modal-overlay" (click)="closeAddFieldModal()">
+<div class="modal-overlay">
   <div class="add-field-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="add-field-modal-header">
@@ -925,6 +927,7 @@
     <div class="add-field-modal-content">
       <div class="fields-checklist">
         @for (field of availableCustomFields; track field.key) {
+        @if ((field.label || '').trim().toLowerCase() !== 'count') {
         <label class="field-checkbox-item" [class.disabled]="isFieldMapped(field.key)">
           <input type="checkbox" [checked]="isFieldChecked(field.key)" [disabled]="isFieldMapped(field.key)"
             (change)="toggleFieldSelection(field.key)">
@@ -950,6 +953,7 @@
           </span>
           }
         </label>
+        }
         }
       </div>
     </div>

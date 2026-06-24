@@ -619,7 +619,7 @@
 </div>
 
 <!-- Task Creation Modal -->
-<div *ngIf="showCreateTaskModal" class="modal-overlay" (click)="closeCreateTaskModal()">
+<div *ngIf="showCreateTaskModal" class="modal-overlay">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="modal-header">
@@ -901,7 +901,7 @@
 
 <!-- Task Creation Modal -->
 @if (showCreateTaskModal) {
-<div class="modal-overlay" (click)="closeCreateTaskModal()">
+<div class="modal-overlay">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="modal-header">
@@ -1187,7 +1187,7 @@
 
 <!-- Select Task Modal -->
 @if (showSelectTaskModal) {
-<div class="modal-overlay" (click)="closeSelectTaskModal()">
+<div class="modal-overlay">
   <div class="select-task-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="select-modal-header">
@@ -1442,7 +1442,7 @@
 
 <!-- Add Field Modal - Small Popup -->
 @if (showAddFieldModal) {
-<div class="modal-overlay" (click)="closeAddFieldModal()">
+<div class="modal-overlay">
   <div class="add-field-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="add-field-modal-header">
@@ -1502,7 +1502,7 @@
 
 <!-- Custom Fields Modal -->
 @if (showCustomFieldsModal) {
-<div class="modal-overlay" (click)="closeCustomFieldsModal()">
+<div class="modal-overlay">
   <div class="custom-fields-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="custom-fields-header">
@@ -1543,7 +1543,7 @@
 
 <!-- Manage Tasks Modal -->
 @if (showManageTasksModal) {
-<div class="modal-overlay" (click)="closeManageTasksModal()">
+<div class="modal-overlay">
   <div class="manage-tasks-modal" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="manage-modal-header">

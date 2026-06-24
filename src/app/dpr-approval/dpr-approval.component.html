@@ -472,7 +472,7 @@
 
 <!-- Day Log History Modal -->
 @if (showDayLogHistoryModal) {
-  <div class="modal-overlay-large" (click)="closeDayLogHistoryModal()">
+  <div class="modal-overlay-large">
     <div class="day-log-history-modal-large" (click)="$event.stopPropagation()">
       <!-- Modal Header -->
       <div class="modal-header-large">
@@ -569,7 +569,7 @@
 
       <!-- Log Time Popup (inside Day Log History modal) -->
       @if (showLogTimePopup) {
-        <div class="ltp-modal-overlay" (click)="closeLogTimePopup()">
+        <div class="ltp-modal-overlay">
           <div class="log-time-popup" (click)="$event.stopPropagation()">
             <div class="ltp-header">
               <div class="ltp-title">

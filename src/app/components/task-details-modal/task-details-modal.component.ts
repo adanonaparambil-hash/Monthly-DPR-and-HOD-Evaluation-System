@@ -94,6 +94,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   selectedAssigneeId: string = '';         // kept for legacy read (single, e.g. view-only)
   selectedAssigneeIds: string[] = [];      // multi-select assignee IDs
   originalAssigneeIds: string[] = [];      // assignees present when the task loaded (to detect newly added ones)
+  isUserAnAssignee: boolean = false;       // whether logged-in user is an assignee — set once at load, not live
   private originalTaskSnapshot: any = null; // snapshot of all editable fields at load (for the change summary)
   selectedCreatedById: string = '';        // Assigned By (single select) → maps to createdBy
   createdBySearchTerm: string = '';
@@ -199,6 +200,7 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       if (loggedInId) {
         this.selectedAssigneeIds = [loggedInId];
         this.originalAssigneeIds = [loggedInId];
+        this.isUserAnAssignee = true;
       }
     } else {
       console.error('Missing required inputs:', {
@@ -276,6 +278,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
           // Snapshot the assignees that already existed on the task, so on save we
           // only notify users who are newly added (first time assigned).
           this.originalAssigneeIds = [...this.selectedAssigneeIds];
+          const sessionUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+          const sessionId = (sessionUser.empId || sessionUser.employeeId || this.userId || '').toString().trim().toUpperCase();
+          this.isUserAnAssignee = this.originalAssigneeIds.some(
+            id => (id || '').toString().trim().toUpperCase() === sessionId
+          );
 
           // Bind assignees list for Time Distribution tab
           this.taskAssignees = (taskDetails.assignees && Array.isArray(taskDetails.assignees))
