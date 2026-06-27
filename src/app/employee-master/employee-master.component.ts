@@ -56,9 +56,18 @@ export interface EmployeeProfileDto {
 })
 export class EmployeeMasterComponent implements OnInit {
   employeeList: EmployeeDto[] = [];   // current 100-record page shown in table
+  filterEmpId: string = '';
   filterName: string = '';
   filterDepartment: string = '';
   filterDesignation: string = '';
+  filterComLoc: string = '';
+
+  comLocOptions = [
+    { value: 'IND', label: 'India' },
+    { value: 'KSA', label: 'Saudi Arabia' },
+    { value: 'OM',  label: 'Oman' },
+    { value: 'UAE', label: 'UAE' },
+  ];
   isLoading: boolean = false;
   departmentList: string[] = [];
 
@@ -114,7 +123,9 @@ export class EmployeeMasterComponent implements OnInit {
     this.currentPage = 1;
 
     this.api.getEmployeeList(
+      this.filterEmpId,
       this.filterName, this.filterDepartment, this.filterDesignation,
+      this.filterComLoc,
       batchNo, this.BATCH_SIZE
     ).subscribe({
       next: (res: any) => {

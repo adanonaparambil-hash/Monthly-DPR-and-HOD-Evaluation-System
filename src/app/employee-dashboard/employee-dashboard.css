@@ -1084,7 +1084,7 @@ html {
 
 .header-main-row {
   display: grid;
-  grid-template-columns: auto 1fr 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 16px;
   align-items: stretch;
 }
@@ -1368,17 +1368,8 @@ html {
 /* Responsive Design */
 @media (max-width: 1400px) {
   .header-main-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto 1fr auto;
     gap: 12px;
-  }
-
-  .section-title {
-    grid-column: 1 / -1;
-    min-width: unset;
-  }
-
-  .date-selector {
-    grid-column: 1 / -1;
   }
 }
 

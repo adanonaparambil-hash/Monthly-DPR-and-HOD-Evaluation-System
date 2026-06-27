@@ -155,9 +155,10 @@
 
 .header-main-row {
   display: grid;
-  grid-template-columns: auto 1fr 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 16px;
   align-items: stretch;
+  width: 100%;
 }
 
 .dashboard-header::before {
@@ -4634,9 +4635,10 @@ mprehensive Dark Mode Support */
 /* Info Cards in Header Row */
 .header-main-row {
   display: grid;
-  grid-template-columns: auto 1fr 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 16px;
   align-items: stretch;
+  width: 100%;
 }
 
 .title-icon {
@@ -5122,17 +5124,8 @@ mprehensive Dark Mode Support */
 /* Responsive Design for Info Cards */
 @media (max-width: 1400px) {
   .header-main-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto 1fr auto;
     gap: 12px;
-  }
-
-  .section-title {
-    grid-column: 1 / -1;
-    min-width: unset;
-  }
-
-  .date-selector {
-    grid-column: 1 / -1;
   }
 }
 

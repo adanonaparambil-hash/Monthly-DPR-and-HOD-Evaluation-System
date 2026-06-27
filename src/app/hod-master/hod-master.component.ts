@@ -17,7 +17,20 @@ export class HodMasterComponent implements OnInit {
   hodList: HodMasterDto[] = [];
   filterName: string = '';
   filterDepartment: string = '';
+  quickSearch: string = '';
   isLoading: boolean = false;
+
+  get filteredHodList(): HodMasterDto[] {
+    const q = this.quickSearch.trim().toLowerCase();
+    if (!q) return this.hodList;
+    return this.hodList.filter(h =>
+      (h.empId        || '').toLowerCase().includes(q) ||
+      (h.employeeName || '').toLowerCase().includes(q) ||
+      (h.department   || '').toLowerCase().includes(q) ||
+      (h.designation  || '').toLowerCase().includes(q) ||
+      (h.isActive === 'Y' ? 'active' : 'inactive').includes(q)
+    );
+  }
   showEditModal: boolean = false;
   isCreateMode: boolean = false;
   selectedHod: HodMasterDto | null = null;

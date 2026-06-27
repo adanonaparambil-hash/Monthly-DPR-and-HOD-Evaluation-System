@@ -4,6 +4,14 @@
   <div class="filter-card">
     <div class="filter-row">
       <div class="filter-group">
+        <label class="filter-label">Employee ID</label>
+        <div class="input-wrapper">
+          <i class="fas fa-id-badge input-icon"></i>
+          <input type="text" class="filter-input" placeholder="Search by ID..."
+                 [(ngModel)]="filterEmpId" (keyup.enter)="onApply()" />
+        </div>
+      </div>
+      <div class="filter-group">
         <label class="filter-label">Employee Name</label>
         <div class="input-wrapper">
           <i class="fas fa-user input-icon"></i>
@@ -29,6 +37,18 @@
           <i class="fas fa-briefcase input-icon"></i>
           <input type="text" class="filter-input" placeholder="Search by designation..."
                  [(ngModel)]="filterDesignation" (keyup.enter)="onApply()" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Location</label>
+        <div class="input-wrapper">
+          <i class="fas fa-map-marker-alt input-icon"></i>
+          <select class="filter-input filter-select" [(ngModel)]="filterComLoc">
+            <option value="">All Locations</option>
+            @for (loc of comLocOptions; track loc.value) {
+              <option [value]="loc.value">{{ loc.label }}</option>
+            }
+          </select>
         </div>
       </div>
       <div class="filter-actions">

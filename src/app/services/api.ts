@@ -480,8 +480,11 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetHodMaster?employeeName=${employeeName}&department=${department}`);
   }
 
-  getEmployeeList(empName: string = '', department: string = '', designation: string = '', pageNo: number = 1, pageSize: number = 500): Observable<any> {
-    return this.http.get(`${this.apiUrl}/General/GetEmployeeList?empName=${empName}&department=${department}&designation=${designation}&pageNo=${pageNo}&pageSize=${pageSize}`);
+  getEmployeeList(empId: string = '', empName: string = '', department: string = '', designation: string = '', comloc: string = '', pageNo: number = 1, pageSize: number = 500): Observable<any> {
+    let url = `${this.apiUrl}/General/GetEmployeeList?empName=${encodeURIComponent(empName)}&department=${encodeURIComponent(department)}&designation=${encodeURIComponent(designation)}&pageNo=${pageNo}&pageSize=${pageSize}`;
+    if (empId)   url += `&empId=${encodeURIComponent(empId)}`;
+    if (comloc)  url += `&comloc=${encodeURIComponent(comloc)}`;
+    return this.http.get(url);
   }
 
   getEmployeeMasterList(): Observable<any> {

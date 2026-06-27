@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Theme } from '../services/theme';
@@ -137,14 +137,32 @@ export class MyLoggedHoursComponent implements OnInit {
   // Break History Modal
   showBreakHistoryModal = false;
   openBreaks: any[] = [];
+  breakHistorySearch   = '';
   isLoadingBreaks = false;
+
+  get filteredOpenBreaks(): any[] {
+    const q = this.breakHistorySearch.trim().toLowerCase();
+    if (!q) return this.openBreaks;
+    return this.openBreaks.filter(b =>
+      (b.employeeName   ?? '').toLowerCase().includes(q) ||
+      (b.employeeId     ?? '').toLowerCase().includes(q) ||
+      (b.department     ?? '').toLowerCase().includes(q) ||
+      (b.designation    ?? '').toLowerCase().includes(q) ||
+      (b.breakReason    ?? '').toLowerCase().includes(q) ||
+      (b.breakDate      ?? '').toLowerCase().includes(q) ||
+      (b.status         ?? '').toLowerCase().includes(q)
+    );
+  }
   breakHistoryFromDate = '';
   breakHistoryToDate = '';
   breakHistorySelectedDepartment: number | string = '';
   breakHistorySelectedEmployee: string = '';
   breakHistorySelectedReason: string = '';
+  breakHistoryComLoc: string = '';
   breakHistoryDepartments: Department[] = [];
   breakHistoryEmployees: Employee[] = [];
+  breakHistoryEmpSearch        = '';
+  breakHistoryEmpDropdownOpen  = false;
   breakReasons: any[] = [];
   
   // Break History Pagination
@@ -1491,16 +1509,46 @@ export class MyLoggedHoursComponent implements OnInit {
 
   onBreakHistoryDepartmentChange() {
     console.log('Break history department changed to:', this.breakHistorySelectedDepartment);
-    
-    // Reset employee selection
     this.breakHistorySelectedEmployee = '';
-    this.breakHistoryEmployees = [];
-    
-    // Load employees for selected department
+    this.breakHistoryEmployees        = [];
+    this.breakHistoryEmpSearch        = '';
+    this.breakHistoryEmpDropdownOpen  = false;
     if (this.breakHistorySelectedDepartment) {
       this.loadBreakHistoryEmployees(Number(this.breakHistorySelectedDepartment));
     }
   }
+
+  // ── Employee searchable dropdown helpers ──────────────────────────────────
+  get filteredBreakHistoryEmployees(): Employee[] {
+    const q = this.breakHistoryEmpSearch.trim().toLowerCase();
+    if (!q) return this.breakHistoryEmployees;
+    return this.breakHistoryEmployees.filter(e =>
+      e.employeeName.toLowerCase().includes(q) ||
+      (e.employeeCode ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  get breakHistorySelectedEmpLabel(): string {
+    if (!this.breakHistorySelectedEmployee) return 'All Employees';
+    const emp = this.breakHistoryEmployees.find(e => e.employeeCode === this.breakHistorySelectedEmployee);
+    return emp ? `${emp.employeeName} (${emp.employeeCode})` : this.breakHistorySelectedEmployee;
+  }
+
+  toggleBreakHistoryEmpDrop(e: Event): void {
+    e.stopPropagation();
+    this.breakHistoryEmpDropdownOpen = !this.breakHistoryEmpDropdownOpen;
+    if (this.breakHistoryEmpDropdownOpen) this.breakHistoryEmpSearch = '';
+  }
+
+  selectBreakHistoryEmp(code: string, e: Event): void {
+    e.stopPropagation();
+    this.breakHistorySelectedEmployee = code;
+    this.breakHistoryEmpDropdownOpen  = false;
+    this.breakHistoryEmpSearch        = '';
+  }
+
+  @HostListener('document:click')
+  closeBhEmpDrop(): void { this.breakHistoryEmpDropdownOpen = false; }
 
   loadBreakHistoryEmployees(departmentId: number) {
     console.log('Loading employees for break history department:', departmentId);
@@ -1545,14 +1593,15 @@ export class MyLoggedHoursComponent implements OnInit {
     this.isLoadingBreaks = true;
     
     const params = {
-      userId: this.breakHistorySelectedEmployee || '',
-      fromDate: this.breakHistoryFromDate || '',
-      toDate: this.breakHistoryToDate || '',
+      userId:       this.breakHistorySelectedEmployee || '',
+      fromDate:     this.breakHistoryFromDate || '',
+      toDate:       this.breakHistoryToDate || '',
       departmentId: this.breakHistorySelectedDepartment ? Number(this.breakHistorySelectedDepartment) : 0,
-      breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null,
-      pageNumber: this.breakHistoryPageNumber,
-      pageSize: this.breakHistoryPageSize,
-      isExport: 'N'
+      breakReason:  this.breakHistorySelectedReason || null,
+      comLoc:       this.breakHistoryComLoc || null,
+      pageNumber:   this.breakHistoryPageNumber,
+      pageSize:     this.breakHistoryPageSize,
+      isExport:     'N'
     };
     
     console.log('Loading break history with params:', params);
@@ -1594,14 +1643,15 @@ export class MyLoggedHoursComponent implements OnInit {
     this.isExportingBreaks = true;
 
     const params = {
-      userId: this.breakHistorySelectedEmployee || '',
-      fromDate: this.breakHistoryFromDate || '',
-      toDate: this.breakHistoryToDate || '',
+      userId:       this.breakHistorySelectedEmployee || '',
+      fromDate:     this.breakHistoryFromDate || '',
+      toDate:       this.breakHistoryToDate || '',
       departmentId: this.breakHistorySelectedDepartment ? Number(this.breakHistorySelectedDepartment) : 0,
-      breakReason: this.breakHistorySelectedReason ? this.breakHistorySelectedReason : null,
-      pageNumber: 1,
-      pageSize: 999999,
-      isExport: 'Y'
+      breakReason:  this.breakHistorySelectedReason || null,
+      comLoc:       this.breakHistoryComLoc || null,
+      pageNumber:   1,
+      pageSize:     999999,
+      isExport:     'Y'
     };
 
     this.api.getOpenBreaks(params).subscribe({

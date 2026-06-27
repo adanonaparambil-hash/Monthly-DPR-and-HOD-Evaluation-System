@@ -35,6 +35,20 @@
 
   <!-- HOD Listing Table -->
   <div class="table-card">
+    <!-- Quick Search Bar -->
+    <div class="quick-search-bar">
+      <div class="quick-search-wrap">
+        <i class="fas fa-search qs-icon"></i>
+        <input type="text" class="qs-input" placeholder="Quick search by Emp ID, Name, Department, Designation, Status..."
+               [(ngModel)]="quickSearch" />
+        <button *ngIf="quickSearch" class="qs-clear" (click)="quickSearch = ''">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <span class="qs-count" *ngIf="quickSearch">
+        {{ filteredHodList.length }} of {{ hodList.length }} records
+      </span>
+    </div>
     <div class="table-wrapper">
       <table class="hod-table">
         <thead>
@@ -58,8 +72,18 @@
             </td>
           </tr>
 
+          <!-- No results -->
+          <tr *ngIf="!isLoading && filteredHodList.length === 0">
+            <td colspan="6" class="state-cell">
+              <div class="empty-state">
+                <i class="fas fa-search" style="font-size:28px;color:#94a3b8;margin-bottom:8px;"></i>
+                <span>No records match "<strong>{{ quickSearch }}</strong>"</span>
+              </div>
+            </td>
+          </tr>
+
           <!-- Data Rows -->
-          <tr *ngFor="let hod of hodList; let i = index" class="table-row">
+          <tr *ngFor="let hod of filteredHodList; let i = index" class="table-row">
             <td class="col-no">
               <span class="row-num">{{ i + 1 }}</span>
             </td>

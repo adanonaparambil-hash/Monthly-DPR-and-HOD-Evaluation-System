@@ -455,14 +455,48 @@
 
           <div class="filter-group" *ngIf="isHOD || (isSurveillance && !isHOD) || isMasOrPurchase">
             <label class="filter-label">Employee</label>
-            <div class="filter-input-wrapper">
-              <i class="fas fa-user filter-icon"></i>
-              <select class="filter-select" [(ngModel)]="breakHistorySelectedEmployee">
-                <option value="">All Employees</option>
-                <option *ngFor="let emp of breakHistoryEmployees" [value]="emp.employeeCode">
-                  {{ emp.employeeName }}
-                </option>
-              </select>
+            <div class="bh-emp-wrap" (click)="$event.stopPropagation()">
+              <button type="button" class="bh-emp-btn"
+                      [class.bh-emp-btn--active]="breakHistorySelectedEmployee"
+                      (click)="toggleBreakHistoryEmpDrop($event)">
+                <i class="fas fa-user bh-emp-ico"></i>
+                <span class="bh-emp-label">{{ breakHistorySelectedEmpLabel }}</span>
+                <i class="fas fa-chevron-down bh-emp-arrow"
+                   [class.bh-emp-arrow--open]="breakHistoryEmpDropdownOpen"></i>
+              </button>
+
+              <div class="bh-emp-drop" *ngIf="breakHistoryEmpDropdownOpen">
+                <div class="bh-emp-search-wrap">
+                  <i class="fas fa-search bh-emp-search-ico"></i>
+                  <input class="bh-emp-search-input" type="text"
+                         placeholder="Search name or ID…"
+                         [(ngModel)]="breakHistoryEmpSearch"
+                         (click)="$event.stopPropagation()"
+                         autofocus>
+                </div>
+                <div class="bh-emp-list">
+                  <!-- All Employees -->
+                  <div class="bh-emp-item"
+                       [class.bh-emp-item--active]="!breakHistorySelectedEmployee"
+                       (click)="selectBreakHistoryEmp('', $event)">
+                    <span class="bh-emp-name">All Employees</span>
+                  </div>
+                  <div class="bh-emp-divider"></div>
+                  <!-- Filtered list -->
+                  <ng-container *ngIf="filteredBreakHistoryEmployees.length > 0; else noEmpMatch">
+                    <div class="bh-emp-item"
+                         *ngFor="let emp of filteredBreakHistoryEmployees"
+                         [class.bh-emp-item--active]="breakHistorySelectedEmployee === emp.employeeCode"
+                         (click)="selectBreakHistoryEmp(emp.employeeCode, $event)">
+                      <span class="bh-emp-name">{{ emp.employeeName }}</span>
+                      <span class="bh-emp-code">{{ emp.employeeCode }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #noEmpMatch>
+                    <div class="bh-emp-empty">No employees found</div>
+                  </ng-template>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -477,6 +511,20 @@
               </select>
             </div>
           </div>
+
+          <div class="filter-group" *ngIf="isHOD">
+            <label class="filter-label">Location</label>
+            <div class="filter-input-wrapper">
+              <i class="fas fa-globe filter-icon"></i>
+              <select class="filter-select" [(ngModel)]="breakHistoryComLoc">
+                <option value="">All Locations</option>
+                <option value="IND">India</option>
+                <option value="KSA">Saudi Arabia</option>
+                <option value="OM">Oman</option>
+                <option value="UAE">UAE</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div class="filter-actions">
@@ -485,6 +533,19 @@
             <span>Apply Filter</span>
           </button>
         </div>
+      </div>
+
+      <!-- General Search Bar -->
+      <div class="bh-general-search-bar">
+        <i class="fas fa-search bh-gs-icon"></i>
+        <input class="bh-gs-input" type="text"
+               [(ngModel)]="breakHistorySearch"
+               placeholder="Search employee, department, reason, date, status…">
+        @if (breakHistorySearch) {
+          <button class="bh-gs-clear" (click)="breakHistorySearch = ''">
+            <i class="fas fa-times"></i>
+          </button>
+        }
       </div>
 
       <!-- Modal Body with Table -->
@@ -498,16 +559,16 @@
         }
 
         <!-- Empty State -->
-        @if (!isLoadingBreaks && openBreaks.length === 0) {
+        @if (!isLoadingBreaks && filteredOpenBreaks.length === 0) {
           <div class="empty-state-large">
             <i class="fas fa-coffee"></i>
-            <p>No Active Breaks</p>
-            <span>All employees are currently working</span>
+            <p>{{ breakHistorySearch ? 'No results found' : 'No Active Breaks' }}</p>
+            <span>{{ breakHistorySearch ? 'Try a different search term' : 'All employees are currently working' }}</span>
           </div>
         }
 
         <!-- Break History Table -->
-        @if (!isLoadingBreaks && openBreaks.length > 0) {
+        @if (!isLoadingBreaks && filteredOpenBreaks.length > 0) {
           <div class="break-table-container">
             <table class="break-table">
               <thead>
@@ -523,7 +584,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (breakRecord of openBreaks; track breakRecord.employeeId) {
+                @for (breakRecord of filteredOpenBreaks; track breakRecord.employeeId) {
                   <tr class="break-row">
                     <td class="td-employee">
                       <div class="employee-cell">

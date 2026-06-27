@@ -161,6 +161,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   // ── UI state ──────────────────────────────────────────────────────────────
   showColumnsPanel = false;
   showGroupByMenu  = false;
+  showComLocMenu   = false;
   groupBy          = 'taskCategory';
 
   // ── Employee popup ────────────────────────────────────────────────────────
@@ -233,6 +234,14 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     { value: 'date',         label: 'Date',          icon: 'fa-calendar' },
   ];
 
+  // ── COM_LOC filter ────────────────────────────────────────────────────────
+  comLocOptions = [
+    { value: 'IND', label: 'India' },
+    { value: 'KSA', label: 'Saudi Arabia' },
+    { value: 'OM',  label: 'Oman' },
+    { value: 'UAE', label: 'UAE' },
+  ];
+
   // ── Filter dropdown options (loaded once from API) ─────────────────────────
   filterEmployees:  { employeeId: string; employeeName: string }[]   = [];
   filterCategories: { categoryId: number; categoryName: string }[]   = [];
@@ -253,6 +262,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     projectIds:        [] as number[],
     statuses:          [] as string[],
     deptIds:           [] as number[],
+    comLocs:           [] as string[],
     taskTitleSearch:   '',
     descriptionSearch: '',
     commentSearch:     '',
@@ -454,6 +464,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
       projectIds:      f.projectIds.length     ? f.projectIds.join(',')     : null,
       statuses:        f.statuses.length       ? f.statuses.join(',')       : null,
       deptIds:         effectiveDeptIds,
+      comLoc:          f.comLocs.length ? f.comLocs.join(',') : null,
       taskTitle:       f.taskTitleSearch    || null,
       description:     f.descriptionSearch  || null,
       dailyComment:    f.commentSearch      || null,
@@ -707,11 +718,16 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   // ── Checkbox filter methods used by HTML ──────────────────────────────────
 
-  /** Values shown in checkbox list (from filter options, not from loaded page) */
+  /** Values shown in checkbox list — selected items pinned to top, then rest */
   getFilteredUniqueValues(col: string): string[] {
-    const text = (this.colFilters[col]?.searchText ?? '').toLowerCase();
-    const raw  = this.getRawFilterValues(col);
-    return text ? raw.filter(v => v.toLowerCase().includes(text)) : raw;
+    const text     = (this.colFilters[col]?.searchText ?? '').toLowerCase();
+    const raw      = this.getRawFilterValues(col);
+    const filtered = text ? raw.filter(v => v.toLowerCase().includes(text)) : raw;
+    const selected = this.colFilters[col]?.selectedValues ?? new Set<string>();
+    return [
+      ...filtered.filter(v =>  selected.has(v)),
+      ...filtered.filter(v => !selected.has(v))
+    ];
   }
 
   private getRawFilterValues(col: string): string[] {
@@ -893,7 +909,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.activeFilters = {
       employeeIds: [], assignedByIds: [], categoryIds: [], projectIds: [],
-      statuses: [], deptIds: [],
+      statuses: [], deptIds: [], comLocs: [],
       taskTitleSearch: '', descriptionSearch: '', commentSearch: '',
       logTimeOp: '', logTimeMin: null,
       startDateFrom: '', startDateTo: '', targetDateFrom: '', targetDateTo: '',
@@ -921,6 +937,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     if (f.projectIds.length)      n++;
     if (f.statuses.length)        n++;
     if (f.deptIds.length)         n++;
+    if (f.comLocs.length)         n++;
     if (f.taskTitleSearch)        n++;
     if (f.descriptionSearch)      n++;
     if (f.commentSearch)          n++;
@@ -956,7 +973,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     this.filterDropdownItems = this.getFilteredUniqueValues(col);
   }
 
-  closeAllDropdowns(): void { this.openFilterCol = null; this.showGroupByMenu = false; this.empPopupEntry = null; }
+  closeAllDropdowns(): void { this.openFilterCol = null; this.showGroupByMenu = false; this.showComLocMenu = false; this.empPopupEntry = null; }
 
   // ── Task detail modal ─────────────────────────────────────────────────────
   openTaskModal(entry: LogEntry, event: Event): void {
@@ -1011,6 +1028,30 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     if (this.userId) {
       this.api.saveAnalyticsSetting({ userId: this.userId, settingKey: 'GROUP_BY', settingValue: v }).subscribe();
     }
+    this.resetPagination();
+    this.loadData();
+  }
+
+  // ── COM_LOC filter ────────────────────────────────────────────────────────
+  get comLocLabel(): string {
+    const sel = this.activeFilters.comLocs;
+    if (!sel.length) return 'All Locations';
+    if (sel.length === 1) return this.comLocOptions.find(o => o.value === sel[0])?.label ?? sel[0];
+    return `${sel.length} Locations`;
+  }
+  toggleComLocMenu(e: Event): void { e.stopPropagation(); this.showComLocMenu = !this.showComLocMenu; this.showGroupByMenu = false; }
+  toggleComLoc(val: string, e: Event): void {
+    e.stopPropagation();
+    const idx = this.activeFilters.comLocs.indexOf(val);
+    if (idx === -1) this.activeFilters.comLocs.push(val);
+    else            this.activeFilters.comLocs.splice(idx, 1);
+    this.resetPagination();
+    this.loadData();
+  }
+  clearComLocs(e: Event): void {
+    e.stopPropagation();
+    this.activeFilters.comLocs = [];
+    this.showComLocMenu = false;
     this.resetPagination();
     this.loadData();
   }

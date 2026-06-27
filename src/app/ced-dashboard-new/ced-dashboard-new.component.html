@@ -101,50 +101,6 @@
             </div>
           </div>
 
-          <!-- Today's Birthdays -->
-          <div class="info-card birthday-card">
-            <div class="card-glow-effect"></div>
-            <div class="card-icon">
-              <i class="fas fa-birthday-cake"></i>
-            </div>
-            <div class="card-content">
-              <h3 class="card-title">Today's Birthdays 🎉</h3>
-              @if (todaysBirthdays.length > 0) {
-                <div class="birthday-carousel">
-                  <div class="birthday-slider" [style.transform]="'translateX(-' + (currentBirthdayIndex * 100) + '%)'">
-                    @for (birthday of todaysBirthdays; track birthday.id) {
-                      <div class="birthday-slide">
-                        <div class="birthday-avatar">
-                          <img [src]="birthday.profileImage" [alt]="birthday.name">
-                          <div class="birthday-badge"><i class="fas fa-gift"></i></div>
-                        </div>
-                        <div class="birthday-info">
-                          <h4 class="birthday-name">{{ birthday.name }}</h4>
-                          <p class="birthday-department">{{ birthday.department }}</p>
-                          <div class="birthday-wish">
-                            <i class="fas fa-heart"></i><span>Happy Birthday!</span>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                  @if (todaysBirthdays.length > 1) {
-                    <div class="carousel-indicators">
-                      @for (birthday of todaysBirthdays; track birthday.id; let i = $index) {
-                        <button class="indicator" [class.active]="i === currentBirthdayIndex" (click)="goToBirthday(i)"></button>
-                      }
-                    </div>
-                  }
-                </div>
-              } @else {
-                <div class="no-birthdays">
-                  <i class="fas fa-calendar-check"></i>
-                  <p>No birthdays today</p>
-                </div>
-              }
-            </div>
-          </div>
-
         </div>
       </div>
 

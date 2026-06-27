@@ -17,6 +17,39 @@
         </button>
       }
 
+      <!-- Location filter — HOD / Admin only -->
+      @if (isHOD) {
+        <div class="group-wrap" (click)="$event.stopPropagation()">
+          <button class="tb-btn" [class.tb-btn-active]="activeFilters.comLocs.length > 0"
+                  (click)="toggleComLocMenu($event)">
+            <i class="fas fa-globe"></i> Location:
+            <strong>{{comLocLabel}}</strong>
+            <i class="fas fa-chevron-down tb-arrow"></i>
+          </button>
+          @if (showComLocMenu) {
+            <div class="tb-dropdown comloc-drop">
+              <!-- All Locations option -->
+              <div class="tb-dd-item" [class.active]="activeFilters.comLocs.length === 0"
+                   (click)="clearComLocs($event)">
+                <i class="fas fa-check comloc-check"
+                   [style.visibility]="activeFilters.comLocs.length === 0 ? 'visible' : 'hidden'"></i>
+                All Locations
+              </div>
+              <div class="comloc-divider"></div>
+              @for (opt of comLocOptions; track opt.value) {
+                <div class="tb-dd-item" [class.active]="activeFilters.comLocs.includes(opt.value)"
+                     (click)="toggleComLoc(opt.value, $event)">
+                  <i class="fas fa-check comloc-check"
+                     [style.visibility]="activeFilters.comLocs.includes(opt.value) ? 'visible' : 'hidden'"></i>
+                  {{opt.label}}
+                  <span class="comloc-code">{{opt.value}}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
       <!-- Group by -->
       <div class="group-wrap" (click)="$event.stopPropagation()">
         <button class="tb-btn" (click)="toggleGroupByMenu($event)">
