@@ -1308,7 +1308,7 @@ export class MyLoggedHoursComponent implements OnInit {
       // Set specific widths for different column types
       switch (col.key) {
         case 'title':
-          return 'minmax(200px, 1fr)';
+          return 'minmax(200px, 260px)';
         case 'description':
           return '180px';
         case 'category':
@@ -2739,17 +2739,17 @@ export class MyLoggedHoursComponent implements OnInit {
 
   getGridTemplateColumnsWithCustomFields(): string {
     const allColumns = this.getAllVisibleColumns();
-    
+
     return allColumns.map(col => {
       // Handle custom field columns
       if (col.key.startsWith('customField_')) {
         return '150px';
       }
-      
+
       // Set specific widths for different column types
       switch (col.key) {
         case 'title':
-          return 'minmax(200px, 1fr)';
+          return 'minmax(200px, 260px)';
         case 'description':
           return '180px';
         case 'category':
