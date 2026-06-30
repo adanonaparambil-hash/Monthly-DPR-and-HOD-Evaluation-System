@@ -267,6 +267,27 @@ export class ByodFormComponent implements OnInit {
   get adminApv()     { return this.getApprovalByCode('ADMIN'); }
   get adminHeadApv() { return this.getApprovalByCode('ADMIN-HEAD'); }
 
+  /** Returns approvalDetails sorted by ApprovalLevel for view-mode dynamic rendering */
+  get sortedApprovalDetails(): ByodApprovalDetail[] {
+    return [...this.approvalDetails].sort((a, b) => (a.approvalLevel ?? 999) - (b.approvalLevel ?? 999));
+  }
+
+  getApproverIcon(code: string): string {
+    const map: Record<string, string> = {
+      'HOD': 'fa-user-tie', 'CEO': 'fa-crown', 'IT': 'fa-desktop',
+      'ADMIN-HEAD': 'fa-user-shield', 'ADMIN': 'fa-file-invoice',
+    };
+    return map[(code || '').toUpperCase()] || 'fa-user-check';
+  }
+
+  getApproverColorClass(code: string): string {
+    const map: Record<string, string> = {
+      'HOD': 'byod-ci-purple', 'CEO': 'byod-ci-amber', 'IT': 'byod-ci-cyan',
+      'ADMIN-HEAD': 'byod-ci-navy', 'ADMIN': 'byod-ci-violet',
+    };
+    return map[(code || '').toUpperCase()] || 'byod-ci-blue';
+  }
+
   /** Check if a specific approver card belongs to the current user and is pending */
   isMyPendingApproval(detail: ByodApprovalDetail): boolean {
     if (!this.incomingApprovalId || !this.isViewMode) return false;

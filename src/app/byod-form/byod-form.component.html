@@ -393,7 +393,7 @@
         <ng-container *ngIf="!isLoadingApprovals">
 
           <!-- ── HOD Approval ── -->
-          <div class="byod-card byod-anim-2">
+          <div class="byod-card byod-anim-2" *ngIf="!isViewMode">
             <div class="byod-card-head byod-head-official">
               <div class="byod-card-icon byod-ci-purple"><i class="fas fa-user-tie"></i></div>
               <div><h3 class="byod-card-title">HOD Approval</h3><p class="byod-card-sub">Head of Department</p></div>
@@ -436,7 +436,7 @@
           </div>
 
           <!-- ── CED / CEO Approval ── -->
-          <div class="byod-card byod-anim-3">
+          <div class="byod-card byod-anim-3" *ngIf="!isViewMode">
             <div class="byod-card-head byod-head-official">
               <div class="byod-card-icon byod-ci-amber"><i class="fas fa-crown"></i></div>
               <div><h3 class="byod-card-title">CED / CEO Approval</h3><p class="byod-card-sub">Executive approval</p></div>
@@ -479,7 +479,7 @@
           </div>
 
           <!-- ── IT Department ── -->
-          <div class="byod-card byod-anim-4">
+          <div class="byod-card byod-anim-4" *ngIf="!isViewMode">
             <div class="byod-card-head byod-head-official">
               <div class="byod-card-icon byod-ci-cyan"><i class="fas fa-desktop"></i></div>
               <div><h3 class="byod-card-title">IT Department</h3><p class="byod-card-sub">IT verification</p></div>
@@ -588,8 +588,51 @@
             </div>
           </div>
 
-          <!-- ── Admin Department ── -->
-          <div class="byod-card byod-anim-5">
+          <!-- ── Admin Head ── -->
+          <div class="byod-card byod-anim-5" *ngIf="!isViewMode">
+            <div class="byod-card-head byod-head-official">
+              <div class="byod-card-icon byod-ci-navy"><i class="fas fa-user-shield"></i></div>
+              <div><h3 class="byod-card-title">Admin Head Approval</h3><p class="byod-card-sub">Final authority</p></div>
+              <span class="byod-apv-status-badge" *ngIf="isViewMode && adminHeadApv" [ngClass]="getStatusClass(adminHeadApv!.approvalStatusCode)">
+                <i class="fas" [ngClass]="getStatusIcon(adminHeadApv!.approvalStatusCode)"></i> {{ getStatusLabel(adminHeadApv!.approvalStatusCode) }}
+              </span>
+              <span class="byod-official-badge" *ngIf="!isViewMode"><i class="fas fa-lock"></i> Official</span>
+            </div>
+            <div class="byod-card-body">
+              <div class="byod-apv-inline" *ngIf="isViewMode && adminHeadApv">
+                <div class="byod-apv-avatar-sm"><img *ngIf="getApproverImage(adminHeadApv!)" [src]="getApproverImage(adminHeadApv!)" class="byod-apv-img"><i *ngIf="!getApproverImage(adminHeadApv!)" class="fas fa-user-tie"></i></div>
+                <div class="byod-apv-inline-meta">
+                  <span class="byod-apv-inline-name">{{ adminHeadApv!.employeeName }}</span>
+                  <span class="byod-apv-inline-sub"><i class="fas fa-id-badge"></i> {{ adminHeadApv!.approverId }}<span *ngIf="adminHeadApv!.phoneNumber"> &nbsp;·&nbsp; <i class="fas fa-phone"></i> {{ adminHeadApv!.phoneNumber }}</span></span>
+                  <span class="byod-apv-inline-sub" *ngIf="adminHeadApv!.email"><i class="fas fa-envelope"></i> {{ adminHeadApv!.email }}</span>
+                  <span class="byod-apv-inline-sub" *ngIf="adminHeadApv!.approvalDate && adminHeadApv!.approvalStatusCode !== 'P'"><i class="fas fa-calendar-check"></i> {{ adminHeadApv!.approvalDate | date:'dd MMM yyyy, hh:mm a' }}</span>
+                  <span class="byod-apv-inline-remarks" *ngIf="adminHeadApv!.remarks"><i class="fas fa-comment-alt"></i> {{ adminHeadApv!.remarks }}</span>
+                </div>
+              </div>
+              <div class="byod-apv-divider" *ngIf="isViewMode && adminHeadApv"></div>
+              <!-- Inline action for Admin Head -->
+              <ng-container *ngIf="adminHeadApv && isMyPendingApproval(adminHeadApv!) && !approvalActionDone">
+                <div class="byod-ia-panel">
+                  <label class="byod-ia-label"><i class="fas fa-comment-alt"></i> Remarks</label>
+                  <textarea class="byod-ia-textarea" [(ngModel)]="approverRemarks" [ngModelOptions]="{standalone:true}" placeholder="Enter remarks…" rows="2"></textarea>
+                  <div class="byod-ia-btns">
+                    <button type="button" class="byod-ia-btn byod-ia-approve" [disabled]="isApproving" (click)="submitApprovalAction('A')">
+                      <i class="fas" [class.fa-check-circle]="!isApproving" [class.fa-spinner]="isApproving" [class.fa-spin]="isApproving"></i> {{ isApproving ? 'Processing…' : 'Approve' }}
+                    </button>
+                    <button type="button" class="byod-ia-btn byod-ia-reject" [disabled]="isApproving" (click)="submitApprovalAction('R')">
+                      <i class="fas" [class.fa-times-circle]="!isApproving" [class.fa-spinner]="isApproving" [class.fa-spin]="isApproving"></i> {{ isApproving ? 'Processing…' : 'Reject' }}
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+              <div class="byod-ia-done" *ngIf="adminHeadApv && isMyPendingApproval(adminHeadApv!) && approvalActionDone">
+                <i class="fas fa-check-circle"></i> Action submitted.
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Voucher Creation ── -->
+          <div class="byod-card byod-anim-6" *ngIf="!isViewMode">
             <div class="byod-card-head byod-head-official">
               <div class="byod-card-icon byod-ci-violet"><i class="fas fa-file-invoice"></i></div>
               <div><h3 class="byod-card-title">Voucher Creation</h3><p class="byod-card-sub">Final clearance</p></div>
@@ -632,46 +675,91 @@
             </div>
           </div>
 
-          <!-- ── Admin Head (view mode only if present) ── -->
-          <div class="byod-card byod-anim-6" *ngIf="isViewMode && adminHeadApv">
-            <div class="byod-card-head byod-head-official">
-              <div class="byod-card-icon byod-ci-navy"><i class="fas fa-user-shield"></i></div>
-              <div><h3 class="byod-card-title">Admin Head Approval</h3><p class="byod-card-sub">Final authority</p></div>
-              <span class="byod-apv-status-badge" [ngClass]="getStatusClass(adminHeadApv!.approvalStatusCode)">
-                <i class="fas" [ngClass]="getStatusIcon(adminHeadApv!.approvalStatusCode)"></i> {{ getStatusLabel(adminHeadApv!.approvalStatusCode) }}
-              </span>
-            </div>
-            <div class="byod-card-body">
-              <div class="byod-apv-inline">
-                <div class="byod-apv-avatar-sm"><img *ngIf="getApproverImage(adminHeadApv!)" [src]="getApproverImage(adminHeadApv!)" class="byod-apv-img"><i *ngIf="!getApproverImage(adminHeadApv!)" class="fas fa-user-tie"></i></div>
-                <div class="byod-apv-inline-meta">
-                  <span class="byod-apv-inline-name">{{ adminHeadApv!.employeeName }}</span>
-                  <span class="byod-apv-inline-sub"><i class="fas fa-id-badge"></i> {{ adminHeadApv!.approverId }}<span *ngIf="adminHeadApv!.phoneNumber"> &nbsp;·&nbsp; <i class="fas fa-phone"></i> {{ adminHeadApv!.phoneNumber }}</span></span>
-                  <span class="byod-apv-inline-sub" *ngIf="adminHeadApv!.email"><i class="fas fa-envelope"></i> {{ adminHeadApv!.email }}</span>
-                  <span class="byod-apv-inline-sub" *ngIf="adminHeadApv!.approvalDate && adminHeadApv!.approvalStatusCode !== 'P'"><i class="fas fa-calendar-check"></i> {{ adminHeadApv!.approvalDate | date:'dd MMM yyyy, hh:mm a' }}</span>
-                  <span class="byod-apv-inline-remarks" *ngIf="adminHeadApv!.remarks"><i class="fas fa-comment-alt"></i> {{ adminHeadApv!.remarks }}</span>
+          <!-- ── View mode: dynamic cards ordered by ApprovalLevel ── -->
+          <ng-container *ngIf="isViewMode">
+            <div class="byod-card" *ngFor="let apv of sortedApprovalDetails">
+              <div class="byod-card-head byod-head-official">
+                <div class="byod-card-icon" [ngClass]="getApproverColorClass(apv.approverCode!)">
+                  <i class="fas" [ngClass]="getApproverIcon(apv.approverCode!)"></i>
                 </div>
+                <div><h3 class="byod-card-title">{{ (apv.approverCode || '').toUpperCase() === 'ADMIN' ? 'Voucher Creation' : apv.approverRole }}</h3></div>
+                <span class="byod-apv-status-badge" [ngClass]="getStatusClass(apv.approvalStatusCode)">
+                  <i class="fas" [ngClass]="getStatusIcon(apv.approvalStatusCode)"></i> {{ getStatusLabel(apv.approvalStatusCode) }}
+                </span>
               </div>
-              <!-- Inline action for Admin Head -->
-              <ng-container *ngIf="isMyPendingApproval(adminHeadApv!) && !approvalActionDone">
-                <div class="byod-ia-panel">
-                  <label class="byod-ia-label"><i class="fas fa-comment-alt"></i> Remarks</label>
-                  <textarea class="byod-ia-textarea" [(ngModel)]="approverRemarks" [ngModelOptions]="{standalone:true}" placeholder="Enter remarks…" rows="2"></textarea>
-                  <div class="byod-ia-btns">
-                    <button type="button" class="byod-ia-btn byod-ia-approve" [disabled]="isApproving" (click)="submitApprovalAction('A')">
-                      <i class="fas" [class.fa-check-circle]="!isApproving" [class.fa-spinner]="isApproving" [class.fa-spin]="isApproving"></i> {{ isApproving ? 'Processing…' : 'Approve' }}
-                    </button>
-                    <button type="button" class="byod-ia-btn byod-ia-reject" [disabled]="isApproving" (click)="submitApprovalAction('R')">
-                      <i class="fas" [class.fa-times-circle]="!isApproving" [class.fa-spinner]="isApproving" [class.fa-spin]="isApproving"></i> {{ isApproving ? 'Processing…' : 'Reject' }}
-                    </button>
+              <div class="byod-card-body">
+                <div class="byod-apv-inline" *ngIf="apv.employeeName">
+                  <div class="byod-apv-avatar-sm">
+                    <img *ngIf="getApproverImage(apv)" [src]="getApproverImage(apv)" class="byod-apv-img">
+                    <i *ngIf="!getApproverImage(apv)" class="fas fa-user-tie"></i>
+                  </div>
+                  <div class="byod-apv-inline-meta">
+                    <span class="byod-apv-inline-name">{{ apv.employeeName }}</span>
+                    <span class="byod-apv-inline-sub"><i class="fas fa-id-badge"></i> {{ apv.approverId }}<span *ngIf="apv.phoneNumber"> &nbsp;·&nbsp; <i class="fas fa-phone"></i> {{ apv.phoneNumber }}</span></span>
+                    <span class="byod-apv-inline-sub" *ngIf="apv.email"><i class="fas fa-envelope"></i> {{ apv.email }}</span>
+                    <span class="byod-apv-inline-sub" *ngIf="apv.approvalDate && apv.approvalStatusCode !== 'P'"><i class="fas fa-calendar-check"></i> {{ apv.approvalDate | date:'dd MMM yyyy, hh:mm a' }}</span>
+                    <span class="byod-apv-inline-remarks" *ngIf="apv.remarks"><i class="fas fa-comment-alt"></i> {{ apv.remarks }}</span>
                   </div>
                 </div>
-              </ng-container>
-              <div class="byod-ia-done" *ngIf="isMyPendingApproval(adminHeadApv!) && approvalActionDone">
-                <i class="fas fa-check-circle"></i> Action submitted.
+                <div class="byod-apv-divider" *ngIf="apv.employeeName"></div>
+                <!-- Inline action -->
+                <ng-container *ngIf="isMyPendingApproval(apv) && !approvalActionDone">
+                  <div class="byod-ia-panel">
+                    <label class="byod-ia-label"><i class="fas fa-comment-alt"></i> Remarks</label>
+                    <textarea class="byod-ia-textarea" [(ngModel)]="approverRemarks" [ngModelOptions]="{standalone:true}" placeholder="Enter remarks…" rows="2"></textarea>
+                    <div class="byod-ia-btns">
+                      <button type="button" class="byod-ia-btn byod-ia-approve" [disabled]="isApproving" (click)="submitApprovalAction('A')">
+                        <i class="fas" [class.fa-check-circle]="!isApproving" [class.fa-spinner]="isApproving" [class.fa-spin]="isApproving"></i> {{ isApproving ? 'Processing…' : 'Approve' }}
+                      </button>
+                      <button type="button" class="byod-ia-btn byod-ia-reject" [disabled]="isApproving" (click)="submitApprovalAction('R')">
+                        <i class="fas" [class.fa-times-circle]="!isApproving" [class.fa-spinner]="isApproving" [class.fa-spin]="isApproving"></i> {{ isApproving ? 'Processing…' : 'Reject' }}
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+                <div class="byod-ia-done" *ngIf="isMyPendingApproval(apv) && approvalActionDone">
+                  <i class="fas fa-check-circle"></i> Action submitted.
+                </div>
+                <!-- IT-specific fields -->
+                <ng-container *ngIf="(apv.approverCode || '').toUpperCase() === 'IT'">
+                  <div class="byod-field byod-mb">
+                    <label class="byod-label">Category of Staff (Eligibility)</label>
+                    <div class="byod-radio-group">
+                      <label class="byod-radio"><input type="radio" name="elig_v" value="Y" [(ngModel)]="itCategory" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null"><span class="byod-radio-dot"></span> Yes</label>
+                      <label class="byod-radio"><input type="radio" name="elig_v" value="N" [(ngModel)]="itCategory" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null"><span class="byod-radio-dot"></span> No</label>
+                    </div>
+                  </div>
+                  <div class="byod-field byod-mb">
+                    <label class="byod-label">User Type</label>
+                    <div class="byod-radio-group">
+                      <label class="byod-radio"><input type="radio" name="utype_v" value="F" [(ngModel)]="itUserType" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null"><span class="byod-radio-dot"></span> First Time</label>
+                      <label class="byod-radio"><input type="radio" name="utype_v" value="E" [(ngModel)]="itUserType" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null"><span class="byod-radio-dot"></span> Existing</label>
+                    </div>
+                  </div>
+                  <div class="byod-sub-section" *ngIf="itUserType !== 'F'">
+                    <div class="byod-sub-section-title"><i class="fas fa-laptop-code"></i> If Existing Notebook User</div>
+                    <div class="byod-field byod-mb">
+                      <label class="byod-label">Asset Code</label>
+                      <input type="text" class="byod-input" [class.byod-input-disabled]="!(isMyPendingApproval(apv) && !approvalActionDone)" [(ngModel)]="itAssetCode" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null" placeholder="Asset code…">
+                    </div>
+                    <div class="byod-field byod-mb">
+                      <label class="byod-label">Date of Purchase</label>
+                      <input type="date" class="byod-input" [class.byod-input-disabled]="!(isMyPendingApproval(apv) && !approvalActionDone)" [(ngModel)]="itDateOfPurchase" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null">
+                    </div>
+                    <div class="byod-field">
+                      <label class="byod-label">Period in Years <span class="byod-mandatory-note">(Min. 5 Years)</span></label>
+                      <input type="text" class="byod-input" [class.byod-input-disabled]="!(isMyPendingApproval(apv) && !approvalActionDone)" [(ngModel)]="itYearsAsOnDate" [ngModelOptions]="{standalone:true}" [attr.disabled]="!(isMyPendingApproval(apv) && !approvalActionDone) ? true : null" placeholder="e.g. 5">
+                    </div>
+                  </div>
+                  <div class="byod-alert byod-alert-green byod-mt"><i class="fas fa-check-circle"></i><span>Verified by IT Dept. — proceed with application processing.</span></div>
+                </ng-container>
+                <!-- Voucher confirm message -->
+                <div class="byod-admin-confirm" *ngIf="(apv.approverCode || '').toUpperCase() === 'ADMIN'">
+                  <i class="fas fa-coins"></i><span>Paid Advance of <strong>OMR 300/-</strong> towards the purchase of Notebook Computer (BYOD – Policy).</span>
+                </div>
               </div>
             </div>
-          </div>
+          </ng-container>
 
         </ng-container>
 
