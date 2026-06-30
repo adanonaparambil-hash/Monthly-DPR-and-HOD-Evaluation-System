@@ -11,6 +11,10 @@
       <button class="byod-back-btn-inline" *ngIf="isViewMode" (click)="goBack()">
         <i class="fas fa-arrow-left"></i>
       </button>
+      <button class="byod-pdf-btn" *ngIf="isViewMode" (click)="downloadAsPdf()" [disabled]="isPdfGenerating" title="Export PDF">
+        <i class="fas" [ngClass]="isPdfGenerating ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i>
+        <span>{{ isPdfGenerating ? 'Generating...' : 'Export PDF' }}</span>
+      </button>
       <div class="byod-hero-icon"><i class="fas fa-laptop"></i></div>
       <div class="byod-hero-text">
         <p class="byod-hero-eyebrow">BYOD Policy — Bring Your Own Device</p>
@@ -587,8 +591,8 @@
           <!-- ── Admin Department ── -->
           <div class="byod-card byod-anim-5">
             <div class="byod-card-head byod-head-official">
-              <div class="byod-card-icon byod-ci-violet"><i class="fas fa-building"></i></div>
-              <div><h3 class="byod-card-title">Admin Department</h3><p class="byod-card-sub">Final clearance</p></div>
+              <div class="byod-card-icon byod-ci-violet"><i class="fas fa-file-invoice"></i></div>
+              <div><h3 class="byod-card-title">Voucher Creation</h3><p class="byod-card-sub">Final clearance</p></div>
               <span class="byod-apv-status-badge" *ngIf="isViewMode && adminApv" [ngClass]="getStatusClass(adminApv!.approvalStatusCode)">
                 <i class="fas" [ngClass]="getStatusIcon(adminApv!.approvalStatusCode)"></i> {{ getStatusLabel(adminApv!.approvalStatusCode) }}
               </span>

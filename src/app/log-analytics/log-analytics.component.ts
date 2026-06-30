@@ -248,6 +248,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   filterProjects:   { projectId: number;  projectName: string }[]    = [];
   filterStatuses:   string[]                                          = [];
   filterDepts:      { departmentId: number; deptName: string }[]     = [];
+  projectCodeMap:   Map<number, string>                               = new Map();
 
   // ── Custom fields ─────────────────────────────────────────────────────────
   customFieldDefs: TaskFieldDefinition[] = [];
@@ -490,6 +491,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
         const result      = res?.data ?? res ?? {};
         const rows: LogAnalyticsRow[] = result.data ?? [];
         this.totalRecords = result.totalCount ?? 0;
+        rows.forEach(r => { if (r.projectId && r.projectName) this.projectCodeMap.set(r.projectId, r.projectName); });
 
         // Build summary map keyed by groupKey (strip T00:00:00 if date groupBy)
         this.summaryMap = {};
@@ -735,7 +737,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
       case 'employee':       return this.filterEmployees.map(e => e.employeeName);
       case 'assignedBy':     return this.filterEmployees.map(e => e.employeeName);
       case 'taskCategory':   return this.filterCategories.map(c => c.categoryName);
-      case 'project':        return this.filterProjects.map(p => p.projectName);
+      case 'project':        return this.filterProjects.map(p => p.projectName).filter((v): v is string => !!v);
       case 'approvalStatus': return this.filterStatuses;
       case 'department':     return this.filterDepts.map(d => d.deptName);
       default:
@@ -797,7 +799,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
         break;
       case 'project':
         this.activeFilters.projectIds = this.filterProjects
-          .filter(p => selectedLabels.includes(p.projectName))
+          .filter(p => p.projectName && selectedLabels.includes(p.projectName))
           .map(p => p.projectId);
         break;
       case 'approvalStatus':

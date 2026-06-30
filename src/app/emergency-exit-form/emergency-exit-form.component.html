@@ -19,6 +19,10 @@
         </div>
       </div>
       <div class="header-actions" *ngIf="isApprovalMode || isViewMode || returnUrl">
+        <button class="btn-pdf" (click)="downloadAsPdf()" [disabled]="isPdfGenerating">
+          <span *ngIf="!isPdfGenerating"><i class="fas fa-file-pdf"></i> Export PDF</span>
+          <span *ngIf="isPdfGenerating"><i class="fas fa-spinner fa-spin"></i> Generating...</span>
+        </button>
         <button class="btn-back" (click)="returnToApprovalListing()">
           <i class="fas fa-arrow-left"></i>
           Back to Approvals
@@ -52,7 +56,7 @@
 
   <!-- Single Screen Form Content -->
   <div class="single-screen-form" *ngIf="!formSubmitted">
-    <div class="form-layout" [class.has-sidebar]="shouldShowWorkflowSidebar()">
+    <div id="exitFormPdfContent" class="form-layout" [class.has-sidebar]="shouldShowWorkflowSidebar()">
       <!-- Left Column: Form Content -->
       <div class="form-content-column">
         <form [formGroup]="exitForm">

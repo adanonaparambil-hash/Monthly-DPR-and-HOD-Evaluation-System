@@ -5,6 +5,8 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { ActivatedRoute, Router } from '@angular/router';
 import { Api } from '../services/api';
 import { DropdownOption, ExitEmpProfileDetails } from '../models/common.model';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import {
   EmployeeExitRequest,
   EmployeeExitResponsibility,
@@ -107,6 +109,9 @@ export class EmergencyExitFormComponent implements OnInit {
   // Date calculation tracking
   wasAutoCalculated: boolean = false;
   private isCalculatingDays: boolean = false;
+
+  // PDF export
+  isPdfGenerating: boolean = false;
 
   // Approval mode flags
   isApprovalMode: boolean = false;
@@ -3127,6 +3132,520 @@ export class EmergencyExitFormComponent implements OnInit {
     } catch (error) {
       console.error('Error formatting date:', dateString, error);
       return dateString;
+    }
+  }
+
+  async downloadAsPdf(): Promise<void> {
+    if (this.isPdfGenerating) return;
+    this.isPdfGenerating = true;
+
+    try {
+      // ── Load assets ──────────────────────────────────────────────────────────
+      const loadImg = async (src: string): Promise<string> => {
+        try {
+          const r = await fetch(src);
+          const b = await r.blob();
+          return await new Promise<string>(res => {
+            const fr = new FileReader();
+            fr.onload = () => res(fr.result as string);
+            fr.readAsDataURL(b);
+          });
+        } catch { return ''; }
+      };
+
+      const [logoDataUrl, empPhotoDataUrl] = await Promise.all([
+        loadImg('assets/images/Logo_LoginScreen.png'),
+        (this.employeePhoto && this.employeePhoto !== AvatarUtil.DEFAULT_AVATAR)
+          ? loadImg(this.employeePhoto)
+          : Promise.resolve(this.employeePhoto?.startsWith('data:') ? this.employeePhoto : ''),
+      ]);
+
+      // ── Constants ─────────────────────────────────────────────────────────────
+      const pW = 210, pH = 297, margin = 8, cW = pW - margin * 2, footerH = 8;
+      const maxY = pH - footerH - 4;
+      const teal = [19, 130, 113] as [number, number, number];
+      const dark = [27, 42, 56] as [number, number, number];
+
+      // ── Form values ───────────────────────────────────────────────────────────
+      const fv = this.exitForm.getRawValue();
+      const formTypeLabel = this.formType === 'E' ? 'EMERGENCY EXIT FORM'
+                          : this.formType === 'P' ? 'PLANNED LEAVE FORM'
+                          : 'RESIGNATION FORM';
+      const empNameRaw = (fv.employeeName || 'Employee').toUpperCase();
+      const empId      = (fv.employeeId  || 'EMP').replace(/\s+/g, '');
+      const typeFile   = this.formType === 'E' ? 'EmergencyExit'
+                       : this.formType === 'R' ? 'Resignation' : 'PlannedLeave';
+      const dateStr    = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const hodDisplayName = this.hodList.find(h => h.idValue === fv.hodName)?.description || fv.hodName || '—';
+      const responsibilities = this.responsibilitiesFormArray.getRawValue() as any[];
+
+      const fmtDate = (d: string) => {
+        if (!d) return '—';
+        try {
+          const dt = new Date(d);
+          if (isNaN(dt.getTime())) return d;
+          return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch { return d; }
+      };
+
+      // ── PDF setup ─────────────────────────────────────────────────────────────
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      let y = 0;
+
+      const newPage = () => { pdf.addPage(); y = margin + 2; };
+
+      const chk = (need: number) => { if (y + need > maxY) newPage(); };
+
+      // ── Section header ────────────────────────────────────────────────────────
+      const secHeader = (title: string) => {
+        chk(8);
+        pdf.setFillColor(...teal);
+        pdf.rect(margin, y, cW, 5.5, 'F');
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(margin, y, 2, 5.5, 'F');
+        pdf.setFillColor(...teal);
+        pdf.rect(margin + 0.5, y, 1.5, 5.5, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(title, margin + 4, y + 3.8);
+        y += 7;
+      };
+
+      // ── Two-column field row ──────────────────────────────────────────────────
+      const twoCol = (rows: { l: string; lv: string; r?: string; rv?: string }[]) => {
+        const hw = (cW - 6) / 2;
+        rows.forEach(row => {
+          const lLines = pdf.splitTextToSize(row.lv || '—', hw - 2);
+          const rLines = row.r ? pdf.splitTextToSize(row.rv || '—', hw - 2) : [];
+          const rowH   = Math.max(lLines.length, rLines.length) * 3.2 + 6.5;
+          chk(rowH);
+
+          pdf.setFillColor(248, 250, 252);
+          pdf.rect(margin, y, cW, rowH - 0.8, 'F');
+          pdf.setDrawColor(226, 232, 240);
+          pdf.setLineWidth(0.12);
+          pdf.rect(margin, y, cW, rowH - 0.8, 'S');
+
+          // left field
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(6);
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(row.l, margin + 2.5, y + 3);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7.5);
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(lLines, margin + 2.5, y + 6.5);
+
+          // right field
+          if (row.r) {
+            const rx = margin + hw + 6;
+            pdf.setFillColor(226, 232, 240);
+            pdf.rect(margin + hw + 3, y + 0.8, 0.25, rowH - 2.3, 'F');
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(6);
+            pdf.setTextColor(100, 116, 139);
+            pdf.text(row.r, rx, y + 3);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(7.5);
+            pdf.setTextColor(15, 23, 42);
+            pdf.text(rLines, rx, y + 6.5);
+          }
+          y += rowH;
+        });
+        y += 0.5;
+      };
+
+      // ── Full-width text field ─────────────────────────────────────────────────
+      const fullField = (label: string, value: string) => {
+        const lines = pdf.splitTextToSize(value || '—', cW - 6);
+        const fh = lines.length * 3.2 + 7;
+        chk(fh);
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(6);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(label, margin, y + 3);
+
+        pdf.setFillColor(248, 250, 252);
+        pdf.setDrawColor(226, 232, 240);
+        pdf.setLineWidth(0.12);
+        pdf.roundedRect(margin, y + 5, cW, lines.length * 3.2 + 2, 1, 1, 'FD');
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(15, 23, 42);
+        pdf.text(lines, margin + 2, y + 8);
+        y += fh;
+      };
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // PAGE 1 HEADER
+      // ══════════════════════════════════════════════════════════════════════════
+      pdf.setFillColor(...dark);
+      pdf.rect(0, 0, pW, 20, 'F');
+      pdf.setFillColor(...teal);
+      pdf.rect(0, 18.5, pW, 1.5, 'F');
+
+      // Logo
+      if (logoDataUrl) {
+        try { pdf.addImage(logoDataUrl, 'PNG', margin, 3, 14, 12); } catch (_) {}
+      }
+
+      // Company info
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('AL ADRAK TRADING AND CONTRACTING LLC', margin + 17, 9);
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.setTextColor(165, 212, 206);
+      pdf.text(formTypeLabel, margin + 17, 15);
+
+      // Date top-right
+      const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(180, 220, 215);
+      pdf.text(`Date: ${today}`, pW - margin, 9, { align: 'right' });
+
+      // Employee name chip top-right
+      const chipW = Math.min(pdf.getTextWidth(empNameRaw) + 6, 60);
+      pdf.setFillColor(...teal);
+      pdf.roundedRect(pW - margin - chipW, 13, chipW, 5, 1, 1, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(empNameRaw, pW - margin - chipW / 2, 16.6, { align: 'center', maxWidth: chipW - 3 });
+
+      y = 23;
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // EMPLOYEE PHOTO + PERSONAL INFO
+      // ══════════════════════════════════════════════════════════════════════════
+      secHeader('1.  PERSONAL INFORMATION');
+
+      // Photo placeholder on right
+      const photoSize = 22;
+      const photoX    = margin + cW - photoSize;
+      const photoY    = y;
+      if (empPhotoDataUrl) {
+        try {
+          pdf.addImage(empPhotoDataUrl, 'JPEG', photoX, photoY, photoSize, photoSize);
+          pdf.setDrawColor(...teal);
+          pdf.setLineWidth(0.5);
+          pdf.rect(photoX, photoY, photoSize, photoSize, 'S');
+        } catch (_) {}
+      } else {
+        pdf.setFillColor(226, 232, 240);
+        pdf.rect(photoX, photoY, photoSize, photoSize, 'F');
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(6);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text('PHOTO', photoX + photoSize / 2, photoY + photoSize / 2 + 1, { align: 'center' });
+      }
+
+      // Fields in left area (cW - photoSize - 6)
+      const fieldsW = cW - photoSize - 6;
+      const hw2 = (fieldsW - 4) / 2;
+      const personalRows = [
+        { l: 'Employee Name', lv: fv.employeeName || '—', r: 'Employee ID', rv: empId },
+        { l: 'Department / Site', lv: fv.department || '—', r: 'Designation', rv: this.employeeDesignation || '—' },
+        { l: 'HOD Name', lv: hodDisplayName, r: undefined as undefined, rv: undefined as undefined },
+      ];
+
+      if (this.formType === 'P' || this.formType === 'R') {
+        personalRows[2] = { l: 'HOD Name', lv: hodDisplayName, r: 'Category', rv: fv.category || '—' };
+        personalRows.push({ l: 'Project Manager / Site Incharge', lv: this.getProjectManagerDisplayName() || '—', r: 'Phone Number', rv: fv.responsibilitiesHandedOverToPhone || '—' });
+        personalRows.push({ l: 'Email ID', lv: fv.responsibilitiesHandedOverToEmail || '—', r: undefined, rv: undefined });
+      }
+
+      const startPersonalY = y;
+      personalRows.forEach(row => {
+        const lLines = pdf.splitTextToSize(row.lv || '—', hw2 - 2);
+        const rLines = row.r ? pdf.splitTextToSize(row.rv || '—', hw2 - 2) : [];
+        const rh = Math.max(lLines.length, rLines.length) * 3.2 + 6.5;
+        chk(rh);
+
+        pdf.setFillColor(248, 250, 252);
+        pdf.rect(margin, y, fieldsW, rh - 0.8, 'F');
+        pdf.setDrawColor(226, 232, 240);
+        pdf.setLineWidth(0.12);
+        pdf.rect(margin, y, fieldsW, rh - 0.8, 'S');
+
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6); pdf.setTextColor(100, 116, 139);
+        pdf.text(row.l, margin + 2.5, y + 3);
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(15, 23, 42);
+        pdf.text(lLines, margin + 2.5, y + 6.5);
+
+        if (row.r) {
+          const rx = margin + hw2 + 5;
+          pdf.setFillColor(226, 232, 240);
+          pdf.rect(margin + hw2 + 2, y + 0.8, 0.25, rh - 2.3, 'F');
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6); pdf.setTextColor(100, 116, 139);
+          pdf.text(row.r, rx, y + 3);
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(15, 23, 42);
+          pdf.text(rLines, rx, y + 6.5);
+        }
+        y += rh;
+      });
+
+      // Ensure we clear the photo
+      y = Math.max(y, startPersonalY + photoSize + 2);
+      y += 1;
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // CONTACT DETAILS  (Emergency only)
+      // ══════════════════════════════════════════════════════════════════════════
+      if (this.formType === 'E') {
+        secHeader('2.  CONTACT DETAILS');
+        twoCol([
+          { l: 'Address', lv: fv.address || '—', r: 'Place', rv: fv.place || '—' },
+          { l: 'District', lv: fv.district || '—', r: 'State', rv: fv.state || '—' },
+          { l: 'Post Office', lv: fv.postOffice || '—', r: 'Nation', rv: fv.nation || '—' },
+          { l: 'Mobile Number', lv: fv.telephoneMobile || '—', r: 'Landline', rv: fv.telephoneLandline || '—' },
+          { l: 'Email ID', lv: fv.emailId || '—' },
+        ]);
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // TRAVEL / RESIGNATION INFORMATION
+      // ══════════════════════════════════════════════════════════════════════════
+      const s3 = this.formType === 'E' ? '3' : '2';
+      const travelTitle = this.formType === 'R'
+        ? `${s3}.  RESIGNATION INFORMATION` : `${s3}.  TRAVEL INFORMATION`;
+      secHeader(travelTitle);
+
+      if (this.formType !== 'R') {
+        twoCol([
+          { l: 'Date of Departure', lv: fmtDate(fv.dateOfDeparture), r: 'Date of Arrival', rv: fmtDate(fv.dateOfArrival) },
+          { l: 'No. of Days Requested', lv: String(fv.noOfDaysApproved ?? '—'), r: 'Flight Time', rv: fv.flightTime || '—' },
+        ]);
+      } else {
+        twoCol([
+          { l: 'Last Working Date', lv: fmtDate(fv.dateOfDeparture), r: 'Notice Period (Days)', rv: String(fv.noOfDaysApproved ?? '—') },
+        ]);
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // DETAILS SECTION
+      // ══════════════════════════════════════════════════════════════════════════
+      const s4 = this.formType === 'E' ? '4' : '3';
+      const detailTitle = this.formType === 'E' ? `${s4}.  EMERGENCY DETAILS`
+                        : this.formType === 'P' ? `${s4}.  LEAVE DETAILS`
+                        : `${s4}.  RESIGNATION DETAILS`;
+      secHeader(detailTitle);
+
+      const reasonLabel = this.formType === 'E' ? 'Reason for Emergency'
+                        : this.formType === 'P' ? 'Reason for Planned Leave'
+                        : 'Reason for Resignation';
+      fullField(reasonLabel, fv.reasonForEmergency || '');
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // RESPONSIBILITIES HANDED OVER
+      // ══════════════════════════════════════════════════════════════════════════
+      const s5 = this.formType === 'E' ? '5' : '4';
+      secHeader(`${s5}.  RESPONSIBILITIES HANDED OVER`);
+
+      if (responsibilities.length === 0) {
+        chk(8);
+        pdf.setFont('helvetica', 'italic'); pdf.setFontSize(7); pdf.setTextColor(148, 163, 184);
+        pdf.text('No responsibilities recorded.', margin + 2, y + 4.5);
+        y += 8;
+      } else {
+        responsibilities.forEach((resp: any, idx: number) => {
+          chk(10);
+          // sub-card header
+          pdf.setFillColor(232, 246, 243);
+          pdf.setDrawColor(...teal);
+          pdf.setLineWidth(0.25);
+          pdf.rect(margin, y, cW, 5.5, 'FD');
+          pdf.setFillColor(...teal);
+          pdf.rect(margin, y, 1.8, 5.5, 'F');
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7); pdf.setTextColor(...teal);
+          pdf.text(`  Responsibility ${idx + 1}`, margin + 3, y + 3.8);
+          y += 7;
+
+          twoCol([
+            { l: 'Project', lv: resp.project || '—', r: 'Responsible Person', rv: resp.responsiblePersonName || '—' },
+            { l: 'Phone Number', lv: resp.responsiblePersonPhone || '—', r: 'Email ID', rv: resp.responsiblePersonEmail || '—' },
+          ]);
+          fullField('Activities', resp.activities || '');
+          if (resp.remarks) fullField('Remarks', resp.remarks);
+          y += 1;
+        });
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // DECLARATIONS
+      // ══════════════════════════════════════════════════════════════════════════
+      const s6 = this.formType === 'E' ? '6' : '5';
+      secHeader(`${s6}.  DECLARATIONS`);
+
+      const decItems = [
+        { ok: !!fv.decInfoAccurate,      text: 'I confirm that all information provided is accurate and complete.' },
+        { ok: !!fv.decHandoverComplete,  text: this.formType === 'E'
+            ? 'I have handed over all my responsibilities to the designated personnel.'
+            : 'I have properly handed over my responsibilities to the designated personnel.' },
+        { ok: !!fv.decReturnAssets,      text: this.formType === 'E'
+            ? 'I will return all company assets (laptop, phone, keys, tag, vehicle, etc.) before departure.'
+            : this.formType === 'P'
+            ? 'I will return all company assets before my planned departure.'
+            : 'I will return all company assets before my last working day.' },
+        { ok: !!fv.decUnderstandReturn,  text: this.formType === 'E'
+            ? 'I understand this is an emergency exit and I will return as per the approved dates.'
+            : this.formType === 'P'
+            ? 'I understand this is a planned leave and I will return as per the approved schedule.'
+            : 'I understand this is a resignation and I will complete the full notice period as required.' },
+      ];
+
+      decItems.forEach(dec => {
+        const lines = pdf.splitTextToSize(dec.text, cW - 13);
+        const dh = lines.length * 3.2 + 6;
+        chk(dh);
+
+        pdf.setFillColor(dec.ok ? 240 : 248, dec.ok ? 253 : 250, dec.ok ? 244 : 252);
+        pdf.setDrawColor(dec.ok ? 22 : 226, dec.ok ? 163 : 232, dec.ok ? 74 : 240);
+        pdf.setLineWidth(0.12);
+        pdf.roundedRect(margin, y, cW, dh - 0.8, 1, 1, 'FD');
+
+        if (dec.ok) {
+          pdf.setFillColor(22, 163, 74);
+          pdf.roundedRect(margin + 2.5, y + 1.8, 3.5, 3.5, 0.4, 0.4, 'F');
+          pdf.setDrawColor(255, 255, 255);
+          pdf.setLineWidth(0.6);
+          pdf.line(margin + 3.2, y + 3.8, margin + 4.0, y + 4.7);
+          pdf.line(margin + 4.0, y + 4.7, margin + 5.4, y + 2.8);
+        } else {
+          pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.25);
+          pdf.roundedRect(margin + 2.5, y + 1.8, 3.5, 3.5, 0.4, 0.4, 'S');
+        }
+
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(15, 23, 42);
+        pdf.text(lines, margin + 8, y + 4);
+        y += dh;
+      });
+      y += 1;
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // APPROVAL WORKFLOW
+      // ══════════════════════════════════════════════════════════════════════════
+      if (this.approvalWorkflow && this.approvalWorkflow.length > 0) {
+        const s7 = this.formType === 'E' ? '7' : '6';
+        secHeader(`${s7}.  APPROVAL WORKFLOW`);
+
+        const statusColor: Record<string, [number, number, number]> = {
+          APPROVED:    [22, 163, 74],
+          REJECTED:    [220, 38, 38],
+          IN_PROGRESS: [234, 179, 8],
+          PENDING:     [148, 163, 184],
+        };
+
+        this.approvalWorkflow.forEach((step, idx) => {
+          const sc = statusColor[step.status] || statusColor['PENDING'];
+          const pS = 10;
+          const textMaxW = cW - pS - 10;
+          const isActioned = step.status === 'APPROVED' || step.status === 'REJECTED';
+          if (!isActioned) return;
+          const contactLine = [step.email, step.phoneNumber].filter(Boolean).join('   |   ');
+          const remarksLines = step.comments
+            ? pdf.splitTextToSize(`Remarks: ${step.comments}`, textMaxW) : [];
+          const boxH = Math.max(16, pS + 4)
+                     + (contactLine ? 3.5 : 0)
+                     + (isActioned && step.approvedDate ? 3.5 : 0)
+                     + remarksLines.length * 3.2;
+          chk(boxH + 2);
+
+          pdf.setFillColor(250, 252, 252);
+          pdf.setDrawColor(226, 232, 240);
+          pdf.setLineWidth(0.15);
+          pdf.roundedRect(margin, y, cW, boxH, 1.5, 1.5, 'FD');
+
+          // Status bar left
+          pdf.setFillColor(...sc);
+          pdf.rect(margin, y, 2.5, boxH, 'F');
+
+          // Approver photo — right side, vertically centred
+          const pX = margin + cW - pS - 1.5;
+          const pY = y + (boxH - pS) / 2;
+          const imgB64 = step.profileImageBase64;
+          const imgSrc = imgB64 ? (imgB64.startsWith('data:') ? imgB64 : `data:image/jpeg;base64,${imgB64}`) : '';
+          if (imgSrc) {
+            try {
+              pdf.addImage(imgSrc, 'JPEG', pX, pY, pS, pS);
+              pdf.setDrawColor(...sc); pdf.setLineWidth(0.35); pdf.rect(pX, pY, pS, pS, 'S');
+            } catch (_) {
+              pdf.setFillColor(232, 240, 248); pdf.rect(pX, pY, pS, pS, 'F');
+            }
+          } else {
+            pdf.setFillColor(232, 240, 248); pdf.rect(pX, pY, pS, pS, 'F');
+            pdf.setDrawColor(210, 220, 230); pdf.setLineWidth(0.2); pdf.rect(pX, pY, pS, pS, 'S');
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(4.5); pdf.setTextColor(160, 174, 192);
+            pdf.text('NO\nPHOTO', pX + pS / 2, pY + pS / 2, { align: 'center' });
+          }
+
+          // Step name
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(15, 23, 42);
+          pdf.text(step.stepName || `Step ${idx + 1}`, margin + 5, y + 5.5, { maxWidth: textMaxW });
+
+          // Status badge — left of photo
+          const stText = step.status || 'PENDING';
+          const bW = pdf.getTextWidth(stText) + 5;
+          pdf.setFillColor(...sc);
+          pdf.roundedRect(pX - bW - 3, y + 2, bW, 5, 0.8, 0.8, 'F');
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6); pdf.setTextColor(255, 255, 255);
+          pdf.text(stText, pX - bW / 2 - 3, y + 5.5, { align: 'center' });
+
+          const approverName = step.approvedBy || step.approverNames?.[0] || '—';
+          const approverId   = step.approvedId || step.approverIds?.[0] || '';
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(15, 23, 42);
+          pdf.text(`${approverName}${approverId ? '   ID: ' + approverId : ''}`, margin + 5, y + 10, { maxWidth: textMaxW });
+          let infoY = y + 13.5;
+          if (contactLine) {
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(contactLine, margin + 5, infoY, { maxWidth: textMaxW });
+            infoY += 3.5;
+          }
+          if (isActioned && step.approvedDate) {
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(100, 116, 139);
+            pdf.text('Date:', margin + 5, infoY);
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(15, 23, 42);
+            pdf.text(fmtDate(step.approvedDate), margin + 16, infoY);
+            infoY += 3.5;
+          }
+          if (remarksLines.length > 0) {
+            pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(remarksLines, margin + 5, infoY);
+          }
+          y += boxH + 3;
+        });
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // FOOTERS — stamp all pages after content is done
+      // ══════════════════════════════════════════════════════════════════════════
+      const totalPages = pdf.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        pdf.setFillColor(...dark);
+        pdf.rect(0, pH - footerH, pW, footerH, 'F');
+        pdf.setFillColor(...teal);
+        pdf.rect(0, pH - footerH, pW, 1.5, 'F');
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(`AL ADRAK TRADING AND CONTRACTING LLC   |   ${formTypeLabel}   |   ${empNameRaw}`, margin, pH - 2.5);
+        pdf.text(`Page ${p} of ${totalPages}`, pW - margin, pH - 2.5, { align: 'right' });
+      }
+
+      pdf.save(`${typeFile}_${empId}_${dateStr}.pdf`);
+      this.toastr.success('PDF downloaded successfully.', 'Export Complete');
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      this.toastr.error('Failed to generate PDF. Please try again.', 'Export Failed');
+    } finally {
+      this.isPdfGenerating = false;
     }
   }
 }

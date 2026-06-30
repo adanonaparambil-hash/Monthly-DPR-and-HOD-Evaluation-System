@@ -1120,6 +1120,31 @@
   background: none !important; font-size: 13px !important;
 }
 
+/* ── PDF export button inside hero ──────────────────────────── */
+.byod-pdf-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: 1.5px solid rgba(255,255,255,.35);
+  color: #fff; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+  backdrop-filter: blur(4px); white-space: nowrap;
+}
+.byod-pdf-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 14px rgba(220,38,38,.45);
+  transform: translateY(-1px);
+}
+.byod-pdf-btn:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+.byod-pdf-btn i {
+  color: #fff !important; -webkit-text-fill-color: #fff !important;
+  background: none !important; font-size: 13px !important;
+}
+.byod-pdf-btn span {
+  color: #fff !important; -webkit-text-fill-color: #fff !important;
+  background: none !important;
+}
+
 /* ── Inline approve/reject inside approver card ────────────── */
 .byod-ia-panel {
   margin-top: 10px;
