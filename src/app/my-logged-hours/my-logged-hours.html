@@ -80,14 +80,46 @@
       @if (isHOD || (isSurveillance && !isHOD) || isMasOrPurchase) {
         <div class="filter-group">
           <label class="filter-label">Employee</label>
-          <div class="filter-input-wrapper">
-            <i class="fas fa-user filter-icon"></i>
-            <select class="filter-select" [(ngModel)]="selectedEmployee">
-              <option value="all">All Employees</option>
-              <option *ngFor="let employee of employees" [value]="employee.employeeCode">
-                {{ employee.employeeName }}
-              </option>
-            </select>
+          <div class="bh-emp-wrap" (click)="$event.stopPropagation()">
+            <button type="button" class="bh-emp-btn"
+                    [class.bh-emp-btn--active]="selectedEmployee !== 'all'"
+                    (click)="toggleEmpDrop($event)">
+              <i class="fas fa-user bh-emp-ico"></i>
+              <span class="bh-emp-label">{{ empSelectedLabel }}</span>
+              <i class="fas fa-chevron-down bh-emp-arrow"
+                 [class.bh-emp-arrow--open]="empDropdownOpen"></i>
+            </button>
+
+            <div class="bh-emp-drop" *ngIf="empDropdownOpen">
+              <div class="bh-emp-search-wrap">
+                <i class="fas fa-search bh-emp-search-ico"></i>
+                <input class="bh-emp-search-input" type="text"
+                       placeholder="Search name or ID…"
+                       [(ngModel)]="empSearchTerm"
+                       (click)="$event.stopPropagation()"
+                       autofocus>
+              </div>
+              <div class="bh-emp-list">
+                <div class="bh-emp-item"
+                     [class.bh-emp-item--active]="selectedEmployee === 'all'"
+                     (click)="selectMainEmployee('all', $event)">
+                  <span class="bh-emp-name">All Employees</span>
+                </div>
+                <div class="bh-emp-divider"></div>
+                <ng-container *ngIf="filteredMainEmployees.length > 0; else noMainEmpMatch">
+                  <div class="bh-emp-item"
+                       *ngFor="let emp of filteredMainEmployees"
+                       [class.bh-emp-item--active]="selectedEmployee === emp.employeeCode"
+                       (click)="selectMainEmployee(emp.employeeCode, $event)">
+                    <span class="bh-emp-name">{{ emp.employeeName }}</span>
+                    <span class="bh-emp-code">{{ emp.employeeCode }}</span>
+                  </div>
+                </ng-container>
+                <ng-template #noMainEmpMatch>
+                  <div class="bh-emp-empty">No employees found</div>
+                </ng-template>
+              </div>
+            </div>
           </div>
         </div>
       }

@@ -103,6 +103,10 @@ export class MyLoggedHoursComponent implements OnInit {
   selectedCategory: string | number = 'all';
   tableSearchTerm = '';  // Client-side table search
 
+  // Employee filter searchable dropdown
+  empDropdownOpen  = false;
+  empSearchTerm    = '';
+
   // API data
   projects: Project[] = [];
   departments: Department[] = [];
@@ -1518,6 +1522,35 @@ export class MyLoggedHoursComponent implements OnInit {
     }
   }
 
+  // ── Main filter — Employee searchable dropdown ────────────────────────────
+  get filteredMainEmployees(): Employee[] {
+    const q = this.empSearchTerm.trim().toLowerCase();
+    if (!q) return this.employees;
+    return this.employees.filter(e =>
+      e.employeeName.toLowerCase().includes(q) ||
+      (e.employeeCode ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  get empSelectedLabel(): string {
+    if (this.selectedEmployee === 'all') return 'All Employees';
+    const emp = this.employees.find(e => e.employeeCode === this.selectedEmployee);
+    return emp ? `${emp.employeeName} (${emp.employeeCode})` : String(this.selectedEmployee);
+  }
+
+  toggleEmpDrop(ev: Event): void {
+    ev.stopPropagation();
+    this.empDropdownOpen = !this.empDropdownOpen;
+    if (this.empDropdownOpen) this.empSearchTerm = '';
+  }
+
+  selectMainEmployee(code: string | number, ev: Event): void {
+    ev.stopPropagation();
+    this.selectedEmployee = code;
+    this.empDropdownOpen  = false;
+    this.empSearchTerm    = '';
+  }
+
   // ── Employee searchable dropdown helpers ──────────────────────────────────
   get filteredBreakHistoryEmployees(): Employee[] {
     const q = this.breakHistoryEmpSearch.trim().toLowerCase();
@@ -1548,7 +1581,10 @@ export class MyLoggedHoursComponent implements OnInit {
   }
 
   @HostListener('document:click')
-  closeBhEmpDrop(): void { this.breakHistoryEmpDropdownOpen = false; }
+  closeBhEmpDrop(): void {
+    this.breakHistoryEmpDropdownOpen = false;
+    this.empDropdownOpen = false;
+  }
 
   loadBreakHistoryEmployees(departmentId: number) {
     console.log('Loading employees for break history department:', departmentId);
