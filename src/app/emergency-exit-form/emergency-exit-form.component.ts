@@ -730,8 +730,13 @@ export class EmergencyExitFormComponent implements OnInit {
           // Format dates for input fields
           const formatDateForInput = (dateString: string): string => {
             if (!dateString) return '';
-            const date = new Date(dateString);
-            return date.toISOString().split('T')[0];
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+            if (/^\d{4}-\d{2}-\d{2}T/.test(dateString)) return dateString.substring(0, 10);
+            const parts = dateString.split('-');
+            if (parts.length === 3 && parts[0].length === 2) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            const d = new Date(dateString);
+            if (isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           };
 
           // Bind data to form fields
@@ -1578,8 +1583,13 @@ export class EmergencyExitFormComponent implements OnInit {
       // Format date for input fields
       const formatDateForInput = (dateString: string): string => {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+        if (/^\d{4}-\d{2}-\d{2}T/.test(dateString)) return dateString.substring(0, 10);
+        const parts = dateString.split('-');
+        if (parts.length === 3 && parts[0].length === 2) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return '';
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       };
 
       // Populate basic form fields - using flexible names to support both listing data and full saved data
