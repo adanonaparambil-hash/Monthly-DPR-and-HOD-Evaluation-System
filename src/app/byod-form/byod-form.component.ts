@@ -213,6 +213,36 @@ export class ByodFormComponent implements OnInit {
           this.itDateOfPurchase = d.dateOfPurchase   ? d.dateOfPurchase.split('T')[0] : '';
           this.itYearsAsOnDate  = d.yearsAsOnDate    ? String(d.yearsAsOnDate) : '';
 
+          // Auto-populate IT fields from issued assets only when:
+          //  - current user is the IT approver
+          //  - IT section has NOT yet been saved (itAssetCode is empty)
+          if (this.incomingApproverCode === 'IT' && !this.itAssetCode) {
+            const formEmpId = (d.employeeId || '').toString();
+            if (formEmpId) {
+              this.api.GetIssuedAssets(formEmpId).subscribe({
+                next: (assetRes: any) => {
+                  if (!assetRes?.success || !assetRes?.data?.length) return;
+                  const laptops: any[] = (assetRes.data as any[]).filter(
+                    (a: any) => (a.category || '').toUpperCase() === 'LAPTOP / NOTEBOOK'
+                  );
+                  if (!laptops.length) return;
+                  // Pick the latest by allocationDate
+                  const latest = laptops.sort((a: any, b: any) =>
+                    this.parseAssetDate(b.allocationDate).getTime() -
+                    this.parseAssetDate(a.allocationDate).getTime()
+                  )[0];
+                  this.itAssetCode      = latest.model || '';
+                  this.itDateOfPurchase = this.parseAssetDateToISO(latest.allocationDate);
+                  const allocMs  = this.parseAssetDate(latest.allocationDate).getTime();
+                  const years    = (Date.now() - allocMs) / (1000 * 60 * 60 * 24 * 365.25);
+                  this.itYearsAsOnDate  = years > 0 ? String(Math.floor(years)) : '';
+                  this.itUserType       = 'E'; // pre-select Existing
+                },
+                error: () => {}
+              });
+            }
+          }
+
           // Patch BYOD-specific fields into form
           const hodValue = d.hod || '';
           if (this.hodList.length > 0) {
@@ -246,6 +276,36 @@ export class ByodFormComponent implements OnInit {
       },
       error: () => { this.isLoadingApprovals = false; }
     });
+  }
+
+  private parseAssetDate(dateStr: string): Date {
+    if (!dateStr) return new Date(0);
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      // YYYY-MM-DD (ISO) — first segment is 4-digit year
+      if (parts[0].length === 4) {
+        const d = new Date(`${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}T00:00:00`);
+        return isNaN(d.getTime()) ? new Date(0) : d;
+      }
+      // DD-MM-YY / DD-MM-YYY / DD-MM-YYYY
+      const day   = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      let   year  = parseInt(parts[2], 10);
+      if (year < 100) year += 2000;
+      const d = new Date(year, month, day);
+      return isNaN(d.getTime()) ? new Date(0) : d;
+    }
+    const fallback = new Date(dateStr);
+    return isNaN(fallback.getTime()) ? new Date(0) : fallback;
+  }
+
+  private parseAssetDateToISO(dateStr: string): string {
+    const d = this.parseAssetDate(dateStr);
+    if (!d || d.getTime() === 0 || isNaN(d.getTime())) return '';
+    const y  = d.getFullYear();
+    const m  = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
   }
 
   getApproverImage(detail: ByodApprovalDetail): string | null {
@@ -304,6 +364,16 @@ export class ByodFormComponent implements OnInit {
 
   submitApprovalAction(status: 'A' | 'R'): void {
     if (!this.incomingApprovalId) return;
+    if (this.incomingApproverCode === 'IT' && status === 'A') {
+      if (!this.itCategory) {
+        this.toaster.showError('Required', 'Please select Category of Staff (Eligibility) before approving.');
+        return;
+      }
+      if (!this.itUserType) {
+        this.toaster.showError('Required', 'Please select User Type before approving.');
+        return;
+      }
+    }
     this.isApproving = true;
     const user = this.auth.getUser();
     const d = this.byodRecord || {};
@@ -334,10 +404,12 @@ export class ByodFormComponent implements OnInit {
       payload.userType       = this.itUserType       || null;
       payload.userExisting   = this.itCategory === 'Y' ? 'Y' : this.itCategory === 'N' ? 'N' : (d.userExisting || null);
       payload.assetCode      = this.itAssetCode      || null;
-      payload.dateOfPurchase = this.itDateOfPurchase || null;
-      payload.yearsAsOnDate  = this.itYearsAsOnDate  ? +this.itYearsAsOnDate : null;
+      payload.dateOfPurchase = (this.itDateOfPurchase && /^\d{4}-\d{2}-\d{2}$/.test(this.itDateOfPurchase))
+        ? this.itDateOfPurchase : null;
+      payload.yearsAsOnDate  = this.itYearsAsOnDate  ? Math.floor(+this.itYearsAsOnDate) : null;
     }
 
+    console.log('[BYOD] submitApprovalAction payload:', JSON.stringify(payload, null, 2));
     this.api.saveEmployeeByod(payload).subscribe({
       next: () => {
         this.isApproving = false;
@@ -674,73 +746,95 @@ export class ByodFormComponent implements OnInit {
         secHeader(`${apvNum}.  APPROVAL WORKFLOW`);
         const scMap: Record<string, [number,number,number]> = { A:[22,163,74], R:[220,38,38], P:[148,163,184], I:[234,179,8] };
 
-        this.approvalDetails.forEach((apv, idx) => {
+        // Filter + sort by ApprovalLevel
+        const apvsToShow = [...this.approvalDetails]
+          .sort((a: any, b: any) => (a.approvalLevel ?? 999) - (b.approvalLevel ?? 999))
+          .filter((apv: any) => {
+            const code = (apv.approvalStatusCode || '').toUpperCase();
+            const cUp  = (apv.approverCode || '').toUpperCase();
+            const rUp  = (apv.approverRole || '').toUpperCase();
+            const isIT = cUp === 'IT' || rUp.includes('IT DEPT') || rUp === 'IT DEPARTMENT';
+            return code === 'A' || (isIT && !!apv.employeeName);
+          });
+
+        const pS  = 8;
+        const gap = 3;
+        const halfW = (cW - gap) / 2;
+
+        const calcApvH = (apv: any): number => {
+          const code = (apv.approvalStatusCode || '').toUpperCase();
+          const contactLine = [apv.email, apv.phoneNumber].filter(Boolean).join(' | ');
+          const tW = halfW - pS - 8;
+          const remarksLines = apv.remarks ? pdf.splitTextToSize(`Remarks: ${apv.remarks}`, tW) : [];
+          return Math.max(14, pS + 4)
+            + (contactLine ? 3 : 0)
+            + (code === 'A' && apv.approvalDate ? 3 : 0)
+            + remarksLines.length * 3.0;
+        };
+
+        const drawApvBox = (apv: any, xOff: number, bW: number, bY: number, boxH: number, idx: number) => {
           const code = (apv.approvalStatusCode || '').toUpperCase();
           const sc2: [number,number,number] = scMap[code] || scMap['P'];
           const stLabel = code === 'A' ? 'APPROVED' : code === 'R' ? 'REJECTED' : 'PENDING';
-          const pS = 10;
-          const textMaxW = cW - pS - 10;
-          const isIT = (apv.approverCode || '').toUpperCase() === 'IT';
-          const isActioned = code === 'A' || code === 'R';
-          if (!isActioned && !isIT) return;
-          const contactLine = [apv.email, apv.phoneNumber].filter(Boolean).join('   |   ');
-          const remarksLines = apv.remarks ? pdf.splitTextToSize(`Remarks: ${apv.remarks}`, textMaxW) : [];
-          const boxH = Math.max(16, pS + 4)
-                     + (contactLine ? 3.5 : 0)
-                     + (isActioned && apv.approvalDate ? 3.5 : 0)
-                     + remarksLines.length * 3.2;
-          chk(boxH + 3);
+          const isApproved = code === 'A';
+          const tW = bW - pS - 8;
+          const contactLine = [apv.email, apv.phoneNumber].filter(Boolean).join(' | ');
+          const remarksLines = apv.remarks ? pdf.splitTextToSize(`Remarks: ${apv.remarks}`, tW) : [];
 
           pdf.setFillColor(250, 252, 252); pdf.setDrawColor(226, 232, 240); pdf.setLineWidth(0.15);
-          pdf.roundedRect(margin, y, cW, boxH, 1.5, 1.5, 'FD');
-          pdf.setFillColor(...sc2); pdf.rect(margin, y, 2.5, boxH, 'F');
+          pdf.roundedRect(xOff, bY, bW, boxH, 1.5, 1.5, 'FD');
+          pdf.setFillColor(...sc2); pdf.rect(xOff, bY, 2, boxH, 'F');
 
-          // Approver photo — right side, vertically centred
-          const pX = margin + cW - pS - 1.5;
-          const pY = y + (boxH - pS) / 2;
+          const pX = xOff + bW - pS - 1.5;
+          const pY = bY + (boxH - pS) / 2;
           const rawB64 = apv.profileImageBase64 || apv.profileImage || '';
           const imgSrc = rawB64 ? (rawB64.startsWith('data:') ? rawB64 : `data:image/jpeg;base64,${rawB64}`) : '';
           if (imgSrc) {
-            try {
-              pdf.addImage(imgSrc, 'JPEG', pX, pY, pS, pS);
-              pdf.setDrawColor(...sc2); pdf.setLineWidth(0.35); pdf.rect(pX, pY, pS, pS, 'S');
-            } catch (_) {
-              pdf.setFillColor(232, 240, 248); pdf.rect(pX, pY, pS, pS, 'F');
-            }
+            try { pdf.addImage(imgSrc, 'JPEG', pX, pY, pS, pS); pdf.setDrawColor(...sc2); pdf.setLineWidth(0.3); pdf.rect(pX, pY, pS, pS, 'S'); }
+            catch (_) { pdf.setFillColor(232, 240, 248); pdf.rect(pX, pY, pS, pS, 'F'); }
           } else {
             pdf.setFillColor(232, 240, 248); pdf.rect(pX, pY, pS, pS, 'F');
-            pdf.setDrawColor(210, 220, 230); pdf.setLineWidth(0.2); pdf.rect(pX, pY, pS, pS, 'S');
-            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(4.5); pdf.setTextColor(160, 174, 192);
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(4); pdf.setTextColor(160, 174, 192);
             pdf.text('NO\nPHOTO', pX + pS / 2, pY + pS / 2, { align: 'center' });
           }
 
-          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(15, 23, 42);
-          pdf.text(apv.approverRole || `Step ${idx + 1}`, margin + 5, y + 5.5, { maxWidth: textMaxW });
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(15, 23, 42);
+          pdf.text(apv.approverRole || `Step ${idx + 1}`, xOff + 4, bY + 5, { maxWidth: tW });
 
-          const bW = pdf.getTextWidth(stLabel) + 5;
-          pdf.setFillColor(...sc2); pdf.roundedRect(pX - bW - 3, y + 2, bW, 5, 0.8, 0.8, 'F');
-          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6); pdf.setTextColor(255, 255, 255);
-          pdf.text(stLabel, pX - bW / 2 - 3, y + 5.5, { align: 'center' });
+          const bW2 = pdf.getTextWidth(stLabel) + 4;
+          pdf.setFillColor(...sc2); pdf.roundedRect(pX - bW2 - 2, bY + 1.5, bW2, 4.5, 0.8, 0.8, 'F');
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(5); pdf.setTextColor(255, 255, 255);
+          pdf.text(stLabel, pX - bW2 / 2 - 2, bY + 4.5, { align: 'center' });
 
           const appId = apv.approverId || apv.approvedId || '';
-          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(15, 23, 42);
-          pdf.text(`${apv.employeeName || '—'}${appId ? '   ID: ' + appId : ''}`, margin + 5, y + 10, { maxWidth: textMaxW });
-          let infoY = y + 13.5;
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(15, 23, 42);
+          pdf.text(`${apv.employeeName || '—'}${appId ? '  ID:' + appId : ''}`, xOff + 4, bY + 9, { maxWidth: tW });
+          let infoY = bY + 12;
           if (contactLine) {
-            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
-            pdf.text(contactLine, margin + 5, infoY, { maxWidth: textMaxW });
-            infoY += 3.5;
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(5.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(contactLine, xOff + 4, infoY, { maxWidth: tW }); infoY += 3;
           }
-          if (isActioned && apv.approvalDate) {
-            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(100, 116, 139);
-            pdf.text('Date:', margin + 5, infoY);
-            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(15, 23, 42);
-            pdf.text(fmtDate(apv.approvalDate), margin + 16, infoY);
-            infoY += 3.5;
+          if (isApproved && apv.approvalDate) {
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(5.5); pdf.setTextColor(100, 116, 139);
+            pdf.text('Date:', xOff + 4, infoY);
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(5.5); pdf.setTextColor(15, 23, 42);
+            pdf.text(fmtDate(apv.approvalDate), xOff + 13, infoY); infoY += 3;
           }
-          if (remarksLines.length > 0) { pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105); pdf.text(remarksLines, margin + 5, infoY); }
-          y += boxH + 3;
-        });
+          if (remarksLines.length > 0) {
+            pdf.setFont('helvetica', 'italic'); pdf.setFontSize(5.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(remarksLines, xOff + 4, infoY);
+          }
+        };
+
+        for (let i = 0; i < apvsToShow.length; i += 2) {
+          const left  = apvsToShow[i];
+          const right = apvsToShow[i + 1] || null;
+          const pairH = Math.max(calcApvH(left), right ? calcApvH(right) : 0);
+          chk(pairH + 2);
+          drawApvBox(left, margin, halfW, y, pairH, i);
+          if (right) drawApvBox(right, margin + halfW + gap, halfW, y, pairH, i + 1);
+          y += pairH + 2;
+        }
       }
 
       // ══════════════════════════════════════════════════════════════════════════
