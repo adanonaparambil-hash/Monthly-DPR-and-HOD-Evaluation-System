@@ -2595,6 +2595,26 @@ export class EmergencyExitFormComponent implements OnInit {
     // Generate PDF base64 when Admin (final) approver approves
     let pdfBase64: string | undefined;
     if (this.currentStage.toUpperCase() === 'ADMIN') {
+      // Stamp the Admin's own step as approved locally BEFORE generating the
+      // PDF, so the final approver's details appear in the workflow section
+      // (the API call that records it happens right after this)
+      const adminStep = this.approvalWorkflow?.find(s =>
+        s.status !== 'APPROVED' && s.status !== 'REJECTED' &&
+        ((s.approverCode || '').toUpperCase() === 'ADMIN'
+          || (s.stepName || '').toUpperCase().includes('ADMIN'))
+      ) || this.approvalWorkflow?.find(s => s.status !== 'APPROVED' && s.status !== 'REJECTED');
+
+      if (adminStep) {
+        adminStep.status = 'APPROVED';
+        adminStep.approvedBy = this.currentUser?.employeeName || this.currentUser?.name
+                            || adminStep.approverNames?.[0] || adminStep.approvedBy || '';
+        adminStep.approvedId = this.currentUser?.empId
+                            || adminStep.approverIds?.[0] || adminStep.approvedId || '';
+        adminStep.approvedDate = new Date().toISOString();
+        adminStep.comments = this.approvalRemarks?.trim() || adminStep.comments;
+        adminStep.email = adminStep.email || this.currentUser?.email || this.currentUser?.emailId;
+      }
+
       try {
         pdfBase64 = (await this.downloadAsPdf(true)) as string;
       } catch (pdfErr) {
@@ -3292,6 +3312,43 @@ export class EmergencyExitFormComponent implements OnInit {
 
       const chk = (need: number) => { if (y + need > maxY) newPage(); };
 
+      // Remove zero-width / bidi-control characters that break wrapping
+      const stripInvisible = (s: string): string => {
+        let out = '';
+        for (const ch of s) {
+          const c = ch.codePointAt(0) as number;
+          if (c === 0x00AD || (c >= 0x200B && c <= 0x200F) ||
+              (c >= 0x202A && c <= 0x202E) || (c >= 0x2060 && c <= 0x206F) ||
+              c === 0xFEFF) continue;
+          out += ch;
+        }
+        return out;
+      };
+
+      // Guaranteed-fit wrapper: measures with the CURRENT font and
+      // hard-breaks any word longer than the column, so no produced
+      // line can ever overflow into the next column
+      const wrapText = (text: any, maxW: number): string[] => {
+        const words = stripInvisible(clean(text)).split(' ').filter(w => w.length > 0);
+        const lines: string[] = [];
+        let cur = '';
+        for (const w of words) {
+          const test = cur ? cur + ' ' + w : w;
+          if (pdf.getTextWidth(test) <= maxW) { cur = test; continue; }
+          if (cur) lines.push(cur);
+          if (pdf.getTextWidth(w) <= maxW) { cur = w; continue; }
+          // single word wider than the column — break it by characters
+          let chunk = '';
+          for (const ch of w) {
+            if (pdf.getTextWidth(chunk + ch) > maxW && chunk) { lines.push(chunk); chunk = ch; }
+            else chunk += ch;
+          }
+          cur = chunk;
+        }
+        if (cur) lines.push(cur);
+        return lines.length ? lines : ['—'];
+      };
+
       // ── Section header ────────────────────────────────────────────────────────
       const secHeader = (title: string) => {
         chk(8);
@@ -3315,8 +3372,9 @@ export class EmergencyExitFormComponent implements OnInit {
           // measure with the same font that renders the values
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(7.5);
-          const lLines = pdf.splitTextToSize(clean(row.lv), hw - 4);
-          const rLines = row.r ? pdf.splitTextToSize(clean(row.rv), hw - 4) : [];
+          // rows without a right column get the full row width
+          const lLines = wrapText(row.lv, row.r ? hw - 4 : cW - 5);
+          const rLines = row.r ? wrapText(row.rv, hw - 4) : [];
           const rowH   = Math.max(lLines.length, rLines.length) * 3.2 + 6.5;
           chk(rowH);
 
@@ -3359,7 +3417,7 @@ export class EmergencyExitFormComponent implements OnInit {
       const fullField = (label: string, value: string) => {
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7.5);
-        const lines = pdf.splitTextToSize(clean(value), cW - 6);
+        const lines = wrapText(value, cW - 6);
         const fh = lines.length * 3.2 + 7;
         chk(fh);
 
@@ -3468,8 +3526,8 @@ export class EmergencyExitFormComponent implements OnInit {
         // measure with the same font that renders the values
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7.5);
-        const lLines = pdf.splitTextToSize(clean(row.lv), hw2 - 4);
-        const rLines = row.r ? pdf.splitTextToSize(clean(row.rv), hw2 - 4) : [];
+        const lLines = wrapText(row.lv, hw2 - 4);
+        const rLines = row.r ? wrapText(row.rv, hw2 - 4) : [];
         const rh = Math.max(lLines.length, rLines.length) * 3.2 + 6.5;
         chk(rh);
 
@@ -3526,11 +3584,11 @@ export class EmergencyExitFormComponent implements OnInit {
       if (this.formType === 'E') {
         secHeader('2.  CONTACT DETAILS');
         twoCol([
-          { l: 'Address', lv: fv.address || '—', r: 'Place', rv: fv.place || '—' },
-          { l: 'District', lv: fv.district || '—', r: 'State', rv: fv.state || '—' },
-          { l: 'Post Office', lv: fv.postOffice || '—', r: 'Nation', rv: fv.nation || '—' },
-          { l: 'Mobile Number', lv: fv.telephoneMobile || '—', r: 'Landline', rv: fv.telephoneLandline || '—' },
-          { l: 'Email ID', lv: fv.emailId || '—' },
+          { l: 'Address', lv: fv.address || '—' },
+          { l: 'Place', lv: fv.place || '—', r: 'District', rv: fv.district || '—' },
+          { l: 'State', lv: fv.state || '—', r: 'Post Office', rv: fv.postOffice || '—' },
+          { l: 'Nation', lv: fv.nation || '—', r: 'Mobile Number', rv: fv.telephoneMobile || '—' },
+          { l: 'Landline', lv: fv.telephoneLandline || '—', r: 'Email ID', rv: fv.emailId || '—' },
         ]);
       }
 
@@ -3679,7 +3737,7 @@ export class EmergencyExitFormComponent implements OnInit {
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(6.5);
           const remarksLines = step.comments
-            ? pdf.splitTextToSize(`Remarks: ${clean(step.comments)}`, textMaxW) : [];
+            ? wrapText('Remarks: ' + step.comments, textMaxW) : [];
           const boxH = Math.max(16, pS + 4)
                      + (contactLine ? 3.5 : 0)
                      + (isActioned && step.approvedDate ? 3.5 : 0)

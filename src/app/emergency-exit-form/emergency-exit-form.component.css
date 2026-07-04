@@ -7577,3 +7577,36 @@ ced Approval Actions Column */
 .dark-theme .doj-notice-title { color: #f87171; }
 .dark-theme .doj-notice-desc  { color: #fca5a5; }
 .dark-theme .doj-notice-desc strong { color: #f87171; }
+
+/* ── Assets accordion header: force readable white text ─────── */
+/* A gradient-text rule (transparent -webkit-text-fill-color) leaks
+   onto these headings, making them invisible on the teal header */
+.assets-header .assets-title h4 {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.assets-header .assets-title i,
+.assets-header .toggle-icon {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.assets-header .asset-count-badge {
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 700;
+}
+
+.dark-theme .assets-header .assets-title h4,
+.dark-theme .assets-header .assets-title i,
+.dark-theme .assets-header .toggle-icon,
+.dark-theme .assets-header .asset-count-badge {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
