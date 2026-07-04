@@ -2994,6 +2994,27 @@ export class EmergencyExitFormComponent implements OnInit {
     return this.approvalWorkflow;
   }
 
+  // ── Co-approvers (other eligible users at the same step) ──────
+  openCoApproversStep: any = null;
+
+  /** Other eligible approvers at the same level, hidden by the isHead filter */
+  getCoApprovers(step: any): any[] {
+    if (!this.approvalWorkflow || this.approvalWorkflow.length === 0 || this.isShowingStaticFlow()) {
+      return [];
+    }
+    return this.approvalWorkflow.filter((s: any) =>
+      s !== step &&
+      s.status !== 'APPROVED' &&
+      s.hasOwnProperty('isHead') && s.isHead !== 'Y' &&
+      (s.order === step.order || (s.stepName && s.stepName === step.stepName))
+    );
+  }
+
+  toggleCoApprovers(step: any, event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    this.openCoApproversStep = this.openCoApproversStep === step ? null : step;
+  }
+
   /**
    * Check if we should show the static approval flow
    */

@@ -846,6 +846,41 @@
                     </div>
                   </div>
 
+                  <!-- Other eligible approvers at this step -->
+                  <div class="co-approvers-wrap" *ngIf="getCoApprovers(step).length > 0">
+                    <button type="button" class="co-approvers-chip" (click)="toggleCoApprovers(step, $event)"
+                      title="Other users who can also action this step">
+                      <i class="fas fa-users"></i>
+                      +{{ getCoApprovers(step).length }} other approver{{ getCoApprovers(step).length > 1 ? 's' : '' }}
+                      <i class="fas fa-chevron-down co-chip-arrow" [class.open]="openCoApproversStep === step"></i>
+                    </button>
+
+                    <div class="co-approvers-pop" *ngIf="openCoApproversStep === step">
+                      <div class="co-approver-row" *ngFor="let co of getCoApprovers(step)">
+                        <div class="co-avatar">
+                          <img *ngIf="getApproverImage(co)" [src]="getApproverImage(co)" alt=""
+                            (error)="onApproverImageError($event, co)">
+                          <i *ngIf="!getApproverImage(co)" class="fas fa-user"></i>
+                        </div>
+                        <div class="co-info">
+                          <div class="co-name">{{ co.approvedBy || co.approverNames?.[0] || '—' }}</div>
+                          <div class="co-meta" *ngIf="co.approvedId || co.approverIds?.[0]">
+                            <i class="fas fa-id-badge"></i> {{ co.approvedId || co.approverIds?.[0] }}
+                          </div>
+                          <div class="co-meta" *ngIf="co.email">
+                            <i class="fas fa-envelope"></i> {{ co.email }}
+                          </div>
+                          <div class="co-meta" *ngIf="co.phoneNumber">
+                            <i class="fas fa-phone"></i> {{ co.phoneNumber }}
+                          </div>
+                          <div class="co-meta" *ngIf="co.department">
+                            <i class="fas fa-building"></i> {{ co.department }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- Static Flow Department Info -->
                   <div class="static-department-info" *ngIf="isShowingStaticFlow()">
                     <div class="department-badge">
