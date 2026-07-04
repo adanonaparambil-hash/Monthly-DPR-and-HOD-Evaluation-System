@@ -136,6 +136,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
   // Employee designation
   employeeDesignation: string = '';
+  employeeDoj: string = '';   // Date of Joining (ISO yyyy-mm-dd) from GetEmployeeProfile
 
   // Project Manager / Site Incharge approval
   pmRemarks: string = '';
@@ -874,12 +875,23 @@ export class EmergencyExitFormComponent implements OnInit {
           // Update photo using helper
           this.setEmployeePhotoFromData(profile);
 
-          // If no photo in exit details response, try the general profile API
-          if (this.employeePhoto === 'assets/images/default-avatar.png' || !this.employeePhoto) {
+          // Capture Date of Joining if this response has it
+          if (profile.doj) {
+            this.employeeDoj = this.parseDojToIso(profile.doj);
+          }
+
+          // If no photo or DOJ in exit details response, try the general profile API
+          if (!this.hasRealEmployeePhoto() || !this.employeeDoj) {
             this.api.GetEmployeeProfile(empId).subscribe({
               next: (profResponse: any) => {
                 if (profResponse && profResponse.success && profResponse.data) {
-                  this.setEmployeePhotoFromData(profResponse.data);
+                  if (!this.hasRealEmployeePhoto()) {
+                    this.setEmployeePhotoFromData(profResponse.data);
+                  }
+                  if (!this.employeeDoj && profResponse.data.doj) {
+                    this.employeeDoj = this.parseDojToIso(profResponse.data.doj);
+                  }
+                  this.cdr.detectChanges();
                 }
               }
             });
@@ -1025,8 +1037,11 @@ export class EmergencyExitFormComponent implements OnInit {
             // Set employee photo using helper
             this.setEmployeePhotoFromData(data);
 
+            // Capture Date of Joining
+            this.employeeDoj = this.parseDojToIso(data.doj || '');
+
             // Fallback to session photo if still not set
-            if ((this.employeePhoto === 'assets/images/default-avatar.png' || !this.employeePhoto) && this.currentUser.photo) {
+            if (!this.hasRealEmployeePhoto() && this.currentUser.photo) {
               this.employeePhoto = this.currentUser.photo;
             }
 
@@ -1086,6 +1101,48 @@ export class EmergencyExitFormComponent implements OnInit {
     console.log('Photo loading failed, using default avatar');
     AvatarUtil.handleImageError(event);
     this.employeePhoto = AvatarUtil.DEFAULT_AVATAR;
+  }
+
+  /** True when a real (non-placeholder) employee photo is loaded */
+  private hasRealEmployeePhoto(): boolean {
+    return !!this.employeePhoto
+      && this.employeePhoto !== 'assets/images/default-avatar.png'
+      && this.employeePhoto !== AvatarUtil.DEFAULT_AVATAR;
+  }
+
+  /** Convert backend DOJ ("08-SEP-2025" or ISO) → "yyyy-mm-dd" */
+  private parseDojToIso(doj: string): string {
+    if (!doj) return '';
+    if (/^\d{4}-\d{2}/.test(doj)) return doj.slice(0, 10);
+    const months: Record<string, string> = {
+      JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06',
+      JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12'
+    };
+    const parts = doj.split('-');
+    if (parts.length === 3 && months[parts[1]?.toUpperCase()]) {
+      const [d, m, y] = parts;
+      return `${y}-${months[m.toUpperCase()]}-${d.padStart(2, '0')}`;
+    }
+    const dt = new Date(doj);
+    return isNaN(dt.getTime()) ? '' : dt.toISOString().slice(0, 10);
+  }
+
+  /** DOJ formatted for display, e.g. "08 Sep 2025" */
+  getDojDisplay(): string {
+    if (!this.employeeDoj) return '';
+    const dt = new Date(this.employeeDoj);
+    if (isNaN(dt.getTime())) return this.employeeDoj;
+    return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /** True when service is less than one year from DOJ to today */
+  isDojLessThanOneYear(): boolean {
+    if (!this.employeeDoj) return false;
+    const doj = new Date(this.employeeDoj);
+    if (isNaN(doj.getTime())) return false;
+    const oneYearLater = new Date(doj);
+    oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+    return new Date() < oneYearLater;
   }
 
   addResponsibility() {
@@ -1540,10 +1597,15 @@ export class EmergencyExitFormComponent implements OnInit {
             
             // Capture designation from actProfession field
             this.employeeDesignation = data.actProfession || '';
-            
+
+            // Capture Date of Joining if this response has it
+            if (data.doj) {
+              this.employeeDoj = this.parseDojToIso(data.doj);
+            }
+
             // Trigger change detection to update the UI
             this.cdr.detectChanges();
-            
+
             // Update form with employee details - using correct field names from API
             this.exitForm.patchValue({
               employeeName: data.employeeName || '',
@@ -1632,6 +1694,7 @@ export class EmergencyExitFormComponent implements OnInit {
     this.formSubmitted = false;
     this.employeePhoto = 'assets/images/default-avatar.png';
     this.employeeDesignation = ''; // Reset designation
+    this.employeeDoj = '';         // Reset date of joining
 
     // Reset responsibilities section to open state
     this.isResponsibilitiesSectionOpen = true;
@@ -2510,10 +2573,10 @@ export class EmergencyExitFormComponent implements OnInit {
     });
   }
 
-  private performApproval(): void {
+  private async performApproval(): Promise<void> {
     // Get exitId from query parameters
     const exitId = this.route.snapshot.queryParams['exitID'] || this.route.snapshot.queryParams['exitId'] || this.route.snapshot.queryParams['requestId'];
-    
+
     // Get approverId from current logged-in user
     const approverId = this.currentUser?.empId;
 
@@ -2529,13 +2592,24 @@ export class EmergencyExitFormComponent implements OnInit {
       return;
     }
 
+    // Generate PDF base64 when Admin (final) approver approves
+    let pdfBase64: string | undefined;
+    if (this.currentStage.toUpperCase() === 'ADMIN') {
+      try {
+        pdfBase64 = (await this.downloadAsPdf(true)) as string;
+      } catch (pdfErr) {
+        console.error('PDF generation failed during Admin approval:', pdfErr);
+      }
+    }
+
     const request: UpdateExitApprovalRequest = {
       approvalId: this.approvalID || undefined,
       exitId: parseInt(exitId),
       approverId: approverId,
       status: 'A',
       remarks: this.approvalRemarks?.trim() || undefined, // Allow empty remarks for approval,
-      baseurl:this.getBaseUrl()
+      baseurl: this.getBaseUrl(),
+      pdfBase64: pdfBase64
     };
 
     console.log('Approval request payload:', request);
@@ -3145,7 +3219,7 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
-  async downloadAsPdf(): Promise<void> {
+  async downloadAsPdf(returnBase64 = false): Promise<string | void> {
     if (this.isPdfGenerating) return;
     this.isPdfGenerating = true;
 
@@ -3198,6 +3272,18 @@ export class EmergencyExitFormComponent implements OnInit {
         } catch { return d; }
       };
 
+      // Normalize exotic whitespace (NBSP etc.) so splitTextToSize can wrap
+      // inside the column instead of overflowing into the next one
+      const clean = (v: any): string => {
+        if (v === null || v === undefined) return '—';
+        const s = String(v)
+          .replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+          .replace(/[\r\n\t]+/g, ' ')
+          .replace(/ {2,}/g, ' ')
+          .trim();
+        return s || '—';
+      };
+
       // ── PDF setup ─────────────────────────────────────────────────────────────
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       let y = 0;
@@ -3226,8 +3312,11 @@ export class EmergencyExitFormComponent implements OnInit {
       const twoCol = (rows: { l: string; lv: string; r?: string; rv?: string }[]) => {
         const hw = (cW - 6) / 2;
         rows.forEach(row => {
-          const lLines = pdf.splitTextToSize(row.lv || '—', hw - 2);
-          const rLines = row.r ? pdf.splitTextToSize(row.rv || '—', hw - 2) : [];
+          // measure with the same font that renders the values
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7.5);
+          const lLines = pdf.splitTextToSize(clean(row.lv), hw - 4);
+          const rLines = row.r ? pdf.splitTextToSize(clean(row.rv), hw - 4) : [];
           const rowH   = Math.max(lLines.length, rLines.length) * 3.2 + 6.5;
           chk(rowH);
 
@@ -3268,7 +3357,9 @@ export class EmergencyExitFormComponent implements OnInit {
 
       // ── Full-width text field ─────────────────────────────────────────────────
       const fullField = (label: string, value: string) => {
-        const lines = pdf.splitTextToSize(value || '—', cW - 6);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        const lines = pdf.splitTextToSize(clean(value), cW - 6);
         const fh = lines.length * 3.2 + 7;
         chk(fh);
 
@@ -3359,22 +3450,26 @@ export class EmergencyExitFormComponent implements OnInit {
       // Fields in left area (cW - photoSize - 6)
       const fieldsW = cW - photoSize - 6;
       const hw2 = (fieldsW - 4) / 2;
+      const dojDisplay = this.getDojDisplay() || '—';
       const personalRows = [
         { l: 'Employee Name', lv: fv.employeeName || '—', r: 'Employee ID', rv: empId },
         { l: 'Department / Site', lv: fv.department || '—', r: 'Designation', rv: this.employeeDesignation || '—' },
-        { l: 'HOD Name', lv: hodDisplayName, r: undefined as undefined, rv: undefined as undefined },
+        { l: 'HOD Name', lv: hodDisplayName, r: 'Date of Joining', rv: dojDisplay },
       ];
 
       if (this.formType === 'P' || this.formType === 'R') {
         personalRows[2] = { l: 'HOD Name', lv: hodDisplayName, r: 'Category', rv: fv.category || '—' };
         personalRows.push({ l: 'Project Manager / Site Incharge', lv: this.getProjectManagerDisplayName() || '—', r: 'Phone Number', rv: fv.responsibilitiesHandedOverToPhone || '—' });
-        personalRows.push({ l: 'Email ID', lv: fv.responsibilitiesHandedOverToEmail || '—', r: undefined, rv: undefined });
+        personalRows.push({ l: 'Email ID', lv: fv.responsibilitiesHandedOverToEmail || '—', r: 'Date of Joining', rv: dojDisplay });
       }
 
       const startPersonalY = y;
       personalRows.forEach(row => {
-        const lLines = pdf.splitTextToSize(row.lv || '—', hw2 - 2);
-        const rLines = row.r ? pdf.splitTextToSize(row.rv || '—', hw2 - 2) : [];
+        // measure with the same font that renders the values
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        const lLines = pdf.splitTextToSize(clean(row.lv), hw2 - 4);
+        const rLines = row.r ? pdf.splitTextToSize(clean(row.rv), hw2 - 4) : [];
         const rh = Math.max(lLines.length, rLines.length) * 3.2 + 6.5;
         chk(rh);
 
@@ -3404,6 +3499,26 @@ export class EmergencyExitFormComponent implements OnInit {
       // Ensure we clear the photo
       y = Math.max(y, startPersonalY + photoSize + 2);
       y += 1;
+
+      // Service < 1 year attention notice (Emergency Exit only)
+      if (this.formType === 'E' && this.isDojLessThanOneYear()) {
+        chk(11);
+        pdf.setFillColor(254, 242, 242);   // red-50
+        pdf.setDrawColor(254, 202, 202);   // red-200
+        pdf.setLineWidth(0.25);
+        pdf.roundedRect(margin, y, cW, 9, 1, 1, 'FD');
+        pdf.setFillColor(220, 38, 38);     // red-600 left bar
+        pdf.rect(margin, y, 1.6, 9, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7);
+        pdf.setTextColor(185, 28, 28);     // red-700
+        pdf.text('ATTENTION - SERVICE LESS THAN ONE YEAR', margin + 4, y + 3.6);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(6.3);
+        pdf.setTextColor(127, 29, 29);     // red-900
+        pdf.text('Employee joined less than one year ago. Security Deposit or Guarantor is MANDATORY for Emergency Exit.', margin + 4, y + 7);
+        y += 11;
+      }
 
       // ══════════════════════════════════════════════════════════════════════════
       // CONTACT DETAILS  (Emergency only)
@@ -3511,6 +3626,8 @@ export class EmergencyExitFormComponent implements OnInit {
       ];
 
       decItems.forEach(dec => {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7);
         const lines = pdf.splitTextToSize(dec.text, cW - 13);
         const dh = lines.length * 3.2 + 6;
         chk(dh);
@@ -3559,8 +3676,10 @@ export class EmergencyExitFormComponent implements OnInit {
           const isActioned = step.status === 'APPROVED' || step.status === 'REJECTED';
           if (!isActioned) return;
           const contactLine = [step.email, step.phoneNumber].filter(Boolean).join('   |   ');
+          pdf.setFont('helvetica', 'italic');
+          pdf.setFontSize(6.5);
           const remarksLines = step.comments
-            ? pdf.splitTextToSize(`Remarks: ${step.comments}`, textMaxW) : [];
+            ? pdf.splitTextToSize(`Remarks: ${clean(step.comments)}`, textMaxW) : [];
           const boxH = Math.max(16, pS + 4)
                      + (contactLine ? 3.5 : 0)
                      + (isActioned && step.approvedDate ? 3.5 : 0)
@@ -3649,6 +3768,9 @@ export class EmergencyExitFormComponent implements OnInit {
         pdf.text(`Page ${p} of ${totalPages}`, pW - margin, pH - 2.5, { align: 'right' });
       }
 
+      if (returnBase64) {
+        return pdf.output('datauristring').split(',')[1];
+      }
       pdf.save(`${typeFile}_${empId}_${dateStr}.pdf`);
       this.toastr.success('PDF downloaded successfully.', 'Export Complete');
     } catch (err) {

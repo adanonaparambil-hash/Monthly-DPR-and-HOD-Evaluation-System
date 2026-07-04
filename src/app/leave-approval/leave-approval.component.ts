@@ -91,6 +91,24 @@ export class LeaveApprovalComponent implements OnInit {
   empFilterSearch: string = '';
   showEmpFilterDropdown: boolean = false;
 
+  // Pagination — pending approvals inbox
+  inboxPageNo   = 1;
+  inboxPageSize = 20;
+  inboxTotalCount = 0;
+  inboxTotalPages = 0;
+
+  // Filter panel visibility
+  showPendingFilters = false;
+  showMyRequestsFilters = false;
+
+  togglePendingFilters(): void {
+    this.showPendingFilters = !this.showPendingFilters;
+  }
+
+  toggleMyRequestsFilters(): void {
+    this.showMyRequestsFilters = !this.showMyRequestsFilters;
+  }
+
   // Loading states
   isLoadingPending = false;
   isLoadingMyRequests = false;
@@ -106,8 +124,15 @@ export class LeaveApprovalComponent implements OnInit {
     private route: ActivatedRoute
   ) { }
 
+  // 'Submitted' status option visible only to ADMINISTRATION dept users and HODs
+  canSeeSubmittedFilter = false;
+
   ngOnInit(): void {
     this.currentUser = this.sessionService.getCurrentUser();
+
+    const userDept = (this.currentUser?.department || this.currentUser?.empDept || '').toString().toUpperCase().trim();
+    const hodFlag  = (this.currentUser?.isHOD || '').toString().toUpperCase();
+    this.canSeeSubmittedFilter = userDept === 'ADMINISTRATION' || hodFlag === 'H';
 
     // Load employee master list for filter dropdown
     this.api.getEmployeeMasterList().subscribe({
@@ -119,9 +144,12 @@ export class LeaveApprovalComponent implements OnInit {
       error: () => {}
     });
 
+    // Restore list state (filters/page) when returning from a record view
+    const savedState = this.restoreListState();
+
     // Check for tab parameter in URL
     this.route.queryParams.subscribe(params => {
-      const tab = params['tab'];
+      const tab = params['tab'] || savedState?.activeTab;
       if (tab === 'myRequests') {
         this.activeTab = 'myRequests';
         this.loadMyRequests();
@@ -130,6 +158,56 @@ export class LeaveApprovalComponent implements OnInit {
         this.loadPendingApprovals();
       }
     });
+  }
+
+  // ── List state persistence (survive navigation to record view) ──
+  private readonly LIST_STATE_KEY = 'leaveApprovalListState';
+
+  private saveListState(): void {
+    const state = {
+      activeTab: this.activeTab,
+      statusFilter: this.statusFilter,
+      typeFilter: this.typeFilter,
+      employeeNameFilter: this.employeeNameFilter,
+      empFilterSearch: this.empFilterSearch,
+      fromDateFilter: this.fromDateFilter,
+      toDateFilter: this.toDateFilter,
+      inboxPageNo: this.inboxPageNo,
+      inboxPageSize: this.inboxPageSize,
+      showPendingFilters: this.showPendingFilters,
+      myFromDate: this.myFromDate,
+      myToDate: this.myToDate,
+      myTypeFilter: this.myTypeFilter,
+      myStatusFilter: this.myStatusFilter,
+      showMyRequestsFilters: this.showMyRequestsFilters,
+    };
+    try { sessionStorage.setItem(this.LIST_STATE_KEY, JSON.stringify(state)); } catch {}
+  }
+
+  private restoreListState(): any {
+    const raw = sessionStorage.getItem(this.LIST_STATE_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(this.LIST_STATE_KEY);   // consume once
+    try {
+      const s = JSON.parse(raw);
+      this.statusFilter          = s.statusFilter ?? this.statusFilter;
+      this.typeFilter            = s.typeFilter   ?? this.typeFilter;
+      this.employeeNameFilter    = s.employeeNameFilter ?? '';
+      this.empFilterSearch       = s.empFilterSearch    ?? '';
+      this.fromDateFilter        = s.fromDateFilter     ?? '';
+      this.toDateFilter          = s.toDateFilter       ?? '';
+      this.inboxPageNo           = s.inboxPageNo  || 1;
+      this.inboxPageSize         = s.inboxPageSize || 20;
+      this.showPendingFilters    = !!s.showPendingFilters;
+      this.myFromDate            = s.myFromDate   ?? '';
+      this.myToDate              = s.myToDate     ?? '';
+      this.myTypeFilter          = s.myTypeFilter   ?? 'all';
+      this.myStatusFilter        = s.myStatusFilter ?? 'all';
+      this.showMyRequestsFilters = !!s.showMyRequestsFilters;
+      return s;
+    } catch {
+      return null;
+    }
   }
 
   switchTab(tab: 'pending' | 'myRequests'): void {
@@ -169,10 +247,12 @@ export class LeaveApprovalComponent implements OnInit {
     this.statusFilter = 'Pending';
     this.typeFilter = 'all';
     this._filteredPending = null;
+    this.inboxPageNo = 1;
     this.loadPendingApprovals();
   }
 
   applyPendingFilters(): void {
+    this.inboxPageNo = 1;
     this.loadPendingApprovals();
   }
 
@@ -207,7 +287,8 @@ export class LeaveApprovalComponent implements OnInit {
 
     // Map status filter → API code
     let statusParam: string | undefined;
-    if (this.statusFilter === 'Pending')  statusParam = 'P';
+    if (this.statusFilter === 'Submitted') statusParam = 'S';
+    else if (this.statusFilter === 'Pending')  statusParam = 'P';
     else if (this.statusFilter === 'Approved') statusParam = 'A';
     else if (this.statusFilter === 'Rejected') statusParam = 'R';
 
@@ -224,6 +305,8 @@ export class LeaveApprovalComponent implements OnInit {
       employeeId: this.employeeNameFilter ? this.empMasterList.find(e => e.description === this.employeeNameFilter)?.idValue || undefined : undefined,
       fromDate:   this.fromDateFilter ? new Date(this.fromDateFilter) : null,
       toDate:     this.toDateFilter   ? new Date(this.toDateFilter)   : null,
+      pageNo:     this.inboxPageNo,
+      pageSize:   this.inboxPageSize,
     };
 
     this.api.GetExitApprovalList(requestParams).subscribe({
@@ -242,13 +325,18 @@ export class LeaveApprovalComponent implements OnInit {
             departureDate: item.actionDate,
             daysRequested: 0,
             status: this.mapStatusToLabel(item.status),
+            approvedDate: item.approvalDate ? new Date(item.approvalDate) : undefined,
             currentStepName: item.approverRole || 'Pending',
             canApprove: true,
             reason: '',
             profileImageBase64: item.profileImageBase64 || null
           }));
+          this.inboxTotalCount = response.totalCount || 0;
+          this.inboxTotalPages = response.totalPages || Math.ceil(this.inboxTotalCount / this.inboxPageSize) || 0;
         } else {
           this.pendingApprovals = [];
+          this.inboxTotalCount = 0;
+          this.inboxTotalPages = 0;
         }
         this.isLoadingPending = false;
       },
@@ -256,6 +344,8 @@ export class LeaveApprovalComponent implements OnInit {
         console.error('Error fetching pending approvals:', error);
         this.isLoadingPending = false;
         this.pendingApprovals = [];
+        this.inboxTotalCount = 0;
+        this.inboxTotalPages = 0;
       }
     });
   }
@@ -348,6 +438,7 @@ export class LeaveApprovalComponent implements OnInit {
   }
 
   viewMyRequestDetails(request: LeaveRequest): void {
+    this.saveListState();
     if (request.leaveType === 'BYOD') {
       this.router.navigate(['/byod-form'], { queryParams: { byodId: request.exitID } });
       return;
@@ -380,8 +471,10 @@ export class LeaveApprovalComponent implements OnInit {
   }
 
   private mapStatusToLabel(status: string): string {
-    switch (status) {
+    switch ((status || '').trim().toUpperCase()) {
+      case 'S': return 'Submitted';
       case 'P': return 'Pending';
+      case 'I': return 'Pending';
       case 'A': return 'Approved';
       case 'R': return 'Rejected';
       default: return status;
@@ -707,10 +800,45 @@ export class LeaveApprovalComponent implements OnInit {
     return this.pendingApprovals;
   }
 
+  // ── Inbox pagination ────────────────────────────────────────
+  inboxGoToPage(page: number): void {
+    if (page < 1 || page > this.inboxTotalPages) return;
+    this.inboxPageNo = page;
+    this.loadPendingApprovals();
+  }
+
+  inboxNextPage():  void { this.inboxGoToPage(this.inboxPageNo + 1); }
+  inboxPrevPage():  void { this.inboxGoToPage(this.inboxPageNo - 1); }
+  inboxFirstPage(): void { this.inboxGoToPage(1); }
+  inboxLastPage():  void { this.inboxGoToPage(this.inboxTotalPages); }
+
+  getInboxPageRange(): string {
+    if (this.inboxTotalCount === 0) return '0';
+    const start = (this.inboxPageNo - 1) * this.inboxPageSize + 1;
+    const end   = Math.min(this.inboxPageNo * this.inboxPageSize, this.inboxTotalCount);
+    return `${start}–${end}`;
+  }
+
+  getInboxPageNumbers(): number[] {
+    const pages: number[] = [];
+    const max = 5;
+    if (this.inboxTotalPages <= max) {
+      for (let i = 1; i <= this.inboxTotalPages; i++) pages.push(i);
+    } else {
+      let start = Math.max(1, this.inboxPageNo - 2);
+      let end   = Math.min(this.inboxTotalPages, this.inboxPageNo + 2);
+      if (this.inboxPageNo <= 3)                          end   = max;
+      else if (this.inboxPageNo >= this.inboxTotalPages - 2) start = this.inboxTotalPages - max + 1;
+      for (let i = start; i <= end; i++) pages.push(i);
+    }
+    return pages;
+  }
+
   /**
    * Navigate to detailed view for approval
    */
   viewRequestDetails(request: LeaveRequest): void {
+    this.saveListState();
     sessionStorage.setItem('returnUrl', '/leave-approval');
 
     if (request.leaveType === 'BYOD') {

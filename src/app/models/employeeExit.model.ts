@@ -112,6 +112,8 @@ export interface EmployeeApprovalInboxRequest {
   department?: string;
   status?: string;
   employeeId?: string;
+  pageNo?: number;
+  pageSize?: number;
 }
 
 export interface ExitApprovalDetailDto {
@@ -138,6 +140,7 @@ export interface UpdateExitApprovalRequest {
   status?: string;
   remarks?: string;
   baseurl?:string;
+  pdfBase64?: string;  // base64 PDF attached when Admin (final) approver approves
 }
 
 export interface IssuedAsset {

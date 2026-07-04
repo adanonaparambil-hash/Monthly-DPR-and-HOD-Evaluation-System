@@ -17,7 +17,8 @@
       "PowerShell(cd \"C:\\\\Users\\\\ITS48\\\\source\\\\repos\\\\TimeSheetAPI\\\\TimeSheetAPI\"; dotnet build --no-restore -v quiet 2>&1 | Where-Object { $_ -match \" error \" } | Select-Object -Last 5)",
       "Bash(npm install *)",
       "PowerShell($f = Get-Content \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakPortal\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\byod-form\\\\byod-form.component.ts\"; $total = $f.Count; Write-Output \"Total: $total\"; $f | Select-Object -Last 15 | ForEach-Object { Write-Output $_ })",
-      "PowerShell($f = Get-Content \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakPortal\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\rejoining-form\\\\rejoining-form.ts\"; $total = $f.Count; Write-Output \"Total: $total\"; $f | Select-Object -Last 15 | ForEach-Object { Write-Output $_ })"
+      "PowerShell($f = Get-Content \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakPortal\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\rejoining-form\\\\rejoining-form.ts\"; $total = $f.Count; Write-Output \"Total: $total\"; $f | Select-Object -Last 15 | ForEach-Object { Write-Output $_ })",
+      "PowerShell($p = 'C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakPortal\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\emergency-exit-form\\\\emergency-exit-form.component.ts'; $lines = [System.IO.File]::ReadAllLines\\($p, [System.Text.Encoding]::UTF8\\); if \\($lines[3279].Contains\\('.replace\\(/['\\)\\) { $lines[3279] = '          .replace\\(/[   -​  　﻿]/g, '' ''\\)'; $enc = New-Object System.Text.UTF8Encoding\\($false\\); [System.IO.File]::WriteAllLines\\($p, $lines, $enc\\); Write-Output \\(\"AFTER: \" + $lines[3279]\\) } else { Write-Output \\(\"ABORT - unexpected content: \" + $lines[3279]\\) })"
     ]
   }
 }

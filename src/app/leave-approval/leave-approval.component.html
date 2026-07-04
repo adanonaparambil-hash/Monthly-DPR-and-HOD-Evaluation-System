@@ -20,12 +20,30 @@
 
     <!-- Pending Approvals Tab -->
     <div class="tab-panel" *ngIf="activeTab === 'pending'" [@fadeInUp]="'in'">
-      <div class="panel-header">
-        <h2><i class="fas fa-hourglass-half"></i> Requests Awaiting Your Approval</h2>
+      <div class="panel-header panel-header-pending">
+        <!-- Left: icon + title + subtitle -->
+        <div class="panel-title-group">
+          <div class="panel-icon-box">
+            <i class="fas fa-clipboard-list"></i>
+          </div>
+          <div class="panel-title-block">
+            <h2>Requests Awaiting Your Approval</h2>
+            <p class="panel-subtitle">Review and take action on requests</p>
+          </div>
+        </div>
+        <!-- Right: Filter toggle -->
+        <button class="filter-toggle-btn" (click)="togglePendingFilters()">
+          <i class="fas fa-sliders-h"></i> Filter
+          <i class="fas fa-chevron-down filter-toggle-arrow" [class.open]="showPendingFilters"></i>
+        </button>
+      </div>
+
+      <!-- Collapsible Filters -->
+      <div class="filters-collapse" *ngIf="showPendingFilters">
         <div class="filters filters-pending">
           <!-- Employee Name -->
           <div class="filter-group filter-emp-group">
-            <label class="filter-label">Employee Name</label>
+            <label class="filter-label">Employee</label>
             <div class="filter-emp-wrap">
               <div class="filter-input-wrap" (click)="showEmpFilterDropdown = true">
                 <i class="fas fa-user filter-input-icon"></i>
@@ -65,6 +83,7 @@
           <div class="filter-group">
             <label class="filter-label">Status</label>
             <select class="filter-select" [(ngModel)]="statusFilter">
+              <option value="Submitted" *ngIf="canSeeSubmittedFilter">Submitted</option>
               <option value="Pending">Pending</option>
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
@@ -105,6 +124,23 @@
 
       <!-- Pending Approvals Table -->
       <div class="requests-table-container" *ngIf="!isLoadingPending">
+
+        <!-- Meta bar: count + page-size selector -->
+        <div class="inbox-meta-bar" *ngIf="inboxTotalCount > 0">
+          <span class="inbox-count-text">
+            Showing <strong>{{ getInboxPageRange() }}</strong> of <strong>{{ inboxTotalCount }}</strong> records
+          </span>
+          <div class="inbox-page-size-wrap">
+            <label class="inbox-ps-label">Per page:</label>
+            <select class="inbox-ps-select" [(ngModel)]="inboxPageSize" (ngModelChange)="inboxGoToPage(1)">
+              <option [value]="20">20</option>
+              <option [value]="50">50</option>
+              <option [value]="100">100</option>
+              <option [value]="500">500</option>
+            </select>
+          </div>
+        </div>
+
         <div class="table-wrapper">
           <table class="requests-table" *ngIf="getMyPendingApprovals().length > 0">
             <thead>
@@ -123,7 +159,7 @@
                 class="request-row">
 
                 <!-- # -->
-                <td class="idx-cell">{{ i + 1 }}</td>
+                <td class="idx-cell">{{ (inboxPageNo - 1) * inboxPageSize + i + 1 }}</td>
 
                 <!-- Employee -->
                 <td class="emp-cell">
@@ -169,11 +205,16 @@
                 <!-- Status -->
                 <td class="status-cell">
                   <span class="status-pill"
+                    [class.sp-submitted]="request.status === 'Submitted'"
                     [class.sp-pending]="request.status === 'Pending'"
                     [class.sp-approved]="request.status === 'Approved'"
                     [class.sp-rejected]="request.status === 'Rejected'">
                     <span class="sp-dot"></span>
                     {{ request.status }}
+                  </span>
+                  <span class="status-action-date"
+                    *ngIf="request.approvedDate && (request.status === 'Approved' || request.status === 'Rejected')">
+                    <i class="far fa-clock"></i> {{ request.approvedDate | date:'dd MMM yyyy, hh:mm a' }}
                   </span>
                 </td>
 
@@ -188,21 +229,97 @@
           </table>
         </div>
 
+        <!-- Pagination -->
+        <div class="inbox-pagination" *ngIf="inboxTotalPages > 1">
+          <button class="pg-btn" (click)="inboxFirstPage()" [disabled]="inboxPageNo === 1" title="First">
+            <i class="fas fa-angle-double-left"></i>
+          </button>
+          <button class="pg-btn" (click)="inboxPrevPage()" [disabled]="inboxPageNo === 1" title="Previous">
+            <i class="fas fa-angle-left"></i>
+          </button>
+
+          <button *ngFor="let page of getInboxPageNumbers()"
+            class="pg-btn pg-num"
+            [class.active]="page === inboxPageNo"
+            (click)="inboxGoToPage(page)">
+            {{ page }}
+          </button>
+
+          <button class="pg-btn" (click)="inboxNextPage()" [disabled]="inboxPageNo === inboxTotalPages" title="Next">
+            <i class="fas fa-angle-right"></i>
+          </button>
+          <button class="pg-btn" (click)="inboxLastPage()" [disabled]="inboxPageNo === inboxTotalPages" title="Last">
+            <i class="fas fa-angle-double-right"></i>
+          </button>
+
+          <span class="pg-info">Page {{ inboxPageNo }} of {{ inboxTotalPages }}</span>
+        </div>
+
         <!-- No Pending Approvals -->
         <div class="empty-state" *ngIf="getMyPendingApprovals().length === 0">
-          <div class="empty-icon">
-            <i class="fas fa-check-circle"></i>
+          <div class="empty-illustration">
+            <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Left leaf -->
+              <ellipse cx="28" cy="120" rx="14" ry="22" fill="#d1fae5" transform="rotate(-30 28 120)"/>
+              <ellipse cx="18" cy="130" rx="10" ry="16" fill="#a7f3d0" transform="rotate(-50 18 130)"/>
+              <line x1="28" y1="120" x2="22" y2="140" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Right leaf -->
+              <ellipse cx="152" cy="120" rx="14" ry="22" fill="#d1fae5" transform="rotate(30 152 120)"/>
+              <ellipse cx="162" cy="130" rx="10" ry="16" fill="#a7f3d0" transform="rotate(50 162 130)"/>
+              <line x1="152" y1="120" x2="158" y2="140" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Clipboard body -->
+              <rect x="52" y="38" width="76" height="96" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+              <!-- Clip at top -->
+              <rect x="74" y="30" width="32" height="16" rx="6" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+              <rect x="80" y="33" width="20" height="7" rx="3.5" fill="#cbd5e1"/>
+              <!-- Lines on clipboard -->
+              <rect x="65" y="66" width="50" height="5" rx="2.5" fill="#cbd5e1"/>
+              <rect x="65" y="80" width="42" height="5" rx="2.5" fill="#cbd5e1"/>
+              <rect x="65" y="94" width="46" height="5" rx="2.5" fill="#cbd5e1"/>
+              <rect x="65" y="108" width="36" height="5" rx="2.5" fill="#e2e8f0"/>
+              <!-- Teal checkmark circle -->
+              <circle cx="118" cy="122" r="22" fill="#138271"/>
+              <circle cx="118" cy="122" r="22" fill="url(#checkGrad)"/>
+              <polyline points="107,122 114,130 130,114" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="checkGrad" x1="96" y1="100" x2="140" y2="144" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#1B2A38"/>
+                  <stop offset="100%" stop-color="#138271"/>
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
           <h3>No Pending Approvals</h3>
           <p>You have no requests awaiting your approval at this time.</p>
+          <button class="btn-view-requests" (click)="switchTab('myRequests')">
+            View My Requests <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- My Requests Tab -->
     <div class="tab-panel" *ngIf="activeTab === 'myRequests'" [@fadeInUp]="'in'">
-      <div class="panel-header">
-        <h2><i class="fas fa-user"></i> My Submitted Requests</h2>
+      <div class="panel-header panel-header-pending">
+        <!-- Left: icon + title + subtitle -->
+        <div class="panel-title-group">
+          <div class="panel-icon-box">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="panel-title-block">
+            <h2>My Submitted Requests</h2>
+            <p class="panel-subtitle">Track the status of your submitted forms</p>
+          </div>
+        </div>
+        <!-- Right: Filter toggle -->
+        <button class="filter-toggle-btn" (click)="toggleMyRequestsFilters()">
+          <i class="fas fa-sliders-h"></i> Filter
+          <i class="fas fa-chevron-down filter-toggle-arrow" [class.open]="showMyRequestsFilters"></i>
+        </button>
+      </div>
+
+      <!-- Collapsible Filters -->
+      <div class="filters-collapse" *ngIf="showMyRequestsFilters">
         <div class="filters filters-pending">
           <!-- From Date -->
           <div class="filter-group">
@@ -346,7 +463,40 @@
 
         <!-- No Requests -->
         <div class="empty-state" *ngIf="myRequests.length === 0">
-          <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+          <div class="empty-illustration">
+            <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Left leaf -->
+              <ellipse cx="28" cy="120" rx="14" ry="22" fill="#d1fae5" transform="rotate(-30 28 120)"/>
+              <ellipse cx="18" cy="130" rx="10" ry="16" fill="#a7f3d0" transform="rotate(-50 18 130)"/>
+              <line x1="28" y1="120" x2="22" y2="140" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Right leaf -->
+              <ellipse cx="152" cy="120" rx="14" ry="22" fill="#d1fae5" transform="rotate(30 152 120)"/>
+              <ellipse cx="162" cy="130" rx="10" ry="16" fill="#a7f3d0" transform="rotate(50 162 130)"/>
+              <line x1="152" y1="120" x2="158" y2="140" stroke="#6ee7b7" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Inbox tray body -->
+              <rect x="48" y="90" width="84" height="44" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+              <!-- Tray opening curve -->
+              <path d="M48 108 Q90 120 132 108" stroke="#e2e8f0" stroke-width="1.5" fill="none"/>
+              <!-- Document in tray -->
+              <rect x="62" y="44" width="56" height="70" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+              <!-- Dog-ear corner -->
+              <path d="M104 44 L118 58 L104 58 Z" fill="#e2e8f0"/>
+              <!-- Lines on document -->
+              <rect x="70" y="66" width="36" height="4" rx="2" fill="#cbd5e1"/>
+              <rect x="70" y="77" width="28" height="4" rx="2" fill="#e2e8f0"/>
+              <rect x="70" y="88" width="32" height="4" rx="2" fill="#e2e8f0"/>
+              <!-- Search/magnify circle on document -->
+              <circle cx="118" cy="122" r="22" fill="url(#inboxGrad)"/>
+              <circle cx="112" cy="117" r="8" stroke="white" stroke-width="2.5" fill="none"/>
+              <line x1="118" y1="123" x2="126" y2="131" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="inboxGrad" x1="96" y1="100" x2="140" y2="144" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#1B2A38"/>
+                  <stop offset="100%" stop-color="#138271"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
           <h3>No Requests Found</h3>
           <p>No submitted requests match your filters.</p>
         </div>

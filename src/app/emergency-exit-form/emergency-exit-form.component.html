@@ -116,6 +116,14 @@
                     </div>
                   </div>
 
+                  <div class="form-group">
+                    <label for="dateOfJoining">Date of Joining</label>
+                    <div class="contact-value designation-display">
+                      <i class="fas fa-calendar-alt doj-icon"></i>
+                      {{ getDojDisplay() || 'Not provided' }}
+                    </div>
+                  </div>
+
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
                     <label for="projectManagerName">Project Manager / Site Incharge *</label>
                     <div class="searchable-dropdown">
@@ -211,6 +219,20 @@
                   </div>
 
 
+                </div>
+              </div>
+
+              <!-- Service < 1 year attention notice (Emergency Exit only) -->
+              <div class="doj-notice" *ngIf="formType === 'E' && isDojLessThanOneYear()">
+                <div class="doj-notice-icon">
+                  <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="doj-notice-text">
+                  <span class="doj-notice-title">Attention — Service Less Than One Year</span>
+                  <span class="doj-notice-desc">
+                    This employee joined less than one year ago.
+                    A <strong>Security Deposit or Guarantor is MANDATORY</strong> for Emergency Exit.
+                  </span>
                 </div>
               </div>
             </div>
