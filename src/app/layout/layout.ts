@@ -89,6 +89,36 @@ export class layout implements OnInit, OnDestroy {
   /** All user menus from API */
   userMenus: any[] = [];
 
+  /** Parent → children tree built from userMenus (parentId linkage) */
+  menuTree: any[] = [];
+
+  /** Expanded/collapsed state per parent menuId */
+  openMenuGroups: { [menuId: number]: boolean } = {};
+
+  toggleMenuGroup(menuId: number, event?: Event): void {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    this.openMenuGroups[menuId] = !this.openMenuGroups[menuId];
+  }
+
+  /** Build the two-level tree: parentId == null are roots, others nest under their parent */
+  private buildMenuTree(menus: any[]): any[] {
+    const byOrder = (a: any, b: any) => (a.menuOrder ?? 0) - (b.menuOrder ?? 0);
+
+    const roots = menus.filter(m => m.parentId == null);
+
+    // Children whose parent is missing/not visible get promoted to root so they are never lost
+    const orphans = menus.filter(m =>
+      m.parentId != null && !menus.some(p => p.menuId === m.parentId)
+    );
+
+    return [...roots, ...orphans]
+      .map(root => ({
+        ...root,
+        children: menus.filter(c => c.parentId === root.menuId).sort(byOrder)
+      }))
+      .sort(byOrder);
+  }
+
   /** Load user menus and set purchase dashboard visibility */
   private loadUserMenus(): void {
     const userId = this.userSession?.userId ?? this.userSession?.id ?? this.userSession?.empId;
@@ -96,13 +126,16 @@ export class layout implements OnInit, OnDestroy {
     this.api.getUserMenus(userId).subscribe({
       next: (res: any) => {
         const menus: any[] = Array.isArray(res) ? res : (res?.data ?? []);
-        
+
         // Store all menus for dynamic rendering
-        this.userMenus = menus.filter((m: any) => 
-          (m.canView ?? 'Y') === 'Y' && 
+        this.userMenus = menus.filter((m: any) =>
+          (m.canView ?? 'Y') === 'Y' &&
           (m.isActive ?? 'Y') === 'Y'
         );
-        
+
+        // Build the parent/child sidebar tree
+        this.menuTree = this.buildMenuTree(this.userMenus);
+
         // Show Purchase Dashboard if any menu entry has the purchase-dashboard URL and canView = 'Y'
         this.isPurchaseDashboardUser = menus.some((m: any) =>
           (m.menuUrl ?? '').toLowerCase().includes('purchase-dashboard') &&
@@ -114,6 +147,7 @@ export class layout implements OnInit, OnDestroy {
         // On error, default to no access (secure by default)
         this.isPurchaseDashboardUser = false;
         this.userMenus = [];
+        this.menuTree = [];
       }
     });
   }

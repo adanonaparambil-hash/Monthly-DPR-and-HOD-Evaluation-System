@@ -6,6 +6,10 @@ import { debounceTime } from 'rxjs/operators';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
+import { ProofhubTaskService } from '../services/proofhub-task.service';
+import {
+  ProjectItem, TodolistItem, CreatorItem, TaskListItem, TaskDetailDto, TaskSearchRequest
+} from '../models/proofhub-task.model';
 
 // ── Custom field value from P_CUSTOM_CURSOR ───────────────────────────────────
 interface TaskFieldValue {
@@ -287,7 +291,8 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   constructor(
     private api:  Api,
-    private auth: AuthService
+    private auth: AuthService,
+    private phTaskApi: ProofhubTaskService
   ) {}
 
   ngOnInit(): void {
@@ -1460,5 +1465,257 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     for (const c of (s || '')) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
     const i = Math.abs(h) % this._FALLBACK_BG.length;
     return { bg: this._FALLBACK_BG[i], txt: this._FALLBACK_TXT[i], border: this._FALLBACK_TXT[i] + '66', icon: 'fa-circle' };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROOFHUB TASK EXPLORER — separate section, does NOT touch any existing
+  // Log Analytics functionality. All state/methods are prefixed with `ph`.
+  // ═══════════════════════════════════════════════════════════════════════════
+  phModalOpen = false;
+  phMastersLoaded = false;
+  phProjects:  ProjectItem[]  = [];
+  phTodolists: TodolistItem[] = [];
+  phCreators:  CreatorItem[]  = [];
+
+  // filters
+  phTitle = '';
+  phProjectId: number | null = null;
+  phListId:    number | null = null;
+  phCreatedBy: number | null = null;
+  phDateFrom = '';
+  phDateTo   = '';
+
+  // listing state
+  // The API is fetched in chunks of 500 (page 1 = records 1-500,
+  // page 2 = 501-1000, ...). The UI always displays 50 rows per page,
+  // sliced from the loaded chunk — a new API call happens only when
+  // the user pages past the current 500-record block.
+  phLoading = false;
+  phSearched = false;
+  phItems: TaskListItem[] = [];    // current UI page (50 rows)
+  phChunk: TaskListItem[] = [];    // loaded server chunk (up to 500 rows)
+  phChunkNo = 0;                   // which 500-chunk is loaded (1-based, 0 = none)
+  phTotal = 0;
+  phPage = 1;
+  phPageSize = 100;                // fixed UI page size
+  phChunkSize = 500;               // fixed API fetch size
+
+  // detail modal state
+  phDetailOpen = false;
+  phDetailLoading = false;
+  phDetail: TaskDetailDto | null = null;
+
+  get phTotalPages(): number {
+    return this.phPageSize > 0 ? Math.ceil(this.phTotal / this.phPageSize) : 0;
+  }
+
+  /** Todolists scoped to the selected project */
+  get phScopedTodolists(): TodolistItem[] {
+    if (this.phProjectId == null) return this.phTodolists;
+    return this.phTodolists.filter(t => Number(t.PROJECT_ID) === Number(this.phProjectId));
+  }
+
+  /**
+   * The backend camelCase serializer mangles DB-style names
+   * (PROJECT_ID → projecT_ID, TITLE → title). Normalizing every key
+   * to UPPERCASE recursively makes the payload match our interfaces
+   * regardless of serializer casing.
+   */
+  private phNorm(value: any): any {
+    if (Array.isArray(value)) return value.map(v => this.phNorm(v));
+    if (value !== null && typeof value === 'object') {
+      const out: any = {};
+      for (const k of Object.keys(value)) {
+        out[k.toUpperCase()] = this.phNorm(value[k]);
+      }
+      return out;
+    }
+    return value;
+  }
+
+  openPhModal(event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    this.phModalOpen = true;
+    if (!this.phMastersLoaded) {
+      this.phTaskApi.getMasters().subscribe({
+        next: (res: any) => {
+          const data = res?.Data ?? res?.data;
+          if ((res?.Success ?? res?.success) && data) {
+            const d = this.phNorm(data);
+            this.phProjects  = d.PROJECTS  ?? [];
+            this.phTodolists = d.TODOLISTS ?? [];
+            this.phCreators  = d.CREATORS  ?? [];
+            this.phMastersLoaded = true;
+          }
+        },
+        error: (err) => console.error('ProofhubTask GetMasters failed:', err)
+      });
+    }
+    if (!this.phSearched) { this.phSearch(1); }
+  }
+
+  closePhModal(): void {
+    this.phModalOpen = false;
+    this.phDetailOpen = false;
+  }
+
+  phOnProjectChange(): void {
+    this.phListId = null;   // reset list when project changes
+  }
+
+  /** New search: drop the loaded chunk and load from the first page */
+  phSearch(page: number = 1): void {
+    this.phSearched = true;
+    this.phChunkNo = 0;      // force a fresh API fetch
+    this.phChunk = [];
+    this.phGoToPage(page, true);
+  }
+
+  /** Fetch one 500-record chunk from the API (chunkNo is the server page) */
+  private phFetchChunk(chunkNo: number): void {
+    this.phLoading = true;
+
+    const req: TaskSearchRequest = {
+      title:     this.phTitle?.trim() || undefined,
+      projectId: this.phProjectId != null ? Number(this.phProjectId) : undefined,
+      listId:    this.phListId    != null ? Number(this.phListId)    : undefined,
+      createdBy: this.phCreatedBy != null ? Number(this.phCreatedBy) : undefined,
+      dateFrom:  this.phDateFrom || undefined,
+      dateTo:    this.phDateTo   || undefined,
+      page:      chunkNo,
+      pageSize:  this.phChunkSize
+    };
+
+    this.phTaskApi.searchTasks(req).subscribe({
+      next: (res: any) => {
+        const data = res?.Data ?? res?.data;
+        if ((res?.Success ?? res?.success) && data) {
+          const d = this.phNorm(data);
+          this.phChunk = d.ITEMS ?? [];
+          this.phTotal = d.TOTAL ?? 0;
+          this.phChunkNo = chunkNo;
+        } else {
+          this.phChunk = [];
+          this.phTotal = 0;
+          this.phChunkNo = 0;
+        }
+        this.phSliceCurrentPage();
+        this.phLoading = false;
+      },
+      error: (err) => {
+        console.error('ProofhubTask Search failed:', err);
+        this.phChunk = [];
+        this.phItems = [];
+        this.phTotal = 0;
+        this.phChunkNo = 0;
+        this.phLoading = false;
+      }
+    });
+  }
+
+  /** Cut the current 50-row UI page out of the loaded 500-record chunk */
+  private phSliceCurrentPage(): void {
+    const offsetInChunk = ((this.phPage - 1) * this.phPageSize) % this.phChunkSize;
+    this.phItems = this.phChunk.slice(offsetInChunk, offsetInChunk + this.phPageSize);
+  }
+
+  phClear(): void {
+    this.phTitle = '';
+    this.phProjectId = null;
+    this.phListId = null;
+    this.phCreatedBy = null;
+    this.phDateFrom = '';
+    this.phDateTo = '';
+    this.phSearch(1);
+  }
+
+  phGoToPage(p: number, force: boolean = false): void {
+    if (!force) {
+      if (p < 1 || p > this.phTotalPages || p === this.phPage) return;
+    }
+    this.phPage = Math.max(1, p);
+
+    // Which 500-record chunk contains this UI page?
+    const neededChunk = Math.floor(((this.phPage - 1) * this.phPageSize) / this.phChunkSize) + 1;
+
+    if (neededChunk === this.phChunkNo && this.phChunk.length > 0) {
+      // Already loaded — instant, no API call
+      this.phSliceCurrentPage();
+    } else {
+      // Crossed a 500 boundary (or fresh search) — fetch from API
+      this.phFetchChunk(neededChunk);
+    }
+  }
+
+  phPageNumbers(): number[] {
+    const total = this.phTotalPages;
+    const max = 5;
+    const pages: number[] = [];
+    if (total <= max) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+      return pages;
+    }
+    let start = Math.max(1, this.phPage - 2);
+    let end   = Math.min(total, this.phPage + 2);
+    if (this.phPage <= 3) { start = 1; end = max; }
+    else if (this.phPage >= total - 2) { start = total - max + 1; end = total; }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+
+  phRangeText(): string {
+    if (this.phTotal === 0) return '0';
+    const start = (this.phPage - 1) * this.phPageSize + 1;
+    const end   = Math.min(this.phPage * this.phPageSize, this.phTotal);
+    return `${start}–${end}`;
+  }
+
+  phOpenDetail(item: TaskListItem, event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    this.phDetailOpen = true;
+    this.phDetailLoading = true;
+    this.phDetail = null;
+    this.phTaskApi.getTaskDetail(item.TASK_ID).subscribe({
+      next: (res: any) => {
+        const data = res?.Data ?? res?.data;
+        if ((res?.Success ?? res?.success) && data) {
+          const d = this.phNorm(data);
+          this.phDetail = {
+            Task:      d.TASK ?? {},
+            Subtasks:  d.SUBTASKS  ?? [],
+            Assignees: d.ASSIGNEES ?? [],
+            Comments:  d.COMMENTS  ?? [],
+            Files:     d.FILES     ?? []
+          } as TaskDetailDto;
+        }
+        this.phDetailLoading = false;
+      },
+      error: (err) => {
+        console.error('ProofhubTask Detail failed:', err);
+        this.phDetailLoading = false;
+      }
+    });
+  }
+
+  phCloseDetail(): void {
+    this.phDetailOpen = false;
+    this.phDetail = null;
+  }
+
+  phIsDone(v?: string): boolean {
+    const s = (v || '').toString().toUpperCase();
+    return s === 'Y' || s === 'TRUE' || s === '1' || s === 'COMPLETED';
+  }
+
+  phFmtBytes(b?: number): string {
+    if (!b || b <= 0) return '';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  phStripHtml(s?: string): string {
+    if (!s) return '';
+    return s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s{2,}/g, ' ').trim();
   }
 }

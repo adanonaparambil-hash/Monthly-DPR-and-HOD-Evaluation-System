@@ -26,10 +26,35 @@
         <i class="fas fa-shopping-bag"></i> Purchase Dashboard
       </a>
 
-      <!-- Dynamic Menu Items from API -->
-      <ng-container *ngFor="let menu of userMenus">
-        <!-- Skip the existing purchase dashboard to avoid duplicates -->
-        <a *ngIf="!isDPROnlyMode && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')" 
+      <!-- Dynamic Menu Items from API (parent → children tree) -->
+      <ng-container *ngFor="let menu of menuTree">
+
+        <!-- Parent WITH children → expandable group (parent itself has no URL) -->
+        <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode && menu.children.length > 0">
+          <a class="parent-menu" (click)="toggleMenuGroup(menu.menuId, $event)"
+             [title]="formatMenuName(menu.menuName)" href="javascript:void(0)">
+            <div class="menu-content">
+              <i class="fas fa-folder-open" *ngIf="openMenuGroups[menu.menuId]"></i>
+              <i class="fas fa-folder" *ngIf="!openMenuGroups[menu.menuId]"></i>
+              <span>{{ formatMenuName(menu.menuName) }}</span>
+            </div>
+            <i class="fas fa-chevron-down" [class.rotated]="openMenuGroups[menu.menuId]"></i>
+          </a>
+          <div class="submenu" *ngIf="openMenuGroups[menu.menuId]" [@slideDown]>
+            <a *ngFor="let child of menu.children"
+               (click)="handleMenuClick(child, $event)"
+               [title]="formatMenuName(child.menuName)"
+               [class.active]="child.isExternal === 'N' && child.menuUrl && currentRoute.includes(child.menuUrl)"
+               href="javascript:void(0)">
+              <i class="fas fa-external-link-alt" *ngIf="child.isExternal === 'Y'"></i>
+              <i class="fas fa-tachometer-alt" *ngIf="child.isExternal !== 'Y'"></i>
+              {{ formatMenuName(child.menuName) }}
+            </a>
+          </div>
+        </div>
+
+        <!-- Root without children → plain link (skip purchase dashboard duplicate) -->
+        <a *ngIf="!isDPROnlyMode && menu.children.length === 0 && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')"
            [routerLink]="menu.isExternal === 'Y' ? null : menu.menuUrl"
            [class.active]="menu.isExternal === 'N' && currentRoute.includes(menu.menuUrl)"
            (click)="handleMenuClick(menu, $event)"

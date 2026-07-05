@@ -79,6 +79,9 @@
           <i class="fas fa-download"></i> Export
         }
       </button>
+      <button class="tb-btn ph-launch-btn" (click)="openPhModal($event)" title="Browse ProofHub tasks">
+        <i class="fas fa-tasks"></i> Proofhub Data
+      </button>
     </div>
   </div>
 
@@ -606,6 +609,317 @@
             </div>
           </div>
         }
+      </div>
+    </div>
+  }
+
+  <!-- ══ PROOFHUB TASK EXPLORER — separate section, independent of the ══ -->
+  <!-- ══ Log Analytics table above. Nothing here touches existing flow. ══ -->
+  @if (phModalOpen) {
+    <div class="ph-overlay" (click)="closePhModal()">
+      <div class="ph-modal" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="ph-head">
+          <div class="ph-head-title">
+            <div class="ph-head-icon"><i class="fas fa-tasks"></i></div>
+            <div>
+              <h3>Proofhub Data</h3>
+              <p>Browse ProofHub tasks — filter, page through, click a row for full details</p>
+            </div>
+          </div>
+          <button class="ph-close" (click)="closePhModal()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Filters -->
+        <div class="ph-filters">
+          <div class="ph-f ph-f-title">
+            <label>Title</label>
+            <input type="text" [(ngModel)]="phTitle" placeholder="Search title…" (keyup.enter)="phSearch(1)">
+          </div>
+          <div class="ph-f">
+            <label>Project</label>
+            <select [(ngModel)]="phProjectId" (ngModelChange)="phOnProjectChange()">
+              <option [ngValue]="null">All Projects</option>
+              @for (p of phProjects; track p.PROJECT_ID) {
+                <option [ngValue]="p.PROJECT_ID">{{ p.TITLE }}</option>
+              }
+            </select>
+          </div>
+          <div class="ph-f">
+            <label>Todolist</label>
+            <select [(ngModel)]="phListId">
+              <option [ngValue]="null">All Lists</option>
+              @for (t of phScopedTodolists; track t.TODOLIST_ID) {
+                <option [ngValue]="t.TODOLIST_ID">{{ t.TITLE }}</option>
+              }
+            </select>
+          </div>
+          <div class="ph-f">
+            <label>Created By</label>
+            <select [(ngModel)]="phCreatedBy">
+              <option [ngValue]="null">All Users</option>
+              @for (c of phCreators; track c.USER_ID) {
+                <option [ngValue]="c.USER_ID">{{ c.NAME }}</option>
+              }
+            </select>
+          </div>
+          <div class="ph-f">
+            <label>From</label>
+            <input type="date" [(ngModel)]="phDateFrom">
+          </div>
+          <div class="ph-f">
+            <label>To</label>
+            <input type="date" [(ngModel)]="phDateTo">
+          </div>
+          <div class="ph-f ph-f-actions">
+            <button class="ph-btn-search" (click)="phSearch(1)"><i class="fas fa-search"></i> Search</button>
+            <button class="ph-btn-clear" (click)="phClear()"><i class="fas fa-times"></i> Clear</button>
+          </div>
+        </div>
+
+        <!-- Meta bar -->
+        <div class="ph-meta">
+          <span>Showing <strong>{{ phRangeText() }}</strong> of <strong>{{ phTotal }}</strong> tasks</span>
+          <span class="ph-ps-fixed"><i class="fas fa-list"></i> 100 per page</span>
+        </div>
+
+        <!-- Body -->
+        <div class="ph-body">
+          @if (phLoading) {
+            <div class="ph-loading"><i class="fas fa-spinner fa-spin"></i> Loading tasks…</div>
+          } @else if (phItems.length === 0) {
+            <div class="ph-empty">
+              <i class="fas fa-search"></i>
+              <p>No tasks found for the selected filters.</p>
+            </div>
+          } @else {
+            <table class="ph-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Task</th>
+                  <th>Project</th>
+                  <th>Todolist</th>
+                  <th>Created By</th>
+                  <th>Created</th>
+                  <th>Due</th>
+                  <th class="ph-cnt-head"><i class="fas fa-list-ul"></i> Subtasks</th>
+                  <th class="ph-cnt-head"><i class="fas fa-comment"></i> Comments</th>
+                  <th class="ph-cnt-head"><i class="fas fa-paperclip"></i> Files</th>
+                  <th>Progress</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of phItems; track item.TASK_ID; let i = $index) {
+                  <tr class="ph-row" (click)="phOpenDetail(item, $event)" title="Click for full details">
+                    <td class="ph-idx">{{ (phPage - 1) * phPageSize + i + 1 }}</td>
+                    <td class="ph-title-cell">
+                      <span class="ph-title-text">{{ item.TITLE }}</span>
+                      @if (item.ASSIGNEES) {
+                        <span class="ph-assignees" [title]="item.ASSIGNEES"><i class="fas fa-user-friends"></i> {{ item.ASSIGNEES }}</span>
+                      }
+                    </td>
+                    <td>{{ item.PROJECT_NAME || '—' }}</td>
+                    <td>{{ item.LIST_NAME || '—' }}</td>
+                    <td>{{ item.CREATED_BY || '—' }}</td>
+                    <td class="ph-date">{{ item.CREATED_AT ? (item.CREATED_AT | date:'dd MMM yyyy') : '—' }}</td>
+                    <td class="ph-date">{{ item.DUE_DATE ? (item.DUE_DATE | date:'dd MMM yyyy') : '—' }}</td>
+                    <td class="ph-cnt-cell">
+                      <span class="ph-cnt" [class.ph-cnt-zero]="!(item.SUBTASK_COUNT > 0)">
+                        <i class="fas fa-list-ul"></i> {{ item.SUBTASK_COUNT || 0 }}
+                      </span>
+                    </td>
+                    <td class="ph-cnt-cell">
+                      <span class="ph-cnt" [class.ph-cnt-zero]="!(item.COMMENT_COUNT > 0)">
+                        <i class="fas fa-comment"></i> {{ item.COMMENT_COUNT || 0 }}
+                      </span>
+                    </td>
+                    <td class="ph-cnt-cell">
+                      <span class="ph-cnt" [class.ph-cnt-zero]="!(item.FILE_COUNT > 0)">
+                        <i class="fas fa-paperclip"></i> {{ item.FILE_COUNT || 0 }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (phIsDone(item.COMPLETED)) {
+                        <span class="ph-status ph-status-done"><i class="fas fa-check"></i> Done</span>
+                      } @else {
+                        <div class="ph-progress">
+                          <div class="ph-progress-bar"><div class="ph-progress-fill" [style.width.%]="item.PERCENT_PROGRESS || 0"></div></div>
+                          <span class="ph-progress-txt">{{ item.PERCENT_PROGRESS || 0 }}%</span>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (phTotalPages > 1) {
+          <div class="ph-pagination">
+            <button class="ph-pg-btn" (click)="phGoToPage(1)" [disabled]="phPage === 1"><i class="fas fa-angle-double-left"></i></button>
+            <button class="ph-pg-btn" (click)="phGoToPage(phPage - 1)" [disabled]="phPage === 1"><i class="fas fa-angle-left"></i></button>
+            @for (p of phPageNumbers(); track p) {
+              <button class="ph-pg-btn ph-pg-num" [class.active]="p === phPage" (click)="phGoToPage(p)">{{ p }}</button>
+            }
+            <button class="ph-pg-btn" (click)="phGoToPage(phPage + 1)" [disabled]="phPage === phTotalPages"><i class="fas fa-angle-right"></i></button>
+            <button class="ph-pg-btn" (click)="phGoToPage(phTotalPages)" [disabled]="phPage === phTotalPages"><i class="fas fa-angle-double-right"></i></button>
+            <span class="ph-pg-info">Page {{ phPage }} of {{ phTotalPages }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ══ TASK DETAIL MODAL (opens on top of the explorer) ══ -->
+  @if (phDetailOpen) {
+    <div class="ph-overlay ph-overlay-top" (click)="phCloseDetail()">
+      <div class="ph-detail-modal" (click)="$event.stopPropagation()">
+        <div class="ph-head">
+          <div class="ph-head-title">
+            <div class="ph-head-icon"><i class="fas fa-clipboard-list"></i></div>
+            <div>
+              <h3>{{ phDetail?.Task?.TITLE || 'Task Detail' }}</h3>
+              <p>Task ID: {{ phDetail?.Task?.TASK_ID || '…' }}</p>
+            </div>
+          </div>
+          <button class="ph-close" (click)="phCloseDetail()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="ph-detail-body">
+          @if (phDetailLoading) {
+            <div class="ph-loading"><i class="fas fa-spinner fa-spin"></i> Loading task details…</div>
+          } @else if (!phDetail) {
+            <div class="ph-empty"><i class="fas fa-exclamation-circle"></i><p>Could not load task details.</p></div>
+          } @else {
+
+            <!-- Overview -->
+            <div class="ph-d-section">
+              <div class="ph-d-grid">
+                <div class="ph-d-item"><label>Project</label><span>{{ phDetail.Task.PROJECT_NAME || '—' }}</span></div>
+                <div class="ph-d-item"><label>Todolist</label><span>{{ phDetail.Task.LIST_NAME || '—' }}</span></div>
+                <div class="ph-d-item"><label>Created By</label><span>{{ phDetail.Task.CREATED_BY || '—' }}</span></div>
+                <div class="ph-d-item"><label>Created At</label><span>{{ phDetail.Task.CREATED_AT ? (phDetail.Task.CREATED_AT | date:'dd MMM yyyy, hh:mm a') : '—' }}</span></div>
+                <div class="ph-d-item"><label>Start Date</label><span>{{ phDetail.Task.START_DATE ? (phDetail.Task.START_DATE | date:'dd MMM yyyy') : '—' }}</span></div>
+                <div class="ph-d-item"><label>Due Date</label><span>{{ phDetail.Task.DUE_DATE ? (phDetail.Task.DUE_DATE | date:'dd MMM yyyy') : '—' }}</span></div>
+                <div class="ph-d-item"><label>Estimated Hours</label><span>{{ phDetail.Task.ESTIMATED_HOURS ?? '—' }}</span></div>
+                <div class="ph-d-item"><label>Logged Hours</label><span>{{ phDetail.Task.LOGGED_HOURS ?? '—' }}</span></div>
+              </div>
+
+              <div class="ph-d-progress-row">
+                @if (phIsDone(phDetail.Task.COMPLETED)) {
+                  <span class="ph-status ph-status-done"><i class="fas fa-check"></i> Completed</span>
+                } @else {
+                  <div class="ph-progress ph-progress-lg">
+                    <div class="ph-progress-bar"><div class="ph-progress-fill" [style.width.%]="phDetail.Task.PERCENT_PROGRESS || 0"></div></div>
+                    <span class="ph-progress-txt">{{ phDetail.Task.PERCENT_PROGRESS || 0 }}% complete</span>
+                  </div>
+                }
+              </div>
+
+              @if (phDetail.Task.DESCRIPTION) {
+                <div class="ph-d-desc">
+                  <label>Description</label>
+                  <p>{{ phStripHtml(phDetail.Task.DESCRIPTION) }}</p>
+                </div>
+              }
+            </div>
+
+            <!-- Assignees -->
+            <div class="ph-d-section">
+              <h4><i class="fas fa-user-friends"></i> Assignees ({{ phDetail.Assignees.length }})</h4>
+              @if (phDetail.Assignees.length > 0) {
+                <div class="ph-d-chips">
+                  @for (a of phDetail.Assignees; track a.USER_ID) {
+                    <span class="ph-d-chip" [title]="a.EMAIL"><i class="fas fa-user"></i> {{ a.NAME }}</span>
+                  }
+                </div>
+              } @else {
+                <p class="ph-d-none">No assignees.</p>
+              }
+            </div>
+
+            <!-- Subtasks -->
+            <div class="ph-d-section">
+              <h4><i class="fas fa-list-ul"></i> Subtasks ({{ phDetail.Subtasks.length }})</h4>
+              @if (phDetail.Subtasks.length > 0) {
+                <div class="ph-d-sublist">
+                  @for (st of phDetail.Subtasks; track st.TASK_ID) {
+                    <div class="ph-d-subrow">
+                      <i class="fas" [class.fa-check-circle]="phIsDone(st.COMPLETED)" [class.fa-circle-notch]="!phIsDone(st.COMPLETED)"
+                        [class.ph-sub-done]="phIsDone(st.COMPLETED)"></i>
+                      <div class="ph-d-subinfo">
+                        <span class="ph-d-subtitle">{{ st.TITLE }}</span>
+                        <span class="ph-d-submeta">
+                          @if (st.DUE_DATE) { Due {{ st.DUE_DATE | date:'dd MMM yyyy' }} · }
+                          {{ st.PERCENT_PROGRESS || 0 }}%
+                          @if (st.ASSIGNEES) { · {{ st.ASSIGNEES }} }
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="ph-d-none">No subtasks.</p>
+              }
+            </div>
+
+            <!-- Comments -->
+            <div class="ph-d-section">
+              <h4><i class="fas fa-comments"></i> Comments ({{ phDetail.Comments.length }})</h4>
+              @if (phDetail.Comments.length > 0) {
+                <div class="ph-d-comments">
+                  @for (c of phDetail.Comments; track c.COMMENT_ID) {
+                    <div class="ph-d-comment">
+                      <div class="ph-d-comment-head">
+                        <strong>{{ c.AUTHOR_NAME || 'Unknown' }}</strong>
+                        <span>{{ c.CREATED_AT ? (c.CREATED_AT | date:'dd MMM yyyy, hh:mm a') : '' }}</span>
+                      </div>
+                      <p>{{ phStripHtml(c.DESCRIPTION) }}</p>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="ph-d-none">No comments.</p>
+              }
+            </div>
+
+            <!-- Files -->
+            <div class="ph-d-section">
+              <h4><i class="fas fa-paperclip"></i> Files ({{ phDetail.Files.length }})</h4>
+              @if (phDetail.Files.length > 0) {
+                <div class="ph-d-files">
+                  @for (f of phDetail.Files; track f.FILE_ID) {
+                    <div class="ph-d-file">
+                      <i class="fas fa-file-alt"></i>
+                      <div class="ph-d-fileinfo">
+                        <span class="ph-d-filename">{{ f.FILE_NAME }}</span>
+                        <span class="ph-d-filemeta">{{ f.FILE_TYPE || '' }} {{ phFmtBytes(f.BYTE_SIZE) }}</span>
+                      </div>
+                      <div class="ph-d-fileactions">
+                        @if (f.PREVIEW_URL || f.DRIVE_URL) {
+                          <a [href]="f.PREVIEW_URL || f.DRIVE_URL" target="_blank" rel="noopener" class="ph-file-btn" title="Preview">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                        }
+                        @if (f.DOWNLOAD_URL) {
+                          <a [href]="f.DOWNLOAD_URL" target="_blank" rel="noopener" class="ph-file-btn" title="Download">
+                            <i class="fas fa-download"></i>
+                          </a>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="ph-d-none">No files attached.</p>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
   }
