@@ -172,7 +172,14 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   // ── Expand state ────────────────────────────────────────────────────────────
   expandedChart: string | null = null;
-  get expandedMeta() { return this.expandedChart ? CHART_META[this.expandedChart] : null; }
+  get expandedMeta() {
+    if (!this.expandedChart) return null;
+    const meta = CHART_META[this.expandedChart];
+    // LPO / GRN titles follow the Yearly/Monthly toggle
+    if (this.expandedChart === 'lpo') return { ...meta, title: `${this.lpoView === 'yearly' ? 'Yearly' : 'Monthly'} LPO` };
+    if (this.expandedChart === 'grn') return { ...meta, title: `${this.grnView === 'yearly' ? 'Yearly' : 'Monthly'} GRN Value` };
+    return meta;
+  }
 
   // ── Dropdown open flags ─────────────────────────────────────────────────────
   lpoCoOpen=false; grnCoOpen=false; projCoOpen=false; projPrOpen=false;
@@ -231,7 +238,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   lpoYear      = this.CURRENT_YEAR;
   lpoMonthFrom = 0;
   lpoMonthTo   = this.CURRENT_MONTH_IDX; // default: Jan → current month
-  lpoView: 'monthly' | 'yearly' = 'monthly';
+  lpoView: 'monthly' | 'yearly' = 'yearly';
   lpoYearFrom=0; lpoYearTo=this.CURRENT_YEAR - 2017; // yearly-mode year range (index into lpoYears)
   grnYearFrom=0; grnYearTo=9; grnMonthFrom=0; grnMonthTo=this.CURRENT_MONTH_IDX; grnView:'yearly'|'monthly'='yearly';
   // GRN monthly-mode: single year dropdown (mirrors lpoYear logic)

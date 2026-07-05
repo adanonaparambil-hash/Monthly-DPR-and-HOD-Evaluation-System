@@ -888,10 +888,16 @@
 
 /* Old insight styles removed - replaced with modern design */
 
-/* ── Combo tall canvas (Projects + Facilities merged card) ──── */
-.pd-cw--combo {
+/* ── Chart canvas heights (increased after removing insights) ── */
+.pd-cw          { position: relative; height: 420px; margin-top: 4px; }
+.pd-cw--tall    { height: 440px; }
+.pd-cw--radar   { height: 560px; }
+
+/* Combo tall canvas (Projects card) — extra specificity so it always
+   wins over the base .pd-cw height */
+.pd-cw.pd-cw--combo {
   position: relative;
-  height: 420px;
+  height: 440px;
   margin-top: 4px;
 }
 .pd-cw--combo canvas {
@@ -899,9 +905,6 @@
   width: 100% !important;
   height: 100% !important;
 }
-.pd-cw          { position: relative; height: 260px; margin-top: 4px; }
-.pd-cw--tall    { height: 310px; }
-.pd-cw--radar   { height: 400px; }
 
 /* ── Enhanced Modal with Glassmorphism ──────────────────────── */
 .pd-modal-bg {
@@ -1157,11 +1160,6 @@
   .pd-modal-filters      { padding: 10px 16px; gap: 8px 12px; }
   .pd-modal-cw           { padding: 10px 16px 14px; }
 }
-
-/* ── Canvas wrappers ────────────────────────────────────────── */
-.pd-cw          { position: relative; height: 260px; margin-top: 4px; }
-.pd-cw--tall    { height: 310px; }
-.pd-cw--radar   { height: 400px; }
 
 /* ── Suppliers split layout ─────────────────────────────────── */
 .pd-supp-split {
@@ -1421,7 +1419,7 @@
 
 .pd-supp-donut-zone {
   position: relative;
-  height: 420px;
+  height: 560px;
   display: flex; align-items: center; justify-content: center;
 }
 .pd-supp-donut-zone canvas {

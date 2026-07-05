@@ -10,7 +10,7 @@
       <div class="pd-card-header">
         <div class="pd-card-icon"><i class="fas fa-shopping-cart"></i></div>
         <div class="pd-card-title">
-          <h3>Monthly LPO</h3>
+          <h3>{{ lpoView === 'yearly' ? 'Yearly' : 'Monthly' }} LPO</h3>
           <span class="pd-badge">3D Bar + Trend</span>
         </div>
         <div class="pd-kpi">
@@ -83,51 +83,10 @@
         </div>
         <!-- View radios -->
         <div class="pd-fg pd-radios">
-          <label class="pd-radio"><input type="radio" name="lpoV" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Monthly</label>
           <label class="pd-radio"><input type="radio" name="lpoV" value="yearly"  [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Yearly</label>
+          <label class="pd-radio"><input type="radio" name="lpoV" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange()"> Monthly</label>
         </div>
         <button class="pd-dl" (click)="exportLPO()"><i class="fas fa-file-excel"></i> Excel</button>
-      </div>
-
-      <!-- Modern LPO Insights -->
-      <div class="pd-insights-modern" *ngIf="!lpoEmpty && !lpoLoading && lpoChartValues.length">
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--primary">
-            <i class="fas fa-trophy"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Peak Month</span>
-            <span class="pd-insight-value">{{ lpoPeak }}</span>
-            <span class="pd-insight-sub">{{ lpoPeakVal }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--success">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Average</span>
-            <span class="pd-insight-value">{{ lpoAvg }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card" [ngClass]="lpoMoMPositive ? 'pd-insight-card--positive' : 'pd-insight-card--negative'">
-          <div class="pd-insight-icon" [ngClass]="lpoMoMPositive ? 'pd-insight-icon--positive' : 'pd-insight-icon--negative'">
-            <i [class]="lpoMoMPositive ? 'fas fa-arrow-trend-up' : 'fas fa-arrow-trend-down'"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">vs Previous</span>
-            <span class="pd-insight-value">{{ lpoMoM }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--info">
-            <i class="fas fa-coins"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Total Amount</span>
-            <span class="pd-insight-value">{{ formatM(lpoTotal) }}</span>
-          </div>
-        </div>
       </div>
 
       <div class="pd-cw pd-state-wrap">
@@ -149,7 +108,7 @@
       <div class="pd-card-header">
         <div class="pd-card-icon"><i class="fas fa-receipt"></i></div>
         <div class="pd-card-title">
-          <h3>GRN Value (Yearly)</h3>
+          <h3>{{ grnView === 'yearly' ? 'Yearly' : 'Monthly' }} GRN Value</h3>
           <span class="pd-badge">Gradient Area</span>
         </div>
         <div class="pd-kpi">
@@ -229,47 +188,6 @@
         <button class="pd-dl" (click)="exportGRN()"><i class="fas fa-file-excel"></i> Excel</button>
       </div>
 
-      <!-- Modern GRN Insights -->
-      <div class="pd-insights-modern" *ngIf="!grnEmpty && !grnLoading && grnChartValues.length">
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--primary">
-            <i class="fas fa-star"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Best Year</span>
-            <span class="pd-insight-value">{{ grnPeakYear }}</span>
-            <span class="pd-insight-sub">{{ grnPeakVal }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--success">
-            <i class="fas fa-chart-area"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Average</span>
-            <span class="pd-insight-value">{{ grnAvg }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card" [ngClass]="grnYoYPositive ? 'pd-insight-card--positive' : 'pd-insight-card--negative'">
-          <div class="pd-insight-icon" [ngClass]="grnYoYPositive ? 'pd-insight-icon--positive' : 'pd-insight-icon--negative'">
-            <i [class]="grnYoYPositive ? 'fas fa-arrow-trend-up' : 'fas fa-arrow-trend-down'"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">YoY Growth</span>
-            <span class="pd-insight-value">{{ grnYoY }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--info">
-            <i class="fas fa-coins"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Total Amount</span>
-            <span class="pd-insight-value">{{ formatM(grnTotal) }}</span>
-          </div>
-        </div>
-      </div>
-
       <div class="pd-cw pd-cw--tall pd-state-wrap">
         <div class="pd-state-overlay" *ngIf="grnLoading">
           <div class="pd-spinner"></div>
@@ -343,38 +261,6 @@
           <input type="range" min="1" [max]="suppCountMax" [(ngModel)]="suppCount" (ngModelChange)="onSupp()" class="pd-sr">
         </div>
         <button class="pd-dl" (click)="exportSuppliers()"><i class="fas fa-file-excel"></i> Excel</button>
-      </div>
-
-      <!-- Modern Supplier Insights Row -->
-      <div class="pd-insights-modern" *ngIf="!suppEmpty && !suppLoading && suppDisplayData.length">
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--primary">
-            <i class="fas fa-crown"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Top Supplier</span>
-            <span class="pd-insight-value">{{ suppTop1Name }}</span>
-            <span class="pd-insight-sub">{{ suppTop1Amt }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--success">
-            <i class="fas fa-chart-pie"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Market Share</span>
-            <span class="pd-insight-value">{{ suppTopShare }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--info">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Top 3 Combined</span>
-            <span class="pd-insight-value">{{ suppTop3Share }}</span>
-          </div>
-        </div>
       </div>
 
       <!-- ══ Main body: donut left · ranked list right ══ -->
@@ -499,46 +385,6 @@
           </div>
         </div>
         <button class="pd-dl" (click)="exportProjects()"><i class="fas fa-file-excel"></i> Excel</button>
-      </div>
-
-      <!-- Modern Projects Insights -->
-      <div class="pd-insights-modern" *ngIf="!projEmpty && !projLoading && (projChartData?.length ?? 0) > 0">
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--primary">
-            <i class="fas fa-rocket"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Highest PO</span>
-            <span class="pd-insight-value">{{ projHighestPO }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--success">
-            <i class="fas fa-file-contract"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Total PO</span>
-            <span class="pd-insight-value">{{ projTotalPO }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--info">
-            <i class="fas fa-truck-loading"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">Total GRN</span>
-            <span class="pd-insight-value">{{ projTotalGRN }}</span>
-          </div>
-        </div>
-        <div class="pd-insight-card">
-          <div class="pd-insight-icon pd-insight-icon--warning">
-            <i class="fas fa-percentage"></i>
-          </div>
-          <div class="pd-insight-content">
-            <span class="pd-insight-label">GRN/PO Ratio</span>
-            <span class="pd-insight-value">{{ projGRNRatio }}</span>
-          </div>
-        </div>
       </div>
 
       <!-- Single canvas — Projects chart only -->
