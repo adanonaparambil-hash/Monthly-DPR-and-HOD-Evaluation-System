@@ -1426,37 +1426,98 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
     ) ?? MAIN_PROJECTS.grnValues;
 
-    // Vertical gradients — deep violet for PO, warm amber for GRN
-    const poGrad = ctx.createLinearGradient(0, 0, 0, 320);
-    poGrad.addColorStop(0, 'rgba(99,102,241,1)');
-    poGrad.addColorStop(1, 'rgba(139,92,246,0.55)');
-    const grnGrad = ctx.createLinearGradient(0, 0, 0, 320);
-    grnGrad.addColorStop(0, 'rgba(245,158,11,1)');
-    grnGrad.addColorStop(1, 'rgba(251,191,36,0.45)');
+    // Reference design: solid crimson (PO) + sky blue (GRN) bars,
+    // smooth trend lines with white dots, dark value tags above points
+    const PO_CLR  = '#ED2B5B';
+    const GRN_CLR = '#56A8E8';
+
+    // Dark rounded tag with pointer above each trend-line point
+    const darkTagPlugin = {
+      id: 'projDarkTag',
+      afterDatasetsDraw(chart: any) {
+        const c = chart.ctx;
+        [2, 3].forEach(di => {
+          const ds = chart.data.datasets[di];
+          if (!ds) return;
+          const meta = chart.getDatasetMeta(di);
+          if (meta.hidden) return;
+          const vals: number[] = (ds.data ?? []) as number[];
+          c.save();
+          meta.data.forEach((pt: any, i: number) => {
+            const val = vals[i];
+            if (val == null || val === 0) return;
+            const label = (+val).toFixed(1) + ' M';
+            const fs = 10.5;
+            c.font = `700 ${fs}px Roboto,sans-serif`;
+            const tw = c.measureText(label).width;
+            const padX = 8, padY = 5, bw = tw + padX * 2, bh = fs + padY * 2, r = 6;
+            const px = pt.x;
+            const by = pt.y - bh - 13;
+            const bx = px - bw / 2;
+            c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = 6; c.shadowOffsetY = 2;
+            c.beginPath();
+            c.moveTo(bx+r, by); c.lineTo(bx+bw-r, by); c.quadraticCurveTo(bx+bw, by, bx+bw, by+r);
+            c.lineTo(bx+bw, by+bh-r); c.quadraticCurveTo(bx+bw, by+bh, bx+bw-r, by+bh);
+            c.lineTo(bx+r, by+bh); c.quadraticCurveTo(bx, by+bh, bx, by+bh-r);
+            c.lineTo(bx, by+r); c.quadraticCurveTo(bx, by, bx+r, by); c.closePath();
+            c.fillStyle = '#16161d';
+            c.fill();
+            // pointer triangle
+            c.beginPath();
+            c.moveTo(px - 4, by + bh);
+            c.lineTo(px + 4, by + bh);
+            c.lineTo(px, by + bh + 5);
+            c.closePath();
+            c.fill();
+            c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+            c.textAlign = 'center'; c.textBaseline = 'middle';
+            c.fillStyle = '#ffffff';
+            c.fillText(label, px, by + bh / 2);
+          });
+          c.restore();
+        });
+      }
+    };
 
     return new Chart(ctx, {
       type: 'bar',
+      plugins: [darkTagPlugin],
       data: {
         labels,
         datasets: [
-          { label: 'PO Value',  data: poValues,
-            backgroundColor: poGrad,  borderColor: '#6366f1', borderWidth: 1.5,
-            borderRadius: 6, borderSkipped: 'bottom' as any },
-          { label: 'GRN Value', data: grnValues,
-            backgroundColor: grnGrad, borderColor: '#f59e0b', borderWidth: 1.5,
-            borderRadius: 6, borderSkipped: 'bottom' as any }
+          { type: 'bar' as any, label: 'PO Value',  data: poValues,
+            backgroundColor: PO_CLR, borderWidth: 0,
+            borderRadius: 4, borderSkipped: 'bottom' as any,
+            barPercentage: 0.85, categoryPercentage: 0.72, order: 4 },
+          { type: 'bar' as any, label: 'GRN Value', data: grnValues,
+            backgroundColor: GRN_CLR, borderWidth: 0,
+            borderRadius: 4, borderSkipped: 'bottom' as any,
+            barPercentage: 0.85, categoryPercentage: 0.72, order: 3 },
+          { type: 'line' as any, label: 'PO Trend',  data: poValues,
+            borderColor: PO_CLR, borderWidth: 3, tension: 0.45, fill: false,
+            pointBackgroundColor: '#ffffff', pointBorderColor: PO_CLR,
+            pointBorderWidth: 2.5, pointRadius: 5.5, pointHoverRadius: 7, order: 1 },
+          { type: 'line' as any, label: 'GRN Trend', data: grnValues,
+            borderColor: GRN_CLR, borderWidth: 3, tension: 0.45, fill: false,
+            pointBackgroundColor: '#ffffff', pointBorderColor: GRN_CLR,
+            pointBorderWidth: 2.5, pointRadius: 5.5, pointHoverRadius: 7, order: 2 }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 46 } },
         animation: { duration: 1400, easing: 'easeOutQuart', delay: (c: any) => (c.dataIndex ?? 0) * 50 },
         plugins: {
           legend: { display: true, position: 'top',
-            labels: { boxWidth: 12, font: { size: 11 }, color: '#374151', usePointStyle: true } },
-          tooltip: { callbacks: {
-            title: (items: any[]) => rawLabels[items[0]?.dataIndex] ?? '',
-            label: (c: any) => ` ${c.dataset.label}: ${(+c.parsed.y).toFixed(3)} M OMR`
-          }}
+            labels: { boxWidth: 12, font: { size: 11 }, color: '#374151', usePointStyle: true,
+              filter: (item: any) => !`${item.text}`.includes('Trend') } },
+          tooltip: {
+            filter: (item: any) => (item.dataset as any).type === 'bar',
+            callbacks: {
+              title: (items: any[]) => rawLabels[items[0]?.dataIndex] ?? '',
+              label: (c: any) => ` ${c.dataset.label}: ${(+c.parsed.y).toFixed(3)} M OMR`
+            }
+          }
         },
         scales: {
           x: { grid: { display: false },
@@ -1464,7 +1525,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
                         maxRotation: 45, minRotation: 30 },
                border: { display: false } },
           y: { beginAtZero: true,
-               grid: { color: 'rgba(99,102,241,0.08)' },
+               grid: { color: 'rgba(0,0,0,0.06)' },
                ticks: { color: '#6b7280', callback: (v: any) => (+v).toFixed(2) + 'M' },
                border: { display: false } }
         }
