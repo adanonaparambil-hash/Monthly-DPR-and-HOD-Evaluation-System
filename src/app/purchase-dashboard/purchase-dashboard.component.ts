@@ -229,6 +229,21 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   facilCompanies: string[] = [];
   facilProjects:  string[] = [];
 
+  /** Max simultaneously selectable projects in the PO vs GRN card */
+  readonly PROJ_MAX_SELECT = 10;
+
+  /** Projects auto-selected on initial load (for the default company).
+   *  Matched by project number + tag so any name format works
+   *  (P.399 DBK / PT. 399 DBK / P399-DBK ...) */
+  private readonly DEFAULT_PROJ_KEYS: Array<{ num: string; tag: string }> = [
+    { num: '399', tag: 'DBK' },
+    { num: '403', tag: 'ZRB' },
+    { num: '408', tag: 'KVF' },
+    { num: '407', tag: 'CRV' },
+    { num: '409', tag: 'AMD' },
+    { num: '411', tag: 'VTA' },
+  ];
+
   // ── Other LPO/GRN/Supp scalar filters ───────────────────────────────────────
   // Current date constants — used to cap the month slider
   readonly TODAY        = new Date();
@@ -444,17 +459,31 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     refreshFn();
   }
 
+  /** Project dropdown list with the selected items pinned to the top */
+  projSortedList(): string[] {
+    const list = this.filterList(this.projects, this.projPrSearch);
+    return [...list].sort((a, b) => {
+      const sa = this.projProjects.includes(a) ? 0 : 1;
+      const sb = this.projProjects.includes(b) ? 0 : 1;
+      return sa - sb;
+    });
+  }
+
   /** Toggle project selection */
   toggleProject(arrayProp: string, project: string, refreshFn: () => void) {
     const currentArray = (this as any)[arrayProp] as string[];
     const idx = currentArray.indexOf(project);
-    
+
     if (idx > -1) {
       (this as any)[arrayProp] = currentArray.filter((_,i) => i !== idx);
     } else {
+      // Hard cap — a new project can be checked only after unchecking one
+      if (arrayProp === 'projProjects' && currentArray.length >= this.PROJ_MAX_SELECT) {
+        return;
+      }
       (this as any)[arrayProp] = [...currentArray, project];
     }
-    
+
     refreshFn();
   }
 
@@ -1066,7 +1095,18 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.projects   = names;
         this.facilities = names;
         if (autoSelectRank1) {
-          this.projProjects = names.filter(n => this.projectNameToRank.get(n) === '1');
+          // Initial selection: the six standard projects (399 DBK, 403 ZRB,
+          // 408 KVF, 407 CRV, 409 AMD, 411 VTA) — matched by number + tag,
+          // tolerant of the name format; falls back to rank-1 projects when
+          // none of them exist for the selected company
+          const defaults = names.filter(n => {
+            const u = n.toUpperCase();
+            return this.DEFAULT_PROJ_KEYS.some(k => u.includes(k.num) && u.includes(k.tag));
+          });
+          this.projProjects = (defaults.length
+            ? defaults
+            : names.filter(n => this.projectNameToRank.get(n) === '1')
+          ).slice(0, this.PROJ_MAX_SELECT);
           this.onProj();
           this.onFacil();
         }

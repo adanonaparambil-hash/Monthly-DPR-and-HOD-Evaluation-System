@@ -369,16 +369,15 @@
                  (click)="clearFilter('projProjects', onProj.bind(this))">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
-            <!-- All Projects Option -->
-            <div class="pd-ddi" 
-                 [class.pd-ddi-active]="projProjects.length === projects.length"
-                 (click)="toggleAllProjects()">
-              <span class="pd-ddi-cb"></span>
-              All Projects
+            <!-- Max selection notice -->
+            <div class="pd-ddi-limit" *ngIf="projProjects.length >= PROJ_MAX_SELECT">
+              <i class="fas fa-info-circle"></i>
+              Max {{ PROJ_MAX_SELECT }} projects — unselect one to add another
             </div>
-            <!-- Individual Project Options -->
-            <div class="pd-ddi" *ngFor="let p of filterList(projects, projPrSearch)"
+            <!-- Individual Project Options (selected pinned on top) -->
+            <div class="pd-ddi" *ngFor="let p of projSortedList()"
                  [class.pd-ddi-active]="isSelected(projProjects, p)"
+                 [class.pd-ddi-disabled]="projProjects.length >= PROJ_MAX_SELECT && !isSelected(projProjects, p)"
                  (click)="toggleProject('projProjects', p, onProj.bind(this))">
               <span class="pd-ddi-cb"></span>{{ p }}
             </div>
@@ -614,16 +613,15 @@
                    (click)="clearFilter('projProjects', onProj.bind(this))">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
-              <!-- All Projects Option -->
-              <div class="pd-ddi" 
-                   [class.pd-ddi-active]="projProjects.length === projects.length"
-                   (click)="toggleAllProjects()">
-                <span class="pd-ddi-cb"></span>
-                All Projects
+              <!-- Max selection notice -->
+              <div class="pd-ddi-limit" *ngIf="projProjects.length >= PROJ_MAX_SELECT">
+                <i class="fas fa-info-circle"></i>
+                Max {{ PROJ_MAX_SELECT }} projects — unselect one to add another
               </div>
-              <!-- Individual Project Options -->
-              <div class="pd-ddi" *ngFor="let p of filterList(projects, projPrSearch)"
+              <!-- Individual Project Options (selected pinned on top) -->
+              <div class="pd-ddi" *ngFor="let p of projSortedList()"
                    [class.pd-ddi-active]="isSelected(projProjects, p)"
+                   [class.pd-ddi-disabled]="projProjects.length >= PROJ_MAX_SELECT && !isSelected(projProjects, p)"
                    (click)="toggleProject('projProjects', p, onProj.bind(this))">
                 <span class="pd-ddi-cb"></span>{{ p }}
               </div>
