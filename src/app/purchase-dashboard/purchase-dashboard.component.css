@@ -889,15 +889,15 @@
 /* Old insight styles removed - replaced with modern design */
 
 /* ── Chart canvas heights (increased after removing insights) ── */
-.pd-cw          { position: relative; height: 420px; margin-top: 4px; }
-.pd-cw--tall    { height: 440px; }
+.pd-cw          { position: relative; height: 500px; margin-top: 4px; }
+.pd-cw--tall    { height: 520px; }
 .pd-cw--radar   { height: 560px; }
 
 /* Combo tall canvas (Projects card) — extra specificity so it always
    wins over the base .pd-cw height */
 .pd-cw.pd-cw--combo {
   position: relative;
-  height: 440px;
+  height: 540px;
   margin-top: 4px;
 }
 .pd-cw--combo canvas {

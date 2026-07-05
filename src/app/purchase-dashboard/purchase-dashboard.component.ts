@@ -1256,8 +1256,46 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       g.addColorStop(1, clr + '88');
       return g;
     });
+
+    // Floating pill label above each bar — same modern look as the GRN chart
+    const lpoPillPlugin = {
+      id: 'lpoPillLabel',
+      afterDatasetsDraw(chart: any) {
+        const { ctx: c, data } = chart;
+        const vals: number[] = data.datasets[0]?.data ?? [];
+        if (!vals.length) return;
+        const meta = chart.getDatasetMeta(0);
+        c.save();
+        meta.data.forEach((bar: any, i: number) => {
+          const val = vals[i];
+          if (val == null || val === 0) return;
+          const label = val.toFixed(2) + ' M';
+          const px = bar.x, py = bar.y;
+          const fs = 10.5;
+          c.font = `600 ${fs}px Roboto,sans-serif`;
+          const tw = c.measureText(label).width;
+          const padX = 7, padY = 4.5, bw = tw + padX * 2, bh = fs + padY * 2, r = 7;
+          const bx = px - bw / 2, by = py - bh - 12;
+          c.shadowColor = 'rgba(0,0,0,0.13)'; c.shadowBlur = 8; c.shadowOffsetY = 3;
+          c.beginPath();
+          c.moveTo(bx+r, by); c.lineTo(bx+bw-r, by); c.quadraticCurveTo(bx+bw, by, bx+bw, by+r);
+          c.lineTo(bx+bw, by+bh-r); c.quadraticCurveTo(bx+bw, by+bh, bx+bw-r, by+bh);
+          c.lineTo(bx+r, by+bh); c.quadraticCurveTo(bx, by+bh, bx, by+bh-r);
+          c.lineTo(bx, by+r); c.quadraticCurveTo(bx, by, bx+r, by); c.closePath();
+          c.fillStyle = 'rgba(255,255,255,0.96)'; c.fill();
+          c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillStyle = '#1e293b';
+          c.fillText(label, px, by + bh / 2);
+          c.beginPath(); c.moveTo(px, by+bh); c.lineTo(px, py-6);
+          c.strokeStyle = 'rgba(99,102,241,0.35)'; c.lineWidth = 1; c.stroke();
+        });
+        c.restore();
+      }
+    };
+
     return new Chart(ctx,{
-      type:'bar', plugins:[threedBarPlugin],
+      type:'bar', plugins:[threedBarPlugin, lpoPillPlugin],
       data:{ labels, datasets:[
         {type:'bar' as any, label:'LPO Amount', data:bars,
          backgroundColor:bgColors as any, borderColor:colors, borderWidth:1.5,
@@ -1269,6 +1307,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       ]},
       options:{
         responsive:true, maintainAspectRatio:false,
+        layout:{ padding:{ top: 48 } },
         animation:{duration:1600,easing:'easeOutBounce',delay:(c:any)=>(c.dataIndex??0)*180},
         plugins:{
           legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:11},color:'#374151',usePointStyle:true}},
