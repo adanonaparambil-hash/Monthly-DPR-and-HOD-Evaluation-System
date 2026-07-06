@@ -1158,11 +1158,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.lpoLoading = false; this.lpoEmpty = data.length === 0;
         this.build('lpo');
         if (this.expandedChart === 'lpo') this.buildModal();
+        this.refreshTvCharts();
       },
       error: () => {
         this.lpoChartLabels = []; this.lpoChartValues = [];
         this.lpoLoading = false; this.lpoEmpty = true;
         this.build('lpo');
+        this.refreshTvCharts();
       }
     });
   }
@@ -1190,11 +1192,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.grnLoading = false; this.grnEmpty = data.length === 0;
         this.build('grn');
         if (this.expandedChart === 'grn') this.buildModal();
+        this.refreshTvCharts();
       },
       error: () => {
         this.grnChartLabels = []; this.grnChartValues = [];
         this.grnLoading = false; this.grnEmpty = true;
         this.build('grn');
+        this.refreshTvCharts();
       }
     });
   }
@@ -1306,6 +1310,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     document.body.style.overflow = '';
     this.tvCharts.forEach(c => { try { c.destroy(); } catch {} });
     this.tvCharts = [];
+  }
+
+  /** Re-render the fullscreen TV charts after a filter change inside the TV view. */
+  refreshTvCharts(): void {
+    if (!this.tvViewOpen) return;
+    // let the [(ngModel)] bindings + main-chart handlers settle, then rebuild
+    setTimeout(() => this.buildTvCharts(), 60);
   }
 
   private buildTvCharts(): void {

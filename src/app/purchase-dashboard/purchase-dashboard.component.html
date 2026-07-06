@@ -780,12 +780,95 @@
      ═══════════════════════════════════════════════════════════════ -->
 <div class="pd-tv-overlay" *ngIf="tvViewOpen">
 
+  <!-- animated neon aurora layer -->
+  <div class="pd-tv-aurora" aria-hidden="true"></div>
+
   <!-- Top header -->
   <div class="pd-tv-header">
     <div class="pd-tv-title">
       <div class="pd-tv-title-icon"><i class="fas fa-shopping-bag"></i></div>
       <h2>Purchase Dashboard</h2>
     </div>
+
+    <!-- ── Live filter strip ── -->
+    <div class="pd-tv-filters">
+      <div class="pd-tv-fg">
+        <span class="pd-tv-fl"><i class="fas fa-shopping-cart"></i> LPO</span>
+        <div class="pd-tv-seg">
+          <label class="pd-tv-segbtn" [class.on]="lpoView==='yearly'">
+            <input type="radio" name="tvLpoV" value="yearly" [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange(); refreshTvCharts()"> Yearly
+          </label>
+          <label class="pd-tv-segbtn" [class.on]="lpoView==='monthly'">
+            <input type="radio" name="tvLpoV" value="monthly" [(ngModel)]="lpoView" (ngModelChange)="onLpoViewChange(); refreshTvCharts()"> Monthly
+          </label>
+        </div>
+        <ng-container *ngIf="lpoView==='yearly'">
+          <select class="pd-tv-sel" [(ngModel)]="lpoYearFrom" (ngModelChange)="onLPO()" title="From year">
+            <option *ngFor="let y of lpoYears; let i = index" [value]="i">{{ y }}</option>
+          </select>
+          <span class="pd-tv-dash">–</span>
+          <select class="pd-tv-sel" [(ngModel)]="lpoYearTo" (ngModelChange)="onLPO()" title="To year">
+            <option *ngFor="let y of lpoYears; let i = index" [value]="i">{{ y }}</option>
+          </select>
+        </ng-container>
+        <ng-container *ngIf="lpoView==='monthly'">
+          <select class="pd-tv-sel" [(ngModel)]="lpoYear" (ngModelChange)="onLpoYearChange()">
+            <option *ngFor="let y of lpoYears" [value]="y">{{ y }}</option>
+          </select>
+          <select class="pd-tv-sel" [(ngModel)]="lpoMonthFrom" (ngModelChange)="onLPO()" title="From month">
+            <option *ngFor="let m of monthLabels.slice(0, lpoMaxMonth + 1); let i = index" [value]="i">{{ m }}</option>
+          </select>
+          <span class="pd-tv-dash">–</span>
+          <select class="pd-tv-sel" [(ngModel)]="lpoMonthTo" (ngModelChange)="onLPO()" title="To month">
+            <option *ngFor="let m of monthLabels.slice(0, lpoMaxMonth + 1); let i = index" [value]="i">{{ m }}</option>
+          </select>
+        </ng-container>
+      </div>
+
+      <div class="pd-tv-fg">
+        <span class="pd-tv-fl"><i class="fas fa-file-invoice"></i> GRN</span>
+        <div class="pd-tv-seg">
+          <label class="pd-tv-segbtn" [class.on]="grnView==='yearly'">
+            <input type="radio" name="tvGrnV" value="yearly" [(ngModel)]="grnView" (ngModelChange)="onGrnViewChange(); refreshTvCharts()"> Yearly
+          </label>
+          <label class="pd-tv-segbtn" [class.on]="grnView==='monthly'">
+            <input type="radio" name="tvGrnV" value="monthly" [(ngModel)]="grnView" (ngModelChange)="onGrnViewChange(); refreshTvCharts()"> Monthly
+          </label>
+        </div>
+        <ng-container *ngIf="grnView==='yearly'">
+          <select class="pd-tv-sel" [(ngModel)]="grnYearFrom" (ngModelChange)="onGRN()" title="From year">
+            <option *ngFor="let y of grnYears; let i = index" [value]="i">{{ y }}</option>
+          </select>
+          <span class="pd-tv-dash">–</span>
+          <select class="pd-tv-sel" [(ngModel)]="grnYearTo" (ngModelChange)="onGRN()" title="To year">
+            <option *ngFor="let y of grnYears; let i = index" [value]="i">{{ y }}</option>
+          </select>
+        </ng-container>
+        <ng-container *ngIf="grnView==='monthly'">
+          <select class="pd-tv-sel" [(ngModel)]="grnYear" (ngModelChange)="onGrnYearChange()">
+            <option *ngFor="let y of grnYearOptions" [value]="y">{{ y }}</option>
+          </select>
+          <select class="pd-tv-sel" [(ngModel)]="grnMonthFrom" (ngModelChange)="onGRN()" title="From month">
+            <option *ngFor="let m of monthLabels.slice(0, grnMaxMonth + 1); let i = index" [value]="i">{{ m }}</option>
+          </select>
+          <span class="pd-tv-dash">–</span>
+          <select class="pd-tv-sel" [(ngModel)]="grnMonthTo" (ngModelChange)="onGRN()" title="To month">
+            <option *ngFor="let m of monthLabels.slice(0, grnMaxMonth + 1); let i = index" [value]="i">{{ m }}</option>
+          </select>
+        </ng-container>
+      </div>
+
+      <div class="pd-tv-fg">
+        <span class="pd-tv-fl"><i class="fas fa-industry"></i> Top Suppliers</span>
+        <select class="pd-tv-sel" [(ngModel)]="suppCount" (ngModelChange)="refreshTvCharts()">
+          <option [ngValue]="5">Top 5</option>
+          <option [ngValue]="10">Top 10</option>
+          <option [ngValue]="15">Top 15</option>
+          <option [ngValue]="20">Top 20</option>
+        </select>
+      </div>
+    </div>
+
     <button class="pd-tv-close" (click)="closeTvView()" title="Close full view">
       <i class="fas fa-times"></i>
     </button>
@@ -812,12 +895,39 @@
       <div class="pd-tv-cw"><canvas #tvGrnCanvas></canvas></div>
     </div>
 
+    <!-- Suppliers: donut + ranked list side-by-side -->
     <div class="pd-tv-cell">
       <div class="pd-tv-cell-hdr">
         <i class="fas fa-industry"></i>
-        <span>Top 10 Suppliers</span>
+        <span>Top {{ suppCount }} Suppliers</span>
+        <span class="pd-tv-amt">{{ suppTop1Amt }}</span>
       </div>
-      <div class="pd-tv-cw"><canvas #tvSuppCanvas></canvas></div>
+      <div class="pd-tv-supp">
+        <div class="pd-tv-supp-donut"><canvas #tvSuppCanvas></canvas></div>
+        <div class="pd-tv-supp-list">
+          <div class="pd-supp-item" *ngFor="let s of suppDisplayData; let i = index">
+            <span class="pd-supp-num" [style.background]="suppRankColor(i)">{{ i + 1 }}</span>
+            <div class="pd-supp-item-body">
+              <div class="pd-supp-item-row1">
+                <span class="pd-supp-item-name" [title]="s.vendorName ?? s.supplierName ?? s.name ?? '—'">
+                  {{ s.vendorName ?? s.supplierName ?? s.name ?? '—' }}
+                </span>
+                <span class="pd-supp-item-amt">{{ suppAmtM(s) }}</span>
+                <span class="pd-supp-item-pct" [style.color]="suppRankColor(i)">{{ suppShare(s).toFixed(1) }}%</span>
+                <button class="pd-supp-item-drill" (click)="openSupplierTransactions(s)" title="View transactions">
+                  <i class="fas fa-arrow-up-right-from-square"></i>
+                </button>
+              </div>
+              <div class="pd-supp-item-bar" [style.background]="suppRankColor(i)+'22'">
+                <div class="pd-supp-item-bar-fill"
+                     [style.width.%]="suppShare(s)"
+                     [style.background]="suppRankColor(i)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="pd-supp-empty-msg" *ngIf="!suppDisplayData.length">No supplier data</div>
+        </div>
+      </div>
     </div>
 
     <div class="pd-tv-cell">
