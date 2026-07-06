@@ -168,6 +168,12 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   // Modal canvas
   @ViewChild('modalCanvas')      modalRef!:      ElementRef<HTMLCanvasElement>;
 
+  // TV view canvases (fullscreen 4-chart presentation)
+  @ViewChild('tvLpoCanvas')  tvLpoRef?:  ElementRef<HTMLCanvasElement>;
+  @ViewChild('tvGrnCanvas')  tvGrnRef?:  ElementRef<HTMLCanvasElement>;
+  @ViewChild('tvSuppCanvas') tvSuppRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('tvProjCanvas') tvProjRef?: ElementRef<HTMLCanvasElement>;
+
   private charts = new Map<string, Chart>();
 
   // ── Expand state ────────────────────────────────────────────────────────────
@@ -254,8 +260,10 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   lpoMonthFrom = 0;
   lpoMonthTo   = this.CURRENT_MONTH_IDX; // default: Jan → current month
   lpoView: 'monthly' | 'yearly' = 'yearly';
-  lpoYearFrom=0; lpoYearTo=this.CURRENT_YEAR - 2017; // yearly-mode year range (index into lpoYears)
-  grnYearFrom=0; grnYearTo=9; grnMonthFrom=0; grnMonthTo=this.CURRENT_MONTH_IDX; grnView:'yearly'|'monthly'='yearly';
+  // yearly-mode year range (index into lpoYears) — defaults to the LAST 6 years;
+  // users can slide left to see older years
+  lpoYearFrom=Math.max(0, (this.CURRENT_YEAR - 2017) - 5); lpoYearTo=this.CURRENT_YEAR - 2017;
+  grnYearFrom=4; grnYearTo=9; grnMonthFrom=0; grnMonthTo=this.CURRENT_MONTH_IDX; grnView:'yearly'|'monthly'='yearly';
   // GRN monthly-mode: single year dropdown (mirrors lpoYear logic)
   grnYear = this.CURRENT_YEAR;
   suppYearFrom=0; suppYearTo=9; suppCount=10;
@@ -296,7 +304,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
       this.lpoMonthFrom = 0;
       this.lpoMonthTo   = this.CURRENT_MONTH_IDX;
     } else {
-      this.lpoYearFrom = 0;
+      this.lpoYearFrom = Math.max(0, this.lpoYears.length - 6);   // last 6 years
       this.lpoYearTo   = this.lpoYears.length - 1;
     }
     this.onLPO();
@@ -305,7 +313,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   /** Called when GRN view radio (Yearly/Monthly) changes — resets sliders to sensible defaults. */
   onGrnViewChange() {
     if (this.grnView === 'yearly') {
-      this.grnYearFrom = 0;
+      this.grnYearFrom = 4;   // last 6 of the 10-year window
       this.grnYearTo   = 9;
     } else {
       this.grnYear      = this.CURRENT_YEAR;
@@ -1281,6 +1289,40 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     return refs[name]?.nativeElement.getContext('2d') ?? null;
   }
 
+  // ── TV VIEW — fullscreen 4-chart presentation (separate from the
+  //    normal layout; the existing dashboard is untouched) ─────────
+  tvViewOpen = false;
+  private tvCharts: Chart[] = [];
+
+  openTvView(): void {
+    this.tvViewOpen = true;
+    document.body.style.overflow = 'hidden';
+    // wait one tick so the *ngIf canvases exist, then build the charts
+    setTimeout(() => this.buildTvCharts(), 80);
+  }
+
+  closeTvView(): void {
+    this.tvViewOpen = false;
+    document.body.style.overflow = '';
+    this.tvCharts.forEach(c => { try { c.destroy(); } catch {} });
+    this.tvCharts = [];
+  }
+
+  private buildTvCharts(): void {
+    this.tvCharts.forEach(c => { try { c.destroy(); } catch {} });
+    this.tvCharts = [];
+    const defs: Array<[ElementRef<HTMLCanvasElement> | undefined, (ctx: CanvasRenderingContext2D) => Chart]> = [
+      [this.tvLpoRef,  (ctx) => this.makeLPO(ctx)],
+      [this.tvGrnRef,  (ctx) => this.makeGRN(ctx)],
+      [this.tvSuppRef, (ctx) => this.makeSuppliers(ctx)],
+      [this.tvProjRef, (ctx) => this.makeProjects(ctx)],
+    ];
+    defs.forEach(([ref, factory]) => {
+      const ctx = ref?.nativeElement?.getContext('2d');
+      if (ctx) this.tvCharts.push(factory(ctx));
+    });
+  }
+
   // ── Chart factories ──────────────────────────────────────────────────────────
 
   private makeLPO(ctx: CanvasRenderingContext2D): Chart {
@@ -1528,11 +1570,11 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
           { type: 'bar' as any, label: 'PO Value',  data: poValues,
             backgroundColor: PO_CLR, borderWidth: 0,
             borderRadius: 4, borderSkipped: 'bottom' as any,
-            barPercentage: 0.85, categoryPercentage: 0.72, order: 4 },
+            barPercentage: 0.85, categoryPercentage: 0.72, order: 3 },
           { type: 'bar' as any, label: 'GRN Value', data: grnValues,
             backgroundColor: GRN_CLR, borderWidth: 0,
             borderRadius: 4, borderSkipped: 'bottom' as any,
-            barPercentage: 0.85, categoryPercentage: 0.72, order: 3 },
+            barPercentage: 0.85, categoryPercentage: 0.72, order: 4 },
           { type: 'line' as any, label: 'PO Trend',  data: poValues,
             borderColor: PO_CLR, borderWidth: 3, tension: 0.45, fill: false,
             pointBackgroundColor: '#ffffff', pointBorderColor: PO_CLR,
