@@ -1217,11 +1217,13 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.projLoading = false; this.projEmpty = data.length === 0;
         this.build('projects');
         if (this.expandedChart === 'projects') this.buildModal();
+        this.refreshTvCharts();
       },
       error: () => {
         this.projChartData = [];
         this.projLoading = false; this.projEmpty = true;
         this.build('projects');
+        this.refreshTvCharts();
       }
     });
   }

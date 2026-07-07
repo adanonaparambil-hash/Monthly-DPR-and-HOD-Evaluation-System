@@ -7,6 +7,12 @@
       "runtimeArgs": ["start"],
       "port": 4200,
       "autoPort": false
+    },
+    {
+      "name": "dashboard-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4173", "--directory", "C:\\Users\\ITS48\\AppData\\Local\\Temp\\claude\\C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System\\509f084a-cf84-49a4-bdc5-62e66bda8544\\scratchpad\\preview"],
+      "port": 4173
     }
   ]
 }
