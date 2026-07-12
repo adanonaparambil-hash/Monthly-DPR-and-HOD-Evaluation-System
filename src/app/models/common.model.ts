@@ -22,6 +22,7 @@ export interface EmployeeProfileUpdateDto {
   employeeName?: string;
   department?: string;
   designation?: string;
+  isDPR?: string;      // 'Y' / 'N' — employee expected to log DPR
   phone?: string;
   email?: string;
   careerSummary?: string;

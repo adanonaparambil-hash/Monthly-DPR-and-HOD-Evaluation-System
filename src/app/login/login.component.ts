@@ -281,7 +281,8 @@ export class LoginComponent implements OnInit, OnDestroy {
           if (code === 'H') {
             this.router.navigate(['/hod-dashboard']);
           } else if (code === 'C') {
-            this.router.navigate(['/ced-dashboard']);
+            // CED lands on the DPR usage dashboard first
+            this.router.navigate(['/ced-dpr-analytics']);
           } else {
             this.router.navigate(['/employee-dashboard']);
           }

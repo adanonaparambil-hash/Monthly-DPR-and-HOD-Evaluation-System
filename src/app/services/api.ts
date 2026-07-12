@@ -603,5 +603,20 @@ export class Api {
       .pipe(catchError(this.handleError));
   }
 
+  getDprNotDoneList(request: { fromDate: string; toDate?: string | null; departmentId?: number | null; comLoc?: string | null }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetDprNotDoneList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getCedDprDashboard(request: { fromDate: string; toDate?: string | null }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetCedDprDashboard`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  exportCedDprDashboard(request: { fromDate: string; toDate?: string | null }): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportCedDprDashboard`, request, { responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
 }
 

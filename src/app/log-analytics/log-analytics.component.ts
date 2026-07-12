@@ -313,8 +313,21 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
     this.userDeptId = user?.departmentID ?? user?.departmentId ?? user?.deptId ?? null;
 
+    // DPR Compliance button: visible only to HODs and SURVEILLANCE department users
+    const ndDeptName = (user?.department ?? user?.empDept ?? '').toString().trim().toUpperCase();
+    this.ndCanView = this.userType === 'H' || ndDeptName === 'SURVEILLANCE';
+
+    // SURVEILLANCE department users get the full HOD view on this page
+    // (all employees/departments visible, same filters and columns as HOD).
+    // Scoped to this component only — no other screen or role logic changes.
+    const isSurveillanceDept = ndDeptName === 'SURVEILLANCE';
+    if (isSurveillanceDept && this.userType === 'E') {
+      this.userType = 'H';
+    }
+
     // HOD: pre-filter to their own department on initial load
-    if (this.userType === 'H' && this.userDeptId) {
+    // (real HODs only — surveillance users start unfiltered, seeing all departments)
+    if (this.userType === 'H' && !isSurveillanceDept && this.userDeptId) {
       this.activeFilters.deptIds = [this.userDeptId];
     }
 
@@ -1504,6 +1517,8 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   phDetailOpen = false;
   phDetailLoading = false;
   phDetail: TaskDetailDto | null = null;
+  /** parent-task stack for subtask drill-down (Back navigation) */
+  phDetailStack: TaskDetailDto[] = [];
 
   get phTotalPages(): number {
     return this.phPageSize > 0 ? Math.ceil(this.phTotal / this.phPageSize) : 0;
@@ -1672,10 +1687,32 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   phOpenDetail(item: TaskListItem, event?: Event): void {
     if (event) { event.stopPropagation(); }
+    this.phDetailStack = [];   // opening a root task — reset the drill trail
     this.phDetailOpen = true;
+    this.phLoadDetail(item.TASK_ID);
+  }
+
+  /** Drill into a subtask — same Detail API; parent kept on the stack for Back */
+  phOpenSubtask(taskId: string | number, event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    if (!taskId) { return; }
+    if (this.phDetail) { this.phDetailStack.push(this.phDetail); }
+    this.phLoadDetail(taskId);
+  }
+
+  /** Back to the parent task without re-calling the API */
+  phBackDetail(): void {
+    const parent = this.phDetailStack.pop();
+    if (parent) {
+      this.phDetail = parent;
+      this.phDetailLoading = false;
+    }
+  }
+
+  private phLoadDetail(taskId: string | number): void {
     this.phDetailLoading = true;
     this.phDetail = null;
-    this.phTaskApi.getTaskDetail(item.TASK_ID).subscribe({
+    this.phTaskApi.getTaskDetail(taskId).subscribe({
       next: (res: any) => {
         const data = res?.Data ?? res?.data;
         if ((res?.Success ?? res?.success) && data) {
@@ -1700,6 +1737,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   phCloseDetail(): void {
     this.phDetailOpen = false;
     this.phDetail = null;
+    this.phDetailStack = [];
   }
 
   phIsDone(v?: string): boolean {
@@ -1717,5 +1755,199 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   phStripHtml(s?: string): string {
     if (!s) return '';
     return s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DPR NOT-DONE LIST — separate section, does NOT touch any existing
+  // Log Analytics functionality. All state/methods are prefixed with `nd`.
+  // ═══════════════════════════════════════════════════════════════════════════
+  ndModalOpen = false;
+  ndLoading   = false;
+  ndSearched  = false;
+  ndCanView   = false;   // set at init: HODs + SURVEILLANCE department users only
+
+  // filters (server-side)
+  ndFromDate = '';
+  ndToDate   = '';
+  ndDeptId: number | null = null;
+  ndComLoc: string | null = null;          // null = all, 'OM', 'IND'
+  ndLocOptions = [
+    { value: null,  label: 'All Locations' },
+    { value: 'OM',  label: 'Oman (OM)' },
+    { value: 'IND', label: 'India (IND)' }
+  ];
+
+  // quick filter (client-side, within loaded results)
+  ndNameSearch = '';
+
+  // data
+  ndEmployees: {
+    employeeId: string; employeeName: string; designation: string;
+    empCategory: string; location: string; departmentId: number;
+    departmentName: string; profileImage: string | null;
+  }[] = [];
+  ndSummary: { departmentId: number; departmentName: string; notDoneCount: number }[] = [];
+  ndExpandedDepts: { [dept: string]: boolean } = {};
+
+  private ndToday(): string {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+  }
+
+  openNdModal(event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    if (!this.ndCanView) { return; }
+    this.ndModalOpen = true;
+    if (!this.ndFromDate) { this.ndFromDate = this.ndToday(); }
+    if (!this.ndToDate)   { this.ndToDate   = this.ndFromDate; }
+    if (!this.ndSearched) { this.ndSearch(); }
+  }
+
+  closeNdModal(): void {
+    this.ndModalOpen = false;
+  }
+
+  ndSearch(): void {
+    if (!this.ndFromDate) { this.ndFromDate = this.ndToday(); }
+    this.ndSearched = true;
+    this.ndLoading = true;
+
+    const req = {
+      fromDate:     this.ndFromDate,
+      toDate:       this.ndToDate || this.ndFromDate,
+      departmentId: this.ndDeptId != null ? Number(this.ndDeptId) : 0,
+      comLoc:       this.ndComLoc || null
+    };
+
+    this.api.getDprNotDoneList(req).subscribe({
+      next: (res: any) => {
+        const data = res?.data ?? res?.Data ?? {};
+        const emps = data.employees ?? data.Employees ?? [];
+        const summ = data.departmentSummary ?? data.DepartmentSummary ?? [];
+
+        this.ndEmployees = emps.map((r: any) => ({
+          employeeId:     r.employeeId     ?? r.EmployeeId     ?? '',
+          employeeName:   r.employeeName   ?? r.EmployeeName   ?? '',
+          designation:    r.designation    ?? r.Designation    ?? '',
+          empCategory:    r.empCategory    ?? r.EmpCategory    ?? '',
+          location:       r.location       ?? r.Location       ?? '',
+          departmentId:   r.departmentId   ?? r.DepartmentId   ?? 0,
+          departmentName: r.departmentName ?? r.DepartmentName ?? 'Unknown',
+          profileImage:   r.profileImageBase64 ?? r.ProfileImageBase64 ?? r.profileImage ?? r.ProfileImage ?? null
+        }));
+
+        this.ndSummary = summ.map((s: any) => ({
+          departmentId:   s.departmentId   ?? s.DepartmentId   ?? 0,
+          departmentName: s.departmentName ?? s.DepartmentName ?? 'Unknown',
+          notDoneCount:   s.notDoneCount   ?? s.NotDoneCount   ?? 0
+        }));
+
+        // expand all departments by default
+        this.ndExpandedDepts = {};
+        this.ndSummary.forEach(s => this.ndExpandedDepts[s.departmentName] = true);
+
+        this.ndLoading = false;
+      },
+      error: (err) => {
+        console.error('GetDprNotDoneList failed:', err);
+        this.ndEmployees = [];
+        this.ndSummary = [];
+        this.ndLoading = false;
+      }
+    });
+  }
+
+  ndClear(): void {
+    this.ndFromDate = this.ndToday();
+    this.ndToDate   = this.ndFromDate;
+    this.ndDeptId   = null;
+    this.ndComLoc   = null;
+    this.ndNameSearch = '';
+    this.ndSearch();
+  }
+
+  ndToggleDept(dept: string): void {
+    this.ndExpandedDepts[dept] = !this.ndExpandedDepts[dept];
+  }
+
+  /** Departments to render — from the summary cursor, but only those that
+   *  still have at least one employee after the client-side name filter. */
+  get ndDepts(): { departmentId: number; departmentName: string; notDoneCount: number }[] {
+    if (!this.ndNameSearch.trim()) return this.ndSummary;
+    return this.ndSummary.filter(s => this.ndEmployeesFor(s.departmentName).length > 0);
+  }
+
+  /** Employees of one department, with the client-side quick filter applied */
+  ndEmployeesFor(dept: string): typeof this.ndEmployees {
+    const q = this.ndNameSearch.trim().toLowerCase();
+    return this.ndEmployees.filter(e =>
+      e.departmentName === dept &&
+      (!q ||
+        e.employeeName.toLowerCase().includes(q) ||
+        e.employeeId.toLowerCase().includes(q) ||
+        (e.designation || '').toLowerCase().includes(q)));
+  }
+
+  /** Total shown after client-side filtering */
+  get ndFilteredTotal(): number {
+    const q = this.ndNameSearch.trim().toLowerCase();
+    if (!q) return this.ndEmployees.length;
+    return this.ndEmployees.filter(e =>
+      e.employeeName.toLowerCase().includes(q) ||
+      e.employeeId.toLowerCase().includes(q) ||
+      (e.designation || '').toLowerCase().includes(q)).length;
+  }
+
+  ndImgSrc(img: string | null): string | null {
+    if (!img) return null;
+    if (img.startsWith('data:')) return img;
+    return 'data:image/jpeg;base64,' + img;
+  }
+
+  ndInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  }
+
+  /** Export the currently displayed (filtered) not-done list as CSV (opens in Excel) */
+  ndExport(): void {
+    const cols = ['Department', 'Employee ID', 'Employee Name', 'Designation', 'Category', 'Location'];
+
+    const escape = (v: any): string => {
+      const s = v == null ? '' : String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const dataRows: string[] = [];
+    for (const dept of this.ndDepts) {
+      for (const emp of this.ndEmployeesFor(dept.departmentName)) {
+        dataRows.push([
+          escape(emp.departmentName),
+          escape(emp.employeeId),
+          escape(emp.employeeName),
+          escape(emp.designation),
+          escape(emp.empCategory),
+          escape(emp.location)
+        ].join(','));
+      }
+    }
+
+    const header = cols.map(escape).join(',');
+    const csv    = [header, ...dataRows].join('\r\n');
+    const blob   = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url    = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    const from   = this.ndFromDate || new Date().toISOString().slice(0, 10);
+    const to     = this.ndToDate || from;
+    anchor.href     = url;
+    anchor.download = from === to
+      ? `dpr-compliance-${from}.csv`
+      : `dpr-compliance-${from}_to_${to}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 }

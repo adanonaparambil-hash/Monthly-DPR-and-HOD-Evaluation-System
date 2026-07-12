@@ -25,6 +25,8 @@ export interface EmployeeProfileDto {
   employeeName: string;
   department: string;
   designation: string;
+  isDPR?: string | null;   // 'Y' / 'N' — expected to log DPR
+  IsDPR?: string | null;   // tolerate PascalCase from API serializer
   phone: string | null;
   email: string | null;
   careerSummary: string | null;
@@ -200,6 +202,14 @@ export class EmployeeMasterComponent implements OnInit {
     return `Records ${from}–${to}`;
   }
 
+  /** IsDPR switch bridge — UI toggle (boolean) ↔ API flag ('Y'/'N') */
+  get isDprOn(): boolean {
+    return this.editProfile.isDPR === 'Y';
+  }
+  set isDprOn(v: boolean) {
+    this.editProfile.isDPR = v ? 'Y' : 'N';
+  }
+
   openViewModal(emp: EmployeeDto): void {
     this.selectedEmployee = emp;
     this.employeeProfile = null;
@@ -233,6 +243,7 @@ export class EmployeeMasterComponent implements OnInit {
             qualification: this.employeeProfile.qualification ?? '',
             skillset: this.employeeProfile.skillset ?? '',
             careerSummary: this.employeeProfile.careerSummary ?? '',
+            isDPR: (String(this.employeeProfile.isDPR ?? this.employeeProfile.IsDPR ?? 'N')).toUpperCase() === 'Y' ? 'Y' : 'N',
           };
         }
         this.isLoadingProfile = false;
@@ -280,6 +291,7 @@ export class EmployeeMasterComponent implements OnInit {
               dob: this.editProfile.dob,
               experienceInd: this.editProfile.experienceInd,
               experienceAbroad: this.editProfile.experienceAbroad,
+              isDPR: this.editProfile.isDPR,
               qualification: this.editProfile.qualification,
               skillset: this.editProfile.skillset,
               careerSummary: this.editProfile.careerSummary,

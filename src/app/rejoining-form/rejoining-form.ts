@@ -103,12 +103,8 @@ export class RejoiningForm implements OnInit {
   }
 
   ngOnInit(): void {
-    const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-    const empId = (currentUser?.empId || currentUser?.userId || currentUser?.id || '').toString();
-    this.loadEmployeeMasterList();
-    if (empId) this.loadPunches(empId);
-
-    // Check if opened from approval listing
+    // Check if opened from approval listing FIRST — a saved record must show the
+    // submitted employee, never the logged-in user (who is only the default for NEW forms)
     const rejoinId  = this.route.snapshot.queryParamMap.get('rejoinId');
     const approvalId = this.route.snapshot.queryParamMap.get('approvalID')
                     || this.route.snapshot.queryParamMap.get('approvalId');
@@ -117,7 +113,18 @@ export class RejoiningForm implements OnInit {
       this.isViewMode = true;
       if (approvalId) this.incomingApprovalId = +approvalId;
       this.incomingApproverCode = approverCode.toUpperCase();
+    }
+
+    this.loadEmployeeMasterList();
+
+    if (rejoinId) {
+      // Existing record: employee/profile/punches come from the record itself
       this.loadRejoinRecord(+rejoinId);
+    } else {
+      // New form: default punches to the logged-in user
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      const empId = (currentUser?.empId || currentUser?.userId || currentUser?.id || '').toString();
+      if (empId) this.loadPunches(empId);
     }
   }
   loadPunches(empId: string, forDate?: string): void {
@@ -393,7 +400,9 @@ export class RejoiningForm implements OnInit {
           description: emp.description || emp.employeeName || emp.name || '',
           nationality: (emp.nationality || emp.Nationality || '').toString().toUpperCase()
         }));
-        // Auto-select logged-in user
+        // Auto-select logged-in user — NEW forms only. When viewing a saved
+        // record the employee comes from the record; never overwrite it here.
+        if (this.isViewMode) { return; }
         const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
         const empId = (currentUser?.empId || currentUser?.userId || currentUser?.id || '').toString();
         if (empId) {
@@ -406,6 +415,7 @@ export class RejoiningForm implements OnInit {
         }
       },
       error: () => {
+        if (this.isViewMode) { return; }
         const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
         const empId = (currentUser?.empId || currentUser?.userId || currentUser?.id || '').toString();
         if (empId) this.loadEmployeeProfile(empId);
@@ -472,6 +482,12 @@ export class RejoiningForm implements OnInit {
             email: d.email || '',
             contactNumber: (d.phone || '').replace(/\D/g, '').slice(-10)
           });
+
+          // Keep the visible Employee field in sync with whoever this profile
+          // belongs to (record owner on saved forms; logged-in user on new forms)
+          if (d.employeeName) {
+            this.selectedEmployeeDisplay = `${d.employeeName} (${d.empId || ''})`.trim();
+          }
         }
       },
       error: (err: any) => {

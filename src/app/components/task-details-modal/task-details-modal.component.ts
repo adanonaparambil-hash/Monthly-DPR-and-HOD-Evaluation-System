@@ -629,6 +629,19 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
       );
       return;
     }
+
+    // Task Title is mandatory ONLY for IT-department users when closing/completing a task.
+    // All other departments keep the existing flow untouched.
+    const loggedInDept = (currentUserForValidation.department || '').toString().trim().toUpperCase();
+    if (loggedInDept === 'IT' &&
+        (this.selectedTaskDetailStatus === 'not-closed' || this.selectedTaskDetailStatus === 'completed') &&
+        !this.editableTaskTitle.trim()) {
+      this.toasterService.showError(
+        'Validation Error',
+        'Task Title is mandatory when closing or completing a task'
+      );
+      return;
+    }
     
     // Validate mandatory fields if status is Closed or Completed
     const validation = this.validateMandatoryFields();

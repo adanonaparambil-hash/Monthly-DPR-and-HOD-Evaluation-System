@@ -1,0 +1,577 @@
+<div class="ca-page" [class.ca-display]="displayMode">
+
+  <!-- floating gradient orbs (decorative) -->
+  <div class="ca-orb ca-orb-1" aria-hidden="true"></div>
+  <div class="ca-orb ca-orb-2" aria-hidden="true"></div>
+  <div class="ca-orb ca-orb-3" aria-hidden="true"></div>
+
+  <!-- ══ DARK AURORA HERO ═════════════════════════════════════════════════ -->
+  <div class="ca-hero">
+    <div class="ca-hero-aurora" aria-hidden="true"></div>
+    <div class="ca-hero-grid" aria-hidden="true"></div>
+
+    <div class="ca-hero-left">
+      <span class="ca-eyebrow"><span class="ca-live-dot"></span> Live Usage Analytics</span>
+      <h1>CED DPR <span class="ca-grad-text">Usage Analytics</span></h1>
+      <p>Company-wide DPR adoption, compliance and usage for the selected period</p>
+      @if (summary) {
+        <div class="ca-hero-stats">
+          <span><b>{{ fmt(summary.totalEmployees) }}</b> employees</span>
+          <span class="ca-hero-sep"></span>
+          <span><b>{{ summary.adoptionPct }}%</b> adoption</span>
+          <span class="ca-hero-sep"></span>
+          <span><b>{{ summary.workingDays }}</b> working day(s)</span>
+        </div>
+      }
+    </div>
+
+    <div class="ca-hero-right">
+      <div class="ca-presets">
+        <button [class.active]="activePreset === 'today'"     (click)="setPreset('today')">Today</button>
+        <button [class.active]="activePreset === 'yesterday'" (click)="setPreset('yesterday')">Yesterday</button>
+        <button [class.active]="activePreset === '7d'"        (click)="setPreset('7d')">7 Days</button>
+        <button [class.active]="activePreset === '30d'"       (click)="setPreset('30d')">30 Days</button>
+      </div>
+      <div class="ca-dates">
+        <div class="ca-date-field">
+          <label>From</label>
+          <input type="date" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()">
+        </div>
+        <div class="ca-date-field">
+          <label>To</label>
+          <input type="date" [(ngModel)]="toDate" (ngModelChange)="onDateChange()">
+        </div>
+        <button class="ca-refresh" (click)="load()" [disabled]="loading || !!dateError">
+          @if (loading) { <i class="fas fa-spinner fa-spin"></i> } @else { <i class="fas fa-bolt"></i> }
+          Refresh
+        </button>
+        <button class="ca-export-all" (click)="exportAll()" [disabled]="loading || exportingAll || !summary || !!dateError"
+                title="Download full dashboard as Excel — one sheet per section">
+          @if (exportingAll) { <i class="fas fa-spinner fa-spin"></i> } @else { <i class="fas fa-file-excel"></i> }
+          Export
+        </button>
+        @if (!displayMode) {
+          <button class="ca-display-btn" (click)="enterDisplay()" [disabled]="!summary"
+                  title="Full-screen display mode — sections slide one by one, ideal for big screens">
+            <i class="fas fa-tv"></i> Display
+          </button>
+        }
+      </div>
+      @if (dateError) {
+        <div class="ca-date-error" role="alert">
+          <i class="fas fa-triangle-exclamation"></i> {{ dateError }}
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (errorMsg) {
+    <div class="ca-error ca-glass"><i class="fas fa-triangle-exclamation"></i> {{ errorMsg }}</div>
+  }
+
+  <!-- ══ SKELETON LOADING ══════════════════════════════════════════════════ -->
+  @if (loading) {
+    <div class="ca-kpis">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="ca-skel ca-skel-kpi"></div>
+      }
+    </div>
+    <div class="ca-skel ca-skel-block"></div>
+    <div class="ca-skel ca-skel-block ca-skel-tall"></div>
+  } @else if (summary) {
+    <div class="ca-deck" #deck (scroll)="onDeckScroll()">
+
+    <!-- overview wrapper: invisible in normal view; one combined slide in display mode -->
+    <div class="ca-overview" data-slide="Overview">
+
+    <!-- ══ KPI CARDS ═══════════════════════════════════════════════════════ -->
+    <div class="ca-kpis">
+      <div class="ca-kpi ca-glass ca-in" style="--kc:#6366f1; --d:0ms;">
+        <div class="ca-kpi-glow"></div>
+        <div class="ca-kpi-top"><div class="ca-kpi-icon"><i class="fas fa-users"></i></div></div>
+        <div class="ca-kpi-val">{{ fmt(kpi['totalEmployees']) }}</div>
+        <div class="ca-kpi-label">Total Employees</div>
+        <div class="ca-kpi-sub">eligible for DPR</div>
+      </div>
+      <div class="ca-kpi ca-glass ca-in" style="--kc:#10b981; --d:60ms;">
+        <div class="ca-kpi-glow"></div>
+        <div class="ca-kpi-top"><div class="ca-kpi-icon"><i class="fas fa-user-check"></i></div></div>
+        <div class="ca-kpi-val">{{ fmt(kpi['loggedEmployees']) }}</div>
+        <div class="ca-kpi-label">Logged</div>
+        <div class="ca-kpi-sub">submitted DPR entries</div>
+      </div>
+      <div class="ca-kpi ca-glass ca-in" style="--kc:#f43f5e; --d:120ms;">
+        <div class="ca-kpi-glow"></div>
+        <div class="ca-kpi-top"><div class="ca-kpi-icon"><i class="fas fa-user-xmark"></i></div></div>
+        <div class="ca-kpi-val">{{ fmt(kpi['notLoggedEmployees']) }}</div>
+        <div class="ca-kpi-label">Not Logged</div>
+        <div class="ca-kpi-sub">no entry in period</div>
+      </div>
+      <div class="ca-kpi ca-glass ca-in" style="--kc:#3b82f6; --d:180ms;">
+        <div class="ca-kpi-glow"></div>
+        <div class="ca-kpi-top"><div class="ca-kpi-icon"><i class="fas fa-percent"></i></div></div>
+        <div class="ca-kpi-val">{{ fmt1(kpi['adoptionPct']) }}<span class="ca-kpi-unit">%</span></div>
+        <div class="ca-kpi-label">Adoption</div>
+        <div class="ca-kpi-bar">
+          <div class="ca-kpi-bar-fill" [style.width.%]="Math.min(100, summary.adoptionPct)"></div>
+        </div>
+      </div>
+      <div class="ca-kpi ca-glass ca-in" style="--kc:#8b5cf6; --d:240ms;">
+        <div class="ca-kpi-glow"></div>
+        <div class="ca-kpi-top"><div class="ca-kpi-icon"><i class="fas fa-clock"></i></div></div>
+        <div class="ca-kpi-val">{{ fmt(kpi['hoursLogged']) }}</div>
+        <div class="ca-kpi-label">Hours Logged</div>
+        <div class="ca-kpi-sub">{{ summary.hoursLoggedDisplay || (summary.workingDays + ' working day(s)') }}</div>
+      </div>
+      <div class="ca-kpi ca-glass ca-in" style="--kc:#0ea5e9; --d:300ms;">
+        <div class="ca-kpi-glow"></div>
+        <div class="ca-kpi-top"><div class="ca-kpi-icon"><i class="fas fa-bullseye"></i></div></div>
+        <div class="ca-kpi-val">{{ fmt(kpi['expectedHours']) }}</div>
+        <div class="ca-kpi-label">Expected Hours</div>
+        <div class="ca-kpi-sub">Omani 8h · Expat 9h</div>
+      </div>
+    </div>
+
+    <!-- ══ ADOPTION DONUT + EXECUTIVE INSIGHTS ═════════════════════════════ -->
+    <div class="ca-card ca-glass ca-insights ca-in" style="--d:120ms;">
+      <div class="ca-insights-grid">
+
+        <div class="ca-donut-wrap">
+          <div class="ca-donut">
+            <svg viewBox="0 0 140 140" width="150" height="150">
+              <defs>
+                <linearGradient id="caDonutGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#2dd4bf"/>
+                  <stop offset="100%" stop-color="#138271"/>
+                </linearGradient>
+              </defs>
+              <circle cx="70" cy="70" r="54" fill="none" stroke="var(--ca-ring-track)" stroke-width="15"/>
+              <circle cx="70" cy="70" r="54" fill="none"
+                      stroke="url(#caDonutGrad)" stroke-width="15" stroke-linecap="round"
+                      [attr.stroke-dasharray]="donutDash(summary.adoptionPct)"
+                      transform="rotate(-90 70 70)"
+                      class="ca-donut-fill"/>
+            </svg>
+            <div class="ca-donut-center">
+              <b>{{ summary.adoptionPct }}%</b>
+              <span>adoption</span>
+            </div>
+          </div>
+          <div class="ca-donut-legend">
+            <span><span class="ca-lg" style="background:#138271;"></span> Logged <b>{{ fmt(summary.loggedEmployees) }}</b></span>
+            <span><span class="ca-lg" style="background:rgba(148,163,184,.45);"></span> Not logged <b>{{ fmt(summary.notLoggedEmployees) }}</b></span>
+          </div>
+        </div>
+
+        <div class="ca-insights-chips">
+          <h2><span class="ca-h-icon" style="--kc:#f59e0b;"><i class="fas fa-lightbulb"></i></span> Executive Insights</h2>
+          <div class="ca-chips">
+            @for (c of insightChips; track c.text; let i = $index) {
+              <span class="ca-chip ca-in" [style.--d]="(180 + i * 60) + 'ms'">
+                <span class="ca-dot" [style.background]="c.dot"></span>{{ c.text }}
+              </span>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ DAILY TREND — defined once; rendered in overview (display mode)
+         or under the heatmap (normal view) via the outlets below ══════════ -->
+    <ng-template #trendTpl>
+    @if (daily.length > 0 && trendPath) {
+      <div class="ca-card ca-glass ca-in ca-trend-card" style="--d:200ms;">
+        <div class="ca-card-head">
+          <h2><span class="ca-h-icon" style="--kc:#3b82f6;"><i class="fas fa-chart-line"></i></span> Daily Adoption Trend</h2>
+          <span class="ca-muted">% of employees who logged, per working day</span>
+        </div>
+
+        <div class="ca-chart-wrap">
+          <svg class="ca-chart" [attr.viewBox]="'0 0 ' + TREND_W + ' ' + TREND_H" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="caAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"  stop-color="#0ea5e9" stop-opacity="0.34"/>
+                <stop offset="100%" stop-color="#138271" stop-opacity="0.02"/>
+              </linearGradient>
+              <linearGradient id="caLineGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%"  stop-color="#138271"/>
+                <stop offset="100%" stop-color="#0ea5e9"/>
+              </linearGradient>
+            </defs>
+            <!-- grid lines -->
+            @for (g of [0.25, 0.5, 0.75]; track g) {
+              <line [attr.x1]="10" [attr.x2]="TREND_W - 10"
+                    [attr.y1]="TREND_H * g" [attr.y2]="TREND_H * g"
+                    class="ca-chart-grid"/>
+            }
+            <path [attr.d]="trendPath.fill" fill="url(#caAreaGrad)" class="ca-chart-area"/>
+            <path [attr.d]="trendPath.line" fill="none" stroke="url(#caLineGrad)"
+                  stroke-width="3" stroke-linecap="round" class="ca-chart-line"/>
+            @for (p of trendPts; track p.d.logDate) {
+              <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4.5" class="ca-chart-dot">
+                <title>{{ p.d.logDate }} · {{ p.d.adoptionPct }}% · {{ p.d.loggedEmployees }} employees · {{ p.d.hoursLoggedDisplay || (p.d.hoursLogged + ' hrs') }}</title>
+              </circle>
+            }
+          </svg>
+          <div class="ca-chart-labels">
+            @for (p of trendPts; track p.d.logDate) {
+              <div class="ca-chart-lb" [title]="p.d.logDate + ' · ' + p.d.loggedEmployees + ' employees · ' + (p.d.hoursLoggedDisplay || p.d.hoursLogged + ' hrs')">
+                <b>{{ p.d.adoptionPct }}%</b>
+                <span>{{ heatDateLabel(p.d.logDate) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+    </ng-template>
+
+    <!-- display mode: trend belongs to the overview slide -->
+    @if (displayMode) {
+      <ng-container [ngTemplateOutlet]="trendTpl"></ng-container>
+    }
+
+    </div><!-- /ca-overview -->
+
+    <!-- ══ DEPARTMENT PERFORMANCE ══════════════════════════════════════════ -->
+    <div class="ca-card ca-glass ca-in" style="--d:180ms;" data-slide="Departments">
+      <div class="ca-card-head">
+        <h2><span class="ca-h-icon" style="--kc:#138271;"><i class="fas fa-building"></i></span> Department Performance</h2>
+        <span class="ca-muted">{{ depts.length }} departments · click a card for employee detail</span>
+      </div>
+
+      <div class="ca-dept-tabs">
+        <button [class.active]="deptFilter === 'all'" (click)="deptFilter = 'all'">
+          All Departments <span class="ca-dt-count">{{ depts.length }}</span>
+        </button>
+        <button class="t-high" [class.active]="deptFilter === 'high'" (click)="deptFilter = 'high'">
+          High Performers <span class="ca-dt-count">{{ deptCounts.high }}</span>
+        </button>
+        <button class="t-avg" [class.active]="deptFilter === 'avg'" (click)="deptFilter = 'avg'">
+          Average Performers <span class="ca-dt-count">{{ deptCounts.avg }}</span>
+        </button>
+        <button class="t-low" [class.active]="deptFilter === 'low'" (click)="deptFilter = 'low'">
+          Low Performers <span class="ca-dt-count">{{ deptCounts.low }}</span>
+        </button>
+      </div>
+
+      <div class="ca-dept-grid2">
+        @for (d of filteredDepts; track d.departmentId; let i = $index) {
+          <div class="ca-dept-card2 ca-in tier-{{ deptTier(d.compliancePct) }}"
+               (click)="openDrill(d)" [style.--d]="(i * 40) + 'ms'" title="Click for employees">
+            <div class="ca-dc2-head">
+              <span class="ca-dc2-rank">{{ d.rank }}</span>
+              <span class="ca-dc2-name">{{ d.departmentName }}</span>
+            </div>
+            <div class="ca-dc2-body">
+              <div class="ca-dc2-ring">
+                <svg viewBox="0 0 60 60" width="66" height="66">
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="var(--ca-ring-track)" stroke-width="6.5"/>
+                  <circle cx="30" cy="30" r="26" fill="none"
+                          [attr.stroke]="compColor(d.compliancePct)" stroke-width="6.5"
+                          stroke-linecap="round"
+                          [attr.stroke-dasharray]="ringDash(d.compliancePct)"
+                          transform="rotate(-90 30 30)"
+                          class="ca-ring-fill"/>
+                </svg>
+                <span class="ca-dc2-pct" [style.color]="compColor(d.compliancePct)">{{ d.compliancePct }}%</span>
+              </div>
+              <div class="ca-dc2-right">
+                <div class="ca-dc2-stats">
+                  <span class="ca-dc2-stat" title="Headcount"><i class="fas fa-users"></i> {{ d.headcount }}</span>
+                  <span class="ca-dc2-stat ok" title="Logged"><i class="fas fa-check"></i> {{ d.loggedCount }}</span>
+                  <span class="ca-dc2-stat bad" title="Not logged"><i class="fas fa-arrow-trend-down"></i> {{ d.missingCount }}</span>
+                </div>
+                <div class="ca-dc2-hrs">{{ d.loggedHrsDisplay || (d.loggedHrs + 'h') }} / {{ d.expectedHrs }}h</div>
+                @if (deptSpark[d.departmentName]) {
+                  <svg class="ca-dc2-spark" viewBox="0 0 64 20" preserveAspectRatio="none">
+                    <polyline [attr.points]="deptSpark[d.departmentName]" fill="none"
+                              [attr.stroke]="compColor(d.compliancePct)"
+                              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                }
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="ca-dept-empty">
+            <i class="fas fa-filter-circle-xmark"></i> No departments in this group for the selected period.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ══ COMPLIANCE HEATMAP (always visible) ═════════════════════════════ -->
+    @if (heatDates.length > 0) {
+      <div class="ca-card ca-glass ca-in" style="--d:260ms;" data-slide="Heatmap">
+        <div class="ca-card-head">
+          <h2><span class="ca-h-icon" style="--kc:#8b5cf6;"><i class="fas fa-table-cells"></i></span> Compliance Heatmap</h2>
+          <div class="ca-heat-legend">
+            <span><span class="ca-lg ca-lg-good"></span> ≥90%</span>
+            <span><span class="ca-lg ca-lg-mid"></span> 70–89%</span>
+            <span><span class="ca-lg ca-lg-bad"></span> &lt;70%</span>
+          </div>
+        </div>
+        <div class="ca-heat-scroll">
+          <table class="ca-heat">
+            <thead>
+              <tr>
+                <th class="ca-heat-dept">Department</th>
+                @for (dt of heatDates; track dt) { <th>{{ heatDateLabel(dt) }}</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of heatRows; track row.name) {
+                <tr>
+                  <td class="ca-heat-dept">{{ row.name }}</td>
+                  @for (c of row.cells; track $index) {
+                    @if (c) {
+                      <td>
+                        <div class="ca-heat-cell" [style.background]="heatBg(c.pct)"
+                             [title]="row.name + ' · ' + heatDateLabel(c.date) + ' · ' + c.pct + '% (' + c.log + '/' + c.exp + ' hrs)'">
+                          {{ c.pct }}
+                        </div>
+                      </td>
+                    } @else {
+                      <td><div class="ca-heat-cell ca-heat-empty">—</div></td>
+                    }
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- normal view: daily trend sits under the heatmap -->
+    @if (!displayMode) {
+      <ng-container [ngTemplateOutlet]="trendTpl"></ng-container>
+    }
+
+    <!-- ══ PEOPLE SPOTLIGHT ════════════════════════════════════════════════ -->
+    <div class="ca-two-col" data-slide="Spotlight">
+      <div class="ca-card ca-glass ca-in" style="--d:300ms;">
+        <div class="ca-card-head">
+          <h2><span class="ca-h-icon" style="--kc:#f59e0b;"><i class="fas fa-trophy"></i></span> Top Loggers</h2>
+          <span class="ca-muted">most hours in period</span>
+        </div>
+        <div class="ca-spotlight">
+          @for (e of topLoggers; track e.employeeId; let i = $index) {
+            <div class="ca-spot-row ca-in" [style.--d]="(340 + i * 60) + 'ms'">
+              <span class="ca-spot-rank" [style.border-color]="medal(i)" [class.ca-medal]="i < 3">{{ i + 1 }}</span>
+              <div class="ca-avatar" [style.background]="avatarBg(e.employeeName)">{{ initials(e.employeeName) }}</div>
+              <div class="ca-spot-info">
+                <span class="ca-spot-name">{{ e.employeeName }}</span>
+                <span class="ca-spot-sub">{{ e.departmentName }}</span>
+              </div>
+              <span class="ca-spot-val">{{ e.loggedHrsDisplay || (e.loggedHrs + ' hrs') }}</span>
+            </div>
+          } @empty {
+            <p class="ca-none">No activity in this period.</p>
+          }
+        </div>
+      </div>
+
+      <div class="ca-card ca-glass ca-in" style="--d:340ms;">
+        <div class="ca-card-head">
+          <h2><span class="ca-h-icon" style="--kc:#6366f1;"><i class="fas fa-star"></i></span> Most Consistent</h2>
+          <span class="ca-muted">logging regularity · past 30 days</span>
+        </div>
+        <div class="ca-spotlight">
+          @for (e of mostConsistent; track e.employeeId; let i = $index) {
+            <div class="ca-spot-row ca-in" [style.--d]="(380 + i * 60) + 'ms'">
+              <span class="ca-spot-rank" [style.border-color]="medal(i)" [class.ca-medal]="i < 3">{{ i + 1 }}</span>
+              <div class="ca-avatar" [style.background]="avatarBg(e.employeeName)">{{ initials(e.employeeName) }}</div>
+              <div class="ca-spot-info">
+                <span class="ca-spot-name">{{ e.employeeName }}</span>
+                <span class="ca-spot-sub">{{ e.departmentName }}
+                  @if (e.loggedDays30 != null && e.workingDays30 != null) {
+                    · {{ e.loggedDays30 }}/{{ e.workingDays30 }} days
+                  }
+                </span>
+              </div>
+              <span class="ca-spot-val" [style.color]="compColor(consVal(e))">{{ consVal(e) }}%</span>
+            </div>
+          } @empty {
+            <p class="ca-none">No activity in this period.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NOT USING DPR ═══════════════════════════════════════════════════ -->
+    <div class="ca-card ca-glass ca-in" style="--d:380ms;" data-slide="Not Using DPR">
+      <div class="ca-card-head">
+        <h2><span class="ca-h-icon" style="--kc:#e11d48;"><i class="fas fa-user-slash"></i></span> Not Using DPR</h2>
+        <span class="ca-missing-badge">{{ missingPool.length }} employees</span>
+      </div>
+
+      <div class="ca-missing-filters">
+        <div class="ca-search-wrap">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" [(ngModel)]="missingSearch" (ngModelChange)="onMissingFilter()"
+                 placeholder="Search name, ID or designation…">
+        </div>
+        <select [(ngModel)]="missingDept" (ngModelChange)="onMissingFilter()">
+          <option value="">All Departments</option>
+          @for (dn of missingDeptNames; track dn) { <option [value]="dn">{{ dn }}</option> }
+        </select>
+        <button class="ca-export" (click)="exportMissing()" [disabled]="missingPool.length === 0">
+          <i class="fas fa-file-excel"></i> Export
+        </button>
+      </div>
+
+      <div class="ca-table-wrap">
+        <table class="ca-table">
+          <thead>
+            <tr>
+              <th>Employee</th><th>ID</th><th>Department</th><th>Designation</th>
+              <th>Status</th><th>Last Log</th><th>Compliance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of missingRows; track u.employeeId) {
+              <tr>
+                <td>
+                  <div class="ca-emp-cell">
+                    <div class="ca-avatar" [style.background]="avatarBg(u.employeeName)">{{ initials(u.employeeName) }}</div>
+                    <span class="ca-emp-name">{{ u.employeeName }}</span>
+                  </div>
+                </td>
+                <td class="ca-mono">{{ u.employeeId }}</td>
+                <td>{{ u.departmentName }}</td>
+                <td>{{ u.designation || '—' }}</td>
+                <td>
+                  <span class="ca-badge" [class.ca-badge-pulse]="badge(u).t === 'CRITICAL'"
+                        [style.background]="badge(u).bg" [style.color]="badge(u).c">{{ badge(u).t }}</span>
+                </td>
+                <td>{{ lastLogLabel(u) }}</td>
+                <td [style.color]="compColor(u.compliancePct)"><b>{{ u.compliancePct }}%</b></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7">
+                <div class="ca-empty-state">
+                  <i class="fas fa-circle-check"></i>
+                  <p>Everyone has logged DPR in this period</p>
+                </div>
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (missingPages > 1) {
+        <div class="ca-pager">
+          <button (click)="missingPrev()" [disabled]="missingPage === 0"><i class="fas fa-angle-left"></i> Prev</button>
+          <span>Page {{ missingPage + 1 }} of {{ missingPages }} · {{ missingPool.length }} employees</span>
+          <button (click)="missingNext()" [disabled]="missingPage >= missingPages - 1">Next <i class="fas fa-angle-right"></i></button>
+        </div>
+      }
+    </div>
+
+    </div><!-- /ca-deck -->
+  }
+
+  <!-- ══ DISPLAY MODE CONTROL BAR ══════════════════════════════════════════ -->
+  @if (displayMode) {
+    <div class="ca-dm-bar">
+      <button class="ca-dm-nav" (click)="advance(-1)" title="Previous section (←)">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="ca-dm-chips">
+        @for (lb of slideLabels; track $index) {
+          <button [class.active]="$index === activeSlide" (click)="goTo($index)">{{ lb }}</button>
+        }
+      </div>
+      <button class="ca-dm-nav" (click)="advance(1)" title="Next section (→)">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <span class="ca-dm-sep"></span>
+      <button class="ca-dm-nav" (click)="toggleAutoPlay()" [title]="autoPlay ? 'Pause auto-rotation' : 'Resume auto-rotation'">
+        <i class="fas" [class.fa-pause]="autoPlay" [class.fa-play]="!autoPlay"></i>
+      </button>
+      <button class="ca-dm-exit" (click)="exitDisplay()" title="Exit display mode (Esc)">
+        <i class="fas fa-compress"></i> Exit
+      </button>
+    </div>
+  }
+
+  <!-- ══ DEPARTMENT DRILL MODAL ════════════════════════════════════════════ -->
+  @if (drillDept) {
+    <div class="ca-overlay" (click)="closeDrill()">
+      <div class="ca-modal" (click)="$event.stopPropagation()">
+        <div class="ca-modal-head">
+          <div class="ca-modal-title">
+            <div class="ca-modal-icon"><i class="fas fa-building"></i></div>
+            <div>
+              <h3>{{ drillDept.departmentName }}</h3>
+              <p>Rank #{{ drillDept.rank }} · {{ drillDept.headcount }} employees ·
+                 <b [style.color]="compColor(drillDept.compliancePct)">{{ drillDept.compliancePct }}%</b> compliance</p>
+            </div>
+          </div>
+          <button class="ca-close" (click)="closeDrill()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="ca-search-wrap ca-drill-search">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" [(ngModel)]="drillSearch" (ngModelChange)="drillPage = 0"
+                 placeholder="Search employee…">
+        </div>
+
+        <div class="ca-table-wrap">
+          <table class="ca-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Employee</th><th>ID</th><th>Designation</th><th>Category</th>
+                <th>Logged</th><th>Expected</th><th>Status</th><th>Compliance</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (u of drillRows; track u.employeeId; let i = $index) {
+                <tr>
+                  <td>
+                    <span class="ca-spot-rank"
+                          [class.ca-medal]="drillRankOf(u, i) <= 3"
+                          [style.border-color]="medal(drillRankOf(u, i) - 1)">
+                      {{ drillRankOf(u, i) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="ca-emp-cell">
+                      <div class="ca-avatar" [style.background]="avatarBg(u.employeeName)">{{ initials(u.employeeName) }}</div>
+                      <span class="ca-emp-name">{{ u.employeeName }}</span>
+                    </div>
+                  </td>
+                  <td class="ca-mono">{{ u.employeeId }}</td>
+                  <td>{{ u.designation || '—' }}</td>
+                  <td>{{ u.empCategory || '—' }}</td>
+                  <td><b>{{ u.loggedHrsDisplay || (u.loggedHrs + ' hrs') }}</b></td>
+                  <td>{{ u.expectedHrs }} hrs</td>
+                  <td>
+                    <span class="ca-badge" [style.background]="badge(u).bg" [style.color]="badge(u).c">{{ badge(u).t }}</span>
+                  </td>
+                  <td [style.color]="compColor(u.compliancePct)"><b>{{ u.compliancePct }}%</b></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="9">
+                  <div class="ca-empty-state"><i class="fas fa-magnifying-glass"></i><p>No employees match the search.</p></div>
+                </td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (drillPages > 1) {
+          <div class="ca-pager">
+            <button (click)="drillPrev()" [disabled]="drillPage === 0"><i class="fas fa-angle-left"></i> Prev</button>
+            <span>Page {{ drillPage + 1 }} of {{ drillPages }} · {{ drillPool.length }} employees</span>
+            <button (click)="drillNext()" [disabled]="drillPage >= drillPages - 1">Next <i class="fas fa-angle-right"></i></button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

@@ -333,9 +333,10 @@ export class layout implements OnInit, OnDestroy {
       '/dashboard': 'Dashboard',
       '/employee-dashboard': 'Employee Analytics',
       '/hod-dashboard': 'HOD Dashboard',
-      '/ced-dashboard': 'CED Performance Dashboard',
+      '/ced-dashboard': 'APR Dashboard',
       '/ced-dashboard-old': 'CED Dashboard (Old)',
-      '/ced-dashboard-new': 'CED Performance Dashboard',
+      '/ced-dashboard-new': 'APR Dashboard',
+      '/ced-dpr-analytics': 'DPR Dashboard',
       '/profile': 'My Profile',
       '/leave-approval': 'Approval Management',
       '/dpr-approval': 'DPR Approval Management',
@@ -396,10 +397,11 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isDashboardRoute(): boolean {
-    return this.currentRoute === '/employee-dashboard' || 
-           this.currentRoute === '/hod-dashboard' || 
+    return this.currentRoute === '/employee-dashboard' ||
+           this.currentRoute === '/hod-dashboard' ||
            this.currentRoute === '/ced-dashboard' ||
-           this.currentRoute === '/ced-dashboard-new';
+           this.currentRoute === '/ced-dashboard-new' ||
+           this.currentRoute === '/ced-dpr-analytics';
   }
 
   getPageSubtitle(): string {
@@ -476,12 +478,29 @@ export class layout implements OnInit, OnDestroy {
     if (menu.isExternal === 'Y' && menu.menuUrl) {
       // External URL handling
       let url = menu.menuUrl.trim();
-      
+
       // Ensure proper protocol
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = `https://${url}`;
       }
-      
+
+      // Pass session identity to external dashboards (CAD etc.):
+      // append userid (logged-in user) + islogin=Y, preserving any existing params
+      try {
+        const extUrl = new URL(url);
+        const sessionUserId = (this.userSession?.empId
+          ?? this.userSession?.employeeId
+          ?? this.userSession?.userId
+          ?? '').toString().trim();
+        if (sessionUserId) {
+          extUrl.searchParams.set('userid', sessionUserId);
+        }
+        extUrl.searchParams.set('islogin', 'Y');
+        url = extUrl.toString();
+      } catch {
+        // malformed URL — open unchanged rather than break the link
+      }
+
       console.log('Opening external URL in new tab:', url);
       
       // Method 1: Create temporary link element (most reliable)
@@ -778,7 +797,7 @@ export class layout implements OnInit, OnDestroy {
         } else if (this.isHod) {
           this.router.navigate(['/hod-dashboard']);
         } else if (this.isCed) {
-          this.router.navigate(['/ced-dashboard']);
+          this.router.navigate(['/ced-dpr-analytics']);
         }
         break;
       case '2':

@@ -82,6 +82,11 @@
       <button class="tb-btn ph-launch-btn" (click)="openPhModal($event)" title="Browse ProofHub tasks">
         <i class="fas fa-tasks"></i> Proofhub Data
       </button>
+      @if (ndCanView) {
+        <button class="tb-btn nd-launch-btn" (click)="openNdModal($event)" title="Employees who have not submitted DPR">
+          <i class="fas fa-clipboard-check"></i> DPR Compliance
+        </button>
+      }
     </div>
   </div>
 
@@ -780,10 +785,20 @@
       <div class="ph-detail-modal" (click)="$event.stopPropagation()">
         <div class="ph-head">
           <div class="ph-head-title">
+            @if (phDetailStack.length > 0) {
+              <button class="ph-back" (click)="phBackDetail()" title="Back to parent task">
+                <i class="fas fa-arrow-left"></i>
+              </button>
+            }
             <div class="ph-head-icon"><i class="fas fa-clipboard-list"></i></div>
             <div>
               <h3>{{ phDetail?.Task?.TITLE || 'Task Detail' }}</h3>
-              <p>Task ID: {{ phDetail?.Task?.TASK_ID || '…' }}</p>
+              <p>
+                @if (phDetailStack.length > 0) {
+                  <span class="ph-sub-badge">Subtask</span>
+                }
+                Task ID: {{ phDetail?.Task?.TASK_ID || '…' }}
+              </p>
             </div>
           </div>
           <button class="ph-close" (click)="phCloseDetail()"><i class="fas fa-times"></i></button>
@@ -848,7 +863,8 @@
               @if (phDetail.Subtasks.length > 0) {
                 <div class="ph-d-sublist">
                   @for (st of phDetail.Subtasks; track st.TASK_ID) {
-                    <div class="ph-d-subrow">
+                    <div class="ph-d-subrow ph-d-subrow-click" (click)="phOpenSubtask(st.TASK_ID, $event)"
+                         title="Click to view this subtask's details">
                       <i class="fas" [class.fa-check-circle]="phIsDone(st.COMPLETED)" [class.fa-circle-notch]="!phIsDone(st.COMPLETED)"
                         [class.ph-sub-done]="phIsDone(st.COMPLETED)"></i>
                       <div class="ph-d-subinfo">
@@ -859,6 +875,15 @@
                           @if (st.ASSIGNEES) { · {{ st.ASSIGNEES }} }
                         </span>
                       </div>
+                      <span class="ph-d-subcnts">
+                        @if (st.COMMENT_COUNT) {
+                          <span title="{{ st.COMMENT_COUNT }} comment(s)"><i class="fas fa-comments"></i> {{ st.COMMENT_COUNT }}</span>
+                        }
+                        @if (st.FILE_COUNT) {
+                          <span title="{{ st.FILE_COUNT }} file(s)"><i class="fas fa-paperclip"></i> {{ st.FILE_COUNT }}</span>
+                        }
+                      </span>
+                      <i class="fas fa-chevron-right ph-d-subarrow"></i>
                     </div>
                   }
                 </div>
@@ -920,6 +945,140 @@
             </div>
           }
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ DPR NOT DONE — separate section, independent of the Log Analytics ══ -->
+  <!-- ══ table above. Nothing here touches the existing flow.              ══ -->
+  @if (ndModalOpen) {
+    <div class="ph-overlay" (click)="closeNdModal()">
+      <div class="ph-modal" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="ph-head">
+          <div class="ph-head-title">
+            <div class="ph-head-icon nd-head-icon"><i class="fas fa-clipboard-check"></i></div>
+            <div>
+              <h3>DPR Compliance</h3>
+              <p>Department-wise employees who were present but have not submitted their DPR</p>
+            </div>
+          </div>
+          <button class="ph-close" (click)="closeNdModal()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Filters -->
+        <div class="ph-filters">
+          <div class="ph-f">
+            <label>From</label>
+            <input type="date" [(ngModel)]="ndFromDate">
+          </div>
+          <div class="ph-f">
+            <label>To</label>
+            <input type="date" [(ngModel)]="ndToDate">
+          </div>
+          <div class="ph-f">
+            <label>Department</label>
+            <select [(ngModel)]="ndDeptId">
+              <option [ngValue]="null">All Departments</option>
+              @for (d of filterDepts; track d.departmentId) {
+                <option [ngValue]="d.departmentId">{{ d.deptName }}</option>
+              }
+            </select>
+          </div>
+          <div class="ph-f">
+            <label>Location</label>
+            <select [(ngModel)]="ndComLoc">
+              @for (l of ndLocOptions; track l.label) {
+                <option [ngValue]="l.value">{{ l.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="ph-f ph-f-title">
+            <label>Quick Search</label>
+            <input type="text" [(ngModel)]="ndNameSearch" placeholder="Name, ID or designation…">
+          </div>
+          <div class="ph-f ph-f-actions">
+            <button class="ph-btn-search" (click)="ndSearch()"><i class="fas fa-search"></i> Search</button>
+            <button class="ph-btn-clear" (click)="ndClear()"><i class="fas fa-times"></i> Clear</button>
+            <button class="ph-btn-search nd-btn-export" (click)="ndExport()"
+                    [disabled]="ndLoading || ndFilteredTotal === 0"
+                    title="Export the list below to Excel (CSV)">
+              <i class="fas fa-file-excel"></i> Export
+            </button>
+          </div>
+        </div>
+
+        <!-- Meta bar -->
+        <div class="ph-meta">
+          <span><strong>{{ ndFilteredTotal }}</strong> employee(s) across <strong>{{ ndDepts.length }}</strong> department(s) have not submitted DPR</span>
+          <span class="ph-ps-fixed"><i class="fas fa-calendar-day"></i> {{ ndFromDate }} → {{ ndToDate || ndFromDate }}</span>
+        </div>
+
+        <!-- Body -->
+        <div class="ph-body">
+          @if (ndLoading) {
+            <div class="ph-loading"><i class="fas fa-spinner fa-spin"></i> Loading list…</div>
+          } @else if (ndDepts.length === 0) {
+            <div class="ph-empty">
+              <i class="fas fa-check-circle"></i>
+              <p>Great — no missing DPR entries found for the selected filters.</p>
+            </div>
+          } @else {
+            @for (dept of ndDepts; track dept.departmentId) {
+              <div class="nd-dept-block">
+
+                <!-- Department header -->
+                <div class="nd-dept-header" (click)="ndToggleDept(dept.departmentName)">
+                  <div class="nd-dept-left">
+                    <i class="fas fa-chevron-down nd-chevron"
+                       [class.nd-collapsed]="!ndExpandedDepts[dept.departmentName]"></i>
+                    <i class="fas fa-building"></i>
+                    <span class="nd-dept-name">{{ dept.departmentName }}</span>
+                  </div>
+                  <span class="nd-dept-badge">{{ ndEmployeesFor(dept.departmentName).length }} pending</span>
+                </div>
+
+                @if (ndExpandedDepts[dept.departmentName]) {
+                  <table class="ph-table nd-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Employee ID</th>
+                        <th>Designation</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (emp of ndEmployeesFor(dept.departmentName); track emp.employeeId; let i = $index) {
+                        <tr class="ph-row">
+                          <td class="ph-idx">{{ i + 1 }}</td>
+                          <td>
+                            <div class="nd-emp-cell">
+                              @if (ndImgSrc(emp.profileImage)) {
+                                <img class="nd-avatar" [src]="ndImgSrc(emp.profileImage)" alt="">
+                              } @else {
+                                <div class="nd-avatar nd-avatar-txt">{{ ndInitials(emp.employeeName) }}</div>
+                              }
+                              <span class="nd-emp-name">{{ emp.employeeName }}</span>
+                            </div>
+                          </td>
+                          <td>{{ emp.employeeId }}</td>
+                          <td>{{ emp.designation || '—' }}</td>
+                          <td>{{ emp.empCategory || '—' }}</td>
+                          <td><span class="nd-loc-badge">{{ emp.location || '—' }}</span></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            }
+          }
+        </div>
+
       </div>
     </div>
   }

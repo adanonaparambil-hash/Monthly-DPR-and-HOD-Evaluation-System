@@ -850,3 +850,45 @@
 @media (max-width: 480px) {
   .emp-master-container { padding: 12px; }
 }
+
+/* ── IsDPR toggle switch ── */
+.em-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 4px;
+}
+.em-switch input { display: none; }
+.em-switch-track {
+  position: relative;
+  width: 42px;
+  height: 23px;
+  border-radius: 99px;
+  background: #cbd5e1;
+  transition: background .25s ease;
+  flex-shrink: 0;
+}
+.em-switch-thumb {
+  position: absolute;
+  top: 2.5px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.25);
+  transition: transform .25s cubic-bezier(.22, 1, .36, 1);
+}
+.em-switch input:checked + .em-switch-track {
+  background: linear-gradient(135deg, #2dd4bf, #138271);
+}
+.em-switch input:checked + .em-switch-track .em-switch-thumb {
+  transform: translateX(18px);
+}
+.em-switch-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: color .2s ease;
+}
+.em-switch-text.on { color: #138271; }

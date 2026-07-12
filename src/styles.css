@@ -1159,3 +1159,9 @@ body.dark-theme .field-pill {
   background: #374151 !important;
   color: #e5e7eb !important;
 }
+
+/* ══ CED DPR display (kiosk) mode — hide app chrome behind the fullscreen dashboard ══ */
+body.ca-kiosk { overflow: hidden; }
+body.ca-kiosk .sidebar { display: none !important; }
+body.ca-kiosk .header { display: none !important; }
+body.ca-kiosk .content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }

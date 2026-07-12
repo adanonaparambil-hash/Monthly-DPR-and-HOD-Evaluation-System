@@ -1425,6 +1425,17 @@ export class EmergencyExitFormComponent implements OnInit {
     this.exitForm.get('postOffice')?.clearValidators();
     this.exitForm.get('nation')?.clearValidators();
 
+    // Travel Information is mandatory ONLY for Emergency and Planned Leave:
+    // arrival date + flight time become required (departure/days already are).
+    // Resignation has no travel section, so they stay optional there.
+    if (this.formType === 'E' || this.formType === 'P') {
+      this.exitForm.get('dateOfArrival')?.setValidators([Validators.required]);
+      this.exitForm.get('flightTime')?.setValidators([Validators.required]);
+    } else {
+      this.exitForm.get('dateOfArrival')?.clearValidators();
+      this.exitForm.get('flightTime')?.clearValidators();
+    }
+
     if (this.formType === 'E') {
       // Emergency form - only planned leave and resignation fields are not required
       this.exitForm.get('category')?.clearValidators();
@@ -1848,6 +1859,18 @@ export class EmergencyExitFormComponent implements OnInit {
       return false;
     }
 
+    // Travel Information — mandatory only for Emergency and Planned Leave
+    if (this.formType === 'E' || this.formType === 'P') {
+      if (!formValue.dateOfArrival) {
+        console.log('Validation failed: dateOfArrival missing for E/P form');
+        return false;
+      }
+      if (!formValue.flightTime) {
+        console.log('Validation failed: flightTime missing for E/P form');
+        return false;
+      }
+    }
+
     // Planned leave and resignation specific fields
     if (this.formType === 'P' || this.formType === 'R') {
       if (!formValue.category) {
@@ -1918,17 +1941,24 @@ export class EmergencyExitFormComponent implements OnInit {
     const rawFormValue = this.exitForm.getRawValue();
     
     const requiredFields = ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
-    
+
+    if (this.formType === 'E' || this.formType === 'P') {
+      // Travel Information is mandatory for Emergency and Planned Leave
+      requiredFields.push('dateOfArrival', 'flightTime');
+    }
+
     if (this.formType === 'P' || this.formType === 'R') {
       requiredFields.push('category', 'responsibilitiesHandedOverToPhone', 'responsibilitiesHandedOverToEmail'); // Removed projectManagerName
     }
-    
+
     const missingFields: string[] = [];
     const fieldLabels: { [key: string]: string } = {
       'employeeName': 'Employee Name',
       'employeeId': 'Employee ID',
       'department': 'Department/Site',
       'dateOfDeparture': this.formType === 'R' ? 'Last Working Date' : 'Date of Departure',
+      'dateOfArrival': 'Date of Arrival',
+      'flightTime': 'Flight Time',
       'noOfDaysApproved': this.formType === 'R' ? 'Notice Period (Days)' : 'No. of Days Requested',
       'reasonForEmergency': this.formType === 'E' ? 'Reason for Emergency' : (this.formType === 'R' ? 'Reason for Resignation' : 'Reason for Planned Leave'),
       'hodName': 'HOD Name',

@@ -364,6 +364,14 @@
                 <input class="em-input" type="number" min="0" [(ngModel)]="editProfile.experienceAbroad" placeholder="0">
               </div>
               <div class="em-field em-full">
+                <label class="em-label">DPR Required</label>
+                <label class="em-switch" title="If ON, this employee is expected to log DPR daily">
+                  <input type="checkbox" [(ngModel)]="isDprOn">
+                  <span class="em-switch-track"><span class="em-switch-thumb"></span></span>
+                  <span class="em-switch-text" [class.on]="isDprOn">{{ isDprOn ? 'ON — logs DPR' : 'OFF — DPR not required' }}</span>
+                </label>
+              </div>
+              <div class="em-field em-full">
                 <label class="em-label">Qualification</label>
                 <input class="em-input" type="text" [(ngModel)]="editProfile.qualification" placeholder="Qualification">
               </div>

@@ -17,8 +17,11 @@
       <a *ngIf="!isDPROnlyMode && isHod" routerLink="/hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-users-cog"></i> HOD Dashboard
       </a>
+      <a *ngIf="!isDPROnlyMode && isCed" routerLink="/ced-dpr-analytics" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+        <i class="fas fa-gauge-high"></i> DPR Dashboard
+      </a>
       <a *ngIf="!isDPROnlyMode && isCed" routerLink="/ced-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-chart-line"></i> Dashboard
+        <i class="fas fa-chart-line"></i> APR Dashboard
       </a>
 
       <!-- Purchase Dashboard — specific users only (ITS48, ITS41, AIS557) -->
