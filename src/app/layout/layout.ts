@@ -476,69 +476,11 @@ export class layout implements OnInit, OnDestroy {
     this.closeSidebarOnMobile();
     
     if (menu.isExternal === 'Y' && menu.menuUrl) {
-      // External URL handling
-      let url = menu.menuUrl.trim();
+      // External link → the backend mints an AES token (emp from session +
+      // mode/admin/exp from this menu's canEdit/isAdmin/duration) and returns the
+      // tokenized URL. The AES key stays server-side, so permissions can't be forged.
+      this.openExternalMenu(menu);
 
-      // Ensure proper protocol
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = `https://${url}`;
-      }
-
-      // Pass session identity to external dashboards (CAD etc.):
-      // append userid (logged-in user) + islogin=Y, preserving any existing params
-      try {
-        const extUrl = new URL(url);
-        const sessionUserId = (this.userSession?.empId
-          ?? this.userSession?.employeeId
-          ?? this.userSession?.userId
-          ?? '').toString().trim();
-        if (sessionUserId) {
-          extUrl.searchParams.set('userid', sessionUserId);
-        }
-        extUrl.searchParams.set('islogin', 'Y');
-        url = extUrl.toString();
-      } catch {
-        // malformed URL — open unchanged rather than break the link
-      }
-
-      console.log('Opening external URL in new tab:', url);
-      
-      // Method 1: Create temporary link element (most reliable)
-      try {
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        // Clean up
-        setTimeout(() => {
-          if (link.parentNode) {
-            document.body.removeChild(link);
-          }
-        }, 100);
-        
-        console.log('External link opened successfully');
-      } catch (error) {
-        console.error('Error opening external link:', error);
-        
-        // Method 2: Fallback using window.open
-        try {
-          const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-          if (newWindow) {
-            newWindow.focus();
-            console.log('Fallback window.open successful');
-          } else {
-            console.warn('Window.open blocked - popup blocker may be active');
-          }
-        } catch (fallbackError) {
-          console.error('Fallback method also failed:', fallbackError);
-        }
-      }
-      
     } else if (menu.menuUrl && menu.isExternal === 'N') {
       // Internal routing
       let route = menu.menuUrl;
@@ -548,6 +490,47 @@ export class layout implements OnInit, OnDestroy {
       console.log('Navigating to internal route:', route);
       this.router.navigate([route]);
     }
+  }
+
+  /**
+   * Open an EXTERNAL menu link with a server-minted authentication token.
+   * A blank tab is opened synchronously (so the browser's popup blocker allows it),
+   * then pointed at the tokenized URL once the backend responds. Falls back to the
+   * raw URL if the token endpoint is unavailable, so the link never fully breaks.
+   */
+  private openExternalMenu(menu: any): void {
+    const sessionUserId = (this.userSession?.empId
+      ?? this.userSession?.employeeId
+      ?? this.userSession?.userId
+      ?? '').toString().trim();
+
+    // raw fallback URL (protocol-normalised)
+    let rawUrl = (menu.menuUrl || '').trim();
+    if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+      rawUrl = `https://${rawUrl}`;
+    }
+
+    // open the tab now, within the click gesture, to avoid popup blocking
+    const tab = window.open('', '_blank');
+
+    // no session user or no menu id → just open the plain link
+    if (!sessionUserId || !menu.menuId) {
+      if (tab) { tab.location.href = rawUrl; } else { window.open(rawUrl, '_blank', 'noopener'); }
+      return;
+    }
+
+    this.api.getExternalLaunchUrl(sessionUserId, menu.menuId).subscribe({
+      next: (res: any) => {
+        const url = (res?.data?.url || res?.Data?.url || rawUrl);
+        if (tab) { tab.location.href = url; }
+        else { window.open(url, '_blank', 'noopener'); }
+      },
+      error: (err: any) => {
+        console.error('External launch token failed, opening raw URL:', err);
+        if (tab) { tab.location.href = rawUrl; }
+        else { window.open(rawUrl, '_blank', 'noopener'); }
+      }
+    });
   }
 
   /** Format menu name to proper case */

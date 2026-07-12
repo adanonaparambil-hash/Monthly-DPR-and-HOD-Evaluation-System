@@ -43,7 +43,8 @@
       "Bash(cp C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/342eb023-eda7-450c-9548-73229d11104a/scratchpad/dpr_audit.html C:/Users/ITS48/Downloads/DPR-Performance-Audit-June2026.html)",
       "Read(//c/Users/ITS48/Downloads/**)",
       "Bash(awk '{print $5, $9}')",
-      "Bash(cp \"C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/342eb023-eda7-450c-9548-73229d11104a/scratchpad/it_audit.html\" \"C:/Users/ITS48/Downloads/DPR-Performance-Audit-IT-June2026.html\")"
+      "Bash(cp \"C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/342eb023-eda7-450c-9548-73229d11104a/scratchpad/it_audit.html\" \"C:/Users/ITS48/Downloads/DPR-Performance-Audit-IT-June2026.html\")",
+      "Bash(grep -n \"GetUserMenusAsync\\\\|class MenuDto\\\\|MenuDto\\\\|IsExternal\\\\|CanEdit\\\\|IsAdmin\\\\|Duration\\\\|MenuUrl\\\\|MenuId\" \"C:/Users/ITS48/source/repos/TimeSheetAPI/TimeSheetAPI/Service/GeneralService.cs\" | head -20)"
     ]
   }
 }

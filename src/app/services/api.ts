@@ -613,6 +613,12 @@ export class Api {
       .pipe(catchError(this.handleError));
   }
 
+  /** Build an authenticated launch URL (AES token minted server-side) for an external menu link. */
+  getExternalLaunchUrl(userId: string, menuId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetExternalLaunchUrl?userId=${encodeURIComponent(userId)}&menuId=${menuId}`)
+      .pipe(catchError(this.handleError));
+  }
+
   exportCedDprDashboard(request: { fromDate: string; toDate?: string | null }): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportCedDprDashboard`, request, { responseType: 'blob' })
       .pipe(catchError(this.handleError));
