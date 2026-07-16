@@ -930,6 +930,39 @@
                         <span class="no-comments-text">No comments yet.</span>
                       </div>
                     </ng-template>
+
+                    <!-- Approval transaction history (previous approve/reject/resubmit actions) -->
+                    <div class="step-history-wrap" *ngIf="getStepHistory(step).length > 0">
+                      <button type="button" class="history-toggle-btn" (click)="toggleStepHistory(step, $event)"
+                        title="Previous actions and comments by this approver">
+                        <i class="fas fa-history"></i>
+                        Previous actions ({{ getStepHistory(step).length }})
+                        <i class="fas fa-chevron-down history-arrow" [class.open]="openHistoryStep === step"></i>
+                      </button>
+
+                      <div class="step-history-list" *ngIf="openHistoryStep === step">
+                        <div class="history-item" *ngFor="let h of getStepHistory(step)">
+                          <div class="history-item-header">
+                            <span class="history-action-badge" [ngClass]="getHistoryActionClass(h)">
+                              {{ getHistoryActionLabel(h) }}
+                            </span>
+                            <span class="history-date" *ngIf="h.actionDate">
+                              <i class="fas fa-clock"></i>
+                              {{ h.actionDate | date:'MMM dd, yyyy HH:mm' }}
+                            </span>
+                          </div>
+                          <div class="history-approver" *ngIf="h.approverName">
+                            <i class="fas fa-user"></i> {{ h.approverName }}
+                          </div>
+                          <div class="history-remarks" *ngIf="h.remarks && h.remarks.trim()">
+                            {{ h.remarks }}
+                          </div>
+                          <div class="history-remarks history-no-remarks" *ngIf="!h.remarks || !h.remarks.trim()">
+                            No comment added.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

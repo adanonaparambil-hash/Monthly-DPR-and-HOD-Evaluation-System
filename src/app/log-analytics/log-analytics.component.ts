@@ -1776,6 +1776,12 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     { value: 'OM',  label: 'Oman (OM)' },
     { value: 'IND', label: 'India (IND)' }
   ];
+  ndIsDpr: string | null = null;           // null = all, 'Y' = DPR users, 'N' = non-DPR users
+  ndIsDprOptions = [
+    { value: null, label: 'All' },
+    { value: 'Y',  label: 'Yes' },
+    { value: 'N',  label: 'No' }
+  ];
 
   // quick filter (client-side, within loaded results)
   ndNameSearch = '';
@@ -1818,7 +1824,8 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
       fromDate:     this.ndFromDate,
       toDate:       this.ndToDate || this.ndFromDate,
       departmentId: this.ndDeptId != null ? Number(this.ndDeptId) : 0,
-      comLoc:       this.ndComLoc || null
+      comLoc:       this.ndComLoc || null,
+      isDpr:        this.ndIsDpr || null
     };
 
     this.api.getDprNotDoneList(req).subscribe({
@@ -1864,6 +1871,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     this.ndToDate   = this.ndFromDate;
     this.ndDeptId   = null;
     this.ndComLoc   = null;
+    this.ndIsDpr    = null;
     this.ndNameSearch = '';
     this.ndSearch();
   }

@@ -701,6 +701,40 @@
                     <span class="byod-apv-inline-remarks" *ngIf="apv.remarks"><i class="fas fa-comment-alt"></i> {{ apv.remarks }}</span>
                   </div>
                 </div>
+
+                <!-- Approval transaction history (previous approve/reject comments) -->
+                <div class="step-history-wrap" *ngIf="getApvHistory(apv).length > 0">
+                  <button type="button" class="history-toggle-btn" (click)="toggleApvHistory(apv, $event)"
+                    title="Previous actions and comments by this approver">
+                    <i class="fas fa-history"></i>
+                    Previous actions ({{ getApvHistory(apv).length }})
+                    <i class="fas fa-chevron-down history-arrow" [class.open]="openHistoryApv === apv"></i>
+                  </button>
+
+                  <div class="step-history-list" *ngIf="openHistoryApv === apv">
+                    <div class="history-item" *ngFor="let h of getApvHistory(apv)">
+                      <div class="history-item-header">
+                        <span class="history-action-badge" [ngClass]="getHistoryActionClass(h)">
+                          {{ getHistoryActionLabel(h) }}
+                        </span>
+                        <span class="history-date" *ngIf="h.actionDate">
+                          <i class="fas fa-clock"></i>
+                          {{ h.actionDate | date:'MMM dd, yyyy HH:mm' }}
+                        </span>
+                      </div>
+                      <div class="history-approver" *ngIf="h.approverName">
+                        <i class="fas fa-user"></i> {{ h.approverName }}
+                      </div>
+                      <div class="history-remarks" *ngIf="h.remarks && h.remarks.trim()">
+                        {{ h.remarks }}
+                      </div>
+                      <div class="history-remarks history-no-remarks" *ngIf="!h.remarks || !h.remarks.trim()">
+                        No comment added.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="byod-apv-divider" *ngIf="apv.employeeName"></div>
                 <!-- Inline action -->
                 <ng-container *ngIf="isMyPendingApproval(apv) && !approvalActionDone">

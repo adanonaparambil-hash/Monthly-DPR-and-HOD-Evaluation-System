@@ -994,6 +994,14 @@
               }
             </select>
           </div>
+          <div class="ph-f">
+            <label>DPR User</label>
+            <select [(ngModel)]="ndIsDpr">
+              @for (o of ndIsDprOptions; track o.label) {
+                <option [ngValue]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
           <div class="ph-f ph-f-title">
             <label>Quick Search</label>
             <input type="text" [(ngModel)]="ndNameSearch" placeholder="Name, ID or designation…">

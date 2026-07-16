@@ -63,6 +63,7 @@ export class EmployeeMasterComponent implements OnInit {
   filterDepartment: string = '';
   filterDesignation: string = '';
   filterComLoc: string = '';
+  filterIsDpr: string = ''; // '' = all, 'Y' = DPR users, 'N' = non-DPR users
 
   comLocOptions = [
     { value: 'IND', label: 'India' },
@@ -128,6 +129,7 @@ export class EmployeeMasterComponent implements OnInit {
       this.filterEmpId,
       this.filterName, this.filterDepartment, this.filterDesignation,
       this.filterComLoc,
+      this.filterIsDpr,
       batchNo, this.BATCH_SIZE
     ).subscribe({
       next: (res: any) => {

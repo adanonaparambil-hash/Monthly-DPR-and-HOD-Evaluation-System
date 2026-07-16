@@ -51,6 +51,17 @@
           </select>
         </div>
       </div>
+      <div class="filter-group">
+        <label class="filter-label">DPR User</label>
+        <div class="input-wrapper">
+          <i class="fas fa-clipboard-check input-icon"></i>
+          <select class="filter-input filter-select" [(ngModel)]="filterIsDpr">
+            <option value="">All</option>
+            <option value="Y">Yes</option>
+            <option value="N">No</option>
+          </select>
+        </div>
+      </div>
       <div class="filter-actions">
         <button class="apply-btn" (click)="onApply()">
           <i class="fas fa-search"></i>

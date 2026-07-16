@@ -812,6 +812,20 @@ export class EmergencyExitFormComponent implements OnInit {
             this.testImageProcessing();
           }
 
+          // Bind approval transaction history (past APPROVED/REJECTED/RESUBMITTED actions with comments)
+          const rawHistory = data.approvalHistory || data.ApprovalHistory || [];
+          this.approvalHistory = rawHistory.map((h: any) => ({
+            approvalLevel: h.approvalLevel ?? h.ApprovalLevel,
+            approverCode: (h.approverCode || h.ApproverCode || '').toString().trim(),
+            approverRole: h.approverRole || h.ApproverRole || '',
+            approverId: (h.approverId || h.ApproverId || '').toString().trim(),
+            approverName: h.approverName || h.ApproverName || '',
+            action: (h.action || h.Action || '').toString().trim().toUpperCase(),
+            remarks: h.remarks || h.Remarks || '',
+            actionDate: h.actionDate || h.ActionDate || null
+          }));
+          console.log('Approval history loaded:', this.approvalHistory.length, 'entries');
+
           // Fetch additional employee details (profile/image) using the employeeId from saved data
           if (data.employeeId) {
             this.loadEmployeeDetailsById(data.employeeId);
@@ -3024,6 +3038,54 @@ export class EmergencyExitFormComponent implements OnInit {
     return this.approvalWorkflow;
   }
 
+  // ── Approval transaction history (from TS_EMP_APPROVAL_HISTORY) ──────
+  approvalHistory: any[] = [];
+  openHistoryStep: any = null;
+
+  /** History entries (approve/reject comments) for this approver's step.
+   *  Matches on ApproverCode (role/section) AND ApproverId, so a user who appears as an
+   *  approver in multiple sections only sees each comment under the section it was made in.
+   *  RESUBMITTED entries are excluded — only Approved/Rejected actions are shown. */
+  getStepHistory(step: any): any[] {
+    if (!this.approvalHistory || this.approvalHistory.length === 0 || this.isShowingStaticFlow()) {
+      return [];
+    }
+    const stepApproverId = (step.approvedId || step.approverIds?.[0] || '').toString().trim();
+    const stepCode = (step.approverCode || '').toString().trim();
+    if (!stepCode && !stepApproverId) {
+      return [];
+    }
+    return this.approvalHistory.filter((h: any) => {
+      if (h.action === 'RESUBMITTED') { return false; }
+      const codeMatches = !stepCode || h.approverCode === stepCode;
+      const idMatches = !stepApproverId || h.approverId === stepApproverId;
+      return codeMatches && idMatches;
+    });
+  }
+
+  toggleStepHistory(step: any, event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    this.openHistoryStep = this.openHistoryStep === step ? null : step;
+  }
+
+  getHistoryActionLabel(h: any): string {
+    switch (h.action) {
+      case 'APPROVED': return 'Approved';
+      case 'REJECTED': return 'Rejected';
+      case 'RESUBMITTED': return 'Resubmitted';
+      default: return h.action || 'Updated';
+    }
+  }
+
+  getHistoryActionClass(h: any): string {
+    switch (h.action) {
+      case 'APPROVED': return 'history-action-approved';
+      case 'REJECTED': return 'history-action-rejected';
+      case 'RESUBMITTED': return 'history-action-resubmitted';
+      default: return 'history-action-other';
+    }
+  }
+
   // ── Co-approvers (other eligible users at the same step) ──────
   openCoApproversStep: any = null;
 
@@ -3783,16 +3845,25 @@ export class EmergencyExitFormComponent implements OnInit {
           const pS = 10;
           const textMaxW = cW - pS - 10;
           const isActioned = step.status === 'APPROVED' || step.status === 'REJECTED';
-          if (!isActioned) return;
+          // Past approve/reject comments for this approver (resubmits excluded)
+          const stepHistory = this.getStepHistory(step);
+          if (!isActioned && stepHistory.length === 0) return;
           const contactLine = [step.email, step.phoneNumber].filter(Boolean).join('   |   ');
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(6.5);
           const remarksLines = step.comments
             ? wrapText('Remarks: ' + step.comments, textMaxW) : [];
+          const historyLines: string[] = [];
+          stepHistory.forEach((h: any) => {
+            const remark = h.remarks && String(h.remarks).trim() ? String(h.remarks).trim() : 'No comment added.';
+            const line = `${this.getHistoryActionLabel(h)}${h.actionDate ? ' on ' + fmtDate(h.actionDate) : ''} - ${remark}`;
+            historyLines.push(...wrapText(line, textMaxW));
+          });
           const boxH = Math.max(16, pS + 4)
                      + (contactLine ? 3.5 : 0)
                      + (isActioned && step.approvedDate ? 3.5 : 0)
-                     + remarksLines.length * 3.2;
+                     + remarksLines.length * 3.2
+                     + (historyLines.length ? historyLines.length * 3.2 + 4 : 0);
           chk(boxH + 2);
 
           pdf.setFillColor(250, 252, 252);
@@ -3855,6 +3926,14 @@ export class EmergencyExitFormComponent implements OnInit {
           if (remarksLines.length > 0) {
             pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
             pdf.text(remarksLines, margin + 5, infoY);
+            infoY += remarksLines.length * 3.2;
+          }
+          if (historyLines.length > 0) {
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(100, 116, 139);
+            pdf.text('Comment History:', margin + 5, infoY + 0.8);
+            infoY += 4;
+            pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(historyLines, margin + 5, infoY);
           }
           y += boxH + 3;
         });

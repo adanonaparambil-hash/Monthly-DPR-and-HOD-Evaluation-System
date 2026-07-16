@@ -1379,3 +1379,146 @@
   color: #16a34a !important; -webkit-text-fill-color: #16a34a !important;
   background: none !important; font-size: 14px !important;
 }
+
+/* ── Approval transaction history (previous approve/reject comments) ── */
+.step-history-wrap {
+  margin-top: 10px;
+}
+
+.history-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1.5px solid #dbeafe;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.history-toggle-btn:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.history-toggle-btn i { font-size: 10px; }
+
+.history-arrow {
+  transition: transform 0.2s ease;
+}
+.history-arrow.open { transform: rotate(180deg); }
+
+.step-history-list {
+  margin-top: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.history-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.history-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.history-action-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.history-action-approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.history-action-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.history-action-resubmitted {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.history-action-other {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.history-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.history-approver {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.history-remarks {
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.history-no-remarks {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Dark theme */
+.dark-theme .history-toggle-btn {
+  background: rgba(29, 78, 216, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+.dark-theme .history-toggle-btn:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+.dark-theme .step-history-list {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+.dark-theme .history-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+.dark-theme .history-remarks { color: var(--text-primary); }
+.dark-theme .history-approver,
+.dark-theme .history-date { color: var(--text-secondary); }

@@ -77,6 +77,22 @@
       </div>
       }
 
+      @if (isHOD || isSurveillance) {
+      <div class="filter-group">
+        <label class="filter-label">Location</label>
+        <div class="filter-input-wrapper">
+          <i class="fas fa-globe filter-icon"></i>
+          <select class="filter-select" [(ngModel)]="selectedComLoc">
+            <option value="">All Locations</option>
+            <option value="IND">India</option>
+            <option value="KSA">Saudi Arabia</option>
+            <option value="OM">Oman</option>
+            <option value="UAE">UAE</option>
+          </select>
+        </div>
+      </div>
+      }
+
       @if (isHOD || (isSurveillance && !isHOD) || isMasOrPurchase) {
         <div class="filter-group">
           <label class="filter-label">Employee</label>
@@ -544,7 +560,7 @@
             </div>
           </div>
 
-          <div class="filter-group" *ngIf="isHOD">
+          <div class="filter-group" *ngIf="isHOD || isSurveillance">
             <label class="filter-label">Location</label>
             <div class="filter-input-wrapper">
               <i class="fas fa-globe filter-icon"></i>

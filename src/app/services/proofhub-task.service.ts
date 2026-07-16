@@ -39,4 +39,5 @@ export class ProofhubTaskService {
   getTaskDetail(taskId: string | number): Observable<ServiceResponse<TaskDetailDto>> {
     return this.http.get<ServiceResponse<TaskDetailDto>>(`${this.base}/${taskId}/Detail`);
   }
+  
 }

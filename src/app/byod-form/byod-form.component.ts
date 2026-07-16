@@ -50,6 +50,10 @@ export class ByodFormComponent implements OnInit {
   byodRecord: any = null;
   isViewMode = false;
 
+  // Approval transaction history (from TS_EMP_APPROVAL_HISTORY)
+  approvalHistory: any[] = [];
+  openHistoryApv: any = null;
+
   // Approver action
   incomingApprovalId: number | null = null;
   incomingApproverCode: string = '';
@@ -165,6 +169,9 @@ export class ByodFormComponent implements OnInit {
 
           // Map approvalList (actual API field)
           this.approvalDetails = d.approvalList || [];
+
+          // Bind approval transaction history (past approve/reject actions with comments)
+          this.approvalHistory = this.mapApprovalHistory(d.approvalHistory || d.ApprovalHistory || []);
 
           // Load the BYOD applicant's profile (NOT the logged-in approver's)
           const recordEmpId = (d.employeeId || '').toString();
@@ -330,6 +337,64 @@ export class ByodFormComponent implements OnInit {
   /** Returns approvalDetails sorted by ApprovalLevel for view-mode dynamic rendering */
   get sortedApprovalDetails(): ByodApprovalDetail[] {
     return [...this.approvalDetails].sort((a, b) => (a.approvalLevel ?? 999) - (b.approvalLevel ?? 999));
+  }
+
+  /** Normalize the approval history rows returned by the API */
+  private mapApprovalHistory(raw: any[]): any[] {
+    return (raw || []).map((h: any) => ({
+      approvalLevel: h.approvalLevel ?? h.ApprovalLevel,
+      approverCode: (h.approverCode || h.ApproverCode || '').toString().trim(),
+      approverRole: h.approverRole || h.ApproverRole || '',
+      approverId: (h.approverId || h.ApproverId || '').toString().trim(),
+      approverName: h.approverName || h.ApproverName || '',
+      action: (h.action || h.Action || '').toString().trim().toUpperCase(),
+      remarks: h.remarks || h.Remarks || '',
+      actionDate: h.actionDate || h.ActionDate || null
+    }));
+  }
+
+  /** History entries (approve/reject comments) for this approver's card.
+   *  Matches on ApproverCode (role/section) AND ApproverId, so a user who appears
+   *  in multiple sections only sees each comment under the section it was made in.
+   *  RESUBMITTED entries are excluded — only Approved/Rejected actions are shown. */
+  getApvHistory(apv: any): any[] {
+    if (!this.approvalHistory || this.approvalHistory.length === 0 || !apv) {
+      return [];
+    }
+    const id = (apv.approverId || '').toString().trim();
+    const code = (apv.approverCode || '').toString().trim();
+    if (!id && !code) {
+      return [];
+    }
+    return this.approvalHistory.filter((h: any) => {
+      if (h.action === 'RESUBMITTED') { return false; }
+      const codeMatches = !code || h.approverCode === code;
+      const idMatches = !id || h.approverId === id;
+      return codeMatches && idMatches;
+    });
+  }
+
+  toggleApvHistory(apv: any, event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    this.openHistoryApv = this.openHistoryApv === apv ? null : apv;
+  }
+
+  getHistoryActionLabel(h: any): string {
+    switch (h.action) {
+      case 'APPROVED': return 'Approved';
+      case 'REJECTED': return 'Rejected';
+      case 'RESUBMITTED': return 'Resubmitted';
+      default: return h.action || 'Updated';
+    }
+  }
+
+  getHistoryActionClass(h: any): string {
+    switch (h.action) {
+      case 'APPROVED': return 'history-action-approved';
+      case 'REJECTED': return 'history-action-rejected';
+      case 'RESUBMITTED': return 'history-action-resubmitted';
+      default: return 'history-action-other';
+    }
   }
 
   getApproverIcon(code: string): string {
@@ -754,22 +819,36 @@ export class ByodFormComponent implements OnInit {
             const cUp  = (apv.approverCode || '').toUpperCase();
             const rUp  = (apv.approverRole || '').toUpperCase();
             const isIT = cUp === 'IT' || rUp.includes('IT DEPT') || rUp === 'IT DEPARTMENT';
-            return code === 'A' || (isIT && !!apv.employeeName);
+            // Also show cards that carry past approve/reject comments (e.g. rejected then resubmitted)
+            return code === 'A' || (isIT && !!apv.employeeName) || this.getApvHistory(apv).length > 0;
           });
 
         const pS  = 8;
         const gap = 3;
         const halfW = (cW - gap) / 2;
 
+        // Past approve/reject comments for this approver, wrapped for the box width
+        const buildHistoryLines = (apv: any, tW: number): string[] => {
+          const lines: string[] = [];
+          this.getApvHistory(apv).forEach((h: any) => {
+            const remark = h.remarks && String(h.remarks).trim() ? String(h.remarks).trim() : 'No comment added.';
+            const line = `${this.getHistoryActionLabel(h)}${h.actionDate ? ' on ' + fmtDate(h.actionDate) : ''} - ${remark}`;
+            lines.push(...pdf.splitTextToSize(line, tW));
+          });
+          return lines;
+        };
+
         const calcApvH = (apv: any): number => {
           const code = (apv.approvalStatusCode || '').toUpperCase();
           const contactLine = [apv.email, apv.phoneNumber].filter(Boolean).join(' | ');
           const tW = halfW - pS - 8;
           const remarksLines = apv.remarks ? pdf.splitTextToSize(`Remarks: ${apv.remarks}`, tW) : [];
+          const historyLines = buildHistoryLines(apv, tW);
           return Math.max(14, pS + 4)
             + (contactLine ? 3 : 0)
             + (code === 'A' && apv.approvalDate ? 3 : 0)
-            + remarksLines.length * 3.0;
+            + remarksLines.length * 3.0
+            + (historyLines.length ? historyLines.length * 3.0 + 4 : 0);
         };
 
         const drawApvBox = (apv: any, xOff: number, bW: number, bY: number, boxH: number, idx: number) => {
@@ -823,6 +902,15 @@ export class ByodFormComponent implements OnInit {
           if (remarksLines.length > 0) {
             pdf.setFont('helvetica', 'italic'); pdf.setFontSize(5.5); pdf.setTextColor(71, 85, 105);
             pdf.text(remarksLines, xOff + 4, infoY);
+            infoY += remarksLines.length * 3.0;
+          }
+          const historyLines = buildHistoryLines(apv, tW);
+          if (historyLines.length > 0) {
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(5.5); pdf.setTextColor(100, 116, 139);
+            pdf.text('Comment History:', xOff + 4, infoY + 0.8);
+            infoY += 3.8;
+            pdf.setFont('helvetica', 'italic'); pdf.setFontSize(5.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(historyLines, xOff + 4, infoY);
           }
         };
 

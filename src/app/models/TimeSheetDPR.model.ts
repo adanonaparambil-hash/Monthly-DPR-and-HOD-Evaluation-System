@@ -256,11 +256,12 @@ export interface TaskBulkApprovalRequest {
 
 export interface UserDailyLogHistoryRequest {
   userId?: string;
-  fromDate?: string;      
-  toDate?: string;        
+  fromDate?: string;
+  toDate?: string;
   projectId?: number;
   categoryId?: number;
   departmentId?:number;
+  comLoc?: string;
   pageNumber?: number;
   pageSize?: number;
   isExport?: string;

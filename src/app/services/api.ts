@@ -480,10 +480,11 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetHodMaster?employeeName=${employeeName}&department=${department}`);
   }
 
-  getEmployeeList(empId: string = '', empName: string = '', department: string = '', designation: string = '', comloc: string = '', pageNo: number = 1, pageSize: number = 500): Observable<any> {
+  getEmployeeList(empId: string = '', empName: string = '', department: string = '', designation: string = '', comloc: string = '', isDpr: string = '', pageNo: number = 1, pageSize: number = 500): Observable<any> {
     let url = `${this.apiUrl}/General/GetEmployeeList?empName=${encodeURIComponent(empName)}&department=${encodeURIComponent(department)}&designation=${encodeURIComponent(designation)}&pageNo=${pageNo}&pageSize=${pageSize}`;
     if (empId)   url += `&empId=${encodeURIComponent(empId)}`;
     if (comloc)  url += `&comloc=${encodeURIComponent(comloc)}`;
+    if (isDpr)   url += `&isDpr=${encodeURIComponent(isDpr)}`;
     return this.http.get(url);
   }
 
@@ -603,7 +604,7 @@ export class Api {
       .pipe(catchError(this.handleError));
   }
 
-  getDprNotDoneList(request: { fromDate: string; toDate?: string | null; departmentId?: number | null; comLoc?: string | null }): Observable<any> {
+  getDprNotDoneList(request: { fromDate: string; toDate?: string | null; departmentId?: number | null; comLoc?: string | null; isDpr?: string | null }): Observable<any> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetDprNotDoneList`, request)
       .pipe(catchError(this.handleError));
   }

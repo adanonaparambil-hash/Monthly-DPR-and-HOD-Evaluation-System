@@ -101,6 +101,7 @@ export class MyLoggedHoursComponent implements OnInit {
   selectedDepartment: string | number = ''; // Will be set from API or session
   selectedEmployee: string | number = 'all';
   selectedCategory: string | number = 'all';
+  selectedComLoc = ''; // Location (COM_LOC) filter — visible to HOD / SURVEILLANCE users only
   tableSearchTerm = '';  // Client-side table search
 
   // Employee filter searchable dropdown
@@ -751,12 +752,17 @@ export class MyLoggedHoursComponent implements OnInit {
     if (this.selectedDepartment !== '' && this.selectedDepartment !== null) {
       request.departmentId = Number(this.selectedDepartment);
     }
-    
+
     // Only add employeeId if a specific employee is selected (not "All Employees")
     if (this.selectedEmployee !== 'all') {
       request.employeeId = this.selectedEmployee;
     }
-    
+
+    // Only add comLoc when a specific location is selected (HOD / SURVEILLANCE filter)
+    if (this.selectedComLoc) {
+      request.comLoc = this.selectedComLoc;
+    }
+
     console.log('getUserDailyLogHistory request:', request);
     
     this.api.getUserDailyLogHistory(request).subscribe({
@@ -1099,10 +1105,15 @@ export class MyLoggedHoursComponent implements OnInit {
     if (this.selectedDepartment !== '' && this.selectedDepartment !== null) {
       exportRequest.departmentId = Number(this.selectedDepartment);
     }
-    
+
     // Only add employeeId if a specific employee is selected (not "All Employees")
     if (this.selectedEmployee !== 'all') {
       exportRequest.employeeId = this.selectedEmployee;
+    }
+
+    // Only add comLoc when a specific location is selected (HOD / SURVEILLANCE filter)
+    if (this.selectedComLoc) {
+      exportRequest.comLoc = this.selectedComLoc;
     }
     
     console.log('Export request:', exportRequest);

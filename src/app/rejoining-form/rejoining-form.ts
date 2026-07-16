@@ -25,6 +25,10 @@ export class RejoiningForm implements OnInit {
   approvalList: any[] = [];
   isLoadingRecord = false;
 
+  // Approval transaction history (from TS_EMP_APPROVAL_HISTORY)
+  approvalHistory: any[] = [];
+  openHistoryApv: any = null;
+
   // Approver action (when opened from pending approvals with matching approvalId)
   incomingApprovalId: number | null = null;
   incomingApproverCode: string = '';
@@ -191,6 +195,9 @@ export class RejoiningForm implements OnInit {
           this.rejoinRecord = d;
           this.approvalList = d.approvalList || [];
 
+          // Bind approval transaction history (past approve/reject actions with comments)
+          this.approvalHistory = this.mapApprovalHistory(d.approvalHistory || d.ApprovalHistory || []);
+
           // Patch form with all returned fields
           this.rejoiningForm.patchValue({
             employeeId:         d.employeeId || '',
@@ -250,6 +257,64 @@ export class RejoiningForm implements OnInit {
       },
       error: () => { this.isLoadingRecord = false; }
     });
+  }
+
+  /** Normalize the approval history rows returned by the API */
+  private mapApprovalHistory(raw: any[]): any[] {
+    return (raw || []).map((h: any) => ({
+      approvalLevel: h.approvalLevel ?? h.ApprovalLevel,
+      approverCode: (h.approverCode || h.ApproverCode || '').toString().trim(),
+      approverRole: h.approverRole || h.ApproverRole || '',
+      approverId: (h.approverId || h.ApproverId || '').toString().trim(),
+      approverName: h.approverName || h.ApproverName || '',
+      action: (h.action || h.Action || '').toString().trim().toUpperCase(),
+      remarks: h.remarks || h.Remarks || '',
+      actionDate: h.actionDate || h.ActionDate || null
+    }));
+  }
+
+  /** History entries (approve/reject comments) for this approver's step.
+   *  Matches on ApproverCode (role/section) AND ApproverId, so a user who appears
+   *  in multiple sections only sees each comment under the section it was made in.
+   *  RESUBMITTED entries are excluded — only Approved/Rejected actions are shown. */
+  getApvHistory(apv: any): any[] {
+    if (!this.approvalHistory || this.approvalHistory.length === 0 || !apv) {
+      return [];
+    }
+    const id = (apv.approverId || '').toString().trim();
+    const code = (apv.approverCode || '').toString().trim();
+    if (!id && !code) {
+      return [];
+    }
+    return this.approvalHistory.filter((h: any) => {
+      if (h.action === 'RESUBMITTED') { return false; }
+      const codeMatches = !code || h.approverCode === code;
+      const idMatches = !id || h.approverId === id;
+      return codeMatches && idMatches;
+    });
+  }
+
+  toggleApvHistory(apv: any, event?: Event): void {
+    if (event) { event.stopPropagation(); }
+    this.openHistoryApv = this.openHistoryApv === apv ? null : apv;
+  }
+
+  getHistoryActionLabel(h: any): string {
+    switch (h.action) {
+      case 'APPROVED': return 'Approved';
+      case 'REJECTED': return 'Rejected';
+      case 'RESUBMITTED': return 'Resubmitted';
+      default: return h.action || 'Updated';
+    }
+  }
+
+  getHistoryActionClass(h: any): string {
+    switch (h.action) {
+      case 'APPROVED': return 'history-action-approved';
+      case 'REJECTED': return 'history-action-rejected';
+      case 'RESUBMITTED': return 'history-action-resubmitted';
+      default: return 'history-action-other';
+    }
   }
 
   /** Overall form status label shown in the banner */
@@ -908,13 +973,22 @@ export class RejoiningForm implements OnInit {
           const pS = 10;
           const textMaxW = cW - pS - 10;
           const isActioned = code === 'A' || code === 'R';
-          if (!isActioned) return;
+          // Past approve/reject comments for this approver (resubmits excluded)
+          const apvHistory = this.getApvHistory(apv);
+          if (!isActioned && apvHistory.length === 0) return;
           const contactLine = [apv.email, apv.phoneNumber].filter(Boolean).join('   |   ');
           const remarksLines = apv.remarks ? pdf.splitTextToSize(`Remarks: ${apv.remarks}`, textMaxW) : [];
+          const historyLines: string[] = [];
+          apvHistory.forEach((h: any) => {
+            const remark = h.remarks && String(h.remarks).trim() ? String(h.remarks).trim() : 'No comment added.';
+            const line = `${this.getHistoryActionLabel(h)}${h.actionDate ? ' on ' + fmtDate(h.actionDate) : ''} - ${remark}`;
+            historyLines.push(...pdf.splitTextToSize(line, textMaxW));
+          });
           const boxH = Math.max(16, pS + 4)
                      + (contactLine ? 3.5 : 0)
                      + (isActioned && apv.approvalDate ? 3.5 : 0)
-                     + remarksLines.length * 3.2;
+                     + remarksLines.length * 3.2
+                     + (historyLines.length ? historyLines.length * 3.2 + 4 : 0);
           chk(boxH + 3);
 
           pdf.setFillColor(250, 252, 252); pdf.setDrawColor(226, 232, 240); pdf.setLineWidth(0.15);
@@ -964,7 +1038,18 @@ export class RejoiningForm implements OnInit {
             pdf.text(fmtDate(apv.approvalDate), margin + 16, infoY);
             infoY += 3.5;
           }
-          if (remarksLines.length > 0) { pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105); pdf.text(remarksLines, margin + 5, infoY); }
+          if (remarksLines.length > 0) {
+            pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(remarksLines, margin + 5, infoY);
+            infoY += remarksLines.length * 3.2;
+          }
+          if (historyLines.length > 0) {
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(100, 116, 139);
+            pdf.text('Comment History:', margin + 5, infoY + 0.8);
+            infoY += 4;
+            pdf.setFont('helvetica', 'italic'); pdf.setFontSize(6.5); pdf.setTextColor(71, 85, 105);
+            pdf.text(historyLines, margin + 5, infoY);
+          }
           y += boxH + 3;
         });
       }
