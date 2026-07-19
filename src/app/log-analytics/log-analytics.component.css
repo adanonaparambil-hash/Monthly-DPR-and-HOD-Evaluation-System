@@ -349,6 +349,11 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+.emp-id-cell {
+  display: block; font-size: 13px; color: #475569; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 .cat-pill {
   display: inline-block;
   padding: 3px 10px; border-radius: 12px;
@@ -467,6 +472,7 @@
   flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 .emp-popup-name { font-weight: 500; color: #1e293b; }
+.emp-popup-id   { display: block; font-size: 11px; color: #64748b; }
 
 /* ── PAGINATION ───────────────────────────────────────────────────────────── */
 .pager {

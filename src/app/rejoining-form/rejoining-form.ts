@@ -683,9 +683,16 @@ export class RejoiningForm implements OnInit {
   // Converts "08-SEP-2025" or any parseable date string to "yyyy-MM-dd" for <input type="date">
   parseToInputDate(dateStr: string): string {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
+    const s = String(dateStr).trim();
+    // Already ISO (e.g. "2026-07-15" or "2026-07-15T00:00:00") — take the date part
+    // directly with no Date() round-trip, so the value binds exactly as sent.
+    const isoMatch = s.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) return isoMatch[1];
+    const d = new Date(s);
     if (isNaN(d.getTime())) return '';
-    return d.toISOString().split('T')[0];
+    // Build from LOCAL date parts — toISOString() converts to UTC, which shifts
+    // midnight local dates one day back (e.g. 15th becomes 14th in GMT+4).
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   getSkillsArray(): string[] {

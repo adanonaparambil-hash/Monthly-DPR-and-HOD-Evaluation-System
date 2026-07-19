@@ -47,7 +47,8 @@
       "Bash(grep -n \"GetUserMenusAsync\\\\|class MenuDto\\\\|MenuDto\\\\|IsExternal\\\\|CanEdit\\\\|IsAdmin\\\\|Duration\\\\|MenuUrl\\\\|MenuId\" \"C:/Users/ITS48/source/repos/TimeSheetAPI/TimeSheetAPI/Service/GeneralService.cs\" | head -20)",
       "Bash(cd /c/Users/ITS48/source/repos/TimeSheetAPI 2>/dev/null && find . -type f -name \"*.cs\" | head -200; echo \"---CSPROJ---\"; find . -name \"*.csproj\")",
       "Bash(awk 'NR>=3460 && NR<=3960 && \\(/approvalWorkflow|APPROVAL|comments|Comments/\\)' \"C:/Users/ITS48/Desktop/AdrakPortal/Monthly-DPR-and-HOD-Evaluation-System/src/app/emergency-exit-form/emergency-exit-form.component.ts\")",
-      "Bash(awk -F: '$1>3460 && $1<3960')"
+      "Bash(awk -F: '$1>3460 && $1<3960')",
+      "mcp__visualize__show_widget"
     ]
   }
 }

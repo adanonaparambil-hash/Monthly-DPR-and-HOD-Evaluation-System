@@ -238,6 +238,12 @@
                               }
                             }
 
+                            @case ('employeeId') {
+                              <span class="emp-id-cell" [title]="getEmployeeIdsLabel(entry)">
+                                {{getEmployeeIdsLabel(entry)}}
+                              </span>
+                            }
+
                             @case ('taskCategory') {
                               <span class="cat-pill"
                                     [style.background]="getCategoryBg(entry.taskCategory.name)"
@@ -611,6 +617,9 @@
             </div>
             <div class="emp-popup-info">
               <span class="emp-popup-name">{{emp.name}}</span>
+              @if (emp.id) {
+                <span class="emp-popup-id">{{emp.id}}</span>
+              }
             </div>
           </div>
         }

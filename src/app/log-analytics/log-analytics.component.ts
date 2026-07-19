@@ -136,7 +136,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   /** Normal users cannot filter/toggle employee or department columns */
   canFilterCol(key: string): boolean {
-    if (this.isNormal && (key === 'employee' || key === 'department')) return false;
+    if (this.isNormal && (key === 'employee' || key === 'employeeId' || key === 'department')) return false;
     return true;
   }
 
@@ -181,6 +181,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   // ── Column definitions ────────────────────────────────────────────────────
   allColumns = [
     { key: 'employee',       label: 'Employee',       icon: 'fa-user',           textSearch: false },
+    { key: 'employeeId',     label: 'Employee ID',    icon: 'fa-id-badge',       textSearch: false },
     { key: 'taskCategory',   label: 'Category',       icon: 'fa-tag',            textSearch: false },
     { key: 'taskTitle',      label: 'Task Title',     icon: 'fa-list-check',     textSearch: true  },
     { key: 'project',        label: 'Project',        icon: 'fa-cube',           textSearch: false },
@@ -199,7 +200,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   ];
 
   visibleColumns: { [key: string]: boolean } = {
-    employee: true, taskCategory: true, taskTitle: true, project: true,
+    employee: true, employeeId: false, taskCategory: true, taskTitle: true, project: true,
     description: true, dailyComment: true, logTime: true,
     approvalStatus: true, startDate: false, targetDate: false,
     createdDate: false, assignedBy: false, dailyCount: false, progress: false,
@@ -207,7 +208,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   };
 
   columnWidths: { [key: string]: number } = {
-    employee: 200, taskCategory: 120, taskTitle: 190, project: 140,
+    employee: 200, employeeId: 110, taskCategory: 120, taskTitle: 190, project: 140,
     description: 260, dailyComment: 200, logTime: 100,
     approvalStatus: 120, startDate: 120, targetDate: 120,
     createdDate: 120, assignedBy: 160, dailyCount: 100, progress: 130,
@@ -753,6 +754,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   private getRawFilterValues(col: string): string[] {
     switch (col) {
       case 'employee':       return this.filterEmployees.map(e => e.employeeName);
+      case 'employeeId':     return this.filterEmployees.map(e => e.employeeId);
       case 'assignedBy':     return this.filterEmployees.map(e => e.employeeName);
       case 'taskCategory':   return this.filterCategories.map(c => c.categoryName);
       case 'project':        return this.filterProjects.map(p => p.projectName).filter((v): v is string => !!v);
@@ -805,6 +807,10 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
           .filter(e => selectedLabels.includes(e.employeeName))
           .map(e => e.employeeId);
         break;
+      case 'employeeId':
+        // Selected labels ARE the employee IDs for this column
+        this.activeFilters.employeeIds = [...selectedLabels];
+        break;
       case 'assignedBy':
         this.activeFilters.assignedByIds = this.filterEmployees
           .filter(e => selectedLabels.includes(e.employeeName))
@@ -850,7 +856,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   private colKeyToSortParam(col: string): string {
     if (col.startsWith('cf_')) return col.replace('cf_', 'CF_').toUpperCase();
     const map: { [k: string]: string } = {
-      employee: 'EMPLOYEE_NAME', taskCategory: 'CATEGORY_NAME',
+      employee: 'EMPLOYEE_NAME', employeeId: 'EMPLOYEE_ID', taskCategory: 'CATEGORY_NAME',
       taskTitle: 'TASK_TITLE', project: 'PROJECT_NAME',
       logTime: 'TOTAL_MIN', approvalStatus: 'STATUS',
       startDate: 'START_DATE', targetDate: 'TARGET_DATE',
@@ -867,6 +873,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     const getVal = (e: LogEntry): string | number => {
       switch (this.activeSortCol) {
         case 'EMPLOYEE_NAME':  return (e.employee?.name  ?? '').toLowerCase();
+        case 'EMPLOYEE_ID':    return (e.employee?.id    ?? '').toLowerCase();
         case 'CATEGORY_NAME':  return (e.taskCategory?.name ?? '').toLowerCase();
         case 'TASK_TITLE':     return (e.taskTitle    ?? '').toLowerCase();
         case 'PROJECT_NAME':   return (e.project      ?? '').toLowerCase();
@@ -907,6 +914,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
     f.timeVal  = null; f.timeOp = '>';
 
     if      (col === 'employee')       this.activeFilters.employeeIds       = [];
+    else if (col === 'employeeId')     this.activeFilters.employeeIds       = [];
     else if (col === 'assignedBy')     this.activeFilters.assignedByIds     = [];
     else if (col === 'taskCategory')   this.activeFilters.categoryIds       = [];
     else if (col === 'project')        this.activeFilters.projectIds        = [];
@@ -1092,7 +1100,7 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   resetColumnsToDefault(): void {
     // Reset fixed columns — keep custom field visibility as-is
     const fixed: { [k: string]: boolean } = {
-      employee: true, taskCategory: true, taskTitle: true, project: true,
+      employee: true, employeeId: false, taskCategory: true, taskTitle: true, project: true,
       description: true, dailyComment: true, logTime: true,
       approvalStatus: true, startDate: false, targetDate: false,
       createdDate: false, assignedBy: false, progress: false,
@@ -1411,6 +1419,12 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   getOverflowEmpNames(entry: LogEntry): string {
     return entry.employees.slice(3).map(e => e.name).join(', ');
+  }
+
+  /** Comma-separated employee IDs for the Employee ID column (single or merged rows) */
+  getEmployeeIdsLabel(entry: LogEntry): string {
+    const ids = entry.employees.map(e => e.id).filter(Boolean);
+    return ids.length ? ids.join(', ') : (entry.employee?.id ?? '');
   }
 
   getTimeBreakdown(entry: LogEntry): string {
