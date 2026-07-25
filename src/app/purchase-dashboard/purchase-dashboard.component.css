@@ -224,6 +224,10 @@
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.6);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+  /* Lift the filter row (and its open dropdowns) above the chart canvas below,
+     otherwise the chart paints over the menu and its items aren't clickable. */
+  position: relative;
+  z-index: 20;
 }
 
 .pd-fg { display: flex; flex-direction: column; gap: 4px; }
@@ -330,7 +334,7 @@
 
 .pd-ddm {
   position: absolute; top: calc(100% + 4px); left: 0; z-index: 1100;
-  background: rgba(255,255,255,0.78);
+  background: rgba(255,255,255,0.97);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   border: 1.5px solid rgba(255,255,255,0.7); border-radius: 12px;
@@ -1111,8 +1115,8 @@
   border-bottom: 2px solid rgba(255,255,255,0.5);
   flex-shrink: 0;
   position: relative;
-  z-index: 1;
-  box-shadow: 
+  z-index: 50;   /* above the chart canvas so open dropdowns overlay the graph */
+  box-shadow:
     0 2px 16px rgba(0,0,0,0.04),
     inset 0 2px 0 rgba(255,255,255,0.8),
     inset 0 -1px 0 rgba(255,255,255,0.3);
@@ -1136,8 +1140,23 @@
   background-clip: text;
 }
 
-/* Dropdown menu inside modal */
-.pd-ddm--modal { z-index: 3000; }
+/* Dropdown menu inside modal — must be SOLID and above the chart.
+   Nested inside the modal's own backdrop-filter, a semi-transparent blurred
+   background renders see-through over the graph, so force an opaque surface
+   and a high stacking order. */
+.pd-ddm--modal {
+  z-index: 5000;
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: #e2e8f0;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.30);
+}
+.pd-ddm--modal .pd-dds {
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 /* Wider sliders for modal */
 .dw--lg  { min-width: 200px; }
@@ -2467,4 +2486,359 @@
   }
   .pd-tv-supp { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
   .pd-tv-filters { gap: 12px; }
+}
+
+/* ═══ Mobile responsiveness (2026-07) ═══
+   Append-only section — fills gaps in the existing @media coverage.
+   Desktop (>1024px) appearance is unchanged. */
+
+@media (max-width: 1024px) {
+  /* Tighter page + grid rhythm on tablets */
+  .pd-wrap { padding: 12px 16px 32px; }
+  .pd-grid { gap: 18px; }
+
+  /* Supplier KPI pills: 2-up earlier so text never crushes */
+  .pd-supp-kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .pd-supp-stats   { grid-template-columns: repeat(2, 1fr); }
+
+  /* Modal chrome: reduce oversized paddings */
+  .pd-modal-hdr     { padding: 16px 20px 14px; }
+  .pd-modal-filters { padding: 12px 20px 14px; gap: 10px 16px; }
+  .pd-modal-cw      { padding: 14px 20px 18px; }
+  .pd-supp-kpi-row--modal { padding: 12px 20px 0; }
+  .pd-modal-supp-split    { padding: 14px 20px 18px; gap: 16px; }
+}
+
+@media (max-width: 768px) {
+  /* ── Page / cards ── */
+  .pd-wrap { padding: 10px 10px 28px; }
+  .pd-grid { gap: 14px; }
+  .pd-card { padding: 14px 12px 12px; border-radius: 18px; }
+  .pd-card:hover { transform: none; }              /* no lift on touch */
+  .pd-card-header { flex-wrap: wrap; row-gap: 8px; }
+  .pd-card-title h3 { white-space: normal; font-size: 0.88rem; line-height: 1.3; }
+  .pd-kpi-val { font-size: 1rem; }
+
+  /* ── Filter toolbars: stack, full-width controls ── */
+  .pd-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+  }
+  .pd-fg  { width: 100%; min-width: 0; }
+  .pd-ddw { width: 100%; }
+  .pd-ddb {
+    width: 100%;
+    height: 38px;                                  /* tappable */
+    justify-content: flex-start;
+  }
+  .pd-ddb > span:first-of-type {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pd-sel { width: 100%; height: 38px; }
+  .dw, .dw--lg { min-width: 0; width: 100%; }
+  .pd-sr, .pd-sr--lg { min-width: 0; width: 100%; }
+  .pd-radios { flex-direction: row; }
+  .pd-dl { width: 100%; height: 38px; justify-content: center; }
+
+  /* ── Dropdown menus: fit viewport, stay tappable ── */
+  .pd-ddm {
+    left: 0;
+    right: auto;
+    width: 100%;
+    min-width: 0;
+    max-width: calc(100vw - 16px);
+    max-height: 50vh;
+  }
+  .pd-ddi { padding: 11px 12px; min-height: 40px; align-items: center; }
+  .pd-dds-inp { height: 26px; }
+
+  /* ── Chart canvases ── */
+  .pd-cw            { height: 300px; }
+  .pd-cw--tall      { height: 320px; }
+  .pd-cw--radar     { height: 340px; }
+  .pd-cw.pd-cw--combo { height: 360px; }
+  .pd-cw canvas, .pd-modal-cw canvas { max-width: 100%; }
+
+  /* ── Suppliers card ── */
+  .pd-supp-body       { gap: 14px; margin-bottom: 14px; }
+  .pd-supp-donut-zone { height: 300px; }
+  .pd-supp-ranked-list { max-height: 320px; }
+  .pd-supp-item        { padding: 9px 10px; gap: 9px; }
+  .pd-supp-item-drill  { width: 32px; height: 32px; }   /* tap target */
+
+  /* ── Expand modal: near-fullscreen with internal scroll ── */
+  .pd-modal-bg  { padding: 10px; }
+  .pd-modal-box {
+    width: calc(100vw - 20px);
+    height: auto;
+    max-height: 92vh;
+    border-radius: 18px;
+    overflow-y: auto;
+  }
+  .pd-modal-hdr { padding: 12px 14px 10px; border-radius: 18px 18px 0 0; }
+  .pd-modal-hdr h2 { font-size: 1.05rem; margin-bottom: 4px; }
+  .pd-modal-icon-wrap { width: 40px; height: 40px; font-size: 17px; border-radius: 12px; }
+  .pd-modal-close { width: 38px; height: 38px; font-size: 15px; }
+  .pd-modal-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 14px 12px;
+  }
+  .pd-modal-kpi {
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .pd-modal-cw { padding: 10px 12px 14px; min-height: 260px; }
+  .pd-supp-kpi-row--modal { padding: 10px 14px 0; }
+  .pd-modal-supp-split { padding: 12px 14px 16px; gap: 14px; }
+  .pd-modal-supp-chart { min-height: 260px; height: 260px; }
+
+  /* ── Supplier transactions (stx) modal ── */
+  .stx-overlay { padding: 10px; }
+  .stx-modal   { width: calc(100vw - 20px); height: 92vh; max-height: 92vh; }
+  .stx-header  { padding: 12px 12px 10px; gap: 8px; }
+  .stx-header-right { width: 100%; justify-content: flex-start; }
+  .stx-filters { padding: 10px 12px; gap: 8px; }
+  .stx-filter-field { min-width: calc(50% - 4px); flex: 1 1 calc(50% - 4px); }
+  .stx-filter-clear { width: 100%; }
+  .stx-table   { min-width: 860px; }               /* wrap scrolls horizontally */
+  .stx-footer  { padding: 10px 12px; }
+  .stx-nav-btn { padding: 8px 12px; }
+
+  /* ── TV view: single-column scrolling layout ── */
+  .pd-tv-overlay { padding: 10px; overflow-y: auto; }
+  .pd-tv-header  { flex-wrap: wrap; padding: 8px 10px; margin-bottom: 10px; }
+  .pd-tv-filters { flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+  .pd-tv-fg      { flex-wrap: wrap; }
+  .pd-tv-filters .pd-ddb { width: auto; }
+  .pd-tv-filters .pd-ddm {
+    left: auto;
+    right: 0;
+    width: auto;
+    min-width: 210px;
+    max-width: calc(100vw - 16px);
+  }
+  .pd-tv-grid {
+    flex: none;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-rows: minmax(250px, auto);
+    gap: 10px;
+    overflow: visible;
+  }
+  .pd-tv-cell { padding: 10px; min-height: 250px; }
+  .pd-tv-cw   { min-height: 200px; }
+  .pd-tv-supp { grid-template-columns: 1fr; grid-template-rows: none; }
+  .pd-tv-supp-donut { min-height: 200px; height: 200px; }
+  .pd-tv-supp-list  { max-height: 240px; }
+}
+
+@media (max-width: 480px) {
+  /* ── Page / cards ── */
+  .pd-wrap { padding: 8px 8px 24px; }
+  .pd-grid { gap: 12px; }
+  .pd-card { padding: 12px 10px; border-radius: 14px; }
+  .pd-card-icon { width: 36px; height: 36px; font-size: 15px; border-radius: 10px; }
+  .pd-card-title h3 { font-size: 0.82rem; }
+  .pd-badge   { font-size: 8.5px; padding: 2px 7px; }
+  .pd-kpi-val { font-size: 0.92rem; }
+  .pd-expand-btn { width: 32px; height: 32px; }
+
+  /* ── Charts ── */
+  .pd-cw            { height: 240px; }
+  .pd-cw--tall      { height: 260px; }
+  .pd-cw--radar     { height: 280px; }
+  .pd-cw.pd-cw--combo { height: 300px; }
+
+  /* ── Suppliers ── */
+  .pd-supp-donut-zone { height: 240px; }
+  .pd-supp-kpi-row, .pd-supp-stats { grid-template-columns: 1fr; gap: 10px; }
+  .pd-supp-kpi-big, .pd-supp-stat-big { font-size: 17px; }
+  .pd-supp-item-name { font-size: 11px; }
+  .pd-supp-item-amt  { font-size: 11px; }
+
+  /* ── Dropdown menus ── */
+  .pd-ddm { max-height: 45vh; }
+
+  /* ── Expand modal ── */
+  .pd-modal-hdr h2    { font-size: 0.95rem; }
+  .pd-modal-badge     { font-size: 9px; padding: 3px 9px; }
+  .pd-modal-cw        { min-height: 220px; }
+  .pd-modal-supp-chart { min-height: 220px; height: 220px; }
+
+  /* ── STX modal ── */
+  .stx-title    { font-size: 13.5px; }
+  .stx-subtitle { max-width: 150px; }
+  .stx-badge-year, .stx-badge-count { font-size: 10px; padding: 3px 8px; }
+  .stx-export-btn { padding: 7px 12px; font-size: 11.5px; }
+  .stx-filter-field { min-width: 100%; flex: 1 1 100%; }
+  .stx-footer-info { font-size: 11px; }
+
+  /* ── TV view ── */
+  .pd-tv-title h2 { font-size: 14px; }
+  .pd-tv-cell     { min-height: 230px; }
+  .pd-tv-cell-hdr { font-size: 12.5px; }
+  .pd-tv-amt      { font-size: 13px; }
+}
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+/* No dead .dark-theme / [data-theme] selectors were found in this file.
+   The additions below cover primary surfaces that had NO dark rule at all:
+   the supplier-transactions modal (.stx-*), the transaction-viewer overlay
+   (.pd-tv-*) and the in-modal filter bar / dropdowns. */
+
+/* --- Supplier-transactions modal --- */
+:host-context(.dark-theme) .stx-modal {
+  background: #1e293b;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .stx-header {
+  background: #172033;
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .stx-title {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .stx-subtitle,
+:host-context(.dark-theme) .stx-state-txt {
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-close {
+  background: #172033;
+  border-color: #334155;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-table-wrap,
+:host-context(.dark-theme) .stx-state-center {
+  background: #0f172a;
+}
+:host-context(.dark-theme) .stx-table-wrap::-webkit-scrollbar-track {
+  background: #172033;
+}
+:host-context(.dark-theme) .stx-table thead tr {
+  background: #172033;
+}
+:host-context(.dark-theme) .stx-table thead th {
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-table tbody tr {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .stx-table tr.stx-row-alt {
+  background: #172033;
+}
+:host-context(.dark-theme) .stx-table tbody tr:hover,
+:host-context(.dark-theme) .stx-table tr.stx-row-alt:hover {
+  background: #0f172a;
+}
+:host-context(.dark-theme) .stx-table tbody td {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .stx-amt {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .stx-vat {
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-empty-row {
+  background: #1e293b !important;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-bottom-bar {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+:host-context(.dark-theme) .stx-footer {
+  background: #172033;
+  border-top-color: #334155;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-footer strong {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .stx-pag-pill {
+  background: #172033;
+  border-color: #334155;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .stx-filters {
+  background: #172033;
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .stx-filter-lbl {
+  color: #94a3b8;
+}
+/* Native inputs on a dark background need color-scheme for their internals */
+:host-context(.dark-theme) .stx-filter-input-wrap {
+  background: #0f172a;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .stx-filter-input {
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+:host-context(.dark-theme) .stx-filter-clear {
+  background: #172033;
+}
+
+/* --- Chart-modal filter bar + dropdowns rendered inside it --- */
+:host-context(.dark-theme) .pd-modal-filters {
+  background: linear-gradient(145deg, #172033 0%, #0f172a 100%);
+}
+:host-context(.dark-theme) .pd-ddm--modal,
+:host-context(.dark-theme) .pd-ddm--modal .pd-dds {
+  background: #1e293b;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .pd-ddi-cb {
+  background: #172033;
+  border-color: #475569;
+}
+
+/* --- Transaction-viewer fullscreen overlay --- */
+:host-context(.dark-theme) .pd-tv-header,
+:host-context(.dark-theme) .pd-tv-cell {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: #334155;
+}
+:host-context(.dark-theme) .pd-tv-title h2 {
+  color: #e2e8f0 !important;
+}
+:host-context(.dark-theme) .pd-tv-cell-hdr {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .pd-tv-btn,
+:host-context(.dark-theme) .pd-tv-close {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .pd-tv-btn:hover {
+  background: #172033;
+}
+:host-context(.dark-theme) .pd-tv-sel {
+  background: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+:host-context(.dark-theme) .pd-tv-supp-list .pd-supp-item {
+  background: rgba(23, 32, 51, 0.75);
+}
+:host-context(.dark-theme) .pd-tv-supp-list .pd-supp-item:hover {
+  background: rgba(15, 23, 42, 0.95);
 }

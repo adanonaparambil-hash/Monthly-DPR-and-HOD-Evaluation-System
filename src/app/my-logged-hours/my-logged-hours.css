@@ -4755,3 +4755,255 @@
 .log-time-popup {
   z-index: 2147483648 !important;
 }
+
+/* ═══ Dark theme gap-fill (2026-07) ═══
+   The data table rows actually rendered by my-logged-hours.html use
+   .record-row / .record-col with .task-title, .column-value, etc.
+   Dark rules existed for the older .table-row / .table-cell classes
+   but not for these, leaving near-black text (#111827 / #374151) on
+   the dark .data-table surface. The Log Time popup (.log-time-popup)
+   was hard-white with no dark rules while sibling modals have them.
+   Same .logged-hours-container.dark-mode pattern and palette as the
+   existing dark rules in this file. */
+
+/* — Main table rows — */
+.logged-hours-container.dark-mode .record-row {
+  border-bottom-color: #374151;
+}
+
+.logged-hours-container.dark-mode .record-row:hover {
+  background: #374151;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.logged-hours-container.dark-mode .task-title {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .record-row:hover .task-title {
+  color: #2dd4bf;
+}
+
+.logged-hours-container.dark-mode .task-description {
+  color: #9ca3af;
+}
+
+.logged-hours-container.dark-mode .column-value {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .logged-by-name {
+  color: #d1d5db;
+}
+
+.logged-hours-container.dark-mode .duration-text {
+  color: #f9fafb;
+}
+
+/* — Log Time popup — */
+.logged-hours-container.dark-mode .log-time-popup {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .ltp-header {
+  border-bottom-color: #374151;
+}
+
+.logged-hours-container.dark-mode .ltp-title {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .ltp-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.logged-hours-container.dark-mode .ltp-date-row {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+
+.logged-hours-container.dark-mode .ltp-date-value {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .ltp-time-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .ltp-total-section {
+  border-top-color: #374151;
+}
+
+.logged-hours-container.dark-mode .ltp-total-value,
+.logged-hours-container.dark-mode .ltp-total-edit-input {
+  color: #f9fafb;
+}
+
+/* — Column Management modal —
+   The dark rules above target ".column-modal", but the markup uses
+   .column-modal-container / -overlay / -content; those and the search,
+   list and footer surfaces stayed hard-white in dark mode. */
+.logged-hours-container.dark-mode .column-modal-overlay {
+  background: rgba(17, 24, 39, 0.85);
+}
+
+.logged-hours-container.dark-mode .column-modal-container {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.logged-hours-container.dark-mode .column-modal-content {
+  background: #1f2937;
+}
+
+.logged-hours-container.dark-mode .column-search-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .column-search-input:focus {
+  background: #374151;
+}
+
+.logged-hours-container.dark-mode .columns-list-container {
+  background: #1f2937;
+}
+
+.logged-hours-container.dark-mode .column-name {
+  color: #f9fafb;
+}
+
+.logged-hours-container.dark-mode .column-summary {
+  background: #111827;
+  border-top-color: #374151;
+}
+
+.logged-hours-container.dark-mode .column-modal-footer {
+  background: #111827;
+  border-top-color: #374151;
+}
+
+/* ═══ Dark theme gap-fill #2 (2026-07) — day bands + header action bar ═══
+   The per-day separator band and the top action-button container kept their
+   light backgrounds in dark mode (light-gray strips / mint-white bar). */
+.logged-hours-container.dark-mode .day-header {
+  background: rgba(30, 41, 59, 0.85);
+  border-bottom-color: #334155;
+}
+.logged-hours-container.dark-mode .day-title { color: #e2e8f0; }
+.logged-hours-container.dark-mode .day-date { color: #94a3b8; }
+.logged-hours-container.dark-mode .header-actions {
+  background: linear-gradient(135deg, #16241f 0%, #1a2b26 100%);
+  border-color: rgba(19, 130, 113, 0.4);
+}
+
+/* ═══ Dark theme gap-fill #3 (2026-07) — filter card ═══
+   The dark rule at ~line 2011 targets `.filter-section`, but the markup uses
+   `.filters-section` (plural) — a dead selector, so the whole filter card
+   stayed white in dark mode. Same for `.filter-group label` vs `.filter-label`. */
+.logged-hours-container.dark-mode .filters-section {
+  background: #1f2937;
+  border-color: #374151;
+}
+.logged-hours-container.dark-mode .filter-label,
+.logged-hours-container.dark-mode .filter-group-header {
+  color: #d1d5db;
+}
+.logged-hours-container.dark-mode .filter-icon { color: #9ca3af; }
+.logged-hours-container.dark-mode .filter-date-input,
+.logged-hours-container.dark-mode .filters-section select,
+.logged-hours-container.dark-mode .filters-section input {
+  color-scheme: dark;
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .filters-section select option {
+  background: #374151; color: #f9fafb;
+}
+.logged-hours-container.dark-mode .compact-search {
+  background: #374151;
+  border-color: #4b5563;
+}
+.logged-hours-container.dark-mode .compact-search-input {
+  background: transparent; color: #f9fafb;
+}
+.logged-hours-container.dark-mode .compact-search-input::placeholder { color: #9ca3af; }
+
+/* ═══ Mobile verification fixes (2026-07) ═══ */
+/* Layout-only rules; no new colors, so no dark-mode counterparts needed. */
+
+@media (max-width: 768px) {
+  /* The 768px block above tries to turn the grid table into stacked cards
+     (`.table-header { display: none }` + `.record-row { grid-template-columns: 1fr }`),
+     but both .table-header and .record-row receive their columns from an
+     inline [style.grid-template-columns] binding, and an inline style beats a
+     stylesheet rule. So rows stayed multi-column while the header was hidden:
+     column values with no labels. Restore the real table and let it scroll
+     horizontally inside .data-table (which is already overflow-x: auto).
+     Header/row padding + gap are already matched by the 768px block above. */
+  .table-header {
+    display: grid;
+  }
+
+  .data-table {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Day Log History modal: 8 columns with fixed widths in a `width: 100%`
+     table were crushed; give the table a floor width so .day-log-table-container
+     scrolls it instead. */
+  .day-log-history-modal-large {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: 92vh;
+  }
+
+  .day-log-table {
+    min-width: 720px;
+  }
+
+  .day-log-table-container {
+    max-height: 60vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tap targets: the filter controls and header buttons land at ~36px */
+  .filter-date-input,
+  .filter-select,
+  .bh-emp-btn,
+  .action-btn,
+  .filter-btn,
+  .apply-filter-btn {
+    min-height: 40px;
+  }
+
+  .more-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .compact-search {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay-large {
+    padding: 8px;
+  }
+
+  .day-log-history-modal-large {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+
+  /* Employee picker dropdown keeps its list reachable on short screens */
+  .bh-emp-list {
+    max-height: 45vh;
+  }
+}

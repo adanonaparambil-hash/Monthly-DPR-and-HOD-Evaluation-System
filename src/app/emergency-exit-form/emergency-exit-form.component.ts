@@ -1201,6 +1201,12 @@ export class EmergencyExitFormComponent implements OnInit {
       return;
     }
 
+    // Date of Departure rules: no past dates (all types); min 2 working days
+    // advance notice for Planned/Resignation (Emergency exempt).
+    if (!this.validateDepartureDate()) {
+      return;
+    }
+
     if (!this.allDeclarationsChecked()) {
       this.showMissingDeclarations();
       return;
@@ -1213,6 +1219,103 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Show confirmation popup
     this.showSubmissionConfirmation();
+  }
+
+  /** Max calendar days ahead of today a Date of Departure may be. Submissions
+   *  further out than this (e.g. next-month dates) are blocked — only today,
+   *  +1, +2 and +3 are allowed. */
+  private readonly MAX_ADVANCE_DAYS = 3;
+
+  private dateOnly(d: Date): Date { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+  private toInputDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  /** Earliest selectable Date of Departure — today (no past dates). */
+  get departureMinDate(): string { return this.toInputDate(this.dateOnly(new Date())); }
+
+  /** Latest selectable Date of Departure — today + 3 calendar days. */
+  get departureMaxDate(): string {
+    const d = this.dateOnly(new Date());
+    d.setDate(d.getDate() + this.MAX_ADVANCE_DAYS);
+    return this.toInputDate(d);
+  }
+
+  /** Earliest selectable Date of Arrival — the chosen Date of Departure (or today). */
+  get dateOfArrivalMinDate(): string {
+    const dep = this.exitForm?.get('dateOfDeparture')?.value;
+    if (dep) {
+      const d = new Date(dep);
+      if (!isNaN(d.getTime())) { return this.toInputDate(this.dateOnly(d)); }
+    }
+    return this.departureMinDate;
+  }
+
+  /**
+   * Validate Date of Departure on save (all form types):
+   *  - cannot be a PAST date;
+   *  - cannot be more than 3 days ahead of today (blocks early / next-month submissions).
+   * Allowed: today, +1, +2, +3. Shows a message and returns false when invalid.
+   */
+  private validateDepartureDate(): boolean {
+    const raw = this.exitForm.get('dateOfDeparture')?.value;
+    if (!raw) { return true; } // "missing" is handled by the required-field validation
+
+    const dep = new Date(raw);
+    if (isNaN(dep.getTime())) { return true; }
+    dep.setHours(0, 0, 0, 0);
+
+    const today = this.dateOnly(new Date());
+    const latest = this.dateOnly(new Date());
+    latest.setDate(latest.getDate() + this.MAX_ADVANCE_DAYS);
+
+    const label = this.formType === 'R' ? 'Last Working Date' : 'Date of Departure';
+    const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // Past date — blocked
+    if (dep < today) {
+      Swal.fire({
+        icon: 'warning',
+        title: `Invalid ${label}`,
+        text: `${label} cannot be a past date. Please select today or a date within the next 3 days.`,
+        confirmButtonColor: '#138271'
+      });
+      return false;
+    }
+
+    // More than 3 days ahead — blocked (too early / next-month)
+    if (dep > latest) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Too Far in Advance',
+        html: `${label} can be at most <b>3 days</b> from today.<br>`
+            + `You can submit only up to <b>${fmt(latest)}</b> — please submit closer to the date.`,
+        confirmButtonColor: '#138271'
+      });
+      return false;
+    }
+
+    // Date of Arrival cannot be earlier than Date of Departure (when provided).
+    // Resignation has no Date of Arrival field (only Last Working Date) — skip it there.
+    const rawArr = this.exitForm.get('dateOfArrival')?.value;
+    if (this.formType !== 'R' && rawArr) {
+      const arr = new Date(rawArr);
+      if (!isNaN(arr.getTime())) {
+        arr.setHours(0, 0, 0, 0);
+        if (arr < dep) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Date of Arrival',
+            html: `Date of Arrival cannot be earlier than the Date of Departure (<b>${fmt(dep)}</b>).<br>`
+                + `Please select the departure date or a later date.`,
+            confirmButtonColor: '#138271'
+          });
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   private showSubmissionConfirmation(): void {

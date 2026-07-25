@@ -2059,3 +2059,101 @@ html {
     font-size: 24px;
   }
 }
+
+/* ═══ Mobile responsiveness gap-fill (2026-07) ═══ */
+/* Append-only: existing coverage is broad; these fill the remaining gaps. */
+
+@media (max-width: 1024px) {
+
+  /* Charts must never exceed their card width */
+  .chart-container canvas {
+    max-width: 100% !important;
+  }
+
+  /* Guard against grid blowout from long content in the header row */
+  .header-main-row > * {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* Neutralize hover lift effects the existing mobile blocks did not cover */
+  .dashboard-header:hover,
+  .info-card:hover {
+    transform: none;
+  }
+
+  /* Release the fixed date-selector/info-card heights when the selector
+     wrapper stacks month + year vertically and content grows taller */
+  .date-selector {
+    height: auto;
+    min-height: 120px;
+  }
+
+  .selector-wrapper {
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .date-selector {
+    min-height: 110px;
+  }
+
+  /* Very narrow screens: keep chart legends inside the card */
+  .legend-item span {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ═══ Dark theme gap-fill (2026-07) ═══ */
+/* In dark mode --primary-color is #1f2937 (near-black, see services/theme.ts),
+   so existing dark rules that color text/icons with var(--primary-color)
+   render dark-on-dark. Repoint those to the gold accent, matching the rest
+   of the dark palette. Being last in the file, these win the cascade at
+   equal specificity. */
+
+:host-context(.dark-theme) .quote-author {
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .select-arrow {
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .card-icon {
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .selector-group label i {
+  color: var(--accent-color);
+}
+
+/* Base title gradient ends on var(--primary-color): fades into the dark
+   background; the existing dark rule has the same flaw. End on the accent. */
+:host-context(.dark-theme) .title-text h2 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, var(--accent-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:host-context(.dark-theme) .indicator.active {
+  background: var(--accent-color);
+}
+
+:host-context(.dark-theme) .birthday-avatar img {
+  border-color: var(--accent-color);
+}
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+/* Every [data-theme="dark"] rule in this file already ships a paired
+   :host-context(.dark-theme) selector, so none were dead. The rule below is
+   the one gap: the native select gets a dark background in dark mode but no
+   color-scheme, so its dropdown list and arrow stayed light. */
+:host-context(.dark-theme) .modern-select {
+  color-scheme: dark;
+}

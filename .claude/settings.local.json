@@ -48,7 +48,18 @@
       "Bash(cd /c/Users/ITS48/source/repos/TimeSheetAPI 2>/dev/null && find . -type f -name \"*.cs\" | head -200; echo \"---CSPROJ---\"; find . -name \"*.csproj\")",
       "Bash(awk 'NR>=3460 && NR<=3960 && \\(/approvalWorkflow|APPROVAL|comments|Comments/\\)' \"C:/Users/ITS48/Desktop/AdrakPortal/Monthly-DPR-and-HOD-Evaluation-System/src/app/emergency-exit-form/emergency-exit-form.component.ts\")",
       "Bash(awk -F: '$1>3460 && $1<3960')",
-      "mcp__visualize__show_widget"
+      "mcp__visualize__show_widget",
+      "PowerShell(npm run build 2>&1)",
+      "Bash(time curl -s -m 30 \"https://adraklive.com/AdrakMPRAPI/api/AI/ValidateToken\" -H \"Authorization: Bearer test\" -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -o /dev/null)",
+      "Bash(curl -s -m 30 \"https://adraklive.com/AdrakMPRAPI/api/AI/Departments\" -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -o /dev/null)",
+      "Bash(curl -s -m 20 \"https://adraklive.com/AdrakMPRAPI/api/AI/Departments\" -w \"STATUS:%{http_code}\\\\n\" -o /dev/null)",
+      "Bash(curl -s -m 20 \"https://adraklive.com/AdrakMPRAPI/api/AI/ValidateToken\" -w \"STATUS:%{http_code}\\\\n\" -o /dev/null)",
+      "Bash(curl -s -m 20 -X POST \"https://adraklive.com/AdrakMPRAPI/api/AI/Chat\" -H \"Content-Type: application/json\" -d '{\"message\":\"hi\",\"sessionId\":\"t1\"}' -w \"STATUS:%{http_code}\\\\n\" -o /dev/null)",
+      "mcp__visualize__read_me",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('jspdf-autotable:', \\({...p.dependencies,...p.devDependencies}\\)['jspdf-autotable']||'—'\\);\")",
+      "PowerShell($src = \"C:\\\\Users\\\\ITS48\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System\\\\38406a72-fdc7-4642-a53b-560782efa9e9\\\\scratchpad\\\\notice-dark.css\"; $dst = \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakPortal\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\notice-management\\\\notice-management.component.css\"; Add-Content -Path $dst -Value \\(Get-Content -Raw $src\\) -Encoding utf8 -NoNewline; \\(Get-Content $dst | Measure-Object -Line\\).Lines)",
+      "Bash(grep -nE \"min-width: *[0-9]{3,}px|width: *[0-9]{3,}px\" task-details-modal.component.css)",
+      "Bash(grep -nE \"^\\\\.[a-z-]*title[a-z-]* *[,{]\" task-details-modal.component.css)"
     ]
   }
 }

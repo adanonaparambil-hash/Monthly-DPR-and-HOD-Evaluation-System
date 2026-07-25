@@ -1840,3 +1840,425 @@
   color: #1f2937;
   border-color: #fbbf24;
 }
+/* ═══ Dark theme gap-fill (2026-07) ═══
+   The task modals are rendered OUTSIDE .task-board-container in
+   my-task.component.html (the container div closes at line 619, the
+   modals start at line 622+), so every ".task-board-container.dark-mode"
+   rule above never matches them and the modals stayed light in dark
+   theme. The theme service also puts .dark-theme on <body>, so the
+   same rules are re-anchored here via :host-context(.dark-theme),
+   which reaches the whole component template. Declarations are
+   verbatim copies of the file's own dark rules above. */
+
+:host-context(.dark-theme) .modal-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+:host-context(.dark-theme) .modal-container,
+:host-context(.dark-theme) .task-modal-container {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .modal-header,
+:host-context(.dark-theme) .modal-task-header {
+  background: #374151;
+  border-bottom: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .modal-title,
+:host-context(.dark-theme) .modal-task-title {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .modal-subtitle {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .modal-close-btn,
+:host-context(.dark-theme) .modal-back-button {
+  background: #4b5563;
+  color: #d1d5db;
+  border: 1px solid #6b7280;
+}
+
+:host-context(.dark-theme) .modal-close-btn:hover,
+:host-context(.dark-theme) .modal-back-button:hover {
+  background: #6b7280;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .form-input,
+:host-context(.dark-theme) .form-select,
+:host-context(.dark-theme) .form-textarea,
+:host-context(.dark-theme) .editable-title,
+:host-context(.dark-theme) .editable-description {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .form-input::placeholder,
+:host-context(.dark-theme) .form-textarea::placeholder,
+:host-context(.dark-theme) .editable-title::placeholder,
+:host-context(.dark-theme) .editable-description::placeholder {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .form-input:focus,
+:host-context(.dark-theme) .form-select:focus,
+:host-context(.dark-theme) .form-textarea:focus,
+:host-context(.dark-theme) .editable-title:focus,
+:host-context(.dark-theme) .editable-description:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+:host-context(.dark-theme) .form-label,
+:host-context(.dark-theme) .section-label {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .task-type-option {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .task-type-option:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+:host-context(.dark-theme) .task-type-option.selected {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: #fbbf24;
+}
+
+:host-context(.dark-theme) .task-type-title {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .task-type-desc {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .progress-circle-3d {
+  background: radial-gradient(circle, #374151 0%, #1f2937 100%);
+}
+
+:host-context(.dark-theme) .progress-percentage-3d {
+  color: #fbbf24;
+}
+
+:host-context(.dark-theme) .progress-label-3d {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .metadata-card {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .metadata-card:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+:host-context(.dark-theme) .metadata-label {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .metadata-select {
+  background: #4b5563;
+  border: 1px solid #6b7280;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .modal-timer-section,
+:host-context(.dark-theme) .total-hours-section {
+  background: #374151;
+  border: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .timer-label,
+:host-context(.dark-theme) .hours-label {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .timer-text,
+:host-context(.dark-theme) .hours-text {
+  color: #fbbf24;
+}
+
+:host-context(.dark-theme) .timer-btn {
+  background: #4b5563;
+  color: #d1d5db;
+  border: 1px solid #6b7280;
+}
+
+:host-context(.dark-theme) .timer-btn:hover {
+  background: #6b7280;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .timer-btn.pause-btn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+:host-context(.dark-theme) .timer-btn.stop-btn {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:host-context(.dark-theme) .modal-category-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+:host-context(.dark-theme) .create-btn,
+:host-context(.dark-theme) .save-changes-btn {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+  border: none;
+}
+
+:host-context(.dark-theme) .create-btn:hover,
+:host-context(.dark-theme) .save-changes-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.3);
+}
+
+:host-context(.dark-theme) .cancel-btn {
+  background: transparent;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .cancel-btn:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .save-draft-btn {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .save-draft-btn:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .comments-panel {
+  background: #374151;
+  border-left: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .comments-tabs {
+  border-bottom: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .right-tab {
+  color: #d1d5db;
+  border-bottom: 2px solid transparent;
+}
+
+:host-context(.dark-theme) .right-tab.active {
+  color: #fbbf24;
+  border-bottom-color: #fbbf24;
+}
+
+:host-context(.dark-theme) .right-tab:hover {
+  color: #f9fafb;
+  background: rgba(75, 85, 99, 0.5);
+}
+
+:host-context(.dark-theme) .comment-item {
+  border-bottom: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .comment-author {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .comment-time {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .comment-text {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .comment-input {
+  background: #4b5563;
+  border: 1px solid #6b7280;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .comment-input::placeholder {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .send-comment-btn {
+  background: #fbbf24;
+  color: #1f2937;
+}
+
+:host-context(.dark-theme) .send-comment-btn:hover {
+  background: #f59e0b;
+}
+
+:host-context(.dark-theme) .activity-item {
+  border-bottom: 1px solid #4b5563;
+}
+
+:host-context(.dark-theme) .activity-description {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .activity-user {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .activity-time {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .activity-duration {
+  color: #fbbf24;
+}
+
+:host-context(.dark-theme) .integrated-upload-area {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  border-color: #6b7280;
+}
+
+:host-context(.dark-theme) .integrated-upload-area:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+  border-color: #fbbf24;
+}
+
+:host-context(.dark-theme) .integrated-upload-area::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(251, 191, 36, 0.1) 50%,
+    transparent 100%
+  );
+}
+
+:host-context(.dark-theme) .upload-icon {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+}
+
+:host-context(.dark-theme) .upload-primary {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .upload-secondary {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .upload-action-btn {
+  background: #fbbf24;
+  color: #1f2937;
+  box-shadow: 
+    0 4px 12px rgba(251, 191, 36, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+:host-context(.dark-theme) .upload-action-btn:hover {
+  background: #f59e0b;
+  box-shadow: 
+    0 6px 20px rgba(251, 191, 36, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+:host-context(.dark-theme) .attachments-label {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .attachments-count {
+  background: #fbbf24;
+  color: #1f2937;
+}
+
+:host-context(.dark-theme) .compact-upload-area {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+:host-context(.dark-theme) .compact-upload-area:hover {
+  background: #4b5563;
+  border-color: #fbbf24;
+}
+
+:host-context(.dark-theme) .upload-text-small {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .compact-file-item {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+:host-context(.dark-theme) .compact-file-item:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+:host-context(.dark-theme) .file-name-small {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .file-btn-small.download:hover {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+:host-context(.dark-theme) .file-btn-small.delete:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+:host-context(.dark-theme) .progress-input-container {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+:host-context(.dark-theme) .progress-input {
+  background: #4b5563;
+  border-color: #6b7280;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .progress-input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+:host-context(.dark-theme) .progress-input-suffix {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .progress-quick-btn {
+  background: #6b7280;
+  border-color: #9ca3af;
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .progress-quick-btn:hover {
+  background: #fbbf24;
+  color: #1f2937;
+  border-color: #fbbf24;
+}
+

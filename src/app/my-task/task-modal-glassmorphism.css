@@ -4615,3 +4615,78 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
   content: none !important;
   background: none !important;
 }
+
+/* ═══ Dark theme gap-fill (2026-07) ═══
+   The Add Field modal styled in this file is rendered OUTSIDE
+   .task-board-container in my-task.component.html, so the
+   ".task-board-container.dark-mode" pattern cannot reach it — and it
+   had no dark rules at all (hard-white panel in dark theme).
+   :host-context(.dark-theme) matches via the .dark-theme class the
+   theme service puts on <body>. Palette mirrors the dark rules used
+   across this component's other modals. */
+
+:host-context(.dark-theme) .add-field-modal {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .add-field-modal-header {
+  border-bottom-color: #374151;
+}
+
+:host-context(.dark-theme) .add-field-modal-title {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .add-field-modal-subtitle {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .add-field-modal-header .modal-close-btn {
+  background: #374151;
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .add-field-modal-header .modal-close-btn:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .field-checkbox-item {
+  border-color: #4b5563;
+}
+
+:host-context(.dark-theme) .field-checkbox-item:hover {
+  background: #374151;
+}
+
+:host-context(.dark-theme) .field-checkbox-item.disabled {
+  background: #374151;
+}
+
+:host-context(.dark-theme) .checkbox-custom-field {
+  background: #374151;
+  border-color: #6b7280;
+}
+
+:host-context(.dark-theme) .field-checkbox-item input[type="checkbox"]:checked + .checkbox-custom-field {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+:host-context(.dark-theme) .field-checkbox-name {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .field-checkbox-description {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .add-field-modal-footer {
+  background: #111827;
+  border-top-color: #374151;
+}
+
+:host-context(.dark-theme) .add-field-modal-footer .selected-count {
+  color: #9ca3af;
+}

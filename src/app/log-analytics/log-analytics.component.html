@@ -87,7 +87,28 @@
           <i class="fas fa-clipboard-check"></i> DPR Compliance
         </button>
       }
+
+      <!-- AI insight report — role-scoped (self / dept / company).
+           Temporarily hidden for all users; flip aiInsightEnabled to true to re-enable. -->
+      @if (aiInsightEnabled && !aiReportCmp.reportHtml) {
+        <button class="tb-btn ai-launch-tb" (click)="aiReportCmp.generate(false)"
+                [disabled]="aiReportCmp.loading" [title]="aiReportLabel">
+          @if (aiReportCmp.loading) {
+            <i class="fas fa-spinner fa-spin"></i> Generating…
+          } @else {
+            <i class="fas fa-wand-magic-sparkles"></i> {{ aiReportLabel }}
+          }
+        </button>
+      }
     </div>
+  </div>
+
+  <!-- ══ AI INSIGHT REPORT panel (button lives in the top bar) ════════════
+       Kept mounted so the #aiReportCmp template ref stays in scope for the
+       top-bar button. It renders nothing while idle, and the only trigger
+       (the button) is gated by aiInsightEnabled — so the feature is fully hidden. -->
+  <div class="ai-report-bar">
+    <app-ai-report #aiReportCmp [buttonLabel]="aiReportLabel" [hideLaunchButton]="true"></app-ai-report>
   </div>
 
   <!-- ══ TABLE AREA ═══════════════════════════════════════════════════════ -->

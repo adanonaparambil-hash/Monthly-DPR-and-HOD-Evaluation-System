@@ -50,6 +50,10 @@
           @if (exportingAll) { <i class="fas fa-spinner fa-spin"></i> } @else { <i class="fas fa-file-excel"></i> }
           Export
         </button>
+        <button class="ca-ai-btn" (click)="aiReport.generate(false)" [disabled]="loading || !summary"
+                title="Generate a company-wide AI performance insight report">
+          <i class="fas fa-wand-magic-sparkles"></i> AI Report
+        </button>
         @if (!displayMode) {
           <button class="ca-display-btn" (click)="enterDisplay()" [disabled]="!summary"
                   title="Full-screen display mode — sections slide one by one, ideal for big screens">
@@ -64,6 +68,9 @@
       }
     </div>
   </div>
+
+  <!-- AI INSIGHT REPORT — button lives in the hero row above; this renders the modal -->
+  <app-ai-report #aiReport [hideLaunchButton]="true"></app-ai-report>
 
   @if (errorMsg) {
     <div class="ca-error ca-glass"><i class="fas fa-triangle-exclamation"></i> {{ errorMsg }}</div>

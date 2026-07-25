@@ -10,11 +10,12 @@ import { SessionMonitorComponent } from '../components/session-monitor.component
 import { AvatarUtil } from '../utils/avatar.util';
 import { NoticePopupComponent } from '../components/notice-popup/notice-popup.component';
 import { NoticePopupService } from '../services/notice-popup.service';
+import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent, NoticePopupComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent, NoticePopupComponent, AiAssistantComponent],
   templateUrl: './layout.html',
   styleUrls: ['./layout.css'],
   animations: [

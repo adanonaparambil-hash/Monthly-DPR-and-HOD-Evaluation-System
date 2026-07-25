@@ -1420,3 +1420,400 @@
 .message-textarea::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #138271, #1ABC9C);
 }
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+
+@media (max-width: 1024px) {
+  .chat-sidebar {
+    width: 300px;
+    padding: 14px;
+  }
+
+  .sidebar-header {
+    padding: 18px;
+  }
+
+  .sidebar-title h2 {
+    font-size: 20px;
+  }
+
+  .messages-content {
+    padding: 16px 18px;
+  }
+
+  .message {
+    max-width: 78%;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Stack panes vertically. Also neutralizes the legacy off-canvas
+     sidebar rule (position:absolute; left:-100%) that had no toggle,
+     which made the conversation list unreachable on mobile. */
+  .chat-content {
+    flex-direction: column;
+  }
+
+  .chat-sidebar {
+    position: static;
+    left: 0;
+    width: 100%;
+    max-height: 45vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(27, 42, 56, 0.1);
+    box-shadow: 0 4px 12px rgba(27, 42, 56, 0.08);
+  }
+
+  .pinned-list {
+    max-height: none;
+  }
+
+  .all-messages-list {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .chat-main,
+  .chat-empty {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chat-main-header {
+    padding: 10px 14px;
+  }
+
+  .chat-details h2 {
+    font-size: 16px;
+  }
+
+  .chat-actions {
+    gap: 4px;
+  }
+
+  /* Composer sticks to the bottom of the thread pane */
+  .message-input-container {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 12px;
+  }
+
+  .empty-content i {
+    font-size: 48px;
+  }
+
+  .empty-content h3 {
+    font-size: 20px;
+  }
+
+  .empty-content p {
+    font-size: 14px;
+  }
+
+  /* Guard against horizontal overflow from hover translateX */
+  .chat-item:hover,
+  .chat-item.active {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-sidebar {
+    max-height: 42vh;
+  }
+
+  .messages-content {
+    padding: 12px;
+  }
+
+  .message {
+    max-width: 90%;
+    gap: 8px;
+  }
+
+  .message-text {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .message-avatar .avatar-placeholder,
+  .typing-avatar .avatar-placeholder {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .chat-main-header {
+    padding: 8px 12px;
+  }
+
+  .chat-details h2 {
+    font-size: 15px;
+  }
+
+  .chat-status {
+    font-size: 11px;
+  }
+
+  .input-area {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .send-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .format-btn {
+    padding: 5px 6px;
+  }
+
+  .input-footer {
+    display: none;
+  }
+
+  .emoji-picker {
+    right: 8px;
+  }
+
+  .file-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .create-group-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+:host-context(.dark-theme) .chat-container {
+  background: var(--background-primary);
+}
+:host-context(.dark-theme) .chat-sidebar {
+  background: var(--background-secondary);
+  border-right-color: var(--border-color);
+}
+:host-context(.dark-theme) .sidebar-header {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .chat-section {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .pinned-section {
+  border-left-color: var(--accent-color);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.02) 0%, rgba(45, 55, 72, 0.02) 100%);
+}
+:host-context(.dark-theme) .section-header {
+  background: var(--background-secondary);
+  border-bottom-color: var(--border-color);
+}
+:host-context(.dark-theme) .section-icon {
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .sidebar-title h2 {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .new-chat-btn:hover {
+  background: var(--background-secondary);
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .search-input {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .search-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+:host-context(.dark-theme) .chat-item {
+  background: var(--background-primary);
+  border-color: transparent;
+}
+:host-context(.dark-theme) .chat-item:hover {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .chat-item.active {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
+}
+:host-context(.dark-theme) .pinned-item {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(45, 55, 72, 0.05) 100%);
+  border-left-color: var(--accent-color);
+}
+:host-context(.dark-theme) .pinned-item:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(45, 55, 72, 0.08) 100%);
+}
+:host-context(.dark-theme) .pinned-item.active {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(45, 55, 72, 0.12) 100%);
+  border-left-color: var(--accent-color);
+}
+:host-context(.dark-theme) .chat-name {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .last-message {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .unread-badge {
+  background: var(--accent-color);
+  color: #1a202c;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+:host-context(.dark-theme) .sidebar-footer {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .create-group-btn {
+  background: var(--accent-color);
+  color: #1a202c;
+}
+:host-context(.dark-theme) .create-group-btn:hover {
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+:host-context(.dark-theme) .avatar-placeholder {
+  border-color: var(--background-primary);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.25);
+}
+:host-context(.dark-theme) .avatar-img {
+  border-color: var(--background-primary);
+}
+:host-context(.dark-theme) .pinned-in-all {
+  border-left-color: var(--accent-color);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.03) 0%, rgba(45, 55, 72, 0.03) 100%);
+}
+:host-context(.dark-theme) .pinned-in-all:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.06) 0%, rgba(45, 55, 72, 0.06) 100%);
+}
+:host-context(.dark-theme) .pinned-in-all.active {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.10) 0%, rgba(45, 55, 72, 0.10) 100%);
+  border-left-color: var(--accent-color);
+}
+:host-context(.dark-theme) .pinned-icon {
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .chat-main {
+  background: var(--background-primary);
+}
+:host-context(.dark-theme) .chat-main-header {
+  background: var(--background-primary);
+  border-bottom-color: var(--border-color);
+}
+:host-context(.dark-theme) .chat-details h2 {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .action-btn:hover {
+  background: var(--background-secondary);
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .messages-container {
+  background: var(--background-secondary);
+}
+:host-context(.dark-theme) .message-text {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .own-message .message-text {
+  background: var(--accent-color);
+  color: #1a202c;
+}
+:host-context(.dark-theme) .message-file {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .file-icon {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .file-name {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .file-download:hover {
+  background: var(--background-secondary);
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .message-input-container {
+  background: var(--background-primary);
+  border-top-color: var(--border-color);
+}
+:host-context(.dark-theme) .message-input-wrapper {
+  border-color: var(--border-color);
+  background: var(--background-secondary);
+}
+:host-context(.dark-theme) .formatting-tools {
+  background: var(--background-primary);
+  border-bottom-color: var(--border-color);
+}
+:host-context(.dark-theme) .format-btn:hover {
+  background: var(--background-secondary);
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .input-btn:hover {
+  background: var(--border-color);
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .message-textarea {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .send-btn {
+  background: var(--accent-color);
+  color: #1a202c;
+}
+:host-context(.dark-theme) .send-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+:host-context(.dark-theme) .input-footer {
+  background: var(--background-primary);
+  border-top-color: var(--border-color);
+}
+:host-context(.dark-theme) .emoji-picker {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .emoji-btn:hover {
+  background: var(--background-secondary);
+}
+:host-context(.dark-theme) .chat-empty {
+  background: var(--background-secondary);
+}
+:host-context(.dark-theme) .empty-content {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .empty-content i {
+  color: var(--accent-color);
+}
+:host-context(.dark-theme) .empty-content h3 {
+  color: var(--text-primary);
+}
+
+/* --- Primary surfaces that previously had no dark rule at all --- */
+:host-context(.dark-theme) .chat-content {
+  background: #334155;
+}
+:host-context(.dark-theme) .date-separator span {
+  background: #172033;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .typing-content {
+  background: #172033;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .chat-list::-webkit-scrollbar-track,
+:host-context(.dark-theme) .messages-container::-webkit-scrollbar-track {
+  background: #172033;
+}
+/* Native inputs on a dark background need color-scheme for their internals */
+:host-context(.dark-theme) .search-input,
+:host-context(.dark-theme) .message-textarea {
+  color-scheme: dark;
+}

@@ -11,6 +11,10 @@
   --background-tertiary: #f1f5f9;
 }
 
+/* NOTE: `.dark-theme .dpr-approval-container` alone is dead CSS under Angular's
+   emulated encapsulation (the .dark-theme class lives on <body>, outside this
+   component) — :host-context is required for the variable to actually flip. */
+:host-context(.dark-theme) .dpr-approval-container,
 .dark-theme .dpr-approval-container {
   --background-tertiary: #334155;
 }
@@ -1897,3 +1901,251 @@
 .ltp-footer-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
 .ltp-footer-value { font-size: 14px; font-weight: 700; color: #1e293b; font-family: 'Courier New', monospace; }
 .ltp-footer-divider { width: 1px; height: 36px; background: #e2e8f0; margin: 0 16px; }
+
+/* ═══ Mobile responsiveness gap-fill (2026-07) ═══ */
+/* Layout-only rules; no new colors introduced, so no dark counterparts needed. */
+
+@media (max-width: 768px) {
+  /* Neutralize the fixed height inherited from the 992px block so content
+     flows naturally and the page scrolls instead of trapping a tiny pane */
+  .main-content {
+    height: auto;
+  }
+
+  .table-section {
+    overflow: visible;
+  }
+
+  /* Day Log History modal previously had no mobile rules at all */
+  .modal-overlay-large {
+    padding: 10px;
+  }
+
+  .day-log-history-modal-large {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: 92vh;
+  }
+
+  .modal-header-large {
+    padding: 14px 16px;
+  }
+
+  .modal-body-large {
+    padding: 12px 16px;
+  }
+
+  .modal-footer-large {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Give the 8-column day-log table a floor width so it scrolls
+     horizontally inside .day-log-table-container instead of crushing */
+  .day-log-table {
+    min-width: 680px;
+  }
+
+  .day-log-table th,
+  .day-log-table td {
+    padding: 10px 12px;
+  }
+
+  /* 40px+ tap targets for small icon buttons and controls */
+  .more-btn,
+  .btn-icon-edit,
+  .close-btn-large,
+  .ltp-close,
+  .ltp-edit-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .table-checkbox {
+    width: 20px;
+    height: 20px;
+  }
+
+  .btn-cancel-header,
+  .btn-approve-header {
+    min-height: 40px;
+    height: auto;
+  }
+
+  .filter-input,
+  .filter-dropdown,
+  .search-input {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay-large {
+    padding: 6px;
+  }
+
+  .day-log-history-modal-large {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+    border-radius: 12px;
+  }
+
+  .modal-title-large {
+    font-size: 16px;
+  }
+
+  .modal-subtitle-large {
+    font-size: 12px;
+  }
+
+  /* Log Time popup: tighten spacing on small phones */
+  .log-time-popup {
+    width: 100%;
+    max-width: calc(100vw - 16px);
+  }
+
+  .ltp-header {
+    padding: 14px 16px 12px;
+  }
+
+  .ltp-date-row {
+    margin: 12px 16px;
+    padding: 12px;
+  }
+
+  .ltp-time-row {
+    padding: 0 16px 12px;
+  }
+
+  .ltp-total-section {
+    padding: 0 16px 12px;
+  }
+
+  .ltp-submit-btn {
+    width: calc(100% - 32px);
+    margin: 0 16px 14px;
+    min-height: 44px;
+  }
+
+  /* Pagination stays tappable when it wraps */
+  .page-number-btn {
+    min-width: 40px;
+    height: 40px;
+  }
+
+  .pagination-btn {
+    min-height: 40px;
+  }
+
+  .content-header {
+    padding: 8px 10px;
+  }
+
+  .table-section {
+    padding: 0 8px;
+  }
+}
+
+/* ═══ Dark theme gap-fill (2026-07) ═══ */
+/* The Log Time popup was built entirely with hard-coded light colors and
+   stayed white in dark mode while the rest of the screen (var-based) flipped.
+   Uses the component's existing :host-context(.dark-theme) pattern. */
+
+:host-context(.dark-theme) .log-time-popup {
+  background: var(--background-secondary);
+}
+
+:host-context(.dark-theme) .ltp-header {
+  border-bottom-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .ltp-title {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .ltp-close {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .ltp-close:hover {
+  background: var(--background-tertiary);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .ltp-date-row {
+  background: var(--background-tertiary);
+}
+
+:host-context(.dark-theme) .ltp-date-label,
+:host-context(.dark-theme) .ltp-time-label,
+:host-context(.dark-theme) .ltp-total-label {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .ltp-date-value {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .ltp-time-input {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .ltp-total-display {
+  background: var(--background-tertiary);
+}
+
+:host-context(.dark-theme) .ltp-total-value,
+:host-context(.dark-theme) .ltp-total-edit-input {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .ltp-footer {
+  background: var(--background-tertiary);
+  border-top-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .ltp-footer-value {
+  color: var(--text-primary);
+}
+
+/* ═══ Dark theme gap-fill #2 (2026-07) — filter controls readability ═══
+   Native date inputs and selects render their internal text/icons per
+   color-scheme; without it they keep light-mode internals on a dark surface. */
+:host-context(.dark-theme) .filter-input,
+:host-context(.dark-theme) .search-input,
+:host-context(.dark-theme) .filter-dropdown {
+  color-scheme: dark;
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .filter-input::placeholder,
+:host-context(.dark-theme) .search-input::placeholder { color: #64748b; }
+:host-context(.dark-theme) .filter-dropdown option {
+  background: #1e293b; color: #e2e8f0;
+}
+:host-context(.dark-theme) .pending-badge.high-count {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ═══ Mobile verification fixes (2026-07) ═══ */
+/* Day Log History modal: the body is overflow:hidden and the table container
+   asks for a flat 480px, which is taller than the space left inside a 92vh
+   modal on a phone — the bottom rows and the footer got clipped. */
+
+@media (max-width: 768px) {
+  .modal-body-large {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .day-log-table-container {
+    max-height: 60vh;
+    -webkit-overflow-scrolling: touch;
+  }
+}

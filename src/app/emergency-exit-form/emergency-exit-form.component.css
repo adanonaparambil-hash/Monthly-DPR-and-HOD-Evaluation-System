@@ -7886,3 +7886,292 @@ ced Approval Actions Column */
 .dark-theme .history-remarks { color: var(--text-primary); }
 .dark-theme .history-approver,
 .dark-theme .history-date { color: var(--text-secondary); }
+
+/* ── Submission-window hint under Travel/Resignation section header ── */
+.date-window-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 3px solid #f59e0b;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #92400e;
+}
+.date-window-hint i { margin-top: 2px; color: #f59e0b; flex: 0 0 auto; }
+.date-window-hint strong { color: #b45309; font-weight: 700; }
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+:host-context(.dark-theme) .dropdown-list {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+:host-context(.dark-theme) .dropdown-item {
+  background: var(--background-primary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .dropdown-item:hover {
+  background: var(--background-secondary);
+}
+:host-context(.dark-theme) .no-results {
+  background: var(--background-primary);
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .flow-card {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .workflow-sidebar {
+  background: var(--background-secondary) !important;
+  border-left-color: var(--border-color) !important;
+}
+:host-context(.dark-theme) .asset-item:hover {
+  background: var(--background-secondary);
+}
+:host-context(.dark-theme) .required-badge {
+  background: var(--error-color) !important;
+  color: white !important;
+  border: 1px solid var(--error-color) !important;
+}
+:host-context(.dark-theme) .header-content h3 {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .header-content p {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .required-badge {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+:host-context(.dark-theme) .timeline-step {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .timeline-step .step-title {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .timeline-step.approved .indicator-dot {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--success-color);
+}
+:host-context(.dark-theme) .timeline-step.approved .indicator-line {
+  background: var(--success-color);
+}
+:host-context(.dark-theme) .timeline-step.rejected .indicator-dot {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--error-color);
+}
+:host-context(.dark-theme) .timeline-step.in_progress .indicator-dot {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--warning-color);
+}
+:host-context(.dark-theme) .timeline-step.pending .indicator-dot {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .timeline-step.approved .approver-card {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--success-color);
+}
+:host-context(.dark-theme) .timeline-step.in_progress .approver-card {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: var(--warning-color);
+}
+:host-context(.dark-theme) .timeline-step.pending .approver-card {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .timeline-step.rejected .approver-card {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--error-color);
+}
+:host-context(.dark-theme) .actions-header {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .actions-header h3 {
+  color: var(--text-primary) !important;
+}
+:host-context(.dark-theme) .actions-header i {
+  color: var(--primary-color);
+}
+:host-context(.dark-theme) .empty-flow {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .empty-flow i {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .flow-header {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color);
+}
+:host-context(.dark-theme) .flow-header h4 {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .approver-info {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .approver-name {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .timeline-indicator {
+  background: var(--background-primary);
+}
+:host-context(.dark-theme) .indicator-dot {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .indicator-dot i {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .form-layout.has-sidebar {
+  background: var(--background-primary);
+}
+:host-context(.dark-theme) .form-content-column {
+  background: var(--background-primary);
+  border-right-color: var(--border-color);
+}
+:host-context(.dark-theme) .workflow-sidebar * {
+  color: var(--text-primary);
+}
+:host-context(.dark-theme) .workflow-sidebar h3,
+:host-context(.dark-theme) .workflow-sidebar h4,
+:host-context(.dark-theme) .workflow-sidebar h5 {
+  color: var(--text-primary) !important;
+}
+:host-context(.dark-theme) .workflow-sidebar p,
+:host-context(.dark-theme) .workflow-sidebar span {
+  color: var(--text-secondary);
+}
+:host-context(.dark-theme) .approval-actions-card * {
+  color: inherit;
+}
+:host-context(.dark-theme) .flow-card * {
+  color: inherit;
+}
+:host-context(.dark-theme) .actions-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+:host-context(.dark-theme) .flow-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+:host-context(.dark-theme) .approver-card {
+  border: 2px solid var(--border-color) !important;
+}
+:host-context(.dark-theme) .timeline-indicator {
+  border: 2px solid var(--border-color) !important;
+  background: var(--background-secondary) !important;
+}
+:host-context(.dark-theme) .indicator-dot {
+  border: 2px solid var(--border-color) !important;
+  background: var(--background-secondary) !important;
+}
+:host-context(.dark-theme) .doj-notice {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.14), rgba(220, 38, 38, 0.08));
+  border-color: rgba(220, 38, 38, 0.4);
+}
+:host-context(.dark-theme) .doj-notice-title { color: #f87171;
+}
+:host-context(.dark-theme) .doj-notice-desc { color: #fca5a5;
+}
+:host-context(.dark-theme) .doj-notice-desc strong { color: #f87171;
+}
+:host-context(.dark-theme) .assets-header .assets-title h4,
+:host-context(.dark-theme) .assets-header .assets-title i,
+:host-context(.dark-theme) .assets-header .toggle-icon,
+:host-context(.dark-theme) .assets-header .asset-count-badge {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+:host-context(.dark-theme) .co-approvers-chip {
+  background: rgba(19, 130, 113, 0.15);
+  border-color: rgba(19, 130, 113, 0.4);
+  color: #1ABC9C;
+}
+:host-context(.dark-theme) .co-approvers-chip:hover {
+  background: #138271;
+  color: #fff;
+}
+:host-context(.dark-theme) .co-approvers-pop {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .co-approver-row {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .co-name { color: var(--text-primary);
+}
+:host-context(.dark-theme) .co-meta { color: var(--text-secondary);
+}
+:host-context(.dark-theme) .history-toggle-btn {
+  background: rgba(29, 78, 216, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+:host-context(.dark-theme) .history-toggle-btn:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+:host-context(.dark-theme) .step-history-list {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .history-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .history-remarks { color: var(--text-primary);
+}
+:host-context(.dark-theme) .history-approver,
+:host-context(.dark-theme) .history-date { color: var(--text-secondary);
+}
+@media (max-width: 768px) {
+  :host-context(.dark-theme) .workflow-sidebar {
+      border-left: none !important;
+      border-top: 1px solid var(--border-color) !important;
+  }
+}
+
+/* --- Primary surfaces that previously had no dark rule at all --- */
+:host-context(.dark-theme) .it-assets-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .success-message {
+  background: #172033;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .success-message p {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .avatar-icon {
+  background: #172033;
+  border-color: #334155;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .indicator-line,
+:host-context(.dark-theme) .step-line {
+  background: #334155;
+}
+:host-context(.dark-theme) .department-badge {
+  background: #172033;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .title-text h1 {
+  color: #e2e8f0;
+}
+/* Native date/select inputs need color-scheme so their internal chrome
+   (calendar picker, option list) follows the dark background. */
+:host-context(.dark-theme) input[type="date"],
+:host-context(.dark-theme) input[type="time"],
+:host-context(.dark-theme) select,
+:host-context(.dark-theme) textarea {
+  color-scheme: dark;
+}

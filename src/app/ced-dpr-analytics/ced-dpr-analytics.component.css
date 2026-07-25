@@ -265,6 +265,21 @@
 .ca-export-all:active:not(:disabled) { transform: scale(.97); }
 .ca-export-all:disabled { opacity: .55; cursor: not-allowed; }
 
+/* AI Report button — sits in the hero action row, purple AI accent */
+.ca-ai-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, #818cf8, #a855f7);
+  border: none; border-radius: 11px;
+  padding: 10px 20px;
+  font-family: inherit; font-size: 13px; font-weight: 800; color: #fff;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(168, 85, 247, 0.32);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.ca-ai-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 14px 30px rgba(168, 85, 247, 0.42); }
+.ca-ai-btn:active:not(:disabled) { transform: scale(.97); }
+.ca-ai-btn:disabled { opacity: .55; cursor: not-allowed; }
+
 /* date-range validation message (max 1 month) */
 .ca-date-error {
   display: flex;
@@ -1336,3 +1351,161 @@
 .ca-dm-exit:hover { background: rgba(244, 63, 94, 0.30); }
 
 :host-context(.dark-theme) .ca-page.ca-display { background-color: #0b1220; }
+
+/* AI insight report button — sits under the hero */
+.ca-ai-report { margin: 16px 0 4px; }
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+
+@media (max-width: 1024px) {
+  /* hero: let the two halves stack sooner and give controls room */
+  .ca-hero { padding: 24px 22px; }
+  .ca-hero-left { min-width: 0; }
+  .ca-hero-right { width: 100%; align-items: stretch; }
+  .ca-presets { flex-wrap: wrap; }
+  .ca-dates { justify-content: flex-start; }
+
+  /* insights: donut above chips (mirrors existing 900px rule a bit earlier) */
+  .ca-insights-grid { grid-template-columns: 1fr; justify-items: center; }
+  .ca-insights-chips { width: 100%; }
+
+  /* modal a bit narrower than viewport */
+  .ca-modal { width: min(940px, calc(100vw - 32px)); }
+
+  /* keep the heatmap table legible inside its existing scroll wrapper */
+  .ca-heat { min-width: 640px; }
+}
+
+@media (max-width: 768px) {
+  .ca-page { padding: 12px 12px 40px; gap: 14px; }
+
+  /* ── hero / toolbar: stack everything, full-width controls ── */
+  .ca-hero { flex-direction: column; align-items: stretch; padding: 18px 16px; gap: 16px; }
+  .ca-hero h1 { font-size: 22px; }
+  .ca-hero p { font-size: 12px; }
+  .ca-hero-stats { flex-wrap: wrap; gap: 8px 12px; }
+  .ca-hero-right { width: 100%; align-items: stretch; gap: 10px; }
+  .ca-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+  .ca-presets button { flex: 1 1 auto; padding: 8px 10px; text-align: center; }
+  .ca-dates { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ca-date-field { width: 100%; }
+  .ca-date-field input[type="date"] { width: 100%; min-width: 0; }
+  .ca-refresh, .ca-export-all, .ca-ai-btn, .ca-display-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  .ca-date-error { max-width: none; }
+
+  /* ── KPI cards: 2 columns ── */
+  .ca-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ca-kpi { padding: 14px; }
+  .ca-kpi-val { font-size: 24px; }
+
+  /* ── cards / headings ── */
+  .ca-card { padding: 16px 14px; }
+  .ca-card h2 { font-size: 15px; }
+  .ca-card-head { gap: 8px; }
+
+  /* ── department cards: single column ── */
+  .ca-dept-grid2 { grid-template-columns: 1fr; }
+  .ca-dept-tabs button { padding: 8px 10px 10px; font-size: 11.5px; }
+
+  /* ── heatmap: horizontal scroll, legible cells ── */
+  .ca-heat-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .ca-heat { min-width: 560px; }
+  .ca-heat-dept { max-width: 120px; }
+  .ca-heat-cell { min-width: 38px; }
+
+  /* ── trend chart: full width, contained ── */
+  .ca-chart-wrap { max-width: 100%; }
+  .ca-chart { width: 100%; max-width: 100%; height: 160px; }
+  .ca-chart-labels { overflow: hidden; }
+  .ca-chart-lb { overflow: hidden; }
+  .ca-chart-lb span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── spotlight lists: allow wrap, truncate text ── */
+  .ca-two-col { grid-template-columns: 1fr; }
+  .ca-spot-row { flex-wrap: wrap; row-gap: 4px; }
+  .ca-spot-info { min-width: 0; flex: 1 1 120px; }
+  .ca-spot-name, .ca-spot-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ca-emp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; display: inline-block; vertical-align: middle; }
+
+  /* ── Not Using DPR filters: stack full width ── */
+  .ca-missing-filters { flex-direction: column; align-items: stretch; }
+  .ca-search-wrap { min-width: 0; width: 100%; }
+  .ca-missing-filters select { width: 100%; }
+  .ca-export { width: 100%; }
+
+  /* tables keep their existing horizontal scroll wrapper */
+  .ca-table-wrap { -webkit-overflow-scrolling: touch; }
+  .ca-table { min-width: 560px; }
+
+  /* ── pager wraps ── */
+  .ca-pager { flex-wrap: wrap; gap: 8px; text-align: center; }
+
+  /* ── drill modal: near-fullscreen with internal scroll ── */
+  .ca-overlay { padding: 10px; }
+  .ca-modal {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+  .ca-modal-head h3 { font-size: 16px; }
+  .ca-modal-icon { width: 38px; height: 38px; font-size: 15px; }
+
+  /* display-mode control bar stays usable on small screens */
+  .ca-dm-bar { max-width: calc(100vw - 16px); padding: 7px 8px; gap: 6px; }
+  .ca-dm-chips { max-width: 44vw; }
+
+  /* neutralize decorative orbs pushing width */
+  .ca-orb { display: none; }
+}
+
+@media (max-width: 480px) {
+  .ca-page { padding: 10px 10px 36px; gap: 12px; }
+
+  .ca-hero { padding: 16px 12px; }
+  .ca-hero h1 { font-size: 19px; }
+  .ca-eyebrow { font-size: 10px; padding: 4px 10px; }
+  .ca-presets button { flex: 1 1 45%; padding: 8px 6px; font-size: 12px; }
+
+  /* KPI cards: keep 2 slim columns; drop to 1 for very long values via minmax */
+  .ca-kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .ca-kpi { padding: 12px; }
+  .ca-kpi-val { font-size: 21px; }
+  .ca-kpi-icon { width: 34px; height: 34px; font-size: 14px; }
+  .ca-kpi-label { font-size: 12px; }
+
+  .ca-card { padding: 14px 12px; }
+  .ca-card h2 { font-size: 14px; }
+  .ca-h-icon { width: 28px; height: 28px; font-size: 12px; }
+
+  .ca-donut { width: 130px; height: 130px; }
+  .ca-donut svg { width: 100%; height: 100%; }
+  .ca-donut-center b { font-size: 21px; }
+
+  .ca-dept-tabs { gap: 2px; }
+  .ca-dept-tabs button { flex: 1 1 45%; padding: 7px 6px; font-size: 11px; }
+
+  .ca-heat { min-width: 480px; }
+  .ca-heat-dept { max-width: 96px; }
+
+  .ca-chart { height: 140px; }
+  .ca-chart-lb b { font-size: 9px; }
+  .ca-chart-lb span { font-size: 8px; }
+
+  .ca-spot-val { font-size: 13px; }
+  .ca-avatar { width: 28px; height: 28px; font-size: 10px; }
+  .ca-emp-name { max-width: 120px; }
+
+  .ca-modal { padding: 14px 10px; border-radius: 14px; }
+  .ca-pager button { padding: 6px 12px; font-size: 12px; }
+  .ca-pager span { flex-basis: 100%; order: -1; }
+
+  .ca-dm-chips { max-width: 36vw; }
+  .ca-dm-nav { width: 32px; height: 32px; }
+}

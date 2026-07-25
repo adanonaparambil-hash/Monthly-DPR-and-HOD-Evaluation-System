@@ -904,3 +904,102 @@
   .hod-filter-field { min-width: 100%; }
   .hod-filter-actions { width: 100%; justify-content: flex-end; }
 }
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+@media (max-width: 1024px) {
+  .apr-reports-page { padding: 20px 20px 40px; }
+  .filter-bar-inner { gap: 14px; }
+  .filter-field { min-width: 150px; }
+}
+
+@media (max-width: 768px) {
+  .apr-reports-page { padding: 14px 14px 32px; overflow-x: hidden; }
+
+  /* Filters: wrap + stack, full-width fields */
+  .filter-bar-inner { padding: 14px; gap: 12px; }
+  .filter-field { flex: 1 1 100%; min-width: 100%; }
+  .filter-select { width: 100%; }
+  .filter-actions { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+
+  /* Table scrolls horizontally inside .table-scroll */
+  .table-scroll { -webkit-overflow-scrolling: touch; }
+  .apr-table { min-width: 620px; }
+  .apr-table th,
+  .apr-table td { white-space: nowrap; }
+
+  /* Disable row shift on touch */
+  .data-row:hover { transform: none; box-shadow: none; }
+
+  /* Pagination stacks */
+  .pagination-bar { flex-direction: column; gap: 12px; padding: 12px 14px; }
+  .pagination-controls { flex-wrap: wrap; justify-content: center; }
+
+  /* HOD modal fills small screens */
+  .hod-modal-overlay { padding: 24px 10px 10px; }
+  .hod-modal { max-height: 94vh; }
+  .hod-modal-header { padding: 16px 16px 12px; }
+  .hod-modal-filters { padding: 12px 16px; }
+  .hod-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .hod-table-wrap .apr-table { min-width: 560px; }
+}
+
+@media (max-width: 480px) {
+  .apr-reports-page { padding: 10px 10px 28px; }
+  .filter-bar-inner { padding: 12px; }
+
+  /* Primary actions full width */
+  .filter-actions { flex-direction: column; align-items: stretch; }
+  .btn-apply,
+  .btn-hod-report { width: 100%; justify-content: center; }
+  .btn-apply span,
+  .btn-hod-report span { display: inline; }
+  .btn-reset { width: 100%; }
+  .btn-reset:hover { transform: none; }
+
+  .apr-table { min-width: 540px; font-size: 13px; }
+  .apr-table th,
+  .apr-table td { padding: 10px 10px; }
+
+  .pg-btn { min-width: 32px; height: 32px; font-size: 12px; }
+  .pagination-info { font-size: 12px; text-align: center; }
+  .empty-state { padding: 48px 16px; }
+
+  .hod-modal-overlay { padding: 12px 6px 6px; }
+  .hod-modal-title { font-size: 0.95rem; }
+  .hod-filter-actions { flex-wrap: wrap; }
+  .btn-hod-export { flex: 1 1 auto; justify-content: center; }
+}
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+/* No dead .dark-theme / [data-theme] selectors were found in this file.
+   The rules below cover primary surfaces that had no dark rule at all. */
+:host-context(.dark-theme) .apr-tabs {
+  background: #172033;
+}
+:host-context(.dark-theme) .apr-tab:hover {
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.6);
+}
+:host-context(.dark-theme) .apr-tab-active {
+  background: #1e293b;
+}
+:host-context(.dark-theme) .hod-modal {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .hod-modal-header {
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .btn-reset-empty {
+  background: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .btn-reset-empty:hover {
+  background: #0f172a;
+}
+/* Native filter selects need color-scheme so their dropdown chrome follows */
+:host-context(.dark-theme) .filter-select {
+  color-scheme: dark;
+}

@@ -1019,3 +1019,216 @@
 .dark-mode .custom-fields-summary {
   background: rgba(255, 255, 255, 0.03);
 }
+
+/* ═══ Mobile responsiveness gap-fill (2026-07) ═══
+   This file loads AFTER manage-fields-ultra.css and forces desktop
+   values with !important, which defeats ultra's existing 768px rules:
+   - .fields-table-ultra { overflow: hidden } kills ultra's mobile
+     overflow-x: auto while the table keeps min-width: 700px → columns
+     were clipped and unreachable on phones.
+   - .type-selector-ultra forces 4 columns (!important), overriding
+     ultra's 2-column phone layout.
+   - .fields-modal-header / .add-field-header force 36-48px paddings.
+   Overrides below carry !important so they win the same cascade. */
+
+@media (max-width: 768px) {
+  .fields-table-ultra {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .type-selector-ultra {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .fields-modal-header {
+    padding: 20px 20px !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  .modal-title-ultra {
+    font-size: 22px !important;
+  }
+
+  .add-field-header {
+    padding: 20px 24px !important;
+  }
+
+  .add-field-title {
+    font-size: 20px !important;
+  }
+
+  .add-field-footer {
+    padding: 16px 20px !important;
+  }
+
+  .field-row-ultra td {
+    padding: 14px 16px !important;
+  }
+
+  .fields-table-ultra thead th {
+    padding: 12px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .fields-modal-header {
+    padding: 16px !important;
+  }
+
+  .add-field-header {
+    padding: 16px !important;
+  }
+
+  .add-field-body {
+    padding: 16px !important;
+  }
+
+  .btn-add-new-field {
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* ═══ Dark theme gap-fill (2026-07) ═══
+   This file forces light surfaces with !important (background: white
+   etc.), which defeats the non-important dark rules at the end of
+   manage-fields-ultra.css — in dark mode the Manage Fields / Add Field
+   modals rendered as mixed light-on-dark panels with unreadable text.
+   Rules below reuse ultra's own dark palette (#1e293b surface,
+   #0f172a inset, #334155 borders, #f1f5f9 / #cbd5e1 / #94a3b8 text)
+   and carry !important to win against the forced light values. */
+
+.logged-hours-container.dark-mode .manage-fields-modal-ultra {
+  background: #1e293b !important;
+}
+
+.logged-hours-container.dark-mode .fields-table-ultra {
+  background: #1e293b !important;
+}
+
+.logged-hours-container.dark-mode .fields-table-ultra thead th {
+  color: #cbd5e1 !important;
+  border-bottom-color: #475569 !important;
+}
+
+.logged-hours-container.dark-mode .field-row-ultra {
+  border-bottom-color: #334155 !important;
+}
+
+.logged-hours-container.dark-mode .field-row-ultra:hover {
+  background: #334155 !important;
+  box-shadow: none !important;
+}
+
+.logged-hours-container.dark-mode .pagination-info {
+  color: #94a3b8 !important;
+}
+
+.logged-hours-container.dark-mode .page-btn-ultra {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+.logged-hours-container.dark-mode .page-btn-ultra:hover:not(:disabled) {
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
+
+.logged-hours-container.dark-mode .add-field-modal-ultra {
+  background: #1e293b !important;
+}
+
+.logged-hours-container.dark-mode .add-field-body {
+  background: #0f172a !important;
+}
+
+.logged-hours-container.dark-mode .field-label-ultra {
+  color: #cbd5e1 !important;
+}
+
+.logged-hours-container.dark-mode .field-input-ultra {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.logged-hours-container.dark-mode .field-hint-ultra {
+  color: #94a3b8 !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra i {
+  color: #94a3b8 !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra.active {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+  border-color: #3b82f6 !important;
+  color: #93c5fd !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra.active i {
+  color: #93c5fd !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra:disabled {
+  background: #0f172a !important;
+}
+
+.logged-hours-container.dark-mode .add-field-footer {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+
+.logged-hours-container.dark-mode .btn-cancel-ultra {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+.logged-hours-container.dark-mode .btn-cancel-ultra:hover {
+  background: #475569 !important;
+  border-color: #64748b !important;
+}
+
+.logged-hours-container.dark-mode .option-item-ultra {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.logged-hours-container.dark-mode .option-input-ultra {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.logged-hours-container.dark-mode .option-checkbox-label {
+  color: #cbd5e1 !important;
+}
+
+.logged-hours-container.dark-mode .toggle-field {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+.logged-hours-container.dark-mode .toggle-title {
+  color: #f1f5f9 !important;
+}
+
+.logged-hours-container.dark-mode .toggle-desc {
+  color: #94a3b8 !important;
+}
+
+.logged-hours-container.dark-mode .btn-add-option-ultra {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}

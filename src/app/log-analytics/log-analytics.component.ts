@@ -6,6 +6,7 @@ import { debounceTime } from 'rxjs/operators';
 import { Api } from '../services/api';
 import { AuthService } from '../services/auth.service';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
+import { AiReportComponent } from '../components/ai-report/ai-report.component';
 import { ProofhubTaskService } from '../services/proofhub-task.service';
 import {
   ProjectItem, TodolistItem, CreatorItem, TaskListItem, TaskDetailDto, TaskSearchRequest
@@ -112,7 +113,7 @@ interface ColPrefItem {
 @Component({
   selector: 'app-log-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, TaskDetailsModalComponent],
+  imports: [CommonModule, FormsModule, TaskDetailsModalComponent, AiReportComponent],
   templateUrl: './log-analytics.component.html',
   styleUrls: ['./log-analytics.component.css']
 })
@@ -133,6 +134,23 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
 
   get isHOD():   boolean { return this.userType === 'H' || this.userType === 'C'; }
   get isNormal(): boolean { return this.userType === 'E'; }
+
+  /** AI Insight feature is currently limited to these specific users only.
+   *  Add/remove EMPIDs here to change who can see the button + report panel. */
+  private readonly AI_INSIGHT_ALLOWED_USERS = ['ITS48', 'ITS41', 'ADS3691'];
+
+  get aiInsightEnabled(): boolean {
+    return this.AI_INSIGHT_ALLOWED_USERS
+      .map(u => u.toUpperCase())
+      .includes((this.userId || '').trim().toUpperCase());
+  }
+
+  /** Role-aware label for the AI insight report button (scope is enforced server-side) */
+  get aiReportLabel(): string {
+    if (this.userType === 'C') return 'Company AI Insight';
+    if (this.userType === 'H') return 'Department AI Insight';
+    return 'My AI Insight';
+  }
 
   /** Normal users cannot filter/toggle employee or department columns */
   canFilterCol(key: string): boolean {

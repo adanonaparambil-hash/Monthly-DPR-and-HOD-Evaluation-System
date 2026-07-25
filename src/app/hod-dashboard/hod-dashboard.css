@@ -4018,3 +4018,215 @@ dditional Top Performer Card Enhancements */
     font-size: 10px;
   }
 }
+
+/* ═══ Mobile responsiveness gap-fill (2026-07) ═══ */
+/* Append-only: fills gaps found in the audit above. Does not modify existing rules. */
+
+@media (max-width: 1024px) {
+
+  /* Tablet: stats as 2 columns (a 1200px rule above collapses them to 1 too early) */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Charts must never exceed their card width */
+  .chart-container canvas {
+    max-width: 100% !important;
+  }
+
+  /* Guard against grid blowout from long content in the header row */
+  .header-main-row > * {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* Restore the stacked-card layout for the pending-evaluations table.
+     An earlier 768px block builds label-prefixed stacked cells, but a later
+     "2fr 1.2fr 1fr 0.8fr 1fr !important" override re-flattens rows into a
+     cramped 5-column grid. Being last in the file, these win the cascade. */
+  .table-header {
+    display: none !important;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Base rule pins chart canvases to 300px height; reduce on mobile.
+     Direct-child selector so the evaluation-summary doughnut
+     (.summary-chart-wrapper canvas, height:auto) is not affected. */
+  .chart-container > canvas {
+    height: 250px !important;
+  }
+
+  /* Release the fixed 140px date-selector height once the wrapper stacks
+     month + year vertically (two selects no longer fit in 140px) */
+  .date-selector {
+    height: auto;
+  }
+
+  .selector-wrapper {
+    height: auto;
+  }
+
+  /* Neutralize hover lift effects not covered by the existing mobile blocks */
+  .dashboard-header:hover,
+  .info-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .chart-container > canvas {
+    height: 220px !important;
+  }
+
+  /* Keep long scrolling panels usable on small phones */
+  .evaluations-table,
+  .leaderboard {
+    max-height: 60vh;
+  }
+
+  /* Stacked table cells: allow value to wrap under its label instead of overflowing */
+  .employee-cell,
+  .department-cell,
+  .date-cell,
+  .priority-cell,
+  .action-cell {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+
+/* ═══ Dark theme gap-fill (2026-07) ═══ */
+/* The app toggles the .dark-theme class on <body> (see services/theme.ts);
+   the [data-theme="dark"] rules above never match because that attribute is
+   never set. The header and info-card surfaces therefore stayed hard-white
+   in dark mode (white select on white wrapper with near-white text). These
+   rules mirror the intended values using the component's working
+   :host-context(.dark-theme) pattern. */
+
+:host-context(.dark-theme) .loading-container {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+:host-context(.dark-theme) .loading-container p {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .no-data {
+  background: rgba(51, 65, 85, 0.3);
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .dashboard-header {
+  background: linear-gradient(135deg,
+    rgba(191, 169, 70, 0.08) 0%,
+    rgba(72, 94, 43, 0.05) 100%);
+  border-color: rgba(191, 169, 70, 0.25);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(191, 169, 70, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* In dark mode --primary-color is #1f2937 (near-black), so the base
+   white-to-primary gradient text fades into the background; end on the
+   gold accent instead. */
+:host-context(.dark-theme) .title-text h2 {
+  background: linear-gradient(135deg, #f9fafb 0%, var(--accent-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:host-context(.dark-theme) .title-icon {
+  background: linear-gradient(135deg, rgba(191, 169, 70, 0.15), rgba(72, 94, 43, 0.1));
+  border-color: rgba(191, 169, 70, 0.25);
+}
+
+:host-context(.dark-theme) .title-icon i,
+:host-context(.dark-theme) .selector-group label i,
+:host-context(.dark-theme) .select-arrow {
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .selector-wrapper {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(191, 169, 70, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:host-context(.dark-theme) .modern-select {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(191, 169, 70, 0.25);
+  color: #f1f5f9;
+}
+
+:host-context(.dark-theme) .modern-select:hover,
+:host-context(.dark-theme) .modern-select:focus {
+  background: rgba(30, 41, 59, 1);
+  border-color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .modern-select option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+:host-context(.dark-theme) .info-card {
+  background: linear-gradient(135deg,
+    rgba(30, 41, 59, 0.95) 0%,
+    rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(191, 169, 70, 0.25);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+
+:host-context(.dark-theme) .info-card:hover {
+  border-color: rgba(191, 169, 70, 0.4);
+  box-shadow: 0 6px 20px rgba(191, 169, 70, 0.2);
+}
+
+:host-context(.dark-theme) .card-icon {
+  background: linear-gradient(135deg, rgba(191, 169, 70, 0.25), rgba(72, 94, 43, 0.2));
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .card-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:host-context(.dark-theme) .quote-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:host-context(.dark-theme) .quote-author {
+  color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .card-decoration {
+  color: rgba(191, 169, 70, 0.15);
+}
+
+/* Ranked leaderboard rows keep their light gold/silver/bronze gradients in
+   dark mode while the row text flips to #f1f5f9 (white-on-light = unreadable).
+   Use translucent dark variants of the same hues. */
+:host-context(.dark-theme) .leaderboard-item.rank-1 {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(146, 100, 10, 0.3));
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
+:host-context(.dark-theme) .leaderboard-item.rank-2 {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.18), rgba(100, 116, 139, 0.3));
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+:host-context(.dark-theme) .leaderboard-item.rank-3 {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), rgba(160, 50, 50, 0.3));
+  border-color: rgba(248, 113, 113, 0.5);
+}

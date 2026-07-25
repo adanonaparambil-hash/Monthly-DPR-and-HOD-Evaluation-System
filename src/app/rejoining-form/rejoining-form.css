@@ -1522,3 +1522,116 @@
 .dark-theme .history-remarks { color: var(--text-primary); }
 .dark-theme .history-approver,
 .dark-theme .history-date { color: var(--text-secondary); }
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+:host-context(.dark-theme) .history-toggle-btn {
+  background: rgba(29, 78, 216, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+:host-context(.dark-theme) .history-toggle-btn:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+:host-context(.dark-theme) .step-history-list {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .history-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .history-remarks { color: var(--text-primary);
+}
+:host-context(.dark-theme) .history-approver,
+:host-context(.dark-theme) .history-date { color: var(--text-secondary);
+}
+
+/* --- Primary surfaces that previously had no dark rule at all --- */
+:host-context(.dark-theme) .rj-container {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .rj-card,
+:host-context(.dark-theme) .rj-emp-dropdown-panel,
+:host-context(.dark-theme) .rj-emp-portal-panel,
+:host-context(.dark-theme) .rj-success-card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .rj-card-header {
+  background: #172033;
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .rj-punch-item,
+:host-context(.dark-theme) .rj-ia-panel,
+:host-context(.dark-theme) .rj-apv-profile,
+:host-context(.dark-theme) .rj-fi-note {
+  background: #172033;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .rj-card-title,
+:host-context(.dark-theme) .rj-punch-time,
+:host-context(.dark-theme) .rj-apv-name,
+:host-context(.dark-theme) .rj-emp-option-name,
+:host-context(.dark-theme) .rj-emp-dd-value,
+:host-context(.dark-theme) .rj-check-text,
+:host-context(.dark-theme) .rj-fi-role,
+:host-context(.dark-theme) .rj-success-card h2 {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .rj-label,
+:host-context(.dark-theme) .rj-punch-label,
+:host-context(.dark-theme) .rj-punch-sub,
+:host-context(.dark-theme) .rj-punch-date,
+:host-context(.dark-theme) .rj-apv-id,
+:host-context(.dark-theme) .rj-apv-meta,
+:host-context(.dark-theme) .rj-emp-option-id,
+:host-context(.dark-theme) .rj-fi-desc,
+:host-context(.dark-theme) .rj-fi-detail,
+:host-context(.dark-theme) .rj-optional,
+:host-context(.dark-theme) .rj-success-card p {
+  color: #94a3b8;
+}
+/* Native controls: dark background needs color-scheme so internal UI follows */
+:host-context(.dark-theme) .rj-input,
+:host-context(.dark-theme) .rj-textarea,
+:host-context(.dark-theme) .rj-emp-search-input,
+:host-context(.dark-theme) .rj-ia-textarea,
+:host-context(.dark-theme) .rj-emp-dropdown-trigger {
+  background: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+:host-context(.dark-theme) .rj-input:hover,
+:host-context(.dark-theme) .rj-input:focus {
+  background: #0f172a;
+}
+:host-context(.dark-theme) .rj-input::placeholder,
+:host-context(.dark-theme) .rj-emp-search-input::placeholder {
+  color: #64748b;
+}
+:host-context(.dark-theme) .rj-check-mark {
+  background: #172033;
+  border-color: #475569;
+}
+:host-context(.dark-theme) .rj-emp-option:hover,
+:host-context(.dark-theme) .rj-punch-item:hover {
+  background: #0f172a;
+}
+:host-context(.dark-theme) .rj-btn-ghost {
+  color: #94a3b8;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .rj-btn-ghost:hover {
+  background: #172033;
+  border-color: #475569;
+}
+:host-context(.dark-theme) .rj-back-btn-inline {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}

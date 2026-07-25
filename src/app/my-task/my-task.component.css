@@ -18810,3 +18810,455 @@ body.modal-open {
     padding: 8px 0;
   }
 }
+
+/* ═══ Dark theme gap-fill (2026-07) ═══
+   The modals in my-task.component.html are rendered OUTSIDE
+   .task-board-container (it closes at line 619; modals start at 622+),
+   so ".task-board-container.dark-mode" rules never reach them.
+   The theme service also toggles .dark-theme on <body>, so
+   :host-context(.dark-theme) is used here — same pattern as the
+   Manage Tasks modal dark rules already present in this file.
+   Palette matches the existing dark rules: #1f2937 surfaces,
+   #374151 raised surfaces/inputs, #4b5563 borders, #f9fafb text,
+   #d1d5db secondary text, #9ca3af placeholders. */
+
+/* — Task creation modal: pieces without any dark rules — */
+:host-context(.dark-theme) .modal-sidebar {
+  background: rgba(17, 24, 39, 0.85);
+  border-left-color: #374151;
+}
+
+:host-context(.dark-theme) .timer-widget {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+:host-context(.dark-theme) .modal-footer {
+  background: #111827;
+  border-top-color: #374151;
+}
+
+:host-context(.dark-theme) .multi-select-display {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .multi-select-dropdown {
+  background: #1f2937;
+  border-color: #4b5563;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+:host-context(.dark-theme) .dropdown-search {
+  border-bottom-color: #374151;
+}
+
+:host-context(.dark-theme) .dropdown-search input {
+  background: transparent;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .dropdown-search input::placeholder {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .dropdown-option:hover {
+  background: #374151;
+}
+
+:host-context(.dark-theme) .dropdown-option .option-text {
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .subtask-item {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+:host-context(.dark-theme) .subtask-input {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .subtask-input::placeholder {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .subtask-hours {
+  background: #1f2937;
+  color: #d1d5db;
+}
+
+/* — Custom Fields modal (no dark rules existed) — */
+:host-context(.dark-theme) .custom-fields-modal {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .custom-fields-header {
+  background: #1f2937;
+  border-bottom-color: #374151;
+}
+
+:host-context(.dark-theme) .custom-fields-modal-title {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .custom-fields-subtitle {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .field-option {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+:host-context(.dark-theme) .field-option:hover:not(.disabled) {
+  background: #374151;
+  border-color: #138271;
+}
+
+:host-context(.dark-theme) .field-option.disabled {
+  background: #1f2937;
+}
+
+:host-context(.dark-theme) .field-option .field-name {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .field-option .field-description {
+  color: #9ca3af;
+}
+
+:host-context(.dark-theme) .custom-fields-footer {
+  background: #111827;
+  border-top-color: #374151;
+}
+
+:host-context(.dark-theme) .custom-fields-actions .cancel-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+:host-context(.dark-theme) .custom-fields-actions .cancel-btn:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* — Log Time popup (hard-white, no dark rules existed) — */
+:host-context(.dark-theme) .log-time-popup {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .ltp-header {
+  border-bottom-color: #374151;
+}
+
+:host-context(.dark-theme) .ltp-title {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .ltp-close:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .ltp-date-row {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+
+:host-context(.dark-theme) .ltp-date-value {
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .ltp-time-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+:host-context(.dark-theme) .ltp-total-section {
+  border-top-color: #374151;
+}
+
+:host-context(.dark-theme) .ltp-total-value,
+:host-context(.dark-theme) .ltp-total-edit-input {
+  color: #f9fafb;
+}
+
+/* ═══ Dark theme gap-fill #2 (2026-07) — Logged Hours mini widget ═══
+   The card kept its white/mint gradient in dark mode while every sibling panel
+   went dark. Skin it with the same green identity on a dark surface. */
+.task-board-container.dark-mode .logged-hours-card {
+  background: linear-gradient(160deg, #1e293b 0%, #172621 55%, #14231e 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 1px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.task-board-container.dark-mode .lh-label { color: #a7f3d0; }
+.task-board-container.dark-mode .lh-sublabel { color: #64748b; }
+.task-board-container.dark-mode .lh-micro-val,
+.task-board-container.dark-mode .lh-micro-total,
+.task-board-container.dark-mode .lh-micro-peak { color: #e2e8f0; }
+.task-board-container.dark-mode .lh-micro-lbl { color: #94a3b8; }
+.task-board-container.dark-mode .lh-micro-sep { color: #475569; }
+.task-board-container.dark-mode .lh-axis-label,
+.task-board-container.dark-mode .lh-day-name,
+.task-board-container.dark-mode .lh-day-date {
+  color: #94a3b8;
+  fill: #94a3b8;               /* these labels render inside the SVG */
+}
+.task-board-container.dark-mode .lh-day-today .lh-day-name,
+.task-board-container.dark-mode .lh-day-today .lh-day-date {
+  color: #6ee7b7;
+  fill: #6ee7b7;
+}
+.task-board-container.dark-mode .lh-axis-line { stroke: #334155; }
+.task-board-container.dark-mode .lh-value-tag {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+}
+.task-board-container.dark-mode .lh-value-tag-today {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.45);
+}
+.task-board-container.dark-mode .lh-dot-tooltip {
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+}
+
+/* ═══ Mobile verification fixes (2026-07) ═══ */
+/* Layout-only rules; no new colors, so no dark-mode counterparts needed.
+   !important is used where task-details-modal.css (loaded after this file
+   via styleUrls) redeclares the same properties for the same selectors. */
+
+@media (max-width: 768px) {
+  /* The desktop grid puts `min-width: 1224px` on .table-header/.table-row.
+     None of the card-layout blocks reset it, and min-width beats max-width,
+     so every "card" was still 1224px wide — clipped without a scrollbar by
+     .task-board-container's overflow-x: hidden, leaving each cell's value
+     (justify-content: space-between) pushed off-screen. */
+  .task-table,
+  .table-body,
+  .table-header,
+  .table-row {
+    min-width: 0 !important;
+  }
+
+  .table-row {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Row action icons shrank to 32px (28px at 480, 24px at 360) — restore a
+     tappable size without touching the page-header buttons that share the
+     .action-btn class. */
+  .table-row .cell.action .action-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  /* ── Select Task modal (the start-a-task flow) had no mobile rules ── */
+  .select-task-modal {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    height: auto;
+    max-height: 92vh;
+    border-radius: 16px;
+  }
+
+  .select-modal-header {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .select-modal-header .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .manage-tasks-btn {
+    min-height: 40px;
+  }
+
+  .select-search-box {
+    padding: 12px 16px;
+  }
+
+  .select-search-input {
+    min-height: 42px;
+  }
+
+  /* Three tabs at 24px side padding overflow a phone — scroll the strip */
+  .select-tabs {
+    padding: 0 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .select-tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 12px 12px;
+    min-height: 44px;
+  }
+
+  .task-list-container {
+    padding: 12px 16px;
+  }
+
+  /* Fixed 50px row with title + dept + two buttons doesn't fit; let it wrap */
+  .task-item {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .task-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .add-start-btn,
+  .assign-btn {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .select-task-modal {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+
+  .select-tab-btn {
+    padding: 10px 10px;
+    font-size: 11px;
+  }
+
+  .table-row .cell.action .action-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 360px) {
+  .table-row .cell.action .action-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ═══ Mobile polish (2026-07) — top section cards ═══
+   The four top cards were designed for narrow desktop columns: `.stats-grid`
+   and `.stat-card` are `flex: 1` with `padding: 3px 5px` and `overflow: hidden`,
+   and `.right-section` is `height: 100%`. Stacked full-width on a phone they
+   split the row height into slivers that CLIP their own content (values looked
+   cut off / collided) while the wide empty card read as "bare". Make them
+   content-sized with real padding instead. */
+@media (max-width: 768px) {
+  /* Cards size to their content, no clipping */
+  .top-right-panels .right-section,
+  .right-section { height: auto !important; }
+
+  .stats-grid {
+    flex: none !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+  }
+  .stat-card {
+    flex: none !important;
+    overflow: visible !important;
+    padding: 10px 14px !important;
+    min-height: 54px !important;
+    justify-content: center !important;
+  }
+  /* Two stats side-by-side reads better than a tall stack of wide bars */
+  .stats-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .stat-card.punched-hours { grid-column: 1 / -1 !important; }
+
+  /* Legible values on a full-width card (desktop sizes were ~10px) */
+  .stat-label { font-size: 10px !important; letter-spacing: .04em !important; }
+  .stat-value { font-size: 18px !important; line-height: 1.2 !important; }
+  .travel-break-stats { justify-content: space-around !important; }
+
+  /* New Task: a normal-height button, not a full-height green bar */
+  .new-task-btn {
+    flex: none !important;
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+  }
+  .new-task-btn i { font-size: 14px !important; }
+
+  /* Break tracker + logged-hours cards: room to breathe, no clipped chart */
+  .top-right-panels .break-tracker-section,
+  .top-right-panels .logged-hours-card { height: auto !important; }
+  .break-tracker-card { overflow: visible !important; }
+
+  /* Tabs row: scroll instead of cramming three labels */
+  .task-tabs, .tabs-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+  }
+  .task-tabs::-webkit-scrollbar, .tabs-container::-webkit-scrollbar { height: 0 !important; }
+  .task-tab, .tab-btn { flex: 0 0 auto !important; white-space: nowrap !important; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .stat-value { font-size: 17px !important; }
+  .stat-card { padding: 9px 12px !important; min-height: 50px !important; }
+}
+
+/* ═══ Table ACTION column fix (2026-07) ═══
+   BUG: the last column was `minmax(110px, 0.25fr)` but three action buttons
+   need 112px (3 × 32px + 2 × 8px gap). Because `.table-row`'s `min-width:1224px`
+   is exactly the sum of the column minimums, that ~2px+ overflow fell OUTSIDE
+   the scrollable width — so the delete button stayed clipped at the right edge
+   even when scrolled fully right. Widen the column (and the row min-width to
+   match) so all three buttons are always reachable. Desktop is unaffected:
+   the fr units still distribute the spare space. */
+.table-header,
+.table-row {
+  grid-template-columns:
+    minmax(150px, 1.2fr) minmax(280px, 2.8fr) minmax(90px, 0.6fr)
+    minmax(130px, 0.8fr) minmax(80px, 0.5fr) minmax(80px, 0.5fr)
+    minmax(60px, 0.4fr) minmax(100px, 0.28fr) minmax(148px, 0.34fr);
+  min-width: 1262px;
+}
+
+/* The action cell must never clip its buttons */
+.cell.action,
+.table-row .cell:last-child,
+.table-header .cell:last-child {
+  overflow: visible;
+}
+.action-buttons {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+.action-buttons .action-btn { flex: 0 0 auto; }
+
+/* Phones keep the stacked/scrolling layout — no forced min-width there. */
+@media (max-width: 768px) {
+  .table-header,
+  .table-row { min-width: 0 !important; }
+}

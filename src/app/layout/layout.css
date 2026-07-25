@@ -68,29 +68,33 @@
   }
 }
 
-/* Mobile Responsive - Mobile */
+/* Mobile Responsive - Mobile: off-canvas drawer (vertical menu slides in from
+   the left over a dark backdrop; hamburger in the header toggles it).
+   NOTE: must stay consistent with the drawer block near the end of this file —
+   never turn the sidebar into a horizontal strip here. */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
     left: 0;
     top: 0;
-    width: 100%;
-    height: auto;
-    max-height: 60px;
-    flex-direction: row;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    overflow-x: auto;
-    overflow-y: hidden;
-    z-index: 999;
+    bottom: 0;
+    width: min(300px, 84vw);
+    height: 100dvh;
+    max-height: none;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 3000;
   }
 }
 
 /* Mobile Responsive - Small Mobile */
 @media (max-width: 480px) {
   .sidebar {
-    max-height: 50px;
-    font-size: 12px;
+    width: min(290px, 88vw);
+    font-size: 14px;
   }
 }
 
@@ -125,25 +129,26 @@
   }
 }
 
-/* Mobile Responsive - Mobile */
+/* Mobile Responsive - Mobile: the sidebar is an overlay drawer, so the main
+   area takes the full width with NO top offset. */
 @media (max-width: 768px) {
   .main-area {
     margin-left: 0;
     width: 100%;
-    margin-top: 60px;
+    margin-top: 0;
   }
-  
+
   .layout-container.sidebar-collapsed .main-area {
     margin-left: 0;
     width: 100%;
-    margin-top: 60px;
+    margin-top: 0;
   }
 }
 
 /* Mobile Responsive - Small Mobile */
 @media (max-width: 480px) {
   .main-area {
-    margin-top: 50px;
+    margin-top: 0;
   }
 }
 
@@ -1324,19 +1329,16 @@
     flex-direction: column;
   }
   
+  /* Drawer visibility is driven by .sidebar-collapsed (translateX) — see the
+     drawer block near the end of this file. No left/.open hack here: no code
+     ever toggles a `.open` class, and left:-100% fought the transform. */
   .sidebar {
-    width: 100%;
-    height: auto;
     position: fixed;
     top: 0;
-    left: -100%;
-    z-index: 1000;
-    transition: left 0.3s ease;
-    overflow: visible;
-  }
-  
-  .sidebar.open {
     left: 0;
+    z-index: 3000;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   
   .menu a {
@@ -1859,25 +1861,27 @@ le Sidebar Toggle Functionality */
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
-    width: 250px;
-    z-index: 1000;
+    bottom: 0;
+    height: 100dvh;
+    width: min(300px, 84vw);
+    z-index: 3000;               /* above the header (z-index 1001) */
     transform: translateX(0);
     transition: transform 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.28);
   }
-  
+
   .layout-container.sidebar-collapsed .sidebar {
     transform: translateX(-100%);
+    box-shadow: none;
   }
-  
+
   .main-area {
     width: 100%;
     margin-left: 0;
     transition: margin-left 0.3s ease;
   }
-  
-  /* Overlay when sidebar is open */
+
+  /* Dark backdrop when the drawer is open — covers header + content */
   .layout-container:not(.sidebar-collapsed)::before {
     content: '';
     position: fixed;
@@ -1885,12 +1889,12 @@ le Sidebar Toggle Functionality */
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 2990;
     opacity: 1;
     transition: opacity 0.3s ease;
   }
-  
+
   .layout-container.sidebar-collapsed::before {
     opacity: 0;
     pointer-events: none;
@@ -2749,4 +2753,41 @@ gout button disabled state */
 body.modal-open .header {
   visibility: hidden;
   pointer-events: none;
+}
+
+/* ═══ Mobile dropdown fix (2026-07) — notification + profile dropdowns ═══
+   On phones the dropdowns were anchored to the bell/avatar with negative
+   right offsets and no height cap, so they could hang off-screen and their
+   content was cut. Pin them to the viewport below the header instead, with
+   internal scrolling. Fixed-position is viewport-relative (the header has no
+   transform), and these rules are last in the file so they win the cascade. */
+@media (max-width: 768px) {
+  .notification-dropdown,
+  .profile-dropdown {
+    position: fixed;
+    top: 76px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-width: none;
+    max-height: min(72vh, calc(100dvh - 90px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 3100;              /* above header (1001) and drawer (3000) */
+    margin-top: 0;
+  }
+
+  .notification-list {
+    max-height: none;           /* the dropdown itself scrolls now */
+  }
+}
+
+@media (max-width: 480px) {
+  .notification-dropdown,
+  .profile-dropdown {
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    max-height: min(76vh, calc(100dvh - 72px));
+  }
 }

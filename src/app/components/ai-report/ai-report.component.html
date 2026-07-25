@@ -1,0 +1,120 @@
+<!-- Launch button (only when the host page doesn't provide its own trigger) -->
+@if (!reportHtml && !loading && !showFilters && !hideLaunchButton) {
+  <button class="air-launch" (click)="generate(false)" [disabled]="loadingCtx">
+    <i class="fas fa-wand-magic-sparkles"></i> {{ buttonLabel }}
+  </button>
+}
+
+<!-- Filter step (HOD = dates; CED = dates + department) -->
+@if (showFilters && !loading) {
+  <div class="air-overlay" (click)="cancelFilters()">
+    <div class="air-filter" (click)="$event.stopPropagation()">
+      <div class="air-filter-head">
+        <div class="air-filter-icon"><i class="fas fa-sliders"></i></div>
+        <div>
+          <div class="air-filter-title">AI Insight Report</div>
+          <div class="air-filter-sub">
+            @if (role === 'C') { Choose a period and (optionally) a department. }
+            @else { Choose the period to analyse. }
+          </div>
+        </div>
+        <button class="air-filter-x" (click)="cancelFilters()" title="Close"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="air-filter-body">
+        <div class="air-field-row">
+          <label class="air-field">
+            <span>From</span>
+            <input type="date" [(ngModel)]="dateFrom" [max]="dateTo">
+          </label>
+          <label class="air-field">
+            <span>To</span>
+            <input type="date" [(ngModel)]="dateTo" [min]="dateFrom">
+          </label>
+        </div>
+
+        @if (role === 'C') {
+          <label class="air-field">
+            <span>Department</span>
+            <select [(ngModel)]="deptId">
+              <option [ngValue]="null">All departments (company-wide)</option>
+              @for (d of departments; track d.departmentId) {
+                <option [ngValue]="d.departmentId">{{ d.deptName }}</option>
+              }
+            </select>
+          </label>
+        }
+
+        @if (error) { <div class="air-filter-err"><i class="fas fa-triangle-exclamation"></i> {{ error }}</div> }
+      </div>
+
+      <div class="air-filter-actions">
+        <button class="air-filter-cancel" (click)="cancelFilters()">Cancel</button>
+        <button class="air-filter-go" (click)="submitFilters()">
+          <i class="fas fa-wand-magic-sparkles"></i> Generate
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Loading overlay -->
+@if (loading) {
+  <div class="air-overlay">
+    <div class="air-loading-card">
+      <div class="air-spinner"></div>
+      <div class="air-loading-title">Generating your AI insight report…</div>
+      <div class="air-loading-sub">Analyzing DPR data — this can take up to 30 seconds.</div>
+    </div>
+  </div>
+}
+
+<!-- Error (inline — small, no modal needed) -->
+@if (error && !loading) {
+  <div class="air-error">
+    <i class="fas fa-triangle-exclamation"></i> {{ error }}
+    <button class="air-retry" (click)="generate(false)">Retry</button>
+  </div>
+}
+
+<!-- Report modal -->
+@if (reportHtml && !loading) {
+  <div class="air-overlay" (click)="close()">
+    <div class="air-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="air-modal-head">
+        <div class="air-head-left">
+          <div class="air-head-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+          <div class="air-head-text">
+            <div class="air-head-title">
+              {{ scopeLabel }}
+              @if (fromCache) { <span class="air-cache">cached</span> }
+            </div>
+            <div class="air-head-sub"><i class="far fa-clock"></i> Generated {{ generatedDate }}</div>
+          </div>
+        </div>
+        <div class="air-head-actions">
+          <button class="air-btn air-pdf" (click)="exportPdf()">
+            <i class="fas fa-file-pdf"></i> <span class="air-btn-txt">Export PDF</span>
+          </button>
+          <button class="air-btn air-close" (click)="close()" title="Close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="air-modal-body">
+        <div class="air-content" id="aiReportContent">
+          <div class="air-pdf-title">
+            <span class="air-pdf-badge"><i class="fas fa-chart-line"></i> DPR Performance Insight</span>
+            <span class="air-pdf-scope">{{ scopeLabel }} &nbsp;·&nbsp; {{ generatedDate }}</span>
+          </div>
+          <div class="air-body" [innerHTML]="reportHtml"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+}

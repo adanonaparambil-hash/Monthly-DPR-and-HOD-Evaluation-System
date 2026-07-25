@@ -1,0 +1,86 @@
+<!-- Floating launcher button (bottom-right, above everything).
+     Hidden entirely unless the user is in the pilot list. -->
+@if (isAllowed) {
+<button class="aia-fab" (click)="toggle()" [class.aia-fab-open]="isOpen"
+        [title]="isOpen ? 'Close AI Assistant' : 'AI Assistant'">
+  @if (isOpen) {
+    <i class="fas fa-times"></i>
+  } @else {
+    <i class="fas fa-robot"></i>
+  }
+</button>
+}
+
+<!-- Slide-in chat panel -->
+@if (isOpen) {
+  <div class="aia-panel">
+    <div class="aia-header">
+      <div class="aia-header-title">
+        <i class="fas fa-robot"></i>
+        <div>
+          <div class="aia-title">DPR AI Assistant</div>
+          <div class="aia-subtitle">
+            @switch (userType) {
+              @case ('C') { Company-wide insights }
+              @case ('H') { Your department insights }
+              @default    { Your personal insights }
+            }
+          </div>
+        </div>
+      </div>
+      <button class="aia-clear" (click)="clearChat()" title="New conversation">
+        <i class="fas fa-rotate-right"></i>
+      </button>
+    </div>
+
+    <div class="aia-messages" #msgList>
+      @if (messages.length === 0) {
+        <div class="aia-welcome">
+          <p>Hi{{ userName ? ' ' + userName : '' }} 👋 Ask me anything about
+            @switch (userType) {
+              @case ('C') { any department or employee's DPR performance. }
+              @case ('H') { your department's DPR performance. }
+              @default    { your DPR performance and how to improve. }
+            }
+          </p>
+          <div class="aia-suggestions">
+            @for (q of suggestions; track q) {
+              <button class="aia-chip" (click)="useSuggestion(q)">{{ q }}</button>
+            }
+          </div>
+        </div>
+      }
+
+      @for (m of messages; track $index) {
+        <div class="aia-msg" [class.aia-msg-user]="m.from === 'user'"
+             [class.aia-msg-error]="m.error">
+          @if (m.from === 'ai' && m.html) {
+            <div class="aia-bubble" [innerHTML]="m.html"></div>
+          } @else {
+            <div class="aia-bubble">{{ m.text }}</div>
+          }
+          <div class="aia-time">{{ m.time | date:'shortTime' }}</div>
+        </div>
+      }
+
+      @if (sending) {
+        <div class="aia-msg">
+          <div class="aia-bubble aia-typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="aia-input-row">
+      <textarea class="aia-input" rows="1"
+                placeholder="Ask about DPR performance…"
+                [(ngModel)]="input"
+                (keydown)="onKeydown($event)"
+                [disabled]="sending"></textarea>
+      <button class="aia-send" (click)="send()" [disabled]="sending || !input.trim()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+}

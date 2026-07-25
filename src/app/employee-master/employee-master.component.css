@@ -892,3 +892,364 @@
   transition: color .2s ease;
 }
 .em-switch-text.on { color: #138271; }
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+
+@media (max-width: 1024px) {
+  .emp-master-container { padding: 18px; }
+  .filter-card { padding: 16px 18px; }
+  .filter-group { min-width: 160px; }
+  .emp-table thead th,
+  .emp-table td { padding: 12px 12px; }
+}
+
+@media (max-width: 768px) {
+  .filter-card { padding: 14px 16px; }
+  .filter-row { flex-wrap: wrap; }
+  .filter-input,
+  .filter-select { width: 100%; }
+
+  /* Wide table: horizontal scroll with readable columns */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .emp-table { min-width: 720px; }
+
+  /* Pagination rows: wrap + center */
+  .table-header-bar { flex-wrap: wrap; justify-content: center; gap: 8px; padding: 12px 14px; }
+  .record-info { width: 100%; text-align: center; }
+  .pagination-controls { width: 100%; justify-content: center; flex-wrap: wrap; }
+  .table-footer-bar { flex-wrap: wrap; justify-content: center; gap: 10px; padding: 12px 14px; }
+
+  /* Employee profile modal */
+  .em-overlay { padding: 10px; }
+  .em-modal { width: calc(100vw - 20px); max-width: calc(100vw - 20px); max-height: 92vh; }
+  .em-body { overflow-y: auto; }
+  .em-grid.em-two-col { grid-template-columns: 1fr; }
+  .em-hero { padding: 22px 16px 18px; }
+  .em-hero-avatar-img,
+  .em-hero-avatar { width: 64px; height: 64px; font-size: 20px; border-radius: 16px; }
+  .em-hero-name { font-size: 17px; }
+  .em-section { padding: 14px 14px; }
+}
+
+@media (max-width: 480px) {
+  .filter-card { padding: 12px; }
+  .apply-btn { width: 100%; justify-content: center; }
+
+  .emp-table { min-width: 640px; }
+  .emp-table thead th,
+  .emp-table td { padding: 8px 10px; font-size: 12.5px; }
+
+  .page-btn { height: 32px; padding: 0 10px; font-size: 12px; }
+  .page-indicator { font-size: 12px; min-width: unset; }
+
+  .em-hero { padding: 18px 14px 14px; }
+  .em-hero-name { font-size: 16px; }
+  .em-hero-avatar-img,
+  .em-hero-avatar { width: 56px; height: 56px; font-size: 18px; border-radius: 14px; }
+  .em-footer { flex-direction: column-reverse; padding: 10px 14px; }
+  .em-btn { width: 100%; justify-content: center; }
+}
+
+/* ═══ Dark theme (2026-07) ═══ */
+/* Angular emulated encapsulation: `.dark-theme` sits on <body>, outside this
+   component, so every rule below must be reached through :host-context().
+   Note: this file leans on var(--card-bg, #fff) / var(--bg-subtle, …) which are
+   never defined anywhere, so those surfaces always resolved to the light
+   fallback — they are pinned explicitly here. */
+
+/* ── Page shell ─────────────────────────────────────────────── */
+:host-context(.dark-theme) .emp-master-container {
+  background: #0f172a;
+}
+
+/* ── Filter card ────────────────────────────────────────────── */
+:host-context(.dark-theme) .filter-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+:host-context(.dark-theme) .filter-label {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .input-icon {
+  color: #64748b;
+}
+
+/* background-color (not the shorthand) so .filter-select keeps its chevron */
+:host-context(.dark-theme) .filter-input {
+  background-color: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+
+:host-context(.dark-theme) .filter-input::placeholder {
+  color: #64748b;
+}
+
+:host-context(.dark-theme) .filter-input:focus {
+  border-color: #1ABC9C;
+  box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.18);
+}
+
+:host-context(.dark-theme) .filter-select option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+/* ── Table card + sub-bars ──────────────────────────────────── */
+:host-context(.dark-theme) .table-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+:host-context(.dark-theme) .table-header-bar {
+  background: #172033;
+  border-bottom-color: #334155;
+}
+
+:host-context(.dark-theme) .table-footer-bar {
+  background: #172033;
+  border-top-color: #334155;
+}
+
+:host-context(.dark-theme) .record-info {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .record-info strong {
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .batch-label {
+  color: #64748b;
+}
+
+:host-context(.dark-theme) .page-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .page-indicator {
+  color: #e2e8f0;
+}
+
+/* ── Table body ─────────────────────────────────────────────── */
+:host-context(.dark-theme) .emp-table tbody tr {
+  border-bottom-color: #26334a;
+}
+
+:host-context(.dark-theme) .emp-table tbody tr.table-row:hover {
+  background: #263447;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+:host-context(.dark-theme) .emp-table td {
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .row-num {
+  background: #263447;
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .avatar-img {
+  border-color: #334155;
+}
+
+:host-context(.dark-theme) .employee-name {
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .employee-email {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .desig-text {
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .contact-text {
+  color: #94a3b8;
+}
+
+/* ── Badges / status chips ──────────────────────────────────── */
+/* .emp-id-badge was near-black #1B2A38 on a light wash — unreadable on dark */
+:host-context(.dark-theme) .emp-id-badge {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.14);
+  border-color: rgba(148, 163, 184, 0.32);
+}
+
+:host-context(.dark-theme) .dept-badge {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+:host-context(.dark-theme) .status-badge.active {
+  background: rgba(26, 188, 156, 0.18);
+  color: #5eead4;
+  border-color: rgba(26, 188, 156, 0.4);
+}
+
+:host-context(.dark-theme) .status-badge.inactive {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+:host-context(.dark-theme) .view-btn {
+  background: rgba(26, 188, 156, 0.18);
+  color: #5eead4;
+}
+
+/* ── Loading / empty states ─────────────────────────────────── */
+:host-context(.dark-theme) .loading-state {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .spinner {
+  border-color: rgba(26, 188, 156, 0.2);
+  border-top-color: #1ABC9C;
+}
+
+:host-context(.dark-theme) .empty-icon {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.12), rgba(26, 188, 156, 0.12));
+}
+
+/* icon is a background-clip:text gradient of dark navy → invisible on dark */
+:host-context(.dark-theme) .empty-icon i {
+  background: linear-gradient(135deg, #5eead4, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:host-context(.dark-theme) .empty-title {
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .empty-subtitle {
+  color: #94a3b8;
+}
+
+/* ── Overlays ───────────────────────────────────────────────── */
+:host-context(.dark-theme) .modal-overlay,
+:host-context(.dark-theme) .em-overlay {
+  background: rgba(2, 6, 16, 0.78);
+}
+
+/* ── Employee profile modal shell ───────────────────────────── */
+:host-context(.dark-theme) .em-modal {
+  background: #0f172a;
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.dark-theme) .em-hero {
+  background: linear-gradient(135deg, #0a1622 0%, #106b5d 60%, #138271 100%);
+}
+
+:host-context(.dark-theme) .em-body {
+  background: #0f172a;
+}
+
+:host-context(.dark-theme) .em-body::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* ── Modal sections ─────────────────────────────────────────── */
+:host-context(.dark-theme) .em-section {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+:host-context(.dark-theme) .em-section-head {
+  border-bottom-color: #26334a;
+}
+
+/* .em-section-title was #0f172a — same as the dark page background */
+:host-context(.dark-theme) .em-section-title {
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .em-label {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .em-label-hint {
+  color: #64748b;
+}
+
+/* ── Modal form controls (colour-scheme needed for the date pickers) ── */
+:host-context(.dark-theme) .em-input {
+  background-color: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+
+:host-context(.dark-theme) .em-input:hover {
+  background-color: #1e293b;
+  border-color: #475569;
+}
+
+:host-context(.dark-theme) .em-input:focus {
+  background-color: #1e293b;
+  border-color: #1ABC9C;
+  box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.18);
+}
+
+:host-context(.dark-theme) .em-input::placeholder {
+  color: #64748b;
+}
+
+:host-context(.dark-theme) .em-select option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:host-context(.dark-theme) .em-input-icon {
+  color: #64748b;
+}
+
+/* ── IsDPR switch ───────────────────────────────────────────── */
+:host-context(.dark-theme) .em-switch-track {
+  background: #475569;
+}
+
+:host-context(.dark-theme) .em-switch-thumb {
+  background: #e2e8f0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+:host-context(.dark-theme) .em-switch-text {
+  color: #94a3b8;
+}
+
+:host-context(.dark-theme) .em-switch-text.on {
+  color: #5eead4;
+}
+
+/* ── Modal footer ───────────────────────────────────────────── */
+:host-context(.dark-theme) .em-footer {
+  background: #172033;
+  border-top-color: #334155;
+}
+
+:host-context(.dark-theme) .em-btn-ghost {
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+:host-context(.dark-theme) .em-btn-ghost:hover {
+  background: #263447;
+  border-color: #475569;
+  color: #e2e8f0;
+}

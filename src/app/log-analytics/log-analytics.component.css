@@ -354,6 +354,22 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+/* AI report renders in a fixed modal overlay — the container itself takes no space. */
+.ai-report-bar { margin: 0; }
+
+/* AI insight launch button — toolbar variant, matches .tb-btn metrics, light-orange accent */
+.ai-launch-tb {
+  background: linear-gradient(135deg, #f59e0b, #f97316) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, .30);
+}
+.ai-launch-tb i { color: #fff; }
+.ai-launch-tb:hover { filter: brightness(1.06); box-shadow: 0 4px 12px rgba(249, 115, 22, .42); }
+.ai-launch-tb:disabled { opacity: .75; cursor: default; }
+
 .cat-pill {
   display: inline-block;
   padding: 3px 10px; border-radius: 12px;
@@ -1445,4 +1461,459 @@
   opacity: 0;
   transform: translateX(-4px);
   transition: all .18s ease;
+}
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+
+@media (max-width: 1024px) {
+
+  /* Top bar: allow the action buttons to wrap instead of overflowing */
+  .top-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .search-wrap {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .top-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+
+  /* Table area padding trimmed */
+  .table-area { padding: 12px; }
+
+  /* Native touch scrolling on all horizontal scroll containers */
+  .tbl-scroll,
+  .ph-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ProofHub / DPR-Compliance modal tables keep readable columns and scroll */
+  .ph-table { min-width: 900px; }
+  .nd-table { min-width: 640px; }
+}
+
+@media (max-width: 768px) {
+
+  /* ── Toolbar ── */
+  .top-bar { padding: 10px 12px; }
+  .top-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .top-actions .tb-btn,
+  .top-actions .chip-clear {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  .group-wrap { width: 100%; }
+  .group-wrap .tb-btn { width: 100%; justify-content: center; }
+
+  /* Toolbar dropdowns: keep inside viewport */
+  .tb-dropdown {
+    left: 0;
+    right: 0;
+    min-width: 0;
+    max-width: calc(100vw - 16px);
+  }
+  .comloc-drop { min-width: 0; }
+
+  /* ── Table area / group blocks ── */
+  .table-area { padding: 12px 8px; }
+  .cat-header { padding: 11px 12px; }
+  .cat-name {
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Pagination ── */
+  .pager {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .pager-info { text-align: center; }
+  .pager-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ── Fixed-position filter portal / employee popup: stay in viewport ── */
+  .cfp-portal {
+    max-width: calc(100vw - 16px);
+    width: min(260px, calc(100vw - 16px));
+  }
+  .emp-popup {
+    max-width: calc(100vw - 16px);
+    min-width: 0;
+  }
+
+  /* ── Columns side panel ── */
+  .col-panel { max-width: calc(100vw - 24px); }
+
+  /* ── ProofHub / DPR-Compliance modals ── */
+  .ph-overlay { padding: 8px; }
+  .ph-modal,
+  .ph-detail-modal {
+    width: calc(100vw - 24px);
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+  }
+  .ph-head { padding: 12px 14px; }
+  .ph-head-title h3 { font-size: 16px; }
+  .ph-head-title p { font-size: 11.5px; }
+  .ph-head-icon { width: 38px; height: 38px; font-size: 15px; }
+
+  /* Modal filter rows stack vertically, controls full width */
+  .ph-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .ph-f,
+  .ph-f-title {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+  .ph-f input,
+  .ph-f select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ph-f-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .ph-btn-search,
+  .ph-btn-clear {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .ph-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  .ph-detail-body { padding: 12px; }
+  .ph-d-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+
+  /* ── Toolbar ── */
+  .top-bar { padding: 8px; gap: 8px; }
+  .table-area { padding: 8px 6px; }
+
+  /* Critical action buttons full-width (already stacked at 768) */
+  .tb-btn { padding: 9px 12px; font-size: 12.5px; }
+
+  /* ── Group headers compress ── */
+  .cat-header { padding: 10px; }
+  .cat-left { gap: 7px; min-width: 0; }
+  .cat-badge { font-size: 10px; padding: 2px 7px; }
+  .cat-right { font-size: 12px; }
+
+  /* ── Fixed dropdown portal pinned inside the viewport ── */
+  .cfp-portal {
+    left: 8px !important;
+    right: 8px;
+    width: auto;
+    max-width: calc(100vw - 16px);
+  }
+  .emp-popup {
+    left: 8px !important;
+    right: 8px;
+    max-width: calc(100vw - 16px);
+  }
+
+  /* ── Columns side panel becomes near-full-width sheet ── */
+  .col-panel { width: calc(100vw - 24px); }
+
+  /* ── Modals ── */
+  .ph-overlay { padding: 6px; }
+  .ph-modal,
+  .ph-detail-modal {
+    width: calc(100vw - 24px);
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+  .ph-head-title { gap: 8px; }
+  .ph-head-title h3 { font-size: 14.5px; }
+  .ph-head-title p { display: none; }
+  .ph-head-icon { width: 32px; height: 32px; font-size: 13px; }
+
+  .ph-btn-search,
+  .ph-btn-clear {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .ph-d-grid { grid-template-columns: 1fr; }
+
+  /* Detail-modal pagination wraps tightly */
+  .ph-pagination { padding: 8px 10px; gap: 3px; }
+  .ph-pg-info { flex-basis: 100%; text-align: center; margin-left: 0; }
+
+  /* ── Pagination (main table) ── */
+  .pager-controls { gap: 6px; }
+  .pager-select { font-size: 12px; }
+  .pager-page { min-width: 42px; }
+}
+
+/* ═══ Dark theme (2026-07) — full skin for the main screen ═══
+   Only the ProofHub modal ever had dark rules; the page itself (toolbar,
+   date-group tables, dropdowns, filter panels, pager) stayed light. The theme
+   toggles .dark-theme on the layout/body, so :host-context reaches it.
+   Palette matches the app shell: #0f172a page, #1e293b panels, #334155 borders,
+   #e2e8f0 / #94a3b8 text, indigo accents softened for dark. */
+
+:host-context(.dark-theme) .la-root { background: #0f172a; }
+
+/* Top bar + search */
+:host-context(.dark-theme) .top-bar {
+  background: #1e293b; border-bottom-color: #334155;
+  box-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+:host-context(.dark-theme) .search-input {
+  background: #0f172a; border-color: #334155; color: #e2e8f0;
+}
+:host-context(.dark-theme) .search-input::placeholder { color: #64748b; }
+:host-context(.dark-theme) .search-input:focus {
+  border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.25);
+}
+
+/* Toolbar buttons + dropdowns */
+:host-context(.dark-theme) .tb-btn {
+  background: #1e293b; color: #cbd5e1; border-color: #334155;
+}
+:host-context(.dark-theme) .tb-btn:hover { background: #263447; border-color: #475569; }
+:host-context(.dark-theme) .tb-btn strong { color: #a5b4fc; }
+:host-context(.dark-theme) .tb-btn-active {
+  background: rgba(99,102,241,.18); border-color: #6366f1;
+}
+:host-context(.dark-theme) .tb-btn-active strong { color: #c7d2fe; }
+:host-context(.dark-theme) .chip-clear {
+  background: rgba(239,68,68,.14); color: #f87171; border-color: rgba(239,68,68,.4);
+}
+:host-context(.dark-theme) .chip-clear:hover { background: rgba(239,68,68,.24); }
+:host-context(.dark-theme) .tb-dropdown {
+  background: #1e293b; border-color: #334155;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+:host-context(.dark-theme) .tb-dd-item { color: #cbd5e1; }
+:host-context(.dark-theme) .tb-dd-item:hover { background: #263447; }
+:host-context(.dark-theme) .tb-dd-item.active {
+  color: #c7d2fe; background: rgba(99,102,241,.2);
+}
+:host-context(.dark-theme) .comloc-divider { background: #334155; }
+:host-context(.dark-theme) .comloc-clear { border-top-color: #334155; }
+:host-context(.dark-theme) .comloc-clear:hover { background: rgba(239,68,68,.18); }
+
+/* Date-group blocks */
+:host-context(.dark-theme) .cat-block {
+  background: #1e293b; border-color: #334155;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+:host-context(.dark-theme) .cat-header {
+  background: linear-gradient(135deg, #1e293b 0%, #172033 100%);
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .cat-header:hover {
+  background: linear-gradient(135deg, #24334a 0%, #1c2940 100%);
+}
+:host-context(.dark-theme) .cat-name { color: #e2e8f0; }
+:host-context(.dark-theme) .cat-chevron { color: #94a3b8; }
+:host-context(.dark-theme) .cat-badge { background: rgba(99,102,241,.22); color: #c7d2fe; }
+:host-context(.dark-theme) .cat-right { color: #c4b5fd; }
+
+/* Table header */
+:host-context(.dark-theme) .th-cell {
+  background: #172033; border-bottom-color: #334155; border-right-color: #26334a;
+}
+:host-context(.dark-theme) .th-label { color: #94a3b8; }
+:host-context(.dark-theme) .th-label:hover { color: #e2e8f0; }
+:host-context(.dark-theme) .sort-idle { color: #475569; }
+:host-context(.dark-theme) .filter-btn { color: #64748b; }
+:host-context(.dark-theme) .filter-btn:hover {
+  background: rgba(99,102,241,.22); color: #a5b4fc; border-color: rgba(99,102,241,.4);
+}
+
+/* Table rows */
+:host-context(.dark-theme) .td-cell {
+  color: #cbd5e1; border-bottom-color: #26334a; border-right-color: #22304a;
+}
+:host-context(.dark-theme) .td-row.row-alt .td-cell { background: #1a2537; }
+:host-context(.dark-theme) .td-row:hover .td-cell,
+:host-context(.dark-theme) .td-row.row-alt:hover .td-cell { background: #1c2b3f; }
+:host-context(.dark-theme) .emp-name,
+:host-context(.dark-theme) .cell-title { color: #e2e8f0; }
+:host-context(.dark-theme) .emp-id-cell { color: #94a3b8; }
+:host-context(.dark-theme) .cell-muted { color: #7f8ea3; }
+:host-context(.dark-theme) .time-val { color: #c4b5fd; }
+
+/* Excel-style column filter panel */
+:host-context(.dark-theme) .col-filter-panel,
+:host-context(.dark-theme) .cfp-portal {
+  background: #1e293b; border-color: #334155;
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
+}
+:host-context(.dark-theme) .cfp-search {
+  background: #172033; border-bottom-color: #26334a;
+}
+:host-context(.dark-theme) .cfp-search input {
+  background: transparent; color: #e2e8f0;
+}
+:host-context(.dark-theme) .cfp-sort-btn {
+  background: #1e293b; color: #cbd5e1; border-color: #334155;
+}
+:host-context(.dark-theme) .cfp-sort-btn:hover {
+  background: rgba(99,102,241,.18); border-color: rgba(99,102,241,.4); color: #c7d2fe;
+}
+:host-context(.dark-theme) .cfp-divider { background: #26334a; }
+:host-context(.dark-theme) .cfp-select-all,
+:host-context(.dark-theme) .cfp-row { color: #cbd5e1; }
+:host-context(.dark-theme) .cfp-select-all:hover,
+:host-context(.dark-theme) .cfp-row:hover { background: #263447; }
+:host-context(.dark-theme) .cfp-val { color: #cbd5e1; }
+:host-context(.dark-theme) .cfp-footer { border-top-color: #26334a; background: #172033; }
+:host-context(.dark-theme) .cfp-clear {
+  background: transparent; color: #f87171; border-color: #334155;
+}
+:host-context(.dark-theme) .cfp-clear:hover {
+  background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.4); color: #f87171;
+}
+
+/* Employee popup */
+:host-context(.dark-theme) .emp-popup {
+  background: #1e293b; border-color: #334155;
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
+}
+:host-context(.dark-theme) .emp-popup-row { border-bottom-color: #26334a; }
+:host-context(.dark-theme) .emp-popup-row:hover { background: #1c2b3f; }
+:host-context(.dark-theme) .emp-popup-name { color: #e2e8f0; }
+
+/* Pager */
+:host-context(.dark-theme) .pager { color: #94a3b8; }
+:host-context(.dark-theme) .pager-select {
+  background: #1e293b; border-color: #334155; color: #cbd5e1;
+}
+:host-context(.dark-theme) .pager-btn {
+  background: #1e293b; border-color: #334155; color: #cbd5e1;
+}
+:host-context(.dark-theme) .pager-btn:hover:not([disabled]) {
+  background: #263447; border-color: #475569;
+}
+:host-context(.dark-theme) .pager-page { color: #e2e8f0; }
+
+/* DPR-compliance modal specifics (shares ph- dark rules for shell/table) */
+:host-context(.dark-theme) .nd-dept-block { background: #1e293b; border-color: #334155; }
+:host-context(.dark-theme) .nd-dept-header { background: #172033; border-color: #334155; }
+:host-context(.dark-theme) .nd-dept-name { color: #e2e8f0; }
+:host-context(.dark-theme) .nd-emp-name { color: #e2e8f0; }
+
+/* ═══ Dark theme gap-fill #2 (2026-07) — unreadable cell values ═══
+   Cell CONTENTS have their own hardcoded #374151 / #1e293b colors, so the
+   .td-cell dark rule couldn't reach them — dates, progress % and assigned-by
+   rendered near-black on the dark row. Brighten them and dark-skin the
+   remaining light panels (column chooser, date/time filter inputs). */
+:host-context(.dark-theme) .date-val,
+:host-context(.dark-theme) .assigned-val,
+:host-context(.dark-theme) .progress-pct,
+:host-context(.dark-theme) .daily-count-val,
+:host-context(.dark-theme) .multi-emp-name-item {
+  color: #cbd5e1;
+}
+:host-context(.dark-theme) .date-ico,
+:host-context(.dark-theme) .assigned-ico { color: #7f8ea3; }
+:host-context(.dark-theme) .progress-bar-wrap { background: #334155; }
+
+/* Date / time filter panels */
+:host-context(.dark-theme) .cfp-date-header,
+:host-context(.dark-theme) .cfp-date-body { background: #172033; border-color: #26334a; }
+:host-context(.dark-theme) .cfp-date-arrow { color: #94a3b8; }
+:host-context(.dark-theme) .cfp-date-field label { color: #94a3b8; }
+:host-context(.dark-theme) .cfp-date-field input[type="date"],
+:host-context(.dark-theme) .cfp-time-op,
+:host-context(.dark-theme) .cfp-time-val {
+  color-scheme: dark;
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .cfp-time-op option { background: #1e293b; color: #e2e8f0; }
+
+/* Column chooser panel */
+:host-context(.dark-theme) .col-panel {
+  background: #1e293b; border-color: #334155;
+  box-shadow: -8px 0 30px rgba(0,0,0,.55);
+}
+:host-context(.dark-theme) .col-panel-head,
+:host-context(.dark-theme) .col-panel-foot {
+  background: #172033; border-color: #26334a;
+}
+:host-context(.dark-theme) .col-panel-head h3,
+:host-context(.dark-theme) .cp-row { color: #e2e8f0; }
+:host-context(.dark-theme) .cp-close { color: #94a3b8; }
+:host-context(.dark-theme) .cp-close:hover { background: #263447; color: #e2e8f0; }
+:host-context(.dark-theme) .cp-row:hover { background: #263447; }
+
+/* ProofHub / compliance modal leftovers */
+:host-context(.dark-theme) .ph-progress-txt { color: #cbd5e1; }
+:host-context(.dark-theme) .ph-progress-bar { background: #334155; }
+:host-context(.dark-theme) .ph-pagination { border-top-color: #26334a; }
+:host-context(.dark-theme) .ph-d-filename { color: #e2e8f0; }
+:host-context(.dark-theme) .ph-date { color: #cbd5e1; }
+
+/* ═══ Mobile verification fixes (2026-07) ═══ */
+/* Layout-only; no new colors, so no dark-theme counterparts needed. */
+
+@media (max-width: 768px) {
+  /* .la-root is height:100vh + overflow:hidden. Inside the app shell (whose
+     .content is already ~100dvh minus the header) that produced a nested
+     scroll area whose bottom rows sat under the fold. Let the shell scroll
+     the page and let the grouped tables flow. */
+  .la-root {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .table-area {
+    flex: none;
+    overflow-y: visible;
+    padding-bottom: 16px;
+  }
+
+  /* Tap targets on the toolbar / search / pager */
+  .search-input {
+    min-height: 40px;
+  }
+
+  .tb-btn {
+    min-height: 40px;
+  }
+
+  .pager-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .pager-select {
+    min-height: 40px;
+  }
 }

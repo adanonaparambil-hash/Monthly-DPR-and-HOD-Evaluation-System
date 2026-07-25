@@ -652,3 +652,63 @@
 .table-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #138271, #1ABC9C);
 }
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+@media (max-width: 1024px) {
+  .past-reports-container { padding: 20px; }
+  .filter-input,
+  .filter-select { width: 100%; }
+}
+
+@media (max-width: 768px) {
+  .past-reports-container { padding: 14px; overflow-x: hidden; }
+
+  /* Filters: stacked, full-width inputs */
+  .filter-section { padding: 16px; }
+  .filter-row { grid-template-columns: 1fr; gap: 14px; margin-bottom: 16px; }
+  .filter-group { width: 100%; }
+  .filter-input,
+  .filter-select { width: 100%; }
+  .filter-actions { flex-wrap: wrap; }
+
+  /* Table scrolls horizontally inside its container */
+  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .reports-table { min-width: 640px; }
+  .reports-table th,
+  .reports-table td { white-space: nowrap; }
+
+  /* Disable row shift on touch to avoid clipped edges */
+  .reports-table tbody tr:hover { transform: none; box-shadow: none; }
+
+  /* Pagination stacks and wraps */
+  .pagination-section { flex-direction: column; gap: 12px; padding: 16px; text-align: center; }
+  .pagination-controls { flex-wrap: wrap; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .past-reports-container { padding: 10px; }
+  .filter-section { padding: 14px; }
+  .filter-group label { font-size: 12px; }
+
+  /* Primary actions full width */
+  .filter-actions { flex-direction: column; gap: 10px; }
+  .btn-filter,
+  .btn-clear { width: 100%; justify-content: center; }
+
+  .reports-table { min-width: 560px; font-size: 12px; }
+  .reports-table th,
+  .reports-table td { padding: 10px 8px; }
+
+  .pagination-btn { padding: 7px 12px; font-size: 13px; }
+  .pagination-info { font-size: 12.5px; }
+  .empty-state { padding: 40px 14px; }
+}
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+/* No dead .dark-theme / [data-theme] selectors were found in this file — its
+   surfaces are all driven by the theme service's CSS custom properties. The
+   only gap: the native filter selects get a dark background from those
+   variables but no color-scheme, so their dropdown chrome stayed light. */
+:host-context(.dark-theme) .filter-select {
+  color-scheme: dark;
+}

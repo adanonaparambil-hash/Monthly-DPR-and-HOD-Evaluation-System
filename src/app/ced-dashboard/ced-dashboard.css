@@ -1120,3 +1120,129 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #1B2A38;
 }
+/* ═══ Mobile responsiveness (2026-07) ═══
+   Append-only section — fills gaps in the existing @media coverage.
+   Desktop (>1024px) appearance is unchanged. */
+
+@media (max-width: 1024px) {
+  /* Tighter section rhythm on tablets */
+  .kpi-section,
+  .department-section,
+  .evaluation-section,
+  .productivity-section,
+  .achievements-section,
+  .performers-section,
+  .insights-section { gap: 18px; margin-bottom: 24px; }
+
+  .chart-container { height: 280px; max-width: 100%; }
+  .large-chart     { min-height: 0; }
+  .kpi-card        { padding: 22px; }
+}
+
+@media (max-width: 768px) {
+  .ced-dashboard-container { padding: 12px; }
+
+  /* Sections */
+  .kpi-section,
+  .department-section,
+  .evaluation-section,
+  .productivity-section,
+  .achievements-section,
+  .performers-section,
+  .insights-section { gap: 14px; margin-bottom: 18px; }
+
+  /* Top bar */
+  .top-bar { padding: 16px 14px; border-radius: 14px; }
+  .dashboard-header h1 { font-size: 22px; }
+  .dashboard-header p  { font-size: 14px; }
+  .control-select, .profile-btn { min-height: 42px; }   /* tappable */
+
+  /* Cards */
+  .kpi-card { padding: 18px 14px; border-radius: 16px; }
+  .kpi-card:hover, .chart-card:hover { transform: none; } /* no lift on touch */
+  .kpi-header { flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .kpi-header h3 { font-size: 16px; }
+  .kpi-value     { font-size: 26px; }
+  .chart-card, .heatmap-card, .word-cloud-card,
+  .progress-grid, .performers-carousel,
+  .insight-card, .funnel-card { padding: 18px 14px; border-radius: 14px; }
+  .chart-header h3 { font-size: 16px; }
+  .chart-header p  { font-size: 12.5px; }
+
+  /* Charts: reduced heights, never wider than viewport */
+  .chart-container { height: 260px; max-width: 100%; }
+  .gauge-container, .donut-container { height: 180px; max-width: 100%; }
+
+  /* Heatmap: scroll inside its card instead of overflowing the page */
+  .heatmap-card { overflow-x: auto; }
+  .heatmap-grid { min-width: 320px; }
+
+  /* Word cloud / funnel / insights */
+  .word-cloud { min-height: 160px; padding: 12px; gap: 10px; }
+  .stage-bar  { font-size: 12.5px; padding: 10px 12px; gap: 6px; flex-wrap: wrap; }
+  .insight-item { padding: 12px; gap: 12px; }
+  .insight-text p { font-size: 13px; }
+
+  /* Performers */
+  .performer-cards { gap: 12px; }
+  .performer-card  { padding: 16px 14px; }
+}
+
+@media (max-width: 480px) {
+  .ced-dashboard-container { padding: 10px 8px; }
+
+  /* Sections */
+  .kpi-section,
+  .department-section,
+  .evaluation-section,
+  .productivity-section,
+  .achievements-section,
+  .performers-section,
+  .insights-section { gap: 12px; margin-bottom: 14px; }
+
+  /* Top bar */
+  .top-bar { padding: 14px 12px; border-radius: 12px; }
+  .dashboard-header h1 { font-size: 19px; }
+  .dashboard-header p  { font-size: 13px; }
+
+  /* Cards */
+  .kpi-card, .chart-card, .heatmap-card, .word-cloud-card,
+  .progress-grid, .performers-carousel,
+  .insight-card, .funnel-card { padding: 14px 10px; border-radius: 12px; }
+  .kpi-header h3 { font-size: 15px; }
+  .kpi-value     { font-size: 22px; }
+  .chart-header h3 { font-size: 15px; }
+  .chart-header p  { font-size: 12px; }
+
+  /* Charts */
+  .chart-container { height: 230px; }
+  .gauge-container, .donut-container { height: 150px; }
+  .gauge-percentage, .donut-percentage { font-size: 20px; }
+
+  /* Heatmap cells */
+  .metric-cell { padding: 6px 4px; font-size: 10px; }
+  .dept-name   { font-size: 11px; }
+
+  /* Funnel / insights */
+  .stage-bar   { font-size: 11.5px; padding: 9px 10px; }
+  .stage-count { font-size: 11px; }
+  .insight-item { padding: 10px; gap: 10px; }
+  .insight-icon { width: 34px; height: 34px; font-size: 15px; }
+
+  /* Performers */
+  .performer-card { padding: 14px 12px; }
+  .performer-info h4 { font-size: 14px; }
+}
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+/* No dead .dark-theme / [data-theme] selectors were found in this file — its
+   surfaces are all driven by the theme service's CSS custom properties. The
+   only gap: native controls get a dark background from those variables but no
+   color-scheme, so their internal text/arrow/list chrome stayed light. */
+:host-context(.dark-theme) .control-select,
+:host-context(.dark-theme) .form-input,
+:host-context(.dark-theme) .form-select,
+:host-context(.dark-theme) .form-textarea {
+  color-scheme: dark;
+}

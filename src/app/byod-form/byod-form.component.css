@@ -1367,3 +1367,214 @@
 .dark-theme .history-remarks { color: var(--text-primary); }
 .dark-theme .history-approver,
 .dark-theme .history-date { color: var(--text-secondary); }
+
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+@media (max-width: 1024px) {
+  /* Collapse the 2-column layout (the un-scoped 1fr 300px rule above
+     otherwise wins over the older 1100px media rule) */
+  .byod-grid-layout { grid-template-columns: 1fr; }
+  .byod-col-side { min-width: 0; }
+  .byod-col-main { min-width: 0; }
+  .byod-wrap { padding: 18px; }
+}
+
+@media (max-width: 768px) {
+  .byod-wrap { padding: 14px; overflow-x: hidden; }
+
+  /* Hero stacks vertically */
+  .byod-hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 18px;
+    gap: 14px;
+  }
+  .byod-hero-icon { width: 52px; height: 52px; border-radius: 13px; }
+  .byod-hero-icon i,
+  .byod-hero-icon .fas { font-size: 22px !important; }
+  .byod-hero-title { font-size: 19px; }
+  .byod-hero-chips { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .byod-back-btn-inline,
+  .byod-pdf-btn { align-self: flex-start; }
+
+  /* Form grid: single column, inputs full width */
+  .byod-form-grid { grid-template-columns: 1fr; gap: 12px; }
+  .byod-field-full { grid-column: 1; }
+  .byod-input { width: 100%; }
+
+  /* Cards: reduced padding */
+  .byod-card-head { padding: 13px 15px; flex-wrap: wrap; }
+  .byod-card-body { padding: 15px; }
+
+  /* Employee preview row stacks */
+  .byod-emp-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .byod-emp-meta { width: 100%; }
+
+  /* Amount banner stacks */
+  .byod-amount-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  /* Hardware / Software split: single column */
+  .byod-split-row { grid-template-columns: 1fr; }
+  .byod-hw-grid { grid-template-columns: 1fr; }
+  .byod-hw-optional { grid-column: 1; }
+
+  /* Approver info grid: single column */
+  .byod-apv-info-grid { grid-template-columns: 1fr; }
+  .byod-apv-inline { flex-wrap: wrap; }
+  .byod-apv-inline-name { white-space: normal; }
+  .byod-sig-pair { grid-template-columns: 1fr; }
+
+  /* Radio options wrap full width */
+  .byod-radio-group { gap: 8px; }
+  .byod-radio { flex: 1 1 auto; justify-content: flex-start; }
+
+  /* Action buttons wrap */
+  .byod-actions { flex-wrap: wrap; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .byod-wrap { padding: 10px; }
+  .byod-hero-content { padding: 16px 14px; }
+  .byod-hero-title { font-size: 16px; }
+  .byod-hero-sub { font-size: 11.5px; }
+  .byod-chip { flex: 1 1 calc(50% - 8px); }
+  .byod-chip-live { flex: 1 1 100%; justify-content: center; }
+
+  .byod-card-head { padding: 11px 12px; }
+  .byod-card-body { padding: 12px; }
+
+  .byod-emp-avatar { width: 56px; height: 56px; font-size: 22px; }
+  .byod-amount-val { font-size: 20px; }
+  .byod-amount-badge { align-self: flex-start; }
+
+  /* Primary actions full width */
+  .byod-actions { flex-direction: column; }
+  .byod-actions .byod-btn { width: 100%; justify-content: center; }
+
+  /* Approve / Reject buttons stack */
+  .byod-ia-btns { flex-direction: column; }
+  .byod-ia-btn { width: 100%; }
+
+  .byod-tc-item { padding: 12px; gap: 10px; }
+  .byod-tc-icon { width: 34px; height: 34px; border-radius: 8px; }
+  .byod-check-row { padding: 12px; }
+  .byod-pdf-btn span { font-size: 11.5px; }
+  .byod-page-footer { font-size: 10.5px; text-align: center; padding: 12px 14px; }
+}
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+:host-context(.dark-theme) .history-toggle-btn {
+  background: rgba(29, 78, 216, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+:host-context(.dark-theme) .history-toggle-btn:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+:host-context(.dark-theme) .step-history-list {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .history-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+:host-context(.dark-theme) .history-remarks { color: var(--text-primary);
+}
+:host-context(.dark-theme) .history-approver,
+:host-context(.dark-theme) .history-date { color: var(--text-secondary);
+}
+
+/* --- Primary surfaces that previously had no dark rule at all --- */
+:host-context(.dark-theme) .byod-wrap {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .byod-card,
+:host-context(.dark-theme) .byod-success-card,
+:host-context(.dark-theme) .byod-page-footer,
+:host-context(.dark-theme) .byod-back-btn,
+:host-context(.dark-theme) .byod-back-btn-inline {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .byod-card-head,
+:host-context(.dark-theme) .byod-head-official {
+  background: #172033;
+  border-bottom-color: #334155;
+}
+:host-context(.dark-theme) .byod-sub-section,
+:host-context(.dark-theme) .byod-hw-item,
+:host-context(.dark-theme) .byod-sw-item,
+:host-context(.dark-theme) .byod-sig-box,
+:host-context(.dark-theme) .byod-ia-panel,
+:host-context(.dark-theme) .byod-emp-row,
+:host-context(.dark-theme) .byod-apv-inline,
+:host-context(.dark-theme) .byod-apv-profile-row {
+  background: #172033;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .byod-card-title,
+:host-context(.dark-theme) .byod-sub-section-title,
+:host-context(.dark-theme) .byod-section-label,
+:host-context(.dark-theme) .byod-emp-name,
+:host-context(.dark-theme) .byod-sig-title,
+:host-context(.dark-theme) .byod-request-text,
+:host-context(.dark-theme) .byod-hw-val,
+:host-context(.dark-theme) .byod-check-text,
+:host-context(.dark-theme) .byod-apv-inline-name,
+:host-context(.dark-theme) .byod-success-card h2 {
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .byod-card-sub,
+:host-context(.dark-theme) .byod-emp-id,
+:host-context(.dark-theme) .byod-emp-contact,
+:host-context(.dark-theme) .byod-hw-label,
+:host-context(.dark-theme) .byod-sw-text,
+:host-context(.dark-theme) .byod-sig-hint,
+:host-context(.dark-theme) .byod-page-footer,
+:host-context(.dark-theme) .byod-apv-inline-sub,
+:host-context(.dark-theme) .byod-apv-inline-meta,
+:host-context(.dark-theme) .byod-success-card p {
+  color: #94a3b8;
+}
+/* Native controls: dark background needs color-scheme so internal UI follows */
+:host-context(.dark-theme) .byod-input,
+:host-context(.dark-theme) .byod-textarea,
+:host-context(.dark-theme) .byod-select,
+:host-context(.dark-theme) .byod-ia-textarea {
+  background: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+:host-context(.dark-theme) .byod-input:hover:not(:disabled),
+:host-context(.dark-theme) .byod-input:focus:not(:disabled) {
+  background: #0f172a;
+}
+:host-context(.dark-theme) .byod-input-disabled {
+  background: #0f172a !important;
+}
+:host-context(.dark-theme) .byod-input::placeholder {
+  color: #64748b;
+}
+:host-context(.dark-theme) .byod-check-box,
+:host-context(.dark-theme) .byod-radio-dot {
+  background: #172033;
+  border-color: #475569;
+}
+:host-context(.dark-theme) .byod-sig-line,
+:host-context(.dark-theme) .byod-apv-divider {
+  background: #334155;
+}
+:host-context(.dark-theme) .byod-btn-ghost:hover {
+  background: #172033;
+  border-color: #475569;
+}

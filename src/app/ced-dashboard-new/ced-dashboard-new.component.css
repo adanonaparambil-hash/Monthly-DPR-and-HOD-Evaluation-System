@@ -6634,3 +6634,65 @@ mprehensive Dark Mode Support */
 .btn-export-all:active:not(:disabled) { transform: translateY(0) !important; }
 .btn-export-all:disabled { opacity: 0.5 !important; cursor: not-allowed !important; }
 .btn-export-all i { font-size: 0.78rem !important; }
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+:host-context(.dark-theme) .info-card {
+  background: linear-gradient(135deg, 
+    rgba(40, 40, 40, 0.95) 0%, 
+    rgba(30, 30, 30, 0.9) 100%);
+  border-color: rgba(191, 169, 70, 0.25);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+:host-context(.dark-theme) .info-card:hover {
+  border-color: rgba(191, 169, 70, 0.4);
+  box-shadow: 0 6px 20px rgba(191, 169, 70, 0.2);
+}
+:host-context(.dark-theme) .card-icon {
+  background: linear-gradient(135deg, rgba(191, 169, 70, 0.25), rgba(72, 94, 43, 0.2));
+  border-color: rgba(191, 169, 70, 0.3);
+}
+:host-context(.dark-theme) .card-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+:host-context(.dark-theme) .quote-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+:host-context(.dark-theme) .quote-author {
+  color: var(--primary-color);
+}
+:host-context(.dark-theme) .card-decoration {
+  color: rgba(191, 169, 70, 0.15);
+}
+
+/* --- Primary surfaces with no (or overridden) dark rule --- */
+/* Fixed page backdrop was a light gradient in dark mode. */
+:host-context(.dark-theme) .simple-background {
+  background: linear-gradient(135deg, #0f172a 0%, #172033 100%);
+}
+/* The later `.employee-card.glassmorphism { background:#fff !important }` rules
+   out-cascaded the existing dark `.employee-card` rule (equal specificity,
+   defined later), so the cards stayed white. Re-assert with matching specificity. */
+:host-context(.dark-theme) .employees-view .employee-card.glassmorphism,
+:host-context(.dark-theme) .employee-list .employee-card.glassmorphism,
+:host-context(.dark-theme) .employee-card.glassmorphism {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+:host-context(.dark-theme) .employees-view .employee-card.glassmorphism:hover,
+:host-context(.dark-theme) .employee-list .employee-card.glassmorphism:hover,
+:host-context(.dark-theme) .employee-card.glassmorphism:hover {
+  background: #172033 !important;
+  border-color: #475569 !important;
+}
+:host-context(.dark-theme) .employees-view .employee-card.glassmorphism.expanded,
+:host-context(.dark-theme) .employee-card.glassmorphism.expanded {
+  background: #1e293b !important;
+  border-color: #94a3b8 !important;
+}
+/* Native controls given a dark background above need color-scheme too */
+:host-context(.dark-theme) .modern-select,
+:host-context(.dark-theme) .filter-select {
+  color-scheme: dark;
+}

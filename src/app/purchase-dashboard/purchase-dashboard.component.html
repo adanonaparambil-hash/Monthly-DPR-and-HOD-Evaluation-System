@@ -344,11 +344,11 @@
           <div class="pd-ddm" *ngIf="projCoOpen" (click)="$event.stopPropagation()">
             <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="projCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
             <div class="pd-ddi pd-ddi-clear" *ngIf="projCompanies.length"
-                 (click)="projCompanies=[]; loadProjects(); onProj();">
+                 (click)="projCompanies=[]; loadProjects(null, true);">
               <i class="fas fa-times-circle"></i> Clear selection
             </div>
             <!-- All Companies Option -->
-            <div class="pd-ddi" 
+            <div class="pd-ddi"
                  [class.pd-ddi-active]="isSelected(projCompanies, 'All Companies')"
                  (click)="toggleProjCompany('All Companies')">
               <span class="pd-ddi-cb"></span>
@@ -589,11 +589,11 @@
             <div class="pd-ddm pd-ddm--modal" *ngIf="projCoOpen" (click)="$event.stopPropagation()">
               <div class="pd-dds"><i class="fas fa-search"></i><input class="pd-dds-inp" [(ngModel)]="projCoSearch" placeholder="Search..." (click)="$event.stopPropagation()" /></div>
               <div class="pd-ddi pd-ddi-clear" *ngIf="projCompanies.length"
-                   (click)="projCompanies=[]; loadProjects(); onProj();">
+                   (click)="projCompanies=[]; loadProjects(null, true);">
                 <i class="fas fa-times-circle"></i> Clear selection
               </div>
               <!-- All Companies Option -->
-              <div class="pd-ddi" 
+              <div class="pd-ddi"
                    [class.pd-ddi-active]="isSelected(projCompanies, 'All Companies')"
                    (click)="toggleProjCompany('All Companies')">
                 <span class="pd-ddi-cb"></span>

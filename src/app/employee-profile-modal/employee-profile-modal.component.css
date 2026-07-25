@@ -642,3 +642,49 @@
     background: #f8fafc;
   }
 }
+/* ═══ Mobile responsiveness (2026-07) ═══ */
+
+@media (max-width: 1024px) {
+  .modal-header { padding: 1.25rem 1.5rem; }
+  .profile-modal-content { padding: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+  .modal-backdrop { padding: 10px; }
+  .modal-container {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: 92vh;
+  }
+  .modal-content { overflow-y: auto; }
+  .modal-header { min-height: unset; padding: 0.875rem 1rem; }
+  .profile-modal-content { padding: 1rem; }
+  .modern-info-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .profile-overview-card { padding: 1.25rem; gap: 1rem; }
+  .avatar-container { width: 88px; height: 88px; }
+  .personal-info-section,
+  .skills-expertise-section,
+  .career-summary-section { padding: 1.25rem; }
+  .section-header { margin-bottom: 1.25rem; }
+}
+
+@media (max-width: 480px) {
+  .modal-backdrop { padding: 10px; align-items: center; }
+  .modal-container {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    height: auto;
+    max-height: 92vh;
+    border-radius: 1rem;
+    margin: auto;
+  }
+  .modal-title { font-size: 1rem; }
+  .avatar-container { width: 72px; height: 72px; }
+  .profile-name { font-size: 1.125rem; }
+  .profile-position { font-size: 0.9375rem; }
+  .personal-info-section,
+  .skills-expertise-section,
+  .career-summary-section { padding: 1rem; }
+  .modal-footer { padding: 0.75rem 1rem; position: static; }
+  .btn-secondary { width: 100%; justify-content: center; }
+}

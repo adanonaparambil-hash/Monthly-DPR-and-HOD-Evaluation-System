@@ -1,0 +1,290 @@
+/* ── Launch button (fallback when host doesn't provide its own) ─────────────── */
+.air-launch {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border: none; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, .34);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.air-launch:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249, 115, 22, .46); }
+
+/* ── Overlay (shared by loading + report modal) ─────────────────────────────── */
+/* z-index sits above the app header/sidebar (which reach ~2000) so the modal
+   covers the whole screen instead of tucking under the top bar. */
+.air-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(15, 23, 42, .60); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  animation: air-fade .15s ease-out;
+}
+@keyframes air-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Filter step card ───────────────────────────────────────────────────────── */
+.air-filter {
+  width: 100%; max-width: 440px;
+  background: #fff; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .32);
+  animation: air-pop .18s ease-out;
+}
+.air-filter-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+}
+.air-filter-icon {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: 0 3px 10px rgba(249, 115, 22, .4);
+}
+.air-filter-title { font-weight: 700; font-size: 15px; }
+.air-filter-sub { font-size: 11.5px; opacity: .82; margin-top: 2px; }
+.air-filter-x {
+  margin-left: auto; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.14);
+  color: #fff; width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+}
+.air-filter-x:hover { background: rgba(255,255,255,.26); }
+
+.air-filter-body { padding: 20px 18px 6px; }
+.air-field-row { display: flex; gap: 12px; }
+.air-field { display: flex; flex-direction: column; gap: 6px; flex: 1; margin-bottom: 14px; }
+.air-field > span {
+  font-size: 12px; font-weight: 600; color: #475569;
+}
+.air-field input, .air-field select {
+  padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 9px;
+  font-size: 13px; color: #1e293b; background: #fff; width: 100%;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.air-field input:focus, .air-field select:focus {
+  outline: none; border-color: #138271; box-shadow: 0 0 0 3px rgba(19, 130, 113, .15);
+}
+.air-filter-err {
+  display: flex; align-items: center; gap: 8px;
+  margin: 4px 0 10px; padding: 9px 12px; border: 1px solid #fecaca; border-radius: 9px;
+  background: #fef2f2; color: #b91c1c; font-size: 12.5px;
+}
+
+.air-filter-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 18px 18px;
+}
+.air-filter-cancel {
+  padding: 9px 16px; border: 1px solid #cbd5e1; border-radius: 9px;
+  background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.air-filter-cancel:hover { background: #f1f5f9; }
+.air-filter-go {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border: none; border-radius: 9px; cursor: pointer;
+  background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff;
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, .34);
+  transition: filter .12s ease, transform .12s ease;
+}
+.air-filter-go:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+@media (max-width: 480px) {
+  .air-field-row { flex-direction: column; gap: 0; }
+}
+
+/* ── Loading card ───────────────────────────────────────────────────────────── */
+.air-loading-card {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 34px 44px; border-radius: 16px; background: #fff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .30); text-align: center;
+}
+.air-spinner {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 4px solid #fde4c9; border-top-color: #f97316;
+  animation: air-spin .8s linear infinite;
+}
+@keyframes air-spin { to { transform: rotate(360deg); } }
+.air-loading-title { font-weight: 700; color: #1e293b; font-size: 15px; }
+.air-loading-sub { font-size: 12.5px; color: #64748b; }
+
+/* ── Error ────────────────────────────────────────────────────────────────── */
+.air-error {
+  display: flex; align-items: center; gap: 10px;
+  margin: 12px 0; padding: 14px 16px; border: 1px solid #fecaca; border-radius: 12px;
+  background: #fef2f2; color: #b91c1c; font-size: 13px;
+}
+.air-retry {
+  margin-left: auto; padding: 6px 12px; border: 1px solid #fca5a5;
+  background: #fff; color: #b91c1c; border-radius: 8px; cursor: pointer; font-size: 12px;
+}
+
+/* ── Modal shell ──────────────────────────────────────────────────────────── */
+.air-modal {
+  width: 96vw; max-width: 1440px; max-height: 94vh;   /* use the full screen width for roomy tables */
+  display: flex; flex-direction: column;
+  background: #fff; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 34px 80px rgba(15, 23, 42, .40);
+  animation: air-pop .18s ease-out;
+}
+@keyframes air-pop {
+  from { transform: translateY(14px) scale(.985); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── Modal header (fixed) ─────────────────────────────────────────────────── */
+.air-modal-head {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
+}
+.air-head-left { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.air-head-icon {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 17px;
+  background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff;
+  box-shadow: 0 3px 10px rgba(249, 115, 22, .4);
+}
+.air-head-text { min-width: 0; }
+.air-head-title {
+  font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.air-head-sub {
+  font-size: 12px; opacity: .82; margin-top: 2px;
+  display: flex; align-items: center; gap: 5px;
+}
+.air-cache {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700;
+  background: rgba(245, 158, 11, .9); color: #fff; padding: 2px 8px; border-radius: 20px;
+}
+.air-head-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+.air-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 13px; border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,.30); background: rgba(255,255,255,.14); color: #fff;
+  transition: background .12s ease;
+}
+.air-btn:hover { background: rgba(255,255,255,.26); }
+.air-pdf {
+  background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff;
+  border-color: transparent; font-weight: 700;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, .4);
+}
+.air-pdf:hover { filter: brightness(1.07); background: linear-gradient(135deg, #f59e0b, #f97316); }
+.air-close { padding: 8px 11px; }
+@media (max-width: 560px) { .air-btn-txt { display: none; } }
+
+/* ── Modal body (scrolls) — clean grey desk, white report sheet ───────────── */
+.air-modal-body {
+  flex: 1 1 auto; overflow-y: auto;
+  background: #eef1f4;
+  padding: 22px;
+}
+
+/* ── Report content — a single white "sheet" that fills the modal width ────── */
+.air-content {
+  max-width: 100%; margin: 0 auto;
+  background: #fff; border-radius: 12px;
+  padding: 30px 40px 44px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .08);
+}
+/* Prose stays at a comfortable reading width; tables/headings span the full sheet */
+.air-body > p, .air-body > ul, .air-body > ol { max-width: 1000px; }
+
+/* Slim title strip at the top of the sheet */
+.air-pdf-title {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+  padding-bottom: 16px; margin-bottom: 22px;
+  border-bottom: 2px solid #f1f5f9;
+}
+.air-pdf-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 800; color: #1B2A38; letter-spacing: -.01em;
+}
+.air-pdf-badge i { color: #f97316; }
+.air-pdf-scope { font-size: 12px; color: #64748b; font-weight: 500; }
+
+.air-body { font-size: 14px; line-height: 1.7; color: #334155; }
+
+/* The report's own top title (# / ## first line) */
+.air-body > h1:first-child, .air-body > h2:first-child {
+  font-size: 21px; color: #1B2A38; font-weight: 800; letter-spacing: -.01em;
+  margin: 0 0 6px; padding: 0; border: none; text-align: left;
+}
+
+/* Numbered section headings — colourful accent bar + tinted lead-in */
+.air-body h1, .air-body h2 {
+  font-size: 17px; margin: 32px 0 14px; color: #1B2A38; font-weight: 800;
+  padding: 9px 14px; letter-spacing: -.01em;
+  border-left: 4px solid #1ABC9C; border-bottom: 2px solid #138271;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(90deg, rgba(26, 188, 156, .10), rgba(26, 188, 156, 0) 46%);
+}
+.air-body > h1:first-child, .air-body > h2:first-child { margin-top: 0; }
+.air-body h3 { font-size: 15px; margin: 18px 0 8px; color: #138271; font-weight: 700; }
+.air-body h4 { font-size: 14px; margin: 14px 0 6px; color: #334155; font-weight: 700; }
+
+/* Paragraphs / lists */
+.air-body p { margin: 10px 0; }
+.air-body ul { margin: 10px 0; padding-left: 26px; list-style: none; }
+.air-body ul li { position: relative; margin: 7px 0; }
+.air-body ul li::before {
+  content: '\f058'; font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free';
+  font-weight: 900; color: #f59e0b; position: absolute; left: -22px; top: 2px; font-size: 12px;
+}
+.air-body strong { color: #0f172a; font-weight: 700; }
+.air-body em { color: #138271; font-style: normal; font-weight: 600; }
+.air-body code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12.5px; background: #f1f5f9; color: #b45309;
+  padding: 1px 6px; border-radius: 5px;
+}
+.air-hr { border: none; border-top: 1px solid #e2e8f0; margin: 18px 0; }
+
+/* ── Tables — crisp, clearly bordered, horizontally scrollable when wide ──── */
+/* The wrapper owns the border/radius and provides horizontal scroll so a wide
+   table (e.g. the 11-column company ranking) keeps proper column widths instead
+   of being squeezed into the sheet. */
+.air-tablewrap {
+  margin: 16px 0 20px;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.air-table {
+  border-collapse: collapse;
+  width: 100%; min-width: 100%;   /* fill the sheet; grow (and scroll) when content needs it */
+  margin: 0; font-size: 13px;
+}
+.air-table th {
+  background: #1B2A38; color: #fff;
+  text-align: left; padding: 12px 18px; font-weight: 700; font-size: 12px;
+  white-space: nowrap;                 /* headings never wrap — keeps columns aligned */
+  border-right: 1px solid rgba(255,255,255,.14);
+  position: sticky; top: 0;            /* header stays visible while scrolling a long table */
+}
+.air-table th:last-child { border-right: none; }
+.air-table td {
+  padding: 11px 18px; border-top: 1px solid #e8edf1; border-right: 1px solid #f1f5f9;
+  color: #334155; vertical-align: top;
+  min-width: 56px;                     /* stop short numeric columns from collapsing */
+  white-space: nowrap;                 /* keep each value on one line so rows read cleanly */
+}
+.air-table td:last-child { border-right: none; }
+/* first column reads like a row label and may hold longer text (names) — let it wrap */
+.air-table td:first-child { font-weight: 600; color: #1e293b; }
+/* the two widest free-text columns (name + any trailing reason) may wrap */
+.air-table td:first-child, .air-table td.air-wrap { white-space: normal; min-width: 120px; }
+.air-table tbody tr:nth-child(even) td { background: #f8fafc; }
+.air-table tbody tr:hover td { background: #fff7ed; }
+
+@media (max-width: 640px) {
+  .air-overlay { padding: 8px; }
+  .air-modal { width: 100%; max-height: 96vh; border-radius: 12px; }
+  .air-modal-body { padding: 10px; }
+  .air-content { padding: 18px 14px; }
+  .air-modal-head { padding: 12px 14px; }
+  .air-filter { max-width: none; }
+  .air-field input, .air-field select { font-size: 16px; } /* stop iOS zoom */
+  .air-body { font-size: 13.5px; }
+  .air-table th, .air-table td { padding: 9px 12px; }
+}

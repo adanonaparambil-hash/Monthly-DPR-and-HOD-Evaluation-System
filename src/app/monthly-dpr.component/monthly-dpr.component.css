@@ -3847,3 +3847,222 @@ nced validation styles for rating inputs */
     font-size: 16px;
   }
 }
+
+/* ═══ Mobile responsiveness gap-fill (2026-07) ═══ */
+/* Layout-only rules; no new colors introduced, so no dark counterparts needed. */
+
+@media (max-width: 768px) {
+  /* Section headers with action buttons (Get ProofHub Task History / + Add New Task)
+     previously had no wrap rules and could overflow horizontally. */
+  .section-header {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .button-container {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  /* Comfortable tap targets for header action buttons */
+  .add-btn,
+  .ptask {
+    min-height: 40px;
+  }
+
+  /* Hours tracker banners: let long messages wrap cleanly */
+  .hours-remaining,
+  .hours-warning {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .hours-remaining span,
+  .hours-warning span {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stack the section-header action buttons full-width on phones */
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .button-container {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .button-container .add-btn,
+  .button-container .ptask {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Keep the two action buttons (Save Draft / Submit, Approve / ReWork) usable */
+  .action-buttons button {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Rating legend items align better when stacked */
+  .rating-legend {
+    padding: 12px;
+    gap: 10px;
+  }
+}
+
+/* ═══ Dark theme gap-fill (2026-07) ═══ */
+/* Fixes for surfaces that were never given dark rules while sibling cards have them.
+   Uses the component's existing dual selector pattern. */
+
+/* Management Remarks card stayed white in dark mode */
+:host-context(.dark-theme) .remarks-card,
+.dark-theme .remarks-card {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .remarks-content p,
+.dark-theme .remarks-content p {
+  color: var(--text-secondary);
+}
+
+/* Remarks History card + items stayed white in dark mode */
+:host-context(.dark-theme) .history-card,
+.dark-theme .history-card {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .history-item,
+.dark-theme .history-item {
+  border-color: var(--border-color);
+  background: var(--background-primary);
+}
+
+:host-context(.dark-theme) .history-user .user-name,
+.dark-theme .history-user .user-name {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .history-date,
+.dark-theme .history-date {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .history-comment,
+.dark-theme .history-comment {
+  color: var(--text-secondary);
+}
+
+/* Overall Performance Rating card cluster stayed white in dark mode */
+:host-context(.dark-theme) .overall-rating-card,
+.dark-theme .overall-rating-card {
+  background: var(--background-secondary);
+  border-left-color: var(--accent-color);
+}
+
+:host-context(.dark-theme) .overall-rating-card h3,
+.dark-theme .overall-rating-card h3 {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .rating-breakdown,
+.dark-theme .rating-breakdown {
+  background: var(--background-primary);
+}
+
+:host-context(.dark-theme) .breakdown-item,
+.dark-theme .breakdown-item {
+  background: var(--background-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+:host-context(.dark-theme) .breakdown-item .label,
+.dark-theme .breakdown-item .label {
+  color: var(--text-secondary);
+}
+
+/* .breakdown-item.final-score keeps its own dark gradient + white text: no override needed */
+
+:host-context(.dark-theme) .final-rating-container,
+.dark-theme .final-rating-container {
+  background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-secondary) 100%);
+}
+
+:host-context(.dark-theme) .rating-description h4,
+.dark-theme .rating-description h4 {
+  color: var(--text-primary);
+}
+
+:host-context(.dark-theme) .rating-description p,
+.dark-theme .rating-description p {
+  color: var(--text-secondary);
+}
+
+:host-context(.dark-theme) .rating-legend,
+.dark-theme .rating-legend {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .legend-item,
+.dark-theme .legend-item {
+  color: var(--text-secondary);
+}
+
+/* Evaluation label hints (Rate 1-100) were #666: low contrast on dark */
+:host-context(.dark-theme) .eval-item label small,
+.dark-theme .eval-item label small {
+  color: var(--text-secondary);
+}
+
+/* AI Generated Summary heading was dark green (#2f4f2f): unreadable on dark */
+:host-context(.dark-theme) .summary-box h3,
+.dark-theme .summary-box h3 {
+  color: var(--text-primary);
+}
+
+
+/* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
+/* No dead .dark-theme / [data-theme] selectors remained in this file (every one
+   already had a paired :host-context variant). The rules below cover primary
+   surfaces that still had no dark rule at all. */
+:host-context(.dark-theme) .task-card .section-header,
+:host-context(.dark-theme) .kpi-card .section-header {
+  background: #172033;
+  color: #e2e8f0;
+}
+/* Native select: dark background needs color-scheme for its internal UI */
+:host-context(.dark-theme) .rating-dropdown {
+  background: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+:host-context(.dark-theme) .modal-body .table-container {
+  background: #1e293b;
+}
+:host-context(.dark-theme) .modal-body tbody tr:hover,
+:host-context(.dark-theme) .modal-body tbody tr:hover td {
+  background: #172033;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .summary-box textarea:focus {
+  background: #0f172a;
+  color: #e2e8f0;
+}

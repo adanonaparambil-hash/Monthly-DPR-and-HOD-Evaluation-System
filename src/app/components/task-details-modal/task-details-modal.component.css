@@ -4671,3 +4671,161 @@ textarea.editable-description[readonly] {
   box-shadow: 0 1px 4px rgba(16, 185, 129, 0.12) !important;
 }
 
+
+/* ═══ Mobile fixes (2026-07) — task detail modal ═══
+   ROOT CAUSE: `.modern-progress-section` (the Overall Progress card) is
+   `width: 320px !important; flex-shrink: 0 !important`. The 480px block below
+   tries `width: 100%` WITHOUT `!important`, so it loses the cascade, and there
+   was no rule at all at 768px — the card stayed a rigid 320px next to the
+   title and pushed the modal content out of view on phones. Everything here
+   therefore repeats `!important` to match the base rules' specificity. */
+@media (max-width: 768px) {
+  /* Title row: stack the title above the progress card */
+  .title-section {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .title-content { width: 100% !important; min-width: 0 !important; }
+
+  /* The Overall Progress card — full width, allowed to shrink */
+  .modern-progress-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-shrink: 1 !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+  }
+  .progress-details-wrapper { min-width: 0 !important; flex: 1 1 auto !important; }
+  .progress-quick-actions { flex-wrap: wrap !important; }
+
+  /* Header: let the status dropdown and chips shrink instead of overflowing */
+  .status-dropdown-wrapper,
+  .status-dropdown-wrapper select.status-dropdown-select {
+    min-width: 0 !important;
+    width: auto !important;
+    flex: 1 1 120px !important;
+  }
+  .modal-header-left, .modal-header-right { min-width: 0 !important; }
+
+  /* Nothing inside the modal may force horizontal scroll */
+  .task-modal-container, .task-content, .task-main-panel, .comments-panel {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+  .metadata-grid { min-width: 0 !important; }
+  .metadata-grid > * { min-width: 0 !important; }
+
+  /* Long values (folder paths, document links) must wrap, not stretch the grid */
+  .metadata-item input, .metadata-item textarea, .metadata-item select {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .metadata-value { overflow-wrap: anywhere !important; }
+
+  /* Comment bubbles + composer */
+  .comment-item, .comment-bubble, .comment-text {
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* ≥16px stops iOS auto-zooming when a field is focused */
+  .modal-task-title, .editable-title,
+  .metadata-item input, .metadata-item textarea,
+  .comment-input, .daily-remarks-textarea, .task-description-textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-progress-section {
+    width: 100% !important;
+    flex-direction: row !important;   /* keep ring beside the numbers */
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+  .progress-circle-wrapper { flex-shrink: 0 !important; }
+  /* Progress step buttons: 3-up grid instead of a cramped 5-across row */
+  .progress-quick-actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+  .progress-quick-actions > * { min-width: 0 !important; width: 100% !important; }
+  .comments-panel { max-height: 48vh !important; }
+}
+
+/* ═══ Mobile polish (2026-07) — modal header ═══
+   The header packs task-id + status dropdown + play/pause + SAVE on the left
+   and LOG TIME + TOTAL HOURS + close on the right. On a phone these wrapped
+   into a cramped jumble with the close button stranded. Give it two clean
+   rows: controls on top, the two timer chips side-by-side underneath. */
+@media (max-width: 768px) {
+  .modal-task-header {
+    align-items: flex-start !important;
+    row-gap: 10px !important;
+    position: relative !important;
+    padding-right: 44px !important;   /* reserve space for the close button */
+  }
+
+  /* Close button pinned top-right, always reachable */
+  .modal-task-header .action-btn:last-child,
+  .modal-task-header .modal-close-btn {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    z-index: 5 !important;
+  }
+
+  .modal-header-left {
+    width: 100% !important;
+    align-items: center !important;
+    row-gap: 8px !important;
+  }
+  .header-actions { flex-wrap: wrap !important; gap: 8px !important; }
+
+  /* Timer chips share one row, equal width */
+  .modal-header-right {
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .modal-timer-section,
+  .total-hours-section {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .modal-header-right .divider { display: none !important; }
+  .timer-label, .hours-label { font-size: 9px !important; letter-spacing: .04em !important; }
+  .timer-display, .hours-display, .hours-text { font-size: 15px !important; }
+
+  /* Touch-friendly control sizes */
+  .modal-task-header .action-btn { min-height: 36px !important; }
+  .save-btn, .modal-task-header button { min-height: 36px !important; }
+
+  /* Side-panel tabs: scroll rather than squeeze all three labels */
+  .comment-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+  }
+  .comment-tabs::-webkit-scrollbar { height: 0 !important; }
+  .comment-tab {
+    flex: 1 0 auto !important;
+    white-space: nowrap !important;
+    min-height: 42px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-task-header { padding: 8px 44px 8px 10px !important; }
+  .timer-display, .hours-display, .hours-text { font-size: 14px !important; }
+  .comment-tab { font-size: 10px !important; padding: 12px 10px !important; }
+}
