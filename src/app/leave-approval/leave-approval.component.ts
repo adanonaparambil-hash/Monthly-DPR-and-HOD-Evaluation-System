@@ -97,9 +97,12 @@ export class LeaveApprovalComponent implements OnInit {
   inboxTotalCount = 0;
   inboxTotalPages = 0;
 
-  // Filter panel visibility
-  showPendingFilters = false;
-  showMyRequestsFilters = false;
+  // Filter panel visibility — OPEN by default so the filters are visible as
+  // soon as the page loads (users shouldn't have to discover the Filter
+  // button first). The toggle still collapses them, and that choice is
+  // preserved in session state when navigating to a detail view and back.
+  showPendingFilters = true;
+  showMyRequestsFilters = true;
 
   togglePendingFilters(): void {
     this.showPendingFilters = !this.showPendingFilters;

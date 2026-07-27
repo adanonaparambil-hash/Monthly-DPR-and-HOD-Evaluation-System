@@ -5007,3 +5007,238 @@
     max-height: 45vh;
   }
 }
+
+/* ═══ Dark theme gap-fill #4 (2026-07) ═══
+   Travel & Break History modal. The partial dark block near line 3260 only
+   darkened the modal shell, .modal-body-large, the .break-table background,
+   the row hover, .employee-name-small, .department-name and
+   .modal-footer-large. Everything below was still light-on-light.
+
+   Cascade note: none of the light break-history declarations in this file use
+   !important, and every selector here is prefixed with
+   `.logged-hours-container.dark-mode` (two extra classes), so plain
+   declarations win. manage-fields-*.css never touches these classes, so this
+   file is the right home for the whole block. */
+
+/* ── Filter strip ──────────────────────────────────────────────────────── */
+.logged-hours-container.dark-mode .break-history-filters {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+.logged-hours-container.dark-mode .break-history-filters .filter-label {
+  color: #d1d5db;
+}
+.logged-hours-container.dark-mode .break-history-filters .filter-icon {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .break-history-filters .filter-date-input,
+.logged-hours-container.dark-mode .break-history-filters .filter-select {
+  color-scheme: dark;
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .break-history-filters .filter-select option {
+  background: #1f2937;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .break-history-filters .filter-date-input:focus,
+.logged-hours-container.dark-mode .break-history-filters .filter-select:focus {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18);
+}
+
+/* ── General search bar ────────────────────────────────────────────────── */
+.logged-hours-container.dark-mode .bh-general-search-bar {
+  background: #1f2937;
+  border-color: #374151;
+}
+.logged-hours-container.dark-mode .bh-gs-icon {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .bh-gs-input {
+  color-scheme: dark;
+  background: transparent;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .bh-gs-input::placeholder {
+  color: #6b7280;
+}
+.logged-hours-container.dark-mode .bh-gs-clear {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .bh-gs-clear:hover {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+/* ── Employee picker dropdown (had zero dark rules) ────────────────────── */
+.logged-hours-container.dark-mode .bh-emp-btn {
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .bh-emp-btn:hover {
+  border-color: #6b7280;
+}
+.logged-hours-container.dark-mode .bh-emp-btn--active {
+  border-color: #2dd4bf;
+}
+.logged-hours-container.dark-mode .bh-emp-btn--active:focus {
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.18);
+}
+.logged-hours-container.dark-mode .bh-emp-ico,
+.logged-hours-container.dark-mode .bh-emp-arrow {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .bh-emp-drop {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+.logged-hours-container.dark-mode .bh-emp-search-wrap {
+  border-bottom-color: #374151;
+}
+.logged-hours-container.dark-mode .bh-emp-search-ico {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .bh-emp-search-input {
+  color-scheme: dark;
+  background: #111827;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .bh-emp-search-input::placeholder {
+  color: #6b7280;
+}
+.logged-hours-container.dark-mode .bh-emp-search-input:focus {
+  border-color: #2dd4bf;
+}
+.logged-hours-container.dark-mode .bh-emp-list {
+  background: #1f2937;
+}
+.logged-hours-container.dark-mode .bh-emp-item {
+  color: #d1d5db;
+}
+.logged-hours-container.dark-mode .bh-emp-item:hover {
+  background: #374151;
+}
+.logged-hours-container.dark-mode .bh-emp-item--active {
+  background: rgba(20, 93, 86, 0.28);
+  color: #5eead4;
+}
+.logged-hours-container.dark-mode .bh-emp-code {
+  background: #374151;
+  color: #d1d5db;
+}
+.logged-hours-container.dark-mode .bh-emp-divider {
+  background: #374151;
+}
+.logged-hours-container.dark-mode .bh-emp-empty {
+  color: #9ca3af;
+}
+
+/* ── Loading / empty states inside .modal-body-large (#111827) ─────────── */
+.logged-hours-container.dark-mode .loading-state-large i {
+  color: #2dd4bf;
+}
+.logged-hours-container.dark-mode .loading-state-large p,
+.logged-hours-container.dark-mode .empty-state-large p {
+  color: #d1d5db;
+}
+.logged-hours-container.dark-mode .empty-state-large i {
+  color: #4b5563;
+}
+.logged-hours-container.dark-mode .empty-state-large span {
+  color: #9ca3af;
+}
+
+/* ── Break table ──────────────────────────────────────────────────────── */
+.logged-hours-container.dark-mode .break-table {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+.logged-hours-container.dark-mode .break-table thead {
+  background: linear-gradient(135deg, #111827 0%, #0f4c47 100%);
+}
+.logged-hours-container.dark-mode .break-table th {
+  color: #e5e7eb;
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+.logged-hours-container.dark-mode .break-table tbody tr {
+  border-bottom-color: #374151;
+}
+.logged-hours-container.dark-mode .break-table td {
+  color: #d1d5db;
+}
+.logged-hours-container.dark-mode .break-table tbody tr:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Break row cell contents ──────────────────────────────────────────── */
+.logged-hours-container.dark-mode .employee-id-small {
+  color: #5eead4;
+  background: rgba(20, 93, 86, 0.3);
+}
+.logged-hours-container.dark-mode .designation-name {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .break-reason-badge {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+.logged-hours-container.dark-mode .break-date,
+.logged-hours-container.dark-mode .end-time {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .start-time {
+  color: #e5e7eb;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.logged-hours-container.dark-mode .footer-info {
+  color: #9ca3af;
+}
+.logged-hours-container.dark-mode .footer-info i {
+  color: #2dd4bf;
+}
+
+/* ═══ Undefined CSS variables (2026-07) ═══
+   `--card-bg`, `--hover-bg`, `--modal-bg` and `--input-bg` are used in this
+   component (and in manage-fields-modern-v2.css) but are NOT DEFINED anywhere
+   in the project — only --text-primary/-secondary/--border-color/--primary-color
+   exist, in src/styles.css. Every fallback-less usage such as
+   `.day-log-history-modal-large { background: var(--card-bg) }` therefore
+   resolved to nothing, leaving those surfaces transparent in BOTH themes.
+   Defining them here on the component root fixes all usages in both
+   stylesheets at once, for light and dark. */
+.logged-hours-container {
+  --card-bg: #ffffff;
+  --modal-bg: #ffffff;
+  --hover-bg: #f3f4f6;
+  --input-bg: #ffffff;
+}
+.logged-hours-container.dark-mode {
+  --card-bg: #1f2937;
+  --modal-bg: #1f2937;
+  --hover-bg: #374151;
+  --input-bg: #374151;
+}
+
+/* ═══ Dark theme gap-fill #5 (2026-07) — toolbar buttons ═══
+   `.filter-btn` (used by "Add Custom Columns", and by buttons in the
+   Break History filter bar) is `background: white; color: #374151` with no
+   dark rule at all, so it stayed a white chip among the dark controls. */
+.logged-hours-container.dark-mode .filter-btn {
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+.logged-hours-container.dark-mode .filter-btn:hover {
+  background: #374151;
+  border-color: #6b7280;
+  color: #f9fafb;
+}
+.logged-hours-container.dark-mode .filter-btn i { color: #9ca3af; }
+.logged-hours-container.dark-mode .filter-btn:hover i { color: #e5e7eb; }
+/* Keep the teal Apply Filter button as-is — it is already high contrast */

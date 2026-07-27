@@ -14,7 +14,7 @@
 /* ── Panel ────────────────────────────────────────────────────────────────── */
 .aia-panel {
   position: fixed; right: 22px; bottom: 86px; z-index: 1200;
-  width: 380px; max-width: calc(100vw - 32px);
+  width: 440px; max-width: calc(100vw - 32px);
   height: 540px; max-height: calc(100vh - 120px);
   display: flex; flex-direction: column;
   background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
@@ -45,10 +45,24 @@
 
 /* ── Messages ─────────────────────────────────────────────────────────────── */
 .aia-messages {
-  flex: 1; overflow-y: auto; padding: 14px;
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 14px;
   display: flex; flex-direction: column; gap: 10px;
   background: #f8fafc;
 }
+
+/* Slim, subtle scrollbars — vertical on the message list, horizontal inside
+   wide-table cards. The panel itself never scrolls sideways (overflow-x
+   hidden above); tables pan within their own rounded container instead. */
+.aia-messages { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.aia-messages::-webkit-scrollbar { width: 5px; }
+.aia-messages::-webkit-scrollbar-track { background: transparent; }
+.aia-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+.aia-messages::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.aia-bubble .air-tablewrap { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
+.aia-bubble .air-tablewrap::-webkit-scrollbar { height: 5px; }
+.aia-bubble .air-tablewrap::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+.aia-bubble .air-tablewrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+.aia-bubble .air-tablewrap::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .aia-welcome { font-size: 13px; color: #475569; }
 .aia-suggestions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .aia-chip {
@@ -58,7 +72,7 @@
 }
 .aia-chip:hover { background: #e9f6f2; }
 
-.aia-msg { display: flex; flex-direction: column; align-items: flex-start; max-width: 88%; }
+.aia-msg { display: flex; flex-direction: column; align-items: flex-start; max-width: 88%; min-width: 0; }
 .aia-msg-user { align-self: flex-end; align-items: flex-end; }
 .aia-bubble {
   padding: 9px 12px; font-size: 13px; line-height: 1.5;
@@ -71,7 +85,21 @@
   border: none; border-radius: 12px 12px 4px 12px; white-space: pre-wrap;
 }
 .aia-msg-error .aia-bubble { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
-.aia-time { font-size: 10px; color: #94a3b8; margin-top: 3px; }
+.aia-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.aia-time { font-size: 10px; color: #94a3b8; }
+
+/* Header action cluster (export conversation + new chat) */
+.aia-header-actions { display: flex; align-items: center; gap: 6px; }
+
+/* Per-answer "PDF" export chip — quiet until hovered */
+.aia-export {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; font-size: 10px; font-weight: 600;
+  border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer;
+  background: #fff; color: #94a3b8;
+  transition: color .12s ease, border-color .12s ease, background .12s ease;
+}
+.aia-export:hover { color: #f97316; border-color: #fdba74; background: #fff7ed; }
 
 /* typing dots */
 .aia-typing { display: flex; gap: 4px; align-items: center; }
@@ -114,3 +142,59 @@
   .aia-fab   { right: 14px; bottom: 14px; }
   .aia-input { font-size: 16px; }          /* ≥16px stops iOS auto-zoom on focus */
 }
+
+/* ── Rendered markdown inside AI bubbles (tables, headings, lists) ─────────
+   Self-contained: the shared renderer emits air-* classes, styled here under
+   .aia-bubble so the chat looks right even on pages without the report modal. */
+
+/* Markdown bubbles hold real block HTML: pre-wrap (meant for plain text)
+   would render the newlines BETWEEN tags as big empty gaps — reset it, and
+   let answers with tables use the panel's full width. */
+.aia-msg-md { max-width: 100%; width: 100%; }
+.aia-bubble-md { white-space: normal; max-width: 100%; min-width: 0; overflow: hidden; }
+.aia-bubble p { margin: 6px 0; }
+.aia-bubble p:first-child { margin-top: 0; }
+.aia-bubble p:last-child { margin-bottom: 0; }
+.aia-bubble h1, .aia-bubble h2, .aia-bubble h3, .aia-bubble h4 {
+  font-size: 13px; font-weight: 700; color: #1B2A38;
+  margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0;
+}
+.aia-bubble h3, .aia-bubble h4 { border-bottom: none; color: #138271; margin: 10px 0 4px; }
+.aia-bubble ul { margin: 6px 0; padding-left: 18px; }
+.aia-bubble ul li { margin: 4px 0; }
+.aia-bubble strong { color: #0f172a; }
+.aia-bubble code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11px; background: #f1f5f9; color: #b45309;
+  padding: 1px 5px; border-radius: 4px;
+}
+.aia-bubble .air-hr { border: none; border-top: 1px solid #e2e8f0; margin: 10px 0; }
+
+/* Tables: full-width card with horizontal scroll — the panel is narrow, so
+   wide tables pan sideways instead of wrapping into unreadable fragments. */
+.aia-bubble .air-tablewrap {
+  margin: 8px 0;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.aia-bubble .air-table {
+  border-collapse: collapse; width: 100%; margin: 0;
+  font-size: 11.5px;
+}
+.aia-bubble .air-table th {
+  background: #1B2A38; color: #fff; text-align: left;
+  padding: 7px 10px; font-weight: 700; font-size: 10.5px;
+  white-space: nowrap; border-right: 1px solid rgba(255,255,255,.14);
+}
+.aia-bubble .air-table th:last-child { border-right: none; }
+.aia-bubble .air-table td {
+  padding: 6px 10px; border-top: 1px solid #e8edf1; border-right: 1px solid #f1f5f9;
+  color: #334155; vertical-align: top; white-space: nowrap;
+}
+.aia-bubble .air-table td:last-child { border-right: none; }
+.aia-bubble .air-table td:first-child { font-weight: 600; color: #1e293b; }
+/* long free-text cells (names, remarks) wrap but keep a readable min width */
+.aia-bubble .air-table td:first-child,
+.aia-bubble .air-table td.air-wrap { white-space: normal; min-width: 110px; }
+.aia-bubble .air-table tbody tr:nth-child(even) td { background: #f8fafc; }

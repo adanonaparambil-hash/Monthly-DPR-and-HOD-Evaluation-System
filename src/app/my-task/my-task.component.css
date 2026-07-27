@@ -19262,3 +19262,38 @@ body.modal-open {
   .table-header,
   .table-row { min-width: 0 !important; }
 }
+
+/* ═══ Dark theme gap-fill #3 (2026-07) — Logged Hours chart panel ═══
+   The CARD went dark earlier, but the chart panel inside it (`.lh-chart-wrap`)
+   is `background: #ffffff`, and the SVG internals (grid/axis lines, axis
+   labels, data dots) are light-mode colours — so the graph stayed a white
+   rectangle on the dark card. */
+.task-board-container.dark-mode .lh-chart-wrap {
+  background: #0f1f1b;                              /* deep green-tinted panel */
+  border-color: rgba(16, 185, 129, 0.30);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+/* Grid + axes: visible but not dominant on dark */
+.task-board-container.dark-mode .lh-grid-line { stroke: rgba(148, 163, 184, 0.22); }
+.task-board-container.dark-mode .lh-axis-line { stroke: rgba(148, 163, 184, 0.38); }
+.task-board-container.dark-mode .lh-axis-label { fill: #94a3b8; }
+.task-board-container.dark-mode .lh-avg-line { stroke: rgba(16, 185, 129, 0.45); }
+
+/* Data points: dark centre so the green ring reads as a dot, not a white blob */
+.task-board-container.dark-mode .lh-dot {
+  fill: #0f1f1b;
+  stroke: #34d399;
+}
+.task-board-container.dark-mode .lh-dot-today {
+  fill: #34d399;
+  stroke: #0f1f1b;
+}
+.task-board-container.dark-mode .lh-dot-pulse { fill: rgba(52, 211, 153, 0.35); }
+
+/* Micro stats strip + average badge */
+.task-board-container.dark-mode .lh-micro-stats {
+  background: rgba(16, 185, 129, 0.12);
+}
+.task-board-container.dark-mode .lh-avg-badge,
+.task-board-container.dark-mode .lh-avg-label,
+.task-board-container.dark-mode .lh-avg-value { color: #a7f3d0; }

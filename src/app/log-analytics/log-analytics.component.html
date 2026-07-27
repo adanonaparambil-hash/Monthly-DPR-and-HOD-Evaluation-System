@@ -88,8 +88,10 @@
         </button>
       }
 
-      <!-- AI insight report — role-scoped (self / dept / company).
-           Temporarily hidden for all users; flip aiInsightEnabled to true to re-enable. -->
+      <!-- AI insight report — role-scoped (self / dept / company), rolled out to
+           every logged-in user. Scope is enforced server-side from the JWT, so
+           the label changes per role but the data never crosses roles.
+           To restrict again, add EMPIDs to AI_INSIGHT_ALLOWED_USERS. -->
       @if (aiInsightEnabled && !aiReportCmp.reportHtml) {
         <button class="tb-btn ai-launch-tb" (click)="aiReportCmp.generate(false)"
                 [disabled]="aiReportCmp.loading" [title]="aiReportLabel">
@@ -105,8 +107,8 @@
 
   <!-- ══ AI INSIGHT REPORT panel (button lives in the top bar) ════════════
        Kept mounted so the #aiReportCmp template ref stays in scope for the
-       top-bar button. It renders nothing while idle, and the only trigger
-       (the button) is gated by aiInsightEnabled — so the feature is fully hidden. -->
+       top-bar button. Renders nothing while idle; the modal appears once the
+       top-bar button triggers generate(). -->
   <div class="ai-report-bar">
     <app-ai-report #aiReportCmp [buttonLabel]="aiReportLabel" [hideLaunchButton]="true"></app-ai-report>
   </div>

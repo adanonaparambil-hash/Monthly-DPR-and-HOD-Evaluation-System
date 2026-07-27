@@ -1037,9 +1037,34 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     return totalPO > 0 ? (totalGRN/totalPO*100).toFixed(1)+'%' : '—';
   }
 
+  /** Company pre-selected on first load. */
+  private readonly DEFAULT_COMPANY = 'AL ADRAK TRADING AND CONTRACTING COMPANY LLC';
+
   // ── Lifecycle ────────────────────────────────────────────────────────────────
   ngOnInit() {
-    this.loadCompanies();
+    // PERF: previously this was a waterfall — GetCompanyDropdown had to finish
+    // before any chart call could start (it supplied the default company), and
+    // the project charts waited on a SECOND round trip for GetProjectDropdown.
+    // Nothing rendered until two sequential requests completed.
+    //
+    // We can skip that wait: the company dropdown returns BRANCHNAME as BOTH
+    // code and name, and getCodes() falls back to the name when the code map
+    // isn't populated yet — so the default company's code is already known.
+    // Apply it optimistically and fire everything at once. loadCompanies()
+    // validates the assumption and corrects course if the company isn't there.
+    const d = this.DEFAULT_COMPANY;
+    this.lpoCompanies   = [d];
+    this.grnCompanies   = [d];
+    this.projCompanies  = [d];
+    this.suppCompanies  = [d];
+    this.facilCompanies = [d];
+
+    // All five requests now leave immediately, in parallel
+    this.loadCompanies();          // dropdown list only
+    this.loadProjects([d], true);  // project dropdown → fires onProj + onFacil
+    this.onLPO();
+    this.onGRN();
+    this.onSupp();
   }
 
   ngAfterViewInit() { setTimeout(()=>{ this.runGSAP(); },150); }
@@ -1061,24 +1086,26 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
           .filter(Boolean);
         this.companies = ['All Companies', ...names];
 
-        // Auto-select the default company on page load
-        const DEFAULT_COMPANY = 'AL ADRAK TRADING AND CONTRACTING COMPANY LLC';
-        if (names.includes(DEFAULT_COMPANY)) {
-          this.lpoCompanies   = [DEFAULT_COMPANY];
-          this.grnCompanies   = [DEFAULT_COMPANY];
-          this.projCompanies  = [DEFAULT_COMPANY];
-          this.suppCompanies  = [DEFAULT_COMPANY];
-          this.facilCompanies = [DEFAULT_COMPANY];
+        // ngOnInit already applied DEFAULT_COMPANY optimistically and fired every
+        // chart request. Only act here if that assumption was WRONG — i.e. this
+        // company isn't available — in which case fall back to "all companies"
+        // and reload. In the normal case (it exists) we do nothing, so there are
+        // no duplicate requests.
+        if (!names.includes(this.DEFAULT_COMPANY)) {
+          this.lpoCompanies   = [];
+          this.grnCompanies   = [];
+          this.projCompanies  = [];
+          this.suppCompanies  = [];
+          this.facilCompanies = [];
+          this.onLPO();
+          this.onGRN();
+          this.onSupp();
+          this.loadProjects(null, true);
         }
-        // Fire LPO / GRN / Suppliers immediately (don't wait for projects)
-        this.onLPO();
-        this.onGRN();
-        this.onSupp();
-        // Load projects with rank-1 auto-select; onProj + onFacil fire inside that callback
-        const projCodes: string[] | null = this.getCodes(this.projCompanies);
-        this.loadProjects(projCodes?.length ? projCodes : null, true);
       },
-      error: () => { this.onLPO(); this.onGRN(); this.onSupp(); this.loadProjects(null, true); }
+      // Charts have already been requested with the optimistic default, so a
+      // dropdown failure only costs us the filter lists — no reload needed.
+      error: () => { this.companies = ['All Companies']; }
     });
   }
 

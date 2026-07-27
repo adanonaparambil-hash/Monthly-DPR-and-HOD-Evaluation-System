@@ -1165,3 +1165,9 @@ body.ca-kiosk { overflow: hidden; }
 body.ca-kiosk .sidebar { display: none !important; }
 body.ca-kiosk .header { display: none !important; }
 body.ca-kiosk .content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+
+/* ══ AI Insight modal open — hide the app top header so the modal header is
+      fully visible (the page wrapper's stacking context caps the overlay's
+      z-index below the header's 1001), and freeze the page behind ══ */
+body.air-modal-open { overflow: hidden; }
+body.air-modal-open .header { display: none !important; }

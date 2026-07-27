@@ -2791,3 +2791,28 @@ body.modal-open .header {
     max-height: min(76vh, calc(100dvh - 72px));
   }
 }
+
+/* ═══ Sidebar scrolling fix (2026-07) — minimal ═══
+   PROBLEM: `.sidebar` is `position: fixed; top:0; bottom:0` with
+   `overflow: visible`, so when several submenus are expanded the menu grows
+   past the viewport and the bottom items (and Logout) become unreachable —
+   nothing scrolls.
+   FIX: let the sidebar itself scroll. Deliberately minimal — no flex changes,
+   no layout restructuring (an earlier attempt to make only `.menu` scroll
+   collapsed it, because an auto margin / space-between on a sibling absorbs
+   the free space before flex-grow can apply). */
+.sidebar {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .28) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .22);
+  border-radius: 99px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .38); }

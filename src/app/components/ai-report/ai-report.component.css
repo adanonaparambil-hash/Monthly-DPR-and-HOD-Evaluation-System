@@ -288,3 +288,44 @@
   .air-body { font-size: 13.5px; }
   .air-table th, .air-table td { padding: 9px 12px; }
 }
+
+/* ── Audit-report elements (kicker strip, KPI tiles, note panel) ───────────
+   Emitted by shared/markdown-render.ts from the API-injected report header.
+   This file is global (ViewEncapsulation.None), so these also style the
+   report body injected via [innerHTML]. */
+.air-kicker {
+  font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: #138271; margin: 0 0 10px;
+  padding-bottom: 8px; border-bottom: 2px solid #1B2A38;
+}
+.air-tiles {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 10px; margin: 16px 0 22px;
+}
+.air-tile {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 12px 10px 10px; text-align: center;
+  border-top: 3px solid #138271;
+}
+.air-tile-v { font-size: 21px; font-weight: 800; color: #1B2A38; letter-spacing: -.02em; }
+.air-tile-l {
+  margin-top: 4px; font-size: 9px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: #64748b; line-height: 1.35;
+}
+.air-note {
+  margin: 14px 0; padding: 12px 16px;
+  background: #f1f5f9; border-left: 4px solid #138271; border-radius: 0 8px 8px 0;
+  font-size: 12.5px; line-height: 1.65; color: #475569;
+}
+
+/* Global styles.css paints ALL h1-h6 as gradient text (-webkit-text-fill-color:
+   transparent + background-clip:text). Inside report/chat content we replace
+   the background with section bars, which left heading glyphs transparent →
+   invisible titles. Reset the clip so headings use their own solid colors. */
+.air-body h1, .air-body h2, .air-body h3, .air-body h4, .air-body h5, .air-body h6,
+.air-pdf-badge,
+.aia-bubble h1, .aia-bubble h2, .aia-bubble h3, .aia-bubble h4 {
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}

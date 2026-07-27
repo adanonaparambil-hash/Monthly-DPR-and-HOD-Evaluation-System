@@ -1232,3 +1232,267 @@
   border-color: rgba(16, 185, 129, 0.35) !important;
   color: #34d399 !important;
 }
+
+/* ═══ Dark theme gap-fill #4 (2026-07) ═══
+   Manage Fields / Add Field / Custom Fields modals — second pass.
+   This file loads LAST in styleUrls, so every rule below lives here (even the
+   ones whose light value is owned by manage-fields-ultra.css) and repeats
+   !important wherever the light declaration in this file carries !important.
+   Palette matches the existing gap-fill block above: #1e293b surface,
+   #0f172a inset, #334155 / #475569 borders, #f1f5f9 / #cbd5e1 / #94a3b8 text.
+
+   Deliberately NOT darkened: .fields-modal-header / .add-field-header are
+   pinned to the teal gradient by !important in this file (lines 12 and 434),
+   which beats ultra's non-important dark rule — so the headers stay teal and
+   .modal-title-ultra / .modal-subtitle-ultra / .add-field-title /
+   .add-field-subtitle / .btn-add-new-field / .close-btn-ultra /
+   .close-btn-circle / .filter-label-header / .filter-select-header are already
+   readable there (white or teal-on-white on a teal bar). Touching them would
+   only reduce contrast. Both overlays are already rgba(0,0,0,.7). */
+
+/* ── Loading state ─────────────────────────────────────────────────────── */
+.logged-hours-container.dark-mode .spinner-ultra {
+  border-color: #334155;
+  border-top-color: #60a5fa;
+}
+
+.logged-hours-container.dark-mode .loading-state-ultra p {
+  color: #94a3b8;
+}
+
+/* ── Empty state (h3 / p / icon are !important in this file) ───────────── */
+.logged-hours-container.dark-mode .empty-icon-ultra {
+  background: rgba(16, 185, 129, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35) !important;
+}
+
+.logged-hours-container.dark-mode .empty-icon-ultra i {
+  color: #34d399 !important;
+}
+
+.logged-hours-container.dark-mode .empty-state-ultra h3 {
+  color: #f1f5f9 !important;
+}
+
+.logged-hours-container.dark-mode .empty-state-ultra p {
+  color: #94a3b8 !important;
+}
+
+/* ── Type badges in the fields table ──────────────────────────────────── */
+.logged-hours-container.dark-mode .type-badge-ultra {
+  box-shadow: none !important;
+}
+
+.logged-hours-container.dark-mode .type-badge-ultra.type-text {
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: #93c5fd !important;
+}
+
+.logged-hours-container.dark-mode .type-badge-ultra.type-number {
+  background: rgba(236, 72, 153, 0.16) !important;
+  color: #f9a8d4 !important;
+}
+
+.logged-hours-container.dark-mode .type-badge-ultra.type-dropdown {
+  background: rgba(99, 102, 241, 0.18) !important;
+  color: #a5b4fc !important;
+}
+
+.logged-hours-container.dark-mode .type-badge-ultra.type-date {
+  background: rgba(251, 191, 36, 0.16) !important;
+  color: #fcd34d !important;
+}
+
+/* ── Toggle switches (off-state track was #cbd5e1 !important) ─────────── */
+.logged-hours-container.dark-mode .switch-ultra .slider-ultra {
+  background: #475569 !important;
+}
+
+.logged-hours-container.dark-mode .switch-ultra .slider-ultra::before {
+  background: #e2e8f0 !important;
+}
+
+.logged-hours-container.dark-mode .slider-ultra-large {
+  background-color: #475569 !important;
+}
+
+.logged-hours-container.dark-mode .slider-ultra-large::before {
+  background-color: #e2e8f0 !important;
+}
+
+/* ── Row action button ────────────────────────────────────────────────── */
+.logged-hours-container.dark-mode .btn-icon-ultra.btn-edit {
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.logged-hours-container.dark-mode .btn-icon-ultra.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.28) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Pagination active page ───────────────────────────────────────────── */
+.logged-hours-container.dark-mode .page-btn-ultra.active {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+  color: #ecfdf5 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Add Field: type selector states the earlier block missed ─────────── */
+.logged-hours-container.dark-mode .type-btn-ultra:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.14) !important;
+  border-color: #3b82f6 !important;
+  color: #bfdbfe !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra:hover:not(:disabled) i {
+  color: #93c5fd !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra:disabled {
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra:disabled.active {
+  background: rgba(99, 102, 241, 0.18) !important;
+  border-color: #6366f1 !important;
+  color: #a5b4fc !important;
+  box-shadow: none !important;
+}
+
+.logged-hours-container.dark-mode .type-btn-ultra:disabled.active i {
+  color: #a5b4fc !important;
+}
+
+.logged-hours-container.dark-mode
+  .form-field-ultra:has(.type-btn-ultra:disabled) .field-label-ultra::after {
+  color: #94a3b8;
+}
+
+/* ── Add Field: inputs — native control hints + placeholders ──────────── */
+.logged-hours-container.dark-mode .field-input-ultra,
+.logged-hours-container.dark-mode .option-input-ultra {
+  color-scheme: dark;
+}
+
+.logged-hours-container.dark-mode .field-input-ultra::placeholder,
+.logged-hours-container.dark-mode .option-input-ultra::placeholder {
+  color: #64748b !important;
+}
+
+.logged-hours-container.dark-mode .field-input-ultra option,
+.logged-hours-container.dark-mode .option-input-ultra option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+/* ── Add Field: option rows / helpers ─────────────────────────────────── */
+.logged-hours-container.dark-mode .option-item-ultra:hover {
+  border-color: #475569 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+.logged-hours-container.dark-mode .option-item-ultra .drag-handle {
+  color: #64748b !important;
+}
+
+.logged-hours-container.dark-mode .option-checkbox {
+  color-scheme: dark;
+}
+
+.logged-hours-container.dark-mode .options-count {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34d399 !important;
+}
+
+.logged-hours-container.dark-mode .btn-add-option-ultra:hover {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.55) !important;
+}
+
+/* ── Add Field: toggle field hover ───────────────────────────────────── */
+.logged-hours-container.dark-mode .toggle-field:hover {
+  border-color: #475569 !important;
+}
+
+/* ── Custom Fields (column picker) modal ──────────────────────────────────
+   .custom-fields-modal / .fields-modal-footer / .custom-fields-summary /
+   .field-name / .summary-info are all styled from var(--modal-bg),
+   var(--hover-bg), var(--card-bg), var(--input-bg) — none of which are
+   defined anywhere in the project, so those declarations resolved to nothing
+   and the panel rendered transparent with inherited (near-black) text.
+   Explicit colours below. */
+.logged-hours-container.dark-mode .custom-fields-modal {
+  background: #1e293b;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.logged-hours-container.dark-mode .custom-fields-list {
+  background: #0f172a;
+}
+
+.logged-hours-container.dark-mode .field-name {
+  color: #f1f5f9;
+}
+
+.logged-hours-container.dark-mode .field-checkbox .checkbox-input {
+  color-scheme: dark;
+}
+
+.logged-hours-container.dark-mode .custom-fields-summary {
+  background: #0f172a;
+  border-top-color: #334155;
+  color: #cbd5e1;
+}
+
+.logged-hours-container.dark-mode .summary-info {
+  color: #cbd5e1;
+}
+
+.logged-hours-container.dark-mode .summary-info i {
+  color: #34d399;
+}
+
+.logged-hours-container.dark-mode .fields-modal-footer {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+/* ═══ Dark theme gap-fill #5 (2026-07) ═══
+   BUG: manage-fields-ultra.css:275 sets
+     `.fields-table-ultra tbody tr.field-row-ultra { background: white; }`
+   but its dark counterpart (ultra:1033) only sets `border-color` — the
+   background was forgotten. So the Manage Custom Fields rows stayed WHITE
+   while the field-name text was lightened for dark mode, making the names
+   (Section, Instruction, Stage…) effectively invisible. Also cover the cells
+   and the row-content text explicitly. */
+.logged-hours-container.dark-mode .fields-table-ultra tbody tr.field-row-ultra {
+  background: #1e293b !important;
+}
+.logged-hours-container.dark-mode .fields-table-ultra tbody tr.field-row-ultra:nth-child(even) {
+  background: #22304a !important;
+}
+.logged-hours-container.dark-mode .fields-table-ultra tbody tr.field-row-ultra:hover {
+  background: #334155 !important;
+}
+.logged-hours-container.dark-mode .fields-table-ultra tbody td,
+.logged-hours-container.dark-mode .field-row-ultra td {
+  background: transparent !important;   /* let the row colour show through */
+  color: #e2e8f0 !important;
+}
+/* Field name + wrapper text */
+.logged-hours-container.dark-mode .field-name-main,
+.logged-hours-container.dark-mode .field-name-wrapper,
+.logged-hours-container.dark-mode .col-name {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+.logged-hours-container.dark-mode .field-name-sub,
+.logged-hours-container.dark-mode .field-meta { color: #94a3b8 !important; }
+
+/* The DEPARTMENT select sits on the teal header — keep it light-on-teal but
+   make its native dropdown list follow the dark theme */
+.logged-hours-container.dark-mode .filter-select-header { color-scheme: light; }

@@ -28,9 +28,16 @@
           </div>
         </div>
       </div>
-      <button class="aia-clear" (click)="clearChat()" title="New conversation">
-        <i class="fas fa-rotate-right"></i>
-      </button>
+      <div class="aia-header-actions">
+        @if (messages.length > 0) {
+          <button class="aia-clear" (click)="exportChat()" title="Export conversation as PDF">
+            <i class="fas fa-file-pdf"></i>
+          </button>
+        }
+        <button class="aia-clear" (click)="clearChat()" title="New conversation">
+          <i class="fas fa-rotate-right"></i>
+        </button>
+      </div>
     </div>
 
     <div class="aia-messages" #msgList>
@@ -53,13 +60,21 @@
 
       @for (m of messages; track $index) {
         <div class="aia-msg" [class.aia-msg-user]="m.from === 'user'"
-             [class.aia-msg-error]="m.error">
+             [class.aia-msg-error]="m.error"
+             [class.aia-msg-md]="m.from === 'ai' && !!m.html">
           @if (m.from === 'ai' && m.html) {
-            <div class="aia-bubble" [innerHTML]="m.html"></div>
+            <div class="aia-bubble aia-bubble-md" [innerHTML]="m.html"></div>
           } @else {
             <div class="aia-bubble">{{ m.text }}</div>
           }
-          <div class="aia-time">{{ m.time | date:'shortTime' }}</div>
+          <div class="aia-meta">
+            <span class="aia-time">{{ m.time | date:'shortTime' }}</span>
+            @if (m.from === 'ai' && !m.error && m.html) {
+              <button class="aia-export" (click)="exportMessage(m)" title="Export this answer as PDF">
+                <i class="fas fa-file-pdf"></i> PDF
+              </button>
+            }
+          </div>
         </div>
       }
 

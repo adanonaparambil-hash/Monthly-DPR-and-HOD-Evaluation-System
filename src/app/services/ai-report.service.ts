@@ -51,7 +51,12 @@ export class AiReportService {
         dateTo: opts.dateTo ?? null,
         deptId: opts.deptId ?? null
       })
-      .pipe(timeout(130000)); // reports can take 20-40s; allow generous headroom
+      // Company-wide (CED) generation measured at 135-145s end-to-end: scoped DPR
+      // data + CED dashboard query + the Claude call. The old 130s limit aborted
+      // the request AFTER the server had already produced the report (logged as
+      // HTTP 499 client-closed), so the user saw "could not generate" for a report
+      // that actually succeeded. Must stay ABOVE the backend's worst case.
+      .pipe(timeout(240000));
   }
 
   /** Who am I (role + dept), decided server-side from the JWT. */

@@ -1,8 +1,10 @@
-import { Component, OnInit, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, AfterViewChecked, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiAssistantService } from '../services/ai-assistant.service';
 import { AuthService } from '../services/auth.service';
+import { renderMarkdown } from '../shared/markdown-render';
+import { exportMarkdownPdf } from '../shared/markdown-pdf';
 
 interface ChatMsg {
   from: 'user' | 'ai';
@@ -17,7 +19,11 @@ interface ChatMsg {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './ai-assistant.component.html',
-  styleUrls: ['./ai-assistant.component.css']
+  styleUrls: ['./ai-assistant.component.css'],
+  // AI answers are injected via [innerHTML]; emulated encapsulation would stop
+  // the .aia-bubble content styles (tables, headings) from reaching that HTML.
+  // All selectors are `aia-`-prefixed, so going global is safe.
+  encapsulation: ViewEncapsulation.None
 })
 export class AiAssistantComponent implements OnInit, AfterViewChecked {
   @ViewChild('msgList') msgList?: ElementRef<HTMLDivElement>;
@@ -67,7 +73,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       return [
         'Compare all departments this month',
         'Which employees need immediate attention?',
-        'What repetitive work should be automated?'
+        'Who has not submitted their DPR?'
       ];
     }
     if (this.userType === 'H') {
@@ -107,7 +113,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       next: res => {
         const answer = res?.answer || 'Sorry, I could not generate an answer.';
         this.messages.push({
-          from: 'ai', text: answer, html: this.renderMarkdownLite(answer), time: new Date()
+          from: 'ai', text: answer, html: renderMarkdown(answer), time: new Date()
         });
         this.sending = false;
         this.shouldScroll = true;
@@ -142,18 +148,41 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       `s-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  /**
-   * Minimal safe markdown rendering (no external libs):
-   * escapes HTML first, then supports **bold**, bullet lines and line breaks.
-   */
-  private renderMarkdownLite(text: string): string {
-    const escaped = text
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return escaped
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^## (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^[-*] (.+)$/gm, '• $1')
-      .replace(/\n/g, '<br>');
+  /** Export one AI answer as a PDF (same engine as the AI Insight Report). */
+  exportMessage(m: ChatMsg): void {
+    if (m.from !== 'ai' || !m.text) return;
+    const when = new Date(m.time);
+    const stamp = `${when.getFullYear()}-${String(when.getMonth() + 1).padStart(2, '0')}-` +
+      `${String(when.getDate()).padStart(2, '0')}_${String(when.getHours()).padStart(2, '0')}` +
+      `${String(when.getMinutes()).padStart(2, '0')}`;
+    const scope = this.userType === 'C' ? 'Company-wide'
+                : this.userType === 'H' ? 'Department' : 'Personal';
+    exportMarkdownPdf({
+      markdown: m.text,
+      headerTitle: 'DPR AI Assistant',
+      headerSubtitle: `${scope} insight   ·   ${when.toLocaleString()}`,
+      footerText: 'AL ADRAK — DPR AI Assistant',
+      filename: `DPR-Chat-${scope}-${stamp}.pdf`,
+    });
+  }
+
+  /** Export the whole conversation (all Q&A turns) as one PDF. */
+  exportChat(): void {
+    const turns = this.messages.filter(m => !m.error);
+    if (turns.length === 0) return;
+    const md = turns.map(m =>
+      m.from === 'user' ? `**Question:** ${m.text}` : m.text
+    ).join('\n\n---\n\n');
+    const now = new Date();
+    const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-` +
+      `${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}` +
+      `${String(now.getMinutes()).padStart(2, '0')}`;
+    exportMarkdownPdf({
+      markdown: md,
+      headerTitle: 'DPR AI Assistant — Conversation',
+      headerSubtitle: `${turns.length} messages   ·   ${now.toLocaleString()}`,
+      footerText: 'AL ADRAK — DPR AI Assistant',
+      filename: `DPR-Chat-Conversation-${stamp}.pdf`,
+    });
   }
 }

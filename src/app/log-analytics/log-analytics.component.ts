@@ -135,11 +135,17 @@ export class LogAnalyticsComponent implements OnInit, OnDestroy {
   get isHOD():   boolean { return this.userType === 'H' || this.userType === 'C'; }
   get isNormal(): boolean { return this.userType === 'E'; }
 
-  /** AI Insight feature is currently limited to these specific users only.
-   *  Add/remove EMPIDs here to change who can see the button + report panel. */
-  private readonly AI_INSIGHT_ALLOWED_USERS = ['ITS48', 'ITS41', 'ADS3691'];
+  /** AI Insight pilot gate. Empty list = visible to EVERY logged-in user
+   *  (rolled out to all CED / HOD / employees). To restrict it again, put
+   *  EMPIDs back in the list, e.g. ['ITS48', 'ITS41'].
+   *
+   *  Note this only controls VISIBILITY of the button. What the report contains
+   *  is scoped server-side from the JWT (employee = own data, HOD = own dept,
+   *  CED = company-wide), so opening the button up cannot leak anyone's data. */
+  private readonly AI_INSIGHT_ALLOWED_USERS: string[] = [];
 
   get aiInsightEnabled(): boolean {
+    if (this.AI_INSIGHT_ALLOWED_USERS.length === 0) return true;   // rolled out to all
     return this.AI_INSIGHT_ALLOWED_USERS
       .map(u => u.toUpperCase())
       .includes((this.userId || '').trim().toUpperCase());

@@ -2842,3 +2842,122 @@
 :host-context(.dark-theme) .pd-tv-supp-list .pd-supp-item:hover {
   background: rgba(15, 23, 42, 0.95);
 }
+
+/* ═══ Detail-view toolbar: group separators (2026-07) ═══
+   The LPO / GRN / Top Suppliers / Projects filter groups ran together in one
+   undivided strip, so it wasn't clear which control belonged to which graph.
+   A thin vertical rule between groups makes the grouping readable. */
+.pd-tv-pipe {
+  flex: 0 0 auto;
+  width: 1px;
+  align-self: stretch;
+  min-height: 22px;
+  margin: 0 2px;
+  background: linear-gradient(180deg,
+              rgba(99, 102, 241, 0) 0%,
+              rgba(99, 102, 241, .30) 25%,
+              rgba(99, 102, 241, .30) 75%,
+              rgba(99, 102, 241, 0) 100%);
+}
+
+/* Top Suppliers now carries year + company controls too, so the strip is
+   longer — shrink the shared pieces slightly and allow the bar to scroll
+   sideways rather than wrap, keeping everything on ONE row. */
+.pd-tv-filters {
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+.pd-tv-filters::-webkit-scrollbar { height: 4px; }
+.pd-tv-filters::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, .35); border-radius: 99px;
+}
+@media (max-width: 1700px) {
+  .pd-tv-filters { gap: 8px; }
+  .pd-tv-filters .pd-ddb > span:first-of-type { max-width: 92px; }
+  .pd-tv-sel { padding-left: 6px; padding-right: 18px; }
+}
+
+/* Dark theme */
+:host-context(.dark-theme) .pd-tv-pipe {
+  background: linear-gradient(180deg,
+              rgba(148, 163, 184, 0) 0%,
+              rgba(148, 163, 184, .35) 25%,
+              rgba(148, 163, 184, .35) 75%,
+              rgba(148, 163, 184, 0) 100%);
+}
+
+/* Keep the detail-view toolbar on ONE row at every width.
+   Overrides the earlier `@media (max-width:1500px) { .pd-tv-filters{flex-wrap:wrap} }`
+   and the ≤1024px `.pd-tv-fg{flex-wrap:wrap}` — with the horizontal scroll above,
+   a single scrollable row reads better than a stack of wrapped chips. */
+.pd-tv-filters { flex-wrap: nowrap !important; justify-content: flex-end !important; }
+.pd-tv-fg      { flex-wrap: nowrap !important; }
+.pd-tv-header  { flex-wrap: nowrap !important; }
+
+/* ═══ Toolbar overflow fix (2026-07) ═══
+   BUG: `.pd-tv-filters` had `justify-content: flex-end` + `overflow-x: auto`.
+   When a flex row overflows, `flex-end` pushes the FIRST items past the start
+   edge — and content that overflows the start edge cannot be scrolled to.
+   The whole LPO group was therefore permanently clipped off the left.
+   FIX: anchor to flex-start (so the overflow goes right, where scrolling can
+   reach it) and use `margin-left: auto` on the first child to keep the strip
+   right-aligned whenever there IS spare room. An auto margin collapses to 0
+   once the content overflows, so it never causes the same trap. */
+.pd-tv-filters {
+  justify-content: flex-start !important;
+}
+.pd-tv-filters > *:first-child {
+  margin-left: auto;
+}
+
+/* ═══ Toolbar: fit everything on one row, no scrollbar (2026-07) ═══
+   Rather than scrolling, tighten every element so the whole strip fits.
+   Company names truncate hard — the count badge next to them already tells
+   you how many are selected, and the full list is one click away. */
+.pd-tv-filters {
+  overflow: visible;          /* nothing to scroll once it fits */
+  gap: 7px;
+  padding-bottom: 0;
+}
+.pd-tv-filters::-webkit-scrollbar { height: 0; display: none; }
+
+/* Group internals */
+.pd-tv-fg  { gap: 5px; }
+.pd-tv-fl  { font-size: 9.5px; letter-spacing: .2px; }
+.pd-tv-fl i { font-size: 9.5px; }
+.pd-tv-pipe { margin: 0; }
+
+/* Selects: trim the horizontal padding around the chevron */
+.pd-tv-sel {
+  padding-left: 6px;
+  padding-right: 16px;
+  background-position: right 4px center;
+}
+.pd-tv-dash { font-size: 11px; margin: 0 -1px; }
+
+/* Segmented Yearly / Monthly control */
+.pd-tv-segbtn { padding-left: 8px; padding-right: 8px; font-size: 10px; }
+
+/* Company / project dropdown buttons — the main space hog */
+.pd-tv-filters .pd-ddb { padding: 0 6px; gap: 4px; }
+.pd-tv-filters .pd-ddb > span:first-of-type { max-width: 84px; }
+.pd-tv-filters .pd-sel-count { min-width: 14px; height: 14px; font-size: 9px; }
+.pd-tv-filters .pd-chev { font-size: 8px; }
+
+/* Progressive tightening on narrower screens so it still fits without scroll */
+@media (max-width: 1750px) {
+  .pd-tv-filters .pd-ddb > span:first-of-type { max-width: 66px; }
+  .pd-tv-filters { gap: 6px; }
+}
+@media (max-width: 1550px) {
+  .pd-tv-filters .pd-ddb > span:first-of-type { max-width: 48px; }
+  .pd-tv-fl { font-size: 9px; }
+  .pd-tv-sel { font-size: 10px; }
+}
+@media (max-width: 1400px) {
+  /* Last resort: labels collapse to their icon, which the pipes now separate */
+  .pd-tv-fl { font-size: 0; gap: 0; }
+  .pd-tv-fl i { font-size: 11px; }
+}
