@@ -329,3 +329,57 @@
   background-clip: border-box !important;
   -webkit-text-fill-color: currentColor !important;
 }
+
+/* ── Legibility guarantee for injected report/chat HTML ────────────────────
+   The global stylesheet paints h1-h6 as gradient text
+   (-webkit-text-fill-color: transparent + background-clip: text). Any such
+   element that also has a dark background renders its glyphs in that dark
+   background colour — i.e. invisible. The per-heading reset above covers the
+   headings we know about, but the report body is model-generated markdown, so
+   we cannot enumerate every element it might produce.
+
+   currentColor here means "use whatever colour this element already has", so
+   this neutralises the transparent fill WITHOUT changing any intended colour
+   (a navy table header stays white, a teal h3 stays teal). */
+.air-content *,
+.air-body *,
+.aia-bubble * {
+  -webkit-text-fill-color: currentColor !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+}
+
+/* Table headers sit on navy — force light text so they can never be dark-on-dark. */
+.air-body .air-table th,
+.aia-bubble .air-table th {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* The model sometimes writes a single-column table as a pseudo sub-heading
+   ("| Priority 1: Immediate |" with no body rows). Rendered plainly that is a
+   dark navy bar whose text is hard to read. Style that case as a LIGHT
+   sub-heading strip — same family as the section headings: pale teal wash,
+   dark navy text, teal left bar. (More specific than the generic
+   `.air-table th` white-on-navy rule, so it wins.) */
+.air-body .air-tablewrap:has(.air-table th:only-child),
+.aia-bubble .air-tablewrap:has(.air-table th:only-child) {
+  border: none;
+  margin: 20px 0 10px;
+  overflow: visible;
+}
+.air-body .air-table th:only-child,
+.aia-bubble .air-table th:only-child {
+  background: linear-gradient(90deg, rgba(26, 188, 156, .14), rgba(26, 188, 156, .02)) !important;
+  color: #1B2A38 !important;
+  -webkit-text-fill-color: #1B2A38 !important;
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  white-space: normal;              /* long titles wrap instead of clipping */
+  border-left: 4px solid #1ABC9C;
+  border-right: none;
+  border-bottom: 2px solid #138271;
+}
