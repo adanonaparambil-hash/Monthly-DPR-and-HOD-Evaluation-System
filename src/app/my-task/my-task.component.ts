@@ -3413,6 +3413,46 @@ export class MyTaskComponent implements OnInit, OnDestroy {
       this.toasterService.showError('Invalid Time', 'You can only reduce the time, not increase it');
       return;
     }
+
+    // AUTO CLOSED time was set by the system (punch machine / nightly job), NOT
+    // by the user stopping their timer — so it often includes hours they were
+    // not actually working. If they hit Save WITHOUT reducing it, make them
+    // consciously confirm the full duration instead of blindly accepting it.
+    const unchanged = this.logTimeTotalMinutes === this.logTimeOriginalMinutes;
+    if (unchanged && (this.logTimeStatus || '').toUpperCase().includes('AUTO')) {
+      Swal.fire({
+        title: 'Is this time correct?',
+        html:
+          `This task was <b>auto-closed by the system</b> — the timer was not stopped by you, ` +
+          `so <b>${this.logTimeTotalDisplay}</b> may include time you were not actually working.<br><br>` +
+          `Please check the duration. If you worked less, reduce it before saving.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: `Yes, ${this.logTimeTotalDisplay} is correct`,
+        cancelButtonText: 'Let me edit the time',
+        confirmButtonColor: '#138271',
+        cancelButtonColor: '#f59e0b',
+        reverseButtons: true,
+        // the Log Time overlay sits at z-index 200000, above the global
+        // .swal2-container (100005) — lift this dialog above the popup
+        customClass: { container: 'swal-above-logtime' }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.saveLogTime();
+        } else {
+          // put them straight into edit mode on the total field
+          this.isEditingLogTime = true;
+        }
+      });
+      return;
+    }
+
+    this.saveLogTime();
+  }
+
+  /** Actual save call — reached directly when the user reduced the time, or
+   *  via the confirmation dialog when saving an unchanged auto-closed value. */
+  private saveLogTime() {
     const currentUser = this.sessionService.getCurrentUser();
     const sessionUserId = currentUser?.empId || currentUser?.employeeId || this.logTimeUserId;
     this.api.decreaseTimeLog({ timeLogId: this.logTimeTimeLogId, newMinutes: this.logTimeTotalMinutes, userId: sessionUserId }).subscribe({

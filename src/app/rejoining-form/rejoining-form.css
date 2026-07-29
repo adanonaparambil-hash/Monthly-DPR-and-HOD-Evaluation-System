@@ -1195,6 +1195,7 @@
 /* ── PDF export button inside banner ────────────────────────── */
 .rj-pdf-btn {
   display: inline-flex; align-items: center; gap: 6px;
+  margin-left: auto;   /* push to the RIGHT side of the flex banner */
   padding: 6px 14px; border-radius: 9px; flex-shrink: 0;
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border: 1.5px solid rgba(255,255,255,.35);

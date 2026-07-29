@@ -9,15 +9,16 @@
     <button class="rj-back-btn-inline" *ngIf="isViewMode" (click)="goBack()">
       <i class="fas fa-arrow-left"></i>
     </button>
-    <button class="rj-pdf-btn" *ngIf="isViewMode" (click)="downloadAsPdf()" [disabled]="isPdfGenerating" title="Export PDF">
-      <i class="fas" [ngClass]="isPdfGenerating ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i>
-      <span>{{ isPdfGenerating ? 'Generating...' : 'Export PDF' }}</span>
-    </button>
     <div class="rj-banner-icon"><i class="fas fa-user-check"></i></div>
     <div class="rj-banner-text">
       <h2>Joining Report – Return From Leave</h2>
       <p>Official re-induction form for employees returning from authorized leave</p>
     </div>
+    <!-- Export PDF lives on the RIGHT side of the header (view mode only) -->
+    <button class="rj-pdf-btn" *ngIf="isViewMode" (click)="downloadAsPdf()" [disabled]="isPdfGenerating" title="Export PDF">
+      <i class="fas" [ngClass]="isPdfGenerating ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i>
+      <span>{{ isPdfGenerating ? 'Generating...' : 'Export PDF' }}</span>
+    </button>
     <div class="rj-banner-meta">
       <div class="rj-meta-chip">
         <span class="rj-meta-label">Form No</span>

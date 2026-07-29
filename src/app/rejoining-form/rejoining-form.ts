@@ -927,6 +927,25 @@ export class RejoiningForm implements OnInit {
       // ══════════════════════════════════════════════════════════════════════════
       if (isExpat) {
         secHeader('5.  PASSPORT DETAILS');
+
+        // Passport safe-custody declaration — same wording as the on-screen
+        // Passport Handling card; must appear in the official exported record.
+        const ppDecl =
+          'I Hereby request the company to keep my passport in safe custody till the time I request the company ' +
+          'for return. I declare and affirm that my passport is deposited with company for safe keeping upon my ' +
+          'free will and on my request.';
+        const ppLines = pdf.splitTextToSize(ppDecl, cW - 8);
+        const ppH = ppLines.length * 3.2 + 5;
+        chk(ppH + 2);
+        pdf.setFillColor(245, 243, 255);                        // pale violet, like the form card
+        pdf.setDrawColor(196, 181, 253); pdf.setLineWidth(0.2);
+        pdf.roundedRect(margin, y, cW, ppH, 1, 1, 'FD');
+        pdf.setFillColor(139, 92, 246);                         // violet accent bar
+        pdf.rect(margin, y, 1.2, ppH, 'F');
+        pdf.setFont('helvetica', 'italic'); pdf.setFontSize(7); pdf.setTextColor(76, 60, 120);
+        pdf.text(ppLines, margin + 4, y + 3.6);
+        y += ppH + 2;
+
         twoCol([
           { l: 'Passport No.', lv: fv.passportNo || '—', r: 'Issue Date', rv: fmtDate(fv.passportIssueDate) },
           { l: 'Expiry Date', lv: fmtDate(fv.passportExpiryDate) },

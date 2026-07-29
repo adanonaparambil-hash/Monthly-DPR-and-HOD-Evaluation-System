@@ -1,4 +1,25 @@
 <div class="notice-overlay" *ngIf="showPopup && current">
+
+  <!-- ===== Intro animation (pure CSS, plays once when the popup opens) =====
+       gift flies in and rotates all around the screen -> lands in the centre
+       -> grows big -> BLASTS open -> glitter fills the whole screen ->
+       the notice rises out of the blast. -->
+  <div class="intro-stage" aria-hidden="true">
+    <div class="gift-box">
+      <div class="gift-lid"><span class="gift-bow">🎀</span></div>
+      <div class="gift-body"></div>
+    </div>
+    <div class="burst">
+      <span class="ring"></span>
+      <span class="cf c1"></span><span class="cf c2"></span><span class="cf c3"></span>
+      <span class="cf c4"></span><span class="cf c5"></span><span class="cf c6"></span>
+      <span class="cf c7"></span><span class="cf c8"></span><span class="cf c9"></span>
+      <span class="cf c10"></span><span class="cf c11"></span><span class="cf c12"></span>
+      <span class="spark s1">✦</span><span class="spark s2">✦</span>
+      <span class="spark s3">✦</span><span class="spark s4">✦</span>
+    </div>
+  </div>
+
   <div class="notice-card">
 
     <!-- Header -->
@@ -28,12 +49,8 @@
       <div class="notice-content" [innerHTML]="current.content"></div>
     </div>
 
-    <!-- Meta — only createdBy and expiry -->
+    <!-- Meta — expiry only (createdBy intentionally not shown) -->
     <div class="notice-meta">
-      <div class="meta-item" *ngIf="current.createdBy">
-        <i class="fas fa-user-tie"></i>
-        <span>{{ current.createdBy }}</span>
-      </div>
       <div class="meta-item meta-expiry" *ngIf="current.expiryDate">
         <i class="fas fa-hourglass-half"></i>
         <span>Expires {{ current.expiryDate | date:'dd MMM yyyy' }}</span>
@@ -58,4 +75,16 @@
     </div>
 
   </div>
+
+  <!-- ===== Glitter rain + corner sparkles (after the card pops in) ===== -->
+  <div class="confetti-rain" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <div class="card-sparkles" aria-hidden="true">
+    <span class="tw t1">✦</span><span class="tw t2">✦</span>
+    <span class="tw t3">✦</span><span class="tw t4">✦</span>
+  </div>
+
 </div>

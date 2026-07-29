@@ -533,8 +533,9 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         console.log('CED Dashboard initialized');
         this.initializeDefaultMonthYear();
         this.loadDashboardData();
+        // ONE request covers quotes AND birthdays (it used to be fetched twice,
+        // pulling ~320 KB of base64 profile images down twice on every load)
         this.loadQuoteOfTheDay();
-        this.loadTodaysBirthdays();
         // Don't start carousel here - it will be started after birthdays are loaded
         
         // Debug: Log initial values
@@ -1003,7 +1004,14 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         }
     }
 
-    // Load Quote of the Day and Birthdays from API
+    // Load Quote of the Day AND Birthdays — ONE request for both.
+    //
+    // PERF: this endpoint returns the quotes (~0.1 KB) together with the
+    // birthday employees' profile pictures (~238 KB of BLOBs, ~320 KB once
+    // base64-encoded). It used to be called TWICE on page load — once here for
+    // the quotes and again in loadTodaysBirthdays() for the employees — so the
+    // browser downloaded that image payload twice, ~640 KB, before the
+    // dashboard settled. Both consumers now share this single response.
     private loadQuoteOfTheDay(): void {
         this.apiService.GetTodaysBirthdaysAndQuotes().subscribe({
             next: (response: any) => {
@@ -1014,21 +1022,25 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
                             text: q.quoteText,
                             author: q.author
                         }));
-                        
+
                         // Display first quote
                         this.currentQuoteIndex = 0;
                         this.quoteOfTheDay = this.allQuotes[0];
-                        
+
                         // Start rotating quotes if more than one
                         if (this.allQuotes.length > 1) {
                             this.startQuoteRotation();
                         }
                     }
+
+                    // …and the birthdays from the SAME response
+                    this.applyTodaysBirthdays(response);
                 }
             },
             error: (error: any) => {
-                console.error('Error fetching quotes:', error);
+                console.error('Error fetching quotes/birthdays:', error);
                 // Keep default quote on error
+                this.todaysBirthdays = [];
             }
         });
     }
@@ -1048,10 +1060,12 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
         }
     }
 
-    // Load Today's Birthdays from API
-    private loadTodaysBirthdays(): void {
-        this.apiService.GetTodaysBirthdaysAndQuotes().subscribe({
-            next: (response: any) => {
+    // Birthdays are filled from the shared response fetched by
+    // loadQuoteOfTheDay() — see the PERF note there. This method no longer
+    // issues its own HTTP request; it only maps what already arrived.
+    private applyTodaysBirthdays(response: any): void {
+        {
+            {
                 if (response && response.success && response.data) {
                     // Load birthdays
                     if (response.data.employees && response.data.employees.length > 0) {
@@ -1084,12 +1098,8 @@ export class CedDashboardNewComponent implements OnInit, AfterViewInit, OnDestro
                         this.todaysBirthdays = [];
                     }
                 }
-            },
-            error: (error: any) => {
-                console.error('Error fetching birthdays:', error);
-                this.todaysBirthdays = [];
             }
-        });
+        }
     }
 
     // Start Birthday Carousel Auto-slide

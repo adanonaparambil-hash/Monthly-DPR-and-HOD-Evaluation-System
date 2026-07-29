@@ -255,11 +255,19 @@
   width: 100%; min-width: 100%;   /* fill the sheet; grow (and scroll) when content needs it */
   margin: 0; font-size: 13px;
 }
+/* LIGHT header row (was dark navy #1B2A38 with white text).
+   Reason: the model often bolds text inside a header cell, and a <strong>
+   there picks up `.air-body strong { color:#0f172a }`, which rendered
+   near-black ON the navy bar — unreadable. On a light bar every inline
+   colour the model can produce stays readable, so this can't regress.
+   Kept solid (not a gradient) because the row is position:sticky and must
+   stay opaque while a long table scrolls under it. */
 .air-table th {
-  background: #1B2A38; color: #fff;
+  background: #E8F5F2; color: #12303F;
   text-align: left; padding: 12px 18px; font-weight: 700; font-size: 12px;
   white-space: nowrap;                 /* headings never wrap — keeps columns aligned */
-  border-right: 1px solid rgba(255,255,255,.14);
+  border-right: 1px solid rgba(19,130,113,.18);
+  border-bottom: 2px solid #1ABC9C;    /* teal rule separates header from body */
   position: sticky; top: 0;            /* header stays visible while scrolling a long table */
 }
 .air-table th:last-child { border-right: none; }
@@ -349,11 +357,21 @@
   background-clip: border-box !important;
 }
 
-/* Table headers sit on navy — force light text so they can never be dark-on-dark. */
+/* Table headers now sit on a LIGHT bar — force DARK text so they can never be
+   light-on-light, and make every inline element inside a header cell inherit
+   that dark colour. Without the second rule a `**bold**` header cell keeps
+   `.air-body strong { color:#0f172a }` and a `code` span keeps its amber,
+   which is exactly how the old navy header ended up dark-on-dark. */
 .air-body .air-table th,
 .aia-bubble .air-table th {
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+  color: #12303F !important;
+  -webkit-text-fill-color: #12303F !important;
+}
+.air-body .air-table th *,
+.aia-bubble .air-table th * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  background: none !important;
 }
 
 /* The model sometimes writes a single-column table as a pseudo sub-heading

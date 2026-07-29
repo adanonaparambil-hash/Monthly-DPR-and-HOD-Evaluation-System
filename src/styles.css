@@ -497,6 +497,12 @@ img[src*="default-avatar.svg"] {
   z-index: 100004 !important;
 }
 
+/* Confirmations launched FROM the Log Time popup (.log-time-overlay is at
+   z-index 200000, above the default swal container) must sit above it. */
+.swal2-container.swal-above-logtime {
+  z-index: 200010 !important;
+}
+
 /* ============================================================
    GLOBAL DARK MODE — Task Details Modal + My Task table.
    The modal component's own dark rules use a `.task-board-container.dark-mode`
@@ -1171,3 +1177,28 @@ body.ca-kiosk .content { margin: 0 !important; padding: 0 !important; width: 100
       z-index below the header's 1001), and freeze the page behind ══ */
 body.air-modal-open { overflow: hidden; }
 body.air-modal-open .header { display: none !important; }
+
+/* ══ ANY full-screen modal open → hide the app top header ═════════════════
+   Same reason as above, applied automatically: while a modal is up the app
+   header must not sit on top of / show through it.
+
+   Each selector below matches an overlay that only EXISTS in the DOM while
+   its modal is open (@if / *ngIf), except .profile-overlay which is always
+   rendered and toggles .active — hence the .active qualifier. Do NOT add
+   permanently-rendered elements here or the header would never show.
+
+   SPECIFICITY WARNING — do not "simplify" these selectors.
+   ced-dashboard-new.component.css ships:
+       :host-context(.layout-container) .header { display: flex !important; }
+   which Angular compiles to `.layout-container[_nghost-x] .header` = (0,3,0)
+   and loads AFTER this file. A shorter rule such as
+       body:has(.modal-backdrop) .header      = (0,2,1)
+   LOSES that fight and the header stays visible (verified in a browser).
+   The `html body .layout-container` prefix raises this to (0,3,2) so it wins
+   regardless of load order. ══ */
+html body .layout-container:has(.modal-backdrop) .header,
+html body .layout-container:has(.ca-overlay) .header,
+html body .layout-container:has(.profile-overlay.active) .header,
+html body .layout-container:has(.notice-overlay) .header {
+  display: none !important;
+}
