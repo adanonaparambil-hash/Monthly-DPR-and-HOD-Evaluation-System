@@ -19,8 +19,7 @@
         @if (isLoading) {
           <!-- Loading State -->
           <div class="loading-container">
-            <div class="loading-spinner"></div>
-            <p>Loading profile...</p>
+            <app-crane-loader size="auto" message="Loading profile"></app-crane-loader>
           </div>
         } @else {
           <!-- Profile Content -->

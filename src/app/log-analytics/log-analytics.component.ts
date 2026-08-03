@@ -8,6 +8,7 @@ import { AuthService } from '../services/auth.service';
 import { TaskDetailsModalComponent } from '../components/task-details-modal/task-details-modal.component';
 import { AiReportComponent } from '../components/ai-report/ai-report.component';
 import { ProofhubTaskService } from '../services/proofhub-task.service';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 import {
   ProjectItem, TodolistItem, CreatorItem, TaskListItem, TaskDetailDto, TaskSearchRequest
 } from '../models/proofhub-task.model';
@@ -113,7 +114,7 @@ interface ColPrefItem {
 @Component({
   selector: 'app-log-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, TaskDetailsModalComponent, AiReportComponent],
+  imports: [CommonModule, FormsModule, TaskDetailsModalComponent, AiReportComponent, CraneLoaderComponent],
   templateUrl: './log-analytics.component.html',
   styleUrls: ['./log-analytics.component.css']
 })

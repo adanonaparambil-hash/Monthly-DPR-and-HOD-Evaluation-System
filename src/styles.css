@@ -1172,6 +1172,16 @@ body.ca-kiosk .sidebar { display: none !important; }
 body.ca-kiosk .header { display: none !important; }
 body.ca-kiosk .content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
 
+/* ══ Purchase Dashboard display (kiosk) mode — same treatment as CED above.
+      The TV overlay is fixed/z-3000 so it already paints over the shell, but
+      hiding the sidebar and header removes them from layout entirely so nothing
+      can bleed through a stacking context, and the fullscreen surface is the
+      dashboard alone. ══ */
+body.pd-kiosk { overflow: hidden; }
+body.pd-kiosk .sidebar { display: none !important; }
+body.pd-kiosk .header { display: none !important; }
+body.pd-kiosk .content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+
 /* ══ AI Insight modal open — hide the app top header so the modal header is
       fully visible (the page wrapper's stacking context caps the overlay's
       z-index below the header's 1001), and freeze the page behind ══ */

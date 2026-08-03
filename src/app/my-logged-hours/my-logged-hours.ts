@@ -7,6 +7,7 @@ import { TaskDetailsModalComponent } from '../components/task-details-modal/task
 import { ToasterComponent } from '../components/toaster/toaster.component';
 import { ToasterService } from '../services/toaster.service';
 import Swal from 'sweetalert2';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 interface LoggedHour {
   id: string;
@@ -87,7 +88,7 @@ interface ColumnDefinition {
 @Component({
   selector: 'app-my-logged-hours',
   standalone: true,
-  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent, CraneLoaderComponent],
   templateUrl: './my-logged-hours.html',
   styleUrls: ['./my-logged-hours.css', './manage-fields-ultra.css', './manage-fields-modern-v2.css']
 })

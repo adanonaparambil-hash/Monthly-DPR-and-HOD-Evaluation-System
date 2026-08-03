@@ -8,6 +8,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Api } from '../services/api';
 import { HODDepartmentDashboard, HODEmployeePerformanceTrend, HODEvaluationSummary, HODDepartmentRanking } from '../models/dashBoard.model';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 Chart.register(...registerables);
 gsap.registerPlugin(ScrollTrigger);
@@ -21,7 +22,7 @@ interface Particle {
 
 @Component({
   selector: 'app-hod-dashboard',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './hod-dashboard.html',
   styleUrl: './hod-dashboard.css',
   animations: [

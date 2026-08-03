@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Api } from '../services/api';
 import { EmployeeProfileModalComponent } from '../employee-profile-modal/employee-profile-modal.component';
 import { AvatarUtil } from '../utils/avatar.util';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 interface Department {
     department: string;
@@ -67,7 +68,7 @@ interface ApiEmployee {
 @Component({
     selector: 'app-ced-dashboard-new',
     standalone: true,
-    imports: [CommonModule, FormsModule, EmployeeProfileModalComponent],
+    imports: [CommonModule, FormsModule, EmployeeProfileModalComponent, CraneLoaderComponent],
     templateUrl: './ced-dashboard-new.component.html',
     styleUrls: ['./ced-dashboard-new.component.css']
 })

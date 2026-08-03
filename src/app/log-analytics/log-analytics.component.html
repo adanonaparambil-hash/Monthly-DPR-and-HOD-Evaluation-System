@@ -115,6 +115,19 @@
 
   <!-- ══ TABLE AREA ═══════════════════════════════════════════════════════ -->
   <div class="table-area">
+
+    <!-- The `loading` flag was set by loadData() but never bound here, so while
+         the analytics query ran the whole table area rendered as blank space
+         with no indication anything was happening. -->
+    @if (loading) {
+      <div class="la-loading-wrap">
+        <app-crane-loader size="auto"
+                          message="Loading log analytics"
+                          sub="Querying task and time-log records"></app-crane-loader>
+      </div>
+    }
+
+    @if (!loading) {
     @for (group of dynamicGroups; track group) {
       @if (getGroupedEntriesForGroup(group).length > 0) {
         <div class="cat-block">
@@ -406,6 +419,7 @@
 
         </div>
       }
+    }
     }
 
     <!-- ── PAGINATION ── -->
@@ -724,7 +738,7 @@
         <!-- Body -->
         <div class="ph-body">
           @if (phLoading) {
-            <div class="ph-loading"><i class="fas fa-spinner fa-spin"></i> Loading tasks…</div>
+            <div class="ph-loading"><app-crane-loader size="md" message="Loading tasks"></app-crane-loader></div>
           } @else if (phItems.length === 0) {
             <div class="ph-empty">
               <i class="fas fa-search"></i>
@@ -838,7 +852,7 @@
 
         <div class="ph-detail-body">
           @if (phDetailLoading) {
-            <div class="ph-loading"><i class="fas fa-spinner fa-spin"></i> Loading task details…</div>
+            <div class="ph-loading"><app-crane-loader size="md" message="Loading task details"></app-crane-loader></div>
           } @else if (!phDetail) {
             <div class="ph-empty"><i class="fas fa-exclamation-circle"></i><p>Could not load task details.</p></div>
           } @else {
@@ -1058,7 +1072,7 @@
         <!-- Body -->
         <div class="ph-body">
           @if (ndLoading) {
-            <div class="ph-loading"><i class="fas fa-spinner fa-spin"></i> Loading list…</div>
+            <div class="ph-loading"><app-crane-loader size="md" message="Loading list"></app-crane-loader></div>
           } @else if (ndDepts.length === 0) {
             <div class="ph-empty">
               <i class="fas fa-check-circle"></i>

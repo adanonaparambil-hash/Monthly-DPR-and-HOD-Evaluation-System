@@ -492,8 +492,9 @@
       <div class="modal-body-large">
         @if (isLoadingDayLogs) {
           <div class="loading-state-large">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading day log history...</p>
+            <app-crane-loader size="auto"
+                              message="Loading day log history"
+                              sub="Fetching time entries for this task"></app-crane-loader>
           </div>
         }
         @if (!isLoadingDayLogs && dayLogHistory.length === 0) {

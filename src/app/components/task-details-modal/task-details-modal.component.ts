@@ -5,6 +5,7 @@ import { Api } from '../../services/api';
 import { ToasterService } from '../../services/toaster.service';
 import { TaskCommentDto, TaskActivityDto, TaskSaveDto } from '../../models/TimeSheetDPR.model';
 import Swal from 'sweetalert2';
+import { CraneLoaderComponent } from '../../shared/crane-loader/crane-loader.component';
 
 interface CustomField {
   key: string;
@@ -30,7 +31,7 @@ interface UploadedFile {
 @Component({
   selector: 'app-task-details-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './task-details-modal.component.html',
   styleUrls: ['./task-details-modal.component.css']
 })

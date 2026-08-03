@@ -1,0 +1,305 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Crane loader
+   Every animated property is transform or opacity, so the whole thing stays
+   on the compositor and never competes with Chart.js for layout time.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --cl-steel:   #64748b;
+  --cl-steel-2: #94a3b8;
+  --cl-amber:   #f59e0b;
+  --cl-amber-2: #fbbf24;
+  --cl-amber-3: #fde68a;
+  --cl-dark:    #334155;
+  --cl-txt:     #475569;
+  --cl-txt-2:   #94a3b8;
+  --cl-ground:  #cbd5e1;
+  --cl-shadow:  #0f172a;
+
+  display: block;
+}
+
+.cl-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.cl-root.cl-inline {
+  flex-direction: row;
+  gap: 12px;
+}
+
+/* ── Footprint ─────────────────────────────────────────────────────────── */
+/* flex-shrink:0 is defensive: .cl-root is a flex column, so in a container
+   narrower than the crane the SVG would otherwise be shrunk below its clamp
+   width and lose the intended size. Let it keep its width and overflow instead. */
+.cl-svg { display: block; height: auto; overflow: visible; flex-shrink: 0; }
+.cl-sm .cl-svg { width: 64px; }
+.cl-md .cl-svg { width: 136px; }
+.cl-lg .cl-svg { width: 184px; }
+
+/* Viewport-scaled. One markup, right size on a phone and on a wall display:
+   ~120px at 375px wide, ~180px at 1280px, capped at 320px so it never
+   dominates an ultrawide screen. */
+.cl-auto .cl-svg { width: clamp(120px, 14vw, 320px); }
+.cl-auto .cl-msg { font-size: clamp(13px, 1.05vw, 20px); }
+.cl-auto .cl-sub { font-size: clamp(11px, 0.8vw, 15px); }
+.cl-auto .cl-bar { width: clamp(110px, 13vw, 300px); }
+
+/* ── Structure ─────────────────────────────────────────────────────────── */
+.cl-ground {
+  stroke: var(--cl-ground);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.cl-base   { fill: var(--cl-dark); }
+.cl-haz    { fill: var(--cl-amber); }
+.cl-steel  { fill: var(--cl-steel); }
+.cl-jib    { fill: var(--cl-amber); }
+.cl-weight { fill: var(--cl-dark); }
+
+.cl-web {
+  fill: none;
+  stroke: var(--cl-steel-2);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cl-tie {
+  fill: none;
+  stroke: var(--cl-steel-2);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.cl-cab {
+  fill: var(--cl-amber-2);
+  stroke: var(--cl-dark);
+  stroke-width: 1.2;
+}
+
+/* ── Trolley + payload ─────────────────────────────────────────────────── */
+.cl-trolley-body { fill: var(--cl-dark); }
+.cl-wheel        { fill: var(--cl-steel-2); }
+.cl-hookblk      { fill: var(--cl-dark); }
+
+.cl-hook {
+  fill: none;
+  stroke: var(--cl-steel);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.cl-cable {
+  fill: var(--cl-steel);
+  transform-box: view-box;
+  transform-origin: 113.5px 36px;   /* top anchor — rope pays out downward */
+}
+
+.cl-sling {
+  fill: none;
+  stroke: var(--cl-steel);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.cl-crate     { fill: var(--cl-amber-2); }
+.cl-crate-top { fill: var(--cl-amber-3); }
+
+.cl-strap {
+  fill: none;
+  stroke: var(--cl-dark);
+  stroke-width: 1.6;
+  opacity: 0.55;
+}
+
+.cl-shadow {
+  fill: var(--cl-shadow);
+  opacity: 0.18;
+  transform-box: view-box;
+  transform-origin: 113.5px 147px;
+}
+
+.cl-beacon { fill: var(--cl-amber); }
+
+/* ══ Motion ═══════════════════════════════════════════════════════════════
+   One 4.4s cycle: the trolley runs out along the jib and back, lifting at
+   mid-span and setting the load down at each end. Cable length, hook height
+   and ground shadow all key off the same timeline so they stay in sync.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.cl-trolley { animation: clTrolley 4.4s cubic-bezier(.45, 0, .55, 1) infinite; }
+.cl-hoist   { animation: clHoist   4.4s cubic-bezier(.45, 0, .55, 1) infinite; }
+.cl-cable   { animation: clCable   4.4s cubic-bezier(.45, 0, .55, 1) infinite; }
+.cl-shadow  { animation: clShadow  4.4s cubic-bezier(.45, 0, .55, 1) infinite; }
+
+/* Deliberately off the main cycle so the swing never lines up the same way. */
+.cl-load   { animation: clSway   1.7s ease-in-out infinite; transform-box: view-box; transform-origin: 113.5px 101px; }
+.cl-beacon { animation: clBeacon 1.4s ease-in-out infinite; }
+
+@keyframes clTrolley {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(56px); }
+}
+
+@keyframes clHoist {
+  0%, 100% { transform: translateY(0); }
+  22%      { transform: translateY(-30px); }
+  50%      { transform: translateY(0); }
+  78%      { transform: translateY(-30px); }
+}
+
+/* Rope is 62 units tall; a 30-unit lift leaves 32 → scaleY 0.52. */
+@keyframes clCable {
+  0%, 100% { transform: scaleY(1); }
+  22%      { transform: scaleY(0.52); }
+  50%      { transform: scaleY(1); }
+  78%      { transform: scaleY(0.52); }
+}
+
+@keyframes clShadow {
+  0%, 100% { transform: scale(1);   opacity: 0.18; }
+  22%      { transform: scale(0.6); opacity: 0.07; }
+  50%      { transform: scale(1);   opacity: 0.18; }
+  78%      { transform: scale(0.6); opacity: 0.07; }
+}
+
+@keyframes clSway {
+  0%, 100% { transform: rotate(-4.5deg); }
+  50%      { transform: rotate(4.5deg); }
+}
+
+@keyframes clBeacon {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.25; transform: scale(0.7); }
+}
+
+/* Phase offsets for sibling loaders. Negative delays start mid-cycle, so the
+   crane is already working on first paint instead of pausing first. */
+.cl-stg-1 .cl-trolley, .cl-stg-1 .cl-hoist,
+.cl-stg-1 .cl-cable,   .cl-stg-1 .cl-shadow { animation-delay: -1.1s; }
+.cl-stg-2 .cl-trolley, .cl-stg-2 .cl-hoist,
+.cl-stg-2 .cl-cable,   .cl-stg-2 .cl-shadow { animation-delay: -2.2s; }
+.cl-stg-3 .cl-trolley, .cl-stg-3 .cl-hoist,
+.cl-stg-3 .cl-cable,   .cl-stg-3 .cl-shadow { animation-delay: -3.3s; }
+
+.cl-stg-1 .cl-load { animation-delay: -0.4s; }
+.cl-stg-2 .cl-load { animation-delay: -0.8s; }
+.cl-stg-3 .cl-load { animation-delay: -1.2s; }
+
+/* ── Caption ───────────────────────────────────────────────────────────── */
+.cl-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.cl-inline .cl-text { align-items: flex-start; text-align: left; }
+
+.cl-msg {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cl-txt);
+  letter-spacing: 0.1px;
+}
+.cl-sm .cl-msg { font-size: 12.5px; }
+.cl-lg .cl-msg { font-size: 15px; }
+
+.cl-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--cl-txt-2);
+}
+
+/* Trailing dots — same beat as the beacon. */
+.cl-dots { font-style: normal; letter-spacing: 1px; }
+.cl-dots b { font-weight: 700; opacity: 0.25; animation: clDot 1.35s ease-in-out infinite; }
+.cl-dots b:nth-child(2) { animation-delay: 0.18s; }
+.cl-dots b:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes clDot {
+  0%, 60%, 100% { opacity: 0.25; }
+  30%           { opacity: 1; }
+}
+
+/* ── Indeterminate bar ─────────────────────────────────────────────────── */
+.cl-bar {
+  position: relative;
+  width: 128px;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--cl-amber-3);
+  overflow: hidden;
+}
+.cl-lg .cl-bar { width: 168px; }
+
+.cl-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cl-amber-2), var(--cl-amber));
+  animation: clBar 1.5s ease-in-out infinite;
+}
+
+@keyframes clBar {
+  0%   { transform: translateX(-105%); }
+  100% { transform: translateX(245%); }
+}
+
+/* ══ Dark theme ═══════════════════════════════════════════════════════════
+   Component styles are scoped, so a plain `.dark-theme .x` rule here would
+   never match — the class lives on an ancestor outside this component.
+   :host-context is the only selector that reaches it.
+   ═════════════════════════════════════════════════════════════════════════ */
+:host-context(.dark-theme) {
+  --cl-steel:   #94a3b8;
+  --cl-steel-2: #64748b;
+  --cl-dark:    #cbd5e1;
+  --cl-txt:     #e2e8f0;
+  --cl-txt-2:   #94a3b8;
+  --cl-ground:  #334155;
+  --cl-shadow:  #000000;
+  --cl-amber-3: #78350f;
+}
+
+:host-context(.dark-theme) .cl-strap { opacity: 0.4; }
+
+/* ── Accessibility ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .cl-trolley, .cl-hoist, .cl-cable, .cl-shadow, .cl-load,
+  .cl-beacon, .cl-dots b, .cl-bar span {
+    animation: none !important;
+  }
+  /* Park the crane mid-lift so the illustration still reads correctly. */
+  .cl-hoist  { transform: translateY(-30px); }
+  .cl-cable  { transform: scaleY(0.52); }
+  .cl-shadow { transform: scale(0.6); opacity: 0.07; }
+  .cl-bar span { width: 100%; opacity: 0.5; }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .cl-md .cl-svg { width: 116px; }
+  .cl-lg .cl-svg { width: 148px; }
+  .cl-msg { font-size: 13px; }
+  .cl-sub { font-size: 11px; }
+  .cl-bar { width: 110px; }
+}
+
+@media (max-width: 480px) {
+  .cl-md .cl-svg { width: 98px; }
+  .cl-lg .cl-svg { width: 118px; }
+  .cl-sm .cl-svg { width: 54px; }
+  .cl-msg { font-size: 12.5px; }
+  .cl-sub { display: none; }   /* headline only — the sub line wraps badly here */
+  .cl-bar { width: 92px; }
+}

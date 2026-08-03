@@ -9,11 +9,12 @@ import { Router } from '@angular/router';
 import { DPRMonthlyReviewListingRequest } from '../models/task.model';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 @Component({
   selector: 'app-apr-past-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './apr-past-reports.component.html',
   styleUrls: ['./apr-past-reports.component.css'],
   animations: [

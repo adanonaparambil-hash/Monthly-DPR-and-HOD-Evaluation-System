@@ -5,6 +5,7 @@ import { Chart, registerables } from 'chart.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Api } from '../services/api';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 import {
   LpoDashboardRequest, GrnDashboardRequest,
   ProjectDashboardRequest, TopSupplierRequest, FacilitiesDashboardRequest,
@@ -107,37 +108,21 @@ const DONUT_VIVID = [
   '#8b5cf6','#14b8a6','#f97316','#06b6d4','#84cc16','#ec4899','#3b82f6'
 ];
 
-// ── Fallback mock data (used when API has no data) ───────────────────────────
 const MONTHS_ALL = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const LPO_ALL_VALUES = [2.59,2.33,2.93,2.04,2.45,2.61,2.78,2.90,2.55,2.38,2.20,2.10];
 
+// Year list for the GRN filter controls. `values` deliberately removed — it was
+// a mock series used as a chart/KPI fallback.
 const GRN_YEARLY = {
-  years:  ['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'],
-  values: [39.2,37.7,31.5,20.1,19.7,22.1,25.1,17.2,22.9,6.9]
+  years:  ['2017','2018','2019','2020','2021','2022','2023','2024','2025','2026']
 };
 
-const MAIN_PROJECTS = {
-  shortLabels:['Mech.Wkshp','P.329 WPCA','P.275 STF','P.314 SRHQ','CWS',
-               'P.255 OSTF','P.288 LSTF','P.285 OTF','P.279 NAK','P.392 CLA','P.249 SU','NRW'],
-  poValues:  [32.5,21.4,14.2,12.8,11.3,10.5,9.2,7.8,6.4,5.8,5.1,4.7],
-  grnValues: [30.1,19.8,12.5,11.4,10.2,9.1,8.3,6.9,5.7,5.1,4.4,4.0]
-};
-
-const TOP_SUPPLIERS = {
-  labels: ['MIS. AL ADRA K TRADING','RAD. DIVISION','ANA ENTERPRISE G',
-           'MS. NEW ROTING CO SAO','MIS. NUHAS O MAN LLC','ENTERPRISE L',
-           'MS. KHIMJI RAMPAS LLC','MS. EAST & WEST TRADING','MIS. TARMAC ZAWAWI',
-           'MIS. RAHMAN ENG CO','MR. THOMAS A ALEXANDER','MS. OMAN PO EN PRODUCTS'],
-  values: [56.2,36.4,22.4,22.2,18.9,11.7,10.2,9.4,8.1,7.7,7.6,6.0]
-};
-
-const MAIN_FACILITIES = [
-  {name:'Mech. Workshop',po:32.5,grn:30.1},{name:'P.329 WPCA',po:21.4,grn:19.8},
-  {name:'P.275 STF',po:14.2,grn:12.5},{name:'P.314 SRHQ',po:12.8,grn:11.4},
-  {name:'CWS',po:11.3,grn:10.2},{name:'P.255 OSTF',po:10.5,grn:9.1},
-  {name:'P.288 LSTF',po:9.2,grn:8.3},{name:'P.285 OTF',po:7.8,grn:6.9},
-  {name:'P.279 NAK',po:6.4,grn:5.7},{name:'P.392 CLA',po:5.8,grn:5.1},
-];
+// The mock series that used to live here (LPO_ALL_VALUES, MAIN_PROJECTS,
+// TOP_SUPPLIERS, MAIN_FACILITIES) have been deleted. They were wired in as
+// "fallback when the API has no data", which meant every chart, every headline
+// KPI and both Excel exports would silently render invented figures whenever a
+// request was still in flight, returned nothing, or failed — and nothing on
+// screen distinguished them from real purchase data. Charts now render only
+// what the API returned; the loading and empty overlays cover the rest.
 
 // ── Chart info metadata ──────────────────────────────────────────────────────
 const CHART_META: Record<string,{title:string,icon:string,type:string,clr:string}> = {
@@ -151,7 +136,7 @@ const CHART_META: Record<string,{title:string,icon:string,type:string,clr:string
 @Component({
   selector: 'app-purchase-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './purchase-dashboard.component.html',
   styleUrls: ['./purchase-dashboard.component.css']
 })
@@ -185,6 +170,44 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     if (this.expandedChart === 'lpo') return { ...meta, title: `${this.lpoView === 'yearly' ? 'Yearly' : 'Monthly'} LPO` };
     if (this.expandedChart === 'grn') return { ...meta, title: `${this.grnView === 'yearly' ? 'Yearly' : 'Monthly'} GRN Value` };
     return meta;
+  }
+
+  // ── Expanded-modal state ─────────────────────────────────────────────────────
+  // The modal draws the SAME data as the card behind it, but had no loading or
+  // empty overlay of its own. Changing a filter from inside the modal therefore
+  // cleared the series and left a blank canvas with nothing explaining it.
+  // These map the expanded chart onto its per-chart flags.
+  get expandedLoading(): boolean {
+    switch (this.expandedChart) {
+      case 'lpo':        return this.lpoLoading;
+      case 'grn':        return this.grnLoading;
+      case 'projects':   return this.projLoading;
+      case 'facilities': return this.facilLoading;
+      case 'suppliers':  return this.suppLoading;
+      default:           return false;
+    }
+  }
+
+  get expandedEmpty(): boolean {
+    switch (this.expandedChart) {
+      case 'lpo':        return this.lpoEmpty;
+      case 'grn':        return this.grnEmpty;
+      case 'projects':   return this.projEmpty;
+      case 'facilities': return this.facilEmpty;
+      case 'suppliers':  return this.suppEmpty;
+      default:           return false;
+    }
+  }
+
+  get expandedLoadingMsg(): string {
+    switch (this.expandedChart) {
+      case 'lpo':        return 'Loading LPO data';
+      case 'grn':        return 'Loading GRN data';
+      case 'projects':   return 'Loading projects data';
+      case 'facilities': return 'Loading facilities data';
+      case 'suppliers':  return 'Loading suppliers';
+      default:           return 'Loading';
+    }
   }
 
   // ── Dropdown open flags ─────────────────────────────────────────────────────
@@ -273,6 +296,22 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   readonly grnYears    = GRN_YEARLY.years;
   // GRN year dropdown options — same range as grnYears array values
   readonly grnYearOptions = GRN_YEARLY.years.map(y => +y);
+
+  // ── Projects card: single-year filter ────────────────────────────────────────
+  // Applies ONLY to the "Main Projects & Facilities — PO vs GRN" card. The API
+  // already accepted a `year` on ProjectDashboardRequest; it was being sent as
+  // null, so nothing else changes server-side.
+  //
+  // Range runs from PROJ_YEAR_FROM to the current year and extends itself each
+  // January — no yearly code edit. Newest first, since recent years get used most.
+  readonly PROJ_YEAR_FROM = 2021;
+  readonly projYears: string[] = Array.from(
+    { length: this.CURRENT_YEAR - this.PROJ_YEAR_FROM + 1 },
+    (_, i) => String(this.PROJ_YEAR_FROM + i)
+  ).reverse();
+
+  /** null = "All Years" (no year filter) — the default, as requested. */
+  projYear: string | null = null;
 
   /** Max index the "To Month" slider can reach for the LPO chart.
    *  Current year → capped at today's month; any past year → full 12 months (index 11). */
@@ -366,20 +405,45 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   suppLoading  = false; suppEmpty  = false;
   facilLoading = false; facilEmpty = false;
 
+  // ── Request sequencing ───────────────────────────────────────────────────────
+  // Every filter control calls its handler on (ngModelChange), and the range
+  // sliders fire on EVERY step — dragging Top-N from 1 to 10 launches ten
+  // requests. They finish in whatever order the server and network decide, so
+  // without a guard the last response to arrive wins, which is frequently not
+  // the one matching what the dropdown now says. That is how a chart ends up
+  // showing numbers for filters the user is no longer looking at.
+  //
+  // Each handler takes a ticket before firing; a response is only allowed to
+  // paint if its ticket is still the newest for that chart. Superseded
+  // responses are dropped, and — importantly — they must NOT clear the loading
+  // flag either, or the loader would disappear while the current request is
+  // still in flight.
+  private reqSeq: Record<string, number> = {
+    lpo: 0, grn: 0, proj: 0, supp: 0, facil: 0
+  };
+
+  /** Take a ticket for `key` and mark that chart busy with no stale data left on screen. */
+  private beginRequest(key: string): number {
+    return ++this.reqSeq[key];
+  }
+
+  /** True when this response still represents the newest request for `key`. */
+  private isCurrent(key: string, seq: number): boolean {
+    return this.reqSeq[key] === seq;
+  }
+
   // ── Computed display values ──────────────────────────────────────────────────
+  // These KPIs sum ONLY what the API returned. They used to fall back to the
+  // hardcoded LPO_ALL_VALUES / GRN_YEARLY.values demo arrays whenever the real
+  // series was empty, which meant the big headline figure on each card could be
+  // an invented number that no one could distinguish from a real one.
   get lpoTotal() {
     // lpoChartValues are already in millions (M); sum them directly
-    const v = this.lpoChartValues.length
-      ? this.lpoChartValues
-      : LPO_ALL_VALUES.slice(Math.min(this.lpoMonthFrom,this.lpoMonthTo), Math.max(this.lpoMonthFrom,this.lpoMonthTo)+1);
-    return Math.round(v.reduce((a,b)=>a+b,0)*1000)/1000;
+    return Math.round(this.lpoChartValues.reduce((a,b)=>a+b,0)*1000)/1000;
   }
   get grnTotal() {
     // grnChartValues are already in millions after conversion
-    const v = this.grnChartValues.length
-      ? this.grnChartValues
-      : GRN_YEARLY.values.slice(this.grnYearFrom, this.grnYearTo+1);
-    return Math.round(v.reduce((a,b)=>a+b,0)*1000)/1000;
+    return Math.round(this.grnChartValues.reduce((a,b)=>a+b,0)*1000)/1000;
   }
   get lpoFromLbl()     { return MONTHS_ALL[Math.min(this.lpoMonthFrom,this.lpoMonthTo)]; }
   get lpoToLbl()       { return MONTHS_ALL[Math.max(this.lpoMonthFrom,this.lpoMonthTo)]; }
@@ -1165,6 +1229,10 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   // ── Filter handlers (call API then rebuild chart) ────────────────────────────
   onLPO() {
+    const seq = this.beginRequest('lpo');
+    // Drop the previous result the moment a new request starts, so the card
+    // cannot keep displaying figures for the old filter selection.
+    this.lpoChartLabels = []; this.lpoChartValues = [];
     this.lpoLoading = true; this.lpoEmpty = false;
     const isMonthly = this.lpoView === 'monthly';
     const req: LpoDashboardRequest = {
@@ -1177,6 +1245,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     };
     this.api.GetLpoDashboard(req).subscribe({
       next: (res) => {
+        if (!this.isCurrent('lpo', seq)) return;   // a newer filter change won
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
         this.lpoChartLabels = data.map((d: any) =>
           d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
@@ -1188,6 +1257,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.refreshTvCharts();
       },
       error: () => {
+        if (!this.isCurrent('lpo', seq)) return;
         this.lpoChartLabels = []; this.lpoChartValues = [];
         this.lpoLoading = false; this.lpoEmpty = true;
         this.build('lpo');
@@ -1197,6 +1267,8 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   onGRN() {
+    const seq = this.beginRequest('grn');
+    this.grnChartLabels = []; this.grnChartValues = [];
     this.grnLoading = true; this.grnEmpty = false;
     const isMonthly = this.grnView === 'monthly';
     const fromIdx = Math.min(this.grnYearFrom,this.grnYearTo);
@@ -1211,6 +1283,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     };
     this.api.GetGrnDashboard(req).subscribe({
       next: (res) => {
+        if (!this.isCurrent('grn', seq)) return;
         const data: any[] = Array.isArray(res) ? res : (res?.data ?? []);
         this.grnChartLabels = data.map((d: any) =>
           d.monthName ?? d.label ?? (d.year != null ? String(d.year) : '') ?? ''
@@ -1222,6 +1295,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.refreshTvCharts();
       },
       error: () => {
+        if (!this.isCurrent('grn', seq)) return;
         this.grnChartLabels = []; this.grnChartValues = [];
         this.grnLoading = false; this.grnEmpty = true;
         this.build('grn');
@@ -1231,14 +1305,19 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   onProj() {
+    const seq = this.beginRequest('proj');
+    this.projChartData = [];
     this.projLoading = true; this.projEmpty = false;
     const req: ProjectDashboardRequest = {
       companies: this.projCompanies.length ? this.projCompanies : null,
       projects:  this.projProjects.length  ? this.projProjects  : null,
-      year: null
+      // null => "All Years", which is exactly what was always sent before, so
+      // the default behaviour of this card is unchanged.
+      year: this.projYear ? this.projYear : null
     };
     this.api.GetProjectDashboard(req).subscribe({
       next: (res) => {
+        if (!this.isCurrent('proj', seq)) return;
         const data = Array.isArray(res) ? res : (res?.data ?? []);
         this.projChartData = data;
         this.projLoading = false; this.projEmpty = data.length === 0;
@@ -1247,6 +1326,7 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
         this.refreshTvCharts();
       },
       error: () => {
+        if (!this.isCurrent('proj', seq)) return;
         this.projChartData = [];
         this.projLoading = false; this.projEmpty = true;
         this.build('projects');
@@ -1256,6 +1336,10 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   onSupp() {
+    const seq = this.beginRequest('supp');
+    // Clearing this also empties the ranked list beside the donut, which reads
+    // from suppDisplayData — otherwise the old top-N list stays on screen.
+    this.suppChartData = [];
     this.suppLoading = true; this.suppEmpty = false;
     const req: TopSupplierRequest = {
       companies: this.getCodes(this.suppCompanies),
@@ -1265,21 +1349,31 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     };
     this.api.GetTopSuppliers(req).subscribe({
       next: (res) => {
+        if (!this.isCurrent('supp', seq)) return;
         const data = Array.isArray(res) ? res : (res?.data ?? []);
         this.suppChartData = data;
         this.suppLoading = false; this.suppEmpty = data.length === 0;
         this.build('suppliers');
         if (this.expandedChart === 'suppliers') this.buildModal();
+        // onSupp was the only handler missing this, so in display mode the
+        // supplier donut kept rendering the previous result after any supplier
+        // filter change (company, year range, Top-N) — it was never rebuilt.
+        this.refreshTvCharts();
       },
       error: () => {
+        if (!this.isCurrent('supp', seq)) return;
         this.suppChartData = [];
         this.suppLoading = false; this.suppEmpty = true;
         this.build('suppliers');
+        this.refreshTvCharts();
       }
     });
   }
 
   onFacil() {
+    const seq = this.beginRequest('facil');
+    this.facilChartData = [];
+    this.facilLoading = true; this.facilEmpty = false;
     const req: FacilitiesDashboardRequest = {
       projects: this.facilProjects.length  ? this.facilProjects  : null,
       vendors:  this.facilCompanies.length ? this.facilCompanies : null,
@@ -1288,11 +1382,19 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     };
     this.api.GetFacilitiesDashboard(req).subscribe({
       next: (res) => {
-        this.facilChartData = Array.isArray(res) ? res : (res?.data ?? []);
+        if (!this.isCurrent('facil', seq)) return;
+        const data = Array.isArray(res) ? res : (res?.data ?? []);
+        this.facilChartData = data;
+        this.facilLoading = false; this.facilEmpty = data.length === 0;
         this.build('facilities');
         if (this.expandedChart === 'facilities') this.buildModal();
       },
-      error: () => { this.facilChartData = null; this.build('facilities'); }
+      error: () => {
+        if (!this.isCurrent('facil', seq)) return;
+        this.facilChartData = [];
+        this.facilLoading = false; this.facilEmpty = true;
+        this.build('facilities');
+      }
     });
   }
 
@@ -1327,18 +1429,54 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   tvViewOpen = false;
   private tvCharts: Chart[] = [];
 
+  /* Keeps the overlay and the browser's real fullscreen state in sync.
+     Pressing Esc (or F11) exits fullscreen without going through
+     closeTvView(), which would otherwise leave the overlay stuck open on top
+     of a windowed browser. `false` here means "already out of fullscreen —
+     don't ask to exit again". Same contract as the CED display mode. */
+  private tvFsHandler = () => {
+    if (!document.fullscreenElement && this.tvViewOpen) this.closeTvView(false);
+  };
+
   openTvView(): void {
+    if (this.tvViewOpen) return;
     this.tvViewOpen = true;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('pd-kiosk');
+
+    // Take the screen for real. Previously this was only a fixed-inset overlay,
+    // so it filled the browser viewport but left the tab strip, address bar and
+    // OS taskbar visible — not a display-mode screen. requestFullscreen is what
+    // the CED dashboard uses, and it must be called from this user gesture.
+    document.addEventListener('fullscreenchange', this.tvFsHandler);
+    document.documentElement.requestFullscreen?.().catch(() => {
+      /* Fullscreen can be refused (permissions policy, non-gesture call).
+         The overlay still works, just windowed — don't break the view. */
+    });
+
     // wait one tick so the *ngIf canvases exist, then build the charts
     setTimeout(() => this.buildTvCharts(), 80);
   }
 
-  closeTvView(): void {
+  closeTvView(leaveFullscreen = true): void {
+    if (!this.tvViewOpen) return;
     this.tvViewOpen = false;
     document.body.style.overflow = '';
+    document.body.classList.remove('pd-kiosk');
+
+    document.removeEventListener('fullscreenchange', this.tvFsHandler);
+    if (leaveFullscreen && document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+
     this.tvCharts.forEach(c => { try { c.destroy(); } catch {} });
     this.tvCharts = [];
+  }
+
+  /** Esc closes the display view (and drops out of fullscreen with it). */
+  @HostListener('document:keydown.escape')
+  onTvEscape(): void {
+    if (this.tvViewOpen) this.closeTvView();
   }
 
   /** Re-render the fullscreen TV charts after a filter change inside the TV view. */
@@ -1366,10 +1504,9 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   // ── Chart factories ──────────────────────────────────────────────────────────
 
   private makeLPO(ctx: CanvasRenderingContext2D): Chart {
-    const from = Math.min(this.lpoMonthFrom,this.lpoMonthTo);
-    const to   = Math.max(this.lpoMonthFrom,this.lpoMonthTo);
-    const labels = this.lpoChartLabels.length ? this.lpoChartLabels : MONTHS_ALL.slice(from,to+1);
-    const bars   = this.lpoChartValues.length ? this.lpoChartValues : LPO_ALL_VALUES.slice(from,to+1);
+    // Real series only — never the LPO_ALL_VALUES demo array (see lpoTotal).
+    const labels = this.lpoChartLabels;
+    const bars   = this.lpoChartValues;
     const colors = labels.map((_,i)=>LPO_BAR_COLORS[i%LPO_BAR_COLORS.length]);
     // Build per-bar gradients for a richer look
     const bgColors = colors.map(clr => {
@@ -1534,19 +1671,24 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   private makeProjects(ctx: CanvasRenderingContext2D): Chart {
     const data = this.projChartData;
     console.log('[PROJECTS] raw API data sample:', (data ?? []).slice(0, 2));
+    // No demo-data fallback. This used to drop back to the hardcoded
+    // MAIN_PROJECTS constant whenever the API data was absent, so before the
+    // first response — and after any failure — the card confidently rendered
+    // twelve invented projects that looked exactly like real figures. An empty
+    // chart plus the loading / empty overlay is the honest representation.
     const rawLabels = data?.map((d: any) =>
       d.projectName ?? d.shortLabel ?? d.name ?? d.project ?? d.description ?? ''
-    ) ?? MAIN_PROJECTS.shortLabels;
+    ) ?? [];
     const labels = rawLabels.map((l: string) => l.length > 22 ? l.substring(0, 21) + '…' : l);
 
     // Smart conversion: only divide by 1M if value looks like raw OMR (>= 100,000)
     const toM = (v: number) => toMillions(v);
     const poValues  = data?.map((d: any) =>
       toM(+(d.poAmount ?? d.poValue ?? d.po ?? d.purchaseOrderAmount ?? d.totalPoAmount ?? 0))
-    ) ?? MAIN_PROJECTS.poValues;
+    ) ?? [];
     const grnValues = data?.map((d: any) =>
       toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
-    ) ?? MAIN_PROJECTS.grnValues;
+    ) ?? [];
 
     // Reference design: solid crimson (PO) + sky blue (GRN) bars,
     // smooth trend lines with white dots, dark value tags above points
@@ -1735,17 +1877,17 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
     console.log('[FACILITIES] raw API data sample:', (data ?? []).slice(0, 2));
     const rawLabels = data?.map((d: any) =>
       d.facilityName ?? d.projectName ?? d.name ?? d.facility ?? d.description ?? ''
-    ) ?? MAIN_FACILITIES.map(f => f.name);
+    ) ?? [];   // no demo-data fallback — see makeProjects()
     const labels = rawLabels.map((l: string) => l.length > 22 ? l.substring(0, 21) + '…' : l);
 
     // Smart conversion: only divide by 1M if value looks like raw OMR (>= 100,000)
     const toM = (v: number) => toMillions(v);
     const poValues  = data?.map((d: any) =>
       toM(+(d.poAmount ?? d.poValue ?? d.po ?? d.purchaseOrderAmount ?? d.totalPoAmount ?? 0))
-    ) ?? MAIN_FACILITIES.map(f => f.po);
+    ) ?? [];
     const grnValues = data?.map((d: any) =>
       toM(+(d.grnAmount ?? d.grnValue ?? d.grn ?? d.goodsReceivedAmount ?? d.totalGrnAmount ?? 0))
-    ) ?? MAIN_FACILITIES.map(f => f.grn);
+    ) ?? [];
 
     // Vertical gradients (top → bottom)
     const poGrad = ctx.createLinearGradient(0, 0, 0, 320);
@@ -1825,10 +1967,11 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   exportLPO(): void {
-    const from = Math.min(this.lpoMonthFrom, this.lpoMonthTo);
-    const to   = Math.max(this.lpoMonthFrom, this.lpoMonthTo);
-    const labels = this.lpoChartLabels.length ? this.lpoChartLabels : MONTHS_ALL.slice(from, to + 1);
-    const values = this.lpoChartValues.length ? this.lpoChartValues : LPO_ALL_VALUES.slice(from, to + 1);
+    // Export the real series only. This previously fell back to the demo array,
+    // so an export taken before the data arrived produced a spreadsheet of
+    // fabricated figures that looked entirely legitimate once it left the app.
+    const labels = this.lpoChartLabels;
+    const values = this.lpoChartValues;
     const view = this.lpoView === 'monthly' ? `${this.lpoYear} (${this.lpoFromLbl}-${this.lpoToLbl})` : `${this.lpoFromYearLbl}-${this.lpoToYearLbl}`;
     const rows: string[][] = [
       ['Monthly LPO Export', view],
@@ -1842,10 +1985,9 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   exportGRN(): void {
-    const from = Math.min(this.grnYearFrom, this.grnYearTo);
-    const to   = Math.max(this.grnYearFrom, this.grnYearTo);
-    const labels = this.grnChartLabels.length ? this.grnChartLabels : GRN_YEARLY.years.slice(from, to + 1);
-    const values = this.grnChartValues.length ? this.grnChartValues : GRN_YEARLY.values.slice(from, to + 1);
+    // Real series only — see exportLPO().
+    const labels = this.grnChartLabels;
+    const values = this.grnChartValues;
     const view = this.grnView === 'monthly' ? `${this.grnYear} (${this.grnFromMonth}-${this.grnToMonth})` : `${this.grnFromYear}-${this.grnToYear}`;
     const rows: string[][] = [
       ['GRN Value Export', view],
@@ -1909,9 +2051,14 @@ export class PurchaseDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   ngOnDestroy() {
+    // Leave display mode first: navigating away while in fullscreen would
+    // otherwise strand the browser in fullscreen with the kiosk body class and
+    // the fullscreenchange listener still attached.
+    this.closeTvView();
     this.charts.forEach(c=>c.destroy());
     this.charts.clear();
     ScrollTrigger.getAll().forEach((t:any)=>t.kill());
     document.body.style.overflow='';
+    document.body.classList.remove('pd-kiosk');
   }
 }

@@ -124,7 +124,9 @@
         <tbody>
           <tr *ngIf="isListLoading">
             <td colspan="7" class="empty-state-cell">
-              <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>
+              <div class="empty-state">
+                <app-crane-loader size="md" message="Loading notices"></app-crane-loader>
+              </div>
             </td>
           </tr>
           <tr *ngFor="let notice of paginatedNotices" class="notice-row">

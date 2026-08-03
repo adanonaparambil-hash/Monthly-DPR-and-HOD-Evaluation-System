@@ -19,7 +19,9 @@
         </div>
       </div>
       <div class="header-actions" *ngIf="isApprovalMode || isViewMode || returnUrl">
-        <button class="btn-pdf" (click)="downloadAsPdf()" [disabled]="isPdfGenerating">
+        <!-- Only once every approval step is approved — see isFullyApproved() -->
+        <button class="btn-pdf" *ngIf="isFullyApproved()"
+                (click)="downloadAsPdf()" [disabled]="isPdfGenerating">
           <span *ngIf="!isPdfGenerating"><i class="fas fa-file-pdf"></i> Export PDF</span>
           <span *ngIf="isPdfGenerating"><i class="fas fa-spinner fa-spin"></i> Generating...</span>
         </button>
@@ -589,13 +591,13 @@
                   <label class="checkbox-label">
                     <input type="checkbox" formControlName="decReturnAssets">
                     <span class="checkmark"></span>
-                    <span *ngIf="formType === 'E'">I will return all company assets (laptop, phone, keys, tag, vehicle,
+                    <span *ngIf="formType === 'E'">I will return all company assets (laptop, sim, keys, tag, vehicle,
                       etc.) before
                       departure</span>
-                    <span *ngIf="formType === 'P'">I will return all company assets (laptop, phone, keys, tag, vehicle,
+                    <span *ngIf="formType === 'P'">I will return all company assets (laptop, sim, keys, tag, vehicle,
                       etc.) before
                       my planned departure</span>
-                    <span *ngIf="formType === 'R'">I will return all company assets (laptop, phone, keys, tag, vehicle,
+                    <span *ngIf="formType === 'R'">I will return all company assets (laptop, sim, keys, tag, vehicle,
                       etc.) before
                       my last working day</span>
                   </label>

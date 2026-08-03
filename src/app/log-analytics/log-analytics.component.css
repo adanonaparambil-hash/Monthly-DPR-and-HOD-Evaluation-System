@@ -1917,3 +1917,13 @@
     min-height: 40px;
   }
 }
+
+/* Main analytics grid loading state (the table area was previously blank
+   while the query ran — `loading` was never bound in the template). */
+.la-loading-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44vh;
+  padding: 40px 20px;
+}

@@ -11,7 +11,7 @@
       <button class="byod-back-btn-inline" *ngIf="isViewMode" (click)="goBack()">
         <i class="fas fa-arrow-left"></i>
       </button>
-      <button class="byod-pdf-btn" *ngIf="isViewMode" (click)="downloadAsPdf()" [disabled]="isPdfGenerating" title="Export PDF">
+      <button class="byod-pdf-btn" *ngIf="isViewMode && isFullyApproved()" (click)="downloadAsPdf()" [disabled]="isPdfGenerating" title="Export PDF">
         <i class="fas" [ngClass]="isPdfGenerating ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i>
         <span>{{ isPdfGenerating ? 'Generating...' : 'Export PDF' }}</span>
       </button>

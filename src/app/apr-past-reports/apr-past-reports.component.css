@@ -1003,3 +1003,11 @@
 :host-context(.dark-theme) .filter-select {
   color-scheme: dark;
 }
+
+/* Holds the crane loader now instead of skeleton rows — needs to centre it. */
+.skeleton-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 20px;
+}

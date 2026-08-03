@@ -1529,6 +1529,31 @@ export class EmergencyExitFormComponent implements OnInit {
     return !this.formSubmitted;
   }
 
+  /**
+   * True only once EVERY approval step has been approved.
+   *
+   * Gates the header "Export PDF" button: a form that is still moving through
+   * the workflow shouldn't be exportable, because the PDF would show approval
+   * rows that are still pending and could be circulated as if it were final.
+   *
+   * A REJECTED step returns false — a rejected form is finished, but it is not
+   * approved, so there is nothing to issue.
+   *
+   * Deliberately matches the progress bar the user is already looking at:
+   * this is true exactly when updateWorkflowProgress() reaches 100%.
+   */
+  isFullyApproved(): boolean {
+    // Record-level verdict wins when the backend has already set it — covers
+    // older records whose step list may not rebuild.
+    if ((this.approvalStatus || '').toUpperCase() === 'A') return true;
+
+    const steps = this.getAllApprovalWorkflowSteps();
+    // No steps loaded yet => cannot confirm approval => stay hidden.
+    if (!steps.length) return false;
+
+    return steps.every(s => (s.status || '').toUpperCase() === 'APPROVED');
+  }
+
   // Placeholder methods - these would need to be implemented based on your requirements
   updateValidatorsForFormType(): void {
     // Contact details are NEVER required - they are display-only from profile
@@ -2160,7 +2185,7 @@ export class EmergencyExitFormComponent implements OnInit {
     if (!formValue.decReturnAssets) {
       const timeText = this.formType === 'E' ? 'before departure' : 
                       (this.formType === 'P' ? 'before my planned departure' : 'before my last working day');
-      missingDeclarations.push(`I will return all company assets (laptop, phone, keys, etc.) ${timeText}`);
+      missingDeclarations.push(`I will return all company assets (laptop, sim, keys, etc.) ${timeText}`);
     }
     if (!formValue.decUnderstandReturn) {
       if (this.formType === 'E') {
@@ -3888,7 +3913,7 @@ export class EmergencyExitFormComponent implements OnInit {
             ? 'I have handed over all my responsibilities to the designated personnel.'
             : 'I have properly handed over my responsibilities to the designated personnel.' },
         { ok: !!fv.decReturnAssets,      text: this.formType === 'E'
-            ? 'I will return all company assets (laptop, phone, keys, tag, vehicle, etc.) before departure.'
+            ? 'I will return all company assets (laptop, sim, keys, tag, vehicle, etc.) before departure.'
             : this.formType === 'P'
             ? 'I will return all company assets before my planned departure.'
             : 'I will return all company assets before my last working day.' },

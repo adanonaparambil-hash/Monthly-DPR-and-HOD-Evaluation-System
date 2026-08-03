@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { Api } from '../services/api';
 import { AvatarUtil } from '../utils/avatar.util';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 @Component({
   selector: 'app-employee-profile-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CraneLoaderComponent],
   templateUrl: './employee-profile-modal.component.html',
   styleUrls: ['./employee-profile-modal.component.css'],
   animations: [

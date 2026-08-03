@@ -200,8 +200,9 @@
       <!-- Loading State -->
       @if (isLoadingData) {
         <div class="loading-state">
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Loading logged hours...</p>
+          <app-crane-loader size="auto"
+                            message="Loading logged hours"
+                            sub="Fetching your time entries"></app-crane-loader>
         </div>
       }
 

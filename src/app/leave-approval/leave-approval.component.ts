@@ -7,6 +7,7 @@ import { Api } from '../services/api';
 import { SessionService } from '../services/session.service';
 import { ApprovalWorkflowService } from '../services/approval-workflow.service';
 import { EmployeeExitRequest, ApprovalStep, DepartmentApproval, MyApprovalRequest, EmployeeApprovalInboxRequest } from '../models/employeeExit.model';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 interface LeaveRequest {
   id: string;
@@ -40,7 +41,7 @@ interface LeaveRequest {
 @Component({
   selector: 'app-leave-approval',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './leave-approval.component.html',
   styleUrls: ['./leave-approval.component.css'],
   animations: [

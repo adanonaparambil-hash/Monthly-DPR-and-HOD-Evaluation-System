@@ -317,6 +317,17 @@ export class RejoiningForm implements OnInit {
     }
   }
 
+  /**
+   * True only once the record is fully approved ('A').
+   *
+   * Gates the header "Export PDF" button — while the form is still Pending ('P'
+   * / legacy 'S') the PDF would carry unapproved approval rows, and a Rejected
+   * ('R') form has nothing to issue.
+   */
+  isFullyApproved(): boolean {
+    return (this.rejoinRecord?.status || '').toUpperCase() === 'A';
+  }
+
   /** Overall form status label shown in the banner */
   getFormStatusLabel(status: string): string {
     switch ((status || '').toUpperCase()) {

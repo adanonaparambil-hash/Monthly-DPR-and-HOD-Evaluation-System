@@ -8,6 +8,7 @@ import { ToasterComponent } from '../components/toaster/toaster.component';
 import { ToasterService } from '../services/toaster.service';
 import { SessionService } from '../services/session.service';
 import Swal from 'sweetalert2';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 interface PendingUser {
   id: string;
@@ -74,7 +75,7 @@ interface DPRLog {
 @Component({
   selector: 'app-dpr-approval',
   standalone: true,
-  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent],
+  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent, CraneLoaderComponent],
   templateUrl: './dpr-approval.component.html',
   styleUrls: ['./dpr-approval.component.css']
 })

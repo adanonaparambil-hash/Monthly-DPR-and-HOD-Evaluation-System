@@ -2961,3 +2961,76 @@
   .pd-tv-fl { font-size: 0; gap: 0; }
   .pd-tv-fl i { font-size: 11px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Chart loading / empty overlays
+   These class names were already in the template but had NO rules, so the
+   states rendered as unstyled blocks stacked above the canvas (and the old
+   .pd-spinner was invisible — it had no border or animation defined). They
+   now sit as a proper overlay on top of the chart area.
+   ══════════════════════════════════════════════════════════════════════════ */
+.pd-state-wrap { position: relative; }
+
+.pd-state-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  text-align: center;
+  border-radius: 14px;
+  /* Fully opaque on purpose. At 0.82 the previous chart stayed legible through
+     the scrim, so during a refetch the card appeared to be showing real figures
+     that belonged to the filter selection the user had just replaced. */
+  background: #ffffff;
+  animation: pdStateIn 0.22s ease-out both;
+}
+
+@keyframes pdStateIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Empty state */
+.pd-nodata-icon {
+  font-size: 30px;
+  color: #cbd5e1;
+  margin-bottom: 2px;
+}
+.pd-nodata-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #475569;
+}
+.pd-nodata-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  max-width: 260px;
+}
+
+/* Batch row in the supplier-transactions modal — the crane sits inline here */
+.stx-batch-loading { justify-content: center; }
+
+:host-context(.dark-theme) .pd-state-overlay {
+  background: #1e293b;   /* matches .pd-card in dark theme */
+}
+:host-context(.dark-theme) .pd-nodata-icon  { color: #475569; }
+:host-context(.dark-theme) .pd-nodata-title { color: #e2e8f0; }
+:host-context(.dark-theme) .pd-nodata-sub   { color: #94a3b8; }
+
+@media (max-width: 768px) {
+  .pd-state-overlay  { padding: 12px; gap: 6px; }
+  .pd-nodata-icon    { font-size: 26px; }
+  .pd-nodata-title   { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  .pd-nodata-icon  { font-size: 22px; }
+  .pd-nodata-title { font-size: 12.5px; }
+  .pd-nodata-sub   { font-size: 11px; }
+}

@@ -116,10 +116,9 @@
 
       <!-- Loading State -->
       <div class="loading-container" *ngIf="isLoadingPending">
-        <div class="loading-spinner">
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Loading pending approvals...</p>
-        </div>
+        <app-crane-loader size="auto"
+                          message="Loading pending approvals"
+                          sub="Fetching leave requests"></app-crane-loader>
       </div>
 
       <!-- Pending Approvals Table -->

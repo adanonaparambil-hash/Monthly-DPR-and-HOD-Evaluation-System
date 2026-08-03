@@ -84,16 +84,9 @@
   <!-- ── Loading skeleton ── -->
   @if (loading) {
     <div class="skeleton-wrap">
-      @for (n of [1,2,3,4,5,6]; track n) {
-        <div class="skeleton-row">
-          <div class="skel skel-sm"></div>
-          <div class="skel skel-lg"></div>
-          <div class="skel skel-md"></div>
-          <div class="skel skel-lg"></div>
-          <div class="skel skel-sm"></div>
-          <div class="skel skel-sm"></div>
-        </div>
-      }
+      <app-crane-loader size="auto"
+                        message="Loading reports"
+                        sub="Fetching appraisal history"></app-crane-loader>
     </div>
   }
 
@@ -224,8 +217,7 @@
       <div class="hod-modal-body">
         @if (hodReportLoading) {
           <div class="hod-loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading HOD report...</span>
+            <app-crane-loader size="md" message="Loading HOD report"></app-crane-loader>
           </div>
         } @else if (hodReportData.length === 0) {
           <div class="hod-empty">

@@ -5,11 +5,12 @@ import { ToastrService } from 'ngx-toastr';
 import { Api } from '../services/api';
 import { HodMasterDto, HodMasterRequestDto } from '../models/common.model';
 import { AvatarUtil } from '../utils/avatar.util';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 @Component({
   selector: 'app-hod-master',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './hod-master.component.html',
   styleUrls: ['./hod-master.component.css']
 })

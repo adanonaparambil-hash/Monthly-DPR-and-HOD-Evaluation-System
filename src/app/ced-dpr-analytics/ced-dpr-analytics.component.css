@@ -1509,3 +1509,12 @@
   .ca-dm-chips { max-width: 36vw; }
   .ca-dm-nav { width: 32px; height: 32px; }
 }
+
+/* Loading state for the analytics deck. */
+.ca-loading-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46vh;
+  padding: 40px 20px;
+}

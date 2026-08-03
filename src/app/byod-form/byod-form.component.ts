@@ -495,6 +495,17 @@ export class ByodFormComponent implements OnInit {
     });
   }
 
+  /**
+   * True only once the record is fully approved ('A').
+   *
+   * Gates the header "Export PDF" button — while approvals are still Pending the
+   * PDF would show unapproved rows, and a Rejected form has nothing to issue.
+   */
+  isFullyApproved(): boolean {
+    const s = (this.byodRecord?.status || '').toUpperCase();
+    return s === 'A' || s === 'APPROVED';
+  }
+
   getStatusClass(status?: string): string {
     const s = (status || '').toUpperCase();
     if (s === 'A' || s === 'APPROVED') return 'byod-apv-approved';

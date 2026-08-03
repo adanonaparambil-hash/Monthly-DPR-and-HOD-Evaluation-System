@@ -2,10 +2,9 @@
   <!-- Loading Indicator -->
   @if (isLoading) {
     <div class="loading-container">
-      <div class="loading-spinner">
-        <i class="fas fa-spinner fa-spin"></i>
-      </div>
-      <p>Loading dashboard data...</p>
+      <app-crane-loader size="auto"
+                        message="Loading dashboard"
+                        sub="Fetching department performance"></app-crane-loader>
     </div>
   } @else {
 

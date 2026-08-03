@@ -74,8 +74,9 @@
 
   <!-- Loading Spinner -->
   <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Loading reports...</p>
+    <app-crane-loader size="auto"
+                      message="Loading reports"
+                      sub="Fetching submitted DPRs"></app-crane-loader>
   </div>
 
   <!-- Table Section -->

@@ -232,51 +232,65 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.showPassword.update(show => !show);
   }
 
-  isPasswordValid(): boolean {
-    const passwordPattern = /^(?=.*\d).{6,}$/; 
-    return passwordPattern.test(this.password());
-  }
-
-  isUserIdValid(): boolean {
-    const userIdPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,}$/;
-    return userIdPattern.test(this.username());
-  }
-
-
-
-  
   onLogin() {
     this.loginErrorMessage = '';
     this.errorMessage = '';
 
-    if (!this.isUserIdValid()) {
-        this.toastr.error('Please enter a valid username (at least 4 characters, including both letters and numbers).', 'Invalid User ID');
+    // Presence checks only. This form AUTHENTICATES an existing account — it does
+    // not create one — so the client must not second-guess the format of a
+    // credential the server already issued.
+    //
+    // This previously enforced two invented patterns:
+    //   userId   /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,}$/   alphanumeric only, must
+    //                                                        contain BOTH a letter
+    //                                                        and a digit, min 4
+    //   password /^(?=.*\d).{6,}$/                           min 6, must contain a digit
+    //
+    // Neither rule exists in PKG_USER_LOGIN.SP_LOGIN_USER, so any account whose ID
+    // carries a dot, hyphen, slash or space (or is purely numeric/alphabetic), and
+    // any password without a digit, was rejected here and NEVER sent to the API —
+    // the click died in the browser with a toast and no redirect, which is exactly
+    // what it looked like from the login screen.
+    //
+    // Password complexity still applies where it belongs: isValidPassword(), used
+    // by onSetPassword() when a password is actually being chosen.
+    const userId = this.username().trim();
+    const password = this.password();
+
+    if (!userId) {
+        this.toastr.error('Please enter your Employee ID.', 'Employee ID Required');
         return;
     }
 
-    if (!this.isPasswordValid()) {
-        this.toastr.error('Please enter a valid password (at least 6 characters, including a number).', 'Invalid Password');
+    if (!password) {
+        this.toastr.error('Please enter your password.', 'Password Required');
         return;
     }
 
     this.isLoggingIn.set(true);
 
-    this.api.login(this.username(), this.password()).subscribe({
+    this.api.login(userId, password).subscribe({
       next: (res) => {
         console.log('Login response:', res);
         console.log('User data from login:', res?.data);
 
         if (res?.success === true && res?.data) {
           const token = res?.token || res?.access_token;
-          if (token) {
-            // Use AuthService for proper session management
-            this.authService.login(token, res.data);
-            
-            // Debug: Log what's being stored
-            console.log('Storing user data:', res.data);
-            console.log('Department ID from login:', res.data.departmentId || res.data.deptId || res.data.department);
+
+          // Without a token there is no session, and AuthGuard would bounce us
+          // straight back here with ?unauthorized=true — looking to the user like
+          // the login simply failed for no reason. Stop with a real message
+          // instead of navigating into a guard we know will reject us.
+          if (!token) {
+            console.error('Login succeeded but no token was returned', res);
+            this.toastr.error('Signed in, but the server did not return a session token. Please contact IT.', 'Session Error');
+            this.isLoggingIn.set(false);
+            return;
           }
-          
+
+          // Use AuthService for proper session management
+          this.authService.login(token, res.data);
+
           const code = (res?.data?.isHOD || '').toString().toUpperCase();
           if (code === 'H') {
             this.router.navigate(['/hod-dashboard']);

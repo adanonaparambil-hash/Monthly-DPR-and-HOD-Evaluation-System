@@ -177,10 +177,9 @@
     <div *ngIf="currentView === 'departments'" class="departments-view">
       <!-- Loading State -->
       <div *ngIf="isLoading" class="loading-state">
-        <div class="loading-spinner">
-          <i class="fas fa-spinner fa-spin"></i>
-        </div>
-        <p>Loading department data...</p>
+        <app-crane-loader size="auto"
+                          message="Loading department data"
+                          sub="Compiling company-wide performance"></app-crane-loader>
       </div>
 
       <!-- No Data State -->
@@ -283,10 +282,7 @@
       
       <!-- Loading State for Employees -->
       <div *ngIf="isLoading" class="loading-state">
-        <div class="loading-spinner">
-          <i class="fas fa-spinner fa-spin"></i>
-        </div>
-        <p>Loading employee data...</p>
+        <app-crane-loader size="auto" message="Loading employee data" sub="Fetching individual records"></app-crane-loader>
       </div>
       
       <!-- Empty State -->

@@ -60,7 +60,8 @@
       "PowerShell($src = \"C:\\\\Users\\\\ITS48\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System\\\\38406a72-fdc7-4642-a53b-560782efa9e9\\\\scratchpad\\\\notice-dark.css\"; $dst = \"C:\\\\Users\\\\ITS48\\\\Desktop\\\\AdrakPortal\\\\Monthly-DPR-and-HOD-Evaluation-System\\\\src\\\\app\\\\notice-management\\\\notice-management.component.css\"; Add-Content -Path $dst -Value \\(Get-Content -Raw $src\\) -Encoding utf8 -NoNewline; \\(Get-Content $dst | Measure-Object -Line\\).Lines)",
       "Bash(grep -nE \"min-width: *[0-9]{3,}px|width: *[0-9]{3,}px\" task-details-modal.component.css)",
       "Bash(grep -nE \"^\\\\.[a-z-]*title[a-z-]* *[,{]\" task-details-modal.component.css)",
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "Bash(npm run *)"
     ]
   }
 }

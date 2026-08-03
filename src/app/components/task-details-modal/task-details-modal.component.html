@@ -156,10 +156,7 @@
       <!-- Loading State -->
       @if (isLoading) {
         <div class="modal-loading-state">
-          <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin"></i>
-          </div>
-          <p>Loading task details...</p>
+          <app-crane-loader size="auto" message="Loading task details" sub="Fetching comments, files and activity"></app-crane-loader>
         </div>
       }
 

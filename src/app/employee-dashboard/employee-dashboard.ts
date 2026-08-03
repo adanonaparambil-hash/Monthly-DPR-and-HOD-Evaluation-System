@@ -7,6 +7,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Api } from '../services/api';
 import { EmployeeDashboardData } from '../models/dashBoard.model';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 Chart.register(...registerables);
 gsap.registerPlugin(ScrollTrigger);
@@ -19,7 +20,7 @@ interface Particle {
 
 @Component({
   selector: 'app-employee-dashboard',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './employee-dashboard.html',
   styleUrl: './employee-dashboard.css',
   animations: [

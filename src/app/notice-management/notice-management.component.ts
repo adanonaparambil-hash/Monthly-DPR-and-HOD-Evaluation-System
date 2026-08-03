@@ -6,6 +6,7 @@ import { Api } from '../services/api';
 import { ToasterService } from '../services/toaster.service';
 import { ToasterComponent } from '../components/toaster/toaster.component';
 import Swal from 'sweetalert2';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 interface Notice {
   noticeId: number;
@@ -49,7 +50,7 @@ interface CreateNoticeForm {
 @Component({
   selector: 'app-notice-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ToasterComponent],
+  imports: [CommonModule, FormsModule, ToasterComponent, CraneLoaderComponent],
   templateUrl: './notice-management.component.html',
   styleUrls: ['./notice-management.component.css'],
   encapsulation: ViewEncapsulation.None

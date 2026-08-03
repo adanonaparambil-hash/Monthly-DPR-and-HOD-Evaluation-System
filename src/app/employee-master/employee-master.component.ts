@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Api } from '../services/api';
 import { AvatarUtil } from '../utils/avatar.util';
 import { EmployeeProfileUpdateDto } from '../models/common.model';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 export interface EmployeeDto {
   empId: string;
@@ -52,7 +53,7 @@ export interface EmployeeProfileDto {
 @Component({
   selector: 'app-employee-master',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './employee-master.component.html',
   styleUrls: ['./employee-master.component.css']
 })
