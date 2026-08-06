@@ -1224,7 +1224,51 @@ export class EmergencyExitFormComponent implements OnInit {
   /** Max calendar days ahead of today a Date of Departure may be. Submissions
    *  further out than this (e.g. next-month dates) are blocked — only today,
    *  +1, +2 and +3 are allowed. */
-  private readonly MAX_ADVANCE_DAYS = 3;
+  /**
+   * The advance window is measured in WORKING days, not calendar days.
+   *
+   * It used to be 3 calendar days for every form type. That quietly shrank the
+   * real window across a weekend: a request raised on Thursday could only reach
+   * Sunday, because Friday and Saturday ate two of the three days even though
+   * nobody was working them.
+   *
+   * Resignation gets a longer runway than an exit or leave request, since a
+   * notice period needs more lead time than a trip.
+   */
+  private readonly MAX_ADVANCE_WORKING_DAYS_DEFAULT = 3;   // Emergency (E) and Planned leave (P)
+  private readonly MAX_ADVANCE_WORKING_DAYS_RESIGN  = 7;   // Resignation (R)
+
+  get maxAdvanceWorkingDays(): number {
+    return this.formType === 'R'
+      ? this.MAX_ADVANCE_WORKING_DAYS_RESIGN
+      : this.MAX_ADVANCE_WORKING_DAYS_DEFAULT;
+  }
+
+  /** Friday and Saturday are the group's weekend. */
+  private isWeekend(d: Date): boolean {
+    const day = d.getDay();            // 0 Sun, 1 Mon ... 5 Fri, 6 Sat
+    return day === 5 || day === 6;
+  }
+
+  /**
+   * Walk forward `n` working days from `from`, skipping Fri/Sat.
+   *
+   * Counts only the days landed on, so the start date itself is never counted —
+   * matching the previous behaviour where "today + 3" meant three days beyond
+   * today. The result is always a working day, but dates in between (including
+   * weekends) stay selectable: the rule caps how far ahead you may submit, it
+   * does not forbid departing on a weekend.
+   */
+  private addWorkingDays(from: Date, n: number): Date {
+    const d = this.dateOnly(from);
+    let counted = 0;
+    // Bounded so a bad `n` can never spin forever.
+    for (let guard = 0; counted < n && guard < 400; guard++) {
+      d.setDate(d.getDate() + 1);
+      if (!this.isWeekend(d)) { counted++; }
+    }
+    return d;
+  }
 
   private dateOnly(d: Date): Date { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
   private toInputDate(d: Date): string {
@@ -1234,11 +1278,9 @@ export class EmergencyExitFormComponent implements OnInit {
   /** Earliest selectable Date of Departure — today (no past dates). */
   get departureMinDate(): string { return this.toInputDate(this.dateOnly(new Date())); }
 
-  /** Latest selectable Date of Departure — today + 3 calendar days. */
+  /** Latest selectable Date of Departure — today + N WORKING days (Fri/Sat skipped). */
   get departureMaxDate(): string {
-    const d = this.dateOnly(new Date());
-    d.setDate(d.getDate() + this.MAX_ADVANCE_DAYS);
-    return this.toInputDate(d);
+    return this.toInputDate(this.addWorkingDays(new Date(), this.maxAdvanceWorkingDays));
   }
 
   /** Earliest selectable Date of Arrival — the chosen Date of Departure (or today). */
@@ -1254,8 +1296,10 @@ export class EmergencyExitFormComponent implements OnInit {
   /**
    * Validate Date of Departure on save (all form types):
    *  - cannot be a PAST date;
-   *  - cannot be more than 3 days ahead of today (blocks early / next-month submissions).
-   * Allowed: today, +1, +2, +3. Shows a message and returns false when invalid.
+   *  - cannot be more than N WORKING days ahead of today (blocks early / next-month
+   *    submissions). N is 3 for Emergency and Planned leave, 7 for Resignation.
+   * Friday and Saturday do not consume the allowance. Shows a message and returns
+   * false when invalid.
    */
   private validateDepartureDate(): boolean {
     const raw = this.exitForm.get('dateOfDeparture')?.value;
@@ -1266,8 +1310,8 @@ export class EmergencyExitFormComponent implements OnInit {
     dep.setHours(0, 0, 0, 0);
 
     const today = this.dateOnly(new Date());
-    const latest = this.dateOnly(new Date());
-    latest.setDate(latest.getDate() + this.MAX_ADVANCE_DAYS);
+    const allowance = this.maxAdvanceWorkingDays;
+    const latest = this.addWorkingDays(new Date(), allowance);
 
     const label = this.formType === 'R' ? 'Last Working Date' : 'Date of Departure';
     const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1277,7 +1321,7 @@ export class EmergencyExitFormComponent implements OnInit {
       Swal.fire({
         icon: 'warning',
         title: `Invalid ${label}`,
-        text: `${label} cannot be a past date. Please select today or a date within the next 3 days.`,
+        text: `${label} cannot be a past date. Please select today or a date within the next ${allowance} working days.`,
         confirmButtonColor: '#138271'
       });
       return false;
@@ -1288,7 +1332,8 @@ export class EmergencyExitFormComponent implements OnInit {
       Swal.fire({
         icon: 'warning',
         title: 'Too Far in Advance',
-        html: `${label} can be at most <b>3 days</b> from today.<br>`
+        html: `${label} can be at most <b>${allowance} working days</b> from today `
+            + `(Friday and Saturday are not counted).<br>`
             + `You can submit only up to <b>${fmt(latest)}</b> — please submit closer to the date.`,
         confirmButtonColor: '#138271'
       });

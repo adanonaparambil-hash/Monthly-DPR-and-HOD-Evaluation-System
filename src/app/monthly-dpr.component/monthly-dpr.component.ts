@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { FormsModule } from '@angular/forms';
-import { DPRTask, DPRKPI, DPRReview, ProofhubTaskDto, DPRComment } from '../models/task.model';
+import { DPRReview, DPRComment } from '../models/task.model';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { Api } from '../services/api';
@@ -9,13 +9,15 @@ import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { DropdownOption, Notification, SendEmailRequest } from '../models/common.model';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AvatarUtil } from '../utils/avatar.util';
+import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 
 
 @Component({
   selector: 'app-monthly-dpr',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, CraneLoaderComponent],
   templateUrl: './monthly-dpr.component.html',
   styleUrl: './monthly-dpr.component.css',
   animations: [
@@ -51,6 +53,20 @@ import { ActivatedRoute, Router } from '@angular/router';
         animate('0.6s ease-in-out', style({ transform: 'scale(1)' })),
       ]),
     ]),
+    // Department-ranking collapse. Animating max-height rather than height so the
+    // list can be any length without the closed value needing to be measured.
+    trigger('rankExpand', [
+      transition(':enter', [
+        style({ maxHeight: '0px', opacity: 0, overflow: 'hidden' }),
+        animate('0.32s cubic-bezier(.25,.8,.25,1)',
+                style({ maxHeight: '1400px', opacity: 1 })),
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('0.24s cubic-bezier(.4,0,.2,1)',
+                style({ maxHeight: '0px', opacity: 0 })),
+      ]),
+    ]),
   ],
 })
 export class MonthlyDprComponent {
@@ -58,14 +74,14 @@ export class MonthlyDprComponent {
 
   EmailID = '';
 
-  showTaskDetails = true;
-  showKpiPerformance = true;
+  
+  
   showHodEvaluation = true;
   showManagementRemarks = true;
   showRemarksHistory = true;
-  summaryText = '';
-  showModal = false;
-  isGeneratingSummary = false;
+  
+  
+  
 
   managementRemarks = '';
 
@@ -83,6 +99,157 @@ export class MonthlyDprComponent {
   WorkedHours = 0;
   TotalEstimatedhours = 0;
 
+  // ── Header profile (display only) ─────────────────────────────────────────
+  // Loaded from Login/GetEmployeeProfile for whichever employee this review
+  // belongs to — NOT the signed-in user. When an HOD opens a team member's MPR
+  // the header has to show that member's photo and details.
+  profileImage = AvatarUtil.DEFAULT_AVATAR;
+  dateOfJoining = '';
+  totalExperience = '';
+  employeeEmail = '';
+  employeePhone = '';
+  employeeLocation = '';
+
+  // ── Monthly work summary (replaces the old Task Details table) ─────────────
+  // AI-drafted from that month's DPR entries, then freely editable. What is saved
+  // is whatever the employee leaves in the box, not the AI's original.
+  monthlyInsight = '';
+  isGeneratingInsight = false;
+  /** Provenance line shown under the box: how much real data backed the draft. */
+  insightMeta: { entries: number; tasks: number; days: number; hours: number; period: string } | null = null;
+
+  @ViewChild('summaryBox') summaryBox?: ElementRef<HTMLTextAreaElement>;
+
+  /** Same floor the submit validation enforces, surfaced in the UI so the rule is
+   *  visible while typing instead of only as a toast after pressing Submit. */
+  readonly insightMinChars = 50;
+
+  /** Set for ~1s after a fresh draft lands, to run the reveal animation. */
+  insightRevealing = false;
+
+  /**
+   * True once Worked Hours has been filled from the AI's DPR total.
+   *
+   * Worked Hours has two possible sources and they must not fight:
+   *   - ProofHub logged hours (async, fires during init)
+   *   - the DPR total returned with the AI summary (user-triggered)
+   * The DPR total is the authoritative one for this review, so once it lands the
+   * ProofHub response must not overwrite it.
+   */
+  workedHoursFromAi = false;
+
+  /** The employee chose "write it myself", so the empty-state overlay steps aside
+   *  even though the box is still blank. */
+  writingOwnSummary = false;
+
+  get hasInsight(): boolean { return (this.monthlyInsight || '').trim().length > 0; }
+
+  get insightChars(): number { return (this.monthlyInsight || '').length; }
+
+  /**
+   * The summary split into individual points.
+   *
+   * The AI now returns a bullet list ('- ' per line) rather than prose, so this
+   * turns the stored text into renderable items. Tolerant on purpose: the field
+   * stays freely editable, so a person may type plain lines with no marker, use
+   * '*' or a bullet glyph, or leave blank lines between points. Anything on its
+   * own line counts as a point and the leading marker is stripped for display.
+   *
+   * Reading order is preserved — the model is told to put the largest effort
+   * first, and re-sorting here would throw that away.
+   */
+  get insightPoints(): string[] {
+    return (this.monthlyInsight || '')
+      .split(/\r?\n/)
+      // The marker must be followed by whitespace. Without that requirement a line
+      // like "-5 hours variance recorded" has its hyphen stripped and displays as
+      // "5 hours variance" — a silently inverted number. Leaving an unstripped
+      // marker on the rare "-Text" line is cosmetic; changing a figure is not.
+      .map(l => l.replace(/^\s*(?:[-*•·]|\d+[.)])\s+/, '').trim())
+      .filter(l => l.length > 0);
+  }
+
+  get insightPointCount(): number { return this.insightPoints.length; }
+
+  /**
+   * Keeps the list going while typing: Enter on a line that starts with '- '
+   * inserts the next '- ' automatically. Without this, editing an AI list means
+   * retyping the marker on every line and people simply stop bothering, which
+   * leaves a half-list-half-prose field.
+   *
+   * Enter on an EMPTY bullet ends the list instead of adding another, matching
+   * how every editor behaves.
+   */
+  onSummaryKeydown(ev: KeyboardEvent): void {
+    if (ev.key !== 'Enter' || ev.shiftKey) return;
+
+    const ta = ev.target as HTMLTextAreaElement;
+    const pos = ta.selectionStart ?? 0;
+    if (pos !== (ta.selectionEnd ?? 0)) return;      // a selection: leave it alone
+
+    const lineStart = ta.value.lastIndexOf('\n', pos - 1) + 1;
+    const line = ta.value.slice(lineStart, pos);
+    const marker = line.match(/^(\s*[-*]\s)/);
+    if (!marker) return;
+
+    ev.preventDefault();
+
+    if (line.trim() === marker[1].trim()) {
+      // Empty bullet: delete just the marker and leave the caret on that now-blank
+      // line. No '\n' is added here — slice(0, lineStart) already ends with the
+      // newline that starts this line, so adding one produced an extra blank line
+      // on every press.
+      this.monthlyInsight = ta.value.slice(0, lineStart) + ta.value.slice(pos);
+      setTimeout(() => ta.setSelectionRange(lineStart, lineStart), 0);
+      return;
+    }
+
+    const insert = '\n' + marker[1];
+    this.monthlyInsight = ta.value.slice(0, pos) + insert + ta.value.slice(pos);
+    setTimeout(() => ta.setSelectionRange(pos + insert.length, pos + insert.length), 0);
+  }
+
+  get insightWords(): number {
+    const t = (this.monthlyInsight || '').trim();
+    return t ? t.split(/\s+/).length : 0;
+  }
+
+  /** 0-100, how close the text is to the minimum length. */
+  get insightProgress(): number {
+    const pct = (this.insightChars / this.insightMinChars) * 100;
+    return pct > 100 ? 100 : Math.round(pct);
+  }
+
+  /** True while there IS text but not yet enough of it — the state the old UI gave
+   *  no warning about until Submit was pressed. */
+  get insightTooShort(): boolean {
+    const n = (this.monthlyInsight || '').trim().length;
+    return n > 0 && n < this.insightMinChars;
+  }
+
+  /** Overlay covers the box only when there is nothing to read and the employee has
+   *  not asked to type. Read-only viewers see a different, non-actionable state —
+   *  the old placeholder told them to "press the Generate button" when that button
+   *  is inside @if (canEditFields) and therefore absent for them. */
+  get showInsightEmptyState(): boolean {
+    return !this.hasInsight && !this.isGeneratingInsight && !this.writingOwnSummary;
+  }
+
+  /** Dismiss the empty state and put the cursor in the box. */
+  startWritingSummary(): void {
+    if (!this.canEditFields) return;
+    this.writingOwnSummary = true;
+    setTimeout(() => this.summaryBox?.nativeElement?.focus(), 0);
+  }
+
+  /** Called when a fresh AI draft arrives — plays the reveal, then clears the flag
+   *  so re-rendering later does not replay it. */
+  playInsightReveal(): void {
+    this.writingOwnSummary = false;
+    this.insightRevealing = true;
+    setTimeout(() => this.insightRevealing = false, 1100);
+  }
+
   achievements = '';
   challenges = '';
   supportNeeded = '';
@@ -94,14 +261,160 @@ export class MonthlyDprComponent {
   teamWork = 0;
   communication = 0;
   hodRating = 0; // HOD's manual rating (1-5)
-  overallScore = 0; // System-generated final rating (20-100 scale for display)
+  overallScore = 0; // Final rating, entered by the HOD (1-100)
   dprid = 0;
-  hoursExceeded: boolean = false;
+  
 
   // Overall Rating System Properties
   hodEvaluationAverage = 0;
   productivityScore = 0;
   showOverallRating = false;
+
+  // ── Department ranking panel (HOD Evaluation section) ─────────────────────
+  // Fetched ONCE when the section opens, then re-ranked locally on every
+  // keystroke by rankedList. Deliberately not a request per keystroke: typing
+  // "85" would fire two, and a slow one landing after a fast one would show a
+  // stale order — the same out-of-order failure we hit on the purchase dashboard.
+  deptRanking: any[] = [];
+  rankingLoading = false;
+  rankingLoaded = false;
+
+  /** HOD of the department can edit; CED can look but not touch. */
+  get canViewDeptRanking(): boolean {
+    if (this.isCed) return true;
+    return this.isHod && !this.isHodViewingOwnDpr;
+  }
+
+  /**
+   * The fetched list with THIS employee's provisional score slotted in, re-sorted.
+   *
+   * Pure getter, so it recomputes on every change-detection pass — that is what
+   * makes the panel reorder live as the HOD types, with no API call and no
+   * possibility of a stale response winning.
+   */
+  get rankedList(): any[] {
+    const provisional = Number(this.overallScore) || 0;
+
+    // Drop any stored row for this employee — the value being typed supersedes it.
+    const others = (this.deptRanking || []).filter(r => r.empId !== this.empId);
+
+    const combined = [
+      ...others.map(r => ({
+        empId: r.empId,
+        employeeName: r.employeeName,
+        designation: r.designation,
+        score: Number(r.overallScore) || 0,
+        // The four criteria as stored for that employee.
+        ips:  Number(r.scoreInitiative) || 0,
+        tc:   Number(r.scoreTeamWork)   || 0,
+        qual: Number(r.scoreQuality)    || 0,
+        time: Number(r.scoreTimeliness) || 0,
+        image: r.profileImageBase64 || AvatarUtil.DEFAULT_AVATAR,
+        isCurrent: false
+      })),
+      {
+        empId: this.empId,
+        employeeName: this.empName || 'This employee',
+        designation: this.designation,
+        score: provisional,
+        // Live values for the row being edited, so the criteria move with the
+        // inputs exactly as the overall score does.
+        ips:  Number(this.initiative)  || 0,
+        tc:   Number(this.teamWork)    || 0,
+        qual: Number(this.quality)     || 0,
+        time: Number(this.timeliness)  || 0,
+        image: this.profileImage,
+        isCurrent: true
+      }
+    ];
+
+    combined.sort((a, b) =>
+      b.score - a.score || (a.employeeName || '').localeCompare(b.employeeName || ''));
+
+    return combined.map((r, i) => ({ ...r, rank: i + 1 }));
+  }
+
+  /** Where the employee under review currently sits. */
+  get currentRankPosition(): number {
+    return this.rankedList.find(r => r.isCurrent)?.rank ?? 0;
+  }
+
+  get rankedTotal(): number {
+    return this.rankedList.length;
+  }
+
+  /**
+   * One fetch for the panel. Uses the review's own month/year so the comparison
+   * is against the same period, and the signed-in HOD's id to resolve which
+   * department(s) to include.
+   */
+  loadDeptRanking(): void {
+    if (this.rankingLoaded || this.rankingLoading) return;
+    if (!this.canViewDeptRanking) return;
+
+    const user = JSON.parse(localStorage.getItem('current_user') || '{}');
+    const hodId = user.empId || '';
+    const { month, year } = this.getReviewMonthYear();
+
+    if (!hodId || !month || !year) return;
+
+    this.rankingLoading = true;
+    this.api.getDeptMprRanking(hodId, month, year).subscribe({
+      next: (res: any) => {
+        this.deptRanking = (res?.success && Array.isArray(res.data)) ? res.data : [];
+        this.rankingLoading = false;
+        this.rankingLoaded = true;
+      },
+      error: (err: any) => {
+        console.error('Error loading department MPR ranking:', err);
+        this.deptRanking = [];
+        this.rankingLoading = false;
+        this.rankingLoaded = true;   // don't retry in a loop
+      }
+    });
+  }
+
+  /** Parse the review's month/year from the monthYear label the screen already holds. */
+  private getReviewMonthYear(): { month: number; year: number } {
+    const months = ['january','february','march','april','may','june',
+                    'july','august','september','october','november','december'];
+    const parts = (this.monthYear || '').trim().split(/[\s\-\/]+/);
+    let month = 0, year = 0;
+    for (const p of parts) {
+      const idx = months.indexOf(p.toLowerCase());
+      if (idx >= 0) month = idx + 1;
+      else if (/^\d{4}$/.test(p)) year = Number(p);
+    }
+    return { month, year };
+  }
+
+  /**
+   * Band class for every NEW MPR element (ranking rows, result card, band scale).
+   *
+   * Deliberately NOT getRatingClass(). That returns 'rating-average' etc., and the
+   * global .rating-* rules near the top of this stylesheet carry
+   * `background: linear-gradient(...)` AND `border: 3px solid ...` for the old
+   * badge widget. Any new element given one of those class names inherited both —
+   * which is why the score chip, the band heading and the progress bars all
+   * rendered as near-black boxes: a 3px dark border on a 7px-tall bar is the bar.
+   *
+   * These own names collide with nothing, so the palette below is the only thing
+   * painting them. Same thresholds as getRatingClass, which is untouched and still
+   * used by every pre-existing widget (and by APR).
+   */
+  rankBandClass(score: number): string {
+    const s = Number(score) || 0;
+    if (s >= 90) return 'mpr-b-top';
+    if (s >= 70) return 'mpr-b-good';
+    if (s >= 50) return 'mpr-b-avg';
+    if (s >= 30) return 'mpr-b-below';
+    return 'mpr-b-poor';
+  }
+
+  /** Ranking panel collapse. Open by default; the HOD can fold it away once the
+   *  department has enough approved reviews to make the list long. */
+  rankOpen = true;
+  toggleRanking(): void { this.rankOpen = !this.rankOpen; }
 
   // Role and mode flags
   userType: 'E' | 'H' | 'C' = 'E';
@@ -167,7 +480,7 @@ export class MonthlyDprComponent {
     return this.isHod && !this.isHodViewingOwnDpr && this.currentStatus === 'S';
   }
 
-  // Table action buttons (Add/Delete for tasks and KPIs)
+  // Table action buttons (Add/Delete for the Task Details table)
   get showTableActions(): boolean {
     if (this.isCed) return false; // CED never sees action buttons
     if (this.isEmployee) return this.currentStatus === 'D' || this.currentStatus === 'R';
@@ -223,42 +536,7 @@ export class MonthlyDprComponent {
 
   hodList: DropdownOption[] = [];
 
-  tasks: DPRTask[] = [
-    {
-      taskName: '',
-      description: '',
-      estimatedHours: 0,
-      actualHours: 0,
-      productivity: 0,
-      selected: false,
-    },
-  ];
 
-  Proofhubtasks: ProofhubTaskDto[] = [
-    {
-      TASK_TITLE: '',
-      TASK_DESCRIPTION: '',
-      START_DATE: '',
-      DUE_DATE: '',
-      ESTIMATED_HOURS: '',
-      LOGGED_HOURS: '',
-    },
-  ];
-
-  kpis: DPRKPI[] = [
-    {
-      description: '',
-      kpiValue: 0,
-      remarks: '',
-      kpiId: 0,
-      dprId: 0,
-      employeeId: '',
-      kpiMasterId: 0,
-      placeholdervalue: ''
-    },
-  ];
-
-  availableKPIs: any[] = []; // Store all available KPIs from API
 
   remarksHistory: DPRComment[] = [
     {
@@ -301,30 +579,57 @@ export class MonthlyDprComponent {
     // Calculate Productivity Score (out of 5)
     this.calculateProductivityScore();
 
-    // Calculate Final Overall Rating using new weighted formula
-    // HOD Rating: 70%, Individual criteria: 5% each (30% total)
-    const hodRatingWeight = 0.7;
-    const individualCriteriaWeight = 0.05; // 5% each
+    // overallScore is NO LONGER derived. The HOD types the final score directly,
+    // so the old weighted formula (70% HOD rating + 5% x six criteria) is gone —
+    // computing it here would immediately overwrite whatever they entered.
+    //
+    // The four criteria are still captured and still shown in the breakdown; they
+    // just no longer feed the final number.
+    //
+    // hodEvaluationAverage above is display-only and unchanged.
 
-    const weightedAverage =
-      (hodRatingValue * hodRatingWeight) +
-      (qualityScore * individualCriteriaWeight) +
-      (timelinessScore * individualCriteriaWeight) +
-      (initiativeScore * individualCriteriaWeight) +
-      (problemSolvingScore * individualCriteriaWeight) +
-      (teamWorkScore * individualCriteriaWeight) +
-      (communicationScore * individualCriteriaWeight);
-
-    // Since all values are already out of 100, no need to multiply by 20
-    this.overallScore = Math.round(weightedAverage);
-
-    // Show overall rating section if we have any meaningful data
     this.showOverallRating =
-      this.hodEvaluationAverage > 0 || this.productivityScore > 0 || this.hodRating > 0;
+      this.hodEvaluationAverage > 0 || this.productivityScore > 0 || this.overallScore > 0;
+  }
+
+  // ── HOD Evaluation: combined criteria ─────────────────────────────────────
+  // The screen now shows four inputs instead of six. Each combined input drives
+  // TWO existing columns so nothing in the database or in SP_DPR_UPDATE_HODREVIEW
+  // has to change — and the Annual Appraisal, which writes the same six columns
+  // through the same procedure, is completely unaffected.
+  //
+  //   Initiative & Problem Solving -> scoreInitiative + scoreProblemSolving
+  //   Teamwork & Communication    -> scoreTeamWork   + scoreCommunication
+  //
+  // Reopening an older review shows `initiative` / `teamWork` (one of each pair),
+  // as agreed — the paired value is only rewritten if the HOD edits the field.
+
+  /** Initiative & Problem Solving changed — mirror onto the problem-solving column. */
+  onInitiativeProblemSolvingChange(): void {
+    this.problemSolving = this.initiative;
+    this.calculateOverallRating();
+  }
+
+  /** Teamwork & Communication changed — mirror onto the communication column. */
+  onTeamworkCommunicationChange(): void {
+    this.communication = this.teamWork;
+    this.calculateOverallRating();
+  }
+
+  /**
+   * Final score typed by the HOD.
+   *
+   * hodRating is kept in step with it because SP_DPR_UPDATE_HODREVIEW still takes
+   * p_hodrating and the column is still read elsewhere; the separate HOD Rating
+   * input has been removed from the screen.
+   */
+  onOverallScoreChange(): void {
+    this.hodRating = this.overallScore;
+    this.calculateOverallRating();
   }
 
   calculateProductivityScore(): void {
-    //const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
+    
     const totalActualHours = this.TotalEstimatedhours;
     const workedHours = this.WorkedHours || 0;
 
@@ -376,23 +681,8 @@ export class MonthlyDprComponent {
   }
 
   // Calculate productivity percentage for individual task based on worked hours
-  calculateTaskProductivity(actualHours: number): number {
-    if (!this.WorkedHours || this.WorkedHours === 0 || !actualHours) {
-      return 0;
-    }
-    const productivity = (actualHours / this.WorkedHours) * 100;
-    return Math.round(productivity * 10) / 10; // Round to 1 decimal place
-  }
 
   // Get CSS class for productivity badge based on percentage
-  getProductivityClass(actualHours: number): string {
-    const productivity = this.calculateTaskProductivity(actualHours);
-    if (productivity >= 80) return 'productivity-excellent';
-    if (productivity >= 60) return 'productivity-good';
-    if (productivity >= 40) return 'productivity-average';
-    if (productivity >= 20) return 'productivity-low';
-    return 'productivity-very-low';
-  }
 
   // Validation method for rating inputs
   validateRatingInput(fieldName: string, event: any): void {
@@ -501,7 +791,7 @@ export class MonthlyDprComponent {
       window.dispatchEvent(new CustomEvent('mprMonthYearUpdated'));
     }
 
-    // this.loadKPIs();
+    
 
     const user = JSON.parse(localStorage.getItem('current_user') || '{}');
     if (user) {
@@ -510,6 +800,9 @@ export class MonthlyDprComponent {
       this.designation = user.designation || '';
       this.department = user.department || '';
       this.EmailID = user.email || '';
+
+      // Own new MPR — header shows the signed-in user.
+      this.loadEmployeeProfile(this.empId);
 
       // Determine userType from session (default Employee)
       const code = ((user.isHOD || user.role || user.userType || '') as string).toString().toUpperCase();
@@ -522,11 +815,7 @@ export class MonthlyDprComponent {
       }
     }
 
-    // Only load KPIs if not loading an existing DPR (dprid will be set when viewing past reports)
-    // When viewing past reports, KPIs will be loaded after DPR data is fetched with correct department
-    if (!this.dprid) {
-      this.loadKPIs();
-    }
+    
 
     this.loadHodMasterList();
 
@@ -542,13 +831,162 @@ export class MonthlyDprComponent {
 
 
 
-  toggleTaskDetails() {
-    this.showTaskDetails = !this.showTaskDetails;
+  /**
+   * Pull the header's photo and profile details for one employee.
+   *
+   * Display only — nothing here feeds the review payload, so it cannot change
+   * what gets saved. Every assignment keeps the existing value on the right of
+   * the ?? / || so a sparse profile record can never blank out details already
+   * populated from the session or from the loaded DPR.
+   *
+   * Failures are logged and swallowed: a missing photo must not stop someone
+   * filling in their review.
+   */
+  private loadEmployeeProfile(empId: string): void {
+    if (!empId) return;
+
+    this.api.GetEmployeeProfile(empId).subscribe({
+      next: (res: any) => {
+        if (!res?.success || !res?.data) return;
+        const d = res.data;
+
+        this.empName     = d.employeeName || this.empName;
+        this.designation = d.designation  || this.designation;
+        this.department  = d.department   || this.department;
+
+        // GetEmployeeProfile returns RAW base64 with no data: prefix (unlike the
+        // login response). AvatarUtil adds it and falls back to the default avatar.
+        this.profileImage = AvatarUtil.processProfileImage(d.profileImageBase64) || this.profileImage;
+
+        this.dateOfJoining    = d.doj || d.joinDate || this.dateOfJoining;
+        this.employeeEmail    = d.email    || this.employeeEmail;
+        this.employeePhone    = d.phone    || this.employeePhone;
+        this.employeeLocation = d.location || this.employeeLocation;
+
+        const expInd    = Number(d.experienceInd)    || 0;
+        const expAbroad = Number(d.experienceAbroad) || 0;
+        const totalYrs  = expInd + expAbroad;
+        if (totalYrs > 0) {
+          const yrs = Math.floor(totalYrs);
+          const mos = Math.round((totalYrs - yrs) * 12);
+          this.totalExperience = mos > 0 ? `${yrs} yrs ${mos} mos` : `${yrs} yrs`;
+        }
+      },
+      error: (err: any) => console.error('Error loading employee profile:', err)
+    });
   }
 
-  toggleKpiPerformance() {
-    this.showKpiPerformance = !this.showKpiPerformance;
+  onAvatarError(event: Event) {
+    AvatarUtil.handleImageError(event);
   }
+
+  // ── Monthly work summary ──────────────────────────────────────────────────
+
+  /**
+   * Ask the API to draft the month's work summary from this employee's DPR
+   * entries (POST api/AI/MprInsight — Claude server-side, not the old n8n
+   * webhook).
+   *
+   * Never called automatically on load: a saved summary is shown as-is, so
+   * reopening a review costs nothing and cannot overwrite the employee's edits.
+   * The user presses the button.
+   *
+   * Overwriting existing text is confirmed first — the whole value of this field
+   * is that people rewrite it, and silently discarding that would be the one
+   * unforgivable bug here.
+   */
+  generateMonthlyInsight(): void {
+    if (this.isGeneratingInsight) return;
+
+    if (!this.canEditFields) {
+      this.toastr.info('This review is read-only.', 'Cannot Edit');
+      return;
+    }
+
+    const { month, year } = this.parseMonthYear();
+    if (!month || !year) {
+      this.toastr.warning('Could not determine the review month.', 'Validation Failed');
+      return;
+    }
+
+    const run = () => {
+      this.isGeneratingInsight = true;
+
+      this.api.getMprInsight({ empId: this.empId, month, year }).subscribe({
+        next: (res: any) => {
+          this.isGeneratingInsight = false;
+
+          const d = res?.data;
+          if (!res?.success || !d) {
+            this.toastr.error(res?.message || 'Could not generate the summary.', 'Error');
+            return;
+          }
+
+          this.monthlyInsight = d.insight || '';
+          this.insightMeta = {
+            entries: d.sourceEntryCount ?? 0,
+            tasks: d.distinctTasks ?? 0,
+            days: d.daysLogged ?? 0,
+            hours: d.totalHours ?? 0,
+            period: d.periodLabel || ''
+          };
+
+          // Bind the DPR total into the header's Worked Hours.
+          // These are the hours the employee actually logged in their daily DPRs
+          // for this month, which is what the review is meant to report. Up to now
+          // the field was filled from ProofHub instead, and the DPR total was only
+          // shown as a chip under the summary.
+          //
+          // Guarded on entries > 0: when no DPR data was found the API returns 0,
+          // and writing that would wipe a figure the user can see but cannot type
+          // back (the input is disabled).
+          if ((d.sourceEntryCount ?? 0) > 0 && d.totalHours != null) {
+            this.WorkedHours = Math.round(Number(d.totalHours));
+            // Stops the in-flight ProofHub response from overwriting this. Generate
+            // is a click, so ProofHub has normally answered long before — but if it
+            // is slow, the later response would silently win.
+            this.workedHoursFromAi = true;
+            this.calculateProductivityScore();
+          }
+
+          this.playInsightReveal();
+
+          if ((d.sourceEntryCount ?? 0) === 0) {
+            // The API returns a plain "nothing was logged" line rather than
+            // inventing prose. Say so, so the blank box is not mistaken for a bug.
+            this.toastr.warning(
+              `No DPR entries found for ${d.periodLabel}. Please write your summary manually.`,
+              'No Data Found');
+          } else {
+            this.toastr.success(
+              `Drafted from ${d.sourceEntryCount} DPR entries across ${d.distinctTasks} task(s). Please review and edit.`,
+              'Summary Generated');
+          }
+        },
+        error: (err: any) => {
+          this.isGeneratingInsight = false;
+          console.error('MPR insight failed:', err);
+          this.toastr.error('Could not reach the summary service. Please try again.', 'Error');
+        }
+      });
+    };
+
+    if (this.monthlyInsight && this.monthlyInsight.trim().length > 0) {
+      Swal.fire({
+        title: 'Replace your summary?',
+        text: 'This will overwrite what is currently in the box, including any edits you have made.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, regenerate',
+        cancelButtonText: 'Keep mine',
+      }).then(result => { if (result.isConfirmed) run(); });
+    } else {
+      run();
+    }
+  }
+
+  
+
 
   toggleHodEvaluation() {
     this.showHodEvaluation = !this.showHodEvaluation;
@@ -562,202 +1000,19 @@ export class MonthlyDprComponent {
     this.showRemarksHistory = !this.showRemarksHistory;
   }
 
-  addNewTask() {
-    // Calculate current total actual hours
-    const totalActualHours = this.tasks.reduce(
-      (sum, task) => sum + (Number(task.actualHours) || 0),
-      0
-    );
-
-    // Check if worked hours is set
-    if (!this.WorkedHours || this.WorkedHours === 0) {
-      this.toastr.warning('Please set Worked Hours before adding tasks.', 'Validation Failed');
-      return;
-    }
-
-    // Check if total hours have reached or exceeded 100% of worked hours
-    if (totalActualHours >= this.WorkedHours) {
-      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
-      this.toastr.warning(
-        `You have already allocated ${percentage}% (${totalActualHours}/${this.WorkedHours} hours) of your worked hours. Cannot add more tasks.`,
-        'Hours Limit Reached'
-      );
-      return;
-    }
-
-    // Validate existing hours before adding new task
-    this.validateActualHours();
-
-    if (this.hoursExceeded) {
-      return;
-    }
-
-    this.tasks.push({
-      taskName: '',
-      description: '',
-      estimatedHours: 0,
-      actualHours: 0,
-      productivity: 0,
-      selected: false,
-    });
-
-    // Show remaining hours info
-    const remainingHours = this.WorkedHours - totalActualHours;
-    this.toastr.info(
-      `You have ${remainingHours} hours remaining out of ${this.WorkedHours} worked hours.`,
-      'Task Added'
-    );
-
-    // Recalculate overall rating when task is added
-    this.calculateOverallRating();
-
-  }
-
-  deleteTask(index: number) {
-    if (this.tasks.length > 1) {
-      Swal.fire({
-        title: 'Are you sure?',
-        text: 'Do you want to delete this task?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.tasks.splice(index, 1);
-          this.validateActualHours(); // Recalculate hours after deletion
-          this.calculateOverallRating(); // Recalculate overall rating after deletion
-          this.toastr.success('Task deleted successfully', 'Success');
-        }
-      });
-    } else {
-      this.toastr.warning('At least one task is required', 'Warning');
-    }
-  }
-
-  addNewKPI() {
-    // Check if we can add more KPIs
-    if (this.canAddMoreKPIs()) {
-      this.kpis.push({
-        kpiMasterId: 0,
-        description: '',
-        kpiValue: '',
-        remarks: '',
-        kpiId: 0,
-        dprId: 0,
-        employeeId: this.empId,
-        placeholdervalue: '',
-      });
-    } else {
-      this.toastr.info('All available KPIs have been added. No more KPIs can be added.', 'Maximum Reached');
-    }
-  }
-
-  canAddMoreKPIs(): boolean {
-    // Get count of selected KPIs (excluding unselected ones with kpiMasterId = 0)
-    const selectedKPICount = this.kpis.filter(kpi => kpi.kpiMasterId && kpi.kpiMasterId !== 0).length;
-
-    // Check if there are unselected rows that can still be used
-    const unselectedRows = this.kpis.filter(kpi => !kpi.kpiMasterId || kpi.kpiMasterId === 0).length;
-
-    // Can add more if: (selected KPIs + unselected rows) < total available KPIs
-    return (selectedKPICount + unselectedRows) < this.availableKPIs.length;
-  }
-
-  get maxKPIsReached(): boolean {
-    return !this.canAddMoreKPIs();
-  }
-
-  getRemainingKPICount(): number {
-    const selectedKPICount = this.kpis.filter(kpi => kpi.kpiMasterId && kpi.kpiMasterId !== 0).length;
-    return this.availableKPIs.length - selectedKPICount;
-  }
 
 
 
-  onKPISelectionChange(index: number, selectedKpiId: number) {
-    if (selectedKpiId === 0) {
-      // User selected "Select KPI" - reset the row
-      this.kpis[index].kpiMasterId = 0;
-      this.kpis[index].description = '';
-      this.kpis[index].placeholdervalue = '';
-      this.kpis[index].kpiValue = '';
-      return;
-    }
 
-    const selectedKPI = this.availableKPIs.find(kpi => kpi.kpiid == selectedKpiId);
 
-    if (selectedKPI) {
-      this.kpis[index].kpiMasterId = selectedKPI.kpiid;
-      this.kpis[index].description = selectedKPI.description; // Use description field from backend
-      this.kpis[index].placeholdervalue = selectedKPI.placeholdervalue; // Set placeholder value
-      // Clear the current value when KPI changes
-      this.kpis[index].kpiValue = '';
-    }
-  }
 
-  getPlaceholderForKPI(index: number): string {
-    return this.kpis[index].placeholdervalue || 'Enter KPI value';
-  }
 
-  getKPINameById(kpiMasterId: number | undefined): string {
-    if (!kpiMasterId || kpiMasterId === 0) return '';
-    const kpi = this.availableKPIs.find(k => k.kpiid === kpiMasterId);
-    return kpi ? (kpi.kpiname || '') : '';
-  }
 
-  getAvailableKPIsForRow(currentIndex: number): any[] {
-    // Get all selected KPI IDs from other rows (excluding current row)
-    const selectedKpiIds = this.kpis
-      .map((kpi, index) => index !== currentIndex ? kpi.kpiMasterId : null)
-      .filter(id => id !== null && id !== 0 && id !== undefined);
 
-    // Filter out already selected KPIs
-    return this.availableKPIs.filter(kpi => !selectedKpiIds.includes(kpi.kpiid));
-  }
 
-  deleteKPI(index: number) {
-    if (this.kpis.length > 1) {
-      Swal.fire({
-        title: 'Are you sure?',
-        text: 'Do you want to delete this KPI?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.kpis.splice(index, 1);
-          this.toastr.success('KPI deleted successfully', 'Success');
 
-          // Show info about remaining KPIs if applicable
-          const remaining = this.getRemainingKPICount();
-          if (remaining > 0) {
-            this.toastr.info(`You can now add ${remaining} more KPI(s)`, 'KPIs Available');
-          }
-        }
-      });
-    } else {
-      // If it's the last row, just reset it instead of deleting
-      this.kpis[0] = {
-        kpiMasterId: 0,
-        description: '',
-        kpiValue: '',
-        remarks: '',
-        kpiId: 0,
-        dprId: 0,
-        employeeId: this.empId,
-        placeholdervalue: '',
-      };
-      this.toastr.info('KPI row has been reset', 'Info');
-    }
-  }
 
-  closeModal() {
-    this.showModal = false;
-    this.summaryText = '';
-    this.isGeneratingSummary = false;
-  }
+
 
   SubmitReview() {
     this.ApprovalStatus = 'S';
@@ -771,28 +1026,8 @@ export class MonthlyDprComponent {
       return;
     }
 
-    // Check if at least one task exists with valid data
-    const validTasks = this.tasks.filter(
-      (task) => task.taskName && task.taskName.trim() !== ''
-    );
-
-    if (validTasks.length === 0) {
-      this.toastr.warning('Please add at least one task before saving.', 'Validation Failed');
-      return;
-    }
-
-    // Check if total actual hours exceed worked hours
-    const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
-
-    if (totalActualHours > this.WorkedHours) {
-      const exceededBy = totalActualHours - this.WorkedHours;
-      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
-      this.toastr.warning(
-        `Cannot save: Total actual hours (${totalActualHours}) exceed worked hours (${this.WorkedHours}) by ${exceededBy} hours (${percentage}%). Please adjust task hours.`,
-        'Hours Exceeded'
-      );
-      return;
-    }
+    // A draft may be saved with an empty summary — the whole point of a draft is
+    // to come back to it. Submit is where the summary becomes mandatory.
 
     this.ApprovalStatus = 'D';
     this.saveEmployeeDetails();
@@ -841,7 +1076,7 @@ export class MonthlyDprComponent {
           scoreTeamWork: Number(this.teamWork),
           scoreCommunication: Number(this.communication),
           hodrating: Number(this.hodRating),
-          scoreOverall: Number(this.overallScore), // System-generated final score (20-100)
+          scoreOverall: Number(this.overallScore), // Final score entered by the HOD (1-100)
           remarks: this.managementRemarks,
           dprid: this.dprid,
           overallValue: this.getRatingText(this.overallScore),
@@ -895,43 +1130,17 @@ export class MonthlyDprComponent {
         return;
       }
 
-      // Validation 2: At least one task must exist
-      if (this.tasks.length === 0) {
-        this.toastr.warning('Please add at least one task before submitting.', 'Validation Failed');
+      // Validation 2: the monthly work summary must be filled in.
+      // Replaces the old per-task checks (at least one task / all tasks complete /
+      // hours within Worked Hours) now that the task table is gone — the summary
+      // is the single record of what was done this month.
+      if (!this.monthlyInsight || this.monthlyInsight.trim().length === 0) {
+        this.toastr.warning('Please add your monthly work summary before submitting.', 'Validation Failed');
         return;
       }
 
-      // Validation 3: All tasks must be complete
-      const hasIncompleteTasks = this.tasks.some(
-        (task) => !task.taskName || !task.description || task.actualHours <= 0
-      );
-
-      if (hasIncompleteTasks) {
-        this.toastr.warning('Please complete all task details. Each task must have a name, description, and actual hours.', 'Validation Failed');
-        return;
-      }
-
-      // Validation 4: Total actual hours should not exceed worked hours
-      const totalActualHours = this.tasks.reduce((sum, task) => sum + (Number(task.actualHours) || 0), 0);
-
-      if (totalActualHours > this.WorkedHours) {
-        this.toastr.warning('The sum of actual hours exceeds the Worked Hours. Please adjust your task hours.', 'Validation Failed');
-        return;
-      }
-
-      // Validation 5: At least one KPI must be properly filled
-      const validKPIs = this.kpis.filter(
-        (kpi) => {
-          if (!kpi.kpiMasterId || kpi.kpiMasterId === 0) return false;
-          if (!kpi.kpiValue) return false;
-          if (typeof kpi.kpiValue === 'string' && kpi.kpiValue.trim() === '') return false;
-          if (typeof kpi.kpiValue === 'number' && kpi.kpiValue <= 0) return false;
-          return true;
-        }
-      );
-
-      if (validKPIs.length === 0) {
-        this.toastr.warning('Please complete at least one KPI with selection and value.', 'Validation Failed');
+      if (this.monthlyInsight.trim().length < 50) {
+        this.toastr.warning('Please give a little more detail in your monthly work summary.', 'Validation Failed');
         return;
       }
     }
@@ -948,6 +1157,13 @@ export class MonthlyDprComponent {
       employeeId: this.empId,
       month: month,
       year: year,
+      // Monthly Performance Review. SP_INSERT_DPR_REVIEW branches on p_form_type
+      // into two separate MERGE statements ('M' vs 'A'), so this decides which
+      // record the save lands on. It was previously omitted, leaving MPR reliant
+      // on whatever the procedure does with a NULL — while apr.component has
+      // always sent 'A' explicitly. Sending it makes the two symmetric and stops
+      // an implicit default from deciding where monthly data goes.
+      formType: 'M',
       workedHours: Number(this.WorkedHours),
       achievements: this.achievements || '',
       challenges: this.challenges || '',
@@ -956,20 +1172,10 @@ export class MonthlyDprComponent {
       hodId: this.reportingTo || '',
       dprid: this.dprid || 0,
       totalEstimatedhours: Number(this.TotalEstimatedhours),
-      tasksList: this.tasks.map((t) => ({
-        taskName: t.taskName,
-        description: t.description,
-        actualHours: Number(t.actualHours),
-      })),
-      kpiList: this.kpis.map((t) => ({
-        kpiId: Number(t.kpiId),
-        dprId: Number(this.dprid),
-        employeeId: t.employeeId,
-        kpiMasterId: t.kpiMasterId,
-        kpiValue: Number(t.kpiValue),
-        remarks: t.remarks,
-        description: t.description,
-      })),
+      // tasksList is deliberately not sent: the Task Details table has been
+      // replaced by the AI-drafted monthly summary below. The field still exists
+      // on DPRReview because APR uses it.
+      monthlyInsight: this.monthlyInsight || '',
     };
 
     Swal.fire({
@@ -1029,18 +1235,6 @@ export class MonthlyDprComponent {
     });
   }
 
-  GetProofHubTask() {
-    this.showModal = true;
-
-    this.getUserProofhubTasks();
-
-
-    this.Proofhubtasks.forEach((task) => {
-      task.selected = false;
-    });
-
-
-  }
 
   getUserProofhubTasks() {
     const email = this.EmailID || '';
@@ -1059,25 +1253,23 @@ export class MonthlyDprComponent {
       next: (res) => {
         console.log('Proofhub tasks response:', res);
 
-        this.Proofhubtasks = (res.data || []).map((task: any) => ({
-          TASK_ID: task.tasK_ID,
-          TASK_TITLE: task.tasK_TITLE,
-          TASK_DESCRIPTION: task.tasK_DESCRIPTION,
-          START_DATE: task.starT_DATE,
-          DUE_DATE: task.duE_DATE,
-          ESTIMATED_HOURS: task.estimateD_HOURS,
-          LOGGED_HOURS: task.loggeD_HOURS,
-          selected: false,
-          COMPLETED: task.completed,
-        }));
+        // The rows are only needed to total the hours now that the task table is
+        // gone, so they stay local instead of being held on the component.
+        // WorkedHours and TotalEstimatedhours are still used — WorkedHours in the
+        // header, TotalEstimatedhours by calculateProductivityScore() and the
+        // save payload — so this method must keep running.
+        const rows: any[] = (res.data || []);
 
-        this.WorkedHours = Math.round(this.Proofhubtasks.reduce(
-          (sum, task) => sum + (Number(task.LOGGED_HOURS) || 0), 0));
+        // Do not clobber a figure the AI summary already supplied from the real
+        // DPR entries — that total is the one this review reports, and the field
+        // is disabled so the user could not restore it by hand.
+        if (!this.workedHoursFromAi) {
+          this.WorkedHours = Math.round(rows.reduce(
+            (sum: number, t: any) => sum + (Number(t.loggeD_HOURS) || 0), 0));
+        }
 
-        this.TotalEstimatedhours = Math.round(this.Proofhubtasks.reduce(
-          (sum, task) => sum + (Number(task.ESTIMATED_HOURS) || 0), 0));
-
-
+        this.TotalEstimatedhours = Math.round(rows.reduce(
+          (sum: number, t: any) => sum + (Number(t.estimateD_HOURS) || 0), 0));
       },
       error: (err) => {
         console.error('Error fetching tasks:', err);
@@ -1107,79 +1299,7 @@ export class MonthlyDprComponent {
 
 
 
-  loadKPIs(resetKpis: boolean = true): void {
-    console.log('Loading KPIs for department:', this.department, 'resetKpis:', resetKpis);
-    this.api.GetActiveKPIs(this.department).subscribe(
-      (response: any) => {
-        if (response && response.success && response.data) {
-          console.log('Loaded KPIs:', response.data);
 
-          this.availableKPIs = response.data;
-
-          // Only reset kpis array if explicitly requested (for new DPR creation)
-          // When loading existing DPR, we don't want to reset as DPR data will populate it
-          if (resetKpis) {
-            this.kpis = [
-              {
-                kpiMasterId: 0,
-                description: '',
-                kpiValue: '',
-                remarks: '',
-                kpiId: 0,
-                dprId: 0,
-                employeeId: this.empId,
-                placeholdervalue: '',
-              }
-            ];
-          }
-        } else {
-          this.availableKPIs = [];
-          if (resetKpis) {
-            this.kpis = [
-              {
-                kpiMasterId: 0,
-                description: '',
-                kpiValue: '',
-                remarks: '',
-                kpiId: 0,
-                dprId: 0,
-                employeeId: this.empId,
-                placeholdervalue: '',
-              }
-            ];
-          }
-        }
-      },
-      (error) => {
-        console.error('Error loading KPIs:', error);
-      }
-    );
-  }
-
-  generateSummary() {
-    const selectedTasks = this.Proofhubtasks.filter((t) => t.selected);
-
-    if (selectedTasks.length === 0) {
-      this.toastr.error('Please select at least one task!.', 'error');
-      return;
-    }
-
-    // Clear existing summary text before generating new one
-    this.summaryText = '';
-    this.isGeneratingSummary = true;
-
-    this.api.summarizeTasks(selectedTasks).subscribe({
-      next: (res) => {
-        this.summaryText = res.summary;
-        this.isGeneratingSummary = false;
-      },
-      error: (err) => {
-        console.error(err);
-        this.toastr.error('Error generating summary', 'Error');
-        this.isGeneratingSummary = false;
-      },
-    });
-  }
 
   cleanSummaryText(text: string): string {
     if (!text) return '';
@@ -1215,45 +1335,8 @@ export class MonthlyDprComponent {
     return cleanedText;
   }
 
-  get cleanedSummaryText(): string {
-    return this.cleanSummaryText(this.summaryText);
-  }
+  
 
-  copySummaryToClipboard(event?: Event) {
-    // Prevent default behavior and stop propagation to avoid modal jerking
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      // Prevent focus changes that might cause layout shifts
-      (event.target as HTMLElement)?.blur();
-    }
-
-    if (this.summaryText) {
-      // Clean the summary text before copying
-      const cleanedText = this.cleanSummaryText(this.summaryText);
-
-      navigator.clipboard.writeText(cleanedText).then(() => {
-        // Show success message
-        this.toastr.success('Summary copied to clipboard!', 'Success');
-
-        // Add visual feedback to button without causing layout shifts
-        const copyBtn = event?.target as HTMLElement;
-        if (copyBtn) {
-          const originalBg = copyBtn.style.backgroundColor;
-          copyBtn.style.backgroundColor = '#d4edda';
-          copyBtn.style.color = '#155724';
-          setTimeout(() => {
-            copyBtn.style.backgroundColor = originalBg;
-            copyBtn.style.color = '#666';
-          }, 1000);
-        }
-      }).catch(err => {
-        console.error('Failed to copy text: ', err);
-        // Fallback for older browsers
-        this.fallbackCopyTextToClipboard(cleanedText);
-      });
-    }
-  }
 
   // Fallback method for older browsers
   private fallbackCopyTextToClipboard(text: string) {
@@ -1296,6 +1379,10 @@ export class MonthlyDprComponent {
           this.department = dpr.department || '';
           this.EmailID = dpr.emailid || '';
 
+          // Existing review — the header must follow the review's OWNER, which is
+          // not the signed-in user when an HOD or CED is viewing someone's MPR.
+          this.loadEmployeeProfile(this.empId);
+
 
           this.WorkedHours = dpr.workedHours ?? 0;
           this.achievements = dpr.achievements ?? '';
@@ -1308,15 +1395,16 @@ export class MonthlyDprComponent {
           this.teamWork = dpr.scoreTeamWork ?? 0;
           this.communication = dpr.scoreCommunication ?? 0;
           this.hodRating = dpr.hodrating ?? 0; // HOD's manual rating (1-5)
-          this.overallScore = dpr.scoreOverall ?? 0; // System-generated final score (20-100)
+          this.overallScore = dpr.scoreOverall ?? 0; // Final score entered by the HOD (1-100)
           this.reportingTo = dpr.hodId ?? '';
           this.currentStatus = dpr.status ?? 'D'; // Set current status from API response
-          this.tasks = dpr.tasksList?.length ? dpr.tasksList : [];
           this.TotalEstimatedhours = dpr.totalEstimatedhours ?? 0;
+          // Saved summary wins. Only an empty one triggers a fresh AI draft, so
+          // reopening a review never overwrites what the employee wrote, and never
+          // spends a Claude call it does not need.
+          this.monthlyInsight = dpr.monthlyInsight ?? '';
 
-          // Load KPIs with the correct department from DPR data
-          // Pass false to not reset kpis array - it will be populated from dpr.kpiList below
-          this.loadKPIs(false);
+          
           
           // Set monthYear from DPR data if available
           if (dpr.month && dpr.year) {
@@ -1335,25 +1423,13 @@ export class MonthlyDprComponent {
           const currentUserId = currentUser.empId || '';
           this.isHodViewingOwnDpr = this.isHod && (currentUserId === this.empId);
 
-          // Handle KPI data - if no existing data, initialize with one empty row
-          if (dpr.kpiList?.length) {
-            this.kpis = dpr.kpiList;
-            console.log('Loaded KPIs from DPR:', this.kpis);
-          } else {
-            console.log('No KPIs in DPR, initializing empty row');
-            this.kpis = [
-              {
-                kpiMasterId: 0,
-                description: '',
-                kpiValue: '',
-                remarks: '',
-                kpiId: 0,
-                dprId: 0,
-                employeeId: this.empId,
-                placeholdervalue: '',
-              }
-            ];
-          }
+          // Ranking panel needs empId, monthYear and isHodViewingOwnDpr resolved
+          // first, so this is the earliest safe point. One call, then local re-rank.
+          this.loadDeptRanking();
+
+          // KPI section removed from MPR — dpr.kpiList is ignored here on purpose.
+          // The field still exists on DPRReview because the Annual Appraisal (APR)
+          // continues to use it.
 
           this.remarksHistory = dpr.commentsList?.length ? dpr.commentsList : [];
 
@@ -1363,19 +1439,6 @@ export class MonthlyDprComponent {
           console.log('Loaded DPR details:', dpr);
         } else {
           console.warn('No DPR data found - loading ProofHub tasks for new DPR');
-          this.tasks = [];
-          this.kpis = [
-            {
-              kpiMasterId: 0,
-              description: '',
-              kpiValue: '',
-              remarks: '',
-              kpiId: 0,
-              dprId: 0,
-              employeeId: this.empId,
-              placeholdervalue: '',
-            }
-          ];
           this.remarksHistory = [];
 
           // For new DPR, set monthYear to previous month
@@ -1442,63 +1505,10 @@ export class MonthlyDprComponent {
   }
 
 
-  validateActualHours() {
-    const totalActualHours = this.tasks.reduce(
-      (sum, task) => sum + (Number(task.actualHours) || 0),
-      0
-    );
 
-    this.hoursExceeded = totalActualHours > this.WorkedHours;
-
-    if (this.hoursExceeded) {
-      const exceededBy = totalActualHours - this.WorkedHours;
-      const percentage = Math.round((totalActualHours / this.WorkedHours) * 100);
-      this.toastr.warning(
-        `Total actual hours (${totalActualHours}) exceed worked hours (${this.WorkedHours}) by ${exceededBy} hours (${percentage}%). Please adjust task hours.`,
-        'Hours Exceeded'
-      );
-    }
-
-    // Recalculate overall rating when hours change
-    this.calculateOverallRating();
-  }
-
-  // Helper method to get total actual hours
-  getTotalActualHours(): number {
-    return this.tasks.reduce(
-      (sum, task) => sum + (Number(task.actualHours) || 0),
-      0
-    );
-  }
-
-  // Helper method to get remaining hours
-  getRemainingHours(): number {
-    const totalActualHours = this.getTotalActualHours();
-    return Math.max(0, this.WorkedHours - totalActualHours);
-  }
-
-  // Helper method to get hours utilization percentage
-  getHoursUtilizationPercentage(): number {
-    if (!this.WorkedHours || this.WorkedHours === 0) return 0;
-    const totalActualHours = this.getTotalActualHours();
-    return Math.round((totalActualHours / this.WorkedHours) * 100);
-  }
-
-  // Helper method to check if can add more tasks based on hours
-  canAddMoreTasksBasedOnHours(): boolean {
-    const totalActualHours = this.getTotalActualHours();
-    return totalActualHours < this.WorkedHours;
-  }
-
-  // Helper method to get hours status class for styling
-  getHoursStatusClass(): string {
-    const percentage = this.getHoursUtilizationPercentage();
-    if (percentage > 100) return 'hours-exceeded';
-    if (percentage === 100) return 'hours-full';
-    if (percentage >= 80) return 'hours-high';
-    if (percentage >= 50) return 'hours-medium';
-    return 'hours-low';
-  }
+  // getHoursUtilizationPercentage() and canAddMoreTasksBasedOnHours() lived here.
+  // Both derived from the per-task hours in the Task Details table and neither was
+  // referenced from the template or anywhere else, so they went with the table.
 
 
 
@@ -1703,6 +1713,17 @@ export class MonthlyDprComponent {
     const hodInfo = this.hodList.find(hod => hod.idValue === this.reportingTo);
     const hodName = hodInfo ? (hodInfo.description || 'HOD') : 'HOD';
 
+    // Remarks are NOT mandatory before Approve or ReWork — nothing validates them.
+    // The email templates cannot branch (the engine is a flat regex replace), so an
+    // empty value would render an empty "Remarks" panel. On a ReWork that is worse
+    // than cosmetic: the employee is told to revise the review with no guidance at
+    // all, and cannot tell whether the HOD left it blank or the mail broke. So the
+    // fallback text is supplied here, worded per outcome.
+    const typedRemarks = (this.managementRemarks || '').trim();
+    const remarksForEmail = typedRemarks || (this.ApprovalStatus === 'R'
+      ? 'No specific remarks were recorded. Please contact your HOD to confirm what needs revising before you resubmit.'
+      : 'No additional remarks were added.');
+
     const emailRequest: SendEmailRequest = {
       templateKey: templateKey,
       toEmail: this.empId,
@@ -1712,7 +1733,7 @@ export class MonthlyDprComponent {
         '[HODName]': hodName,
         '[MonthYear]': this.monthYear,
         '[EvaluationFormLink]': evaluationFormLink,
-        '[HODRemarks]': this.managementRemarks || '',
+        '[HODRemarks]': remarksForEmail,
         '[EmployeeDprEditLink]': this.ApprovalStatus === 'R' ? employeeDprEditLink : evaluationFormLink
       }
     };

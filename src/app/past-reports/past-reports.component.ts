@@ -97,14 +97,26 @@ export class PastReportsComponent implements OnInit, OnDestroy {
     { value: '12', label: 'December' }
   ];
 
-  years = [
-    { value: '', label: 'Select year' },
-    { value: '2025', label: '2025' },
-    { value: '2024', label: '2024' },
-    { value: '2023', label: '2023' },
-    { value: '2022', label: '2022' },
-    { value: '2021', label: '2021' }
-  ];
+  /**
+   * Rolling five-year window ending at the current year, built at load.
+   *
+   * This list used to be hardcoded and topped out at 2025. Once 2026 arrived,
+   * setDefaultPreviousMonth() set filters.year = '2026' — a value with no matching
+   * <option> — so the select rendered BLANK even though the filter was applied and
+   * the table below correctly showed July 2026. The dropdown looked broken while
+   * the query was fine, and it would have silently rotted again every January.
+   *
+   * Same construction as apr-past-reports.component.ts, so the two pages stay
+   * consistent.
+   */
+  years = (() => {
+    const currentYear = new Date().getFullYear();
+    const result = [{ value: '', label: 'Select year' }];
+    for (let y = currentYear; y >= currentYear - 4; y--) {
+      result.push({ value: y.toString(), label: y.toString() });
+    }
+    return result;
+  })();
 
   statuses = [
     { value: '', label: 'Select status' },

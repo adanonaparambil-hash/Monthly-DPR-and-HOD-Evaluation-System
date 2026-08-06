@@ -20,6 +20,9 @@ export interface DPRReview {
   tasksList?: DPRTask[];
   commentsList?: DPRComment[];
   kpiList?: DPRKPI[];
+  /** MPR only — AI-drafted, employee-editable summary of the month's DPR work.
+   *  Optional so the APR payload is unaffected. */
+  monthlyInsight?: string;
 
   // ── Annual Appraisal — Work Summary ───────────────────────────
   appraisalPeriod?: string;

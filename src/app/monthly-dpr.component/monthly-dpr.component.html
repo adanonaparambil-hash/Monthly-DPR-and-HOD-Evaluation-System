@@ -19,40 +19,48 @@
     </div>
   }
 
-  <!-- Employepan class="circle-score">{{ overallScore }}</span>
-          </div>
-        </div>
-      }
-    </div>
-  </div>
+  <!-- ══ Employee header ═══════════════════════════════════════════════════
+       Employee Id / Name / Designation / Department were disabled inputs; they
+       are display-only values the component owns, so they render as text here.
+       Worked Hours and Reporting To keep their original controls and bindings —
+       Reporting To is the one field on this card a user can actually change. -->
+  <div class="mpr-profile-card" [@scaleIn]>
 
-  <!-- Employee Info Card -->
-  <div class="info-card" [@scaleIn]>
-    <div class="info-row">
-      <div class="info-item">
-        <label><b>Employee Id</b></label>
-        <input [(ngModel)]="empId" placeholder="Enter employee ID" disabled>
+    <div class="mpr-profile-main">
+      <div class="mpr-avatar-wrap">
+        <img class="mpr-avatar" [src]="profileImage" [alt]="empName || 'Employee'"
+             (error)="onAvatarError($event)">
       </div>
-      <div class="info-item">
-        <label><b>Name</b></label>
-        <input [(ngModel)]="empName" placeholder="Enter your full name" disabled>
-      </div>
-      <div class="info-item">
-        <label><b>Designation</b></label>
-        <input [(ngModel)]="designation" placeholder="Enter your designation" disabled>
+
+      <div class="mpr-identity">
+        <h2 class="mpr-name">{{ empName || '—' }}</h2>
+        <p class="mpr-role">
+          <span>{{ designation || '—' }}</span>
+          @if (department) { <span class="mpr-dot">•</span><span>{{ department }}</span> }
+        </p>
+        <div class="mpr-chips">
+          <span class="mpr-chip mpr-chip--id"><i class="fas fa-id-badge"></i> {{ empId || '—' }}</span>
+          @if (dateOfJoining) {
+            <span class="mpr-chip"><i class="fas fa-calendar-alt"></i> Joined {{ dateOfJoining }}</span>
+          }
+          @if (totalExperience) {
+            <span class="mpr-chip"><i class="fas fa-briefcase"></i> {{ totalExperience }}</span>
+          }
+          @if (employeeLocation) {
+            <span class="mpr-chip"><i class="fas fa-location-dot"></i> {{ employeeLocation }}</span>
+          }
+        </div>
       </div>
     </div>
-    <div class="info-row">
-      <div class="info-item">
-        <label><b>Department</b></label>
-        <input [(ngModel)]="department" placeholder="Enter your department" disabled>
+
+    <div class="mpr-profile-meta">
+      <div class="mpr-field">
+        <label>Worked Hours</label>
+        <input type="number" [(ngModel)]="WorkedHours"
+               placeholder="e.g., 160" disabled>
       </div>
-      <div class="info-item">
-        <label><b>Worked Hours</b></label>
-        <input type="number" [(ngModel)]="WorkedHours" placeholder="Enter Worked Hours: e.g., 160" disabled>
-      </div>
-      <div class="info-item">
-        <label><b>Reporting To</b></label>
+      <div class="mpr-field">
+        <label>Reporting To</label>
         <select [(ngModel)]="reportingTo" [disabled]="!canEditFields">
           <option value="">Select HOD</option>
           @for (hod of hodList; track hod.idValue) {
@@ -63,195 +71,196 @@
         </select>
       </div>
     </div>
+
   </div>
 
-  <!-- Task Details Section -->
-  <div class="task-card" [@scaleIn]>
-    <div class="section-header" (click)="toggleTaskDetails()">
-      <div class="header-left">
-        <i class="fas fa-hourglass-half"></i>
-        <span>Task Details</span>
-      </div>
-      <div class="header-right">
-        @if (showTableActions) {
-          <div class="button-container" (click)="$event.stopPropagation()">
-            <button class="add-btn ptask" (click)="GetProofHubTask()">Get ProofHub Task History</button>
-            <button class="add-btn" (click)="addNewTask()">+ Add New Task</button>
-          </div>
-        }
-        <i class="fas" [class.fa-chevron-down]="showTaskDetails" [class.fa-chevron-right]="!showTaskDetails"></i>
-      </div>
-    </div>
+  <!-- ══ Monthly Work Summary ═══════════════════════════════════════════════
+       Replaces the old multi-row Task Details table. Drafted by AI from that
+       month's DPR entries (POST api/AI/MprInsight), then freely editable — what
+       is saved is whatever the employee leaves in the box. -->
+  <div class="mpr-summary-card" [@scaleIn]>
 
-    @if (showTaskDetails) {
-      <div class="task-content" [@fadeInUp]>
-        <!-- Hours Tracking Indicator -->
-        @if (WorkedHours > 0) {
-          <div class="hours-tracker" [class]="getHoursStatusClass()">
-            @if (getRemainingHours() > 0) {
-              <div class="hours-remaining">
-                <i class="fas fa-info-circle"></i>
-                <span>{{ getRemainingHours() }} hours remaining out of {{ WorkedHours }} hours ({{ getTotalActualHours() }} hours used)</span>
-              </div>
-            }
-            @if (hoursExceeded) {
-              <div class="hours-warning">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>Hours exceeded by {{ getTotalActualHours() - WorkedHours }} hours. Total: {{ getTotalActualHours() }} / {{ WorkedHours }} hours. Please adjust task hours.</span>
-              </div>
-            }
+    <div class="mpr-summary-head">
+      <div class="mpr-summary-title">
+        <!-- Animated AI orb: pulsing halo + a dot orbiting the wand -->
+        <span class="mpr-summary-icon" [class.is-busy]="isGeneratingInsight">
+          <i class="fas fa-wand-magic-sparkles"></i>
+          <span class="mpr-orb-ring"></span>
+          <span class="mpr-orb-dot"></span>
+        </span>
+        <div class="mpr-summary-titletext">
+          <!-- The pill is a SIBLING of the h3, not a child. Two reasons: styles.css
+               gives every h1-h6 `-webkit-text-fill-color: transparent`, which
+               INHERITS, so a span inside the heading renders unpainted text on its
+               own gradient — a coloured blob with nothing in it. And semantically a
+               status badge is not part of the heading, so nesting it made screen
+               readers announce "Monthly Work Summary AI assisted" as one heading. -->
+          <div class="mpr-summary-h3row">
+            <h3>Monthly Work Summary</h3>
+            <span class="mpr-ai-pill">
+              <i class="fas fa-wand-magic-sparkles"></i>
+              <span>AI assisted</span>
+            </span>
           </div>
-        }
-        <div class="table-container my-task-table">
-          <table>
-            <thead>
-              <tr>
-                <th class="SlNo-col">SL No</th>
-                <th class="task-col">Task Name</th>
-                <th class="desc-col">Task Description</th>
-                <th class="hours-col">Actual Hours</th>
-                <th class="productivity-col">Percentage %</th>
-                @if (showTableActions) {
-                  <th class="delete-col" style="text-align: center;">Action</th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (task of tasks; track $index; let i = $index) {
-                <tr>
-                  <td class="SlNo-col">{{ i + 1 }}</td>
-                  <td class="task-col">
-                    <textarea [(ngModel)]="task.taskName" placeholder="Task name" [disabled]="!canEditFields"></textarea>
-                  </td>
-                  <td class="desc-col">
-                    <textarea [(ngModel)]="task.description" placeholder="Description and status" [disabled]="!canEditFields"></textarea>
-                  </td>
-                  <td class="hours-col">
-                    <input type="number" [(ngModel)]="task.actualHours" placeholder="0" (keyup)="validateActualHours()" [disabled]="!canEditFields">
-                  </td>
-                  <td class="productivity-col">
-                    <span class="productivity-badge" [class]="getProductivityClass(task.actualHours)">
-                      {{ calculateTaskProductivity(task.actualHours) }}%
-                    </span>
-                  </td>
-                  @if (showTableActions) {
-                    <td class="delete-col" style="text-align: center;">
-                      <button class="delete-btn" (click)="deleteTask(i)" title="Delete Task">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
+          <p>Generated from your Daily Progress Reports — review and edit before submitting.</p>
         </div>
       </div>
-    }
-  </div>
 
+      @if (canEditFields) {
+        <button class="mpr-gen-btn" (click)="generateMonthlyInsight()"
+                [class.is-busy]="isGeneratingInsight"
+                [disabled]="isGeneratingInsight">
+          <i class="fas" [class.fa-wand-magic-sparkles]="!isGeneratingInsight"
+                         [class.fa-spinner]="isGeneratingInsight"
+                         [class.fa-spin]="isGeneratingInsight"></i>
+          <span>{{ isGeneratingInsight ? 'Generating…' : (hasInsight ? 'Regenerate' : 'Generate from my DPR') }}</span>
+        </button>
+      }
+    </div>
 
+    <div class="mpr-summary-body">
+      @if (isGeneratingInsight) {
+        <div class="mpr-summary-loading">
+          <app-crane-loader size="auto"
+                            message="Reading your DPR entries"
+                            sub="Drafting your monthly summary"></app-crane-loader>
+          <!-- Skeleton lines so the wait reads as "text is coming" rather than
+               "the panel is broken" -->
+          <div class="mpr-skeleton" aria-hidden="true">
+            <span style="width:92%"></span><span style="width:78%"></span>
+            <span style="width:85%"></span><span style="width:64%"></span>
+          </div>
+        </div>
+      } @else {
+        <div class="mpr-summary-field">
+          <!-- The summary is a list of points, not prose.
 
-  <!-- KPI Performance Section -->
-  <div class="kpi-card" [@scaleIn]>
-    <div class="section-header" (click)="toggleKpiPerformance()">
-      <div class="header-left">
-        <i class="fas fa-chart-line"></i>
-        <span>KPI Performance</span>
-      </div>
-      <div class="header-right">
-        @if (showTableActions) {
-          <div class="button-container" (click)="$event.stopPropagation()">
-            @if (!maxKPIsReached) {
-              <button class="add-btn" (click)="addNewKPI()">+ Add KPI</button>
-            }
-            @if (maxKPIsReached) {
-              <span class="max-kpi-message">
-                All KPIs Added ({{ availableKPIs.length }}/{{ availableKPIs.length }})
+               Editable: a textarea, because the whole point of this field is that
+               the employee can rewrite whatever the AI drafted. Typing Enter
+               continues the '- ' marker (onSummaryKeydown).
+
+               Read-only: rendered as a real list instead. This is the state the
+               HOD is in while scoring, so it is exactly when presentation matters
+               most — a reviewer reading twelve points should not be reading them
+               out of a greyed-out disabled textarea. -->
+          @if (canEditFields) {
+            <textarea #summaryBox
+                      class="mpr-summary-text is-list"
+                      [class.is-revealing]="insightRevealing"
+                      [(ngModel)]="monthlyInsight"
+                      (keydown)="onSummaryKeydown($event)"
+                      [attr.aria-label]="'Monthly work summary'"
+                      placeholder="One point per line, starting with a dash. For example:&#10;- Completed the structural drawings for the Muscat site&#10;- Coordinated with the MEP team on service routing"></textarea>
+          } @else if (hasInsight) {
+            <div class="mpr-summary-read" [class.is-revealing]="insightRevealing"
+                 role="list" aria-label="Monthly work summary">
+              @for (p of insightPoints; track $index) {
+                <div class="mpr-point" role="listitem"
+                     [style.animation-delay]="($index < 14 ? $index * 40 : 0) + 'ms'">
+                  <span class="mpr-point-dot"></span>
+                  <span class="mpr-point-text">{{ p }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <!-- read-only AND empty: keeps the box the same height so the empty
+                 state below has something to sit over -->
+            <div class="mpr-summary-read mpr-summary-read--empty"></div>
+          }
+
+          <!-- Empty state, over the box. Replaces the old placeholder, which told
+               every reader to "press the Generate button" even when that button is
+               hidden by @if (canEditFields). -->
+          @if (showInsightEmptyState) {
+            <div class="mpr-summary-empty" [@fadeInUp]>
+              @if (canEditFields) {
+                <span class="mpr-empty-orb">
+                  <i class="fas fa-wand-magic-sparkles"></i>
+                  <span class="mpr-empty-spark s1"></span>
+                  <span class="mpr-empty-spark s2"></span>
+                  <span class="mpr-empty-spark s3"></span>
+                </span>
+                <h4>Draft this from your daily reports</h4>
+                <p>We will read your DPR entries for {{ monthYear }} and turn them into a
+                   summary you can edit.</p>
+                <div class="mpr-empty-actions">
+                  <button type="button" class="mpr-gen-btn mpr-gen-btn--lg"
+                          (click)="generateMonthlyInsight()">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    <span>Generate from my DPR</span>
+                  </button>
+                  <button type="button" class="mpr-write-link" (click)="startWritingSummary()">
+                    or write it myself
+                  </button>
+                </div>
+              } @else {
+                <span class="mpr-empty-orb mpr-empty-orb--quiet">
+                  <i class="fas fa-file-lines"></i>
+                </span>
+                <h4>No summary recorded</h4>
+                <p>Nothing was entered for {{ monthYear }}. This review is read-only.</p>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mpr-summary-foot">
+          <div class="mpr-summary-footleft">
+            @if (insightMeta && insightMeta.entries > 0) {
+              <!-- Provenance as discrete chips: easier to scan than one run-on line,
+                   and it makes clear the numbers are real DPR data, not AI output. -->
+              <span class="mpr-prov-label"><i class="fas fa-circle-check"></i> Drafted from</span>
+              <span class="mpr-prov-chips">
+                <span class="mpr-prov-chip" style="animation-delay:0ms"><b>{{ insightMeta.entries }}</b> entries</span>
+                <span class="mpr-prov-chip" style="animation-delay:60ms"><b>{{ insightMeta.tasks }}</b> tasks</span>
+                <span class="mpr-prov-chip" style="animation-delay:120ms"><b>{{ insightMeta.days }}</b> days</span>
+                <span class="mpr-prov-chip" style="animation-delay:180ms"><b>{{ insightMeta.hours }}</b> h</span>
+                @if (insightMeta.period) {
+                  <span class="mpr-prov-chip mpr-prov-chip--period" style="animation-delay:240ms">{{ insightMeta.period }}</span>
+                }
+              </span>
+            } @else if (insightMeta && insightMeta.entries === 0) {
+              <span class="mpr-summary-prov mpr-summary-prov--warn">
+                <i class="fas fa-triangle-exclamation"></i>
+                No DPR entries found for {{ insightMeta.period }} — please write this yourself.
+              </span>
+            } @else {
+              <span class="mpr-summary-hint">
+                <i class="fas fa-circle-info"></i>
+                AI drafts are a starting point. Check the facts and edit freely — the text you
+                leave here is what your reviewer sees.
               </span>
             }
           </div>
-        }
-        <i class="fas" [class.fa-chevron-down]="showKpiPerformance" [class.fa-chevron-right]="!showKpiPerformance"></i>
-      </div>
-    </div>
 
-    @if (showKpiPerformance) {
-      <div class="kpi-content" [@fadeInUp]>
-        <div class="table-container kpi-table">
-          <table>
-            <thead>
-              <tr>
-                <th class="SlNo-col">Sl No</th>
-                <th class="kpi-col">KPI</th>
-                <th class="desc-col">Description</th>
-                <th class="kpi-value-col">KPI Value</th>
-                @if (showTableActions) {
-                  <th class="delete-col" style="text-align: center;">Action</th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (kpi of kpis; track $index; let i = $index) {
-                <tr>
-                  <td class="SlNo-col">{{ i + 1 }}</td>
-                  <td class="kpi-col">
-                    @if (canEditFields) {
-                      <select [(ngModel)]="kpi.kpiMasterId" (ngModelChange)="onKPISelectionChange(i, $event)">
-                        <option [value]="0">Select KPI</option>
-                        @for (availableKpi of getAvailableKPIsForRow(i); track availableKpi.kpiid) {
-                          <option [value]="availableKpi.kpiid">
-                            {{ availableKpi.kpiname }}
-                          </option>
-                        }
-                      </select>
-                    } @else {
-                      <span class="readonly-value">
-                        {{ getKPINameById(kpi.kpiMasterId) || 'No KPI Selected' }}
-                      </span>
-                    }
-                  </td>
-                  <td class="desc-col">{{ kpi.description }}</td>
-                  <td class="kpi-value-col">
-                    @if (canEditFields) {
-                      <input [(ngModel)]="kpi.kpiValue" [placeholder]="getPlaceholderForKPI(i)" type="text" class="rating-input">
-                    } @else {
-                      <span class="readonly-value">{{ kpi.kpiValue || '-' }}</span>
-                    }
-                  </td>
-                  @if (showTableActions) {
-                    <td class="delete-col" style="text-align: center;">
-                      <button class="delete-btn" (click)="deleteKPI(i)" title="Delete KPI">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        @if (showTableActions && availableKPIs.length > 0) {
-          <div class="kpi-status-info">
-            <small class="text-muted">
-              <i class="fas fa-info-circle"></i>
-              @if (!maxKPIsReached) {
-                <span>
-                  {{ getRemainingKPICount() }} KPI(s) remaining out of {{ availableKPIs.length }} available
-                </span>
-              }
-              @if (maxKPIsReached) {
-                <span>
-                  All {{ availableKPIs.length }} available KPIs have been added
-                </span>
-              }
-            </small>
+          <!-- Length meter. The submit rule needs 50+ characters; showing it here
+               means the employee finds out while typing, not from a toast after
+               pressing Submit. -->
+          <div class="mpr-summary-meter" [class.is-short]="insightTooShort"
+                                         [class.is-ok]="insightChars >= insightMinChars">
+            @if (insightTooShort) {
+              <span class="mpr-meter-text">{{ insightMinChars - insightChars }} more characters needed</span>
+            } @else if (insightChars >= insightMinChars) {
+              <!-- Point count leads: it is the number that matters now the summary
+                   is a list. Words/characters follow for the length rule. -->
+              <span class="mpr-meter-text">
+                <i class="fas fa-check"></i>
+                {{ insightPointCount }} {{ insightPointCount === 1 ? 'point' : 'points' }}
+                · {{ insightWords }} words
+              </span>
+            } @else {
+              <span class="mpr-meter-text">{{ insightChars }} characters</span>
+            }
+            <span class="mpr-meter-bar"><span class="mpr-meter-fill" [style.width.%]="insightProgress"></span></span>
           </div>
-        }
-      </div>
-    }
+        </div>
+      }
+    </div>
   </div>
+
+
+
+
 
 
   <!-- Achievements and Challenges -->
@@ -288,7 +297,25 @@
 
       @if (showHodEvaluation) {
         <div class="evaluation-content" [@fadeInUp]>
-          <div class="evaluation-grid">
+          <!-- Four criteria. The two combined inputs each drive a pair of existing
+               columns (see onInitiativeProblemSolvingChange / onTeamworkCommunication-
+               Change) so the DB and SP_DPR_UPDATE_HODREVIEW are unchanged and APR,
+               which writes the same six columns, is unaffected. -->
+          <div class="evaluation-grid mpr-eval-grid">
+            <div class="eval-item">
+              <label>Initiative &amp; Problem Solving <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="initiative" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="onInitiativeProblemSolvingChange()"
+                (keyup)="validateRatingInput('initiative', $event)" (blur)="finalizeRatingInput('initiative', $event)">
+            </div>
+            <div class="eval-item">
+              <label>Teamwork &amp; Communication <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="teamWork" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
+                (ngModelChange)="onTeamworkCommunicationChange()"
+                (keyup)="validateRatingInput('teamWork', $event)" (blur)="finalizeRatingInput('teamWork', $event)">
+            </div>
             <div class="eval-item">
               <label>Quality <small>(Rate 1-100)</small></label>
               <input [(ngModel)]="quality" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100" step="1"
@@ -301,112 +328,165 @@
                 step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
                 (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('timeliness', $event)" (blur)="finalizeRatingInput('timeliness', $event)">
             </div>
-            <div class="eval-item">
-              <label>Initiative <small>(Rate 1-100)</small></label>
-              <input [(ngModel)]="initiative" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
+            <!-- Final score is now TYPED by the HOD, not derived. -->
+            <div class="eval-item eval-item--overall">
+              <label>Overall Score <small>(Rate 1-100)</small></label>
+              <input [(ngModel)]="overallScore" placeholder="Enter final score (1-100)" type="number" min="1" max="100"
                 step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
-                (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('initiative', $event)" (blur)="finalizeRatingInput('initiative', $event)">
-            </div>
-            <div class="eval-item">
-              <label>Problem Solving <small>(Rate 1-100)</small></label>
-              <input [(ngModel)]="problemSolving" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1"
-                max="100" step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
-                (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('problemSolving', $event)" (blur)="finalizeRatingInput('problemSolving', $event)">
-            </div>
-            <div class="eval-item">
-              <label>Team Work <small>(Rate 1-100)</small></label>
-              <input [(ngModel)]="teamWork" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
-                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
-                (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('teamWork', $event)" (blur)="finalizeRatingInput('teamWork', $event)">
-            </div>
-            <div class="eval-item">
-              <label>Communication <small>(Rate 1-100)</small></label>
-              <input [(ngModel)]="communication" placeholder="Enter score (1-100, e.g., 85)" type="number" min="1" max="100"
-                step="1" class="rating-input" [disabled]="!canEditHodEvaluation"
-                (ngModelChange)="calculateOverallRating()" (keyup)="validateRatingInput('communication', $event)" (blur)="finalizeRatingInput('communication', $event)">
-            </div>
-            <div class="eval-item">
-              <label>HOD Rating <small>(Rate 1-100)</small></label>
-              <input [(ngModel)]="hodRating" placeholder="Enter rating (1-100, e.g., 85)" type="number" min="1" max="100" step="1"
-                class="rating-input" [disabled]="!canEditHodEvaluation" (ngModelChange)="calculateOverallRating()"
-                (keyup)="validateRatingInput('hodRating', $event)" (blur)="finalizeRatingInput('hodRating', $event)">
+                (ngModelChange)="onOverallScoreChange()"
+                (keyup)="validateRatingInput('overallScore', $event)" (blur)="finalizeRatingInput('overallScore', $event)">
             </div>
           </div>
 
+          <!-- ══ Result card ═══════════════════════════════════════════════════
+               Sits directly under the score inputs and ABOVE the ranking, so the
+               reading order is: enter the scores → see this employee's outcome →
+               then see where that places them in the department.
+
+               Deliberately shows ONLY the outcome. The four criteria are already
+               in the inputs above and in the ranking chips below, so repeating
+               them a third time here was pure duplication.
+
+               The band scale replaces the old legend, which was still labelled on
+               the retired 1-5 scale (4.5-5.0 etc.) while the inputs and
+               getRatingClass() both work in 1-100. -->
           @if (showOverallRating) {
-            <div class="overall-rating-section" [@scaleIn]>
-              <div class="overall-rating-card">
-                <h3><i class="fas fa-trophy"></i> Overall Performance Rating</h3>
+            <div class="mpr-result" [@scaleIn]>
 
-                <div class="rating-breakdown">
-                  <div class="breakdown-item">
-                    <span class="label">HOD Rating (70%):</span>
-                    <span class="value">{{ hodRating }}/100</span>
-                  </div>
-                  <div class="breakdown-item">
-                    <span class="label">Quality (5%):</span>
-                    <span class="value">{{ quality }}/100</span>
-                  </div>
-                  <div class="breakdown-item">
-                    <span class="label">Timeliness (5%):</span>
-                    <span class="value">{{ timeliness }}/100</span>
-                  </div>
-                  <div class="breakdown-item">
-                    <span class="label">Initiative (5%):</span>
-                    <span class="value">{{ initiative }}/100</span>
-                  </div>
-                  <div class="breakdown-item">
-                    <span class="label">Communication (5%):</span>
-                    <span class="value">{{ communication }}/100</span>
-                  </div>
-                  <div class="breakdown-item">
-                    <span class="label">Teamwork (5%):</span>
-                    <span class="value">{{ teamWork }}/100</span>
-                  </div>
-                  <div class="breakdown-item">
-                    <span class="label">Problem Solving (5%):</span>
-                    <span class="value">{{ problemSolving }}/100</span>
-                  </div>
-                  <div class="breakdown-item final-score">
-                    <span class="label">Final Overall Score:</span>
-                    <span class="value">{{ overallScore }}/100</span>
-                  </div>
+              <div class="mpr-result-gauge">
+                <svg viewBox="0 0 132 132" class="mpr-gauge-svg" aria-hidden="true">
+                  <circle class="mpr-gauge-track" cx="66" cy="66" r="56" />
+                  <circle class="mpr-gauge-fill" [ngClass]="rankBandClass(overallScore)"
+                          cx="66" cy="66" r="56"
+                          [style.stroke-dashoffset]="352 - (352 * (overallScore || 0) / 100)" />
+                </svg>
+                <div class="mpr-gauge-centre">
+                  <span class="mpr-gauge-score">{{ overallScore || 0 }}</span>
+                  <span class="mpr-gauge-of">/ 100</span>
                 </div>
+              </div>
 
-                <div class="final-rating-container">
-                  <div class="rating-circle" [class]="getRatingClass(overallScore)" [@pulseAnimation]>
-                    <div class="rating-score">{{ overallScore }}</div>
-                    <div class="rating-text">{{ getRatingText(overallScore) }}</div>
-                  </div>
-                  <div class="rating-description">
-                    <h4>{{ getRatingText(overallScore) }}</h4>
-                    <p>{{ getRatingDescription(overallScore) }}</p>
-                  </div>
-                </div>
+              <div class="mpr-result-body">
+                <span class="mpr-result-eyebrow">Overall performance</span>
+                <h3 class="mpr-result-band" [ngClass]="rankBandClass(overallScore)">
+                  {{ getRatingText(overallScore) }}
+                </h3>
+                <p class="mpr-result-desc">{{ getRatingDescription(overallScore) }}</p>
 
-                <div class="rating-legend">
-                  <div class="legend-item excellent">
-                    <span class="legend-color"></span>
-                    <span>Excellent (4.5-5.0)</span>
+                <!-- Band scale, on the real 1-100 scale, with a live marker -->
+                <div class="mpr-scale">
+                  <div class="mpr-scale-track">
+                    <span class="mpr-scale-seg mpr-b-poor"  style="flex:30"></span>
+                    <span class="mpr-scale-seg mpr-b-below" style="flex:20"></span>
+                    <span class="mpr-scale-seg mpr-b-avg"   style="flex:20"></span>
+                    <span class="mpr-scale-seg mpr-b-good"  style="flex:20"></span>
+                    <span class="mpr-scale-seg mpr-b-top"   style="flex:10"></span>
+                    <span class="mpr-scale-marker"
+                          [style.left.%]="overallScore > 100 ? 100 : (overallScore < 0 ? 0 : overallScore)"></span>
                   </div>
-                  <div class="legend-item good">
-                    <span class="legend-color"></span>
-                    <span>Good (3.5-4.4)</span>
-                  </div>
-                  <div class="legend-item average">
-                    <span class="legend-color"></span>
-                    <span>Average (2.5-3.4)</span>
-                  </div>
-                  <div class="legend-item below-average">
-                    <span class="legend-color"></span>
-                    <span>Below Average (1.5-2.4)</span>
-                  </div>
-                  <div class="legend-item poor">
-                    <span class="legend-color"></span>
-                    <span>Poor (1.0-1.4)</span>
+                  <div class="mpr-scale-labels">
+                    <span>Poor<br><b>&lt;30</b></span>
+                    <span>Below Avg<br><b>30-49</b></span>
+                    <span>Average<br><b>50-69</b></span>
+                    <span>Good<br><b>70-89</b></span>
+                    <span>Excellent<br><b>90+</b></span>
                   </div>
                 </div>
               </div>
+
+            </div>
+          }
+
+          <!-- ══ Department ranking — HOD (own dept) and CED, read-only for CED ══
+               Placed under the Overall Performance card: the outcome for THIS
+               employee reads first, the department comparison second.
+
+               Fetched once when the review loads; this list re-orders locally as
+               the Overall Score is typed, so there is no request per keystroke. -->
+          @if (canViewDeptRanking) {
+            <div class="mpr-rank-panel" [class.is-closed]="!rankOpen" [@scaleIn]>
+              <!-- Whole header is the toggle. The rank badge stays visible when the
+                   panel is folded, so collapsing it never hides the one number the
+                   HOD is actually watching. -->
+              <div class="mpr-rank-head" (click)="toggleRanking()"
+                   role="button" tabindex="0"
+                   (keydown.enter)="toggleRanking()" (keydown.space)="toggleRanking()"
+                   [attr.aria-expanded]="rankOpen" aria-controls="mprRankBody"
+                   [title]="rankOpen ? 'Hide department ranking' : 'Show department ranking'">
+                <div class="mpr-rank-title">
+                  <i class="fas fa-ranking-star"></i>
+                  <span>Department Ranking</span>
+                  <small>{{ monthYear }} &nbsp;·&nbsp; approved reviews</small>
+                </div>
+                <div class="mpr-rank-head-right">
+                  @if (!rankingLoading && rankedTotal > 0) {
+                    <div class="mpr-rank-badge" [ngClass]="rankBandClass(overallScore)">
+                      Rank {{ currentRankPosition }} of {{ rankedTotal }}
+                    </div>
+                  }
+                  @if (!rankingLoading && !rankOpen && rankedTotal > 1) {
+                    <span class="mpr-rank-count">{{ rankedTotal }} employees</span>
+                  }
+                  <button type="button" class="mpr-rank-chev"
+                          [class.is-open]="rankOpen"
+                          (click)="toggleRanking(); $event.stopPropagation()"
+                          [attr.aria-label]="rankOpen ? 'Hide department ranking' : 'Show department ranking'">
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+
+              @if (rankingLoading && rankOpen) {
+                <div class="mpr-rank-loading">
+                  <app-crane-loader size="md" message="Loading department ranking"></app-crane-loader>
+                </div>
+              }
+
+              @if (!rankingLoading && rankOpen) {
+                <div class="mpr-rank-list" id="mprRankBody" [@rankExpand]>
+                  @for (r of rankedList; track r.empId; let i = $index) {
+                    <div class="mpr-rank-row" [class.is-current]="r.isCurrent"
+                         [class.is-first]="r.rank === 1"
+                         [style.animation-delay]="(i < 12 ? i * 45 : 0) + 'ms'">
+                      <span class="mpr-rank-pos" [ngClass]="rankBandClass(r.score)">{{ r.rank }}</span>
+                      <img class="mpr-rank-avatar" [src]="r.image" [alt]="r.employeeName"
+                           (error)="onAvatarError($event)">
+                      <div class="mpr-rank-who">
+                        <span class="mpr-rank-name">
+                          {{ r.employeeName }}
+                          @if (r.isCurrent) { <em class="mpr-rank-you">under review</em> }
+                        </span>
+                        @if (r.designation) { <span class="mpr-rank-desig">{{ r.designation }}</span> }
+                        <!-- The four criteria behind the score. For the row under
+                             review these are the live input values. -->
+                        <span class="mpr-rank-criteria">
+                          <span class="mpr-crit" title="Initiative &amp; Problem Solving">
+                            <b>I&amp;P</b>{{ r.ips }}
+                          </span>
+                          <span class="mpr-crit" title="Teamwork &amp; Communication">
+                            <b>T&amp;C</b>{{ r.tc }}
+                          </span>
+                          <span class="mpr-crit" title="Quality"><b>Qly</b>{{ r.qual }}</span>
+                          <span class="mpr-crit" title="Timeliness"><b>Tml</b>{{ r.time }}</span>
+                        </span>
+                      </div>
+                      <div class="mpr-rank-bar">
+                        <div class="mpr-rank-bar-fill" [ngClass]="rankBandClass(r.score)"
+                             [style.width.%]="r.score > 100 ? 100 : (r.score < 0 ? 0 : r.score)">
+                          <span class="mpr-rank-sheen"></span>
+                        </div>
+                      </div>
+                      <span class="mpr-rank-score" [ngClass]="rankBandClass(r.score)">{{ r.score }}</span>
+                    </div>
+                  }
+                  @if (rankedTotal === 0) {
+                    <div class="mpr-rank-empty">
+                      <i class="fas fa-inbox"></i>
+                      No approved reviews in this department for {{ monthYear }} yet.
+                    </div>
+                  }
+                </div>
+              }
             </div>
           }
         </div>
@@ -490,85 +570,3 @@
 </div>
 
 <!-- Modal -->
-@if (showModal) {
-  <div class="modal-overlay">
-    <div class="modal-box" [@scaleIn]>
-      <div class="modal-header">
-        <span class="back-arrow" (click)="closeModal()">&#8592;</span>
-        <h2>ProofHub Task History</h2>
-      </div>
-
-      <div class="modal-body" style="overflow-x: hidden; max-width: 100%;">
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th class="SlNo-col">SL No</th>
-                <th class="task-col">Task Name</th>
-                <th class="desc-col">Task Description</th>
-                <th class="date-col">Start Date</th>
-                <th class="date-col">Due Date</th>
-                <th class="hours-col">Estimated Hours</th>
-                <th class="hours-col">Logged Hours</th>
-                <th class="status-col">Completion Status</th>
-                <th class="select-col">Select</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (task of Proofhubtasks; track task.TASK_ID; let i = $index) {
-                <tr>
-                  <td>{{ i + 1 }}</td>
-                  <td class="task-col">{{ task.TASK_TITLE }}</td>
-                  <td class="desc-col">{{ task.TASK_DESCRIPTION }}</td>
-                  <td class="date-col">{{ task.START_DATE }}</td>
-                  <td class="date-col">{{ task.DUE_DATE }}</td>
-                  <td class="hours-col">{{ task.ESTIMATED_HOURS }}</td>
-                  <td class="hours-col">{{ task.LOGGED_HOURS }}</td>
-                  <td class="status-col">
-                    <span [class]="task.COMPLETED ? 'status-completed' : 'status-incomplete'">
-                      {{ task.COMPLETED ? 'Completed' : 'Incomplete' }}
-                    </span>
-                  </td>
-                  <td><input type="checkbox" [(ngModel)]="task.selected" /></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <div class="summary-box" style="overflow: hidden;">
-          <div class="summary-header"
-            style="display: flex; justify-content: space-between; align-items: center; position: relative; min-height: 40px; padding-right: 50px;">
-            <h3 style="margin: 0; flex-grow: 1;">AI Generated Summary</h3>
-            @if (summaryText) {
-              <button class="copy-btn" (click)="copySummaryToClipboard($event)"
-                [title]="'Copy clean summary to clipboard: ' + (cleanedSummaryText.length > 50 ? cleanedSummaryText.substring(0, 50) + '...' : cleanedSummaryText)"
-                type="button"
-                style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 8px; border-radius: 4px; transition: background-color 0.2s; color: #666; font-size: 16px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
-                <i class="fas fa-clipboard"></i>
-              </button>
-            }
-          </div>
-          <div class="textarea-container">
-            <textarea readonly #summaryTextarea
-              [placeholder]="isGeneratingSummary ? 'Generating summary...' : 'Click \'Generate Summary\' to create an AI-powered summary of selected tasks...'">{{ summaryText }}</textarea>
-          </div>
-        </div>
-
-        <div class="summary-actions">
-          <button class="generate-summary-btn" (click)="generateSummary()" [disabled]="isGeneratingSummary" type="button">
-            @if (isGeneratingSummary) {
-              <span>
-                <i class="fas fa-spinner fa-spin"></i> Generating...
-              </span>
-            } @else {
-              <span>Generate Summary</span>
-            }
-          </button>
-          <button class="close-modal-btn" (click)="closeModal()" type="button">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-}

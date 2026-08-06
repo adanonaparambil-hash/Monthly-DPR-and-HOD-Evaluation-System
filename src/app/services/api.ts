@@ -83,6 +83,21 @@ export class Api {
 
   }
 
+  /**
+   * MPR monthly work summary — asks the API to read that employee's DPR entries
+   * for the given month and draft an editable summary via Claude.
+   *
+   * Separate from summarizeTasks() above, which goes through the n8n webhook.
+   * This one calls Anthropic directly server-side.
+   *
+   * empId is optional: the API defaults to the caller's own token identity and
+   * only honours an explicit id for HOD/CED.
+   */
+  getMprInsight(request: { empId?: string; month: number; year: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/AI/MprInsight`, request)
+      .pipe(catchError(this.handleError));
+  }
+
 
   GetMonthlyReviewListing(listingRequest: DPRMonthlyReviewListingRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/DPRReview/GetMonthlyReviewListing`, listingRequest);
@@ -550,6 +565,12 @@ export class Api {
 
   validateAppraisalAccess(request: AppraisalAccessRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/DPRReview/validate-appraisal-access`, request);
+  }
+
+  /** MPR HOD-Evaluation ranking panel — approved monthly reviews for the HOD's department(s). */
+  getDeptMprRanking(hodId: string, month: number, year: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/DPRReview/GetDeptMprRanking?hodId=${encodeURIComponent(hodId)}&month=${month}&year=${year}`)
+      .pipe(catchError(this.handleError));
   }
 
   getUserMenus(userId: number | string): Observable<any> {

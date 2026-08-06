@@ -855,32 +855,91 @@ h3 i {
   /* Smooth color and transform transition */
 }
 
-/* Colorful icon for Achievements */
-h3 .colorful-icon {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+/* ══ SECTION ICONS ══════════════════════════════════════════════════════════
+   Each icon gets its OWN colour, animated by default.
+
+   What was here before: a shared `background: linear-gradient(#1B2A38,#138271)`
+   with `-webkit-text-fill-color: transparent`, then per-icon `color: #e74c3c`
+   (red) and `color: #2ecc71` (green), then `color: #3498db` on hover.
+
+   Those three `color` rules were DEAD. Once text-fill is transparent, `color` no
+   longer paints the glyph — only the gradient clipped to it does. So every icon
+   rendered in the identical dark navy-teal, the intended red/green/blue never
+   appeared, and hover changed nothing but the scale.
+
+   Fix: give each icon its own GRADIENT (the thing that actually paints) and
+   animate background-position so the colour visibly shifts without hovering.
+   Component-scoped stylesheet, so APR is unaffected. */
+
+h3 .colorful-icon,
+.section-header .header-left i {
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Oversized so background-position has somewhere to travel — a 100%-wide
+     gradient cannot animate. */
+  background-size: 220% 220%;
+  animation: mprIconFlow 6s ease-in-out infinite,
+             mprIconBob  3.4s ease-in-out infinite;
+  transition: transform .25s cubic-bezier(.25,.8,.25,1), filter .25s ease;
+  will-change: background-position, transform;
 }
 
-/* Color for Challenges */
-h3 .colorful-icon.fa-question-circle {
-  color: #e74c3c;
-  /* Red */
+/* Colour per section — vivid and distinct, three stops so the flow is visible */
+h3 .colorful-icon.fa-trophy          { background-image: linear-gradient(120deg, #fbbf24, #f97316, #fcd34d, #f59e0b); }
+h3 .colorful-icon.fa-question-circle { background-image: linear-gradient(120deg, #fb7185, #e11d48, #fda4af, #f43f5e); }
+h3 .colorful-icon.fa-handshake       { background-image: linear-gradient(120deg, #34d399, #059669, #6ee7b7, #10b981); }
+
+.section-header .header-left i.fa-star    { background-image: linear-gradient(120deg, #a78bfa, #6366f1, #c4b5fd, #8b5cf6); }
+.section-header .header-left i.fa-comment { background-image: linear-gradient(120deg, #38bdf8, #0284c7, #7dd3fc, #0ea5e9); }
+.section-header .header-left i.fa-history { background-image: linear-gradient(120deg, #22d3ee, #0891b2, #67e8f9, #06b6d4); }
+
+/* Desync the loops so the icons never move or shift colour in lockstep */
+h3 .colorful-icon.fa-question-circle       { animation-duration: 7s,   3.9s; }
+h3 .colorful-icon.fa-handshake             { animation-duration: 6.5s, 4.3s; }
+.section-header .header-left i.fa-star     { animation-duration: 5.5s, 3.6s; }
+.section-header .header-left i.fa-comment  { animation-duration: 7.5s, 4.1s; }
+.section-header .header-left i.fa-history  { animation-duration: 6.8s, 3.7s; }
+
+@keyframes mprIconFlow {
+  0%   { background-position:   0%  50%; }
+  50%  { background-position: 100%  50%; }
+  100% { background-position:   0%  50%; }
+}
+@keyframes mprIconBob {
+  0%,100% { transform: translateY(0)      rotate(0deg); }
+  50%     { transform: translateY(-2.5px) rotate(-3deg); }
 }
 
-/* Color for Support Needed / Suggestions */
-h3 .colorful-icon.fa-handshake {
-  color: #2ecc71;
-  /* Green */
+/* Hover is now a DISTINCT, stronger response rather than the only thing that
+   happened. Pausing the bob stops it fighting the hover transform. */
+h3 .colorful-icon:hover,
+.section-header .header-left i:hover {
+  transform: scale(1.22) rotate(-8deg);
+  filter: brightness(1.14) saturate(1.15);
+  animation-play-state: running, paused;
 }
 
-/* Hover effect for all icons */
-h3 .colorful-icon:hover {
-  transform: scale(1.2);
-  /* Slightly enlarge the icon on hover */
-  color: #3498db;
-  /* Change color to blue on hover */
+/* The collapse chevron is a control, not decoration — keep it plain so it stays
+   readable and does not compete with the coloured section icon. */
+.section-header > i.fas {
+  animation: none;
+  -webkit-text-fill-color: currentColor;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  background-image: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  h3 .colorful-icon,
+  .section-header .header-left i {
+    animation: none;
+    /* Without the flow animation, park each gradient mid-travel so the icon still
+       shows its own colour instead of only the first stop. */
+    background-position: 50% 50%;
+  }
+  h3 .colorful-icon:hover,
+  .section-header .header-left i:hover { transform: scale(1.1); }
 }
 
 input:hover,
@@ -4065,4 +4124,1357 @@ nced validation styles for rating inputs */
 :host-context(.dark-theme) .summary-box textarea:focus {
   background: #0f172a;
   color: #e2e8f0;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MPR MODERN REFRESH
+   Appended, not merged, so the whole visual change is one contiguous block and
+   can be reverted by deleting from here down. Purely presentational — no
+   selector here targets a form control's behaviour, only its appearance.
+   Dark mode uses :host-context(.dark-theme), matching the 173 existing rules
+   in this file (a plain .dark-theme rule would never match — the class sits on
+   an ancestor outside this component's scope).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.monthly-dpr-page {
+  --mpr-accent:  #0f766e;
+  --mpr-accent-2:#14b8a6;
+  --mpr-surface: #ffffff;
+  --mpr-line:    #e4eaf1;
+  --mpr-ink:     #14293d;
+  --mpr-muted:   #64748b;
+  --mpr-radius:  16px;
+  --mpr-shadow:  0 1px 2px rgba(16,32,52,.04), 0 8px 24px rgba(16,32,52,.06);
+  padding: 24px 26px 40px;
+}
+
+/* ── Employee header card ───────────────────────────────────────────────── */
+.mpr-profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+  background: var(--mpr-surface);
+  border: 1px solid var(--mpr-line);
+  border-radius: var(--mpr-radius);
+  box-shadow: var(--mpr-shadow);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+/* accent rail */
+.mpr-profile-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--mpr-accent-2), var(--mpr-accent));
+}
+
+.mpr-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.mpr-avatar-wrap {
+  flex-shrink: 0;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--mpr-accent-2), var(--mpr-accent));
+}
+.mpr-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: #eef2f7;
+  border: 2px solid #fff;
+}
+
+.mpr-identity { min-width: 0; }
+
+.mpr-name {
+  margin: 0 0 3px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--mpr-ink);
+  line-height: 1.25;
+}
+.mpr-role {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--mpr-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mpr-dot { color: #cbd5e1; }
+
+.mpr-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.mpr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+.mpr-chip i { font-size: 10.5px; opacity: .75; }
+.mpr-chip--id {
+  background: rgba(20, 184, 166, .10);
+  border-color: rgba(15, 118, 110, .22);
+  color: var(--mpr-accent);
+}
+
+/* Worked Hours + Reporting To */
+.mpr-profile-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.mpr-field { display: flex; flex-direction: column; gap: 6px; min-width: 170px; }
+.mpr-field label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--mpr-muted);
+}
+.mpr-field input,
+.mpr-field select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--mpr-line);
+  border-radius: 9px;
+  background: #fff;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--mpr-ink);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.mpr-field select { cursor: pointer; }
+.mpr-field input:focus,
+.mpr-field select:focus {
+  outline: none;
+  border-color: var(--mpr-accent-2);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, .14);
+}
+.mpr-field input:disabled {
+  background: #f6f8fb;
+  color: #64748b;
+  cursor: not-allowed;
+}
+.mpr-field select:disabled {
+  background: #f6f8fb;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ── Section cards ──────────────────────────────────────────────────────── */
+.info-card,
+.task-card,
+.kpi-card,
+.remarks-card,
+.history-card {
+  border: 1px solid var(--mpr-line) !important;
+  border-radius: var(--mpr-radius) !important;
+  box-shadow: var(--mpr-shadow) !important;
+}
+
+.task-card .section-header,
+.kpi-card .section-header,
+.remarks-card .section-header,
+.history-card .section-header,
+.section-header {
+  border-bottom: 1px solid var(--mpr-line);
+  padding: 15px 22px !important;
+  transition: background-color .18s ease;
+}
+.section-header:hover { background: #f8fafc; }
+
+/* ── Action buttons ─────────────────────────────────────────────────────── */
+.action-buttons { gap: 12px; padding-top: 8px; }
+
+.btn-draft,
+.btn-available,
+.btn-approve,
+.btn-pushback {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: .1px;
+  box-shadow: 0 1px 2px rgba(16,32,52,.06) !important;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease !important;
+}
+.btn-draft:hover,
+.btn-available:hover,
+.btn-approve:hover,
+.btn-pushback:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 6px 16px rgba(16,32,52,.13) !important;
+}
+.btn-draft:active,
+.btn-available:active,
+.btn-approve:active,
+.btn-pushback:active { transform: translateY(0); }
+
+/* ── Dark theme ─────────────────────────────────────────────────────────── */
+:host-context(.dark-theme) .monthly-dpr-page {
+  --mpr-surface: #1e293b;
+  --mpr-line:    #334155;
+  --mpr-ink:     #f1f5f9;
+  --mpr-muted:   #94a3b8;
+  --mpr-shadow:  0 1px 2px rgba(0,0,0,.30), 0 8px 24px rgba(0,0,0,.28);
+}
+:host-context(.dark-theme) .mpr-chip {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+:host-context(.dark-theme) .mpr-chip--id {
+  background: rgba(20,184,166,.16);
+  border-color: rgba(20,184,166,.34);
+  color: #5eead4;
+}
+:host-context(.dark-theme) .mpr-avatar { border-color: #1e293b; background: #334155; }
+:host-context(.dark-theme) .mpr-field input,
+:host-context(.dark-theme) .mpr-field select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+:host-context(.dark-theme) .mpr-field input:disabled,
+:host-context(.dark-theme) .mpr-field select:disabled {
+  background: #172033;
+  color: #64748b;
+}
+:host-context(.dark-theme) .section-header:hover { background: #243449; }
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .mpr-profile-card { gap: 20px; }
+  .mpr-profile-meta { width: 100%; }
+  .mpr-field { flex: 1 1 180px; min-width: 0; }
+}
+@media (max-width: 768px) {
+  .monthly-dpr-page { padding: 16px 14px 32px; }
+  .mpr-profile-card { flex-direction: column; align-items: flex-start; padding: 18px; }
+  .mpr-name { font-size: 18px; }
+  .mpr-avatar-wrap { width: 62px; height: 62px; }
+}
+@media (max-width: 480px) {
+  .mpr-profile-main { gap: 13px; }
+  .mpr-avatar-wrap { width: 54px; height: 54px; }
+  .mpr-name { font-size: 16.5px; }
+  .mpr-role { font-size: 12.5px; }
+  .mpr-chip { font-size: 10.5px; padding: 3px 8px; }
+  .mpr-profile-meta { flex-direction: column; width: 100%; }
+  .mpr-field { width: 100%; }
+}
+
+
+/* ══ Monthly Work Summary card ════════════════════════════════════════════ */
+
+.mpr-summary-card {
+  background: var(--mpr-surface);
+  border: 1px solid var(--mpr-line);
+  border-radius: var(--mpr-radius);
+  box-shadow: var(--mpr-shadow);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.mpr-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--mpr-line);
+  background: linear-gradient(180deg, rgba(20,184,166,.05), transparent);
+}
+
+.mpr-summary-title { display: flex; align-items: center; gap: 13px; min-width: 0; }
+
+.mpr-summary-icon {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--mpr-accent-2), var(--mpr-accent));
+  color: #fff;
+  font-size: 15px;
+}
+.mpr-summary-title h3 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--mpr-ink);
+}
+.mpr-summary-title p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--mpr-muted);
+}
+
+.mpr-gen-btn {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--mpr-accent-2), var(--mpr-accent));
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16,32,52,.10);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.mpr-gen-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 6px 16px rgba(15,118,110,.26);
+}
+.mpr-gen-btn:active:not(:disabled) { transform: translateY(0); }
+.mpr-gen-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.mpr-summary-body { padding: 18px 22px 16px; }
+
+/* The single large field that replaced the task table. */
+.mpr-summary-text {
+  width: 100%;
+  /* Sized for what actually goes in here: the AI drafts 200–350 words, and the
+     employee then edits it. At 260px that arrived pre-scrolled, which made a
+     substantial summary feel cramped and discouraged editing. This fits a full
+     draft without scrolling on a laptop; `vh` lets it breathe on larger screens
+     and `resize: vertical` still lets anyone drag it further. */
+  min-height: clamp(360px, 46vh, 620px);
+  resize: vertical;
+  padding: 20px 22px;
+  border: 1.5px solid var(--mpr-line);
+  border-radius: 13px;
+  /* Very faint tint rather than pure white — less glare over a long read, and it
+     reads as a deliberate writing surface next to the white card. */
+  background: #fcfdfe;
+  font-family: inherit;
+  font-size: 14.75px;
+  line-height: 1.82;
+  letter-spacing: .05px;
+  color: var(--mpr-ink);
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 2px rgba(16,32,52,.035);
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+.mpr-summary-text:hover:not(:disabled):not(:focus) {
+  border-color: #cfdae6;
+}
+.mpr-summary-text:focus {
+  outline: none;
+  border-color: var(--mpr-accent-2);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(20,184,166,.14), inset 0 1px 2px rgba(16,32,52,.03);
+}
+.mpr-summary-text:disabled {
+  background: #f6f8fb;
+  color: #475569;
+  cursor: default;
+}
+.mpr-summary-text::placeholder { color: #94a3b8; }
+
+.mpr-summary-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  /* Matches the textarea's height so the card does not jump when the crane
+     appears and again when the draft replaces it. */
+  min-height: clamp(360px, 46vh, 620px);
+  border: 1.5px dashed var(--mpr-line);
+  border-radius: 13px;
+  background: #fcfdfe;
+}
+
+/* ══ AI SUMMARY — modernised shell ══════════════════════════════════════════
+   Everything below is additive: it restyles the header orb, adds the empty
+   state, the provenance chips and the length meter. The textarea's own sizing
+   rules above are untouched, so the box keeps the height it had. */
+
+/* ── Header orb: pulsing halo + a dot orbiting the wand ───────────────────── */
+.mpr-summary-icon { position: relative; overflow: visible; }
+.mpr-summary-icon i { position: relative; z-index: 2; }
+
+.mpr-orb-ring {
+  position: absolute; inset: -5px;
+  border-radius: 14px;
+  border: 1.5px solid var(--mpr-accent-2, #14b8a6);
+  opacity: 0;
+  animation: mprOrbRing 2.8s ease-out infinite;
+}
+@keyframes mprOrbRing {
+  0%   { transform: scale(.82); opacity: .55; }
+  70%  { transform: scale(1.28); opacity: 0; }
+  100% { transform: scale(1.28); opacity: 0; }
+}
+
+.mpr-orb-dot {
+  position: absolute; top: 50%; left: 50%;
+  width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,.95);
+  /* Two-part transform: the wrapper angle spins, the offset pushes the dot out
+     to the orbit radius. Animating rotate on a translated element is what makes
+     it circle rather than wobble. */
+  animation: mprOrbit 3.4s linear infinite;
+  transform-origin: 2.5px 2.5px;
+}
+@keyframes mprOrbit {
+  from { transform: rotate(0deg)   translateX(23px); }
+  to   { transform: rotate(360deg) translateX(23px); }
+}
+
+/* While the API call is in flight the orb speeds up — a free progress cue */
+.mpr-summary-icon.is-busy .mpr-orb-dot  { animation-duration: 1.1s; }
+.mpr-summary-icon.is-busy .mpr-orb-ring { animation-duration: 1.2s; }
+.mpr-summary-icon.is-busy i             { animation: mprWandBuzz .9s ease-in-out infinite; }
+@keyframes mprWandBuzz {
+  0%,100% { transform: rotate(-8deg) scale(1); }
+  50%     { transform: rotate(8deg)  scale(1.1); }
+}
+
+/* ── "AI assisted" pill ──────────────────────────────────────────────────── */
+.mpr-summary-h3row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Every declaration marked (a) below exists to escape the global h1-h6 gradient
+   text rule in styles.css. The pill sits next to a heading and previously inside
+   one; without these it renders as a coloured capsule with invisible text.
+   styles.css:90 has the same opt-out for buttons — this is a known trap here. */
+.mpr-ai-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  white-space: nowrap;
+  color: #fff;
+  -webkit-text-fill-color: #fff;                    /* (a) paint the glyphs */
+  -webkit-background-clip: border-box;              /* (a) gradient fills the pill, */
+  background-clip: border-box;                      /* (a) not the letters */
+  background-image: linear-gradient(110deg, #0d9488, #4f46e5, #0d9488);
+  background-size: 220% 100%;
+  box-shadow: 0 2px 8px rgba(79,70,229,.30);
+  animation: mprPillFlow 5s linear infinite;
+}
+/* Children inherit the transparent fill too, so restate it. */
+.mpr-ai-pill i,
+.mpr-ai-pill span { -webkit-text-fill-color: #fff; color: #fff; }
+.mpr-ai-pill i { font-size: 9.5px; opacity: .95; }
+@keyframes mprPillFlow {
+  from { background-position: 0% 50%; }
+  to   { background-position: 220% 50%; }
+}
+
+/* Empty-state headline: same opt-out, so the colours set here (and the dark-theme
+   override further down) actually take effect instead of being overruled by the
+   global heading gradient. */
+.mpr-summary-empty h4 {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+}
+
+/* ── Generate button: travelling sheen ───────────────────────────────────── */
+.mpr-gen-btn { position: relative; overflow: hidden; }
+.mpr-gen-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 25%, rgba(255,255,255,.42) 50%, transparent 75%);
+  transform: translateX(-100%);
+  animation: mprBtnSheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes mprBtnSheen {
+  0%       { transform: translateX(-100%); }
+  45%,100% { transform: translateX(100%); }
+}
+.mpr-gen-btn.is-busy::after { animation-duration: 1.1s; }
+
+.mpr-gen-btn--lg { padding: 12px 22px; font-size: 13.75px; border-radius: 11px; }
+
+/* ── Field wrapper, so the empty state can sit over the textarea ──────────── */
+.mpr-summary-field { position: relative; }
+
+/* ══ SUMMARY AS POINTS ══════════════════════════════════════════════════════
+   The AI returns a bullet list ('- ' per line) rather than prose, so both the
+   editable and the read-only views are laid out for lines rather than a wall of
+   text. */
+
+/* Editing view: give each line room to be read as a discrete point. A prose
+   line-height crams bullets together and they stop looking like a list. */
+.mpr-summary-text.is-list {
+  line-height: 1.85;
+  /* Hanging indent so a point that wraps stays visually attached to its dash
+     instead of lining up under the next one. */
+  padding-left: 20px;
+  text-indent: -12px;
+}
+
+/* Read-only view: a real list, not a greyed-out disabled textarea. This is what
+   the HOD reads while scoring. */
+.mpr-summary-read {
+  min-height: clamp(360px, 46vh, 620px);
+  max-height: clamp(360px, 46vh, 620px);
+  overflow-y: auto;
+  padding: 18px 20px;
+  border: 1.5px solid var(--mpr-line, #e4eaf1);
+  border-radius: 13px;
+  background: #fcfdfe;
+}
+.mpr-summary-read--empty { background: #f8fafc; border-style: dashed; }
+
+.mpr-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 9px 4px;
+  border-bottom: 1px solid #f1f5f9;
+  animation: mprPointIn .3s cubic-bezier(.2,.8,.3,1) both;
+}
+.mpr-point:last-child { border-bottom: none; }
+
+@keyframes mprPointIn {
+  from { opacity: 0; transform: translateX(-7px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.mpr-point-dot {
+  flex-shrink: 0;
+  width: 7px; height: 7px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
+  box-shadow: 0 0 0 3px rgba(20,184,166,.13);
+}
+
+.mpr-point-text {
+  font-size: 14.25px;
+  line-height: 1.62;
+  color: var(--mpr-ink, #14293d);
+  /* Long point text must wrap, not push the card sideways */
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.mpr-summary-read.is-revealing { animation: mprTextReveal .9s cubic-bezier(.2,.7,.3,1) both; }
+
+:host-context(.dark-theme) .mpr-summary-read {
+  background: #131c2b; border-color: #334155;
+}
+:host-context(.dark-theme) .mpr-summary-read--empty { background: #111a27; }
+:host-context(.dark-theme) .mpr-point { border-bottom-color: #1e293b; }
+:host-context(.dark-theme) .mpr-point-text { color: #e2e8f0; }
+
+@media (max-width: 768px) {
+  .mpr-summary-read {
+    min-height: clamp(260px, 48vh, 400px);
+    max-height: clamp(260px, 48vh, 400px);
+    padding: 14px 15px;
+  }
+  .mpr-point-text { font-size: 13.5px; }
+  .mpr-summary-text.is-list { line-height: 1.75; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpr-point, .mpr-summary-read.is-revealing { animation: none; }
+}
+
+/* Fresh AI text arriving: unblur + settle, so it reads as "just generated" */
+.mpr-summary-text.is-revealing { animation: mprTextReveal .9s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes mprTextReveal {
+  from { filter: blur(5px); opacity: .25; transform: translateY(5px); }
+  to   { filter: blur(0);   opacity: 1;   transform: translateY(0); }
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.mpr-summary-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px;
+  padding: 26px;
+  text-align: center;
+  border-radius: 13px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(20,184,166,.09), transparent 62%),
+    #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+}
+.mpr-summary-empty h4 {
+  margin: 12px 0 0;
+  font-size: 16px; font-weight: 700; color: var(--mpr-ink, #14293d);
+}
+.mpr-summary-empty p {
+  margin: 5px 0 0; max-width: 46ch;
+  font-size: 13px; line-height: 1.6; color: var(--mpr-muted, #64748b);
+}
+.mpr-empty-actions {
+  margin-top: 18px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+}
+
+.mpr-write-link {
+  border: none; background: none; padding: 4px 2px;
+  font-family: inherit; font-size: 12.75px; font-weight: 600;
+  color: var(--mpr-muted, #64748b);
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; transition: color .18s ease;
+}
+.mpr-write-link:hover { color: var(--mpr-accent, #0f766e); }
+
+/* Big orb with three sparks drifting off it */
+.mpr-empty-orb {
+  position: relative;
+  width: 62px; height: 62px; border-radius: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 24px; color: #fff;
+  background: linear-gradient(135deg, #14b8a6, #6366f1);
+  box-shadow: 0 12px 30px rgba(99,102,241,.30);
+  animation: mprEmptyFloat 3.6s ease-in-out infinite;
+}
+@keyframes mprEmptyFloat {
+  0%,100% { transform: translateY(0)    rotate(-2deg); }
+  50%     { transform: translateY(-7px) rotate(2deg); }
+}
+.mpr-empty-orb--quiet {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  box-shadow: 0 10px 24px rgba(100,116,139,.24);
+  animation: none;
+}
+
+.mpr-empty-spark {
+  position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  background: #fbbf24; opacity: 0;
+  animation: mprSpark 2.6s ease-in-out infinite;
+}
+.mpr-empty-spark.s1 { top: -6px;  right: 4px;   animation-delay: 0s; }
+.mpr-empty-spark.s2 { bottom: -4px; left: -6px; animation-delay: .85s; background: #22d3ee; }
+.mpr-empty-spark.s3 { top: 18px;  right: -8px;  animation-delay: 1.7s; background: #a78bfa; }
+@keyframes mprSpark {
+  0%   { opacity: 0; transform: scale(.4) translate(0,0); }
+  35%  { opacity: 1; transform: scale(1.25) translate(3px,-5px); }
+  100% { opacity: 0; transform: scale(.4) translate(7px,-13px); }
+}
+
+/* ── Skeleton lines shown under the crane while generating ───────────────── */
+.mpr-skeleton { width: min(560px, 78%); display: flex; flex-direction: column; gap: 10px; }
+.mpr-skeleton span {
+  height: 10px; border-radius: 999px;
+  background: linear-gradient(90deg, #e8eef4 25%, #f4f8fb 50%, #e8eef4 75%);
+  background-size: 220% 100%;
+  animation: mprSkeleton 1.5s linear infinite;
+}
+.mpr-skeleton span:nth-child(2) { animation-delay: .12s; }
+.mpr-skeleton span:nth-child(3) { animation-delay: .24s; }
+.mpr-skeleton span:nth-child(4) { animation-delay: .36s; }
+@keyframes mprSkeleton {
+  from { background-position: 220% 0; }
+  to   { background-position: -20% 0; }
+}
+
+/* ── Provenance chips ────────────────────────────────────────────────────── */
+.mpr-summary-footleft { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-width: 0; }
+
+.mpr-prov-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; color: var(--mpr-accent, #0f766e); white-space: nowrap;
+}
+.mpr-prov-chips { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.mpr-prov-chip {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11.5px; color: #0f766e;
+  background: rgba(20,184,166,.11);
+  border: 1px solid rgba(20,184,166,.24);
+  animation: mprChipIn .34s cubic-bezier(.2,.8,.3,1) both;
+}
+.mpr-prov-chip b { font-size: 12.5px; font-weight: 800; }
+.mpr-prov-chip--period { color: #4f46e5; background: rgba(99,102,241,.10); border-color: rgba(99,102,241,.24); }
+@keyframes mprChipIn {
+  from { opacity: 0; transform: translateY(6px) scale(.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Length meter ────────────────────────────────────────────────────────── */
+.mpr-summary-meter {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+  flex-shrink: 0; min-width: 168px;
+}
+.mpr-meter-text { font-size: 11.5px; font-weight: 600; color: #94a3b8; white-space: nowrap; }
+.mpr-summary-meter.is-short .mpr-meter-text { color: #ea580c; }
+.mpr-summary-meter.is-ok    .mpr-meter-text { color: #059669; }
+
+.mpr-meter-bar {
+  width: 100%; height: 4px; border-radius: 999px;
+  background: #eef2f7; overflow: hidden;
+}
+.mpr-meter-fill {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #fbbf24, #f97316);
+  transition: width .3s ease, background .3s ease;
+}
+.mpr-summary-meter.is-ok .mpr-meter-fill { background: linear-gradient(90deg, #34d399, #059669); }
+
+/* ── Dark theme ──────────────────────────────────────────────────────────── */
+:host-context(.dark-theme) .mpr-summary-empty {
+  background: radial-gradient(120% 90% at 50% 0%, rgba(20,184,166,.10), transparent 62%), #131c2b;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .mpr-summary-empty h4 { color: #e2e8f0; }
+:host-context(.dark-theme) .mpr-summary-empty p  { color: #94a3b8; }
+:host-context(.dark-theme) .mpr-meter-bar        { background: #334155; }
+:host-context(.dark-theme) .mpr-skeleton span {
+  background: linear-gradient(90deg, #1e293b 25%, #263449 50%, #1e293b 75%);
+  background-size: 220% 100%;
+}
+:host-context(.dark-theme) .mpr-prov-chip { color: #5eead4; background: rgba(20,184,166,.14); border-color: rgba(20,184,166,.30); }
+:host-context(.dark-theme) .mpr-prov-chip--period { color: #a5b4fc; background: rgba(99,102,241,.16); border-color: rgba(99,102,241,.32); }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mpr-summary-empty h4 { font-size: 14.5px; }
+  .mpr-summary-empty p  { font-size: 12.25px; }
+  .mpr-empty-orb { width: 52px; height: 52px; font-size: 20px; }
+  .mpr-empty-actions { flex-direction: column; gap: 10px; width: 100%; }
+  .mpr-gen-btn--lg { width: 100%; justify-content: center; }
+  .mpr-summary-meter { align-items: flex-start; width: 100%; min-width: 0; }
+}
+@media (max-width: 480px) {
+  .mpr-ai-pill { font-size: 9px; }
+  .mpr-skeleton { width: 88%; }
+}
+
+/* ── Reduced motion: everything above is decorative ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mpr-orb-ring, .mpr-orb-dot, .mpr-summary-icon.is-busy i,
+  .mpr-ai-pill, .mpr-gen-btn::after, .mpr-empty-orb, .mpr-empty-spark,
+  .mpr-skeleton span, .mpr-prov-chip, .mpr-summary-text.is-revealing {
+    animation: none;
+  }
+  .mpr-orb-ring, .mpr-orb-dot, .mpr-empty-spark, .mpr-gen-btn::after { opacity: 0; }
+}
+
+.mpr-summary-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.mpr-summary-prov,
+.mpr-summary-hint {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 74ch;
+}
+.mpr-summary-prov { color: var(--mpr-accent); font-weight: 600; }
+.mpr-summary-prov i { margin-top: 2px; }
+.mpr-summary-prov--warn { color: #b45309; }
+.mpr-summary-hint { color: var(--mpr-muted); }
+.mpr-summary-hint i { margin-top: 2px; opacity: .8; }
+.mpr-summary-count { color: #94a3b8; white-space: nowrap; }
+
+/* Dark theme */
+:host-context(.dark-theme) .mpr-summary-head {
+  background: linear-gradient(180deg, rgba(20,184,166,.10), transparent);
+}
+:host-context(.dark-theme) .mpr-summary-text {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.22);
+}
+:host-context(.dark-theme) .mpr-summary-text:hover:not(:disabled):not(:focus) {
+  border-color: #415571;
+}
+:host-context(.dark-theme) .mpr-summary-text:focus {
+  background: #111c31;
+  box-shadow: 0 0 0 3px rgba(20,184,166,.18), inset 0 1px 2px rgba(0,0,0,.2);
+}
+:host-context(.dark-theme) .mpr-summary-loading {
+  background: #0f172a;
+  border-color: #334155;
+}
+:host-context(.dark-theme) .mpr-summary-text:disabled {
+  background: #172033;
+  color: #94a3b8;
+}
+:host-context(.dark-theme) .mpr-summary-prov { color: #5eead4; }
+:host-context(.dark-theme) .mpr-summary-prov--warn { color: #fbbf24; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mpr-summary-head { padding: 14px 16px; }
+  .mpr-summary-body { padding: 14px 16px 14px; }
+  .mpr-summary-text {
+    min-height: clamp(300px, 52vh, 480px);
+    font-size: 14px;
+    line-height: 1.78;
+    padding: 16px 17px;
+  }
+  .mpr-summary-loading { min-height: clamp(300px, 52vh, 480px); }
+  .mpr-gen-btn { width: 100%; justify-content: center; }
+}
+@media (max-width: 480px) {
+  .mpr-summary-title h3 { font-size: 14.5px; }
+  .mpr-summary-title p { font-size: 11.5px; }
+  .mpr-summary-icon { width: 32px; height: 32px; font-size: 13px; }
+  .mpr-summary-text { min-height: clamp(260px, 48vh, 400px); font-size: 13.75px; }
+  .mpr-summary-loading { min-height: clamp(260px, 48vh, 400px); }
+  .mpr-summary-foot { flex-direction: column; gap: 6px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HOD EVALUATION — department ranking panel
+   Visible to the department's HOD (editable review) and to CED (read-only).
+   Rows re-order live as the Overall Score is typed; the movement is CSS only,
+   driven by Angular re-rendering the @for in the new order.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Five inputs now, not seven — let them breathe */
+.mpr-eval-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.eval-item--overall .rating-input {
+  border-color: var(--mpr-accent-2, #14b8a6);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, .12);
+  font-weight: 700;
+}
+
+.mpr-rank-panel {
+  margin-top: 22px;
+  background: var(--mpr-surface, #fff);
+  border: 1px solid var(--mpr-line, #e4eaf1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.mpr-rank-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mpr-line, #e4eaf1);
+  background: #f8fafc;
+}
+.mpr-rank-title { display: flex; align-items: center; gap: 9px; font-weight: 700; color: var(--mpr-ink, #14293d); font-size: 14.5px; }
+.mpr-rank-title i { color: var(--mpr-accent, #0f766e); }
+.mpr-rank-title small { font-weight: 500; color: var(--mpr-muted, #64748b); font-size: 12px; }
+
+.mpr-rank-badge {
+  padding: 5px 13px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 700; color: #fff;
+  background: #64748b;
+  transition: background-color .3s ease;
+}
+
+.mpr-rank-loading { display: flex; align-items: center; justify-content: center; padding: 26px; }
+
+.mpr-rank-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+.mpr-rank-row {
+  display: grid;
+  grid-template-columns: 34px 38px minmax(0, 1.5fr) minmax(90px, 2fr) 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  /* the reorder animation: rows slide rather than jump when the sort changes */
+  animation: mprRankIn .28s ease-out both;
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+.mpr-rank-row:hover { background: #f8fafc; }
+
+@keyframes mprRankIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* the employee being reviewed */
+.mpr-rank-row.is-current {
+  background: rgba(20, 184, 166, .07);
+  border-color: rgba(15, 118, 110, .28);
+  box-shadow: 0 1px 3px rgba(15, 118, 110, .10);
+}
+
+.mpr-rank-pos {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12.5px; font-weight: 800; color: #fff; background: #94a3b8;
+}
+.mpr-rank-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  object-fit: cover; background: #eef2f7; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #e2e8f0;
+}
+.mpr-rank-who { display: flex; flex-direction: column; min-width: 0; }
+.mpr-rank-name {
+  font-size: 13.5px; font-weight: 600; color: var(--mpr-ink, #14293d);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mpr-rank-you {
+  font-style: normal; font-size: 10.5px; font-weight: 700;
+  color: var(--mpr-accent, #0f766e); background: rgba(20,184,166,.14);
+  padding: 1px 7px; border-radius: 999px; margin-left: 7px;
+}
+.mpr-rank-desig {
+  font-size: 11.5px; color: var(--mpr-muted, #64748b);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.mpr-rank-bar { height: 7px; border-radius: 999px; background: #eef2f7; overflow: hidden; }
+.mpr-rank-bar-fill { height: 100%; border-radius: 999px; background: #94a3b8; transition: width .35s ease, background-color .3s ease; }
+
+.mpr-rank-score { font-size: 14px; font-weight: 800; text-align: right; color: var(--mpr-ink, #14293d); }
+
+.mpr-rank-empty {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 30px 18px; color: var(--mpr-muted, #64748b); font-size: 13px;
+}
+.mpr-rank-empty i { font-size: 18px; color: #cbd5e1; }
+
+/* ══ BAND PALETTE ═══════════════════════════════════════════════════════════════
+   Own class names (mpr-b-*), NOT the rating-* ones.
+
+   The previous version passed getRatingClass() through, which yields
+   'rating-average' etc. Those class names already exist near the top of this file
+   for the legacy badge widget and carry BOTH a dark gradient and `border: 3px
+   solid`. Every element here inherited them: a 3px dark border on a 7px-tall
+   progress bar IS the whole bar, which is why the bars, the score chip and the
+   band heading all rendered as near-black blocks. Namespacing fixes it at the
+   root instead of fighting it with overrides.
+
+   Ramp is a real red→green progression so a low score is legible at a glance
+   rather than being another shade of teal. */
+.mpr-rank-pos.mpr-b-poor,  .mpr-rank-bar-fill.mpr-b-poor,  .mpr-rank-badge.mpr-b-poor  { background: linear-gradient(135deg, #fb7185, #e11d48); }
+.mpr-rank-pos.mpr-b-below, .mpr-rank-bar-fill.mpr-b-below, .mpr-rank-badge.mpr-b-below { background: linear-gradient(135deg, #fbbf24, #f97316); }
+.mpr-rank-pos.mpr-b-avg,   .mpr-rank-bar-fill.mpr-b-avg,   .mpr-rank-badge.mpr-b-avg   { background: linear-gradient(135deg, #38bdf8, #0284c7); }
+.mpr-rank-pos.mpr-b-good,  .mpr-rank-bar-fill.mpr-b-good,  .mpr-rank-badge.mpr-b-good  { background: linear-gradient(135deg, #34d399, #059669); }
+.mpr-rank-pos.mpr-b-top,   .mpr-rank-bar-fill.mpr-b-top,   .mpr-rank-badge.mpr-b-top   { background: linear-gradient(135deg, #22d3ee, #6366f1); }
+
+/* Matching glow so the position pill reads as a medal, not a flat dot */
+.mpr-rank-pos.mpr-b-poor  { box-shadow: 0 2px 7px rgba(225,  29,  72, .34); }
+.mpr-rank-pos.mpr-b-below { box-shadow: 0 2px 7px rgba(249, 115,  22, .34); }
+.mpr-rank-pos.mpr-b-avg   { box-shadow: 0 2px 7px rgba(  2, 132, 199, .34); }
+.mpr-rank-pos.mpr-b-good  { box-shadow: 0 2px 7px rgba(  5, 150, 105, .34); }
+.mpr-rank-pos.mpr-b-top   { box-shadow: 0 2px 9px rgba( 99, 102, 241, .40); }
+
+.mpr-rank-badge.mpr-b-poor  { box-shadow: 0 3px 10px rgba(225,  29,  72, .30); }
+.mpr-rank-badge.mpr-b-below { box-shadow: 0 3px 10px rgba(249, 115,  22, .30); }
+.mpr-rank-badge.mpr-b-avg   { box-shadow: 0 3px 10px rgba(  2, 132, 199, .30); }
+.mpr-rank-badge.mpr-b-good  { box-shadow: 0 3px 10px rgba(  5, 150, 105, .30); }
+.mpr-rank-badge.mpr-b-top   { box-shadow: 0 3px 12px rgba( 99, 102, 241, .36); }
+
+.mpr-rank-score.mpr-b-poor  { color: #e11d48; }
+.mpr-rank-score.mpr-b-below { color: #ea580c; }
+.mpr-rank-score.mpr-b-avg   { color: #0284c7; }
+.mpr-rank-score.mpr-b-good  { color: #059669; }
+.mpr-rank-score.mpr-b-top   { color: #4f46e5; }
+
+/* A 0 score must not paint a full-width bar or a loud "poor" chip — nothing has
+   been entered yet, so it should read as neutral. */
+.mpr-rank-bar-fill { min-width: 0; }
+
+/* ── Animated sheen travelling along each filled bar ───────────────────────── */
+.mpr-rank-bar-fill { position: relative; overflow: hidden; }
+.mpr-rank-sheen {
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg,
+              rgba(255,255,255,0) 20%,
+              rgba(255,255,255,.55) 50%,
+              rgba(255,255,255,0) 80%);
+  transform: translateX(-100%);
+  animation: mprSheen 2.6s ease-in-out infinite;
+}
+@keyframes mprSheen {
+  0%       { transform: translateX(-100%); }
+  55%,100% { transform: translateX(100%); }
+}
+
+/* Rank 1 — a slow breathing halo, so the top of the list draws the eye */
+.mpr-rank-row.is-first .mpr-rank-pos { animation: mprCrown 2.4s ease-in-out infinite; }
+@keyframes mprCrown {
+  0%,100% { transform: scale(1);    filter: brightness(1); }
+  50%     { transform: scale(1.09); filter: brightness(1.16); }
+}
+
+/* Row hover lift */
+.mpr-rank-row:hover { transform: translateX(3px); }
+
+/* The employee under review gets a moving accent edge so it stays findable in a
+   long department list */
+.mpr-rank-row.is-current::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #22d3ee, #6366f1, #22d3ee);
+  background-size: 100% 300%;
+  animation: mprEdge 3s linear infinite;
+}
+.mpr-rank-row { position: relative; }
+@keyframes mprEdge {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 0% 300%; }
+}
+
+/* ── Header toggle ────────────────────────────────────────────────────────── */
+.mpr-rank-head { cursor: pointer; user-select: none; transition: background-color .2s ease; }
+.mpr-rank-head:hover { background: #f1f5f9; }
+.mpr-rank-head:focus-visible { outline: 2px solid var(--mpr-accent, #0f766e); outline-offset: -2px; }
+
+.mpr-rank-head-right { display: flex; align-items: center; gap: 10px; }
+
+.mpr-rank-count {
+  font-size: 11.5px; font-weight: 600; color: var(--mpr-muted, #64748b);
+  background: #eef2f7; padding: 3px 9px; border-radius: 999px;
+}
+
+.mpr-rank-chev {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--mpr-line, #e4eaf1);
+  background: #fff; color: var(--mpr-muted, #64748b);
+  border-radius: 8px; cursor: pointer; padding: 0;
+  /* The icon is chevron-DOWN, so closed points right and open points down. */
+  transform: rotate(-90deg);
+  transition: transform .28s cubic-bezier(.25,.8,.25,1), background-color .2s ease, color .2s ease;
+}
+.mpr-rank-chev.is-open { transform: rotate(0deg); }
+.mpr-rank-chev:hover { background: var(--mpr-accent, #0f766e); border-color: var(--mpr-accent, #0f766e); color: #fff; }
+.mpr-rank-chev i { font-size: 11px; }
+
+/* When folded the panel is just the header — drop the divider so it reads as one
+   solid bar rather than a header with an empty body under it. */
+.mpr-rank-panel.is-closed .mpr-rank-head { border-bottom: none; }
+
+:host-context(.dark-theme) .mpr-rank-head:hover { background: #1d2839; }
+:host-context(.dark-theme) .mpr-rank-chev {
+  background: #1e293b; border-color: #334155; color: #94a3b8;
+}
+:host-context(.dark-theme) .mpr-rank-count { background: #1e293b; color: #94a3b8; }
+
+/* Respect the OS reduced-motion setting — the loops above are decorative */
+@media (prefers-reduced-motion: reduce) {
+  .mpr-rank-sheen,
+  .mpr-rank-row.is-first .mpr-rank-pos,
+  .mpr-rank-row.is-current::before { animation: none; }
+  .mpr-rank-sheen { opacity: 0; }
+  .mpr-rank-row:hover { transform: none; }
+}
+
+/* Dark theme */
+:host-context(.dark-theme) .mpr-rank-head  { background: #172033; }
+:host-context(.dark-theme) .mpr-rank-row:hover { background: #243449; }
+:host-context(.dark-theme) .mpr-rank-row.is-current {
+  background: rgba(20,184,166,.13); border-color: rgba(20,184,166,.34);
+}
+:host-context(.dark-theme) .mpr-rank-bar { background: #334155; }
+:host-context(.dark-theme) .mpr-rank-avatar { border-color: #1e293b; box-shadow: 0 0 0 1px #334155; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mpr-rank-row { grid-template-columns: 28px 32px minmax(0, 1fr) 46px; gap: 9px; }
+  .mpr-rank-bar { display: none; }              /* score + position carry it on small screens */
+  .mpr-rank-desig { display: none; }
+}
+@media (max-width: 480px) {
+  .mpr-rank-head { padding: 12px 14px; }
+  .mpr-rank-title { font-size: 13.5px; }
+  .mpr-rank-name { font-size: 12.5px; }
+}
+
+
+/* ── Ranking rows: the four criteria behind each score ─────────────────────── */
+.mpr-rank-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+.mpr-crit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #475569;
+  font-variant-numeric: tabular-nums;   /* stops the row twitching as digits change */
+  white-space: nowrap;
+}
+.mpr-crit b {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+/* the row being edited — criteria track the inputs live, so make them read as active */
+.mpr-rank-row.is-current .mpr-crit {
+  background: rgba(20, 184, 166, .12);
+  border-color: rgba(15, 118, 110, .26);
+  color: var(--mpr-accent, #0f766e);
+}
+.mpr-rank-row.is-current .mpr-crit b { color: rgba(15, 118, 110, .70); }
+
+:host-context(.dark-theme) .mpr-crit {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+:host-context(.dark-theme) .mpr-crit b { color: #94a3b8; }
+:host-context(.dark-theme) .mpr-rank-row.is-current .mpr-crit {
+  background: rgba(20, 184, 166, .18);
+  border-color: rgba(20, 184, 166, .36);
+  color: #5eead4;
+}
+
+/* Give the name column more room now that it carries the criteria too */
+.mpr-rank-row { grid-template-columns: 34px 38px minmax(0, 2.1fr) minmax(80px, 1.3fr) 52px; }
+
+@media (max-width: 768px) {
+  .mpr-rank-row { grid-template-columns: 28px 32px minmax(0, 1fr) 46px; }
+  .mpr-rank-criteria { gap: 4px; }
+  .mpr-crit { font-size: 10px; padding: 1px 5px; }
+}
+@media (max-width: 480px) {
+  /* four chips wrap badly at this width — keep the two combined ones, which are
+     the pair the HOD actually enters */
+  .mpr-crit:nth-child(n+3) { display: none; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESULT CARD  (replaces .overall-rating-card)
+   Outcome only — gauge, band, description, scale. The four criteria live in the
+   inputs above and in the ranking chips; showing them a third time here was the
+   duplication being removed.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.mpr-result {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding: 24px 28px;
+  background: var(--mpr-surface, #fff);
+  border: 1px solid var(--mpr-line, #e4eaf1);
+  border-radius: 16px;
+  box-shadow: var(--mpr-shadow, 0 8px 24px rgba(16,32,52,.06));
+  animation: mprResultIn .42s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes mprResultIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Gauge ─────────────────────────────────────────────────────────────── */
+.mpr-result-gauge { position: relative; width: 132px; height: 132px; flex-shrink: 0; }
+.mpr-gauge-svg { width: 132px; height: 132px; transform: rotate(-90deg); }
+.mpr-gauge-track {
+  fill: none; stroke: #eef2f7; stroke-width: 11;
+}
+.mpr-gauge-fill {
+  fill: none;
+  stroke-width: 11;
+  stroke-linecap: round;
+  stroke: #94a3b8;
+  stroke-dasharray: 352;                 /* 2*pi*56 */
+  /* the fill sweeps round as the HOD types */
+  transition: stroke-dashoffset .55s cubic-bezier(.3,.8,.3,1), stroke .3s ease;
+}
+/* Gauge ring — same ramp as the ranking bands. `border`/`background` from the old
+   rating-* rules never showed on an SVG stroke, which is why the ring was the one
+   part of this card that looked right; it is renamed anyway so the whole card is
+   driven by one palette. */
+.mpr-gauge-fill.mpr-b-poor  { stroke: #e11d48; }
+.mpr-gauge-fill.mpr-b-below { stroke: #f97316; }
+.mpr-gauge-fill.mpr-b-avg   { stroke: #0284c7; }
+.mpr-gauge-fill.mpr-b-good  { stroke: #059669; }
+.mpr-gauge-fill.mpr-b-top   { stroke: #6366f1; }
+
+/* Soft coloured halo behind the ring.
+   `isolation` matters: without it the z-index:-1 pseudo-element escapes to the
+   card's stacking context and paints BEHIND .mpr-result's own background, i.e.
+   invisible. Isolating keeps it inside the gauge, which has no background of its
+   own, so the blur shows through.
+   The :has() selector must name .mpr-result-band specifically — the band scale
+   inside this same card hard-codes all five mpr-b-* classes, so a bare
+   :has(.mpr-b-poor) would match every card regardless of score. */
+.mpr-result-gauge { isolation: isolate; }
+.mpr-result-gauge::after {
+  content: ''; position: absolute; inset: 12px; border-radius: 50%;
+  z-index: -1; opacity: .45; filter: blur(14px);
+  transition: background-color .4s ease;
+}
+.mpr-result:has(.mpr-result-band.mpr-b-poor)  .mpr-result-gauge::after { background: #fb7185; }
+.mpr-result:has(.mpr-result-band.mpr-b-below) .mpr-result-gauge::after { background: #fbbf24; }
+.mpr-result:has(.mpr-result-band.mpr-b-avg)   .mpr-result-gauge::after { background: #38bdf8; }
+.mpr-result:has(.mpr-result-band.mpr-b-good)  .mpr-result-gauge::after { background: #34d399; }
+.mpr-result:has(.mpr-result-band.mpr-b-top)   .mpr-result-gauge::after { background: #818cf8; }
+
+.mpr-gauge-centre {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1px;
+}
+.mpr-gauge-score {
+  font-size: 34px; font-weight: 800; line-height: 1;
+  color: var(--mpr-ink, #14293d);
+  font-variant-numeric: tabular-nums;
+}
+.mpr-gauge-of { font-size: 11px; font-weight: 600; color: var(--mpr-muted, #64748b); }
+
+/* ── Body ──────────────────────────────────────────────────────────────── */
+.mpr-result-body { flex: 1 1 320px; min-width: 0; }
+
+.mpr-result-eyebrow {
+  display: block;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--mpr-muted, #64748b);
+  margin-bottom: 4px;
+}
+.mpr-result-band {
+  margin: 0 0 6px;
+  font-size: 24px; font-weight: 800; letter-spacing: -.3px;
+  color: var(--mpr-ink, #14293d);
+  transition: color .3s ease;
+}
+/* This heading is the element that showed as a full-width black bar: it had only
+   `color` set, so the gradient + 3px border from the global .rating-average rule
+   painted straight over it and swallowed the text. Under its own class name there
+   is no inherited background at all — but the resets stay as belt-and-braces in
+   case another global .rating-* style is ever added. */
+/* This is an <h3>, and styles.css:65 gives EVERY h1-h6
+       background: var(--text-gradient); -webkit-text-fill-color: transparent;
+   so the glyphs are painted only by the gradient clipped to them. Setting
+   `background: none` here to shed the legacy .rating-* gradient therefore left
+   transparent text on nothing — the band label vanished completely.
+   Opting out of text-fill is mandatory, not cosmetic. currentColor makes it
+   follow the .mpr-b-* colour below automatically. */
+.mpr-result-band {
+  background: none; border: none; padding: 0;
+  -webkit-text-fill-color: currentColor;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+}
+.mpr-result-band.mpr-b-poor  { color: #e11d48; }
+.mpr-result-band.mpr-b-below { color: #ea580c; }
+.mpr-result-band.mpr-b-avg   { color: #0284c7; }
+.mpr-result-band.mpr-b-good  { color: #059669; }
+.mpr-result-band.mpr-b-top   { color: #4f46e5; }
+
+.mpr-result-desc {
+  margin: 0 0 18px;
+  font-size: 13.5px; line-height: 1.6;
+  color: var(--mpr-muted, #64748b);
+  max-width: 62ch;
+}
+
+/* ── Band scale (replaces the old 1-5 legend) ──────────────────────────── */
+.mpr-scale-track {
+  position: relative;
+  display: flex;
+  height: 9px;
+  border-radius: 999px;
+  overflow: visible;
+  background: #eef2f7;
+}
+.mpr-scale-seg { height: 9px; }
+.mpr-scale-seg:first-child { border-radius: 999px 0 0 999px; }
+.mpr-scale-seg:last-child  { border-radius: 0 999px 999px 0; }
+/* Renamed off rating-* for the same reason as everything else in this card: those
+   globals carry `border: 3px solid`, and a 3px border on a 9px segment is what
+   made this strip look like it had heavy dark dividers. */
+.mpr-scale-seg { border: none; }
+.mpr-scale-seg.mpr-b-poor  { background: linear-gradient(90deg, #fda4af, #fb7185); }
+.mpr-scale-seg.mpr-b-below { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+.mpr-scale-seg.mpr-b-avg   { background: linear-gradient(90deg, #7dd3fc, #38bdf8); }
+.mpr-scale-seg.mpr-b-good  { background: linear-gradient(90deg, #6ee7b7, #10b981); }
+.mpr-scale-seg.mpr-b-top   { background: linear-gradient(90deg, #22d3ee, #6366f1); }
+
+.mpr-scale-marker {
+  position: absolute;
+  top: -4px;
+  width: 17px; height: 17px;
+  margin-left: -8.5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--mpr-ink, #14293d);
+  box-shadow: 0 1px 4px rgba(16,32,52,.28);
+  /* slides along the scale as the score changes */
+  transition: left .45s cubic-bezier(.3,.8,.3,1);
+}
+
+.mpr-scale-labels {
+  display: flex;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--mpr-muted, #64748b);
+  line-height: 1.35;
+}
+/* widths mirror the segment flex values so labels sit under their band */
+.mpr-scale-labels span:nth-child(1) { flex: 30; }
+.mpr-scale-labels span:nth-child(2) { flex: 20; }
+.mpr-scale-labels span:nth-child(3) { flex: 20; }
+.mpr-scale-labels span:nth-child(4) { flex: 20; }
+.mpr-scale-labels span:nth-child(5) { flex: 10; }
+.mpr-scale-labels b { font-size: 10.5px; color: #475569; font-weight: 700; }
+
+/* ── Dark theme ────────────────────────────────────────────────────────── */
+:host-context(.dark-theme) .mpr-gauge-track  { stroke: #334155; }
+:host-context(.dark-theme) .mpr-scale-track  { background: #334155; }
+:host-context(.dark-theme) .mpr-scale-seg.mpr-b-poor { background: linear-gradient(90deg, #9f1239, #e11d48); }
+:host-context(.dark-theme) .mpr-scale-marker { background: #0f172a; border-color: #e2e8f0; }
+:host-context(.dark-theme) .mpr-scale-labels b { color: #cbd5e1; }
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mpr-result { gap: 20px; padding: 20px; }
+  .mpr-result-gauge, .mpr-gauge-svg { width: 108px; height: 108px; }
+  .mpr-gauge-score { font-size: 28px; }
+  .mpr-result-band { font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .mpr-result { flex-direction: column; align-items: center; text-align: center; }
+  .mpr-result-desc { margin-bottom: 14px; }
+  /* the five stacked labels get too tight — keep the numbers, drop the words */
+  .mpr-scale-labels span { font-size: 0; }
+  .mpr-scale-labels b { font-size: 9.5px; }
 }
