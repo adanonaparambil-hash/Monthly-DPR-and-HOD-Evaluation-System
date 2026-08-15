@@ -20,6 +20,7 @@ import { layout } from './layout/layout';
 import { AuthGuard } from './guards/auth.guard';
 import { PurchaseDashboardGuard } from './guards/purchase-dashboard.guard';
 import { LogAnalyticsGuard } from './guards/log-analytics.guard';
+import { WirReportGuard } from './guards/wir-report.guard';
 import { CedDprAnalyticsGuard } from './guards/ced-dpr-analytics.guard';
 
 export const routes: Routes = [
@@ -63,6 +64,7 @@ export const routes: Routes = [
       { path: 'hod-master',          loadComponent: () => import('./hod-master/hod-master.component').then(m => m.HodMasterComponent) },
       { path: 'employee-master',     loadComponent: () => import('./employee-master/employee-master.component').then(m => m.EmployeeMasterComponent) },
       { path: 'byod-form',           loadComponent: () => import('./byod-form/byod-form.component').then(m => m.ByodFormComponent) },
+      { path: 'wir-reports',         loadComponent: () => import('./wir-report/wir-report.component').then(m => m.WirReportComponent), canActivate: [WirReportGuard] },
       {
         path: 'purchase-dashboard',
         loadComponent: () => import('./purchase-dashboard/purchase-dashboard.component').then(m => m.PurchaseDashboardComponent),

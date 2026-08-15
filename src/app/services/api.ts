@@ -8,6 +8,7 @@ import { EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notifica
 import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest, EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
 import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest,SupplierTransactionRequest } from '../models/axpertDashBoard.model';
+import { WirListRequest } from '../models/wir.model';
 
 
 @Injectable({
@@ -415,6 +416,11 @@ export class Api {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request);
   }
 
+  // Lunch monitor — who is running a timer / on break / idle during lunch
+  getLunchMonitor(request: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetLunchMonitor`, request);
+  }
+
   exportOpenBreaks(request: any): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/GetOpenBreaks`, request, {
       responseType: 'blob'
@@ -643,6 +649,20 @@ export class Api {
 
   exportCedDprDashboard(request: { fromDate: string; toDate?: string | null }): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportCedDprDashboard`, request, { responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── WIR Reports ─────────────────────────────────────────────────────────────
+
+  getWirList(request: WirListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/WIR/GetWirList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getWirPdf(docid: string): Observable<Blob> {
+    // docid goes as a query param — WIR numbers contain '/' which breaks URL paths
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/WIR/GetWirPdf`, { params, responseType: 'blob' })
       .pipe(catchError(this.handleError));
   }
 

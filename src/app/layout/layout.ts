@@ -79,8 +79,21 @@ export class layout implements OnInit, OnDestroy {
     return code === 'C';
   }
 
+  /** Non-HOD users who are still allowed the Employee Master menu (with edit) */
+  private readonly employeeMasterUsers = ['ADN3549', 'ITS48', 'ITS16', 'AIS462'];
+
+  get isEmployeeMasterUser(): boolean {
+    const id = (this.userSession?.empId ?? this.userSession?.employeeId ??
+                this.userSession?.userId ?? this.userSession?.id ?? '')
+               .toString().toUpperCase().trim();
+    return this.employeeMasterUsers.includes(id);
+  }
+
   /** Purchase Dashboard visibility — driven by getUserMenus API response */
   isPurchaseDashboardUser = false;
+
+  /** WIR Reports visibility — driven by getUserMenus API response (menu 'app-wir-report') */
+  isWirReportUser = false;
   
   /** Log Analytics visibility — accessible to all users */
   get isLogAnalyticsUser(): boolean {
@@ -128,10 +141,13 @@ export class layout implements OnInit, OnDestroy {
       next: (res: any) => {
         const menus: any[] = Array.isArray(res) ? res : (res?.data ?? []);
 
-        // Store all menus for dynamic rendering
+        // Store all menus for dynamic rendering.
+        // WIR Report is rendered as a dedicated static link (flag below), so it
+        // is excluded from the dynamic tree to avoid a duplicate entry.
         this.userMenus = menus.filter((m: any) =>
           (m.canView ?? 'Y') === 'Y' &&
-          (m.isActive ?? 'Y') === 'Y'
+          (m.isActive ?? 'Y') === 'Y' &&
+          !(m.menuUrl ?? '').toLowerCase().includes('wir-report')
         );
 
         // Build the parent/child sidebar tree
@@ -143,10 +159,18 @@ export class layout implements OnInit, OnDestroy {
           (m.canView ?? 'Y') === 'Y' &&
           (m.isActive ?? 'Y') === 'Y'
         );
+
+        // Show WIR Reports only for users whose menu list contains the app-wir-report entry
+        this.isWirReportUser = menus.some((m: any) =>
+          (m.menuUrl ?? '').toLowerCase().includes('wir-report') &&
+          (m.canView ?? 'Y') === 'Y' &&
+          (m.isActive ?? 'Y') === 'Y'
+        );
       },
       error: () => {
         // On error, default to no access (secure by default)
         this.isPurchaseDashboardUser = false;
+        this.isWirReportUser = false;
         this.userMenus = [];
         this.menuTree = [];
       }
@@ -299,8 +323,8 @@ export class layout implements OnInit, OnDestroy {
     
     // Clear DPR-only mode from sessionStorage when component is destroyed
     // (but only if we're not navigating to another DPR route)
-    const isDPRRoute = window.location.pathname.includes('/my-task') || 
-                       window.location.pathname.includes('/my-logged-hours') || 
+    const isDPRRoute = window.location.pathname.includes('/my-task') ||
+                       window.location.pathname.includes('/my-logged-hours') ||
                        window.location.pathname.includes('/log-analytics') ||
                        window.location.pathname.includes('/dpr-approval');
     
@@ -351,7 +375,8 @@ export class layout implements OnInit, OnDestroy {
       '/rejoining-form': 'Rejoining Form',
       '/exit-form': 'Exit Form',
       '/byod-form': 'BYOD Form',
-      '/purchase-dashboard': 'Purchase Dashboard'
+      '/purchase-dashboard': 'Purchase Dashboard',
+      '/wir-reports': 'WIR Reports'
     };
 
     // Strip query params and fragments before lookup
@@ -660,8 +685,8 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isDPRRouteActive(): boolean {
-    return this.currentRoute.includes('/my-task') || 
-           this.currentRoute.includes('/my-logged-hours') || 
+    return this.currentRoute.includes('/my-task') ||
+           this.currentRoute.includes('/my-logged-hours') ||
            this.currentRoute.includes('/log-analytics') ||
            this.currentRoute.includes('/dpr');
   }
@@ -1177,8 +1202,8 @@ export class layout implements OnInit, OnDestroy {
   private checkDPROnlyMode(): void {
     // Check if we're on a DPR-related route (clean the route first)
     const cleanRoute = this.currentRoute.split('?')[0].split('#')[0];
-    const isDPRRoute = cleanRoute === '/my-task' || 
-                       cleanRoute === '/my-logged-hours' || 
+    const isDPRRoute = cleanRoute === '/my-task' ||
+                       cleanRoute === '/my-logged-hours' ||
                        cleanRoute === '/log-analytics' ||
                        cleanRoute === '/dpr-approval';
     

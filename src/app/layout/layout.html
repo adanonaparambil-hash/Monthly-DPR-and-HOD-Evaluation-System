@@ -29,6 +29,11 @@
         <i class="fas fa-shopping-bag"></i> Purchase Dashboard
       </a>
 
+      <!-- WIR Reports — only for users with the app-wir-report menu entry -->
+      <a *ngIf="!isDPROnlyMode && isWirReportUser" routerLink="/wir-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+        <i class="fas fa-clipboard-check"></i> WIR Reports
+      </a>
+
       <!-- Dynamic Menu Items from API (parent → children tree) -->
       <ng-container *ngFor="let menu of menuTree">
 
@@ -185,8 +190,10 @@
         </div>
       </div>
 
-      <!-- System Master Menu with Sub-items (hidden in DPR-only mode) -->
-      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode && (isHod || isCed)">
+      <!-- System Master Menu with Sub-items (hidden in DPR-only mode).
+           Also shown to the Employee-Master whitelist (non-HOD users), who
+           only get the Employee Master item inside. -->
+      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode && (isHod || isCed || isEmployeeMasterUser)">
         <a class="parent-menu" (click)="toggleSystemMasterMenu()" [class.active]="isSystemMasterRouteActive()">
           <div class="menu-content">
             <i class="fas fa-cogs"></i>
@@ -195,7 +202,7 @@
           <i class="fas fa-chevron-down" [class.rotated]="isSystemMasterMenuOpen"></i>
         </a>
         <div class="submenu" *ngIf="isSystemMasterMenuOpen" [@slideDown]>
-          <a routerLink="/notice-management" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          <a *ngIf="isHod || isCed" routerLink="/notice-management" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="fas fa-bell"></i>
             <span>Communication Master</span>
           </a>

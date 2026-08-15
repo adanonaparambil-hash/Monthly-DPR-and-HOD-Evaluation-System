@@ -61,7 +61,23 @@
       "Bash(grep -nE \"min-width: *[0-9]{3,}px|width: *[0-9]{3,}px\" task-details-modal.component.css)",
       "Bash(grep -nE \"^\\\\.[a-z-]*title[a-z-]* *[,{]\" task-details-modal.component.css)",
       "Bash(dotnet build *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Read(//c/Users/ITS48/source/repos/TimeSheetAPI/**)",
+      "Read(//c/Users/ITS48/source/repos/TimeSheetAPI/TimeSheetAPI/**)",
+      "Bash(cd \"C:/Users/ITS48/source/repos/TimeSheetAPI/TimeSheetAPI\" && ls Controllers && echo \"===SERVICE===\" && ls Service && echo \"===INTERFACE===\" && ls Interface && echo \"===MODEL===\" && ls Model)",
+      "Bash(python -c \"import fitz; print\\('pymupdf ok', fitz.__doc__\\)\")",
+      "Bash(py -c \"import fitz; print\\('pymupdf ok'\\)\")",
+      "PowerShell(Get-Command python, py, pdftoppm, magick, gs -ErrorAction SilentlyContinue)",
+      "Bash(npm init *)",
+      "Bash(node pdftext.mjs \"C:/Users/ITS48/Downloads/prv_frx_wir.pdf\")",
+      "Bash(node pdftext.mjs \"C:/Users/ITS48/Downloads/WIR_ATC_P. 404 YRS_WIR_26613 \\(3\\).pdf\")",
+      "Bash(dotnet add *)",
+      "Bash(dotnet run *)",
+      "Bash(node pdftext.mjs \"wirtest/wir-sample.pdf\")",
+      "Bash(cp \"C:/Users/ITS48/source/repos/TimeSheetAPI/TimeSheetAPI/Service/WirPdfBuilder.cs\" Service/)",
+      "Bash(sed -i 's/\\\\[\"T1\"\\\\] = 0, \\\\[\"T2\"\\\\] = 0/[\"T1\"] = 0, [\"T2\"] = 1/' Program.cs)",
+      "Bash(sed -i 's/\\\\[\"INSAPP\"\\\\]           = \"NO\"/[\"INSAPP\"]           = \"YES\"/; s/\\\\[\"IDATE\"\\\\]            = null/[\"IDATE\"]            = \"02\\\\/01\\\\/2024 9:49:18 AM\"/; s/\\\\[\"IDESIG\"\\\\]           = null/[\"IDESIG\"]           = \"QA\\\\/QC ENGINEER\"/' Program.cs)",
+      "Bash(cd \"C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/279950c4-e778-4c50-9309-c7c42af5c58b/scratchpad/wirtest\" && cp \"C:/Users/ITS48/source/repos/TimeSheetAPI/TimeSheetAPI/Service/WirPdfBuilder.cs\" Service/ && dotnet run 2>&1 | tail -2 && cd .. && node pdftext.mjs \"wirtest/wir-sample.pdf\" 2>&1 | grep -A2 \"Inspected By\")"
     ]
   }
 }

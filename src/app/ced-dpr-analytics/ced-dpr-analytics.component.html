@@ -441,7 +441,14 @@
               <tr>
                 <td>
                   <div class="ca-emp-cell">
-                    <div class="ca-avatar" [style.background]="avatarBg(u.employeeName)">{{ initials(u.employeeName) }}</div>
+                    <div class="ca-avatar-wrap">
+                      <div class="ca-avatar" [style.background]="avatarBg(u.employeeName)">{{ initials(u.employeeName) }}</div>
+                      @if (u.isNewJoiner === 'Y') {
+                        <span class="ca-newjoiner" [title]="'Joined ' + (u.joinDate || 'recently') + ' — within the last 8 days'">
+                          <b class="ca-newtxt">NEW<small>JOINEE</small></b>
+                        </span>
+                      }
+                    </div>
                     <span class="ca-emp-name">{{ u.employeeName }}</span>
                   </div>
                 </td>

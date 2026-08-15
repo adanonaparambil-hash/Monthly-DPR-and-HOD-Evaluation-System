@@ -1,0 +1,206 @@
+<div class="lm-page">
+
+  <!-- ── Filter bar ── -->
+  <div class="lm-hero">
+    <div class="lm-hero-left">
+      @if (isLive) {
+        <span class="lm-live-chip"><span class="lm-live-dot"></span>LIVE</span>
+        <span class="lm-title-sub">Auto-refreshes every 5 minutes · pick a date to audit a past day</span>
+      } @else {
+        <span class="lm-hist-chip">{{ selectedDate }}</span>
+        <span class="lm-title-sub">Historical view · clear the date to go back to live</span>
+      }
+    </div>
+
+    <div class="lm-toolbar">
+      <div class="lm-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search name, ID, dept, task…" [(ngModel)]="searchText">
+        @if (searchText) {
+          <button class="lm-clear-btn" (click)="searchText = ''"><i class="fas fa-times"></i></button>
+        }
+      </div>
+
+      <div class="lm-date">
+        <i class="fas fa-calendar-days"></i>
+        <input type="date" [(ngModel)]="selectedDate" (change)="loadData()" title="Pick a past date to audit">
+        @if (selectedDate) {
+          <button class="lm-clear-btn" title="Back to live" (click)="clearDate()"><i class="fas fa-times"></i></button>
+        }
+      </div>
+
+      <select class="lm-select" [(ngModel)]="selectedDepartment" (change)="loadData()">
+        <option [ngValue]="0">All Departments</option>
+        @for (d of departments; track d.departmentId) {
+          <option [ngValue]="d.departmentId">{{ d.deptName }}</option>
+        }
+      </select>
+
+      <select class="lm-select" [(ngModel)]="selectedLocation" (change)="loadData()">
+        @for (l of locations; track l.code) {
+          <option [value]="l.code">{{ l.label }}</option>
+        }
+      </select>
+
+      <select class="lm-select" [(ngModel)]="selectedStatus" (change)="loadData()">
+        @for (s of statuses; track s.code) {
+          <option [value]="s.code">{{ s.label }}</option>
+        }
+      </select>
+
+      <select class="lm-select" [(ngModel)]="selectedDpr" (change)="loadData()" title="DPR user filter">
+        @for (d of dprOptions; track d.code) {
+          <option [value]="d.code">{{ d.label }}</option>
+        }
+      </select>
+
+      <button class="lm-icon-btn" (click)="loadData()" title="Refresh">
+        <i class="fas fa-rotate-right"></i>
+      </button>
+
+      <button class="lm-btn lm-btn-primary" (click)="exportCSV()" [disabled]="filteredRows.length === 0">
+        <i class="fas fa-file-arrow-down"></i><span>Export</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Per-location summary cards ── -->
+  @if (summary.length > 0) {
+    <div class="lm-summary-row">
+      @for (s of summary; track s.location) {
+        <div class="lm-summary-card" [class.lm-card-live]="s.inWindowNow === 'Y'">
+          <div class="lm-card-head">
+            <span class="lm-card-loc">{{ s.location }}</span>
+            <span class="lm-card-window"><i class="fas fa-clock"></i> {{ s.windowStart }} – {{ s.windowEnd }}</span>
+            @if (s.inWindowNow === 'Y') {
+              <span class="lm-live-chip"><span class="lm-live-dot"></span>Lunch time now</span>
+            }
+          </div>
+          <div class="lm-card-stats">
+            <div class="lm-stat">
+              <span class="lm-stat-num lm-num-red">{{ s.workedInLunch }}</span>
+              <span class="lm-stat-label">Worked in lunch</span>
+            </div>
+            <div class="lm-stat">
+              <span class="lm-stat-num lm-num-green">{{ s.onBreak }}</span>
+              <span class="lm-stat-label">On break</span>
+            </div>
+            <div class="lm-stat">
+              <span class="lm-stat-num lm-num-gray">{{ s.idle }}</span>
+              <span class="lm-stat-label">Idle</span>
+            </div>
+            <div class="lm-stat">
+              <span class="lm-stat-num">{{ s.totalEmployees }}</span>
+              <span class="lm-stat-label">Total</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Table card ── -->
+  <div class="lm-card-table">
+    <div class="lm-card-table-head">
+      <span class="lm-table-title"><i class="fas fa-table-list"></i> Employees</span>
+      <span class="lm-table-count">
+        {{ filteredRows.length }} of {{ rows.length }} records
+        @if (lastRefreshed && isLive) {
+          <span class="lm-refreshed">· refreshed {{ lastRefreshed | date:'shortTime' }}</span>
+        }
+        @if (loadError) {
+          <span class="lm-error"><i class="fas fa-triangle-exclamation"></i> {{ loadError }}</span>
+        }
+      </span>
+    </div>
+
+    <div class="lm-table-wrap">
+      @if (loading) {
+        <app-crane-loader></app-crane-loader>
+      } @else {
+        <table class="lm-table">
+          <thead>
+            <tr>
+              <th style="width:230px">Employee</th>
+              <th style="width:150px">Department</th>
+              <th style="width:70px">Loc</th>
+              <th style="width:130px">Lunch Window</th>
+              <th style="width:150px">Status</th>
+              <th style="width:110px">Worked in Lunch</th>
+              <th style="width:100px">Break Taken</th>
+              <th style="width:130px">Break Reason</th>
+              <th style="width:200px">Punch Times (day)</th>
+              <th>Running Task (now)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredRows; track trackRow($index, row)) {
+              <tr>
+                <td>
+                  <div class="lm-emp">
+                    @if (row.profileImageBase64) {
+                      <img class="lm-avatar" [src]="'data:image/jpeg;base64,' + row.profileImageBase64" alt="">
+                    } @else {
+                      <div class="lm-avatar lm-avatar-fallback">{{ initials(row.employeeName) }}</div>
+                    }
+                    <div class="lm-emp-text">
+                      <span class="lm-emp-name" [title]="row.employeeName">{{ row.employeeName }}</span>
+                      <span class="lm-emp-sub">{{ row.employeeId }} · {{ row.designation || '—' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="lm-cell" [title]="row.department">{{ row.department || '—' }}</span></td>
+                <td>{{ row.location }}</td>
+                <td>{{ row.windowStart }} – {{ row.windowEnd }}</td>
+                <td>
+                  <span class="pill" [ngClass]="statusClass(row.status)">
+                    <span class="pill-dot"></span>{{ statusLabel(row) }}
+                  </span>
+                  @if (row.isTimerRunningNow === 'Y' && row.inWindowNow === 'Y') {
+                    <span class="lm-mini-flag lm-flag-red" title="Timer is running right now"><i class="fas fa-circle-play"></i></span>
+                  }
+                  @if (row.isOnBreakNow === 'Y') {
+                    <span class="lm-mini-flag lm-flag-green" [title]="'On break now: ' + (row.breakReasonNow || '')"><i class="fas fa-mug-hot"></i></span>
+                  }
+                </td>
+                <td [class.lm-strong-red]="row.workMinutes >= 5">{{ formatMin(row.workMinutes) }}</td>
+                <td>{{ formatMin(row.breakMinutes) }}</td>
+                <td>{{ row.breakReason || '—' }}</td>
+                <td>
+                  @if (row.punchCount > 0) {
+                    <div class="lm-punch">
+                      <span class="lm-punch-last" title="Latest punch">
+                        <i class="fas fa-fingerprint"></i> {{ row.lastPunchTime }}
+                        <span class="lm-punch-count">{{ row.punchCount }}×</span>
+                      </span>
+                      <span class="lm-punch-all" [title]="'All punches: ' + row.punchTimes">{{ row.punchTimes }}</span>
+                    </div>
+                  } @else {
+                    <span class="lm-muted">No punches</span>
+                  }
+                </td>
+                <td>
+                  @if (row.runningTask) {
+                    <span class="lm-cell lm-task" [title]="row.runningTask">
+                      <i class="fas fa-stopwatch"></i> {{ row.runningTask }}
+                    </span>
+                  } @else {
+                    <span class="lm-muted">—</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="lm-empty" colspan="9">
+                  <i class="fas fa-inbox"></i>
+                  <div>No employees match the current filters</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+
+</div>

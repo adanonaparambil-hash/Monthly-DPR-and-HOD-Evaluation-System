@@ -8,6 +8,7 @@ import { ToasterComponent } from '../components/toaster/toaster.component';
 import { ToasterService } from '../services/toaster.service';
 import Swal from 'sweetalert2';
 import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
+import { LunchMonitorComponent } from '../lunch-monitor/lunch-monitor.component';
 
 interface LoggedHour {
   id: string;
@@ -88,7 +89,7 @@ interface ColumnDefinition {
 @Component({
   selector: 'app-my-logged-hours',
   standalone: true,
-  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent, CraneLoaderComponent],
+  imports: [CommonModule, FormsModule, ToasterComponent, TaskDetailsModalComponent, CraneLoaderComponent, LunchMonitorComponent],
   templateUrl: './my-logged-hours.html',
   styleUrls: ['./my-logged-hours.css', './manage-fields-ultra.css', './manage-fields-modern-v2.css']
 })
@@ -142,6 +143,7 @@ export class MyLoggedHoursComponent implements OnInit {
 
   // Break History Modal
   showBreakHistoryModal = false;
+  showLunchMonitorModal = false;   // HOD + SURVEILLANCE only
   openBreaks: any[] = [];
   breakHistorySearch   = '';
   isLoadingBreaks = false;
@@ -1433,6 +1435,19 @@ export class MyLoggedHoursComponent implements OnInit {
   }
 
   // Break History Modal Methods
+  // ── Lunch Monitor modal (HOD + SURVEILLANCE department only) ──────────
+  get canSeeLunchMonitor(): boolean {
+    return this.isHOD || this.isSurveillance;
+  }
+
+  openLunchMonitorModal() {
+    this.showLunchMonitorModal = true;
+  }
+
+  closeLunchMonitorModal() {
+    this.showLunchMonitorModal = false;
+  }
+
   openBreakHistoryModal() {
     console.log('Opening Break History modal...');
     this.showBreakHistoryModal = true;

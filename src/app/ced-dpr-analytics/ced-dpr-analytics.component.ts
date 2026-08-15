@@ -66,6 +66,8 @@ interface CedEmployee {
   loggedDays:       number;
   workingDays:      number;
   loggedInRange:    string;   // 'Y' / 'N'
+  joinDate?:        string | null;  // 'YYYY-MM-DD' from DOJ
+  isNewJoiner?:     string;         // 'Y' when joined < 1 month ago
   compliancePct:    number;
   lastLogDate:      string | null;
   daysSinceLastLog: number;   // -1 = never used DPR

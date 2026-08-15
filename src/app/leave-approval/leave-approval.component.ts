@@ -128,7 +128,7 @@ export class LeaveApprovalComponent implements OnInit {
     private route: ActivatedRoute
   ) { }
 
-  // 'Submitted' status option visible only to ADMINISTRATION dept users and HODs
+  // 'Submitted' status option visible to ADMINISTRATION and OPERATIONS dept users, and HODs
   canSeeSubmittedFilter = false;
 
   ngOnInit(): void {
@@ -136,7 +136,7 @@ export class LeaveApprovalComponent implements OnInit {
 
     const userDept = (this.currentUser?.department || this.currentUser?.empDept || '').toString().toUpperCase().trim();
     const hodFlag  = (this.currentUser?.isHOD || '').toString().toUpperCase();
-    this.canSeeSubmittedFilter = userDept === 'ADMINISTRATION' || hodFlag === 'H';
+    this.canSeeSubmittedFilter = userDept === 'ADMINISTRATION' || userDept === 'OPERATIONS' || hodFlag === 'H';
 
     // Load employee master list for filter dropdown
     this.api.getEmployeeMasterList().subscribe({

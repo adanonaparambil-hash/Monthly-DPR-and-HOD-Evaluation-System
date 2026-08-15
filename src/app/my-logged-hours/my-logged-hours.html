@@ -27,6 +27,12 @@
         <i class="fas fa-clock"></i>
         <span>Travel & Break History</span>
       </button>
+      @if (canSeeLunchMonitor) {
+        <button class="action-btn primary lunch-monitor-btn" (click)="openLunchMonitorModal()">
+          <i class="fas fa-mug-hot"></i>
+          <span>Lunch Monitor</span>
+        </button>
+      }
     </div>
   </header>
 
@@ -444,6 +450,31 @@
     (taskStopped)="onTaskStopped($event)"
     (showLogTime)="onShowLogTime($event)">
   </app-task-details-modal>
+}
+
+<!-- Lunch Monitor Modal - HOD + SURVEILLANCE only -->
+@if (showLunchMonitorModal) {
+  <div class="modal-overlay-large" (click)="closeLunchMonitorModal()">
+    <div class="lunch-monitor-modal-large" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="lunch-modal-header">
+        <div class="lunch-modal-title-section">
+          <i class="fas fa-mug-hot lunch-modal-icon"></i>
+          <div>
+            <h2 class="lunch-modal-title">Lunch Monitor</h2>
+            <p class="lunch-modal-subtitle">Who is running a task timer, on break, or idle during the lunch window</p>
+          </div>
+        </div>
+        <button class="lunch-modal-close" (click)="closeLunchMonitorModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <!-- Modal Body: the full monitor (summary cards + live table + filters) -->
+      <div class="lunch-modal-body">
+        <app-lunch-monitor></app-lunch-monitor>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- Break History Modal - Large Table Design -->

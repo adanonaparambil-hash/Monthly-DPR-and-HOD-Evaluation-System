@@ -1,0 +1,272 @@
+<div class="wir-page">
+
+  <!-- ── Hero header card ── -->
+  <div class="wir-hero">
+    <div class="wir-hero-left">
+      <div class="wir-hero-icon"><i class="fas fa-clipboard-check"></i></div>
+      <div>
+        <div class="wir-title-main">WIR Reports</div>
+        <div class="wir-title-sub">Work Inspection Requests · click any row to view the report</div>
+      </div>
+    </div>
+
+    <div class="wir-toolbar">
+      <div class="wir-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search WIR no, project, subject…"
+               [(ngModel)]="searchText" (ngModelChange)="onSearchChange()">
+        @if (searchText) {
+          <button class="wir-search-clear" (click)="clearSearch()"><i class="fas fa-times"></i></button>
+        }
+      </div>
+
+      <div class="wir-dates">
+        <i class="fas fa-calendar-days"></i>
+        <input type="date" [(ngModel)]="fromDate" (change)="onDateChange()" title="From date">
+        <span class="wir-dates-sep">→</span>
+        <input type="date" [(ngModel)]="toDate" (change)="onDateChange()" title="To date">
+        @if (fromDate || toDate) {
+          <button class="wir-search-clear" title="Clear dates" (click)="clearDates()">
+            <i class="fas fa-times"></i>
+          </button>
+        }
+      </div>
+
+      <button class="wir-icon-btn" (click)="loadData()" title="Refresh">
+        <i class="fas fa-rotate-right"></i>
+      </button>
+
+      <button class="wir-btn wir-btn-primary" (click)="exportCSV()" [disabled]="filteredRows.length === 0">
+        <i class="fas fa-file-arrow-down"></i><span>Export</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Table card ── -->
+  <div class="wir-card">
+    <div class="wir-card-head">
+      <div class="wir-card-left">
+        <span class="wir-card-title"><i class="fas fa-table-list"></i> WIR Records</span>
+        @if (anyFilterActive) {
+          <button class="wir-btn wir-btn-ghost wir-btn-sm" (click)="clearAllFilters()">
+            <i class="fas fa-filter-circle-xmark"></i> Clear filters
+          </button>
+        }
+        @if (loadError) {
+          <span class="wir-error"><i class="fas fa-triangle-exclamation"></i> {{ loadError }}</span>
+        }
+      </div>
+      <span class="wir-card-count">
+        @if (effectiveTotal === 0) {
+          No records
+        } @else {
+          Showing <strong>{{ rangeStart }}–{{ rangeEnd }}</strong> of <strong>{{ effectiveTotal }}</strong>
+          @if (anyFilterActive && filteredRows.length !== rows.length) {
+            <span class="wir-cap-note">(filtered from {{ rows.length }})</span>
+          }
+        }
+      </span>
+    </div>
+
+    <div class="wir-table-wrap">
+      @if (loading) {
+        <app-crane-loader></app-crane-loader>
+      } @else {
+        <table class="wir-table">
+          <thead>
+            <tr>
+              <th class="sl-col"><div class="th-inner"><span class="th-label">SL</span></div></th>
+              @for (col of allColumns; track col.key) {
+                <th [style.width.px]="col.width" [style.min-width.px]="col.width">
+                  <div class="th-inner">
+                    <span class="th-label" (click)="sortBy(col.key, $event)">
+                      {{ col.label }}
+                      @if (colFilters[col.key].sortDir === 'asc') {
+                        <i class="fas fa-sort-up sort-active"></i>
+                      } @else if (colFilters[col.key].sortDir === 'desc') {
+                        <i class="fas fa-sort-down sort-active"></i>
+                      }
+                    </span>
+                    <button class="filter-btn"
+                            [class.filter-active]="isFiltered(col.key)"
+                            (click)="toggleColFilter(col.key, $event)"
+                            [title]="'Filter ' + col.label">
+                      <i class="fas fa-filter"></i>
+                    </button>
+                  </div>
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of pagedRows; track row.docid + '|' + row.revno; let i = $index) {
+              <tr class="td-row" (click)="openPdf(row)" title="Click to view WIR report">
+                <td class="sl-col sl-cell">{{ rangeStart + i }}</td>
+                @for (col of allColumns; track col.key) {
+                  <td [style.width.px]="col.width" [style.min-width.px]="col.width">
+                    @switch (col.key) {
+                      @case ('docid') {
+                        <span class="docid-cell">
+                          <span class="docid-ico"><i class="fas fa-file-pdf"></i></span>
+                          <span class="docid-text" [title]="row.docid">{{ row.docid }}</span>
+                        </span>
+                      }
+                      @case ('status') {
+                        <span class="pill" [ngClass]="statusClass(row.status)">
+                          <span class="pill-dot"></span>{{ row.status }}
+                        </span>
+                      }
+                      @case ('qaqcStatus') {
+                        <span class="pill" [ngClass]="qaqcClass(row.qaqcStatus)">
+                          <span class="pill-dot"></span>{{ row.qaqcStatus }}
+                        </span>
+                      }
+                      @default {
+                        <span class="cell-text" [title]="cellValue(row, col.key)">{{ cellValue(row, col.key) || '—' }}</span>
+                      }
+                    }
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td class="wir-empty" [attr.colspan]="allColumns.length + 1">
+                  <i class="fas fa-inbox"></i>
+                  <div>No WIR records found</div>
+                  @if (anyFilterActive) {
+                    <button class="wir-btn wir-btn-ghost" (click)="clearAllFilters()">Clear all filters</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- ── Pagination footer ── -->
+    @if (!loading && totalPages > 1) {
+      <div class="wir-pager">
+        <button class="wir-icon-btn" [disabled]="currentPage === 1" (click)="goToPage(1)">
+          <i class="fas fa-angles-left"></i>
+        </button>
+        <button class="wir-icon-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+          <i class="fas fa-angle-left"></i>
+        </button>
+        <span class="wir-pager-info">Page <strong>{{ currentPage }}</strong> of {{ totalPages }}</span>
+        <button class="wir-icon-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="wir-icon-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">
+          <i class="fas fa-angles-right"></i>
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ── Column filter popup ── -->
+  @if (openFilterCol) {
+    <div class="cfp-pop" [style.left.px]="popupX" [style.top.px]="popupY" (click)="$event.stopPropagation()">
+      <div class="cfp-head">
+        <span>{{ colLabel(openFilterCol) }}</span>
+        <button class="cfp-clear" (click)="clearColFilter(openFilterCol)">Clear</button>
+      </div>
+
+      <div class="cfp-sort-row">
+        <button class="cfp-sort-btn" [class.active]="colFilters[openFilterCol].sortDir === 'asc'"
+                (click)="setSort(openFilterCol, 'asc')">
+          <i class="fas fa-sort-amount-up-alt"></i> A → Z
+        </button>
+        <button class="cfp-sort-btn" [class.active]="colFilters[openFilterCol].sortDir === 'desc'"
+                (click)="setSort(openFilterCol, 'desc')">
+          <i class="fas fa-sort-amount-down-alt"></i> Z → A
+        </button>
+      </div>
+      <div class="cfp-divider"></div>
+
+      @if (colType(openFilterCol) === 'date') {
+        <div class="cfp-date-body">
+          <div class="cfp-date-field">
+            <label>From</label>
+            <input type="date" [(ngModel)]="colFilters[openFilterCol].dateFrom" (change)="applyFilters()">
+          </div>
+          <div class="cfp-date-field">
+            <label>To</label>
+            <input type="date" [(ngModel)]="colFilters[openFilterCol].dateTo" (change)="applyFilters()">
+          </div>
+        </div>
+      } @else if (colType(openFilterCol) === 'text') {
+        <div class="cfp-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Contains…" autocomplete="off"
+                 [value]="colFilters[openFilterCol].searchText"
+                 (input)="onFilterSearch($event)">
+        </div>
+      } @else {
+        <div class="cfp-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search values…" autocomplete="off"
+                 (input)="onFilterSearch($event)">
+        </div>
+        <label class="cfp-row cfp-select-all">
+          <input type="checkbox" [checked]="allSelected(openFilterCol)"
+                 (change)="toggleSelectAll(openFilterCol)">
+          <span>(Select All)</span>
+        </label>
+        <div class="cfp-list">
+          @for (val of filterDropdownItems; track val) {
+            <label class="cfp-row">
+              <input type="checkbox"
+                     [checked]="colFilters[openFilterCol].selectedValues.has(val)"
+                     (change)="toggleValue(openFilterCol, val)">
+              <span class="cfp-val" [title]="val">{{ val }}</span>
+            </label>
+          } @empty {
+            <div class="cfp-none">No values</div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── PDF preview modal ── -->
+  @if (pdfOpen) {
+    <div class="pdf-overlay" (click)="closePdf()">
+      <div class="pdf-modal" (click)="$event.stopPropagation()">
+        <div class="pdf-modal-head">
+          <div class="pdf-modal-title">
+            <i class="fas fa-file-pdf"></i>
+            <span>WIR — {{ pdfDocid }}</span>
+          </div>
+          <div class="pdf-modal-actions">
+            <button class="wir-btn wir-btn-ghost" (click)="openPdfNewTab()" [disabled]="pdfLoading || !!pdfError">
+              <i class="fas fa-up-right-from-square"></i><span>Open</span>
+            </button>
+            <button class="wir-btn wir-btn-primary" (click)="downloadPdf()" [disabled]="pdfLoading || !!pdfError">
+              <i class="fas fa-download"></i><span>Download</span>
+            </button>
+            <button class="wir-icon-btn pdf-close" (click)="closePdf()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="pdf-modal-body">
+          @if (pdfLoading) {
+            <div class="pdf-loading">
+              <i class="fas fa-circle-notch fa-spin"></i>
+              <span>Generating report…</span>
+            </div>
+          } @else if (pdfError) {
+            <div class="pdf-loading pdf-err">
+              <i class="fas fa-triangle-exclamation"></i>
+              <span>{{ pdfError }}</span>
+            </div>
+          } @else if (pdfUrl) {
+            <iframe [src]="pdfUrl" title="WIR PDF preview"></iframe>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

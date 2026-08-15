@@ -1518,3 +1518,68 @@
   min-height: 46vh;
   padding: 40px 20px;
 }
+
+/* ── New-joiner flag (DOJ < 1 month) — tiny label on TOP of the avatar ── */
+.ca-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  padding-top: 13px;         /* room for the starburst above the head */
+}
+/* Comic starburst "NEW!" — yellow burst, red text, GIF-style pop animation.
+   Three stacked rotated squares form a 12-point burst. Centered on the
+   avatar's middle, straight above the head. */
+.ca-newjoiner {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  margin-left: -14px;        /* half of width → true center of the avatar */
+  width: 28px;
+  height: 28px;
+  background: #FFD31A;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  cursor: default;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .28));
+  animation: caNewPop 1s ease-in-out infinite;
+}
+.ca-newjoiner::before,
+.ca-newjoiner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  border-radius: inherit;
+}
+.ca-newjoiner::before { transform: rotate(30deg); }
+.ca-newjoiner::after  { transform: rotate(60deg); }
+.ca-newtxt {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-style: italic;
+  font-weight: 900;
+  font-size: 8px;
+  line-height: 1.05;
+  color: #E11D2E;
+  letter-spacing: -.02em;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, .3);
+  transform: rotate(-8deg);
+}
+.ca-newtxt small {
+  font-size: 5px;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+@keyframes caNewPop {
+  0%, 100% { transform: scale(1)    rotate(-5deg); }
+  50%      { transform: scale(1.22) rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-newjoiner { animation: none; }
+}
