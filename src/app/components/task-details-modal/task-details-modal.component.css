@@ -4829,3 +4829,58 @@ textarea.editable-description[readonly] {
   .timer-display, .hours-display, .hours-text { font-size: 14px !important; }
   .comment-tab { font-size: 10px !important; padding: 12px 10px !important; }
 }
+
+/* ═══ Mobile polish (2026-08) — iPhone/Safari full-visibility fixes ═══
+   Problems on phones: (1) 100vh includes Safari's URL/home bars, so the
+   bottom of the modal (comment box, records) was cut off; (2) the
+   comments panel was capped at ~half the screen with a TRANSLUCENT glass
+   background, so it painted on top of the form cards and looked broken;
+   (3) nested scroll containers trapped the scroll. Fix: dynamic viewport
+   height, ONE scroll container for the whole modal body, opaque panels,
+   and safe-area padding so the send button clears the iPhone home bar. */
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: stretch !important;
+  }
+  .task-modal-container {
+    height: 100dvh !important;        /* falls back to the 100vh rule above on old browsers */
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  /* header stays pinned; everything below scrolls as one column */
+  .task-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .task-main-panel {
+    flex: none !important;
+    overflow: visible !important;
+  }
+  /* comments flow below the form — full height, no cap, no see-through */
+  .comments-panel {
+    flex: none !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-top: 2px solid #e2e8f0 !important;
+  }
+  .task-board-container.dark-mode .comments-panel {
+    background: #1e293b !important;
+    border-top-color: #334155 !important;
+  }
+  .comments-content {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* comment input reachable above the iPhone home bar */
+  .comment-input-container {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+}
