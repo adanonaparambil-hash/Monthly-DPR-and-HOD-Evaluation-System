@@ -1,0 +1,154 @@
+<div class="fin-page">
+
+  <!-- header -->
+  <div class="fin-head">
+    <span class="fin-head-ic"><i class="fas fa-hourglass-half"></i></span>
+    <div>
+      <h2>Supplier Overdue Aging</h2>
+      <p>How far past due the outstanding amounts already are</p>
+    </div>
+    <span class="fin-head-sp"></span>
+  </div>
+
+  <!-- filters -->
+  <div class="fin-filters">
+    <div class="fin-f">
+      <label for="soaBranch">Branch</label>
+      <select id="soaBranch" [(ngModel)]="selectedBranchName" (ngModelChange)="onBranchChange()"
+              [disabled]="branchesLoading || loading">
+        <option *ngFor="let b of branches" [ngValue]="b.branchName">
+          {{ b.branchName === 'ALL' ? 'All branches' : b.branchName }}
+        </option>
+      </select>
+    </div>
+
+    <div class="fin-actions">
+      <button type="button" class="fin-btn" (click)="runReport()" [disabled]="loading">
+        <i class="fas fa-rotate"></i> Refresh
+      </button>
+      <button type="button" class="fin-btn ghost" (click)="resetFilters()" [disabled]="loading">
+        <i class="fas fa-xmark"></i> Reset
+      </button>
+      <button type="button" class="fin-btn ghost" (click)="exportCsv()" [disabled]="loading || exporting || !totalCount">
+        <i class="fas" [class.fa-file-csv]="!exporting" [class.fa-spinner]="exporting" [class.fa-spin]="exporting"></i>
+        {{ exporting ? 'Exporting…' : 'Export' }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- loading -->
+  <div class="fin-state" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <span>Running the report…</span>
+    <small>Supplier payment data is read live from Axpert, so this can take a moment.</small>
+  </div>
+
+  <!-- error -->
+  <div class="fin-state err" *ngIf="!loading && loadError">
+    <i class="fas fa-triangle-exclamation"></i>
+    <span>The report could not be loaded.</span>
+    <small>{{ loadError }}</small>
+  </div>
+
+  <!-- results -->
+  <ng-container *ngIf="!loading && !loadError">
+
+    <div class="fin-meta" *ngIf="totalCount">
+      <span>Showing <strong>{{ pageRange() }}</strong> of <strong>{{ totalCount }}</strong> supplier{{ totalCount === 1 ? '' : 's' }}</span>
+      <span>·</span>
+      <span>Branch: <strong>{{ selectedBranchName === 'ALL' ? 'All branches' : selectedBranchName }}</strong></span>
+      <span class="fin-meta-sp"></span>
+      <div class="fin-ps">
+        <label for="soaPs">Per page:</label>
+        <select id="soaPs" [(ngModel)]="pageSize" (ngModelChange)="pageSizeChanged()">
+          <option *ngFor="let n of PAGE_SIZES" [ngValue]="n">{{ n }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fin-table-wrap" #tableWrap *ngIf="totalCount">
+      <table class="fin-table">
+        <thead>
+          <tr>
+            <th class="tx-l">#</th>
+            <th class="tx-l">Vendor</th>
+            <th class="tx-l">Currency</th>
+            <th>1-30 Days</th>
+            <th>31-60 Days</th>
+            <th>61-90 Days</th>
+            <th>91-120 Days</th>
+            <th>121-180 Days</th>
+            <th>Above 180 Days</th>
+            <th>Total Overdue</th>
+            <th>Total Outstanding</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- pagedRows, not rows: the page on screen. Export still takes the
+               whole set, so nothing is lost by paging here. -->
+          <tr *ngFor="let r of pagedRows; let i = index; trackBy: trackByRow">
+            <td class="tx-l">{{ rowNumber(i) }}</td>
+            <td class="tx-l fin-vendor">{{ r.vendorName }}</td>
+            <td class="tx-l"><span class="fin-cur">{{ r.currency }}</span></td>
+            <td [class]="cls(r.days_1_30)">{{ r.days_1_30 | number:'1.2-2' }}</td>
+            <td [class]="cls(r.days_31_60)">{{ r.days_31_60 | number:'1.2-2' }}</td>
+            <td [class]="cls(r.days_61_90)">{{ r.days_61_90 | number:'1.2-2' }}</td>
+            <td [class]="cls(r.days_91_120)">{{ r.days_91_120 | number:'1.2-2' }}</td>
+            <td [class]="cls(r.days_121_180)">{{ r.days_121_180 | number:'1.2-2' }}</td>
+            <td [class]="cls(r.above_180_Days)">{{ r.above_180_Days | number:'1.2-2' }}</td>
+            <td><strong>{{ r.total_Overdue | number:'1.2-2' }}</strong></td>
+            <td><strong>{{ r.total_Outstanding | number:'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+
+        <!-- Totals are for THIS PAGE, and say so. Export totals the full set. -->
+        <tfoot>
+          <tr>
+            <td class="tx-l"></td>
+            <td class="tx-l">TOTAL (this page)</td>
+            <td class="tx-l"></td>
+            <td>{{ total('days_1_30') | number:'1.2-2' }}</td>
+            <td>{{ total('days_31_60') | number:'1.2-2' }}</td>
+            <td>{{ total('days_61_90') | number:'1.2-2' }}</td>
+            <td>{{ total('days_91_120') | number:'1.2-2' }}</td>
+            <td>{{ total('days_121_180') | number:'1.2-2' }}</td>
+            <td>{{ total('above_180_Days') | number:'1.2-2' }}</td>
+            <td>{{ total('total_Overdue') | number:'1.2-2' }}</td>
+            <td>{{ total('total_Outstanding') | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- pagination -->
+    <div class="fin-pager" *ngIf="totalPages > 1">
+      <button type="button" class="pg-btn" (click)="firstPage()" [disabled]="pageNo === 1" title="First">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+      <button type="button" class="pg-btn" (click)="prevPage()" [disabled]="pageNo === 1" title="Previous">
+        <i class="fas fa-angle-left"></i>
+      </button>
+
+      <button type="button" class="pg-btn" *ngFor="let p of pageNumbers()"
+              [class.active]="p === pageNo" (click)="goToPage(p)">{{ p }}</button>
+
+      <button type="button" class="pg-btn" (click)="nextPage()" [disabled]="pageNo === totalPages" title="Next">
+        <i class="fas fa-angle-right"></i>
+      </button>
+      <button type="button" class="pg-btn" (click)="lastPage()" [disabled]="pageNo === totalPages" title="Last">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+
+      <span class="pg-info">Page {{ pageNo }} of {{ totalPages }}</span>
+    </div>
+
+    <div class="fin-state" *ngIf="hasRun && !totalCount">
+      <i class="fas fa-inbox"></i>
+      <span>No outstanding supplier payments for this branch.</span>
+      <small>The report only lists suppliers with an outstanding balance. Try “All branches”.</small>
+    </div>
+
+  </ng-container>
+</div>

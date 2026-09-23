@@ -1,0 +1,191 @@
+/* ============================================================================
+   Shared styling for the two Finance supplier reports.
+
+   Both components point at this one file, so the pages cannot drift apart.
+   ============================================================================ */
+
+.fin-page { padding: 20px; max-width: 100%; }
+
+/* ── header ──────────────────────────────────────────────────────────────────
+   A light card with a teal accent rail, not a full-bleed gradient. The page
+   below it is white cards on a light background, and a heavy coloured band on
+   top fought with that instead of leading into it. */
+.fin-head {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.fin-head-ic {
+  width: 42px; height: 42px; flex: 0 0 42px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gradient-secondary); color: #fff; font-size: 17px;
+  box-shadow: 0 4px 10px -3px rgba(19, 130, 113, .5);
+}
+/* styles.css paints EVERY h1-h6 with a gradient and a TRANSPARENT text fill.
+   Without putting the fill back, this title renders invisible. */
+.fin-head h2 {
+  margin: 0; font-size: 16px; font-weight: 700; color: var(--text-primary);
+  background: none; -webkit-text-fill-color: var(--text-primary);
+  -webkit-background-clip: border-box;
+}
+.fin-head p { margin: 3px 0 0; font-size: 12px; color: var(--text-secondary); opacity: .85; }
+.fin-head-sp { flex: 1 1 auto; }
+
+/* ── filter bar ──────────────────────────────────────────────────────────── */
+.fin-filters {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color); border-radius: 12px;
+  padding: 14px 16px; margin-bottom: 16px;
+}
+.fin-f { display: flex; flex-direction: column; min-width: 220px; }
+.fin-f label {
+  font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 5px;
+}
+.fin-f select {
+  width: 100%; padding: 9px 11px; border-radius: 9px;
+  border: 1px solid var(--border-color);
+  background: var(--background-primary); color: var(--text-primary);
+  font: 600 13px "Segoe UI";
+}
+.fin-f select:focus {
+  outline: none; border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(19, 130, 113, .13);
+}
+.fin-actions { display: flex; gap: 8px; }
+.fin-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border: none; border-radius: 9px; cursor: pointer;
+  font: 700 13px "Segoe UI";
+  background: var(--gradient-secondary); color: #fff;
+}
+.fin-btn:disabled { opacity: .55; cursor: not-allowed; }
+.fin-btn.ghost {
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* ── meta bar ────────────────────────────────────────────────────────────── */
+.fin-meta {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 10px; font-size: 12px; color: var(--text-secondary);
+}
+.fin-meta strong { color: var(--text-primary); }
+.fin-meta-sp { flex: 1 1 auto; }
+.fin-ps { display: flex; align-items: center; gap: 7px; }
+.fin-ps label { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.fin-ps select {
+  padding: 5px 9px; border-radius: 7px; border: 1px solid var(--border-color);
+  background: var(--background-primary); color: var(--text-primary);
+  font: 700 12px "Segoe UI";
+}
+
+/* ── pagination ──────────────────────────────────────────────────────────── */
+.fin-pager {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 6px; margin-top: 14px;
+}
+.pg-btn {
+  min-width: 34px; height: 34px; padding: 0 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--background-primary); color: var(--text-primary);
+  font: 700 12px "Segoe UI"; cursor: pointer;
+}
+.pg-btn:hover:not(:disabled) { border-color: var(--secondary-color); color: var(--secondary-color); }
+.pg-btn:disabled { opacity: .4; cursor: not-allowed; }
+.pg-btn.active {
+  background: var(--gradient-secondary); border-color: transparent; color: #fff;
+}
+.pg-info { margin-left: 8px; font-size: 12px; color: var(--text-secondary); }
+
+/* ── table ───────────────────────────────────────────────────────────────── */
+/* The TABLE scrolls, not the page.
+   Without a height the wrapper grows to fit 100 rows, the window scrolls
+   instead, the sticky header and totals row have nothing to stick inside, and
+   changing page throws you to a different part of the document. Capping the
+   height keeps every bit of scrolling inside the report. */
+.fin-table-wrap {
+  background: var(--background-primary);
+  border: 1px solid var(--border-color); border-radius: 12px;
+  overflow: auto; box-shadow: var(--shadow-sm);
+  max-height: calc(100vh - 330px);
+  min-height: 220px;
+}
+table.fin-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+.fin-table thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--primary-color); color: #fff;
+  font: 700 11px "Segoe UI"; letter-spacing: .04em; text-transform: uppercase;
+  padding: 11px 12px; text-align: right; white-space: nowrap;
+}
+.fin-table thead th.tx-l { text-align: left; }
+.fin-table tbody td {
+  padding: 10px 12px; font: 600 12.5px "Segoe UI";
+  color: var(--text-primary); text-align: right; white-space: nowrap;
+  border-bottom: 1px solid var(--border-color);
+}
+.fin-table tbody td.tx-l { text-align: left; }
+.fin-table tbody tr:hover { background: rgba(19, 130, 113, .05); }
+
+/* A zero is noise on a money report — the value is what matters, so zeros are
+   dimmed rather than removed (removing them would make an empty bucket and a
+   missing value look the same). */
+.fin-zero { color: var(--text-secondary); opacity: .4; font-weight: 500; }
+.fin-neg { color: var(--error-color); }
+.fin-cur {
+  display: inline-block; padding: 2px 7px; border-radius: 6px;
+  background: rgba(19, 130, 113, .1); color: var(--secondary-color);
+  font: 700 11px "Segoe UI";
+}
+.fin-vendor { font-weight: 700; }
+
+/* totals row */
+.fin-table tfoot td {
+  position: sticky; bottom: 0;
+  padding: 11px 12px; font: 800 12.5px "Segoe UI";
+  background: var(--background-secondary); color: var(--text-primary);
+  text-align: right; white-space: nowrap; border-top: 2px solid var(--secondary-color);
+}
+.fin-table tfoot td.tx-l { text-align: left; }
+
+/* ── states ──────────────────────────────────────────────────────────────── */
+.fin-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 54px 20px; text-align: center;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color); border-radius: 12px;
+  color: var(--text-secondary); font: 600 13px "Segoe UI";
+}
+.fin-state i { font-size: 30px; opacity: .35; }
+.fin-state.err { color: var(--error-color); }
+.fin-state.err i { opacity: .6; }
+.fin-state small { font-weight: 500; opacity: .8; max-width: 560px; line-height: 1.5; }
+
+/* ── dark mode ───────────────────────────────────────────────────────────────
+   Component styles need :host-context. A plain .dark-theme rule never matches
+   from inside a component's scoped stylesheet. */
+:host-context(.dark-theme) .fin-filters,
+:host-context(.dark-theme) .fin-table-wrap,
+:host-context(.dark-theme) .fin-state { background: var(--background-secondary); }
+:host-context(.dark-theme) .fin-f select { background: var(--background-primary); }
+:host-context(.dark-theme) .fin-table tbody tr:hover { background: rgba(19, 130, 113, .12); }
+:host-context(.dark-theme) .fin-table tfoot td { background: var(--background-primary); }
+:host-context(.dark-theme) .pg-btn,
+:host-context(.dark-theme) .fin-ps select { background: var(--background-primary); }
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .fin-page { padding: 12px; }
+  .fin-head { padding: 14px 16px; }
+  .fin-head h2 { font-size: 15px; }
+  .fin-f { min-width: 100%; }
+  .fin-actions { width: 100%; }
+  .fin-meta-sp { display: none; }
+  .fin-ps { width: 100%; justify-content: flex-end; }
+  .fin-btn { flex: 1 1 auto; justify-content: center; }
+}

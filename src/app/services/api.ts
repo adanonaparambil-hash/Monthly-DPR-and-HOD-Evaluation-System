@@ -9,6 +9,7 @@ import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, U
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
 import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest,SupplierTransactionRequest } from '../models/axpertDashBoard.model';
 import { WirListRequest } from '../models/wir.model';
+import { SupplierReportRequest } from '../models/financeReport.model';
 
 
 @Injectable({
@@ -564,7 +565,22 @@ export class Api {
     return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
   }
 
-  // Axpert dashboard API 
+  // ── Finance reports (ADK2026 / Axpert supplier payments) ────────────────
+  // Branch id AND name in one call, so the dropdown carries the id on each
+  // option and picking a branch never needs a second lookup.
+  GetFinanceBranchList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/FinanceReport/GetBranchList`);
+  }
+
+  GetSupplierPaymentForecast(request: SupplierReportRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/FinanceReport/GetSupplierPaymentForecast`, request);
+  }
+
+  GetSupplierOverdueAging(request: SupplierReportRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/FinanceReport/GetSupplierOverdueAging`, request);
+  }
+
+  // Axpert dashboard API
   GetLpoDashboard(request: LpoDashboardRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetLpoDashboard`, request);
   }

@@ -1,0 +1,343 @@
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
+import { Api } from '../services/api';
+import {
+  BranchOption,
+  SupplierOverdueAgingRow,
+  SupplierReportRequest
+} from '../models/financeReport.model';
+
+/**
+ * Finance › Supplier Overdue Aging.
+ *
+ * The mirror of the forecast: how far PAST due the outstanding amounts already
+ * are — 1-30, 31-60, 61-90, 91-120, 121-180, beyond 180.
+ */
+@Component({
+  selector: 'app-supplier-overdue-aging',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './supplier-overdue-aging.component.html',
+  styleUrls: ['./finance-reports.css']
+})
+export class SupplierOverdueAgingComponent implements OnInit {
+
+  branches: BranchOption[] = [];
+  branchesLoading = false;
+
+  /**
+   * The branch the page opens on. "ALL" runs every branch at once, which is
+   * the slowest possible first query, so the default is the main company and
+   * the user widens from there.
+   *
+   * Matched case-insensitively against the branch list. If the name is ever
+   * renamed in the BRANCH master this silently falls back to "ALL" rather than
+   * showing an empty dropdown.
+   */
+  readonly DEFAULT_BRANCH = 'AL ADRAK TRADING AND CONTRACTING COMPANY LLC';
+
+  selectedBranchName = 'ALL';
+
+  /**
+   * Two-level paging: the server sends BATCH_SIZE rows, the table shows
+   * pageSize of them. Pages inside a batch are free; only crossing a boundary
+   * goes back to the database. Every size divides BATCH_SIZE exactly, so a
+   * page never straddles two batches.
+   */
+  readonly BATCH_SIZE = 500;
+  readonly PAGE_SIZES = [100, 250, 500];
+
+  private batch: SupplierOverdueAgingRow[] = [];
+  private batchNo = 0;
+
+  /**
+   * The slice on screen. A CACHED FIELD, not a getter — a getter that builds
+   * a new array is re-read on every change-detection pass, and *ngFor then
+   * tears down and re-creates every row, which schedules another pass.
+   */
+  pagedRows: SupplierOverdueAgingRow[] = [];
+
+  pageNo = 1;
+  pageSize = 100;
+  totalCount = 0;
+  totalPages = 0;
+
+  loading = false;
+  exporting = false;
+  loadError = '';
+  hasRun = false;
+
+  readonly fixedProjectCode = 'ALL';
+  readonly fixedVendorName = 'ALL';
+  readonly fixedOutstandingStatus = 'OUTSTANDING';
+
+  /**
+   * The scrolling box around the table. Paging scrolls THIS back to the top,
+   * not the window: the table has its own scrollbar, so moving the page would
+   * throw the user out of the report instead of to the first new row.
+   */
+  @ViewChild('tableWrap') tableWrap?: ElementRef<HTMLDivElement>;
+
+  constructor(private api: Api, private toastr: ToastrService) {}
+
+  ngOnInit(): void {
+    // The report is NOT started here. loadBranches() starts it once the list is
+    // back, otherwise the first run would go out as "ALL" and be thrown away
+    // the moment the default branch was applied - two slow queries for one page.
+    this.loadBranches();
+  }
+
+  loadBranches(): void {
+    this.branchesLoading = true;
+    this.api.GetFinanceBranchList().subscribe({
+      next: (res: any) => {
+        const data = res?.data || [];
+        this.branches = [{ branchId: 1, branchName: 'ALL' }, ...(Array.isArray(data) ? data : [])];
+        this.branchesLoading = false;
+        this.applyDefaultBranch();
+        this.runReport(1);
+      },
+      error: () => {
+        this.branches = [{ branchId: 1, branchName: 'ALL' }];
+        this.branchesLoading = false;
+        this.runReport(1);
+      }
+    });
+  }
+
+  /** Select DEFAULT_BRANCH if the list contains it; otherwise stay on ALL. */
+  private applyDefaultBranch(): void {
+    const want = this.DEFAULT_BRANCH.trim().toUpperCase();
+    const hit = this.branches.find(b => (b.branchName || '').trim().toUpperCase() === want);
+    if (hit?.branchName) { this.selectedBranchName = hit.branchName; }
+  }
+
+  /** `size: 0` means "every row" and is only ever sent by Export. */
+  private buildRequest(batchNo: number, size: number): SupplierReportRequest {
+    const picked = this.branches.find(b => b.branchName === this.selectedBranchName);
+    return {
+      branchName: this.selectedBranchName || 'ALL',
+      branchId: this.selectedBranchName === 'ALL' ? 1 : Number(picked?.branchId ?? 1),
+      projectCode: this.fixedProjectCode,
+      vendorName: this.fixedVendorName,
+      outstandingStatus: this.fixedOutstandingStatus,
+      pageNo: batchNo,
+      pageSize: size
+    };
+  }
+
+  /** Always hits the server. Page moves inside a loaded batch do not call this. */
+  runReport(batchNo = 1): void {
+    this.loading = true;
+    this.loadError = '';
+
+    this.api.GetSupplierOverdueAging(this.buildRequest(batchNo, this.BATCH_SIZE)).subscribe({
+      next: (res: any) => {
+        if (res?.success) {
+          this.batch = res.data || [];
+          this.batchNo = batchNo;
+          this.totalCount = res.totalCount || this.batch.length;
+          this.totalPages = Math.ceil(this.totalCount / this.pageSize) || 0;
+          this.showPage();
+        } else {
+          this.clearResults();
+          this.loadError = res?.message || 'The report could not be loaded.';
+        }
+        this.hasRun = true;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Supplier overdue aging failed:', err);
+        this.clearResults();
+        this.loadError = this.describeError(err);
+        this.hasRun = true;
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * Turn an HTTP failure into something a person can act on.
+   *
+   * A 400 from this API is the global InvalidModelStateResponseFactory, whose
+   * message is the bare string "Validation Failed" - true but useless. The
+   * field-level reasons sit in error.errors, so they get pulled out.
+   */
+  private describeError(err: any): string {
+    const body = err?.error;
+    const detail = Array.isArray(body?.errors)
+      ? body.errors.map((e: any) => (e?.field ? e.field + ": " : "") + (e?.error ?? "")).join("; ")
+      : "";
+    const base = body?.message || body?.Message || err?.message || "The report could not be loaded.";
+    return detail ? base + " - " + detail : base;
+  }
+
+  private clearResults(): void {
+    this.batch = [];
+    this.batchNo = 0;
+    this.pagedRows = [];
+    this.totalCount = 0;
+    this.totalPages = 0;
+  }
+
+  /** Branch picked - a different result set, so start at page 1 again. */
+  onBranchChange(): void {
+    this.pageNo = 1;
+    this.runReport(1);
+  }
+
+  resetFilters(): void {
+    this.selectedBranchName = 'ALL';
+    this.pageNo = 1;
+    this.runReport(1);
+  }
+
+  // ── paging ────────────────────────────────────────────────────────────────
+  private batchNoFor(page: number): number {
+    return Math.floor(((page - 1) * this.pageSize) / this.BATCH_SIZE) + 1;
+  }
+
+  private offsetInBatch(page: number): number {
+    return ((page - 1) * this.pageSize) % this.BATCH_SIZE;
+  }
+
+  /** Cut the current page out of the batch already in memory. No API call. */
+  private showPage(): void {
+    const from = this.offsetInBatch(this.pageNo);
+    this.pagedRows = this.batch.slice(from, from + this.pageSize);
+    // Back to row 1 of the new page, inside the table only.
+    if (this.tableWrap) { this.tableWrap.nativeElement.scrollTop = 0; }
+  }
+
+  /** Fetches only when the page falls outside the batch already held. */
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) { return; }
+    this.pageNo = page;
+    const needed = this.batchNoFor(page);
+    if (needed === this.batchNo) { this.showPage(); } else { this.runReport(needed); }
+  }
+
+  firstPage(): void { this.goToPage(1); }
+  prevPage():  void { this.goToPage(this.pageNo - 1); }
+  nextPage():  void { this.goToPage(this.pageNo + 1); }
+  lastPage():  void { this.goToPage(this.totalPages); }
+
+  /** totalPages must be recomputed before goToPage's guard reads it. */
+  pageSizeChanged(): void {
+    this.pageSize = Number(this.pageSize) || 100;
+    this.totalPages = Math.ceil(this.totalCount / this.pageSize) || 0;
+    this.pageNo = 1;
+    if (this.batchNo === 1) { this.showPage(); } else { this.runReport(1); }
+  }
+
+  pageRange(): string {
+    if (!this.totalCount) { return '0'; }
+    const start = (this.pageNo - 1) * this.pageSize + 1;
+    const end = Math.min(this.pageNo * this.pageSize, this.totalCount);
+    return `${start}–${end}`;
+  }
+
+  pageNumbers(): number[] {
+    const pages: number[] = [];
+    const max = 5;
+    if (this.totalPages <= max) {
+      for (let i = 1; i <= this.totalPages; i++) { pages.push(i); }
+    } else {
+      let start = Math.max(1, this.pageNo - 2);
+      let end = Math.min(this.totalPages, this.pageNo + 2);
+      if (this.pageNo <= 3) { end = max; }
+      else if (this.pageNo >= this.totalPages - 2) { start = this.totalPages - max + 1; }
+      for (let i = start; i <= end; i++) { pages.push(i); }
+    }
+    return pages;
+  }
+
+  rowNumber(i: number): number {
+    return (this.pageNo - 1) * this.pageSize + i + 1;
+  }
+
+  /**
+   * Totals for the rows ON THIS PAGE, and labelled as such in the template.
+   * With the server sending one batch at a time, a whole-result total would
+   * need the very fetch the paging exists to avoid. The Export file totals the
+   * full set instead.
+   */
+  total(field: keyof SupplierOverdueAgingRow): number {
+    return this.pagedRows.reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
+  }
+
+  trackByRow(_i: number, r: SupplierOverdueAgingRow): string {
+    return `${r.vendorName}#${r.currency}`;
+  }
+
+  cls(value: number | undefined | null): string {
+    const n = Number(value) || 0;
+    if (n === 0) { return 'fin-zero'; }
+    return n < 0 ? 'fin-neg' : '';
+  }
+
+  /**
+   * Export covers EVERY row, so it makes its own call with pageSize 0. That is
+   * the one place a full fetch is worth it — the user asked for the whole file.
+   */
+  exportCsv(): void {
+    if (!this.totalCount) {
+      this.toastr.info('There is nothing to export yet.', 'Supplier Overdue Aging');
+      return;
+    }
+
+    this.exporting = true;
+    this.api.GetSupplierOverdueAging(this.buildRequest(1, 0)).subscribe({
+      next: (res: any) => {
+        const all: SupplierOverdueAgingRow[] = (res?.success && res.data) ? res.data : [];
+        if (!all.length) {
+          this.toastr.error('The export returned no rows.', 'Supplier Overdue Aging');
+          this.exporting = false;
+          return;
+        }
+        this.writeCsv(all);
+        this.exporting = false;
+        this.toastr.success(`${all.length} rows exported.`, 'Supplier Overdue Aging');
+      },
+      error: (err) => {
+        console.error('Export failed:', err);
+        this.toastr.error(err?.error?.message || 'The export could not be produced.', 'Supplier Overdue Aging');
+        this.exporting = false;
+      }
+    });
+  }
+
+  private writeCsv(all: SupplierOverdueAgingRow[]): void {
+    const head = ['Vendor', 'Currency', '1-30 Days', '31-60 Days', '61-90 Days',
+                  '91-120 Days', '121-180 Days', 'Above 180 Days',
+                  'Total Overdue', 'Total Outstanding'];
+
+    const esc = (v: any) => `"${(v ?? '').toString().replace(/"/g, '""')}"`;
+    const sum = (f: keyof SupplierOverdueAgingRow) =>
+      all.reduce((s, r) => s + (Number(r[f]) || 0), 0);
+
+    const lines = [
+      head.map(esc).join(','),
+      ...all.map(r => [
+        r.vendorName, r.currency, r.days_1_30, r.days_31_60, r.days_61_90,
+        r.days_91_120, r.days_121_180, r.above_180_Days,
+        r.total_Overdue, r.total_Outstanding
+      ].map(esc).join(',')),
+      // Totals over the WHOLE file, not a page.
+      ['TOTAL', '', sum('days_1_30'), sum('days_31_60'), sum('days_61_90'),
+       sum('days_91_120'), sum('days_121_180'), sum('above_180_Days'),
+       sum('total_Overdue'), sum('total_Outstanding')].map(esc).join(',')
+    ];
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SupplierOverdueAging_${this.selectedBranchName}_${stamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}

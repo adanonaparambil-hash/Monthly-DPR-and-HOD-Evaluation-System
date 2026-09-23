@@ -61,6 +61,12 @@ export const routes: Routes = [
       // configuration modal. Standalone page so both procedures can be used
       // without changing the exit form itself.
       { path: 'exit-flow-config',    loadComponent: () => import('./exit-approval-flow-config/exit-flow-config-page.component').then(m => m.ExitFlowConfigPageComponent) },
+      // Finance — supplier payment reports, read from the ADK2026 (Axpert)
+      // schema. The MENU is granted per user in the menu master (121/122/123);
+      // these routes stay reachable by URL to anyone signed in, so the API is
+      // the real gate.
+      { path: 'supplier-payment-forecast', loadComponent: () => import('./finance-reports/supplier-payment-forecast.component').then(m => m.SupplierPaymentForecastComponent) },
+      { path: 'supplier-overdue-aging',    loadComponent: () => import('./finance-reports/supplier-overdue-aging.component').then(m => m.SupplierOverdueAgingComponent) },
       { path: 'rejoining-form',      loadComponent: () => import('./rejoining-form/rejoining-form').then(m => m.RejoiningForm) },
       { path: 'leave-approval',      loadComponent: () => import('./leave-approval/leave-approval.component').then(m => m.LeaveApprovalComponent) },
       { path: 'dpr-approval',        loadComponent: () => import('./dpr-approval/dpr-approval.component').then(m => m.DprApprovalComponent) },

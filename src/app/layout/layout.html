@@ -52,10 +52,11 @@
             <a *ngFor="let child of menu.children"
                (click)="handleMenuClick(child, $event)"
                [title]="child.menuName"
-               [class.active]="child.isExternal === 'N' && child.menuUrl && currentRoute.includes(child.menuUrl)"
+               [class.active]="!isExternalMenu(child) && child.menuUrl && currentRoute.includes(child.menuUrl)"
                href="javascript:void(0)">
-              <i class="fas fa-external-link-alt" *ngIf="child.isExternal === 'Y'"></i>
-              <i class="fas fa-tachometer-alt" *ngIf="child.isExternal !== 'Y'"></i>
+              <!-- the icon follows what the link ACTUALLY is, not just the flag -->
+              <i class="fas fa-external-link-alt" *ngIf="isExternalMenu(child)"></i>
+              <i class="fas fa-tachometer-alt" *ngIf="!isExternalMenu(child)"></i>
               {{ child.menuName }}
             </a>
           </div>
@@ -63,13 +64,13 @@
 
         <!-- Root without children → plain link (skip purchase dashboard duplicate) -->
         <a *ngIf="!isDPROnlyMode && menu.children.length === 0 && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')"
-           [routerLink]="menu.isExternal === 'Y' ? null : menu.menuUrl"
-           [class.active]="menu.isExternal === 'N' && currentRoute.includes(menu.menuUrl)"
+           [routerLink]="isExternalMenu(menu) ? null : menu.menuUrl"
+           [class.active]="!isExternalMenu(menu) && currentRoute.includes(menu.menuUrl)"
            (click)="handleMenuClick(menu, $event)"
            [title]="menu.menuName"
-           [href]="menu.isExternal === 'Y' ? 'javascript:void(0)' : null">
-          <i class="fas fa-external-link-alt" *ngIf="menu.isExternal === 'Y'"></i>
-          <i class="fas fa-tachometer-alt" *ngIf="menu.isExternal === 'N'"></i>
+           [href]="isExternalMenu(menu) ? 'javascript:void(0)' : null">
+          <i class="fas fa-external-link-alt" *ngIf="isExternalMenu(menu)"></i>
+          <i class="fas fa-tachometer-alt" *ngIf="!isExternalMenu(menu)"></i>
           {{ menu.menuName }}
         </a>
       </ng-container>
@@ -189,6 +190,12 @@
           </a>
         </div>
       </div>
+
+      <!-- Finance is NOT declared here. It comes from the menu master
+           (FINANCE 121, with 122 / 123 under it) and renders through the
+           dynamic "Menu Items from API" tree above, like every other
+           permission-driven menu. Adding it here as well would show it twice
+           and bypass the permission check. -->
 
       <!-- System Master Menu with Sub-items (hidden in DPR-only mode).
            Also shown to the Employee-Master whitelist (non-HOD users), who

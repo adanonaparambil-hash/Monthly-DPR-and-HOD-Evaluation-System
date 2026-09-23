@@ -89,6 +89,12 @@ export class layout implements OnInit, OnDestroy {
     return this.employeeMasterUsers.includes(id);
   }
 
+  /* Finance (supplier payment reports) has NO flag here on purpose.
+     Visibility comes from the menu master — FINANCE (121) with Supplier
+     Payment Forecast (122) and Supplier Overdue Aging (123) under it — and is
+     rendered by the dynamic menuTree, so access is granted per user in the
+     database rather than by editing this file. */
+
   /** Purchase Dashboard visibility — driven by getUserMenus API response */
   isPurchaseDashboardUser = false;
 
@@ -364,6 +370,8 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dpr-analytics': 'DPR Dashboard',
       '/profile': 'My Profile',
       '/leave-approval': 'Approval Management',
+      '/supplier-payment-forecast': 'Supplier Payment Forecast',
+      '/supplier-overdue-aging': 'Supplier Overdue Aging',
       '/dpr-approval': 'DPR Approval Management',
       '/chat': 'Internal Communications',
       '/my-task': 'My Task Management',
@@ -501,13 +509,13 @@ export class layout implements OnInit, OnDestroy {
     
     this.closeSidebarOnMobile();
     
-    if (menu.isExternal === 'Y' && menu.menuUrl) {
+    if (this.isExternalMenu(menu)) {
       // External link → the backend mints an AES token (emp from session +
       // mode/admin/exp from this menu's canEdit/isAdmin/duration) and returns the
       // tokenized URL. The AES key stays server-side, so permissions can't be forged.
       this.openExternalMenu(menu);
 
-    } else if (menu.menuUrl && menu.isExternal === 'N') {
+    } else if (menu.menuUrl) {
       // Internal routing
       let route = menu.menuUrl;
       if (!route.startsWith('/')) {
@@ -516,6 +524,24 @@ export class layout implements OnInit, OnDestroy {
       console.log('Navigating to internal route:', route);
       this.router.navigate([route]);
     }
+  }
+
+  /**
+   * Is this menu really an outside site?
+   *
+   * IS_EXTERNAL in the menu master says what it INTENDS, but the URL says what
+   * is actually possible. A link with no scheme — '/supplier-payment-forecast',
+   * 'app-wir-report' — is a route inside this app, and sending it through the
+   * external launcher opens a blank tab pointed at a tokenised URL that does
+   * not exist. So both have to agree before we treat it as external.
+   *
+   * This makes the sidebar tolerant of a menu row flagged 'Y' by mistake, which
+   * is otherwise invisible until someone clicks it and lands on a broken page.
+   */
+  isExternalMenu(menu: any): boolean {
+    if ((menu?.isExternal ?? '').toString().trim().toUpperCase() !== 'Y') { return false; }
+    const url = (menu?.menuUrl || '').toString().trim().toLowerCase();
+    return url.startsWith('http://') || url.startsWith('https://');
   }
 
   /**
@@ -752,6 +778,7 @@ export class layout implements OnInit, OnDestroy {
     if (this.isSystemMasterRouteActive()) {
       this.isSystemMasterMenuOpen = true;
     }
+
   }
 
   isLoggingOut = false;
