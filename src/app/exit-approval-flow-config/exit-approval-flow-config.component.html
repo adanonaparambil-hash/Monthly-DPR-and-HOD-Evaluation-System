@@ -1,0 +1,407 @@
+<!-- Approval-flow configuration. Renders nothing unless `open`. -->
+<div class="afc-mask" *ngIf="open" (click)="close()">
+  <div class="afc" (click)="stop($event)">
+
+    <!-- ── header ──────────────────────────────────────────────────────── -->
+    <div class="afc-h">
+      <span class="afc-h-ic"><i class="fas fa-sliders"></i></span>
+      <div class="afc-h-tx">
+        <h3>Approval Flow Configuration</h3>
+        <p>Employee types, their approval levels, and who approves each role</p>
+      </div>
+      <span class="afc-x" (click)="close()" title="Close"><i class="fas fa-xmark"></i></span>
+    </div>
+
+    <div class="afc-err" *ngIf="loadError">
+      <i class="fas fa-circle-exclamation"></i><span>{{ loadError }}</span>
+      <span class="btn g sm" (click)="load()"><i class="fas fa-rotate"></i> Retry</span>
+    </div>
+
+    <div class="afc-b">
+
+      <!-- ── employee types rail ───────────────────────────────────────── -->
+      <div class="types">
+        <div class="th"><span>Employee types</span><span class="cnt">{{ types.length }}</span></div>
+
+        <div class="tlist">
+          <div class="tc" *ngFor="let t of types"
+               [class.on]="t === selectedType"
+               [class.dim]="!isTypeRegistered(t)"
+               (click)="selectType(t)">
+            <span class="tc-av">{{ initials(typeLabel(t), t) }}</span>
+
+            <span class="tc-mid">
+              <span class="n">{{ typeLabel(t) }}</span>
+              <span class="tc-stats">
+                <span class="st"><b>{{ activeLevelCount(t) }}</b> levels</span>
+                <span class="st"><b>{{ activeApproverCount(t) }}</b> approvers</span>
+              </span>
+            </span>
+
+            <!-- Active switch. stopPropagation, or the click would also select
+                 the type. Only offered for a type that has a master row: one
+                 that exists solely in the flow tables has nothing to toggle. -->
+            <span class="tg tc-tg" *ngIf="typeRow(t)"
+                  [class.on]="isTypeRegistered(t)"
+                  [title]="isTypeRegistered(t)
+                            ? 'Active — shown on the exit form. Click to switch off.'
+                            : 'Inactive — hidden from the exit form. Click to switch on.'"
+                  (click)="toggleTypeActive(t, $event)"><i></i></span>
+
+            <span class="tc-flag" *ngIf="!typeRow(t)"
+                  title="Configured in the flow tables but missing from the employee-type master">no
+              master</span>
+          </div>
+        </div>
+
+        <div class="empty-note" *ngIf="!types.length && !loading && !loadError">
+          <i class="fas fa-layer-group"></i>
+          <span>No employee types yet.</span>
+        </div>
+
+        <!-- "New employee type" is intentionally not offered here. Types are
+             master data: they are created once, and from this screen a user
+             only switches an existing one on or off. The create dialog and
+             createType() are left in place so it can be re-enabled by putting
+             this button back. -->
+      </div>
+
+      <!-- ── panel ─────────────────────────────────────────────────────── -->
+      <div class="panel">
+        <div class="loading" *ngIf="loading">
+          <i class="fas fa-circle-notch fa-spin"></i> Loading configuration…
+        </div>
+
+        <ng-container *ngIf="!loading">
+          <div class="tabs">
+            <span [class.on]="activeTab === 'levels'" (click)="activeTab = 'levels'">
+              <i class="fas fa-list-ol"></i> Levels
+              <b class="pill">{{ selectedLevels.length }}</b></span>
+            <span [class.on]="activeTab === 'approvers'" (click)="activeTab = 'approvers'">
+              <i class="fas fa-users"></i> Approvers
+              <b class="pill">{{ approverPeopleCount }}</b></span>
+          </div>
+
+
+          <!-- ── LEVELS ──────────────────────────────────────────────── -->
+          <div *ngIf="activeTab === 'levels'">
+            <div class="ph">
+              <h4>{{ typeLabel(selectedType) || '—' }}</h4>
+              <span class="ph-sub">the order approvals are requested in</span>
+              <!-- Adding a level is not offered: the chain itself is master
+                   data. A level can only be switched off from here. -->
+            </div>
+
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th style="width:34px"></th><th style="width:40px">Lv</th><th>Role</th>
+                  <th style="width:66px"></th>
+                </tr></thead>
+                <tbody>
+                  <tr *ngFor="let l of selectedLevels; let i = index; let last = last"
+                      [class.off]="l.isActive === 'N'">
+                    <td>
+                      <div class="ord">
+                        <i class="fas fa-chevron-up" [class.dis]="i === 0"
+                           title="Move up" (click)="i > 0 && moveLevel(l, -1)"></i>
+                        <i class="fas fa-chevron-down" [class.dis]="last"
+                           title="Move down" (click)="!last && moveLevel(l, 1)"></i>
+                      </div>
+                    </td>
+                    <td><div class="lv">{{ l.approvalLevel }}</div></td>
+                    <td>
+                      <div class="role">{{ prettyRole(l.roleCode) }}</div>
+                      <div class="sub" *ngIf="isFormRole(l.roleCode)">
+                        <i class="fas fa-file-signature"></i> chosen on the form</div>
+                      <div class="sub" *ngIf="!isFormRole(l.roleCode)"
+                           [class.warnTx]="peopleOf(l.roleCode).length === 0">
+                        {{ peopleOf(l.roleCode).length }}
+                        approver{{ peopleOf(l.roleCode).length === 1 ? '' : 's' }}</div>
+                    </td>
+                    <td>
+                      <div class="acts">
+                        <!-- edit removed on purpose: a level's role and order
+                             are master data. Only switching it off is offered. -->
+                        <span class="ic dl" title="Deactivate" (click)="deactivateLevel(l)">
+                          <i class="fas fa-ban"></i></span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="!selectedLevels.length">
+                    <td colspan="4" class="none">
+                      <i class="fas fa-list-ol"></i>
+                      <span>No active levels for this employee type.</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Edit/add opens as its own dialog rather than growing the panel:
+                 the table stays where it was, so nothing shifts under the cursor
+                 and the form is never below the fold. -->
+            <div class="fdlg-mask" *ngIf="showLevelForm" (click)="showLevelForm = false">
+              <div class="fdlg" (click)="stop($event)">
+                <div class="fdlg-h">
+                  <span class="fdlg-ic"><i class="fas fa-pen-to-square"></i></span>
+                  <div class="fdlg-tx">
+                    <h5>{{ levelForm.flowId ? 'Edit level' : 'Add level' }}</h5>
+                    <p>{{ typeLabel(selectedType) }}</p>
+                  </div>
+                  <span class="fdlg-x" (click)="showLevelForm = false"><i class="fas fa-xmark"></i></span>
+                </div>
+
+                <div class="fdlg-b">
+                  <div class="fg">
+                <div class="f">
+                  <label>Role code <span class="rq">*</span></label>
+                  <input [(ngModel)]="levelForm.roleCode" placeholder="e.g. PASSPORT" autocomplete="off">
+                  <div class="hp">Must match the approvers' role.</div>
+                </div>
+                <div class="f">
+                  <label>Approval level <span class="rq">*</span></label>
+                  <input type="number" min="1" [(ngModel)]="levelForm.approvalLevel">
+                  <div class="hp">Order in the chain.</div>
+                </div>
+              </div>
+                </div>
+
+                <div class="fdlg-f">
+                  <span class="btn g" (click)="showLevelForm = false">Cancel</span>
+                  <span class="btn" (click)="saveLevel()">
+                    <i class="fas fa-floppy-disk"></i> Save level</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── APPROVERS ───────────────────────────────────────────── -->
+          <div *ngIf="activeTab === 'approvers'">
+            <div class="ph">
+              <h4>{{ typeLabel(selectedType) || '—' }}</h4>
+              <span class="ph-sub">who approves each role</span>
+              <!-- No "Add approver" button up here on purpose. Adding from the
+                   header meant choosing the role in the dialog, and that list
+                   carried roles belonging to OTHER employee types. The + on each
+                   role section is the only way in now, so the role is decided by
+                   where you clicked and can't be got wrong. -->
+            </div>
+
+            <!-- Grouped by ROLE. A role with four people used to be four rows
+                 all repeating the role name; the chain is per role, so the role
+                 is stated once and its people sit under it. -->
+            <div class="rgroups" *ngIf="groupedApprovers.length">
+              <div class="rg" *ngFor="let g of groupedApprovers">
+
+                <div class="rg-h">
+                  <span class="rg-name">{{ prettyRole(g.role) }}</span>
+
+                  <span class="tag form" *ngIf="g.isForm">from the form</span>
+                  <span class="rg-cnt" *ngIf="!g.isForm">{{ g.people.length }}</span>
+                  <span class="tag warn" *ngIf="!roleHasLevel(g.role)">no level</span>
+
+                  <span class="rg-sp"></span>
+
+                  <span class="ic" *ngIf="!g.isForm" title="Add someone to this role"
+                        (click)="addApprover(g.role)"><i class="fas fa-plus"></i></span>
+                </div>
+
+                <div class="rg-b" *ngIf="g.people.length">
+                  <div class="rg-p" *ngFor="let a of g.people" [class.off]="a.isActive === 'N'">
+                    <span class="av sm">{{ initials(a.employeeName, a.employeeId) }}</span>
+
+                    <span class="rg-p-tx">
+                      <span class="who">{{ a.employeeName || a.employeeId }}</span>
+                      <span class="sub">
+                        <span class="mono">{{ a.employeeId }}</span>
+                        <ng-container *ngIf="a.designation"> · {{ a.designation }}</ng-container>
+                      </span>
+                    </span>
+
+                    <!-- head is a toggle, not a column: click the pill -->
+                    <span class="hd" [class.on]="a.isHead === 'Y'" (click)="toggleHead(a)"
+                          [title]="a.isHead === 'Y' ? 'Head — gets the e-mail. Click to unset.'
+                                                    : 'Set as head'">
+                      <i class="fas fa-envelope"></i> head
+                    </span>
+
+                    <span class="acts">
+                      <span class="ic" title="Edit" (click)="editApprover(a)"><i class="fas fa-pen"></i></span>
+                      <span class="ic dl" title="Remove" (click)="deactivateApprover(a)">
+                        <i class="fas fa-ban"></i></span>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="rg-empty" *ngIf="g.isForm">
+                  <i class="fas fa-file-signature"></i>
+                  The person is named on the exit form itself.
+                </div>
+                <div class="rg-empty warnTx" *ngIf="!g.isForm && !g.people.length">
+                  <i class="fas fa-triangle-exclamation"></i>
+                  Nobody assigned — a form would stall on this step.
+                </div>
+              </div>
+            </div>
+
+            <div class="tbl-wrap" *ngIf="!groupedApprovers.length">
+              <table>
+                <tbody>
+                  <tr>
+                    <td class="none">
+                      <i class="fas fa-users"></i>
+                      <span>No approvers configured for this flow.</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="hint">
+              <i class="fas fa-circle-info"></i>
+              <div><b>Head</b> receives the notification e-mail and is the primary approver;
+                any other active person on the same role may still approve.</div>
+            </div>
+
+            <div class="fdlg-mask" *ngIf="showApproverForm" (click)="showApproverForm = false">
+              <div class="fdlg" (click)="stop($event)">
+                <div class="fdlg-h">
+                  <span class="fdlg-ic"><i class="fas fa-user-plus"></i></span>
+                  <div class="fdlg-tx">
+                    <h5>{{ approverForm.deptPersonId ? 'Edit approver' : 'Add approver' }}</h5>
+                    <p>{{ typeLabel(selectedType) }}</p>
+                  </div>
+                  <span class="fdlg-x" (click)="showApproverForm = false"><i class="fas fa-xmark"></i></span>
+                </div>
+
+                <div class="fdlg-b">
+                  <div class="fg">
+                <!-- ROLE IS FIXED, not chosen. It comes from the section whose +
+                     was clicked (or from the row being edited), so it is shown,
+                     not offered. approverForm.roleCode still carries the value. -->
+                <div class="f">
+                  <label>Role</label>
+                  <div class="rolefix">
+                    <i class="fas fa-lock"></i>
+                    <span>{{ prettyRole(approverForm.roleCode) || '—' }}</span>
+                  </div>
+                  <div class="hp">Set by the section you opened this from.</div>
+                </div>
+
+                <!-- EMPLOYEE PICKER — the list is already in memory, so opening
+                     it costs no API call. Click the field to browse, or type to
+                     filter. Picking a row is what sets EMPLOYEE_ID. -->
+                <div class="f emp wide">
+                  <label>Employee <span class="rq">*</span></label>
+
+                  <!-- chosen -->
+                  <div class="emp-picked" *ngIf="approverForm.employeeId">
+                    <span class="av">{{ initials(approverForm.employeeName, approverForm.employeeId) }}</span>
+                    <span class="emp-picked-tx">
+                      <span class="who">{{ approverForm.employeeName || approverForm.employeeId }}</span>
+                      <span class="sub mono">{{ approverForm.employeeId }}</span>
+                    </span>
+                    <span class="ic" title="Change" (click)="clearEmployee()">
+                      <i class="fas fa-xmark"></i></span>
+                  </div>
+
+                  <!-- search / browse -->
+                  <div class="emp-input" *ngIf="!approverForm.employeeId">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input [(ngModel)]="approverSearch"
+                           placeholder="Click to browse, or type a name / ID…"
+                           autocomplete="off"
+                           (ngModelChange)="rebuildFilteredEmployees()"
+                           (focus)="openEmpPicker()"
+                           (click)="openEmpPicker()"
+                           (blur)="closeEmpPicker()">
+                    <i class="fas fa-chevron-down caret"></i>
+                  </div>
+
+                  <div class="emp-list" *ngIf="empPickerOpen && !approverForm.employeeId">
+                    <div class="emp-row" *ngFor="let e of filteredEmployees"
+                         [class.dis]="isAlreadyApprover(e.idValue)"
+                         (mousedown)="pickEmployee(e)">
+                      <span class="av sm">{{ initials(e.description, e.idValue) }}</span>
+                      <span class="emp-row-tx">
+                        <span class="nm">{{ e.description }}</span>
+                        <span class="mono id">{{ e.idValue }}</span>
+                      </span>
+                      <span class="tag added" *ngIf="isAlreadyApprover(e.idValue)">added</span>
+                    </div>
+                    <div class="emp-row none" *ngIf="!filteredEmployees.length">
+                      No employee matches “{{ approverSearch }}”.
+                    </div>
+                  </div>
+
+                  <div class="hp" *ngIf="!approverForm.employeeId">
+                    {{ employeeList.length }} employees available.
+                  </div>
+                </div>
+
+                <div class="f">
+                  <label>Options</label>
+                  <div class="chk" (click)="approverForm.isHead = approverForm.isHead === 'Y' ? 'N' : 'Y'">
+                    <span class="box" [class.on]="approverForm.isHead === 'Y'">
+                      <i class="fas fa-check" *ngIf="approverForm.isHead === 'Y'"></i></span>
+                    Is head
+                  </div>
+                  <div class="hp">Gets the notification e-mail.</div>
+                </div>
+              </div>
+                </div>
+
+                <div class="fdlg-f">
+                  <span class="btn g" (click)="showApproverForm = false">Cancel</span>
+                  <span class="btn" (click)="saveApprover()">
+                    <i class="fas fa-floppy-disk"></i> Save approver</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- New employee type. A dialog like the other two, so the rail does not
+         change height and jump the type list under the cursor. -->
+    <div class="fdlg-mask" *ngIf="showNewType" (click)="showNewType = false">
+      <div class="fdlg narrow" (click)="stop($event)">
+        <div class="fdlg-h">
+          <span class="fdlg-ic"><i class="fas fa-layer-group"></i></span>
+          <div class="fdlg-tx">
+            <h5>New employee type</h5>
+            <p>A separate approval chain</p>
+          </div>
+          <span class="fdlg-x" (click)="showNewType = false"><i class="fas fa-xmark"></i></span>
+        </div>
+
+        <div class="fdlg-b">
+          <div class="f">
+            <label>Type name <span class="rq">*</span></label>
+            <input [(ngModel)]="newTypeName" placeholder="e.g. Omani Driver"
+                   (keyup.enter)="createType()" autocomplete="off" #newTypeInput>
+            <div class="code-prev" *ngIf="newTypeName">
+              Saved as <b class="mono">{{ newTypeCode }}</b>
+            </div>
+            <div class="hp">Letters, digits and underscore. A type cannot be
+              renamed afterwards, so the chain it builds stays traceable.</div>
+          </div>
+        </div>
+
+        <div class="fdlg-f">
+          <span class="btn g" (click)="showNewType = false; newTypeName = ''">Cancel</span>
+          <span class="btn" (click)="createType()"><i class="fas fa-plus"></i> Create type</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="afc-f">
+      <span class="saved sm" *ngIf="dirty">
+        <i class="fas fa-circle-check"></i> Changes saved — the flow preview refreshes on close.</span>
+      <span style="flex:1"></span>
+      <span class="btn g" (click)="close()">Close</span>
+    </div>
+  </div>
+</div>

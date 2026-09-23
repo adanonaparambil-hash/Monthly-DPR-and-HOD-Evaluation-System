@@ -1,0 +1,269 @@
+<div class="dpr-page">
+  <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
+  <svg width="0" height="0"><defs>
+    <linearGradient id="hdash-gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
+    <linearGradient id="hdash-ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13827155"/><stop offset="1" stop-color="#13827100"/></linearGradient>
+  </defs></svg>
+
+  <header class="hero in">
+    <span class="aur"></span><span class="hg"></span>
+    <div class="hl">
+      <div class="eyeb"><span class="dot"></span> DPR command center · {{ hodName }}</div>
+      <div class="htitle" id="hodTitle">{{ hodTitle }}</div>
+      <div class="hsub">{{ heroDateLine }}</div>
+      <div class="deptbar">
+        <span class="deptlbl">My departments</span>
+        <button class="dpill" *ngFor="let p of deptPills; let i = index" [class.on]="activeDept === i" (click)="selectDept(i)">{{ p.label }} <span class="cnt">{{ p.count }}</span></button>
+      </div>
+      <div class="chips">
+        <span class="chip" *ngIf="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading live data…</span>
+        <span class="chip hot" *ngIf="loadError"><i class="fas fa-circle-exclamation"></i> {{ loadError }}</span>
+        <span class="chip" [class.hot]="chipForms > 0"><i class="fas fa-file-circle-check"></i> Forms to approve <b>{{ chipForms }}</b></span>
+        <span class="chip" [class.hot]="chipLogs > 0"><i class="fas fa-clipboard-check"></i> DPR logs to approve <b>{{ chipLogs }}</b></span>
+        <span class="chip" [class.hot]="chipNoDpr > 0"><i class="fas fa-user-slash"></i> No DPR today <b>{{ chipNoDpr }}</b></span>
+        <span class="chip ok"><i class="fas fa-check"></i> Logged today <b>{{ chipLogged }}</b></span>
+      </div>
+    </div>
+    <div class="hr">
+      <div class="ring">
+        <svg width="122" height="122"><circle class="tr" cx="61" cy="61" r="50" fill="none" stroke-width="10"/>
+        <circle class="vl" cx="61" cy="61" r="50" fill="none" stroke-width="10" [style.stroke-dashoffset]="animate ? heroRingOffset : 314"/></svg>
+        <div class="mid"><b>{{ heroAdoptionText }}</b><span>adoption</span></div>
+      </div>
+      <div class="rside">
+        <div class="rrow"><i class="sq" style="background:#2dd4bf"></i> Logged <b>{{ rsLogged }}</b></div>
+        <div class="rrow"><i class="sq" style="background:#818cf8"></i> Expected <b>{{ rsExpected }}</b></div>
+        <div class="rrow"><i class="sq" style="background:#f59e0b"></i> Working days <b>{{ rsWorkingDays }}</b></div>
+        <div class="rrow" style="opacity:.7;border-top:1px solid rgba(255,255,255,.15);padding-top:6px">Fulfilment <b>{{ rsFulfil }}</b></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- DEPARTMENT PULSE -->
+  <div class="band"><span class="bi" style="--bc:#138271"><i class="fas fa-gauge-high"></i></span><h3>Department Pulse</h3><span class="rule"></span><span class="cnt">live</span></div>
+  <div class="grid">
+    <div class="c12 tiles">
+      <div class="tile glass in" style="--tc:#138271;--d:40ms"><span class="lb"><i class="d" style="background:#138271"></i>Team adoption</span><b [attr.data-c]="t1c" [attr.data-s]="t1s">0</b><small class="up"><i class="fas fa-arrow-trend-up"></i> {{ t1sub }}</small></div>
+      <div class="tile glass in" style="--tc:#0ea5e9;--d:90ms"><span class="lb"><i class="d" style="background:#0ea5e9"></i>Hours logged</span><b [attr.data-c]="t2c" [attr.data-s]="t2s">0</b><small class="fl">{{ t2sub }}</small></div>
+      <div class="tile glass in" style="--tc:#f43f5e;--d:140ms"><span class="lb"><i class="d" style="background:#f43f5e"></i>Awaiting me</span><b [attr.data-c]="t3c" [attr.data-s]="t3s">0</b><small class="dn"><i class="fas fa-triangle-exclamation"></i> {{ t3sub }}</small></div>
+      <div class="tile glass in" style="--tc:#f59e0b;--d:190ms"><span class="lb"><i class="d" style="background:#f59e0b"></i>Oldest pending</span><b [attr.data-c]="t4c" [attr.data-s]="t4s">0</b><small class="dn">{{ t4sub }}</small></div>
+    </div>
+
+    <div class="c8 card glass in" style="--d:230ms">
+      <h2><span class="ic" style="--kc:#138271"><i class="fas fa-chart-area"></i></span>Team DPR compliance — last 14 working days <span class="lk">CED analytics →</span></h2>
+      <div class="chart">
+        <svg id="trend" viewBox="0 0 660 170" preserveAspectRatio="none">
+          <ng-container *ngFor="let t of trendTicks">
+            <line class="gl" x1="30" x2="630" [attr.y1]="t.y" [attr.y2]="t.y"/>
+            <text class="ax" x="2" [attr.y]="t.y + 3">{{ t.v }}</text>
+          </ng-container>
+          <path *ngFor="let p of trendPrePaths" [attr.d]="p.d" fill="none" [attr.stroke]="p.c" [attr.stroke-width]="p.w" [attr.stroke-dasharray]="p.dash ? '5 5' : null" stroke-linecap="round" [attr.opacity]="p.o"/>
+          <path [attr.d]="trendAreaD" fill="url(#hdash-ga)"/>
+          <path [attr.d]="trendLoggedD" fill="none" stroke="#138271" stroke-width="2.8" stroke-linecap="round" opacity="1"/>
+          <circle *ngFor="let d of trendDots" [attr.cx]="d.cx" [attr.cy]="d.cy" [attr.r]="d.r" [attr.fill]="d.f" stroke="#fff" stroke-width="1.4"/>
+        </svg>
+      </div>
+      <div class="note" *ngIf="!trendDots.length"><span class="mut">No activity recorded in the last 14 days.</span></div>
+      <div class="cleg"><span><i style="background:#138271"></i>Logged hours</span><span><i style="background:#6366f1"></i>Adoption %</span><span><i style="background:#94a3b8"></i>Expected (leave-adjusted)</span></div>
+    </div>
+
+    <div class="c4 card glass in" style="--d:280ms">
+      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-quote-left"></i></span>Quote of the day</h2>
+      <div class="quote"><span class="qm">”</span>
+        <q>A team is only as consistent as the habits its leader inspects — not the ones they announce.</q>
+        <div class="qa">Leadership note</div></div>
+      <div class="note" style="margin-top:14px;border-top:1px dashed var(--line);padding-top:12px">
+        <span>Top logger this month <b>{{ quoteTopLogger }}</b></span></div>
+    </div>
+  </div>
+
+  <!-- MY ACTION QUEUES -->
+  <div class="band"><span class="bi" style="--bc:#f43f5e"><i class="fas fa-inbox"></i></span><h3>My Action Queues</h3><span class="rule"></span><span class="cnt">2 separate workflows</span></div>
+  <div class="grid">
+    <div class="c6 card glass in" style="--d:40ms">
+      <h2><span class="ic" style="--kc:#f43f5e"><i class="fas fa-file-circle-check"></i></span>Forms awaiting approval
+        <span class="lock"><i class="fas fa-lock"></i> APPROVER</span></h2>
+      <div class="score"><span class="scoreN">{{ formCount }}</span><span class="bandchip b50">{{ formChip }}</span></div>
+      <div class="ap" *ngFor="let r of formRows"><span class="av" [style.background]="r.color"><i *ngIf="r.icon" [ngClass]="r.icon"></i><ng-container *ngIf="!r.icon">{{ r.ini }}</ng-container></span>
+        <div><div class="apn">{{ r.name }}</div><div class="aps">{{ r.sub }}</div></div><span class="age" [ngClass]="r.ageCls">{{ r.ageLbl }}</span></div>
+      <div class="ap" *ngIf="!formRows.length"><span class="mut">No forms are waiting for your approval.</span></div>
+      <div class="note" style="margin-top:9px" *ngIf="formNote"><span class="mut">{{ formNote }}</span></div>
+    </div>
+
+    <div class="c6 card glass in" style="--d:90ms">
+      <h2><span class="ic" style="--kc:#138271"><i class="fas fa-clipboard-check"></i></span>DPR logs awaiting approval
+        <span class="lock"><i class="fas fa-lock"></i> APPROVER</span></h2>
+      <div class="score"><span class="scoreN">{{ logCount }}</span><span class="bandchip b50">{{ logChip }}</span></div>
+      <div class="ap" *ngFor="let r of logRows"><span class="av" [style.background]="r.color"><i *ngIf="r.icon" [ngClass]="r.icon"></i><ng-container *ngIf="!r.icon">{{ r.ini }}</ng-container></span>
+        <div><div class="apn">{{ r.name }}</div><div class="aps">{{ r.sub }}</div></div><span class="age" [ngClass]="r.ageCls">{{ r.ageLbl }}</span></div>
+      <div class="ap" *ngIf="!logRows.length"><span class="mut">No DPR logs are waiting for your approval.</span></div>
+      <div style="margin-top:11px;display:flex;gap:6px"><button class="btn bt"><i class="fas fa-check-double"></i> Bulk approve</button><button class="btn bg">Review</button></div>
+    </div>
+  </div>
+
+  <!-- TEAM DPR DISCIPLINE -->
+  <div class="band"><span class="bi" style="--bc:#0ea5e9"><i class="fas fa-user-clock"></i></span><h3>Team DPR Discipline</h3><span class="rule"></span><span class="cnt">{{ teamCount }} members</span></div>
+  <div class="grid">
+    <div class="c12 card glass in" style="--d:40ms">
+      <h2><span class="ic" style="--kc:#0ea5e9"><i class="fas fa-user-group"></i></span>Team pulse — right now <span class="lk">All {{ teamCount }} →</span></h2>
+      <div class="team" id="team">
+        <div class="mem" *ngFor="let m of team; trackBy: trackMember" [style.--sc]="m.color" [style.animation]="m.anim">
+          <div class="mtop"><span class="av" [style.background]="m.color"><img *ngIf="m.img" [src]="m.img" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover"/><ng-container *ngIf="!m.img">{{ m.ini }}</ng-container></span>
+            <div><div class="mn">{{ m.n }}</div><div class="mr">{{ m.r }}</div></div></div>
+          <div class="mmid"><div class="mh">{{ m.h }}h <small>/ {{ m.exp }}</small></div>
+            <div class="mring"><svg width="40" height="40"><circle class="mt" cx="20" cy="20" r="15" fill="none" stroke-width="4"/>
+              <circle class="mv" cx="20" cy="20" r="15" fill="none" stroke-width="4" [attr.stroke]="m.color" [style.stroke-dashoffset]="animate ? m.ringOff : 94"/></svg><b>{{ m.p }}%</b></div></div>
+          <div class="mbot"><span class="pill" [ngClass]="m.pillClass"><i></i>{{ m.pillLabel }}</span><span class="mt2" [title]="m.t">{{ m.t }}</span></div>
+          <div class="mpunch"><i class="fas fa-fingerprint"></i> In <b>{{ m.in }}</b> · Out <b>{{ m.out }}</b></div>
+        </div>
+      </div>
+      <div class="note" *ngIf="!team.length"><span class="mut">No team members in this scope.</span></div>
+    </div>
+
+    <div class="c7 card glass in" style="--d:90ms">
+      <h2><span class="ic" style="--kc:#0ea5e9"><i class="fas fa-fingerprint"></i></span>Team attendance &amp; punch — today <span class="lk">Export →</span></h2>
+      <table class="atbl"><thead><tr><th>Member</th><th>In</th><th>Out</th><th>In office</th><th>DPR</th><th>Gap</th></tr></thead>
+        <tbody id="attb">
+          <tr *ngFor="let r of attRows">
+            <td class="n">{{ r.n }}</td><td>{{ r.in }}</td><td>{{ r.out }}</td><td>{{ r.off }}</td>
+            <td style="font-weight:700" [style.color]="r.dprColor">{{ r.dpr }}</td>
+            <td><span *ngIf="r.hasGap" class="gapchip" [ngClass]="r.gapCls">{{ r.gapLabel }}</span><span *ngIf="!r.hasGap" class="mut">—</span></td>
+          </tr>
+          <tr *ngIf="!attRows.length"><td colspan="6" class="mut">No attendance records for today.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="c5 card glass in" style="--d:140ms">
+      <h2><span class="ic" style="--kc:#f43f5e"><i class="fas fa-user-slash"></i></span>DPR not done — today
+        <span class="lock"><i class="fas fa-lock"></i> HOD + SURVEILLANCE</span></h2>
+      <div class="score"><span class="scoreN">{{ notDoneCount }}</span><span class="bandchip b30">NOT DONE TODAY</span></div>
+      <div class="ap" *ngFor="let r of notDoneRows"><span class="av" [style.background]="r.color"><i *ngIf="r.icon" [ngClass]="r.icon"></i><ng-container *ngIf="!r.icon">{{ r.ini }}</ng-container></span>
+        <div><div class="apn">{{ r.name }}</div><div class="aps">{{ r.sub }}</div></div><span class="age" [ngClass]="r.ageCls">{{ r.ageLbl }}</span></div>
+      <div class="ap" *ngIf="!notDoneRows.length"><span class="mut">Everyone who punched in has logged a DPR today.</span></div>
+      <div style="margin-top:10px;display:flex;gap:6px"><button class="btn bt"><i class="fas fa-paper-plane"></i> Send reminder</button><button class="btn bg">CSV</button></div>
+    </div>
+
+    <div class="c7 card glass in" style="--d:190ms">
+      <h2><span class="ic" style="--kc:#0ea5e9"><i class="fas fa-table-cells"></i></span>Compliance heatmap — member × day</h2>
+      <div style="overflow-x:auto">
+        <table id="hmap" style="border-collapse:separate;border-spacing:3px;width:100%;min-width:500px">
+          <thead><tr><th></th><th *ngFor="let d of hmapDays" style="font:700 8.5px Segoe UI;color:#94a3b8">{{ d }}</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of hmapRows">
+              <td style="font:600 11px Segoe UI;color:#475569;white-space:nowrap;padding-right:6px">{{ r.n }}</td>
+              <td *ngFor="let c of r.cells" style="width:26px;height:22px;border-radius:5px;font:700 8.5px Segoe UI;text-align:center" [style.background]="c.bg" [style.color]="c.fg" [title]="c.title">{{ c.label }}</td>
+            </tr>
+            <tr *ngIf="!hmapRows.length"><td class="mut" [attr.colspan]="hmapDays.length + 1" style="font:600 11px Segoe UI;padding:6px">No logged hours in the last 10 days.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="calleg" style="margin-top:9px"><span>0%</span><i style="background:#fecdd3"></i><i style="background:#fde68a"></i><i style="background:#a7f3d0"></i><i style="background:#2dd4bf"></i><i style="background:#0f766e"></i><span>120%+</span>
+        <span style="margin-left:auto"><i style="background:#e2e8f0"></i> Leave</span></div>
+    </div>
+
+    <div class="c5 card glass in" style="--d:240ms">
+      <h2><span class="ic" style="--kc:#f59e0b"><i class="fas fa-ranking-star"></i></span>Top loggers &amp; most consistent</h2>
+      <div class="lb2" id="hlead">
+        <div class="lbr" *ngFor="let r of leadRows; let i = index">
+          <span class="lbrk" [ngClass]="i < 3 ? 'g' + (i + 1) : ''">{{ i + 1 }}</span>
+          <div><div class="lbn">{{ r.n }}</div><div class="lbb"><i [style.background]="r.c" [style.width.%]="animate ? r.p : 0"></i></div></div>
+          <span class="lbv" [style.color]="r.tc">{{ r.v }}</span>
+        </div>
+        <div class="note" *ngIf="!leadRows.length"><span class="mut">No ranking data for this month.</span></div>
+      </div>
+    </div>
+
+    <div class="c12 card glass in" style="--d:290ms">
+      <h2><span class="ic" style="--kc:#f43f5e"><i class="fas fa-utensils"></i></span>Lunch &amp; break monitor
+        <span class="lock"><i class="fas fa-lock"></i> HOD + SURVEILLANCE</span></h2>
+      <!-- not wired to a data source yet — never render sample names/counters here -->
+      <div class="attrow" style="margin-bottom:10px">
+        <div class="attbox"><div class="k">IND 13:00–13:30</div><div class="v" style="color:var(--ink3)">— <small>worked in lunch</small></div></div>
+        <div class="attbox"><div class="k">On break</div><div class="v" style="color:var(--ink3)">—</div></div>
+        <div class="attbox"><div class="k">Idle</div><div class="v" style="color:var(--ink3)">—</div></div>
+      </div>
+      <div class="ap"><span class="mut">Break monitoring is not wired to live data yet.</span></div>
+      <div class="note" style="margin-top:9px"><span>Oman window <b>13:00–14:00</b></span></div>
+    </div>
+
+  </div>
+
+  <!-- EXCEPTIONS & DISCIPLINE -->
+  <div class="band"><span class="bi" style="--bc:#f43f5e"><i class="fas fa-triangle-exclamation"></i></span><h3>Exceptions &amp; Discipline</h3><span class="rule"></span><span class="cnt">computed — no AI</span></div>
+  <div class="grid">
+    <div class="c4 card glass in" style="--d:40ms">
+      <h2><span class="ic" style="--kc:#f59e0b"><i class="fas fa-triangle-exclamation"></i></span>Needs attention — fulfilment below 70
+        <span class="lock"><i class="fas fa-lock"></i> HOD / CED</span></h2>
+      <div class="score"><span class="scoreN">{{ lowCount }}<small> of {{ teamCount }}</small></span><span class="bandchip b50">BELOW 70</span></div>
+      <div class="ap" *ngFor="let r of lowRows"><span class="av" [style.background]="r.color"><i *ngIf="r.icon" [ngClass]="r.icon"></i><ng-container *ngIf="!r.icon">{{ r.ini }}</ng-container></span>
+        <div><div class="apn">{{ r.name }}</div><div class="aps">{{ r.sub }}</div></div><span class="age" [ngClass]="r.ageCls">{{ r.ageLbl }}</span></div>
+      <div class="ap" *ngIf="!lowRows.length"><span class="mut">Nobody is below 70% fulfilment.</span></div>
+      <div class="note" style="margin-top:9px"><span class="mut">{{ lowNote }}</span></div>
+    </div>
+
+    <div class="c4 card glass in" style="--d:90ms">
+      <h2><span class="ic" style="--kc:#dc2626"><i class="fas fa-user-slash"></i></span>Non-submitters — period
+        <span class="lock"><i class="fas fa-lock"></i> HOD / CED</span></h2>
+      <div class="score"><span class="scoreN">{{ staleCount }}<small> of {{ staleOf }}</small></span><span class="bandchip b30">{{ staleChip }}</span></div>
+      <div class="ap" *ngFor="let r of staleRows"><span class="av" [style.background]="r.color"><i *ngIf="r.icon" [ngClass]="r.icon"></i><ng-container *ngIf="!r.icon">{{ r.ini }}</ng-container></span>
+        <div><div class="apn">{{ r.name }}</div><div class="aps">{{ r.sub }}</div></div><span class="age" [ngClass]="r.ageCls">{{ r.ageLbl }}</span></div>
+      <div class="ap" *ngIf="!staleRows.length"><span class="mut">Everyone has logged within the last 3 days.</span></div>
+      <div class="note" style="margin-top:9px"><span class="mut">{{ staleNote }}</span></div>
+    </div>
+
+    <div class="c4 card glass in" style="--d:140ms">
+      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-pen-fancy"></i></span>Remark discipline
+        <span class="lock"><i class="fas fa-lock"></i> HOD / CED</span></h2>
+      <div class="score"><span class="scoreN">{{ remarkAvg }}<small>%</small></span><span class="bandchip b50">DEPT AVERAGE COVERAGE</span></div>
+      <div class="stack"><i *ngFor="let s of stackSegs" [style.background]="s.c" [style.width.%]="animate ? s.w : 0"></i></div>
+      <div class="slegend">
+        <span><i style="background:#16a34a"></i>Proper reporters <b>{{ stackCounts.proper }}</b></span><span><i style="background:#f59e0b"></i>Description-only <b>{{ stackCounts.desc }}</b></span>
+        <span><i style="background:#dc2626"></i>No documentation <b>{{ stackCounts.none }}</b></span><span><i style="background:#8b5cf6"></i>Copy-paste <b>{{ stackCounts.dup }}</b></span></div>
+      <div class="note" style="margin-top:9px"><span class="mut">Repeating a remark on the same continuing task is legitimate and is never flagged.</span></div>
+    </div>
+    <div class="c12 card glass in" style="--d:190ms">
+      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-wand-magic-sparkles"></i></span>Department AI audit
+        <span class="lock" style="background:#eef2ff;color:#4338ca;border-color:#c7d2fe"><i class="fas fa-hand-pointer"></i> ON REQUEST</span></h2>
+      <div class="empty empty-wide">
+        <i class="fas fa-file-shield"></i>
+        <div>
+          <p>Write a full DPR audit for your department — adoption, fulfilment, remark discipline and per-person findings, in 12 sections with a PDF export.</p>
+          <div style="margin-top:11px;display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn bt"><i class="fas fa-wand-magic-sparkles"></i> Generate audit</button>
+            <button class="btn bg">{{ auditMonthLabel }}</button>
+          </div>
+          <small style="display:block;margin-top:9px">Runs only when you press the button — no scheduler, nothing generated on login. Takes 10–30 seconds.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMUNICATIONS -->
+  <div class="band"><span class="bi" style="--bc:#0ea5e9"><i class="fas fa-bullhorn"></i></span><h3>Communications</h3><span class="rule"></span><span class="cnt">broadcast health</span></div>
+  <div class="grid">
+    <div class="c4 card glass in" style="--d:40ms">
+      <h2><span class="ic" style="--kc:#f59e0b"><i class="fas fa-bullhorn"></i></span>Announcements <span class="lk">All notices →</span></h2>
+      <!-- not wired to a data source yet — empty state, never sample notices -->
+      <div class="ap" style="padding-top:0"><span class="mut">Announcements are not wired to live data yet.</span></div>
+    </div>
+
+    <div class="c3 card glass in" style="--d:90ms">
+      <h2><span class="ic" style="--kc:#6366f1"><i class="fas fa-bell"></i></span>My notifications</h2>
+      <!-- not wired to a data source yet — empty state, never sample notifications -->
+      <div class="ex" style="padding-top:0"><span class="mut">Notifications are not wired to live data yet.</span></div>
+    </div>
+
+    <div class="c5 card glass in" style="--d:140ms">
+      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-tower-broadcast"></i></span>Broadcast health
+        <span class="lock"><i class="fas fa-lock"></i> NEEDS NEW GATE</span></h2>
+      <!-- not wired to a data source yet — empty state, never sample broadcasts -->
+      <div class="attrow" style="margin-bottom:10px">
+        <div class="attbox"><div class="k">Active</div><div class="v" style="color:var(--ink3)">—</div></div>
+        <div class="attbox"><div class="k">Upcoming</div><div class="v">—</div></div>
+        <div class="attbox"><div class="k">High priority</div><div class="v" style="color:var(--ink3)">—</div></div>
+      </div>
+      <div class="ap"><span class="mut">Broadcast health is not wired to live data yet.</span></div>
+    </div>
+  </div>
+</div>

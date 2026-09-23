@@ -16,9 +16,12 @@ import {
   UpdateExitApprovalRequest,
   IssuedAsset,
   IssuedAssetsResponse,
-  GroupedAssets
+  GroupedAssets,
+  EmpType,
+  EmpTypeFlowStep
 } from '../models/employeeExit.model';
 import { SessionService } from '../services/session.service';
+import { ExitApprovalFlowConfigComponent } from '../exit-approval-flow-config/exit-approval-flow-config.component';
 import { ToastrService } from 'ngx-toastr';
 import { ApprovalWorkflowService } from '../services/approval-workflow.service';
 import { AvatarUtil } from '../utils/avatar.util';
@@ -54,7 +57,7 @@ interface ResponsibilityHandover {
 @Component({
   selector: 'app-emergency-exit-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ExitApprovalFlowConfigComponent],
   templateUrl: './emergency-exit-form.component.html',
   styleUrls: ['./emergency-exit-form.component.css'],
   animations: [
@@ -468,6 +471,7 @@ export class EmergencyExitFormComponent implements OnInit {
 
       // Load master lists from API - Add delay to ensure component is ready
       setTimeout(() => {
+        this.loadEmpTypes();           // once per new form: the type list
         this.loadHodMasterList();
         this.loadEmployeeMasterList(); // Using this for both Project Manager and Responsibilities dropdowns
       }, 100);
@@ -527,6 +531,10 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   setupDateChangeListeners(): void {
+    // Category decides whether Flight Time exists at all (Omani = leave, not
+    // travel), so its validator has to react to Category as well. Wired once.
+    this.setupCategoryChangeListener();
+
     // Only setup listeners for Emergency and Planned Leave forms (not Resignation)
     if (this.formType === 'E' || this.formType === 'P') {
       // Listen to changes in Date of Departure
@@ -679,6 +687,8 @@ export class EmergencyExitFormComponent implements OnInit {
         // Load master lists for non-approval mode
         this.loadHodMasterList();
         this.loadEmployeeMasterList(); // Using this for both Project Manager and Responsibilities dropdowns
+        // same treatment as the lists above (none of them depend on form type;
+        // reloading here also recovers if the ngOnInit call failed)
 
         // Ensure fields are enabled for regular form usage
         this.enableFormFields();
@@ -750,6 +760,8 @@ export class EmergencyExitFormComponent implements OnInit {
             flightTime: data.flightTime || '',
             noOfDaysApproved: data.noOfDaysApproved || 0,
             hodName: data.depHod || '',
+            siteAdmin: data.siteAdmin || '',
+            campBoss: data.campBoss || '',
             projectManagerName: data.projectSiteIncharge || '', // Store the ID
             reasonForEmergency: data.reasonForLeave || '',
             category: this.mapCategoryFromBackend(data.category), // Map S/W to Staff/Worker
@@ -979,9 +991,15 @@ export class EmergencyExitFormComponent implements OnInit {
       responsibilitiesHandedOverToPhone: [''], // Phone number for planned/resignation
       responsibilitiesHandedOverToEmail: [''], // Email for planned/resignation
 
-      // HOD Information
+      // HOD Information.
+      // Required by default, but the Worker category hides this field and
+      // clears the validator — see applyWorkerFieldsForCategory().
       hodName: ['', Validators.required],
       hodSignature: [''],
+
+      // Worker category only: these stand in for the HOD on those forms.
+      siteAdmin: [''],
+      campBoss: [''],
 
       // Project Manager / Site Incharge (for Planned Leave and Resignation)
       projectManagerName: [''],
@@ -1029,6 +1047,9 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('Emergency Exit Form - Populating form with data:', formData);
       this.exitForm.patchValue(formData);
 
+      // The form is for the signed-in user until the ID No. picker says otherwise
+      this.selectedEmployeeId = (formData.employeeId || '').toString().trim();
+
       // Load employee profile with photo
       this.loadEmployeeProfile();
 
@@ -1039,12 +1060,19 @@ export class EmergencyExitFormComponent implements OnInit {
     }
   }
 
-  // Load employee profile with photo
-  loadEmployeeProfile(): void {
-    const empId = this.currentUser?.empId;
-    if (empId) {
-      this.api.GetEmployeeProfile(empId).subscribe({
+  // Load employee profile with photo.
+  // `empId` defaults to the signed-in user, so every existing caller behaves
+  // exactly as before. The ID No. picker passes another employee: then the
+  // session-user fallbacks (photo / email) are skipped, and a response for
+  // someone who is no longer the selected employee is dropped, so a slow
+  // lookup can never overwrite a later selection.
+  loadEmployeeProfile(empId?: string): void {
+    const target = (empId || this.currentUser?.empId || '').toString().trim();
+    const isSelf = !!target && target === (this.currentUser?.empId || '').toString().trim();
+    if (target) {
+      this.api.GetEmployeeProfile(target).subscribe({
         next: (response: any) => {
+          if (this.selectedEmployeeId && target !== this.selectedEmployeeId) { return; } // stale
           if (response && response.success && response.data) {
             const data = response.data;
 
@@ -1054,8 +1082,8 @@ export class EmergencyExitFormComponent implements OnInit {
             // Capture Date of Joining
             this.employeeDoj = this.parseDojToIso(data.doj || '');
 
-            // Fallback to session photo if still not set
-            if (!this.hasRealEmployeePhoto() && this.currentUser.photo) {
+            // Fallback to session photo if still not set (own form only)
+            if (isSelf && !this.hasRealEmployeePhoto() && this.currentUser?.photo) {
               this.employeePhoto = this.currentUser.photo;
             }
 
@@ -1069,11 +1097,11 @@ export class EmergencyExitFormComponent implements OnInit {
               nation: data.nationality || data.nation || '',
               telephoneMobile: data.phone || '',
               telephoneLandline: data.telephoneNo || data.telephone || '',
-              emailId: data.email || this.currentUser.email || '',
+              emailId: data.email || (isSelf ? this.currentUser?.email : '') || '',
               department: data.empDept || data.department || '',
               // Auto-fill phone and email for planned and resignation forms
               responsibilitiesHandedOverToPhone: (this.formType === 'P' || this.formType === 'R') ? (data.phone || '') : '',
-              responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (data.email || this.currentUser.email || '') : ''
+              responsibilitiesHandedOverToEmail: (this.formType === 'P' || this.formType === 'R') ? (data.email || (isSelf ? this.currentUser?.email : '') || '') : ''
             });
 
             console.log('Employee profile loaded successfully');
@@ -1383,6 +1411,10 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   private performFormSubmission(): void {
+    // Worker / Omani carry no chain without a type, so stop before the request
+    // is built rather than saving a form nobody can approve.
+    if (!this.validateApprovalType()) { return; }
+
     this.isSubmitting = true;
 
     try {
@@ -1453,7 +1485,10 @@ export class EmergencyExitFormComponent implements OnInit {
 
     // Prepare responsibilities array for all form types that use responsibilities
     const responsibilities: EmployeeExitResponsibility[] = [];
-    if ((this.formType === 'E' || this.formType === 'P' || this.formType === 'R') && formValue.responsibilities) {
+    // Worker has no handover section — send nothing rather than blank rows
+    if (!this.isWorkerCategory
+        && (this.formType === 'E' || this.formType === 'P' || this.formType === 'R')
+        && formValue.responsibilities) {
       formValue.responsibilities.forEach((resp: any) => {
         responsibilities.push({
           activities: resp.activities || '',
@@ -1475,7 +1510,15 @@ export class EmergencyExitFormComponent implements OnInit {
 
     const exitRequest: EmployeeExitRequest = {
       exitId : this.route.snapshot.queryParams['exitID'] || this.route.snapshot.queryParams['exitId'] || 0,
-      employeeId: formValue.employeeId || '',
+      // WHO the form is for: the ID No. on the form (picker value, or the signed-in
+      // user by default). getRawValue() already includes the disabled control; the
+      // direct read is a belt-and-braces fallback.
+      employeeId: formValue.employeeId || this.exitForm.get('employeeId')?.value || '',
+      // WHO filed it: always the signed-in session user -> p_created_by
+      createdBy: (this.currentUser?.empId || this.currentUser?.employeeId || '').toString().trim(),
+      // WHICH approval chain -> p_approval_type. Ignored by the proc on a
+      // resubmit, so an in-flight form can never have two chains merged into it.
+      approvalType: this.approvalType || undefined,
       employeeName: formValue.employeeName || '',
       emailId: formValue.emailId || '',
       formType: this.formType, // 'E' for Emergency, 'P' for Planned, 'R' for Resignation
@@ -1484,7 +1527,10 @@ export class EmergencyExitFormComponent implements OnInit {
       flightTime: formValue.flightTime || '',
       responsibilitiesHanded: '', // No longer using single dropdown - using responsibilities array for all types
       noOfDaysApproved: parseInt(formValue.noOfDaysApproved) || 0,
+      // Worker sends Site Admin + Camp Boss instead; HOD stays empty there.
       depHod: formValue.hodName || '',
+      siteAdmin: formValue.siteAdmin || '',
+      campBoss: formValue.campBoss || '',
       projectSiteIncharge: formValue.projectManagerName || '', // Fix: use projectManagerName from form
       reasonForLeave: formValue.reasonForEmergency || '',
       approvalStatus: 'P',
@@ -1600,6 +1646,529 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   // Placeholder methods - these would need to be implemented based on your requirements
+  /**
+   * Omani on a Planned-leave form: the "Travel Information" block is really
+   * LEAVE information — there is no flight, so the dates are leave start/end
+   * and Flight Time does not apply.
+   *
+   * Reads the CONTROL rather than a local flag, so it is equally correct for a
+   * live selection, a reloaded saved form, and disabled view/approval mode
+   * (a disabled control still reports its value).
+   *
+   * Scoped to formType 'P' deliberately: Resignation already renders
+   * "Resignation Information" with a Last Working Date and no arrival/flight
+   * fields, and the Emergency form has no Category at all. Accepts the raw
+   * backend code 'O' as well as the mapped 'Omani'.
+   */
+  /**
+   * Worker category: the "Responsibilities Handed Over To" section does not
+   * apply — it is hidden, never validated, and nothing is submitted for it.
+   *
+   * Reads the CONTROL so it is correct for a live selection, a reloaded saved
+   * form and disabled view/approval mode. Scoped to the form types that
+   * actually have a Category (P/R), so a stale value can never leak into an
+   * Emergency form. Accepts the raw backend code 'W' as well as 'Worker'.
+   */
+  get isWorkerCategory(): boolean {
+    if (this.formType !== 'P' && this.formType !== 'R') { return false; }
+    const c = (this.exitForm?.get('category')?.value || '').toString().trim().toUpperCase();
+    return c === 'WORKER' || c === 'W';
+  }
+
+  get isOmaniLeaveMode(): boolean {
+    if (this.formType !== 'P') { return false; }
+    const c = (this.exitForm?.get('category')?.value || '').toString().trim().toUpperCase();
+    return c === 'OMANI' || c === 'O';
+  }
+
+  private categorySubWired = false;
+
+  /**
+   * Flight Time exists only when this is real travel, so its required
+   * validator has to track BOTH form type and Category.
+   *
+   * emitEvent:false is deliberate — this runs from inside Category's own
+   * valueChanges, and re-emitting would re-enter the same handler.
+   */
+  /**
+   * Worker swaps HOD for Site Admin + Camp Boss.
+   *
+   * A hidden field must never keep a required validator, or the form is
+   * invalid with nothing on screen for the user to fix — the same trap
+   * applyFlightTimeValidator() guards against. So the required flag moves with
+   * the fields: HOD required for Staff/Omani, the other two required for
+   * Worker, and whichever set is hidden is cleared.
+   *
+   * emitEvent:false — this runs from inside Category's own valueChanges.
+   */
+  private applyWorkerFieldsForCategory(): void {
+    const hod  = this.exitForm.get('hodName');
+    const site = this.exitForm.get('siteAdmin');
+    const camp = this.exitForm.get('campBoss');
+    if (!hod || !site || !camp) { return; }
+
+    if (this.isWorkerCategory) {
+      hod.clearValidators();
+      site.setValidators([Validators.required]);
+      camp.setValidators([Validators.required]);
+    } else {
+      hod.setValidators([Validators.required]);
+      site.clearValidators();
+      camp.clearValidators();
+      // leave the values alone: switching Worker -> Staff and back should not
+      // throw away what was already picked
+    }
+
+    hod.updateValueAndValidity({ emitEvent: false });
+    site.updateValueAndValidity({ emitEvent: false });
+    camp.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private applyFlightTimeValidator(): void {
+    const ft = this.exitForm.get('flightTime');
+    if (!ft) { return; }
+    if ((this.formType === 'E' || this.formType === 'P') && !this.isOmaniLeaveMode) {
+      ft.setValidators([Validators.required]);
+    } else {
+      // hidden field: the validator must go with it, or the form is invalid
+      // with nothing on screen for the user to fix
+      ft.clearValidators();
+    }
+    ft.updateValueAndValidity({ emitEvent: false });
+  }
+
+  /**
+   * The handover section is hidden for Worker, so the whole responsibilities
+   * FormArray is disabled with it — Angular excludes disabled controls from
+   * the parent form's validity, so no per-row validator can block submit for
+   * a section nobody can see. Rows are kept (not cleared) so switching back to
+   * Staff/Omani does not throw away what was already typed.
+   *
+   * emitEvent:false — this runs from inside Category's own valueChanges.
+   */
+  private applyResponsibilitiesForCategory(): void {
+    const arr = this.exitForm.get('responsibilities');
+    if (!arr) { return; }
+    if (this.isWorkerCategory) {
+      arr.disable({ emitEvent: false });
+    } else if (!this.isViewMode && !this.isApprovalMode) {
+      // never re-enable in view/approval mode — everything is disabled there
+      // on purpose (disableAllFormFields)
+      arr.enable({ emitEvent: false });
+    }
+  }
+
+  // ── Approval flow by employee type ────────────────────────────────────────
+  // Backed by PKG_EXITFORM.SP_GET_EMP_TYPE_APPROVAL_FLOW, in two calls:
+  //   1. once per NEW form  -> the selectable types (no chain yet)
+  //   2. on each pick       -> that type's chain, which fills the card below
+  //
+  // The picker is offered for Worker and Omani only. Staff uses its standard
+  // flow, so its type is resolved automatically. A saved form never fetches at
+  // all: it keeps the chain it was created with, which comes from
+  // approvalWorkflow, not from here.
+
+  empTypes: EmpType[] = [];
+  empTypeSteps: EmpTypeFlowStep[] = [];
+  selectedFlowType: string = '';
+  flowTypesLoading = false;
+  flowStepsLoading = false;
+  /** Types are fetched once per form, not on every Category change. */
+  private empTypesLoaded = false;
+
+  private readonly ROLE_LABELS: { [k: string]: string } = {
+    'HANDOVER': 'Handing Over Approval',
+    'HOD': 'HOD Approval',
+    'PROJECT_MANAGER': 'Project Manager Approval',
+    'IT': 'IT Approval',
+    'AUDIT': 'Audit Approval',
+    'FINANCE': 'Finance Approval',
+    'FACILITY': 'Facility Approval',
+    'TRANSPORT': 'Transport Approval',
+    'HR': 'HR Approval',
+    'ADMIN': 'Admin Approval',
+    'PASSPORT': 'Passport Approval',
+    // worker chain
+    'SITE_ADMIN': 'Site Admin Approval',
+    'SITE_INCHARGE': 'Site Incharge Approval',
+    'CAMBOSS': 'Camp Boss Approval',
+    'BNS_CAMP': 'BNS Camp Approval',
+    'STORE': 'Store Approval',
+    'TRAINING_CENTER': 'Training Center Approval'
+  };
+
+  /**
+   * Roles whose approver is picked on this form rather than configured.
+   * Staff / Omani take HOD, Project Manager and the handover people; Worker
+   * takes Site Admin, Site Incharge and Camp Boss. Used by the chain preview
+   * so those steps read "Chosen on this form".
+   */
+  private readonly FORM_FILLED_ROLES = [
+    'HOD', 'PROJECT_MANAGER', 'HANDOVER',
+    'SITE_ADMIN', 'SITE_INCHARGE', 'CAMBOSS'
+  ];
+
+  /** Category as chosen on the form, upper-cased. Accepts full words or codes. */
+  private get categoryPicked(): string {
+    return (this.exitForm?.get('category')?.value || '').toString().trim().toUpperCase();
+  }
+
+  /** The type dropdown is for Worker and Omani; Staff is resolved for them. */
+  /**
+   * Omani only. Staff and Worker each have one standard chain, resolved
+   * without asking; Omani is the category that genuinely has more than one.
+   */
+  get canPickFlowType(): boolean {
+    return this.canPickEmployee
+        && ['OMANI', 'O'].includes(this.categoryPicked);
+  }
+
+  /**
+   * The employee types on offer for the Category currently chosen.
+   *
+   *   Staff           -> none. Staff has one standard chain, resolved without
+   *                      asking, so the dropdown is not shown at all.
+   *   Worker / Omani  -> only that category's own types.
+   *
+   * Matched on the type CODE or NAME containing the category word, because
+   * that is the only link between the two: Category is a fixed radio on this
+   * form, while employee types are free-text master data created in the
+   * configuration modal. So OMANI_STAFF and OMANI_DRIVER belong to Omani,
+   * WORKER_SITE would belong to Worker.
+   *
+   * A plain STAFF type is never offered here — it is the Staff default and
+   * showing it under Omani or Worker is exactly the mix-up being removed.
+   */
+  get typesForCategory(): EmpType[] {
+    const c = this.categoryPicked;
+    const word = (c === 'W' || c === 'WORKER') ? 'WORKER'
+               : (c === 'O' || c === 'OMANI')  ? 'OMANI'
+               : '';
+    if (!word) { return []; }
+
+    return (this.empTypes || []).filter(t => {
+      const code = (t.typeCode || '').toString().toUpperCase();
+      const name = (t.typeName || '').toString().toUpperCase();
+      if (code === 'STAFF') { return false; }
+      return code.includes(word) || name.includes(word);
+    });
+  }
+
+  /** The card shows a real chain once a Category has been chosen. */
+  get showFlowPreview(): boolean {
+    return ['STAFF', 'WORKER', 'OMANI', 'S', 'W', 'O'].includes(this.categoryPicked);
+  }
+
+  /**
+   * The value saved as APPROVAL_TYPE — which chain this form is filed under.
+   *
+   *   Category = Staff           -> 'STAFF'
+   *   Category = Worker / Omani  -> whatever the Employee type dropdown holds
+   *
+   * For Staff it is resolved rather than read from the dropdown, because the
+   * dropdown is not offered for Staff. Empty until a Category is chosen, and
+   * empty for Worker / Omani until the user actually picks a type — that is
+   * what validateApprovalType() below reports on.
+   */
+  get approvalType(): string {
+    const c = this.categoryPicked;
+    if (c === 'S' || c === 'STAFF') { return 'STAFF'; }
+    if (['W', 'WORKER', 'O', 'OMANI'].includes(c)) {
+      return (this.selectedFlowType || '').toString().trim().toUpperCase();
+    }
+    return (this.selectedFlowType || '').toString().trim().toUpperCase();
+  }
+
+  /**
+   * Worker and Omani must have a type picked before the form can be saved:
+   * without one the procedure has no chain to build and the form would be
+   * submitted with no approvers at all.
+   */
+  private validateApprovalType(): boolean {
+    const c = this.categoryPicked;
+    if (!['W', 'WORKER', 'O', 'OMANI'].includes(c)) { return true; }
+    if (this.approvalType) { return true; }
+
+    this.toastr.error('Select an Employee type in the Current Approval Flow card before saving.');
+    return false;
+  }
+
+  /**
+   * ONE call, on a new form only. Nothing is fetched for a saved form, and
+   * nothing is re-fetched when Category changes — only the chain is.
+   */
+  loadEmpTypes(force = false): void {
+    if (!this.canPickEmployee) { return; }
+    if (this.empTypesLoaded && !force) { return; }
+
+    this.empTypesLoaded = true;
+    this.flowTypesLoading = true;
+
+    this.api.GetEmpTypeApprovalFlow('E').subscribe({
+      next: (res: any) => {
+        this.flowTypesLoading = false;
+        this.empTypes = res?.data?.types ?? [];
+        this.syncFlowTypeToCategory();
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        // non-fatal: the card falls back to the static preview
+        this.flowTypesLoading = false;
+        this.empTypes = [];
+        console.error('Error loading employee types:', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** The chosen type's chain. A type with nothing configured returns nothing. */
+  loadFlowForType(code: string): void {
+    const t = (code || '').toString().trim().toUpperCase();
+    if (!t) { this.empTypeSteps = []; this.buildPreviewFlowSteps(); this.cdr.detectChanges(); return; }
+
+    this.flowStepsLoading = true;
+    this.api.GetEmpTypeApprovalFlow('E', t).subscribe({
+      next: (res: any) => {
+        this.flowStepsLoading = false;
+        this.empTypeSteps = res?.data?.steps ?? [];
+        this.buildPreviewFlowSteps();
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.flowStepsLoading = false;
+        this.empTypeSteps = [];
+        this.buildPreviewFlowSteps();
+        console.error('Error loading approval flow:', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Category changed. Staff resolves to its own type and loads straight away.
+   * Worker and Omani pre-select the matching type when one exists, and
+   * otherwise clear the selection so the user picks from the dropdown.
+   */
+  private syncFlowTypeToCategory(): void {
+    if (!this.canPickEmployee) { return; }        // saved form: never re-pick
+
+    const c = this.categoryPicked;
+    const has = (code: string) =>
+      this.empTypes.some(t => (t.typeCode || '').toString().toUpperCase() === code);
+    const pick = (code: string) => {
+      if (code === this.selectedFlowType) { return; }
+      this.selectedFlowType = code;
+      this.loadFlowForType(code);
+    };
+
+    // Staff and Worker: resolved, never asked — no dropdown is shown for them.
+    if (c === 'S' || c === 'STAFF') {
+      if (has('STAFF')) { pick('STAFF'); }
+      return;
+    }
+
+    if (c === 'W' || c === 'WORKER') {
+      // prefer a type literally called WORKER, else the single worker type
+      if (has('WORKER')) { pick('WORKER'); return; }
+      const workerTypes = this.typesForCategory;
+      if (workerTypes.length === 1) {
+        pick((workerTypes[0].typeCode || '').toString().toUpperCase());
+      } else {
+        this.selectedFlowType = '';
+        this.empTypeSteps = [];
+        this.buildPreviewFlowSteps();
+      }
+      return;
+    }
+
+    if (c === 'O' || c === 'OMANI') {
+      const options = this.typesForCategory;
+
+      // exactly one type for this category — nothing to choose, pick it
+      if (options.length === 1) {
+        pick((options[0].typeCode || '').toString().toUpperCase());
+        return;
+      }
+
+      // keep the current pick if it still belongs to this category, so
+      // re-rendering does not wipe a choice the user already made
+      const stillValid = options.some(t =>
+        (t.typeCode || '').toString().toUpperCase() === this.selectedFlowType);
+      if (stillValid) { return; }
+
+      // several options, or none: the user picks from the dropdown
+      this.selectedFlowType = '';
+      this.empTypeSteps = [];
+      this.buildPreviewFlowSteps();
+      return;
+    }
+
+    // no category chosen yet
+    this.selectedFlowType = '';
+    this.empTypeSteps = [];
+    this.buildPreviewFlowSteps();
+  }
+
+  /** The dropdown's (change). Loads that type's chain into the card. */
+  onFlowTypeChange(value: string): void {
+    this.selectedFlowType = (value || '').toString().trim().toUpperCase();
+    this.empTypeSteps = [];
+    this.buildPreviewFlowSteps();
+    this.loadFlowForType(this.selectedFlowType);
+  }
+
+  isFlowTypeSelected(t: EmpType): boolean {
+    return (t?.typeCode || '').toString().toUpperCase() === this.selectedFlowType;
+  }
+
+  /** Keeps timeline rows identified across renders instead of by array index. */
+  trackStep = (i: number, s: any): any => s?.stepId ?? s?.stepName ?? i;
+
+  /** Levels in the chosen chain — shown next to the selector. */
+  get selectedFlowLevelCount(): number {
+    return this.previewFlowSteps.length;
+  }
+
+  /**
+   * Readable label for an employee type. TYPE_NAME is usually stored as the
+   * code itself (OMANI_STAFF), which reads as shouting in a dropdown, so a
+   * name that is just the code gets title-cased. A name someone actually
+   * typed is shown exactly as typed.
+   */
+  typeOptionLabel(t: EmpType | undefined): string {
+    const raw = ((t?.typeName || '').toString().trim()
+              || (t?.typeCode || '').toString().trim());
+    if (!raw) { return ''; }
+
+    if (raw === raw.toUpperCase()) {
+      return raw.split(/[_\s]+/).filter(Boolean)
+        .map(w => w.charAt(0) + w.slice(1).toLowerCase())
+        .join(' ');
+    }
+    return raw;
+  }
+
+  /** The chosen type's label, for the preview notice. */
+  get selectedFlowTypeLabel(): string {
+    const code = (this.selectedFlowType || '').toString().trim();
+    if (!code) { return ''; }
+
+    const row = (this.empTypes || []).find(
+      t => (t.typeCode || '').toString().toUpperCase() === code.toUpperCase());
+    return this.typeOptionLabel(row) || this.typeOptionLabel({ typeCode: code } as EmpType);
+  }
+
+  /**
+   * The chain mapped into ApprovalStep for the EXISTING timeline markup.
+   *
+   * A CACHED FIELD, not a getter, and this matters. The template reads it from
+   * *ngFor (through getDisplayApprovalWorkflow) and from three *ngIf
+   * expressions, so a getter that rebuilt the array ran several times per
+   * change-detection pass AND handed back a new array reference every time.
+   * *ngFor then tore down and re-created every row, which scheduled another
+   * pass — the form locked up as soon as a Category was picked and real steps
+   * existed. Rebuilt only when empTypeSteps actually changes.
+   */
+  previewFlowSteps: ApprovalStep[] = [];
+
+  /**
+   * The cursor returns ONE ROW PER PERSON, so a level with four approvers
+   * arrives as four rows. They are grouped back to one step per (level, role)
+   * and the names joined; without this the timeline would show IT four times.
+   *
+   * Still a preview: the real approver rows are created on submit, which is why
+   * the PREVIEW badge stays.
+   */
+  private buildPreviewFlowSteps(): void {
+    const groups = new Map<string, { level: number; role: string; formPicked: boolean; names: string[] }>();
+
+    for (const s of this.empTypeSteps) {
+      const level = Number(s.approvalLevel ?? 0);
+      const role = (s.roleCode || '').toString().trim();
+      const key = level + '|' + role;
+
+      let g = groups.get(key);
+      if (!g) {
+        g = {
+          level,
+          role,
+          // isFormSelected comes from the procedure, which today only flags
+          // HOD / PROJECT_MANAGER / HANDOVER. The Worker chain's three
+          // form-filled roles are OR'd in here so the preview does not claim
+          // they will be "assigned after submission" when the filer picked
+          // them on this very form.
+          formPicked: (s.isFormSelected || '').toString().toUpperCase() === 'Y'
+                      || this.FORM_FILLED_ROLES.includes((s.roleCode || '').toString().trim().toUpperCase()),
+          names: []
+        };
+        groups.set(key, g);
+      }
+      // a LEFT JOIN miss is a real level with nobody on it
+      const name = (s.employeeName || s.employeeId || '').toString().trim();
+      if (name) { g.names.push(name); }
+    }
+
+    this.previewFlowSteps = [...groups.values()]
+      .sort((a, b) => (a.level - b.level) || a.role.localeCompare(b.role))
+      .map((g, i) => ({
+        stepId: i + 1,
+        stepName: this.ROLE_LABELS[g.role.toUpperCase()] || g.role || 'Approval Step',
+        approverType: 'DEPARTMENT',
+        approverIds: [],
+        approverNames: [
+          g.names.length ? g.names.join(', ')
+                         : (g.formPicked ? 'Chosen on this form' : 'Assigned after submission')
+        ],
+        status: 'PENDING',
+        isRequired: true,
+        order: g.level || (i + 1)
+      } as ApprovalStep));
+  }
+
+
+  // ── Flow-configuration modal ──────────────────────────────────────────────
+  // Hosts ExitApprovalFlowConfigComponent, which reads and writes through
+  // GetFlowConfig / SaveFlowConfig. Nothing about the exit form's own
+  // validation or save path changes.
+
+  flowConfigOpen = false;
+
+  /** Session role code: 'H' HOD, 'C' CED, 'E' employee (same as layout.ts). */
+  get isHodUser(): boolean {
+    const code = (this.currentUser?.isHOD || '').toString().trim().toUpperCase();
+    return code === 'H';
+  }
+
+  openFlowConfig(): void { this.flowConfigOpen = true; }
+
+  /** `saved` is true when the modal wrote something, so both the type list and
+   *  the open chain are re-read — the configuration it shows has changed. */
+  onFlowConfigClosed(saved: boolean): void {
+    this.flowConfigOpen = false;
+    if (saved) {
+      this.loadEmpTypes(true);
+      if (this.selectedFlowType) { this.loadFlowForType(this.selectedFlowType); }
+    }
+    this.cdr.detectChanges();
+  }
+  /** Flight Time disappears for Omani, so its validator must track Category. */
+  private setupCategoryChangeListener(): void {
+    if (this.categorySubWired) { return; }   // setup re-runs on form-type change
+    this.categorySubWired = true;
+    this.exitForm.get('category')?.valueChanges.subscribe(() => {
+      // Touch ONLY what Category actually governs. Calling the full
+      // updateValidatorsForFormType() here (it refreshes validity on every
+      // control, with events) plus cdr.detectChanges() re-entered this very
+      // handler mid-change-detection: interpolations updated but *ngIf views
+      // were never reconciled, so the hidden Flight Time field and the plane
+      // icon stayed on screen. Angular runs its own CD after this handler.
+      this.applyFlightTimeValidator();
+      this.applyResponsibilitiesForCategory();
+      this.applyWorkerFieldsForCategory();     // HOD <-> Site Admin + Camp Boss
+      this.syncFlowTypeToCategory();          // keep the flow aligned to Category
+    });
+  }
+
   updateValidatorsForFormType(): void {
     // Contact details are NEVER required - they are display-only from profile
     this.exitForm.get('address')?.clearValidators();
@@ -1616,12 +2185,13 @@ export class EmergencyExitFormComponent implements OnInit {
     // arrival date + flight time become required (departure/days already are).
     // Resignation has no travel section, so they stay optional there.
     if (this.formType === 'E' || this.formType === 'P') {
+      // still required for Omani — it is the Leave End Date there
       this.exitForm.get('dateOfArrival')?.setValidators([Validators.required]);
-      this.exitForm.get('flightTime')?.setValidators([Validators.required]);
     } else {
       this.exitForm.get('dateOfArrival')?.clearValidators();
-      this.exitForm.get('flightTime')?.clearValidators();
     }
+    // single source of truth for the Flight Time rule (form type + Category)
+    this.applyFlightTimeValidator();
 
     if (this.formType === 'E') {
       // Emergency form - only planned leave and resignation fields are not required
@@ -1636,9 +2206,11 @@ export class EmergencyExitFormComponent implements OnInit {
       // Planned leave specific fields are required
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.clearValidators(); // Remove required validation
-      // Add validators for phone and email fields
-      this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
-      this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.required, Validators.email]);
+      // Phone / Email are OPTIONAL for every category. Format is still checked,
+      // but only when something was typed — pattern and email validators both
+      // pass an empty value through, so a blank field never blocks the save.
+      this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
+      this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.email]);
       // Remove old single dropdown validators (now using responsibilities array)
       this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
 
@@ -1646,9 +2218,9 @@ export class EmergencyExitFormComponent implements OnInit {
       // Resignation specific fields are required (reuse existing fields)
       this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.clearValidators(); // Remove required validation
-      // Add validators for phone and email fields
-      this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.required, Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
-      this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.required, Validators.email]);
+      // Optional here too — same rule as the Planned Leave branch above.
+      this.exitForm.get('responsibilitiesHandedOverToPhone')?.setValidators([Validators.pattern(/^[+]?[0-9\s\-()]{7,15}$/)]);
+      this.exitForm.get('responsibilitiesHandedOverToEmail')?.setValidators([Validators.email]);
       // Remove old single dropdown validators (now using responsibilities array)
       this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
     }
@@ -1733,8 +2305,10 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   loadEmployeeMasterList(): void {
-    console.log('Loading employee master list...');
-    this.api.GetEmployeeMasterList().subscribe({
+    console.log('Loading employee list (incl. workers)...');
+    // GetEmployeeListAll, not GetEmployeeMasterList: a Worker exit form needs
+    // to pick LABOUR employees, which the master list deliberately excludes.
+    this.api.GetEmployeeListAll().subscribe({
       next: (response: any) => {
         console.log('Employee Master API Response:', response);
         if (response && response.success && response.data) {
@@ -1742,7 +2316,9 @@ export class EmergencyExitFormComponent implements OnInit {
             idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
             description: emp.description || emp.employeeName || emp.name,
             email: emp.email || emp.Email || emp.emailId || emp.EmailId,
-            phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone
+            phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone,
+            // 'Y' = first login not done -> not selectable in the ID No. picker
+            firstlogin: (emp.firstlogin ?? emp.Firstlogin ?? emp.FIRSTLOGIN ?? 'N').toString().trim().toUpperCase()
           }));
           console.log('Employee Master List loaded:', this.employeeMasterList);
           
@@ -1760,7 +2336,8 @@ export class EmergencyExitFormComponent implements OnInit {
               idValue: emp.idValue || emp.empId || emp.id || emp.employeeId,
               description: emp.description || emp.employeeName || emp.name,
               email: emp.email || emp.Email || emp.emailId || emp.EmailId,
-              phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone
+              phoneNumber: emp.phoneNumber || emp.PhoneNumber || emp.phone || emp.Phone,
+              firstlogin: (emp.firstlogin ?? emp.Firstlogin ?? emp.FIRSTLOGIN ?? 'N').toString().trim().toUpperCase()
             }));
             console.log('Mapped Employee Master from direct array:', this.employeeMasterList);
           }
@@ -1772,11 +2349,16 @@ export class EmergencyExitFormComponent implements OnInit {
     });
   }
 
-  loadEmployeeDetails(): void {
-    const empId = this.currentUser?.empId;
-    if (empId) {
-      this.api.GetExitEmployeeDetails(empId).subscribe({
+  // `empId` defaults to the signed-in user (existing callers unchanged); the ID
+  // No. picker passes another employee. See loadEmployeeProfile for the stale-
+  // response guard — this lookup patches name/department/HOD, so without it the
+  // session-user response landing late would silently revert the selection.
+  loadEmployeeDetails(empId?: string): void {
+    const target = (empId || this.currentUser?.empId || '').toString().trim();
+    if (target) {
+      this.api.GetExitEmployeeDetails(target).subscribe({
         next: (response: any) => {
+          if (this.selectedEmployeeId && target !== this.selectedEmployeeId) { return; } // stale
           console.log('GetExitEmployeeDetails API Response:', response);
           
           // Handle different possible response structures
@@ -1863,6 +2445,8 @@ export class EmergencyExitFormComponent implements OnInit {
         noOfDaysApproved: request.noOfDaysApproved || request.daysRequested || 0,
         reasonForEmergency: request.reasonForLeave || request.reason || '',
         hodName: request.depHod || request.hodName || '',
+        siteAdmin: request.siteAdmin || '',
+        campBoss: request.campBoss || '',
         projectManagerName: request.projectSiteIncharge || request.projectManagerName || '', // Store ID
         category: this.mapCategoryFromBackend(request.category || ''), // Map S/W to Staff/Worker
         responsibilitiesHandedOverToPhone: request.responsibilitiesHandedOverToPhone || request.phoneNumber || '',
@@ -1923,10 +2507,10 @@ export class EmergencyExitFormComponent implements OnInit {
     if (this.formType === 'P' || this.formType === 'R') {
       // Get current values from form or session
       const currentPhone = this.exitForm.get('telephoneMobile')?.value || 
-                          this.currentUser?.phone || 
+                          (this.isFormForSessionUser() ? this.currentUser?.phone : '') || 
                           this.exitForm.get('responsibilitiesHandedOverToPhone')?.value || '';
       const currentEmail = this.exitForm.get('emailId')?.value || 
-                          this.currentUser?.email || 
+                          (this.isFormForSessionUser() ? this.currentUser?.email : '') || 
                           this.exitForm.get('responsibilitiesHandedOverToEmail')?.value || '';
       
       // Only update if fields are empty
@@ -1964,7 +2548,11 @@ export class EmergencyExitFormComponent implements OnInit {
     }
 
     // Regular required fields that are editable (including employeeName and emailId)
-    let requiredFields = ['employeeName', 'emailId', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
+    // Worker has no HOD field on screen; it asks for Site Admin + Camp Boss,
+    // so requiring hodName here would block a form with nothing to fix.
+    let requiredFields = this.isWorkerCategory
+      ? ['employeeName', 'emailId', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'siteAdmin', 'campBoss']
+      : ['employeeName', 'emailId', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
 
     // Add planned leave and resignation specific validations
     if (this.formType === 'P' || this.formType === 'R') {
@@ -1983,6 +2571,10 @@ export class EmergencyExitFormComponent implements OnInit {
   }
 
   validateResponsibilities(): boolean {
+    // Worker: the handover section is not shown, so nothing to validate. This
+    // is the single choke point for both the P/R and the E call sites.
+    if (this.isWorkerCategory) { return true; }
+
     const responsibilities = this.responsibilitiesFormArray;
 
     if (responsibilities.length === 0) {
@@ -2041,7 +2633,12 @@ export class EmergencyExitFormComponent implements OnInit {
       console.log('Validation failed: reasonForEmergency missing');
       return false;
     }
-    if (!formValue.hodName) {
+    if (this.isWorkerCategory) {
+      if (!formValue.siteAdmin || !formValue.campBoss) {
+        console.log('Validation failed: siteAdmin / campBoss missing');
+        return false;
+      }
+    } else if (!formValue.hodName) {
       console.log('Validation failed: hodName missing');
       return false;
     }
@@ -2052,7 +2649,8 @@ export class EmergencyExitFormComponent implements OnInit {
         console.log('Validation failed: dateOfArrival missing for E/P form');
         return false;
       }
-      if (!formValue.flightTime) {
+      // no Flight Time field for Omani (leave, not travel) — see isOmaniLeaveMode
+      if (!this.isOmaniLeaveMode && !formValue.flightTime) {
         console.log('Validation failed: flightTime missing for E/P form');
         return false;
       }
@@ -2066,19 +2664,9 @@ export class EmergencyExitFormComponent implements OnInit {
       }
       
       // Project Manager is now optional - no validation needed
-      
-      // Check phone number
-      if (!formValue.responsibilitiesHandedOverToPhone) {
-        console.log('Validation failed: responsibilitiesHandedOverToPhone missing for P/R form');
-        return false;
-      }
-      
-      // Check email
-      if (!formValue.responsibilitiesHandedOverToEmail) {
-        console.log('Validation failed: responsibilitiesHandedOverToEmail missing for P/R form');
-        return false;
-      }
-      
+      // Phone Number / Email ID are optional for every category, so they are
+      // deliberately not checked here.
+
       // Validate responsibilities for planned and resignation forms
       const responsibilitiesValid = this.validateResponsibilities();
       if (!responsibilitiesValid) {
@@ -2127,15 +2715,20 @@ export class EmergencyExitFormComponent implements OnInit {
     const formValue = this.exitForm.value;
     const rawFormValue = this.exitForm.getRawValue();
     
-    const requiredFields = ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
+    // same swap as above: HOD is not on a Worker form
+    const requiredFields = this.isWorkerCategory
+      ? ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'siteAdmin', 'campBoss']
+      : ['employeeName', 'employeeId', 'department', 'dateOfDeparture', 'noOfDaysApproved', 'reasonForEmergency', 'hodName'];
 
     if (this.formType === 'E' || this.formType === 'P') {
-      // Travel Information is mandatory for Emergency and Planned Leave
-      requiredFields.push('dateOfArrival', 'flightTime');
+      // Travel Information is mandatory for Emergency and Planned Leave.
+      // Flight Time does not exist for Omani, so never report it missing.
+      requiredFields.push('dateOfArrival');
+      if (!this.isOmaniLeaveMode) { requiredFields.push('flightTime'); }
     }
 
     if (this.formType === 'P' || this.formType === 'R') {
-      requiredFields.push('category', 'responsibilitiesHandedOverToPhone', 'responsibilitiesHandedOverToEmail'); // Removed projectManagerName
+      requiredFields.push('category'); // Phone / Email are optional, Project Manager too
     }
 
     const missingFields: string[] = [];
@@ -2143,8 +2736,9 @@ export class EmergencyExitFormComponent implements OnInit {
       'employeeName': 'Employee Name',
       'employeeId': 'Employee ID',
       'department': 'Department/Site',
-      'dateOfDeparture': this.formType === 'R' ? 'Last Working Date' : 'Date of Departure',
-      'dateOfArrival': 'Date of Arrival',
+      'dateOfDeparture': this.formType === 'R' ? 'Last Working Date'
+                          : (this.isOmaniLeaveMode ? 'Leave Start Date' : 'Date of Departure'),
+      'dateOfArrival': this.isOmaniLeaveMode ? 'Leave End Date' : 'Date of Arrival',
       'flightTime': 'Flight Time',
       'noOfDaysApproved': this.formType === 'R' ? 'Notice Period (Days)' : 'No. of Days Requested',
       'reasonForEmergency': this.formType === 'E' ? 'Reason for Emergency' : (this.formType === 'R' ? 'Reason for Resignation' : 'Reason for Planned Leave'),
@@ -2167,8 +2761,9 @@ export class EmergencyExitFormComponent implements OnInit {
       }
     });
 
-    // Check responsibilities for all form types that use them
-    if (this.formType === 'E' || this.formType === 'P' || this.formType === 'R') {
+    // Check responsibilities for all form types that use them.
+    // Worker has no handover section, so it must never be reported missing.
+    if (!this.isWorkerCategory && (this.formType === 'E' || this.formType === 'P' || this.formType === 'R')) {
       const responsibilities = this.responsibilitiesFormArray;
       if (responsibilities.length === 0) {
         missingFields.push('At least one Responsibility');
@@ -2508,6 +3103,210 @@ export class EmergencyExitFormComponent implements OnInit {
     return description.split(' - ')[0] || description;
   }
 
+  // ── Site Admin / Camp Boss pickers (Worker category) ──────────────────────
+  // Same searchable-dropdown pattern and the same source as Project Manager /
+  // Site Incharge: employeeMasterList. NOT the HOD master — that list is only
+  // for the HOD field. One generic set of handlers keyed by control name,
+  // rather than two near-identical copies.
+
+  workerPickers: { [control: string]: { term: string; open: boolean } } = {
+    siteAdmin: { term: '', open: false },
+    campBoss:  { term: '', open: false }
+  };
+
+  /** Name to show in the box for whatever EMPID the control holds. */
+  workerPickerDisplay(control: string): string {
+    const id = (this.exitForm.get(control)?.value || '').toString().trim();
+    if (!id) { return ''; }
+    const emp = (this.employeeMasterList || []).find(e => e.idValue === id);
+    return emp ? this.getEmployeeNameFromDescription(emp.description || '') : id;
+  }
+
+  onWorkerPickerInput(control: string, ev: Event): void {
+    const term = (ev.target as HTMLInputElement).value;
+    this.workerPickers[control].term = term;
+    // typing something other than the selected name clears the stored id, so
+    // a half-typed name can never be mistaken for a real selection
+    if (term !== this.workerPickerDisplay(control)) {
+      this.exitForm.patchValue({ [control]: '' });
+    }
+  }
+
+  showWorkerPicker(control: string): void {
+    this.workerPickers[control].term = this.workerPickerDisplay(control);
+    this.workerPickers[control].open = true;
+  }
+
+  /** Delayed so a click on a row lands before the list unmounts on blur. */
+  hideWorkerPicker(control: string): void {
+    setTimeout(() => { this.workerPickers[control].open = false; }, 200);
+  }
+
+  isWorkerPickerOpen(control: string): boolean {
+    return !!this.workerPickers[control]?.open;
+  }
+
+  filteredWorkerPeople(control: string): DropdownOption[] {
+    const term = (this.workerPickers[control]?.term || '').trim().toLowerCase();
+    const list = this.employeeMasterList || [];
+    if (!term) { return list; }
+    return list.filter(e =>
+      (e.description || '').toLowerCase().includes(term) ||
+      (e.idValue || '').toLowerCase().includes(term));
+  }
+
+  isWorkerPersonSelected(control: string, emp: DropdownOption): boolean {
+    return (this.exitForm.get(control)?.value || '') === emp.idValue;
+  }
+
+  selectWorkerPerson(control: string, emp: DropdownOption): void {
+    this.exitForm.patchValue({ [control]: emp.idValue });   // store the EMPID
+    this.workerPickers[control].term = this.getEmployeeNameFromDescription(emp.description || '');
+    this.workerPickers[control].open = false;
+    this.cdr.detectChanges();
+  }
+
+  // ── ID No. picker (new forms only) ────────────────────────────────────────
+  // An exit form can be raised on another employee's behalf. The picker writes
+  // into the (still disabled) employeeId control, exactly like the Project
+  // Manager dropdown writes into projectManagerName — so every existing read
+  // (getRawValue(), validateEmployeeInfo(), the PDF) keeps working unchanged.
+
+  /** The employee the form is currently FOR. '' until the session user is known. */
+  selectedEmployeeId: string = '';
+  employeePickerTerm: string = '';
+  private isEmployeePickerOpen: boolean = false;
+
+  /**
+   * A form being CREATED, as opposed to one being opened.
+   *
+   * An exit id in the query string means an existing record — the chain is
+   * already built and stored against it, so anything that would change the
+   * flow belongs to creation time only.
+   */
+  get isNewForm(): boolean {
+    const q = this.route.snapshot.queryParams;
+    const hasExitId = !!(q['exitID'] || q['exitId'] || q['requestId']);
+    return !this.isApprovalMode && !this.isViewMode && !hasExitId;
+  }
+
+  /** Picker only on a brand-new form; view / approval keep the read-only field. */
+  get canPickEmployee(): boolean {
+    return this.isNewForm;
+  }
+
+  /** True when the form is for the signed-in user (the default). */
+  isFormForSessionUser(): boolean {
+    const me  = (this.currentUser?.empId || '').toString().trim();
+    const sel = (this.selectedEmployeeId || '').toString().trim();
+    return !sel || !me || sel === me;
+  }
+
+  /** GetEmployeeMasterList.firstlogin = 'Y' -> has never signed in to the
+   *  portal. These are exactly who an on-behalf form is FOR: selectable, tagged
+   *  "No portal sign-in access". */
+  isFirstLoginPending(emp: DropdownOption): boolean {
+    return (emp?.firstlogin || '').toString().trim().toUpperCase() === 'Y';
+  }
+
+  /** The signed-in user's own row — always selectable (you may file your own). */
+  isPickerRowSelf(emp: DropdownOption): boolean {
+    const me = (this.currentUser?.empId || this.currentUser?.employeeId || '').toString().trim();
+    return !!me && (emp?.idValue || '').toString().trim() === me;
+  }
+
+  /** ID No. picker rule (this column only):
+   *    firstlogin 'Y'  -> selectable (no portal access; file on their behalf)
+   *    firstlogin 'N'  -> DISABLED, tagged "Already using the portal" — they can
+   *                       file their own form...
+   *    ...except the signed-in user, who is 'N' but must stay selectable.
+   *  A missing/blank flag is treated as 'N' (restrictive by default). */
+  isPickerRowDisabled(emp: DropdownOption): boolean {
+    return !this.isFirstLoginPending(emp) && !this.isPickerRowSelf(emp);
+  }
+
+  /** "NAME | EMPID" (master list) or "NAME - x" -> NAME */
+  pickerNameOf(description: string): string {
+    const d = description || '';
+    return (d.split(' | ')[0] || d).split(' - ')[0] || d;
+  }
+
+  getEmployeePickerDisplay(): string {
+    const id = this.exitForm.get('employeeId')?.value;
+    if (!id) { return ''; }
+    const hit = this.employeeMasterList.find(e => e.idValue === id);
+    return hit ? `${this.pickerNameOf(hit.description || '')} (${id})` : id;
+  }
+
+  onEmployeePickerInput(event: any): void {
+    this.employeePickerTerm = event.target?.value || '';
+  }
+
+  showEmployeePicker(): void {
+    this.employeePickerTerm = '';            // open on the full list
+    this.isEmployeePickerOpen = true;
+  }
+
+  hideEmployeePicker(): void {
+    setTimeout(() => { this.isEmployeePickerOpen = false; }, 200);
+  }
+
+  isEmployeePickerVisible(): boolean {
+    return this.isEmployeePickerOpen;
+  }
+
+  /** Matches on name (description) OR employee id — it is the ID No. field. */
+  getFilteredEmployeesForPicker(term: string): DropdownOption[] {
+    const list = this.employeeMasterList || [];
+    const t = (term || '').trim().toLowerCase();
+    if (!t) { return list; }
+    return list.filter(e =>
+      (e.description || '').toLowerCase().includes(t) ||
+      (e.idValue || '').toLowerCase().includes(t));
+  }
+
+  isEmployeePicked(emp: DropdownOption): boolean {
+    return this.exitForm.get('employeeId')?.value === emp.idValue;
+  }
+
+  pickEmployee(emp: DropdownOption, event?: Event): void {
+    if (this.isPickerRowDisabled(emp)) {
+      // portal users file their own form. preventDefault keeps the input
+      // focused so the list stays open instead of closing on the click.
+      event?.preventDefault();
+      return;
+    }
+    const id = (emp.idValue || '').toString().trim();
+    if (!id) { return; }
+    this.isEmployeePickerOpen = false;
+    if (id === (this.exitForm.get('employeeId')?.value || '').toString().trim()) { return; }
+
+    this.selectedEmployeeId = id;
+
+    // the suggested flow depends on WHO the form is for
+
+    // Clear everything that belonged to the previous employee so nothing of
+    // theirs lingers while the new lookups are in flight.
+    this.employeePhoto = AvatarUtil.DEFAULT_AVATAR;
+    this.employeeDesignation = '';
+    this.employeeDoj = '';
+    this.exitForm.patchValue({
+      employeeId: id,
+      employeeName: this.pickerNameOf(emp.description || ''),
+      emailId: emp.email || '',
+      department: '',
+      hodName: '',
+      responsibilitiesHandedOverToPhone: '',
+      responsibilitiesHandedOverToEmail: ''
+    });
+    this.exitForm.get('employeeId')?.setErrors(null);
+
+    // The same two lookups the session-user flow runs, for this employee.
+    this.loadEmployeeDetails(id);
+    this.loadEmployeeProfile(id);
+    this.cdr.detectChanges();
+  }
+
   /**
    * Get the display name for responsible person from the stored ID
    */
@@ -2539,6 +3338,7 @@ export class EmergencyExitFormComponent implements OnInit {
     switch (category.toUpperCase()) {
       case 'S': return 'Staff';
       case 'W': return 'Worker';
+      case 'O': return 'Omani';
       default: return category; // Return as-is if already in full form
     }
   }
@@ -2551,6 +3351,7 @@ export class EmergencyExitFormComponent implements OnInit {
     switch (category) {
       case 'Staff': return 'S';
       case 'Worker': return 'W';
+      case 'Omani': return 'O';
       default: return category; // Return as-is if already in short form
     }
   }
@@ -2773,11 +3574,19 @@ export class EmergencyExitFormComponent implements OnInit {
       return;
     }
 
+    // IT stage only: surface the BYOD 3-year retention warning inside the
+    // confirmation, without changing the approval flow itself.
+    const byodWarning = this.currentStage === 'IT' && this.hasByodRetentionWarning()
+      ? `<div style="margin-top:12px;padding:10px 12px;border-radius:8px;background:#fef3cd;` +
+        `border:1px solid #f0ad4e;color:#8a6d3b;font-size:13px;text-align:left;">` +
+        `<b>⚠ BYOD retention check</b><br>${this.getByodWarningText()}</div>`
+      : '';
+
     // Show confirmation dialog
     Swal.fire({
       title: 'Confirm Approval',
-      text: 'Are you sure you want to approve this request?',
-      icon: 'question',
+      html: 'Are you sure you want to approve this request?' + byodWarning,
+      icon: byodWarning ? 'warning' : 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
@@ -3186,9 +3995,12 @@ export class EmergencyExitFormComponent implements OnInit {
                    this.route.snapshot.queryParams['exitId'] || 
                    this.route.snapshot.queryParams['requestId'];
     
-    // If no ExitId and no dynamic approval workflow data, show static flow
+    // If no ExitId and no dynamic approval workflow data, show the PREVIEW of the
+    // chosen flow. staticApprovalFlow remains only as a fallback for when the
+    // flows API failed or no Category has been chosen yet.
     if (!exitId && (!this.approvalWorkflow || this.approvalWorkflow.length === 0)) {
-      return this.staticApprovalFlow;
+      const preview = this.showFlowPreview ? this.previewFlowSteps : [];
+      return preview.length ? preview : this.staticApprovalFlow;
     }
     
     
@@ -3395,6 +4207,60 @@ export class EmergencyExitFormComponent implements OnInit {
    */
   toggleITAssetsSection(): void {
     this.isITAssetsSectionOpen = !this.isITAssetsSectionOpen;
+  }
+
+  // ── BYOD (IT approval stage only) ──────────────────────────────────────
+  // BYOD rows come from the same GetIssuedAssets response with
+  // recType = 'BYOD'. They are shown only at the IT stage (the TRANSPORT
+  // stage filter keeps CAR-only, so it never sees them) and carry a
+  // 3-year policy check on startDate.
+
+  isByodAsset(asset: IssuedAsset): boolean {
+    return (asset.recType || '').toUpperCase() === 'BYOD';
+  }
+
+  /** Parse the BYOD date strings (DD-MM-YYYY, tolerant of MM-DD-YYYY). */
+  private parseByodDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    const m = value.trim().match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    if (!m) {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    let day = +m[1], month = +m[2];
+    if (day <= 12 && month > 12) { [day, month] = [month, day]; }  // MM-DD fallback
+    const d = new Date(+m[3], month - 1, day);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  /** True when the BYOD start date is less than 3 years before today. */
+  isByodUnder3Years(asset: IssuedAsset): boolean {
+    if (!this.isByodAsset(asset)) return false;
+    const start = this.parseByodDate(asset.startDate);
+    if (!start) return false;
+    const threeYearMark = new Date(start.getFullYear() + 3, start.getMonth(), start.getDate());
+    return new Date() < threeYearMark;
+  }
+
+  /** BYOD rows currently displayed (IT stage only — grouped assets already exclude CAR). */
+  private getByodAssetsForItStage(): IssuedAsset[] {
+    if (this.currentStage !== 'IT') return [];
+    return this.issuedAssets.filter(a => this.isByodAsset(a));
+  }
+
+  /** Any displayed BYOD under 3 years → show the retention warning (IT stage only). */
+  hasByodRetentionWarning(): boolean {
+    return this.getByodAssetsForItStage().some(a => this.isByodUnder3Years(a));
+  }
+
+  /** Banner / dialog text for the 3-year BYOD retention rule. */
+  getByodWarningText(): string {
+    const flagged = this.getByodAssetsForItStage().filter(a => this.isByodUnder3Years(a));
+    if (flagged.length === 0) return '';
+    const first = flagged[0];
+    const lap = first.lap ? ` (${first.lap})` : '';
+    return `BYOD${lap} started on ${first.startDate || 'N/A'} — less than 3 years ago. ` +
+           `As per policy the BYOD laptop must be retained by the company before exit clearance.`;
   }
 
   /**
@@ -3883,10 +4749,18 @@ export class EmergencyExitFormComponent implements OnInit {
       // ══════════════════════════════════════════════════════════════════════════
       const s3 = this.formType === 'E' ? '3' : '2';
       const travelTitle = this.formType === 'R'
-        ? `${s3}.  RESIGNATION INFORMATION` : `${s3}.  TRAVEL INFORMATION`;
+        ? `${s3}.  RESIGNATION INFORMATION`
+        : (this.isOmaniLeaveMode ? `${s3}.  LEAVE INFORMATION` : `${s3}.  TRAVEL INFORMATION`);
       secHeader(travelTitle);
 
-      if (this.formType !== 'R') {
+      if (this.isOmaniLeaveMode) {
+        // Omani = leave, not travel: leave start/end, and no Flight Time row
+        // (twoCol renders a row full-width when r/rv are omitted).
+        twoCol([
+          { l: 'Leave Start Date', lv: fmtDate(fv.dateOfDeparture), r: 'Leave End Date', rv: fmtDate(fv.dateOfArrival) },
+          { l: 'No. of Days Requested', lv: String(fv.noOfDaysApproved ?? '—') },
+        ]);
+      } else if (this.formType !== 'R') {
         twoCol([
           { l: 'Date of Departure', lv: fmtDate(fv.dateOfDeparture), r: 'Date of Arrival', rv: fmtDate(fv.dateOfArrival) },
           { l: 'No. of Days Requested', lv: String(fv.noOfDaysApproved ?? '—'), r: 'Flight Time', rv: fv.flightTime || '—' },

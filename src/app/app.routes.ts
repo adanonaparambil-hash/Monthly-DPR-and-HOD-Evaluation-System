@@ -29,9 +29,12 @@ export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./login/login.component').then(m => m.LoginComponent) },
 
   { path: 'employee-dashboard-demo', loadComponent: () => import('./employee-dashboard/employee-dashboard').then(m => m.EmployeeDashboard) },
+  { path: 'dpr-employee-dashboard-demo', loadComponent: () => import('./dpr-employee-dashboard/dpr-employee-dashboard.component').then(m => m.DprEmployeeDashboardComponent) },
+  { path: 'dpr-hod-dashboard-demo',      loadComponent: () => import('./dpr-hod-dashboard/dpr-hod-dashboard.component').then(m => m.DprHodDashboardComponent) },
   { path: 'hod-dashboard-demo',      loadComponent: () => import('./hod-dashboard/hod-dashboard').then(m => m.HodDashboard) },
   { path: 'ced-dashboard-demo',      loadComponent: () => import('./ced-dashboard/ced-dashboard').then(m => m.CedDashboard) },
   { path: 'ced-dashboard-new-demo',  loadComponent: () => import('./ced-dashboard-new/ced-dashboard-new.component').then(m => m.CedDashboardNewComponent) },
+  { path: 'exit-flow-config-demo',   loadComponent: () => import('./exit-approval-flow-config/exit-flow-config-page.component').then(m => m.ExitFlowConfigPageComponent) },
 
   {
     path: '',
@@ -40,6 +43,8 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard',           loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent) },
       { path: 'employee-dashboard',  loadComponent: () => import('./employee-dashboard/employee-dashboard').then(m => m.EmployeeDashboard) },
+      { path: 'dpr-employee-dashboard', loadComponent: () => import('./dpr-employee-dashboard/dpr-employee-dashboard.component').then(m => m.DprEmployeeDashboardComponent) },
+      { path: 'dpr-hod-dashboard',      loadComponent: () => import('./dpr-hod-dashboard/dpr-hod-dashboard.component').then(m => m.DprHodDashboardComponent) },
       { path: 'hod-dashboard',       loadComponent: () => import('./hod-dashboard/hod-dashboard').then(m => m.HodDashboard) },
       { path: 'ced-dashboard',       loadComponent: () => import('./ced-dashboard-new/ced-dashboard-new.component').then(m => m.CedDashboardNewComponent) },
       { path: 'ced-dashboard-old',   loadComponent: () => import('./ced-dashboard/ced-dashboard').then(m => m.CedDashboard) },
@@ -52,6 +57,10 @@ export const routes: Routes = [
       { path: 'apr-past-reports',    loadComponent: () => import('./apr-past-reports/apr-past-reports.component').then(m => m.AprPastReportsComponent) },
       { path: 'profile',             loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent) },
       { path: 'exit-form',           loadComponent: () => import('./emergency-exit-form/emergency-exit-form.component').then(m => m.EmergencyExitFormComponent) },
+      // Employee-type approval flow: the type picker + chain preview, and the
+      // configuration modal. Standalone page so both procedures can be used
+      // without changing the exit form itself.
+      { path: 'exit-flow-config',    loadComponent: () => import('./exit-approval-flow-config/exit-flow-config-page.component').then(m => m.ExitFlowConfigPageComponent) },
       { path: 'rejoining-form',      loadComponent: () => import('./rejoining-form/rejoining-form').then(m => m.RejoiningForm) },
       { path: 'leave-approval',      loadComponent: () => import('./leave-approval/leave-approval.component').then(m => m.LeaveApprovalComponent) },
       { path: 'dpr-approval',        loadComponent: () => import('./dpr-approval/dpr-approval.component').then(m => m.DprApprovalComponent) },

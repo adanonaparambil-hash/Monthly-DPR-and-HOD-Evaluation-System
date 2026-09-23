@@ -1,0 +1,302 @@
+/* Host page for the emp-type approval flow.
+   NOTE: styles.css sets -webkit-text-fill-color: transparent on every h1-h6 for
+   the gradient headings, so any heading here must opt out explicitly or it
+   renders invisible. Same for dark mode: component styles only reach the theme
+   through :host-context(.dark-theme). */
+
+.efp-wrap {
+  padding: 20px 24px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.efp-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.efp-title,
+.efp-card-title {
+  /* opt out of the global gradient text-fill */
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: #1f2937;
+  margin: 0;
+}
+
+.efp-title { font-size: 1.35rem; font-weight: 700; }
+
+.efp-sub {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: .85rem;
+}
+
+.efp-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.efp-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.efp-select {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font-size: .85rem;
+}
+
+.efp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.efp-btn-primary { background: #2563eb; color: #fff; }
+.efp-btn-primary:hover { background: #1d4ed8; }
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+.efp-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.efp-card-title {
+  font-size: .95rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.efp-muted { color: #6b7280; font-size: .85rem; }
+
+.efp-empty {
+  padding: 14px 16px;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  color: #6b7280;
+  font-size: .85rem;
+}
+
+.efp-warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: .82rem;
+}
+
+.efp-msg {
+  font-size: .78rem;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+/* ── type picker ────────────────────────────────────────────────────────── */
+.efp-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.efp-type {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  cursor: pointer;
+  text-align: left;
+}
+
+.efp-type:hover { border-color: #93c5fd; background: #eff6ff; }
+
+.efp-type.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, .15);
+}
+
+.efp-type-name { font-weight: 700; font-size: .9rem; color: #1f2937; }
+.efp-type-code { font-size: .7rem; color: #9ca3af; letter-spacing: .04em; }
+
+.efp-type-count {
+  font-size: .72rem;
+  font-weight: 600;
+  color: #047857;
+}
+
+.efp-type-count.zero { color: #b45309; }
+
+/* ── the chain ──────────────────────────────────────────────────────────── */
+.efp-chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.efp-step {
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.efp-step:last-child { border-bottom: 0; }
+
+.efp-step-no {
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.efp-step-body { flex: 1 1 auto; min-width: 0; }
+
+.efp-step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.efp-role { font-weight: 700; font-size: .88rem; color: #1f2937; }
+
+.efp-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  /* chips sit inside headings elsewhere in this app, where the global
+     gradient rule would erase them — pin the fill colour here too */
+  -webkit-text-fill-color: currentColor;
+}
+
+.efp-chip-form { background: #e0e7ff; color: #3730a3; }
+.efp-chip-any  { background: #dcfce7; color: #166534; }
+.efp-chip-none { background: #fee2e2; color: #991b1b; }
+.efp-chip-head { background: #fef3c7; color: #92400e; margin-left: 6px; }
+
+.efp-people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.efp-person {
+  padding: 8px 10px;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  background: #fafafa;
+  min-width: 0;
+}
+
+.efp-person-name {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+}
+
+.efp-person-meta {
+  display: block;
+  font-size: .72rem;
+  color: #6b7280;
+  overflow-wrap: anywhere;
+}
+
+.efp-people-none {
+  font-size: .78rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ── dark mode ──────────────────────────────────────────────────────────── */
+:host-context(.dark-theme) .efp-title,
+:host-context(.dark-theme) .efp-card-title,
+:host-context(.dark-theme) .efp-role,
+:host-context(.dark-theme) .efp-type-name,
+:host-context(.dark-theme) .efp-person-name { color: #e5e7eb; }
+
+:host-context(.dark-theme) .efp-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+:host-context(.dark-theme) .efp-select {
+  background: #111827;
+  border-color: #374151;
+  color: #e5e7eb;
+}
+
+:host-context(.dark-theme) .efp-type {
+  background: #111827;
+  border-color: #374151;
+}
+
+:host-context(.dark-theme) .efp-type:hover,
+:host-context(.dark-theme) .efp-type.is-active {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+}
+
+:host-context(.dark-theme) .efp-person {
+  background: #111827;
+  border-color: #374151;
+}
+
+:host-context(.dark-theme) .efp-step { border-bottom-color: #374151; }
+:host-context(.dark-theme) .efp-empty { border-color: #374151; }
+
+/* ── responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .efp-wrap { padding: 14px 12px 40px; }
+  .efp-head { flex-direction: column; align-items: stretch; }
+  .efp-head-actions { justify-content: space-between; }
+  .efp-types { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .efp-types { grid-template-columns: 1fr 1fr; }
+  .efp-people { grid-template-columns: 1fr; }
+  .efp-step { gap: 10px; }
+}

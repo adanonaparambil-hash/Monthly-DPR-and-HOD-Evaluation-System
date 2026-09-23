@@ -17,7 +17,17 @@ export interface UserSession {
 export class AuthService {
   private readonly SESSION_KEY = 'user_session';
   private readonly SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours (1 day) in milliseconds
-  private readonly ACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes (1 hour) of inactivity
+  /**
+   * 8 hours of inactivity. THIS is the timeout people actually experience —
+   * SESSION_TIMEOUT above only bites on a tab left open overnight, and the JWT
+   * runs for the same 24 hours, so whichever of the two is shorter decides, and
+   * that is this one.
+   *
+   * Any of mousedown / mousemove / keypress / scroll / touchstart / click
+   * restarts the 8 hours (see startActivityMonitoring), so it means "untouched
+   * for 8 hours", not "8 hours since login".
+   */
+  private readonly ACTIVITY_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours of inactivity
   
   private sessionSubject = new BehaviorSubject<UserSession | null>(null);
   public session$ = this.sessionSubject.asObservable();

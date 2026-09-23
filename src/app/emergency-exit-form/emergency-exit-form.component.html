@@ -95,8 +95,45 @@
 
                   <div class="form-group">
                     <label for="employeeId">ID No. *</label>
-                    <input type="text" id="employeeId" formControlName="employeeId"
-                      [class.error]="isFieldInvalid('employeeId')" placeholder="Employee ID" [disabled]="true">
+                    <!-- NEW FORM: pick the employee this form is for. Same searchable
+                         pattern as the Project Manager field. Writes into the (still
+                         disabled) employeeId control. -->
+                    <div class="searchable-dropdown" *ngIf="canPickEmployee; else employeeIdReadOnly">
+                      <input type="text" id="employeeIdPicker" [value]="getEmployeePickerDisplay()"
+                        [class.error]="isFieldInvalid('employeeId')"
+                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search employee by name or ID...'"
+                        class="dropdown-input" (input)="onEmployeePickerInput($event)"
+                        (focus)="showEmployeePicker()" (blur)="hideEmployeePicker()" autocomplete="off">
+                      <div class="dropdown-icon">
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                      <div class="dropdown-list pm-dropdown" *ngIf="isEmployeePickerVisible()"
+                        [class.small-list]="shouldUseSmallDropdown(employeePickerTerm)">
+                        <div class="dropdown-item" *ngFor="let emp of getFilteredEmployeesForPicker(employeePickerTerm)"
+                          [class.selected]="isEmployeePicked(emp)"
+                          [class.disabled]="isPickerRowDisabled(emp)"
+                          [title]="isPickerRowDisabled(emp)
+                                     ? 'Already uses the portal and can file their own exit form'
+                                     : (isFirstLoginPending(emp) ? 'Has not signed in to the portal yet — you are filing this form on their behalf' : '')"
+                          (mousedown)="pickEmployee(emp, $event)">
+                          <div class="employee-info">
+                            <div class="employee-name">{{ pickerNameOf(emp.description || '') }}</div>
+                            <div class="employee-id">{{ emp.idValue || '' }}
+                              <span class="no-portal-tag" *ngIf="isFirstLoginPending(emp)">No portal sign-in access</span>
+                              <span class="portal-user-tag" *ngIf="isPickerRowDisabled(emp)">Already using the portal</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="no-results" *ngIf="getFilteredEmployeesForPicker(employeePickerTerm).length === 0">
+                          No employees found
+                        </div>
+                      </div>
+                    </div>
+                    <!-- VIEW / APPROVAL: the read-only field, exactly as before -->
+                    <ng-template #employeeIdReadOnly>
+                      <input type="text" id="employeeId" formControlName="employeeId"
+                        [class.error]="isFieldInvalid('employeeId')" placeholder="Employee ID" [disabled]="true">
+                    </ng-template>
                     <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
                       {{ getFieldError('employeeId') }}
                     </span>
@@ -124,6 +161,44 @@
                       <i class="fas fa-calendar-alt doj-icon"></i>
                       {{ getDojDisplay() || 'Not provided' }}
                     </div>
+                  </div>
+
+                  <!-- Worker only. Shown in view/approval mode too, because
+                       isWorkerCategory reads the loaded Category. -->
+                  <!-- Same searchable dropdown and the same source as Project
+                       Manager / Site Incharge above: employeeMasterList. The
+                       HOD master list is only for the HOD field. -->
+                  <div class="form-group" *ngIf="isWorkerCategory">
+                    <label for="siteAdmin">Site Admin *</label>
+                    <div class="searchable-dropdown">
+                      <input type="text" id="siteAdmin"
+                        [value]="workerPickerDisplay('siteAdmin')"
+                        [class.error]="isFieldInvalid('siteAdmin')"
+                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select site admin...'"
+                        class="dropdown-input" autocomplete="off"
+                        (input)="onWorkerPickerInput('siteAdmin', $event)"
+                        (focus)="showWorkerPicker('siteAdmin')"
+                        (blur)="hideWorkerPicker('siteAdmin')">
+                      <div class="dropdown-icon">
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                      <div class="dropdown-list pm-dropdown" *ngIf="isWorkerPickerOpen('siteAdmin')">
+                        <div class="dropdown-item" *ngFor="let emp of filteredWorkerPeople('siteAdmin')"
+                          [class.selected]="isWorkerPersonSelected('siteAdmin', emp)"
+                          (mousedown)="selectWorkerPerson('siteAdmin', emp)">
+                          <div class="employee-info">
+                            <div class="employee-name">{{ getEmployeeNameFromDescription(emp.description || '') }}</div>
+                            <div class="employee-id">{{ emp.idValue || '' }}</div>
+                          </div>
+                        </div>
+                        <div class="no-results" *ngIf="filteredWorkerPeople('siteAdmin').length === 0">
+                          No employees found
+                        </div>
+                      </div>
+                    </div>
+                    <span class="error-message" *ngIf="isFieldInvalid('siteAdmin')">
+                      {{ getFieldError('siteAdmin') }}
+                    </span>
                   </div>
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
@@ -160,8 +235,45 @@
                     </span>
                   </div>
 
+                  <div class="form-group" *ngIf="isWorkerCategory">
+                    <label for="campBoss">Camp Boss *</label>
+                    <div class="searchable-dropdown">
+                      <input type="text" id="campBoss"
+                        [value]="workerPickerDisplay('campBoss')"
+                        [class.error]="isFieldInvalid('campBoss')"
+                        [placeholder]="employeeMasterList.length === 0 ? 'Loading employees...' : 'Search and select camp boss...'"
+                        class="dropdown-input" autocomplete="off"
+                        (input)="onWorkerPickerInput('campBoss', $event)"
+                        (focus)="showWorkerPicker('campBoss')"
+                        (blur)="hideWorkerPicker('campBoss')">
+                      <div class="dropdown-icon">
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                      <div class="dropdown-list pm-dropdown" *ngIf="isWorkerPickerOpen('campBoss')">
+                        <div class="dropdown-item" *ngFor="let emp of filteredWorkerPeople('campBoss')"
+                          [class.selected]="isWorkerPersonSelected('campBoss', emp)"
+                          (mousedown)="selectWorkerPerson('campBoss', emp)">
+                          <div class="employee-info">
+                            <div class="employee-name">{{ getEmployeeNameFromDescription(emp.description || '') }}</div>
+                            <div class="employee-id">{{ emp.idValue || '' }}</div>
+                          </div>
+                        </div>
+                        <div class="no-results" *ngIf="filteredWorkerPeople('campBoss').length === 0">
+                          No employees found
+                        </div>
+                      </div>
+                    </div>
+                    <span class="error-message" *ngIf="isFieldInvalid('campBoss')">
+                      {{ getFieldError('campBoss') }}
+                    </span>
+                  </div>
 
-                  <div class="form-group">
+
+                  <!-- HOD is not part of a Worker form: those are approved
+                       through the Site Admin and Camp Boss below instead. The
+                       required validator moves with the field, see
+                       applyWorkerFieldsForCategory(). -->
+                  <div class="form-group" *ngIf="!isWorkerCategory">
                     <label for="hodName">HOD Name *</label>
                     <select id="hodName" formControlName="hodName" [class.error]="isFieldInvalid('hodName')">
                       <option value="">{{ hodList.length === 0 ? 'Loading HODs...' : 'Select HOD' }}</option>
@@ -184,7 +296,7 @@
 
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
-                    <label for="responsibilitiesHandedOverToPhone">Phone Number *</label>
+                    <label for="responsibilitiesHandedOverToPhone">Phone Number</label>
                     <input type="tel" id="responsibilitiesHandedOverToPhone"
                       formControlName="responsibilitiesHandedOverToPhone"
                       [class.error]="isFieldInvalid('responsibilitiesHandedOverToPhone')"
@@ -195,7 +307,7 @@
                   </div>
 
                   <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
-                    <label for="responsibilitiesHandedOverToEmail">Email ID *</label>
+                    <label for="responsibilitiesHandedOverToEmail">Email ID</label>
                     <input type="email" id="responsibilitiesHandedOverToEmail"
                       formControlName="responsibilitiesHandedOverToEmail"
                       [class.error]="isFieldInvalid('responsibilitiesHandedOverToEmail')" placeholder="Email address">
@@ -211,17 +323,56 @@
                       <label class="radio-label">
                         <input type="radio" formControlName="category" value="Staff">
                         <span class="radio-mark"></span>
-                        Staff
+                        Staff <span class="cat-note">(Expats)</span>
                       </label>
                       <label class="radio-label">
                         <input type="radio" formControlName="category" value="Worker">
                         <span class="radio-mark"></span>
-                        Worker
+                        Worker <span class="cat-note">(Expats)</span>
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" formControlName="category" value="Omani">
+                        <span class="radio-mark"></span>
+                        Omani <span class="cat-note">(Omani National)</span>
                       </label>
                     </div>
                     <span class="error-message" *ngIf="isFieldInvalid('category')">
                       {{ getFieldError('category') }}
                     </span>
+                  </div>
+
+                  <!-- EMPLOYEE TYPE — its OWN grid cell, placed straight after
+                       Category so it lands in the left column of the next row
+                       rather than stacked under the radios on the right.
+                       Offered for Omani only: Staff and Worker each resolve to
+                       their own type with nothing to choose. Whatever is picked
+                       still drives the Current Approval Flow preview. -->
+                  <div class="form-group" *ngIf="canPickFlowType">
+                    <label for="flowType">Employee Type *</label>
+                    <!-- [selected] per option, NOT [value] on the select: the
+                         select's value binding is applied before *ngFor has
+                         attached the options, so on first render the browser
+                         fell back to the first option and showed the wrong
+                         type against the previewed chain. -->
+                    <select id="flowType"
+                            (change)="onFlowTypeChange($any($event.target).value)">
+                      <option value="">Select type…</option>
+                      <option *ngFor="let t of typesForCategory" [value]="t.typeCode"
+                              [selected]="isFlowTypeSelected(t)">
+                        {{ typeOptionLabel(t) }}
+                      </option>
+                    </select>
+
+                    <small class="emp-type-hint" *ngIf="flowStepsLoading">Loading…</small>
+                    <small class="emp-type-hint"
+                           *ngIf="!flowStepsLoading && selectedFlowLevelCount">
+                      {{ selectedFlowLevelCount }}
+                      approval level{{ selectedFlowLevelCount === 1 ? '' : 's' }}
+                    </small>
+                    <small class="emp-type-hint warn"
+                           *ngIf="!flowTypesLoading && !typesForCategory.length">
+                      No employee type is configured for this category yet.
+                    </small>
                   </div>
 
 
@@ -353,9 +504,12 @@
           <div class="form-section-card" [@fadeInUp]="'in'">
             <div class="section-header">
               <h3>
-                <i class="fas fa-plane" *ngIf="formType === 'E' || formType === 'P'"></i>
+                <!-- Omani = leave, not travel: calendar icon, "Leave Information" -->
+                <i class="fas fa-plane" *ngIf="(formType === 'E' || formType === 'P') && !isOmaniLeaveMode"></i>
+                <i class="fas fa-calendar-day" *ngIf="isOmaniLeaveMode"></i>
                 <i class="fas fa-calendar-times" *ngIf="formType === 'R'"></i>
-                {{ formType === 'R' ? 'Resignation Information' : 'Travel Information' }}
+                {{ formType === 'R' ? 'Resignation Information'
+                   : (isOmaniLeaveMode ? 'Leave Information' : 'Travel Information') }}
               </h3>
             </div>
             <div class="date-window-hint"
@@ -363,7 +517,8 @@
               <i class="fas fa-circle-info"></i>
               <span>
                 This form can be submitted only within <strong>{{ maxAdvanceWorkingDays }} working days</strong> of your
-                {{ formType === 'R' ? 'last working date' : 'date of departure' }}
+                {{ formType === 'R' ? 'last working date'
+                   : (isOmaniLeaveMode ? 'leave start date' : 'date of departure') }}
                 (Friday and Saturday are not counted).
                 Please apply close to the date — earlier submissions will not be accepted.
               </span>
@@ -372,7 +527,8 @@
               <div class="travel-grid">
                 <div class="form-group">
                   <label for="dateOfDeparture">
-                    {{ formType === 'R' ? 'Last Working Date *' : 'Date of Departure *' }}
+                    {{ formType === 'R' ? 'Last Working Date *'
+                       : (isOmaniLeaveMode ? 'Leave Start Date *' : 'Date of Departure *') }}
                   </label>
                   <input type="date" id="dateOfDeparture" formControlName="dateOfDeparture"
                     [min]="departureMinDate" [max]="departureMaxDate"
@@ -383,7 +539,7 @@
                 </div>
 
                 <div class="form-group" *ngIf="formType !== 'R'">
-                  <label for="dateOfArrival">Date of Arrival *</label>
+                  <label for="dateOfArrival">{{ isOmaniLeaveMode ? 'Leave End Date *' : 'Date of Arrival *' }}</label>
                   <input type="date" id="dateOfArrival" formControlName="dateOfArrival"
                     [min]="dateOfArrivalMinDate"
                     [class.error]="isFieldInvalid('dateOfArrival')">
@@ -400,14 +556,19 @@
                     [class.error]="isFieldInvalid('noOfDaysApproved')" min="1"
                     [placeholder]="formType === 'R' ? 'Notice period in days' : 'Number of days'">
                   <small class="auto-calc-note" *ngIf="(formType === 'E' || formType === 'P') && wasAutoCalculated">
-                    <i class="fas fa-calculator"></i> Auto-calculated from departure and arrival dates
+                    <i class="fas fa-calculator"></i>
+                    {{ isOmaniLeaveMode
+                       ? 'Auto-calculated from leave start and end dates'
+                       : 'Auto-calculated from departure and arrival dates' }}
                   </small>
                   <span class="error-message" *ngIf="isFieldInvalid('noOfDaysApproved')">
                     {{ getFieldError('noOfDaysApproved') }}
                   </span>
                 </div>
 
-                <div class="form-group" *ngIf="formType !== 'R'">
+                <!-- no flight for Omani: it is leave, not travel. The required
+                     validator is cleared in lockstep (see isOmaniLeaveMode). -->
+                <div class="form-group" *ngIf="formType !== 'R' && !isOmaniLeaveMode">
                   <label for="flightTime">Flight Time *</label>
                   <input type="time" id="flightTime" formControlName="flightTime"
                     [class.error]="isFieldInvalid('flightTime')">
@@ -446,9 +607,12 @@
             </div>
           </div>
 
-          <!-- Collapsible Responsibilities Section (Emergency, Planned, and Resignation) -->
+          <!-- Collapsible Responsibilities Section (Emergency, Planned, and Resignation).
+               Not for the Worker category: no handover applies, so it is hidden and
+               its FormArray is disabled in lockstep (see applyResponsibilitiesForCategory). -->
           <div class="form-section-card collapsible-section"
-            *ngIf="formType === 'E' || formType === 'P' || formType === 'R'" [@fadeInUp]="'in'">
+            *ngIf="(formType === 'E' || formType === 'P' || formType === 'R') && !isWorkerCategory"
+            [@fadeInUp]="'in'">
             <div class="section-header collapsible-header" (click)="toggleResponsibilitiesSection()">
               <h3>
                 <i class="fas fa-handshake"></i>
@@ -593,18 +757,30 @@
                       to the designated personnel</span>
                   </label>
 
+                  <!-- Worker returns tools and equipment, not the office asset
+                       list — laptop / sim / vehicle do not apply to them. -->
                   <label class="checkbox-label">
                     <input type="checkbox" formControlName="decReturnAssets">
                     <span class="checkmark"></span>
-                    <span *ngIf="formType === 'E'">I will return all company assets (laptop, sim, keys, tag, vehicle,
-                      etc.) before
-                      departure</span>
-                    <span *ngIf="formType === 'P'">I will return all company assets (laptop, sim, keys, tag, vehicle,
-                      etc.) before
-                      my planned departure</span>
-                    <span *ngIf="formType === 'R'">I will return all company assets (laptop, sim, keys, tag, vehicle,
-                      etc.) before
-                      my last working day</span>
+                    <ng-container *ngIf="isWorkerCategory; else returnAssetsDefault">
+                      <span *ngIf="formType === 'E'">I will return all company tools and equipment issued to me
+                        before departure</span>
+                      <span *ngIf="formType === 'P'">I will return all company tools and equipment issued to me
+                        before my planned departure</span>
+                      <span *ngIf="formType === 'R'">I will return all company tools and equipment issued to me
+                        before my last working day</span>
+                    </ng-container>
+                    <ng-template #returnAssetsDefault>
+                      <span *ngIf="formType === 'E'">I will return all company assets (laptop, sim, keys, tag, vehicle,
+                        etc.) before
+                        departure</span>
+                      <span *ngIf="formType === 'P'">I will return all company assets (laptop, sim, keys, tag, vehicle,
+                        etc.) before
+                        my planned departure</span>
+                      <span *ngIf="formType === 'R'">I will return all company assets (laptop, sim, keys, tag, vehicle,
+                        etc.) before
+                        my last working day</span>
+                    </ng-template>
                   </label>
 
                   <label class="checkbox-label">
@@ -633,7 +809,8 @@
                       days. You will be notified of the final decision via email.</span>
                     <span *ngIf="formType === 'P'">Planned leave requests are typically processed within 5-7 business
                       days. You will be notified of the final decision via email. Please submit this form no more than
-                      {{ maxAdvanceWorkingDays }} working days before your date of departure.</span>
+                      {{ maxAdvanceWorkingDays }} working days before your
+                      {{ isOmaniLeaveMode ? 'leave start date' : 'date of departure' }}.</span>
                     <span *ngIf="formType === 'R'">Resignation requests are typically processed within 7-10 business
                       days. You will be notified of the final decision via email. Please submit this form no more than
                       {{ maxAdvanceWorkingDays }} working days before your last working date.</span>
@@ -693,6 +870,15 @@
                 <span>Loading {{ currentStage === 'TRANSPORT' ? 'vehicles' : 'assets' }}...</span>
               </div>
 
+              <!-- BYOD 3-year retention warning — IT approval stage only -->
+              <div class="byod-warning-banner" *ngIf="currentStage === 'IT' && !isLoadingAssets && hasByodRetentionWarning()">
+                <i class="fas fa-triangle-exclamation"></i>
+                <div>
+                  <b>BYOD retention check</b>
+                  <p>{{ getByodWarningText() }}</p>
+                </div>
+              </div>
+
               <div class="assets-list" *ngIf="!isLoadingAssets && getTotalAssetCount() > 0">
                 <div class="category-group" *ngFor="let category of Object.keys(groupedAssets)">
                   <div class="category-header">
@@ -726,6 +912,31 @@
                           <i class="fas fa-cog"></i>
                           Engine: {{ asset.engNo }}
                         </div>
+
+                        <!-- BYOD record details (recType 'BYOD') -->
+                        <ng-container *ngIf="isByodAsset(asset)">
+                          <div class="byod-detail" *ngIf="asset.lap">
+                            <i class="fas fa-laptop"></i> {{ asset.lap }}
+                          </div>
+                          <div class="byod-detail" *ngIf="asset.byodHdrId">
+                            <i class="fas fa-hashtag"></i> Ref: {{ asset.byodHdrId }}
+                          </div>
+                          <div class="byod-detail" *ngIf="asset.startDate">
+                            <i class="fas fa-calendar-check"></i> Start: {{ asset.startDate }}
+                          </div>
+                          <div class="byod-detail" *ngIf="asset.endDate">
+                            <i class="fas fa-calendar-xmark"></i> End: {{ asset.endDate }}
+                          </div>
+                          <div class="byod-detail" *ngIf="asset.noOfMonths">
+                            <i class="fas fa-clock"></i> {{ asset.noOfMonths }} months
+                          </div>
+                          <div class="byod-detail" *ngIf="asset.amount">
+                            <i class="fas fa-money-bill"></i> Amount: {{ asset.amount }}
+                          </div>
+                          <div class="byod-detail" *ngIf="asset.con">
+                            <i class="fas fa-circle-info"></i> Status: {{ asset.con }}
+                          </div>
+                        </ng-container>
                       </div>
                     </div>
                   </div>
@@ -785,21 +996,41 @@
             <i class="fas fa-route"></i>
             <h4>Current Approval Flow</h4>
             <span class="preview-badge" *ngIf="isShowingStaticFlow()">PREVIEW</span>
+            <!-- HOD only, and only while CREATING a form. Opening an existing
+                 one shows the chain that was already built for it, so offering
+                 to reconfigure the flow there would be misleading — the change
+                 could not apply to the record on screen.
+                 type="button" is required — a bare <button> inside the form
+                 would submit it. -->
+            <button type="button" class="btn-manage-flows" *ngIf="isHodUser && isNewForm"
+                    (click)="openFlowConfig()"
+                    title="Add or change approval levels and approvers">
+              <i class="fas fa-sliders"></i>
+              <span>Configure approval flow</span>
+            </button>
           </div>
+          <!-- The employee-type picker now lives beside the Category radios in
+               Personal Information, since Category is what drives it. This card
+               only previews the chain that choice produces. -->
 
-          <!-- Static Flow Preview Notice -->
+          <!-- Preview notice. Once a type's chain has loaded this describes the
+               REAL sequence below; before that it is the generic one. -->
           <div class="static-flow-notice" *ngIf="isShowingStaticFlow()">
             <div class="notice-content">
               <i class="fas fa-info-circle"></i>
-              <div class="notice-text">
+              <div class="notice-text" *ngIf="showFlowPreview && previewFlowSteps.length">
+                <p><strong>This is the {{ selectedFlowTypeLabel }} approval flow.</strong></p>
+                <p>The named approvers are confirmed when you submit.</p>
+              </div>
+              <div class="notice-text" *ngIf="!(showFlowPreview && previewFlowSteps.length)">
                 <p><strong>This shows the typical approval sequence.</strong></p>
-                <p>Actual approvers will be assigned after submission.</p>
+                <p>Select a Category to see the exact approval flow.</p>
               </div>
             </div>
           </div>
 
           <div class="flow-timeline">
-            <div class="timeline-step" *ngFor="let step of getDisplayApprovalWorkflow(); let last = last"
+            <div class="timeline-step" *ngFor="let step of getDisplayApprovalWorkflow(); let last = last; trackBy: trackStep"
               [ngClass]="step.status.toLowerCase()">
 
               <!-- Timeline Icon/Dot -->
@@ -843,16 +1074,21 @@
                       <div class="approver-name">
                         <span *ngIf="!isShowingStaticFlow()">{{ step.approvedBy || step.approverNames[0] || 'Pending
                           Assignment' }}</span>
+                        <!-- was the hardcoded literal "Responsible Person", which is
+                             wrong now that a real chain is previewed: show who the
+                             step actually goes to. -->
                         <span *ngIf="isShowingStaticFlow()" class="responsible-person">
-                          <strong>Responsible Person</strong>
+                          <strong>{{ step.approverNames[0] || 'Responsible Person' }}</strong>
                         </span>
                       </div>
                       <div class="approver-id"
                         *ngIf="(step.approvedId || step.approverIds[0]) && !isShowingStaticFlow()">
                         ID: {{ step.approvedId || step.approverIds[0] }}
                       </div>
+                      <!-- the name moved up into the strong tag, so this line now
+                           carries the level instead of repeating it -->
                       <div class="static-flow-subtitle" *ngIf="isShowingStaticFlow()">
-                        {{ step.approverNames[0] }}
+                        Level {{ step.order }}
                       </div>
                     </div>
                   </div>
@@ -1031,3 +1267,11 @@
     </div>
   </div>
 </div>
+<!-- HOD-only approval-flow configuration modal. Own component so this file
+     does not grow further; renders nothing unless flowConfigOpen. -->
+<app-exit-approval-flow-config
+  [open]="flowConfigOpen"
+  [employeeList]="employeeMasterList"
+  formType="E"
+  (closed)="onFlowConfigClosed($event)">
+</app-exit-approval-flow-config>

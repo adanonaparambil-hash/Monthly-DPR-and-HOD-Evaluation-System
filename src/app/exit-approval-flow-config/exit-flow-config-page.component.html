@@ -1,0 +1,121 @@
+<div class="efp-wrap">
+
+  <!-- header -->
+  <div class="efp-head">
+    <div>
+      <h2 class="efp-title">Employee Type &amp; Approval Flow</h2>
+      <p class="efp-sub">
+        Pick a type to see the exact chain a form of that type will follow.
+      </p>
+    </div>
+
+    <div class="efp-head-actions">
+      <label class="efp-label" for="efpFormType">Module</label>
+      <select id="efpFormType" class="efp-select"
+              [(ngModel)]="formType" (ngModelChange)="loadTypes()">
+        <option *ngFor="let f of formTypes" [value]="f.code">{{ f.label }}</option>
+      </select>
+
+      <button type="button" class="efp-btn efp-btn-primary" (click)="openConfig()">
+        <i class="fa-solid fa-sliders"></i> Configure flow
+      </button>
+    </div>
+  </div>
+
+  <!-- 1. the type picker -->
+  <section class="efp-card">
+    <h3 class="efp-card-title">1 &nbsp;Employee type</h3>
+
+    <div *ngIf="loading && !types.length" class="efp-muted">Loading…</div>
+
+    <div *ngIf="!loading && !types.length" class="efp-empty">
+      No employee types are configured yet.
+      Use <strong>Configure flow</strong> to create the first one.
+    </div>
+
+    <div class="efp-types" *ngIf="types.length">
+      <button type="button"
+              *ngFor="let t of types"
+              class="efp-type"
+              [class.is-active]="selectedType === t.typeCode"
+              [class.is-empty]="!t.levelCount"
+              (click)="selectType(t.typeCode || '')">
+        <span class="efp-type-name">{{ t.typeName || t.typeCode }}</span>
+        <span class="efp-type-code">{{ t.typeCode }}</span>
+        <span class="efp-type-count"
+              [class.zero]="!t.levelCount">
+          {{ t.levelCount || 0 }} level{{ t.levelCount === 1 ? '' : 's' }}
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 2. the chain -->
+  <section class="efp-card" *ngIf="selectedType">
+    <h3 class="efp-card-title">
+      2 &nbsp;Approval flow — {{ typeName(selectedType) }}
+    </h3>
+
+    <div *ngIf="loading" class="efp-muted">Loading…</div>
+
+    <!-- a type with no configuration returns an empty chain, not an error -->
+    <div *ngIf="!loading && !groupedSteps.length" class="efp-empty">
+      Nothing is configured for <strong>{{ typeName(selectedType) }}</strong> yet,
+      so a form of this type would have no approvers.
+    </div>
+
+    <div *ngIf="emptyLevels.length" class="efp-warn">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      {{ emptyLevels.length }} level{{ emptyLevels.length === 1 ? ' has' : 's have' }}
+      nobody configured — a form would stall there.
+    </div>
+
+    <ol class="efp-chain" *ngIf="!loading && groupedSteps.length">
+      <li class="efp-step" *ngFor="let g of groupedSteps">
+        <div class="efp-step-no">{{ g.level }}</div>
+
+        <div class="efp-step-body">
+          <div class="efp-step-head">
+            <span class="efp-role">{{ prettyRole(g.roleCode) }}</span>
+            <span class="efp-chip efp-chip-form" *ngIf="g.isFormSelected">chosen on the form</span>
+            <span class="efp-chip efp-chip-any" *ngIf="g.isAnyOneAllowed && g.people.length > 1">
+              any one of {{ g.people.length }}
+            </span>
+            <span class="efp-chip efp-chip-none"
+                  *ngIf="!g.isFormSelected && !g.people.length">nobody configured</span>
+          </div>
+
+          <div class="efp-people" *ngIf="g.people.length">
+            <div class="efp-person" *ngFor="let p of g.people">
+              <span class="efp-person-name">
+                {{ p.employeeName || p.employeeId }}
+                <span class="efp-chip efp-chip-head" *ngIf="p.isHead === 'Y'">head</span>
+              </span>
+              <span class="efp-person-meta">
+                {{ p.employeeId }}
+                <ng-container *ngIf="p.designation"> · {{ p.designation }}</ng-container>
+                <ng-container *ngIf="p.department"> · {{ p.department }}</ng-container>
+              </span>
+              <span class="efp-person-meta" *ngIf="p.email">{{ p.email }}</span>
+            </div>
+          </div>
+
+          <div class="efp-people-none" *ngIf="g.isFormSelected && !g.people.length">
+            The person for this step is named on the form itself.
+          </div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <p class="efp-msg" *ngIf="message">{{ message }}</p>
+
+  <!-- the configuration modal -->
+  <app-exit-approval-flow-config
+    [open]="configOpen"
+    [formType]="formType"
+    [employeeList]="employeeList"
+    (closed)="onConfigClosed($event)">
+  </app-exit-approval-flow-config>
+
+</div>

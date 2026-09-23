@@ -8175,3 +8175,288 @@ ced Approval Actions Column */
 :host-context(.dark-theme) textarea {
   color-scheme: dark;
 }
+
+/* ── BYOD 3-year retention (IT approval stage) ────────────────────── */
+.byod-warning-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff8e6;
+  border: 1px solid #f0ad4e;
+}
+.byod-warning-banner > i {
+  color: #d97706;
+  font-size: 18px;
+  margin-top: 2px;
+}
+.byod-warning-banner b {
+  color: #92400e;
+  font-size: 13px;
+}
+.byod-warning-banner p {
+  margin: 3px 0 0;
+  color: #8a6d3b;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.byod-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin: 2px 4px 2px 0;
+}
+.byod-detail i { color: #0f4c81; font-size: 11px; }
+
+.byod-under3-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 3px 9px;
+  margin: 4px 4px 2px 0;
+}
+
+/* ── ID No. picker (2026-09) ─────────────────────────────────────────────────
+   GetEmployeeMasterList.firstlogin = 'Y' means the employee has never signed in
+   to the portal — i.e. exactly who an on-behalf form is FOR. Every row is
+   selectable; this tag just explains why you may be filing for them. */
+.no-portal-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #b45309;
+  background: #fff4e2;
+  border: 1px solid rgba(180, 83, 9, .25);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.dropdown-item.selected .no-portal-tag {
+  color: #fff;
+  background: rgba(255, 255, 255, .18);
+  border-color: rgba(255, 255, 255, .45);
+}
+
+/* An OPEN picker must paint over the form-groups that follow it.
+   Every .form-group:has(.searchable-dropdown) is given z-index:1000 !important
+   above, which makes each group its own stacking context — so the list's huge
+   z-index is trapped inside the ID No. group, and the later sibling group
+   (Project Manager, also z-index 1000) paints over it. The list only exists in
+   the DOM while open (*ngIf), so :has(... .dropdown-list) is "currently open":
+   lift just that group above its siblings for as long as the list is showing. */
+/* SPECIFICITY — measured in the browser, not assumed. Angular's emulated
+   encapsulation appends [_ngcontent-xxx] to every TOP-LEVEL compound and to
+   nothing inside :has(). So the planned-grid rule above compiles to
+     .form-grid-planned[_ng] .form-group[_ng]:has(.searchable-dropdown)   = (0,5,0)
+   while a bare
+     .form-group[_ng]:has(.searchable-dropdown .dropdown-list)            = (0,4,0)
+   LOSES to it even though it matches, is !important, and comes later: the
+   computed z-index stayed 1000 and the PM group kept painting over the list.
+   The grid-scoped forms below compile to (0,6,0) and win in every grid. */
+.form-group:has(.searchable-dropdown .dropdown-list),
+.form-grid .form-group:has(.searchable-dropdown .dropdown-list),
+.form-grid-planned .form-group:has(.searchable-dropdown .dropdown-list),
+.responsibility-form-grid .form-group:has(.searchable-dropdown .dropdown-list) {
+  z-index: 1001 !important;
+}
+
+/* ── SELECTED-ROW NAME (2026-09) ─────────────────────────────────────────────
+   .employee-name is gradient TEXT: -webkit-text-fill-color:transparent with a
+   dark-green gradient clipped to the glyphs. The existing
+   ".dropdown-item.selected .employee-name { color: white }" never worked,
+   because text-fill-color overrides color — so on the (dark-green) selected row
+   the name was dark-green-on-dark-green: invisible, while the plain-coloured id
+   and tag showed. Undo the clip on selected rows so the intent finally holds.
+   Fixes every dropdown here (ID No., Project Manager, responsibilities). */
+.dropdown-item.selected .employee-name {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: #fff;
+  color: #fff;
+}
+
+/* ── PORTAL USER ROW (ID No. picker only) (2026-09) ──────────────────────────
+   firstlogin='N' = already uses the portal = can file their own form, so the row
+   is shown for completeness but NOT selectable (the signed-in user's own row is
+   the exception and never gets .disabled). Only the ID No. picker emits
+   .disabled, so these rules cannot reach the other dropdowns. */
+.dropdown-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background: var(--background-primary);
+}
+.dropdown-item.disabled:hover {
+  background: var(--background-primary);           /* no hover highlight */
+}
+.dropdown-item.disabled .employee-name {
+  /* flatten the gradient text-fill so it reads as muted, not "active" */
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: rgba(27, 42, 56, 0.62);
+  color: rgba(27, 42, 56, 0.62);
+}
+.portal-user-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid rgba(71, 85, 105, .25);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* ── Approval-flow type picker inside the "Current Approval Flow" card ───────
+   Omani / Worker on a new form only. Sits between the card header and the
+   timeline, so it must not create a stacking context that traps the timeline. */
+.flow-type-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(19, 130, 113, .06);
+  border: 1px solid rgba(19, 130, 113, .18);
+}
+.flow-type-picker label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.flow-type-picker select {
+  flex: 1 1 150px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--background-primary);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.flow-type-hint {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0d7a63;
+  white-space: nowrap;
+}
+
+/* ── "Manage flows" button in the Current Approval Flow header (HOD only) ─── */
+/* ── "Configure approval flow" (HOD) ─────────────────────────────────────
+   It used to be styled for a dark header — white text on a translucent white
+   fill — but .flow-header is a WHITE card header, so the label was invisible
+   and only the icon showed. It now reads as a real button.
+
+   Placed on its own row: the card lives in the narrow workflow sidebar, where
+   a trailing inline button squeezed "Current Approval Flow" onto two lines and
+   collided with the PREVIEW badge. */
+.flow-header {
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
+.flow-header h4 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.btn-manage-flows {
+  flex: 1 1 100%;
+  margin: 2px 0 0;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  /* the h4 above is subject to the global gradient text-fill rule; this label
+     is not a heading, but pin the fill anyway so it can never inherit it */
+  -webkit-text-fill-color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  box-shadow: 0 2px 6px rgba(19, 130, 113, .25);
+  transition: filter .15s, box-shadow .15s, transform .08s;
+}
+
+.btn-manage-flows i {
+  font-size: 13px;
+  color: #fff;
+}
+
+.btn-manage-flows:hover {
+  filter: brightness(1.09);
+  box-shadow: 0 4px 12px rgba(19, 130, 113, .34);
+}
+
+.btn-manage-flows:active { transform: translateY(1px); }
+
+.btn-manage-flows:focus-visible {
+  outline: 2px solid #138271;
+  outline-offset: 2px;
+}
+
+/* ── Category qualifier + Employee Type field ────────────────────────────── */
+/* The type picker sits under the Category radios because Category is what
+   drives it. It is styled as an ORDINARY field of this form — same label,
+   same control — rather than a tinted panel, which read as bolted on beside
+   the plain fields around it. */
+
+.cat-note {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 1px;
+  /* styles.css text-fills headings transparently; pin it so a future heading
+     wrapper cannot erase this */
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Employee Type is a plain .form-group now, so it inherits this form's own
+   label and select styling. Only the hint line needs rules of its own. */
+
+.emp-type-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.emp-type-hint.warn { color: #b45309; font-weight: 600; }

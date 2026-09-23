@@ -11,7 +11,8 @@
     <button class="tab-button" [class.active]="activeTab === 'myRequests'" (click)="switchTab('myRequests')">
       <i class="fas fa-user-check"></i>
       <span>My Requests</span>
-      <span class="tab-badge" *ngIf="myRequests.length > 0">{{ myRequests.length }}</span>
+      <!-- the badge counts ALL my requests, not just the rows on this page -->
+      <span class="tab-badge" *ngIf="myTotalCount > 0">{{ myTotalCount }}</span>
     </button>
   </div>
 
@@ -131,11 +132,14 @@
           </span>
           <div class="inbox-page-size-wrap">
             <label class="inbox-ps-label">Per page:</label>
-            <select class="inbox-ps-select" [(ngModel)]="inboxPageSize" (ngModelChange)="inboxGoToPage(1)">
-              <option [value]="20">20</option>
-              <option [value]="50">50</option>
-              <option [value]="100">100</option>
-              <option [value]="500">500</option>
+            <!-- [ngValue], not [value]: [value] writes back the STRING "100",
+                 and every later use of inboxPageSize then relies on JS coercing
+                 it. [ngValue] keeps it a number.
+                 Sizes come from PAGE_SIZES because each one must divide the
+                 500-row batch exactly, or a page would straddle two batches. -->
+            <select class="inbox-ps-select" [(ngModel)]="inboxPageSize"
+                    (ngModelChange)="inboxPageSizeChanged()">
+              <option *ngFor="let n of PAGE_SIZES" [ngValue]="n">{{ n }}</option>
             </select>
           </div>
         </div>
@@ -355,7 +359,7 @@
           <div class="filter-group filter-group-action">
             <label class="filter-label">&nbsp;</label>
             <div class="filter-action-row">
-              <button class="filter-search-btn" (click)="loadMyRequests()">
+              <button class="filter-search-btn" (click)="applyMyRequestFilters()">
                 <i class="fas fa-search"></i> Search
               </button>
               <button class="filter-clear-btn" (click)="clearMyRequestFilters()">
@@ -376,6 +380,24 @@
 
       <!-- My Requests Table -->
       <div class="requests-table-container" *ngIf="!isLoadingMyRequests">
+
+        <!-- Meta bar: count + page-size selector (same as the inbox above) -->
+        <div class="inbox-meta-bar" *ngIf="myTotalCount > 0">
+          <span class="inbox-count-text">
+            Showing <strong>{{ getMyPageRange() }}</strong> of <strong>{{ myTotalCount }}</strong> records
+          </span>
+          <div class="inbox-page-size-wrap">
+            <label class="inbox-ps-label">Per page:</label>
+            <!-- [ngValue], not [value]: keeps the value a number instead of the
+                 string "100". Sizes come from PAGE_SIZES because each one must
+                 divide the 500-row batch exactly. -->
+            <select class="inbox-ps-select" [(ngModel)]="myPageSize"
+                    (ngModelChange)="myPageSizeChanged()">
+              <option *ngFor="let n of PAGE_SIZES" [ngValue]="n">{{ n }}</option>
+            </select>
+          </div>
+        </div>
+
         <div class="table-wrapper">
           <table class="requests-table" *ngIf="myRequests.length > 0">
             <thead>
@@ -393,8 +415,8 @@
               <tr *ngFor="let request of myRequests; let i = index; trackBy: trackByRequestId"
                 class="request-row">
 
-                <!-- # -->
-                <td class="idx-cell">{{ i + 1 }}</td>
+                <!-- # — continues across pages, so page 2 starts at 501 -->
+                <td class="idx-cell">{{ myRowNumber(i) }}</td>
 
                 <!-- Employee -->
                 <td class="emp-cell">
@@ -458,6 +480,32 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="inbox-pagination" *ngIf="myTotalPages > 1">
+          <button class="pg-btn" (click)="myFirstPage()" [disabled]="myPageNo === 1" title="First">
+            <i class="fas fa-angle-double-left"></i>
+          </button>
+          <button class="pg-btn" (click)="myPrevPage()" [disabled]="myPageNo === 1" title="Previous">
+            <i class="fas fa-angle-left"></i>
+          </button>
+
+          <button *ngFor="let page of getMyPageNumbers()"
+            class="pg-btn pg-num"
+            [class.active]="page === myPageNo"
+            (click)="myGoToPage(page)">
+            {{ page }}
+          </button>
+
+          <button class="pg-btn" (click)="myNextPage()" [disabled]="myPageNo === myTotalPages" title="Next">
+            <i class="fas fa-angle-right"></i>
+          </button>
+          <button class="pg-btn" (click)="myLastPage()" [disabled]="myPageNo === myTotalPages" title="Last">
+            <i class="fas fa-angle-double-right"></i>
+          </button>
+
+          <span class="pg-info">Page {{ myPageNo }} of {{ myTotalPages }}</span>
         </div>
 
         <!-- No Requests -->

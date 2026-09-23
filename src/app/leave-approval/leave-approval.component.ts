@@ -92,11 +92,73 @@ export class LeaveApprovalComponent implements OnInit {
   empFilterSearch: string = '';
   showEmpFilterDropdown: boolean = false;
 
+  /**
+   * How many rows one trip to the server brings back.
+   *
+   * Paging is TWO-LEVEL: the server hands over 500 rows at a time, and the
+   * table shows 100 of them per page. Pages 1–5 are therefore free — they are
+   * slices of a batch already in memory — and only page 6 costs a request, for
+   * rows 501–1000. With 2,400 records that is 5 requests instead of 24.
+   *
+   * Every page-size option divides 500 exactly, so a page never straddles two
+   * batches and a single slice is always enough.
+   */
+  readonly BATCH_SIZE = 500;
+
   // Pagination — pending approvals inbox
-  inboxPageNo   = 1;
-  inboxPageSize = 20;
+  inboxPageNo   = 1;      // display page, 1-based, across the whole result set
+  inboxPageSize = 100;    // rows shown per page
   inboxTotalCount = 0;
   inboxTotalPages = 0;
+  /** The 500 rows currently held, and which block of 500 they are. 0 = none. */
+  private inboxBatch: LeaveRequest[] = [];
+  private inboxBatchNo = 0;
+
+  // Pagination — my submitted requests (same two-level scheme)
+  myPageNo   = 1;
+  myPageSize = 100;
+  myTotalCount = 0;
+  myTotalPages = 0;
+  private myBatch: LeaveRequest[] = [];
+  private myBatchNo = 0;
+
+  /** Offered in the "Per page" selector. Every one divides BATCH_SIZE exactly. */
+  readonly PAGE_SIZES = [100, 250, 500];
+
+  /** Which block of BATCH_SIZE rows holds the first row of `page`. */
+  private batchNoFor(page: number, pageSize: number): number {
+    return Math.floor(((page - 1) * pageSize) / this.BATCH_SIZE) + 1;
+  }
+
+  /** Where that page starts inside its batch. */
+  private offsetInBatch(page: number, pageSize: number): number {
+    return ((page - 1) * pageSize) % this.BATCH_SIZE;
+  }
+
+  /** A restored/stored size is only honoured if it is still a valid option. */
+  private sanePageSize(value: any): number {
+    const n = Number(value);
+    return this.PAGE_SIZES.includes(n) ? n : 100;
+  }
+
+  /**
+   * Per-page changed. totalPages is in display rows, so it has to be recomputed
+   * before anything reads it — inboxGoToPage guards against `page > totalPages`
+   * and would bounce off a stale value. Back to page 1, which is always batch 1.
+   */
+  inboxPageSizeChanged(): void {
+    this.inboxPageSize = this.sanePageSize(this.inboxPageSize);
+    this.inboxTotalPages = Math.ceil(this.inboxTotalCount / this.inboxPageSize) || 0;
+    this.inboxPageNo = 1;
+    if (this.inboxBatchNo === 1) { this.showInboxPage(); } else { this.loadPendingApprovals(); }
+  }
+
+  myPageSizeChanged(): void {
+    this.myPageSize = this.sanePageSize(this.myPageSize);
+    this.myTotalPages = Math.ceil(this.myTotalCount / this.myPageSize) || 0;
+    this.myPageNo = 1;
+    if (this.myBatchNo === 1) { this.showMyPage(); } else { this.loadMyRequests(); }
+  }
 
   // Filter panel visibility — OPEN by default so the filters are visible as
   // soon as the page loads (users shouldn't have to discover the Filter
@@ -138,8 +200,10 @@ export class LeaveApprovalComponent implements OnInit {
     const hodFlag  = (this.currentUser?.isHOD || '').toString().toUpperCase();
     this.canSeeSubmittedFilter = userDept === 'ADMINISTRATION' || userDept === 'OPERATIONS' || hodFlag === 'H';
 
-    // Load employee master list for filter dropdown
-    this.api.getEmployeeMasterList().subscribe({
+    // Load the employee list for the filter dropdown. GetEmployeeListAll so
+    // Worker requests can be filtered by their employee too — the master list
+    // excludes LABOUR.
+    this.api.GetEmployeeListAll().subscribe({
       next: (res: any) => {
         const data = res?.data || res || [];
         this.empMasterList = Array.isArray(data) ? data : [];
@@ -183,6 +247,8 @@ export class LeaveApprovalComponent implements OnInit {
       myToDate: this.myToDate,
       myTypeFilter: this.myTypeFilter,
       myStatusFilter: this.myStatusFilter,
+      myPageNo: this.myPageNo,
+      myPageSize: this.myPageSize,
       showMyRequestsFilters: this.showMyRequestsFilters,
     };
     try { sessionStorage.setItem(this.LIST_STATE_KEY, JSON.stringify(state)); } catch {}
@@ -201,12 +267,14 @@ export class LeaveApprovalComponent implements OnInit {
       this.fromDateFilter        = s.fromDateFilter     ?? '';
       this.toDateFilter          = s.toDateFilter       ?? '';
       this.inboxPageNo           = s.inboxPageNo  || 1;
-      this.inboxPageSize         = s.inboxPageSize || 20;
+      this.inboxPageSize         = this.sanePageSize(s.inboxPageSize);
       this.showPendingFilters    = !!s.showPendingFilters;
       this.myFromDate            = s.myFromDate   ?? '';
       this.myToDate              = s.myToDate     ?? '';
       this.myTypeFilter          = s.myTypeFilter   ?? 'all';
       this.myStatusFilter        = s.myStatusFilter ?? 'all';
+      this.myPageNo              = s.myPageNo   || 1;
+      this.myPageSize            = this.sanePageSize(s.myPageSize);
       this.showMyRequestsFilters = !!s.showMyRequestsFilters;
       return s;
     } catch {
@@ -229,15 +297,20 @@ export class LeaveApprovalComponent implements OnInit {
       this.myToDate = '';
       this.myStatusFilter = 'all';
       this.myTypeFilter = 'all';
+      this.myPageNo = 1;
       this.loadMyRequests();
     }
   }
 
   onTypeFilterChange(value: any): void {
     this.typeFilter = value;
+    // Back to page 1 on both: a new filter is a different result set, and
+    // staying on page 7 of it would fetch a batch of rows nobody asked for.
     if (this.activeTab === 'pending') {
+      this.inboxPageNo = 1;
       this.loadPendingApprovals();
     } else {
+      this.myPageNo = 1;
       this.loadMyRequests();
     }
   }
@@ -283,11 +356,19 @@ export class LeaveApprovalComponent implements OnInit {
     setTimeout(() => { this.showEmpFilterDropdown = false; }, 200);
   }
 
+  /**
+   * Fetch the batch that page `inboxPageNo` falls in, then show that page.
+   * Always goes to the server — callers are the ones that changed something
+   * (filters, tab, first load). Page moves within a loaded batch go through
+   * inboxGoToPage, which does not call this.
+   */
   loadPendingApprovals(): void {
     if (!this.currentUser) return;
 
     this.isLoadingPending = true;
     this._filteredPending = null;
+
+    const batchNo = this.batchNoFor(this.inboxPageNo, this.inboxPageSize);
 
     // Map status filter → API code
     let statusParam: string | undefined;
@@ -309,14 +390,15 @@ export class LeaveApprovalComponent implements OnInit {
       employeeId: this.employeeNameFilter ? this.empMasterList.find(e => e.description === this.employeeNameFilter)?.idValue || undefined : undefined,
       fromDate:   this.fromDateFilter ? new Date(this.fromDateFilter) : null,
       toDate:     this.toDateFilter   ? new Date(this.toDateFilter)   : null,
-      pageNo:     this.inboxPageNo,
-      pageSize:   this.inboxPageSize,
+      // the SERVER pages in blocks of 500 — not in display pages
+      pageNo:     batchNo,
+      pageSize:   this.BATCH_SIZE,
     };
 
     this.api.GetExitApprovalList(requestParams).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.pendingApprovals = response.data.map((item: any) => ({
+          this.inboxBatch = response.data.map((item: any) => ({
             id: `REQ${item.formId}`,
             exitId: item.formId,
             exitID: item.formId,
@@ -335,29 +417,45 @@ export class LeaveApprovalComponent implements OnInit {
             reason: '',
             profileImageBase64: item.profileImageBase64 || null
           }));
+          this.inboxBatchNo = batchNo;
           this.inboxTotalCount = response.totalCount || 0;
-          this.inboxTotalPages = response.totalPages || Math.ceil(this.inboxTotalCount / this.inboxPageSize) || 0;
+          // pages are counted in DISPLAY rows, not in batches — response.totalPages
+          // is the server's own batch count and would say "1" for 500 records
+          this.inboxTotalPages = Math.ceil(this.inboxTotalCount / this.inboxPageSize) || 0;
+          this.showInboxPage();
         } else {
-          this.pendingApprovals = [];
-          this.inboxTotalCount = 0;
-          this.inboxTotalPages = 0;
+          this.resetInboxBatch();
         }
         this.isLoadingPending = false;
       },
       error: (error) => {
         console.error('Error fetching pending approvals:', error);
         this.isLoadingPending = false;
-        this.pendingApprovals = [];
-        this.inboxTotalCount = 0;
-        this.inboxTotalPages = 0;
+        this.resetInboxBatch();
       }
     });
+  }
+
+  private resetInboxBatch(): void {
+    this.inboxBatch = [];
+    this.inboxBatchNo = 0;
+    this.pendingApprovals = [];
+    this.inboxTotalCount = 0;
+    this.inboxTotalPages = 0;
+  }
+
+  /** Slice the loaded batch down to the current display page. No API call. */
+  private showInboxPage(): void {
+    const from = this.offsetInBatch(this.inboxPageNo, this.inboxPageSize);
+    this.pendingApprovals = this.inboxBatch.slice(from, from + this.inboxPageSize);
   }
 
   loadMyRequests(): void {
     if (!this.currentUser) return;
 
     this.isLoadingMyRequests = true;
+
+    const batchNo = this.batchNoFor(this.myPageNo, this.myPageSize);
 
     // Map status filter → API code
     let statusParam: string | undefined;
@@ -373,17 +471,22 @@ export class LeaveApprovalComponent implements OnInit {
     else if (this.myTypeFilter === 'REJOIN') typeParam = 'R';
 
     const requestParams: MyApprovalRequest = {
+      // The API reads this as the CREATOR of the form, not its subject: this
+      // tab lists what I filed, including forms I raised for somebody else.
       employeeId: this.currentUser.empId || this.currentUser.employeeId,
       status:     statusParam || undefined,
       formType:   typeParam   || undefined,
       fromDate:   this.myFromDate || undefined,
       toDate:     this.myToDate   || undefined,
+      // the SERVER pages in blocks of 500 — not in display pages
+      pageNo:     batchNo,
+      pageSize:   this.BATCH_SIZE,
     };
 
     this.api.GetMySubmittedRequests(requestParams).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.myRequests = response.data.map((item: any) => ({
+          this.myBatch = response.data.map((item: any) => ({
             id:              `REQ${item.formId}`,
             exitId:          item.formId,
             exitID:          item.formId,
@@ -399,17 +502,83 @@ export class LeaveApprovalComponent implements OnInit {
             currentStepName: '',
             priority:        'Medium'
           }));
+          this.myBatchNo = batchNo;
+          this.myTotalCount = response.totalCount || 0;
+          // counted in DISPLAY rows — response.totalPages counts batches
+          this.myTotalPages = Math.ceil(this.myTotalCount / this.myPageSize) || 0;
+          this.showMyPage();
         } else {
-          this.myRequests = [];
+          this.resetMyBatch();
         }
         this.isLoadingMyRequests = false;
       },
       error: (error) => {
         console.error('Error fetching my requests:', error);
         this.isLoadingMyRequests = false;
-        this.myRequests = [];
+        this.resetMyBatch();
       }
     });
+  }
+
+  private resetMyBatch(): void {
+    this.myBatch = [];
+    this.myBatchNo = 0;
+    this.myRequests = [];
+    this.myTotalCount = 0;
+    this.myTotalPages = 0;
+  }
+
+  /** Slice the loaded batch down to the current display page. No API call. */
+  private showMyPage(): void {
+    const from = this.offsetInBatch(this.myPageNo, this.myPageSize);
+    this.myRequests = this.myBatch.slice(from, from + this.myPageSize);
+  }
+
+  // ── My Requests pagination ──────────────────────────────────
+  /**
+   * Only fetches when the page falls outside the 500 rows already held;
+   * otherwise it is a slice of what is in memory.
+   */
+  myGoToPage(page: number): void {
+    if (page < 1 || page > this.myTotalPages) return;
+    this.myPageNo = page;
+    if (this.batchNoFor(page, this.myPageSize) === this.myBatchNo) {
+      this.showMyPage();
+    } else {
+      this.loadMyRequests();
+    }
+  }
+
+  myNextPage():  void { this.myGoToPage(this.myPageNo + 1); }
+  myPrevPage():  void { this.myGoToPage(this.myPageNo - 1); }
+  myFirstPage(): void { this.myGoToPage(1); }
+  myLastPage():  void { this.myGoToPage(this.myTotalPages); }
+
+  getMyPageRange(): string {
+    if (this.myTotalCount === 0) return '0';
+    const start = (this.myPageNo - 1) * this.myPageSize + 1;
+    const end   = Math.min(this.myPageNo * this.myPageSize, this.myTotalCount);
+    return `${start}–${end}`;
+  }
+
+  getMyPageNumbers(): number[] {
+    const pages: number[] = [];
+    const max = 5;
+    if (this.myTotalPages <= max) {
+      for (let i = 1; i <= this.myTotalPages; i++) pages.push(i);
+    } else {
+      let start = Math.max(1, this.myPageNo - 2);
+      let end   = Math.min(this.myTotalPages, this.myPageNo + 2);
+      if (this.myPageNo <= 3)                       end   = max;
+      else if (this.myPageNo >= this.myTotalPages - 2) start = this.myTotalPages - max + 1;
+      for (let i = start; i <= end; i++) pages.push(i);
+    }
+    return pages;
+  }
+
+  /** Row number continues across pages instead of restarting at 1. */
+  myRowNumber(i: number): number {
+    return (this.myPageNo - 1) * this.myPageSize + i + 1;
   }
 
   private mapMyStatusToLabel(status: string): string {
@@ -432,6 +601,17 @@ export class LeaveApprovalComponent implements OnInit {
     this.myToDate = '';
     this.myStatusFilter = 'all';
     this.myTypeFilter = 'all';
+    this.myPageNo = 1;
+    this.loadMyRequests();
+  }
+
+  /**
+   * Search button. Back to page 1 first — a new filter produces a different
+   * result set, and asking for page 3 of it would land on rows the user never
+   * scrolled past (or on nothing at all).
+   */
+  applyMyRequestFilters(): void {
+    this.myPageNo = 1;
     this.loadMyRequests();
   }
 
@@ -607,8 +787,21 @@ export class LeaveApprovalComponent implements OnInit {
     }
   }
 
+  /**
+   * The key must include the FORM TYPE, not just the id.
+   *
+   * `item.id` is `REQ<formId>`, and formId is only unique WITHIN a form type —
+   * each of TS_EMPLOYEE_EXIT, TS_EMPLOYEE_BYOD and TS_EMPLOYEE_REJOINING has
+   * its own sequence. They already collide in UAT: BYOD 81 and REJOIN 81 both
+   * exist, and AAS2 and ADS3373 approve both. When two rows share a trackBy
+   * key, *ngFor throws a duplicate-key error and the whole table fails to
+   * render — which looks exactly like "the listing is broken".
+   *
+   * It gets likelier the bigger the page, so this has to be right before the
+   * page size goes up to 500.
+   */
   trackByRequestId(index: number, item: LeaveRequest): string {
-    return item.id;
+    return `${item.leaveType}#${item.id}`;
   }
 
   /**
@@ -805,10 +998,18 @@ export class LeaveApprovalComponent implements OnInit {
   }
 
   // ── Inbox pagination ────────────────────────────────────────
+  /**
+   * Only fetches when the page falls outside the 500 rows already held;
+   * otherwise it is a slice of what is in memory.
+   */
   inboxGoToPage(page: number): void {
     if (page < 1 || page > this.inboxTotalPages) return;
     this.inboxPageNo = page;
-    this.loadPendingApprovals();
+    if (this.batchNoFor(page, this.inboxPageSize) === this.inboxBatchNo) {
+      this.showInboxPage();
+    } else {
+      this.loadPendingApprovals();
+    }
   }
 
   inboxNextPage():  void { this.inboxGoToPage(this.inboxPageNo + 1); }

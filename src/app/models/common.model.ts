@@ -50,6 +50,9 @@ export interface DropdownOption {
   description?: string;
   email?: string;
   phoneNumber?: string;
+  /** 'Y' = has not completed first login yet (GetEmployeeMasterList). Such
+   *  employees are shown but not selectable in the exit-form ID picker. */
+  firstlogin?: string;
 }
 
 export interface DropDownMasterDto {

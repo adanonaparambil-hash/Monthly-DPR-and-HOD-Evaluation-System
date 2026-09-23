@@ -5,7 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DPRReview, ProofhubTaskDto, DPRMonthlyReviewListingRequest,AppraisalAccessRequest } from '../models/task.model';
 import { EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
-import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest, EmployeeRejoiningDto,EmployeeByodDto} from '../models/employeeExit.model';
+import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, UpdateExitApprovalRequest, EmployeeRejoiningDto,EmployeeByodDto, SaveFlowConfigRequest} from '../models/employeeExit.model';
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
 import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest,SupplierTransactionRequest } from '../models/axpertDashBoard.model';
 import { WirListRequest } from '../models/wir.model';
@@ -224,10 +224,39 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
 
+  /**
+   * Employee list WITH workers (EMPCATEGORY 'LABOUR'), same shape as
+   * GetEmployeeMasterList.
+   *
+   * Deliberately a second endpoint, not a flag on the first: that list feeds
+   * my-task, task-details-modal, rejoining-form and the flow-config page, and
+   * none of them should gain ~2,900 labour rows. Only two callers use this —
+   * the exit form's people pickers and the Approval Management employee filter.
+   */
+  GetEmployeeListAll(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetEmployeeListAll`);
+  }
+
   getEmployeePunchByDate(employeeId: string, date: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/EmpExitForm/getEmployeePunchByDate?employeeId=${employeeId}&date=${date}`);
   }
 
+
+
+  GetEmpTypeApprovalFlow(formType: string = 'E', empType?: string | null): Observable<any> {
+    let params = new HttpParams().set('formType', formType);
+    if (empType) { params = params.set('empType', empType); }
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetEmpTypeApprovalFlow`, { params });
+  }
+
+  GetFlowConfig(formType: string = 'E'): Observable<any> {
+    const params = new HttpParams().set('formType', formType);
+    return this.http.get(`${this.apiUrl}/EmpExitForm/GetFlowConfig`, { params });
+  }
+
+  SaveFlowConfig(dto: SaveFlowConfigRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/EmpExitForm/SaveFlowConfig`, dto);
+  }
 
   InsertEmployeeExit(EmployeeExitRequest: EmployeeExitRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/InsertEmployeeExit`, EmployeeExitRequest);
@@ -649,6 +678,27 @@ export class Api {
 
   exportCedDprDashboard(request: { fromDate: string; toDate?: string | null }): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/DailyTimeSheet/ExportCedDprDashboard`, request, { responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── DPR Dashboards (Employee + HOD) ─────────────────────────────────────────
+
+  /** Employee DPR dashboard — 8 cursors in one call. Omit month/year for the current user-local month. */
+  getDprEmployeeDashboard(empId: string, month?: number | null, year?: number | null): Observable<any> {
+    let params = new HttpParams().set('empId', empId);
+    if (month != null) params = params.set('month', month);
+    if (year  != null) params = params.set('year', year);
+    return this.http.get(`${this.apiUrl}/DprDash/Employee`, { params })
+      .pipe(catchError(this.handleError));
+  }
+
+  /** HOD DPR dashboard — 11 cursors in one call. Omit department for all departments this HOD manages. */
+  getDprHodDashboard(hodId: string, department?: string | null, month?: number | null, year?: number | null): Observable<any> {
+    let params = new HttpParams().set('hodId', hodId);
+    if (department) params = params.set('department', department);
+    if (month != null) params = params.set('month', month);
+    if (year  != null) params = params.set('year', year);
+    return this.http.get(`${this.apiUrl}/DprDash/Hod`, { params })
       .pipe(catchError(this.handleError));
   }
 
