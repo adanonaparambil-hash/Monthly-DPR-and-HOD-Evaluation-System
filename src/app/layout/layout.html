@@ -29,10 +29,10 @@
         <i class="fas fa-shopping-bag"></i> Purchase Dashboard
       </a>
 
-      <!-- WIR Reports — only for users with the app-wir-report menu entry -->
-      <a *ngIf="!isDPROnlyMode && isWirReportUser" routerLink="/wir-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-clipboard-check"></i> WIR Reports
-      </a>
+      <!-- WIR Reports is NOT declared here any more. It comes from the menu
+           master (now under QAQC) and renders in the dynamic tree below, like
+           Finance. Keeping this link as well showed it twice and ignored the
+           parent it was given. -->
 
       <!-- Dynamic Menu Items from API (parent → children tree) -->
       <ng-container *ngFor="let menu of menuTree">
@@ -62,8 +62,12 @@
           </div>
         </div>
 
-        <!-- Root without children → plain link (skip purchase dashboard duplicate) -->
-        <a *ngIf="!isDPROnlyMode && menu.children.length === 0 && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')"
+        <!-- Root without children → plain link.
+             menu.menuUrl is required: a parent whose children are all hidden
+             would otherwise render as a label that goes nowhere.
+             Purchase Dashboard is skipped because it still has its own link. -->
+        <a *ngIf="!isDPROnlyMode && menu.children.length === 0 && menu.menuUrl
+                  && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')"
            [routerLink]="isExternalMenu(menu) ? null : menu.menuUrl"
            [class.active]="!isExternalMenu(menu) && currentRoute.includes(menu.menuUrl)"
            (click)="handleMenuClick(menu, $event)"

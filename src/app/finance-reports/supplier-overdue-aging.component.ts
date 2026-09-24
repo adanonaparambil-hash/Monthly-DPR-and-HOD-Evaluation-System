@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
@@ -6,7 +6,9 @@ import { Api } from '../services/api';
 import {
   BranchOption,
   SupplierOverdueAgingRow,
-  SupplierReportRequest
+  SupplierReportRequest,
+  CurrencyOption,
+  ReportColumn
 } from '../models/financeReport.model';
 
 /**
@@ -22,7 +24,7 @@ import {
   templateUrl: './supplier-overdue-aging.component.html',
   styleUrls: ['./finance-reports.css']
 })
-export class SupplierOverdueAgingComponent implements OnInit {
+export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
 
   branches: BranchOption[] = [];
   branchesLoading = false;
@@ -46,6 +48,32 @@ export class SupplierOverdueAgingComponent implements OnInit {
    * goes back to the database. Every size divides BATCH_SIZE exactly, so a
    * page never straddles two batches.
    */
+  /**
+   * The columns, in order. `key` is the name the PROCEDURE knows - it is sent
+   * verbatim as the sort column, so the header and the ORDER BY can never drift
+   * apart the way two hand-kept lists would.
+   */
+  readonly COLUMNS: ReportColumn[] = [
+    { key: 'VENDORNAME',        label: 'Vendor',            text: true },
+    { key: 'CURRENCY',          label: 'Currency',          text: true, filter: true },
+    { key: 'DAYS_1_30',         label: '1-30 Days' },
+    { key: 'DAYS_31_60',        label: '31-60 Days' },
+    { key: 'DAYS_61_90',        label: '61-90 Days' },
+    { key: 'DAYS_91_120',       label: '91-120 Days' },
+    { key: 'DAYS_121_180',      label: '121-180 Days' },
+    { key: 'ABOVE_180_DAYS',    label: 'Above 180 Days' },
+    { key: 'TOTAL_OVERDUE',     label: 'Total Overdue' },
+    { key: 'TOTAL_OUTSTANDING', label: 'Total Outstanding' }
+  ];
+
+  /** Sorting and the currency filter are SERVER-side. See runReport(). */
+  sortColumn = 'VENDORNAME';
+  sortDir: 'ASC' | 'DESC' = 'ASC';
+
+  currencies: CurrencyOption[] = [];
+  selectedCurrency = 'ALL';
+  currencyFilterOpen = false;
+
   readonly BATCH_SIZE = 500;
   readonly PAGE_SIZES = [100, 250, 500];
 
@@ -66,6 +94,15 @@ export class SupplierOverdueAgingComponent implements OnInit {
 
   loading = false;
   exporting = false;
+
+  /**
+   * Seconds the current run has been going. Shown while loading: a spinner with
+   * no number is indistinguishable from a page that has died, which is exactly
+   * how this looked when the query ran long.
+   */
+  elapsed = 0;
+  private elapsedTimer: any = null;
+  private inFlight: any = null;
   loadError = '';
   hasRun = false;
 
@@ -82,7 +119,32 @@ export class SupplierOverdueAgingComponent implements OnInit {
 
   constructor(private api: Api, private toastr: ToastrService) {}
 
+  ngOnDestroy(): void {
+    this.stopTimer();
+    this.inFlight?.unsubscribe();
+  }
+
+  private startTimer(): void {
+    this.stopTimer();
+    this.elapsed = 0;
+    this.elapsedTimer = setInterval(() => { this.elapsed++; }, 1000);
+  }
+
+  private stopTimer(): void {
+    if (this.elapsedTimer) { clearInterval(this.elapsedTimer); this.elapsedTimer = null; }
+  }
+
+  /** Abandon the current run and go back to whatever was on screen. */
+  cancelRun(): void {
+    this.inFlight?.unsubscribe();
+    this.inFlight = null;
+    this.stopTimer();
+    this.loading = false;
+    this.loadError = 'Cancelled. The report was still running - try a single branch, or a narrower filter.';
+  }
+
   ngOnInit(): void {
+    this.loadCurrencies();
     // The report is NOT started here. loadBranches() starts it once the list is
     // back, otherwise the first run would go out as "ALL" and be thrown away
     // the moment the default branch was applied - two slow queries for one page.
@@ -107,6 +169,56 @@ export class SupplierOverdueAgingComponent implements OnInit {
     });
   }
 
+  loadCurrencies(): void {
+    this.api.GetFinanceCurrencyList().subscribe({
+      next: (res: any) => {
+        const data = res?.data || [];
+        this.currencies = Array.isArray(data) ? data : [];
+      },
+      error: () => { this.currencies = []; }
+    });
+  }
+
+  // ── sorting and the currency filter ──────────────────────────────────────
+  /**
+   * Both go back to the server. Sorting the 500 rows on hand would reorder a
+   * slice of the report and present it as the whole thing, and the same goes
+   * for filtering - page 1 of "RIAL OMANI only" is not the first 100 RIAL OMANI
+   * suppliers unless the database did the filtering.
+   */
+  sortBy(col: ReportColumn): void {
+    if (this.sortColumn === col.key) {
+      this.sortDir = this.sortDir === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+      this.sortColumn = col.key;
+      // Money reads largest-first; a name reads A-Z.
+      this.sortDir = col.text ? 'ASC' : 'DESC';
+    }
+    this.pageNo = 1;
+    this.runReport(1);
+  }
+
+  sortIcon(col: ReportColumn): string {
+    if (this.sortColumn !== col.key) { return 'fa-sort'; }
+    return this.sortDir === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
+  }
+
+  toggleCurrencyFilter(event: Event): void {
+    event.stopPropagation();
+    this.currencyFilterOpen = !this.currencyFilterOpen;
+  }
+
+  pickCurrency(value: string): void {
+    this.selectedCurrency = value;
+    this.currencyFilterOpen = false;
+    this.pageNo = 1;
+    this.runReport(1);
+  }
+
+  /** Any click outside closes the popover. */
+  @HostListener('document:click')
+  onDocumentClick(): void { this.currencyFilterOpen = false; }
+
   /** Select DEFAULT_BRANCH if the list contains it; otherwise stay on ALL. */
   private applyDefaultBranch(): void {
     const want = this.DEFAULT_BRANCH.trim().toUpperCase();
@@ -123,6 +235,9 @@ export class SupplierOverdueAgingComponent implements OnInit {
       projectCode: this.fixedProjectCode,
       vendorName: this.fixedVendorName,
       outstandingStatus: this.fixedOutstandingStatus,
+      currency: this.selectedCurrency || 'ALL',
+      sortColumn: this.sortColumn,
+      sortDir: this.sortDir,
       pageNo: batchNo,
       pageSize: size
     };
@@ -132,8 +247,9 @@ export class SupplierOverdueAgingComponent implements OnInit {
   runReport(batchNo = 1): void {
     this.loading = true;
     this.loadError = '';
+    this.startTimer();
 
-    this.api.GetSupplierOverdueAging(this.buildRequest(batchNo, this.BATCH_SIZE)).subscribe({
+    this.inFlight = this.api.GetSupplierOverdueAging(this.buildRequest(batchNo, this.BATCH_SIZE)).subscribe({
       next: (res: any) => {
         if (res?.success) {
           this.batch = res.data || [];
@@ -147,6 +263,7 @@ export class SupplierOverdueAgingComponent implements OnInit {
         }
         this.hasRun = true;
         this.loading = false;
+        this.stopTimer();
       },
       error: (err) => {
         console.error('Supplier overdue aging failed:', err);
@@ -154,6 +271,7 @@ export class SupplierOverdueAgingComponent implements OnInit {
         this.loadError = this.describeError(err);
         this.hasRun = true;
         this.loading = false;
+        this.stopTimer();
       }
     });
   }
@@ -166,6 +284,13 @@ export class SupplierOverdueAgingComponent implements OnInit {
    * field-level reasons sit in error.errors, so they get pulled out.
    */
   private describeError(err: any): string {
+    // rxjs timeout() raises a TimeoutError, which has no HTTP body at all -
+    // without naming it the user would see "The report could not be loaded"
+    // and no reason.
+    if (err?.name === 'TimeoutError') {
+      return 'The report took too long and was stopped. Pick a single branch, ' +
+             'or ask IT to look at the query performance.';
+    }
     const body = err?.error;
     const detail = Array.isArray(body?.errors)
       ? body.errors.map((e: any) => (e?.field ? e.field + ": " : "") + (e?.error ?? "")).join("; ")
@@ -264,8 +389,25 @@ export class SupplierOverdueAgingComponent implements OnInit {
    * need the very fetch the paging exists to avoid. The Export file totals the
    * full set instead.
    */
-  total(field: keyof SupplierOverdueAgingRow): number {
-    return this.pagedRows.reduce((sum, r) => sum + (Number(r[field]) || 0), 0);
+  /**
+   * Total of one COLUMN over the rows on this page. Takes the column, not a
+   * property name, so it goes through cell() and stays in step with the header
+   * and the body - all three now read from the same COLUMNS list.
+   */
+  totalOf(col: ReportColumn): number {
+    return this.pagedRows.reduce((sum, r) => sum + (Number(this.cell(r, col)) || 0), 0);
+  }
+
+  /** Cell value for a column, so the template can loop instead of repeating. */
+  cell(row: any, col: ReportColumn): any {
+    // COLUMN KEYS are the procedure's names (TOTAL_OUTSTANDING); the row uses
+    // the JSON names (total_Outstanding). Matching on letters only bridges the
+    // two without a second lookup table to keep in step.
+    const want = col.key.replace(/_/g, '').toLowerCase();
+    for (const k of Object.keys(row || {})) {
+      if (k.replace(/_/g, '').toLowerCase() === want) { return row[k]; }
+    }
+    return null;
   }
 
   trackByRow(_i: number, r: SupplierOverdueAgingRow): string {

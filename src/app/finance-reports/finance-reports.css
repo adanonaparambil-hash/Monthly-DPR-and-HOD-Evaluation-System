@@ -6,102 +6,106 @@
 
 .fin-page { padding: 20px; max-width: 100%; }
 
-/* ── header ──────────────────────────────────────────────────────────────────
-   A light card with a teal accent rail, not a full-bleed gradient. The page
-   below it is white cards on a light background, and a heavy coloured band on
-   top fought with that instead of leading into it. */
-.fin-head {
-  display: flex; align-items: center; gap: 14px;
-  background: var(--background-primary);
-  border: 1px solid var(--border-color);
-  border-left: 4px solid var(--secondary-color);
-  border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
-  box-shadow: var(--shadow-sm);
+/* ── Hero header card ────────────────────────────────────────────────────────
+   Title on the left, every control on the right, all in ONE card - the same
+   shape as the WIR Reports page, so the two read as one product. This replaces
+   the old stacked title card + filter card, which cost a whole band of vertical
+   space to say nothing. */
+.fin-hero {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #e8edf3;
+  border-radius: 14px;
+  padding: 14px 20px; margin-bottom: 16px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, .05);
 }
-.fin-head-ic {
-  width: 42px; height: 42px; flex: 0 0 42px; border-radius: 11px;
+.fin-hero-left { display: flex; align-items: center; gap: 14px; }
+.fin-hero-icon {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--gradient-secondary); color: #fff; font-size: 17px;
-  box-shadow: 0 4px 10px -3px rgba(19, 130, 113, .5);
+  background: linear-gradient(135deg, #1B2A38, #138271);
+  color: #fff; font-size: 19px;
 }
-/* styles.css paints EVERY h1-h6 with a gradient and a TRANSPARENT text fill.
-   Without putting the fill back, this title renders invisible. */
-.fin-head h2 {
-  margin: 0; font-size: 16px; font-weight: 700; color: var(--text-primary);
-  background: none; -webkit-text-fill-color: var(--text-primary);
-  -webkit-background-clip: border-box;
-}
-.fin-head p { margin: 3px 0 0; font-size: 12px; color: var(--text-secondary); opacity: .85; }
-.fin-head-sp { flex: 1 1 auto; }
+/* Plain divs, NOT h1-h6. styles.css paints every heading with a gradient and a
+   transparent text fill, so an <h2> here renders invisible. */
+.fin-title-main { font-size: 19px; font-weight: 800; color: #1B2A38; letter-spacing: .2px; }
+.fin-title-sub { font-size: 12px; color: #64748b; margin-top: 1px; }
 
-/* ── filter bar ──────────────────────────────────────────────────────────── */
-.fin-filters {
-  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
-  background: var(--background-primary);
-  border: 1px solid var(--border-color); border-radius: 12px;
-  padding: 14px 16px; margin-bottom: 16px;
+.fin-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* branch picker, inline in the toolbar */
+.fin-branch { position: relative; display: flex; align-items: center; }
+.fin-branch > i {
+  position: absolute; left: 11px; font-size: 12px; color: #94a3b8; pointer-events: none;
 }
-.fin-f { display: flex; flex-direction: column; min-width: 220px; }
-.fin-f label {
-  font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
-  color: var(--text-secondary); margin-bottom: 5px;
+.fin-branch select {
+  height: 36px; min-width: 260px; max-width: 340px;
+  padding: 0 30px 0 31px; border-radius: 9px;
+  border: 1px solid #e2e8f0; background: #f8fafc; color: #1e293b;
+  font: 600 12.5px "Segoe UI"; cursor: pointer;
 }
-.fin-f select {
-  width: 100%; padding: 9px 11px; border-radius: 9px;
-  border: 1px solid var(--border-color);
-  background: var(--background-primary); color: var(--text-primary);
-  font: 600 13px "Segoe UI";
-}
-.fin-f select:focus {
-  outline: none; border-color: var(--secondary-color);
+.fin-branch select:focus {
+  outline: none; border-color: #138271; background: #fff;
   box-shadow: 0 0 0 3px rgba(19, 130, 113, .13);
 }
-.fin-actions { display: flex; gap: 8px; }
+.fin-branch select:disabled { opacity: .6; cursor: not-allowed; }
+
+/* square icon buttons, like the WIR toolbar */
+.fin-icon-btn {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #e2e8f0; border-radius: 9px;
+  background: #f8fafc; color: #475569;
+  font-size: 13px; cursor: pointer;
+}
+.fin-icon-btn:hover:not(:disabled) {
+  border-color: #138271; color: #138271; background: #fff;
+}
+.fin-icon-btn:disabled { opacity: .45; cursor: not-allowed; }
+
 .fin-btn {
+  height: 36px;
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 16px; border: none; border-radius: 9px; cursor: pointer;
-  font: 700 13px "Segoe UI";
-  background: var(--gradient-secondary); color: #fff;
+  padding: 0 15px; border: none; border-radius: 9px; cursor: pointer;
+  font: 700 12.5px "Segoe UI";
+  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
 }
-.fin-btn:disabled { opacity: .55; cursor: not-allowed; }
-.fin-btn.ghost {
-  background: transparent; color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-}
+.fin-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── meta bar ────────────────────────────────────────────────────────────── */
 .fin-meta {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  margin-bottom: 10px; font-size: 12px; color: var(--text-secondary);
+  margin-bottom: 10px; font-size: 12px; color: #64748b;
 }
-.fin-meta strong { color: var(--text-primary); }
+.fin-meta strong { color: #1B2A38; }
 .fin-meta-sp { flex: 1 1 auto; }
 .fin-ps { display: flex; align-items: center; gap: 7px; }
-.fin-ps label { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.fin-ps label { font-size: 11px; font-weight: 700; color: #64748b; }
 .fin-ps select {
-  padding: 5px 9px; border-radius: 7px; border: 1px solid var(--border-color);
-  background: var(--background-primary); color: var(--text-primary);
+  padding: 5px 9px; border-radius: 7px; border: 1px solid #e2e8f0;
+  background: #fff; color: #334155;
   font: 700 12px "Segoe UI";
 }
 
 /* ── pagination ──────────────────────────────────────────────────────────── */
 .fin-pager {
   display: flex; align-items: center; justify-content: center;
-  flex-wrap: wrap; gap: 6px; margin-top: 14px;
+  flex-wrap: wrap; gap: 5px; margin-top: 10px; padding-bottom: 4px;
 }
 .pg-btn {
-  min-width: 34px; height: 34px; padding: 0 10px;
+  min-width: 30px; height: 30px; padding: 0 8px;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border-color); border-radius: 8px;
-  background: var(--background-primary); color: var(--text-primary);
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  background: #fff; color: #334155;
   font: 700 12px "Segoe UI"; cursor: pointer;
 }
-.pg-btn:hover:not(:disabled) { border-color: var(--secondary-color); color: var(--secondary-color); }
+.pg-btn:hover:not(:disabled) { border-color: #138271; color: #138271; }
 .pg-btn:disabled { opacity: .4; cursor: not-allowed; }
 .pg-btn.active {
-  background: var(--gradient-secondary); border-color: transparent; color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #138271); border-color: transparent; color: #fff;
 }
-.pg-info { margin-left: 8px; font-size: 12px; color: var(--text-secondary); }
+.pg-info { margin-left: 8px; font-size: 12px; color: #64748b; }
 
 /* ── table ───────────────────────────────────────────────────────────────── */
 /* The TABLE scrolls, not the page.
@@ -110,81 +114,200 @@
    changing page throws you to a different part of the document. Capping the
    height keeps every bit of scrolling inside the report. */
 .fin-table-wrap {
-  background: var(--background-primary);
-  border: 1px solid var(--border-color); border-radius: 12px;
-  overflow: auto; box-shadow: var(--shadow-sm);
-  max-height: calc(100vh - 330px);
+  background: #fff;
+  border: 1px solid #e8edf3; border-radius: 12px;
+  overflow: auto; box-shadow: 0 4px 18px rgba(15, 23, 42, .05);
+  max-height: calc(100vh - 292px);
   min-height: 220px;
 }
-table.fin-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+
+/* Scrollbars, scoped to this box.
+   The global rule in styles.css paints every thumb with var(--accent-color),
+   which ThemeService sets to #cc9933 - that is the gold bar. It also sets only
+   WIDTH, so the horizontal bar fell back to the browser default thickness and
+   sat there like a highlighter line under the table. */
+.fin-table-wrap::-webkit-scrollbar { width: 9px; height: 9px; }
+.fin-table-wrap::-webkit-scrollbar-track { background: #f6f8fb; border-radius: 8px; }
+.fin-table-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1; border-radius: 8px; border: 2px solid #f6f8fb;
+}
+.fin-table-wrap::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.fin-table-wrap::-webkit-scrollbar-corner { background: #f6f8fb; }
+/* Firefox */
+.fin-table-wrap { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f6f8fb; }
+
+/* No min-width: the columns are sized to fit the screen instead of forcing a
+   horizontal scrollbar on every monitor. */
+table.fin-table { width: 100%; border-collapse: collapse; }
+/* Literal colours from here down, NOT var(--primary-color) and friends.
+   ThemeService overwrites those on :root at runtime - in light mode
+   --primary-color becomes #cc9933 (gold) and --secondary-color #2f4f2f (olive),
+   which is where the mustard header came from. WIR Reports hard-codes its
+   palette for exactly this reason, and these pages now match it. */
 .fin-table thead th {
-  position: sticky; top: 0; z-index: 2;
-  background: var(--primary-color); color: #fff;
-  font: 700 11px "Segoe UI"; letter-spacing: .04em; text-transform: uppercase;
-  padding: 11px 12px; text-align: right; white-space: nowrap;
+  position: sticky; top: 0; z-index: 3;
+  background: #f6f8fb; color: #64748b;
+  border-bottom: 1px solid #e8edf3;
+  /* the vertical rule between columns */
+  border-left: 1px solid #e8edf3;
+  font: 700 10.5px "Segoe UI"; letter-spacing: .02em; text-transform: uppercase;
+  padding: 0; text-align: right; white-space: nowrap;
 }
+.fin-table thead th:first-child { border-left: none; }
+/* position:sticky above also makes each th the containing block for .th-pop */
 .fin-table thead th.tx-l { text-align: left; }
-.fin-table tbody td {
-  padding: 10px 12px; font: 600 12.5px "Segoe UI";
-  color: var(--text-primary); text-align: right; white-space: nowrap;
-  border-bottom: 1px solid var(--border-color);
+/* the column currently driving the ORDER BY */
+.fin-table thead th.sorted { background: #eef4f3; color: #138271; }
+
+/* header contents: sort button, then the funnel */
+.th-inner {
+  display: flex; align-items: center; gap: 3px;
+  justify-content: flex-end; padding: 8px 8px;
 }
+.fin-table thead th.tx-l .th-inner { justify-content: flex-start; }
+
+.th-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
+}
+.th-label:hover { color: #138271; }
+.th-label i { font-size: 10px; opacity: .55; }
+.fin-table thead th.sorted .th-label i { opacity: 1; }
+
+.th-filter {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; flex-shrink: 0;
+  border: none; border-radius: 5px; background: none;
+  color: #94a3b8; font-size: 10px; cursor: pointer;
+}
+.th-filter:hover { background: #e2e8f0; color: #475569; }
+/* a filter that is actually doing something must look different from one that is not */
+.th-filter.on { background: #138271; color: #fff; }
+
+/* filter popover */
+.th-pop {
+  position: absolute; top: 100%; right: 6px; z-index: 20;
+  min-width: 190px; max-height: 260px; overflow: auto;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+  padding: 5px;
+}
+.th-pop-item {
+  display: block; width: 100%; text-align: left;
+  padding: 7px 10px; border: none; border-radius: 7px; background: none;
+  font: 600 12px "Segoe UI"; color: #334155; cursor: pointer;
+  text-transform: none; letter-spacing: 0;
+}
+.th-pop-item:hover { background: #f1f5f9; }
+.th-pop-item.on { background: #eef6f4; color: #138271; }
+.th-pop-empty {
+  padding: 9px 10px; font: 500 11.5px "Segoe UI"; color: #94a3b8;
+  text-transform: none; letter-spacing: 0;
+}
+
+/* the # column stays narrow */
+.fin-table .idx { width: 52px; color: #94a3b8; font-weight: 600; }
+.fin-table tbody td {
+  padding: 8px 8px; font: 600 12px "Segoe UI";
+  color: #1e293b; text-align: right; white-space: nowrap;
+  border-bottom: 1px solid #eef2f7;
+  border-left: 1px solid #f1f5f9;   /* the column rule, lighter than the header's */
+}
+.fin-table tbody td:first-child { border-left: none; }
+/* only the headline figures carry weight; the buckets stay quiet */
+.fin-table tbody td strong.plain { font-weight: 600; }
 .fin-table tbody td.tx-l { text-align: left; }
-.fin-table tbody tr:hover { background: rgba(19, 130, 113, .05); }
+.fin-table tbody tr:hover { background: #f8fafc; }
 
 /* A zero is noise on a money report — the value is what matters, so zeros are
    dimmed rather than removed (removing them would make an empty bucket and a
    missing value look the same). */
-.fin-zero { color: var(--text-secondary); opacity: .4; font-weight: 500; }
-.fin-neg { color: var(--error-color); }
+.fin-zero { color: #94a3b8; font-weight: 500; }
+.fin-neg { color: #dc2626; }
 .fin-cur {
-  display: inline-block; padding: 2px 7px; border-radius: 6px;
-  background: rgba(19, 130, 113, .1); color: var(--secondary-color);
+  display: inline-block; padding: 2px 6px; border-radius: 6px;
+  background: #eef6f4; color: #138271;
   font: 700 11px "Segoe UI";
 }
-.fin-vendor { font-weight: 700; }
+/* Vendor names run to 45+ characters and are what pushed the table off screen.
+   Capped and ellipsised; the full name is on the cell's tooltip. */
+.fin-vendor {
+  font-weight: 700; color: #1B2A38;
+  display: block; max-width: 250px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fin-table td.tx-l { max-width: 260px; }
+.fin-table .idx, .fin-table td.idx { max-width: none; }
 
 /* totals row */
 .fin-table tfoot td {
-  position: sticky; bottom: 0;
-  padding: 11px 12px; font: 800 12.5px "Segoe UI";
-  background: var(--background-secondary); color: var(--text-primary);
-  text-align: right; white-space: nowrap; border-top: 2px solid var(--secondary-color);
+  position: sticky; bottom: 0; z-index: 2;
+  padding: 9px 8px; font: 800 12px "Segoe UI";
+  background: #f6f8fb; color: #1B2A38;
+  text-align: right; white-space: nowrap; border-top: 2px solid #138271;
+  border-left: 1px solid #e8edf3;
 }
+.fin-table tfoot td:first-child { border-left: none; }
 .fin-table tfoot td.tx-l { text-align: left; }
 
 /* ── states ──────────────────────────────────────────────────────────────── */
 .fin-state {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; padding: 54px 20px; text-align: center;
-  background: var(--background-primary);
-  border: 1px solid var(--border-color); border-radius: 12px;
-  color: var(--text-secondary); font: 600 13px "Segoe UI";
+  background: #fff;
+  border: 1px solid #e8edf3; border-radius: 12px;
+  color: #64748b; font: 600 13px "Segoe UI";
 }
 .fin-state i { font-size: 30px; opacity: .35; }
-.fin-state.err { color: var(--error-color); }
+.fin-state.err { color: #dc2626; }
 .fin-state.err i { opacity: .6; }
 .fin-state small { font-weight: 500; opacity: .8; max-width: 560px; line-height: 1.5; }
+.fin-cancel { width: auto; padding: 0 14px; gap: 7px; margin-top: 6px; font: 700 12px "Segoe UI"; }
 
 /* ── dark mode ───────────────────────────────────────────────────────────────
    Component styles need :host-context. A plain .dark-theme rule never matches
    from inside a component's scoped stylesheet. */
-:host-context(.dark-theme) .fin-filters,
+:host-context(.dark-theme) .fin-hero,
 :host-context(.dark-theme) .fin-table-wrap,
-:host-context(.dark-theme) .fin-state { background: var(--background-secondary); }
-:host-context(.dark-theme) .fin-f select { background: var(--background-primary); }
+:host-context(.dark-theme) .fin-state { background: var(--background-secondary); border-color: rgba(255,255,255,.08); }
+:host-context(.dark-theme) .fin-title-main { color: var(--text-primary); }
+:host-context(.dark-theme) .fin-title-sub { color: var(--text-secondary); }
+:host-context(.dark-theme) .fin-branch select,
+:host-context(.dark-theme) .fin-icon-btn { background: var(--background-primary); border-color: rgba(255,255,255,.12); color: var(--text-primary); }
+/* The table is hard-coded light now, so dark mode has to restate it rather
+   than lean on variables that ThemeService repaints. */
+:host-context(.dark-theme) .fin-table thead th {
+  background: #16233a; color: #94a3b8;
+  border-bottom-color: #1e293b; border-left-color: #1e293b;
+}
+:host-context(.dark-theme) .fin-table thead th.sorted { background: #1b3040; color: #5eead4; }
+:host-context(.dark-theme) .th-filter:hover { background: #1e293b; color: #cbd5e1; }
+:host-context(.dark-theme) .th-pop { background: #1f2937; border-color: #334155; }
+:host-context(.dark-theme) .th-pop-item { color: #e2e8f0; }
+:host-context(.dark-theme) .th-pop-item:hover { background: #273449; }
+:host-context(.dark-theme) .th-pop-item.on { background: rgba(19,130,113,.25); color: #5eead4; }
+:host-context(.dark-theme) .fin-table tbody td { border-left-color: #1a2536; }
+:host-context(.dark-theme) .fin-table tfoot td { border-left-color: #1e293b; }
+:host-context(.dark-theme) .fin-table tbody td { color: #e2e8f0; border-bottom-color: #1e293b; }
 :host-context(.dark-theme) .fin-table tbody tr:hover { background: rgba(19, 130, 113, .12); }
-:host-context(.dark-theme) .fin-table tfoot td { background: var(--background-primary); }
+:host-context(.dark-theme) .fin-table tfoot td { background: #16233a; color: #f1f5f9; }
+:host-context(.dark-theme) .fin-vendor { color: #f1f5f9; }
+:host-context(.dark-theme) .fin-cur { background: rgba(19, 130, 113, .22); color: #5eead4; }
+:host-context(.dark-theme) .fin-zero { color: #64748b; }
 :host-context(.dark-theme) .pg-btn,
-:host-context(.dark-theme) .fin-ps select { background: var(--background-primary); }
+:host-context(.dark-theme) .fin-ps select {
+  background: var(--background-primary); border-color: rgba(255,255,255,.12); color: var(--text-primary);
+}
 
 /* ── responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .fin-page { padding: 12px; }
-  .fin-head { padding: 14px 16px; }
-  .fin-head h2 { font-size: 15px; }
-  .fin-f { min-width: 100%; }
-  .fin-actions { width: 100%; }
+  .fin-hero { flex-direction: column; align-items: stretch; padding: 13px 14px; }
+  .fin-title-main { font-size: 16px; }
+  .fin-toolbar { justify-content: flex-start; }
+  .fin-branch { flex: 1 1 100%; }
+  .fin-branch select { min-width: 0; max-width: none; width: 100%; }
   .fin-meta-sp { display: none; }
   .fin-ps { width: 100%; justify-content: flex-end; }
   .fin-btn { flex: 1 1 auto; justify-content: center; }

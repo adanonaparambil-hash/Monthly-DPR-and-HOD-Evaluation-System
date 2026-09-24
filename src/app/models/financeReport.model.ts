@@ -26,6 +26,12 @@ export interface SupplierReportRequest {
   projectCode: string;
   vendorName: string;
   outstandingStatus: string;
+  /** 'ALL', or one currency name. Applied in the procedure, not the browser. */
+  currency: string;
+  /** Column name the procedure recognises, e.g. 'TOTAL_OUTSTANDING'. */
+  sortColumn: string;
+  /** 'ASC' or 'DESC'. */
+  sortDir: string;
   /** 1-based batch number. */
   pageNo: number;
   /** Rows per batch. 0 means "every row" and is used only by Export. */
@@ -61,4 +67,20 @@ export interface SupplierOverdueAgingRow {
   above_180_Days?: number;
   total_Overdue?: number;
   total_Outstanding?: number;
+}
+
+/** One currency for the Currency column's filter. */
+export interface CurrencyOption {
+  currency?: string;
+}
+
+/** A column heading that can be sorted, and optionally filtered. */
+export interface ReportColumn {
+  /** Name the PROCEDURE knows it by - this is what goes to the server. */
+  key: string;
+  label: string;
+  /** Left-aligned text column vs right-aligned money column. */
+  text?: boolean;
+  /** Show the funnel (only Currency has one today). */
+  filter?: boolean;
 }

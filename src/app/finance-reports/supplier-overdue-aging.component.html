@@ -1,47 +1,51 @@
 <div class="fin-page">
 
-  <!-- header -->
-  <div class="fin-head">
-    <span class="fin-head-ic"><i class="fas fa-hourglass-half"></i></span>
-    <div>
-      <h2>Supplier Overdue Aging</h2>
-      <p>How far past due the outstanding amounts already are</p>
-    </div>
-    <span class="fin-head-sp"></span>
-  </div>
-
-  <!-- filters -->
-  <div class="fin-filters">
-    <div class="fin-f">
-      <label for="soaBranch">Branch</label>
-      <select id="soaBranch" [(ngModel)]="selectedBranchName" (ngModelChange)="onBranchChange()"
-              [disabled]="branchesLoading || loading">
-        <option *ngFor="let b of branches" [ngValue]="b.branchName">
-          {{ b.branchName === 'ALL' ? 'All branches' : b.branchName }}
-        </option>
-      </select>
+  <!-- Hero: title and every control in ONE card, matching WIR Reports -->
+  <div class="fin-hero">
+    <div class="fin-hero-left">
+      <div class="fin-hero-icon"><i class="fas fa-hourglass-half"></i></div>
+      <div>
+        <div class="fin-title-main">Supplier Overdue Aging</div>
+        <div class="fin-title-sub">How far past due the outstanding amounts already are</div>
+      </div>
     </div>
 
-    <div class="fin-actions">
-      <button type="button" class="fin-btn" (click)="runReport()" [disabled]="loading">
-        <i class="fas fa-rotate"></i> Refresh
+    <div class="fin-toolbar">
+      <div class="fin-branch">
+        <i class="fas fa-code-branch"></i>
+        <select id="soaBranch" [(ngModel)]="selectedBranchName" (ngModelChange)="onBranchChange()"
+                [disabled]="branchesLoading || loading" title="Branch">
+          <option *ngFor="let b of branches" [ngValue]="b.branchName">
+            {{ b.branchName === 'ALL' ? 'All branches' : b.branchName }}
+          </option>
+        </select>
+      </div>
+
+      <button type="button" class="fin-icon-btn" (click)="runReport()" [disabled]="loading" title="Refresh">
+        <i class="fas fa-rotate"></i>
       </button>
-      <button type="button" class="fin-btn ghost" (click)="resetFilters()" [disabled]="loading">
-        <i class="fas fa-xmark"></i> Reset
+      <button type="button" class="fin-icon-btn" (click)="resetFilters()" [disabled]="loading" title="Reset to all branches">
+        <i class="fas fa-rotate-left"></i>
       </button>
-      <button type="button" class="fin-btn ghost" (click)="exportCsv()" [disabled]="loading || exporting || !totalCount">
+
+      <button type="button" class="fin-btn" (click)="exportCsv()"
+              [disabled]="loading || exporting || !totalCount" title="Export every row to CSV">
         <i class="fas" [class.fa-file-csv]="!exporting" [class.fa-spinner]="exporting" [class.fa-spin]="exporting"></i>
         {{ exporting ? 'Exporting…' : 'Export' }}
       </button>
     </div>
-
   </div>
 
-  <!-- loading -->
+  <!-- loading. The elapsed count matters: a bare spinner on a query that runs
+       for minutes is indistinguishable from a dead page. -->
   <div class="fin-state" *ngIf="loading">
     <i class="fas fa-spinner fa-spin"></i>
-    <span>Running the report…</span>
-    <small>Supplier payment data is read live from Axpert, so this can take a moment.</small>
+    <span>Running the report… <strong>{{ elapsed }}s</strong></span>
+    <small>Supplier payment data is read live from Axpert, so this can take a while.</small>
+    <small *ngIf="elapsed > 20">Still going. Narrowing to a single branch is usually much quicker.</small>
+    <button type="button" class="fin-icon-btn fin-cancel" (click)="cancelRun()" title="Stop waiting">
+      <i class="fas fa-xmark"></i> Cancel
+    </button>
   </div>
 
   <!-- error -->
@@ -71,52 +75,65 @@
       <table class="fin-table">
         <thead>
           <tr>
-            <th class="tx-l">#</th>
-            <th class="tx-l">Vendor</th>
-            <th class="tx-l">Currency</th>
-            <th>1-30 Days</th>
-            <th>31-60 Days</th>
-            <th>61-90 Days</th>
-            <th>91-120 Days</th>
-            <th>121-180 Days</th>
-            <th>Above 180 Days</th>
-            <th>Total Overdue</th>
-            <th>Total Outstanding</th>
+            <th class="tx-l idx">#</th>
+            <!-- One loop, driven by COLUMNS. The old hand-written headers had to
+                 be kept in step with the body and the totals row by eye, which
+                 is how the TOTAL row lost a cell last time. -->
+            <th *ngFor="let c of COLUMNS" [class.tx-l]="c.text" [class.sorted]="sortColumn === c.key">
+              <span class="th-inner">
+                <button type="button" class="th-label" (click)="sortBy(c)"
+                        [title]="'Sort by ' + c.label">
+                  {{ c.label }}
+                  <i class="fas" [ngClass]="sortIcon(c)"></i>
+                </button>
+
+                <!-- filter: Currency only, for now -->
+                <button *ngIf="c.filter" type="button" class="th-filter"
+                        [class.on]="selectedCurrency !== 'ALL'"
+                        (click)="toggleCurrencyFilter($event)"
+                        [title]="selectedCurrency === 'ALL' ? 'Filter by currency' : 'Currency: ' + selectedCurrency">
+                  <i class="fas fa-filter"></i>
+                </button>
+              </span>
+
+              <!-- popover. stop() keeps the document click-away from firing. -->
+              <div class="th-pop" *ngIf="c.filter && currencyFilterOpen" (click)="$event.stopPropagation()">
+                <button type="button" class="th-pop-item" [class.on]="selectedCurrency === 'ALL'"
+                        (click)="pickCurrency('ALL')">All currencies</button>
+                <button type="button" class="th-pop-item" *ngFor="let cur of currencies"
+                        [class.on]="selectedCurrency === cur.currency"
+                        (click)="pickCurrency(cur.currency || 'ALL')">{{ cur.currency }}</button>
+                <div class="th-pop-empty" *ngIf="!currencies.length">No currencies found.</div>
+              </div>
+            </th>
           </tr>
         </thead>
 
         <tbody>
-          <!-- pagedRows, not rows: the page on screen. Export still takes the
-               whole set, so nothing is lost by paging here. -->
           <tr *ngFor="let r of pagedRows; let i = index; trackBy: trackByRow">
-            <td class="tx-l">{{ rowNumber(i) }}</td>
-            <td class="tx-l fin-vendor">{{ r.vendorName }}</td>
-            <td class="tx-l"><span class="fin-cur">{{ r.currency }}</span></td>
-            <td [class]="cls(r.days_1_30)">{{ r.days_1_30 | number:'1.2-2' }}</td>
-            <td [class]="cls(r.days_31_60)">{{ r.days_31_60 | number:'1.2-2' }}</td>
-            <td [class]="cls(r.days_61_90)">{{ r.days_61_90 | number:'1.2-2' }}</td>
-            <td [class]="cls(r.days_91_120)">{{ r.days_91_120 | number:'1.2-2' }}</td>
-            <td [class]="cls(r.days_121_180)">{{ r.days_121_180 | number:'1.2-2' }}</td>
-            <td [class]="cls(r.above_180_Days)">{{ r.above_180_Days | number:'1.2-2' }}</td>
-            <td><strong>{{ r.total_Overdue | number:'1.2-2' }}</strong></td>
-            <td><strong>{{ r.total_Outstanding | number:'1.2-2' }}</strong></td>
+            <td class="tx-l idx">{{ rowNumber(i) }}</td>
+            <td *ngFor="let c of COLUMNS"
+                [class.tx-l]="c.text"
+                [ngClass]="c.text ? '' : cls(cell(r, c))">
+              <ng-container [ngSwitch]="c.key">
+                <span *ngSwitchCase="'CURRENCY'" class="fin-cur">{{ cell(r, c) }}</span>
+                <span *ngSwitchCase="'VENDORNAME'" class="fin-vendor" [title]="cell(r, c)">{{ cell(r, c) }}</span>
+                <strong *ngSwitchDefault [class.plain]="!['TOTAL_OVERDUE','TOTAL_OUTSTANDING'].includes(c.key)">
+                  {{ cell(r, c) | number:'1.2-2' }}
+                </strong>
+              </ng-container>
+            </td>
           </tr>
         </tbody>
 
         <!-- Totals are for THIS PAGE, and say so. Export totals the full set. -->
         <tfoot>
           <tr>
-            <td class="tx-l"></td>
-            <td class="tx-l">TOTAL (this page)</td>
-            <td class="tx-l"></td>
-            <td>{{ total('days_1_30') | number:'1.2-2' }}</td>
-            <td>{{ total('days_31_60') | number:'1.2-2' }}</td>
-            <td>{{ total('days_61_90') | number:'1.2-2' }}</td>
-            <td>{{ total('days_91_120') | number:'1.2-2' }}</td>
-            <td>{{ total('days_121_180') | number:'1.2-2' }}</td>
-            <td>{{ total('above_180_Days') | number:'1.2-2' }}</td>
-            <td>{{ total('total_Overdue') | number:'1.2-2' }}</td>
-            <td>{{ total('total_Outstanding') | number:'1.2-2' }}</td>
+            <td class="tx-l idx"></td>
+            <td *ngFor="let c of COLUMNS; let first = first" [class.tx-l]="c.text">
+              <ng-container *ngIf="first">TOTAL (this page)</ng-container>
+              <ng-container *ngIf="!first && !c.text">{{ totalOf(c) | number:'1.2-2' }}</ng-container>
+            </td>
           </tr>
         </tfoot>
       </table>

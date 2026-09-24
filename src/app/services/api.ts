@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, timeout } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DPRReview, ProofhubTaskDto, DPRMonthlyReviewListingRequest,AppraisalAccessRequest } from '../models/task.model';
 import { EmployeeProfileUpdateDto, DropDownMasterDto, DropDownChildDto, Notification, ClearNotificationRequest, SendEmailRequest, NoticeSaveDto, NoticePagedRequestDto, HodMasterRequestDto } from '../models/common.model';
@@ -18,6 +18,14 @@ import { SupplierReportRequest } from '../models/financeReport.model';
 
 export class Api {
   private readonly apiUrl = `${environment.apiBaseUrl}/api`;
+
+  /**
+   * Ceiling for the supplier reports. HttpClient has NO default timeout, so
+   * without this a slow query leaves the page spinning with no error and no way
+   * out. Set ABOVE the API's own 150s database timeout, so the server's real
+   * message wins whenever it manages to produce one.
+   */
+  private readonly REPORT_TIMEOUT_MS = 180000;
 
   constructor(private http: HttpClient) { }
 
@@ -572,12 +580,18 @@ export class Api {
     return this.http.get(`${this.apiUrl}/FinanceReport/GetBranchList`);
   }
 
+  GetFinanceCurrencyList(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/FinanceReport/GetCurrencyList`);
+  }
+
   GetSupplierPaymentForecast(request: SupplierReportRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/FinanceReport/GetSupplierPaymentForecast`, request);
+    return this.http.post(`${this.apiUrl}/FinanceReport/GetSupplierPaymentForecast`, request)
+      .pipe(timeout(this.REPORT_TIMEOUT_MS));
   }
 
   GetSupplierOverdueAging(request: SupplierReportRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/FinanceReport/GetSupplierOverdueAging`, request);
+    return this.http.post(`${this.apiUrl}/FinanceReport/GetSupplierOverdueAging`, request)
+      .pipe(timeout(this.REPORT_TIMEOUT_MS));
   }
 
   // Axpert dashboard API

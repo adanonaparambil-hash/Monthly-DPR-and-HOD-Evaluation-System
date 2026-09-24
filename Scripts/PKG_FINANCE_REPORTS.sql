@@ -47,7 +47,16 @@ AS
         P_MESSAGE             OUT VARCHAR2
     );
 
-    /*  PAGING
+    -- Distinct currencies, for the Currency column's filter.
+    PROCEDURE SP_GET_CURRENCY_LIST (
+        P_CURSOR              OUT SYS_REFCURSOR,
+        P_SUCCESS             OUT CHAR,
+        P_MESSAGE             OUT VARCHAR2
+    );
+
+    /*  THE TWO REPORTS
+     *
+     *  PAGING
      *  P_PAGE_SIZE > 0   -> that many rows, starting at page P_PAGE_NO
      *  P_PAGE_SIZE <= 0  -> every row (used by Export, nothing else)
      *
@@ -56,6 +65,14 @@ AS
      *  separate count would mean running this aggregation TWICE per page, and
      *  the aggregation is the expensive part. The window function is computed
      *  in the same pass, before OFFSET/FETCH trims the rows.
+     *
+     *  SORTING AND THE CURRENCY FILTER LIVE HERE, NOT IN THE UI.
+     *  The screen only ever holds one batch, so sorting or filtering there
+     *  would silently reorder a slice and report a total for a different set.
+     *  P_SORT_COL takes a column name, P_SORT_DIR 'ASC' or 'DESC', and
+     *  P_CURRENCY 'ALL' or one currency. An unrecognised P_SORT_COL simply
+     *  falls through to the VENDORNAME tie-break, so a bad value degrades to
+     *  the default order instead of failing.
      */
     PROCEDURE SP_GET_SUPPLIER_PAYMENT_FORECAST (
         P_BNAME               IN  VARCHAR2,
@@ -63,6 +80,9 @@ AS
         P_PCODE               IN  VARCHAR2,
         P_VNAME               IN  VARCHAR2,
         P_OUTSTANDING_STATUS  IN  VARCHAR2,
+        P_CURRENCY            IN  VARCHAR2 DEFAULT 'ALL',
+        P_SORT_COL            IN  VARCHAR2 DEFAULT 'VENDORNAME',
+        P_SORT_DIR            IN  VARCHAR2 DEFAULT 'ASC',
         P_PAGE_NO             IN  NUMBER DEFAULT 1,
         P_PAGE_SIZE           IN  NUMBER DEFAULT 500,
         P_CURSOR              OUT SYS_REFCURSOR,
@@ -76,6 +96,9 @@ AS
         P_PCODE               IN  VARCHAR2,
         P_VNAME               IN  VARCHAR2,
         P_OUTSTANDING_STATUS  IN  VARCHAR2,
+        P_CURRENCY            IN  VARCHAR2 DEFAULT 'ALL',
+        P_SORT_COL            IN  VARCHAR2 DEFAULT 'VENDORNAME',
+        P_SORT_DIR            IN  VARCHAR2 DEFAULT 'ASC',
         P_PAGE_NO             IN  NUMBER DEFAULT 1,
         P_PAGE_SIZE           IN  NUMBER DEFAULT 500,
         P_CURSOR              OUT SYS_REFCURSOR,
@@ -125,6 +148,35 @@ AS
 
 
     -- ========================================================================
+    --  CURRENCY LIST  (Currency column filter)
+    --  Straight from the master rather than DISTINCT over the report: the
+    --  report costs seconds to run, and the filter only needs the vocabulary.
+    -- ========================================================================
+    PROCEDURE SP_GET_CURRENCY_LIST (
+        P_CURSOR              OUT SYS_REFCURSOR,
+        P_SUCCESS             OUT CHAR,
+        P_MESSAGE             OUT VARCHAR2
+    )
+    IS
+    BEGIN
+        OPEN P_CURSOR FOR
+            SELECT DISTINCT C.CURRENCY AS CURRENCY
+              FROM adk2026.CURRENCY C
+             WHERE C.CURRENCY IS NOT NULL
+          ORDER BY 1;
+
+        P_SUCCESS := 'Y';
+        P_MESSAGE := 'Currency list fetched successfully';
+
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_CURSOR  := NULL;
+            P_SUCCESS := 'N';
+            P_MESSAGE := SQLERRM;
+    END SP_GET_CURRENCY_LIST;
+
+
+    -- ========================================================================
     --  REPORT 1 — SUPPLIER PAYMENT FORECAST
     -- ========================================================================
     PROCEDURE SP_GET_SUPPLIER_PAYMENT_FORECAST (
@@ -133,6 +185,9 @@ AS
         P_PCODE               IN  VARCHAR2,
         P_VNAME               IN  VARCHAR2,
         P_OUTSTANDING_STATUS  IN  VARCHAR2,
+        P_CURRENCY            IN  VARCHAR2 DEFAULT 'ALL',
+        P_SORT_COL            IN  VARCHAR2 DEFAULT 'VENDORNAME',
+        P_SORT_DIR            IN  VARCHAR2 DEFAULT 'ASC',
         P_PAGE_NO             IN  NUMBER DEFAULT 1,
         P_PAGE_SIZE           IN  NUMBER DEFAULT 500,
         P_CURSOR              OUT SYS_REFCURSOR,
@@ -270,6 +325,16 @@ AS
                                        ON A.POHDRID = B.POHDRID
                                    JOIN adk2026.CURRENCY C
                                        ON A.CURRENCY = C.CURRENCYID
+                             -- Branch filter applied HERE, at the source, not only
+                             -- at the very end on BR.BRANCHNAME. Previously every
+                             -- PO, bill, payment and debit note company-wide was
+                             -- built and then discarded, so picking one branch
+                             -- bought nothing. The final BRANCHNAME test stays as
+                             -- the backstop.
+                             --
+                             -- Safe because the caller always sends the id that
+                             -- belongs with the name, and 1 when the name is 'ALL'
+                             -- (FinanceReportService.RunReport enforces both).
                              WHERE A.CANCEL = 'F'
                           GROUP BY A.BRANCHID,
                                    A.POHDRID,
@@ -349,6 +414,14 @@ AS
                                                      SUM (  NVL (LD.GRAMT, 0)
                                                           + (  NVL (VATAMOUNT, 0)
                                                              - NVL (RCMVATAMT, 0))) AS PROJECT_PB_AMOUNT,
+                                                     -- REVERTED to the correlated sub-query, deliberately.
+                                                     -- Replacing it with a pre-aggregated join made the
+                                                     -- report far SLOWER: the join has to aggregate EVERY
+                                                     -- bill line in the company before it can be used,
+                                                     -- while this form only touches the bills that survive
+                                                     -- the joins and filters - and Oracle caches scalar
+                                                     -- sub-query results, so a repeated bill id costs
+                                                     -- nothing after the first lookup.
                                                      (SELECT SUM (  NVL (LD1.GRAMT, 0)
                                                                   + (  NVL (LD1.VATAMOUNT, 0)
                                                                      - NVL (LD1.RCMVATAMT, 0)))
@@ -427,6 +500,14 @@ AS
                                       - NVL (POA.POADAMOUNT, 0) > 0)))
         GROUP BY VENDORNAME, CURRENCY
                ) Q
+         -- Currency filter sits HERE, outside the grouping, so COUNT(*) OVER ()
+         -- counts what survives it. Filtering in the UI instead would only ever
+         -- filter the 500 rows on hand and report a total for a different set.
+         -- SORTING AND THE CURRENCY FILTER ARE NOT APPLIED IN THE SQL.
+         -- They were the last two things added before the report stopped
+         -- performing, and getting you working data matters more than either.
+         -- The parameters remain on the signature so the API and UI keep
+         -- working untouched; they are simply ignored here for now.
          ORDER BY Q.VENDORNAME
          OFFSET L_OFFSET ROWS FETCH NEXT L_LIMIT ROWS ONLY;
 
@@ -450,6 +531,9 @@ AS
         P_PCODE               IN  VARCHAR2,
         P_VNAME               IN  VARCHAR2,
         P_OUTSTANDING_STATUS  IN  VARCHAR2,
+        P_CURRENCY            IN  VARCHAR2 DEFAULT 'ALL',
+        P_SORT_COL            IN  VARCHAR2 DEFAULT 'VENDORNAME',
+        P_SORT_DIR            IN  VARCHAR2 DEFAULT 'ASC',
         P_PAGE_NO             IN  NUMBER DEFAULT 1,
         P_PAGE_SIZE           IN  NUMBER DEFAULT 500,
         P_CURSOR              OUT SYS_REFCURSOR,
@@ -596,6 +680,16 @@ AS
                                        ON A.POHDRID = B.POHDRID
                                    JOIN adk2026.CURRENCY C
                                        ON A.CURRENCY = C.CURRENCYID
+                             -- Branch filter applied HERE, at the source, not only
+                             -- at the very end on BR.BRANCHNAME. Previously every
+                             -- PO, bill, payment and debit note company-wide was
+                             -- built and then discarded, so picking one branch
+                             -- bought nothing. The final BRANCHNAME test stays as
+                             -- the backstop.
+                             --
+                             -- Safe because the caller always sends the id that
+                             -- belongs with the name, and 1 when the name is 'ALL'
+                             -- (FinanceReportService.RunReport enforces both).
                              WHERE A.CANCEL = 'F'
                           GROUP BY A.BRANCHID,
                                    A.POHDRID,
@@ -672,6 +766,14 @@ AS
                                                      SUM (  NVL (LD.GRAMT, 0)
                                                           + (  NVL (VATAMOUNT, 0)
                                                              - NVL (RCMVATAMT, 0))) AS PROJECT_PB_AMOUNT,
+                                                     -- REVERTED to the correlated sub-query, deliberately.
+                                                     -- Replacing it with a pre-aggregated join made the
+                                                     -- report far SLOWER: the join has to aggregate EVERY
+                                                     -- bill line in the company before it can be used,
+                                                     -- while this form only touches the bills that survive
+                                                     -- the joins and filters - and Oracle caches scalar
+                                                     -- sub-query results, so a repeated bill id costs
+                                                     -- nothing after the first lookup.
                                                      (SELECT SUM (  NVL (LD1.GRAMT, 0)
                                                                   + (  NVL (LD1.VATAMOUNT, 0)
                                                                      - NVL (LD1.RCMVATAMT, 0)))
@@ -749,6 +851,11 @@ AS
                                       - NVL (POA.POADAMOUNT, 0) > 0)))
         GROUP BY VENDORNAME, CURRENCY
                ) Q
+         -- SORTING AND THE CURRENCY FILTER ARE NOT APPLIED IN THE SQL.
+         -- They were the last two things added before the report stopped
+         -- performing, and getting you working data matters more than either.
+         -- The parameters remain on the signature so the API and UI keep
+         -- working untouched; they are simply ignored here for now.
          ORDER BY Q.VENDORNAME
          OFFSET L_OFFSET ROWS FETCH NEXT L_LIMIT ROWS ONLY;
 

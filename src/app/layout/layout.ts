@@ -98,7 +98,11 @@ export class layout implements OnInit, OnDestroy {
   /** Purchase Dashboard visibility — driven by getUserMenus API response */
   isPurchaseDashboardUser = false;
 
-  /** WIR Reports visibility — driven by getUserMenus API response (menu 'app-wir-report') */
+  /**
+   * Kept only so nothing referencing it breaks — WIR Reports no longer uses it.
+   * It is a menu-master item (under QAQC) and renders through menuTree, so its
+   * visibility comes from TS_USER_MENU_ACCESS like every other dynamic menu.
+   */
   isWirReportUser = false;
   
   /** Log Analytics visibility — accessible to all users */
@@ -148,12 +152,14 @@ export class layout implements OnInit, OnDestroy {
         const menus: any[] = Array.isArray(res) ? res : (res?.data ?? []);
 
         // Store all menus for dynamic rendering.
-        // WIR Report is rendered as a dedicated static link (flag below), so it
-        // is excluded from the dynamic tree to avoid a duplicate entry.
+        //
+        // WIR Report is NO LONGER excluded here. It used to be, because it had
+        // its own hard-coded link further up the sidebar. The moment it was
+        // given a parent in the menu master (QAQC), that exclusion removed it
+        // from the tree and left QAQC standing there with no children at all.
         this.userMenus = menus.filter((m: any) =>
           (m.canView ?? 'Y') === 'Y' &&
-          (m.isActive ?? 'Y') === 'Y' &&
-          !(m.menuUrl ?? '').toLowerCase().includes('wir-report')
+          (m.isActive ?? 'Y') === 'Y'
         );
 
         // Build the parent/child sidebar tree
@@ -516,8 +522,10 @@ export class layout implements OnInit, OnDestroy {
       this.openExternalMenu(menu);
 
     } else if (menu.menuUrl) {
-      // Internal routing
-      let route = menu.menuUrl;
+      // Internal routing. Translate a legacy component code first — without
+      // this, 'app-wir-report' becomes '/app-wir-report', which is not a route.
+      let route = this.LEGACY_MENU_ROUTES[(menu.menuUrl || '').trim().toLowerCase()]
+                  || menu.menuUrl;
       if (!route.startsWith('/')) {
         route = `/${route}`;
       }
@@ -538,6 +546,22 @@ export class layout implements OnInit, OnDestroy {
    * This makes the sidebar tolerant of a menu row flagged 'Y' by mistake, which
    * is otherwise invisible until someone clicks it and lands on a broken page.
    */
+  /**
+   * Menu rows that store a COMPONENT CODE instead of a route.
+   *
+   * These predate the menu master holding real paths ("app-wir-report" is not
+   * a route; "/wir-reports" is). They used to work only because each had a
+   * hard-coded link in this sidebar. Now that they come through the tree, the
+   * code has to be translated or the click lands on a dead route.
+   *
+   * Better fixed in the data - UPDATE TM_MENU_MASTER SET MENU_URL = '/wir-reports'
+   * - and then this entry can go.
+   */
+  private readonly LEGACY_MENU_ROUTES: { [code: string]: string } = {
+    'app-wir-report': '/wir-reports',
+    'app-purchase-dashboard': '/purchase-dashboard'
+  };
+
   isExternalMenu(menu: any): boolean {
     if ((menu?.isExternal ?? '').toString().trim().toUpperCase() !== 'Y') { return false; }
     const url = (menu?.menuUrl || '').toString().trim().toLowerCase();
