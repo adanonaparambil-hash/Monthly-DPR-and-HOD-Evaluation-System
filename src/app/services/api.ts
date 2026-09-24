@@ -594,6 +594,34 @@ export class Api {
       .pipe(timeout(this.REPORT_TIMEOUT_MS));
   }
 
+  /**
+   * How old the supplier report figures are.
+   *
+   * The reports read a snapshot rebuilt every 4 hours rather than
+   * aggregating the whole company live - that is what took them from timing
+   * out to under a second - so the screen has to be able to date them.
+   */
+  GetFinanceSnapshotStatus(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/FinanceReport/GetSnapshotStatus`);
+  }
+
+  /**
+   * Vendors for the Vendor column filter, narrowed by the SAME branch and
+   * status the report is using.
+   *
+   * That narrowing is not cosmetic. Of 6,183 vendors in the master, 2,277
+   * appear in the snapshot at all, 907 have anything outstanding, and 622 do
+   * for the default branch. An unfiltered list would mean most picks returned
+   * an empty report, which reads as broken rather than as "owes nothing".
+   */
+  GetFinanceVendorList(branchName = 'ALL', branchId = 1, outstandingStatus = 'OUTSTANDING'): Observable<any> {
+    const params = new HttpParams()
+      .set('branchName', branchName)
+      .set('branchId', String(branchId))
+      .set('outstandingStatus', outstandingStatus);
+    return this.http.get(`${this.apiUrl}/FinanceReport/GetVendorList`, { params });
+  }
+
   // Axpert dashboard API
   GetLpoDashboard(request: LpoDashboardRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/AxpertDashBoard/GetLpoDashboard`, request);

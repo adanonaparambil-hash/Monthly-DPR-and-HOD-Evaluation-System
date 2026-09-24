@@ -8,6 +8,7 @@ import {
   SupplierOverdueAgingRow,
   SupplierReportRequest,
   CurrencyOption,
+  VendorOption,
   ReportColumn
 } from '../models/financeReport.model';
 
@@ -54,7 +55,7 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
    * apart the way two hand-kept lists would.
    */
   readonly COLUMNS: ReportColumn[] = [
-    { key: 'VENDORNAME',        label: 'Vendor',            text: true },
+    { key: 'VENDORNAME',        label: 'Vendor',            text: true, filter: true },
     { key: 'CURRENCY',          label: 'Currency',          text: true, filter: true },
     { key: 'DAYS_1_30',         label: '1-30 Days' },
     { key: 'DAYS_31_60',        label: '31-60 Days' },
@@ -66,13 +67,33 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
     { key: 'TOTAL_OUTSTANDING', label: 'Total Outstanding' }
   ];
 
-  /** Sorting and the currency filter are SERVER-side. See runReport(). */
+  /** Sorting is SERVER-side - the screen only holds one batch at a time. */
   sortColumn = 'VENDORNAME';
   sortDir: 'ASC' | 'DESC' = 'ASC';
 
   currencies: CurrencyOption[] = [];
   selectedCurrency = 'ALL';
-  currencyFilterOpen = false;
+
+  /**
+   * Vendors for the Vendor column filter, and the picked one.
+   *
+   * Hundreds of entries even after the branch and outstanding filters, so
+   * unlike Currency this popover NEEDS a search box. vendorQuery drives it
+   * and visibleVendors is the filtered slice actually rendered.
+   */
+  vendors: VendorOption[] = [];
+  selectedVendor = 'ALL';
+  vendorQuery = '';
+
+  /**
+   * Capped deliberately. Rendering many hundreds of buttons inside a popover
+   * costs a visible pause every time it opens; the search box is how you reach
+   * the rest, and the footer says so when the list is trimmed.
+   */
+  readonly VENDOR_LIST_LIMIT = 200;
+
+  /** Which column's popover is open, by column key. Null = none. */
+  openFilter: string | null = null;
 
   readonly BATCH_SIZE = 500;
   readonly PAGE_SIZES = [100, 250, 500];
@@ -96,6 +117,26 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
   exporting = false;
 
   /**
+   * When the figures were last rebuilt.
+   *
+   * The report reads a snapshot refreshed every 4 hours rather than
+   * aggregating the whole company live — that is what took it from timing out
+   * to well under a second. Because of that the screen MUST date what it is
+   * showing: without this the numbers look current to the second, and someone
+   * chasing an overdue balance would act on a payment that was entered after
+   * the last refresh and is not reflected here yet.
+   */
+  asOf: Date | null = null;
+
+  /**
+   * Set when the last scheduled rebuild FAILED, so stale figures are not
+   * passed off as current. There is no rebuild button on screen — the 4-hourly
+   * job owns that — which makes showing the failure more important, not less:
+   * it is the only way anyone would know the numbers had stopped moving.
+   */
+  snapshotFailed = false;
+
+  /**
    * Seconds the current run has been going. Shown while loading: a spinner with
    * no number is indistinguishable from a page that has died, which is exactly
    * how this looked when the query ran long.
@@ -107,7 +148,7 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
   hasRun = false;
 
   readonly fixedProjectCode = 'ALL';
-  readonly fixedVendorName = 'ALL';
+
   readonly fixedOutstandingStatus = 'OUTSTANDING';
 
   /**
@@ -145,6 +186,7 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrencies();
+    this.loadSnapshotStatus();
     // The report is NOT started here. loadBranches() starts it once the list is
     // back, otherwise the first run would go out as "ALL" and be thrown away
     // the moment the default branch was applied - two slow queries for one page.
@@ -159,6 +201,10 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
         this.branches = [{ branchId: 1, branchName: 'ALL' }, ...(Array.isArray(data) ? data : [])];
         this.branchesLoading = false;
         this.applyDefaultBranch();
+        // Vendors depend on the branch, so this waits until the default has
+        // been applied - loading them first would list the vendors for ALL
+        // branches and then silently disagree with the report on screen.
+        this.loadVendors();
         this.runReport(1);
       },
       error: () => {
@@ -166,6 +212,21 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
         this.branchesLoading = false;
         this.runReport(1);
       }
+    });
+  }
+
+  /** Reads only the metadata row - it never touches the report tables. */
+  loadSnapshotStatus(): void {
+    this.api.GetFinanceSnapshotStatus().subscribe({
+      next: (res: any) => {
+        const d = res?.data;
+        if (!d) { return; }
+        if (d.refreshed_At ?? d.refreshedAt) {
+          this.asOf = new Date(d.refreshed_At ?? d.refreshedAt);
+        }
+        this.snapshotFailed = (d.status ?? '') === 'FAILED';
+      },
+      error: () => { /* the report itself also carries asOf, so this is only a fallback */ }
     });
   }
 
@@ -179,13 +240,25 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── sorting and the currency filter ──────────────────────────────────────
   /**
-   * Both go back to the server. Sorting the 500 rows on hand would reorder a
-   * slice of the report and present it as the whole thing, and the same goes
-   * for filtering - page 1 of "RIAL OMANI only" is not the first 100 RIAL OMANI
-   * suppliers unless the database did the filtering.
+   * Loaded ONCE on init, not per keystroke. The list comes from the snapshot
+   * and changes only when that is rebuilt, so searching it in the browser is
+   * both instant and correct — a round trip per character would be neither.
    */
+  loadVendors(): void {
+    const picked = this.branches.find(b => b.branchName === this.selectedBranchName);
+    const bid = this.selectedBranchName === 'ALL' ? 1 : Number(picked?.branchId ?? 1);
+
+    this.api.GetFinanceVendorList(this.selectedBranchName || 'ALL', bid, this.fixedOutstandingStatus).subscribe({
+      next: (res: any) => {
+        const data = res?.data || [];
+        this.vendors = Array.isArray(data) ? data : [];
+      },
+      error: () => { this.vendors = []; }
+    });
+  }
+
+  // ── sorting and the column filters ───────────────────────────────────────
   sortBy(col: ReportColumn): void {
     if (this.sortColumn === col.key) {
       this.sortDir = this.sortDir === 'ASC' ? 'DESC' : 'ASC';
@@ -203,21 +276,64 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
     return this.sortDir === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
   }
 
-  toggleCurrencyFilter(event: Event): void {
+  /**
+   * Both go back to the server. Sorting the 500 rows on hand would reorder a
+   * slice of the report and present it as the whole thing, and the same goes
+   * for filtering - page 1 of "RIAL OMANI only" is not the first 100 RIAL OMANI
+   * suppliers unless the database did the filtering.
+   */
+  toggleFilter(col: ReportColumn, event: Event): void {
     event.stopPropagation();
-    this.currencyFilterOpen = !this.currencyFilterOpen;
+    this.openFilter = this.openFilter === col.key ? null : col.key;
   }
 
   pickCurrency(value: string): void {
     this.selectedCurrency = value;
-    this.currencyFilterOpen = false;
+    this.openFilter = null;
     this.pageNo = 1;
     this.runReport(1);
   }
 
-  /** Any click outside closes the popover. */
+  pickVendor(value: string): void {
+    this.selectedVendor = value;
+    this.openFilter = null;
+    this.vendorQuery = '';
+    this.pageNo = 1;
+    this.runReport(1);
+  }
+
+  /**
+   * The vendors actually rendered: those matching the search box, capped at
+   * VENDOR_LIST_LIMIT. Called from the template, so it stays cheap - a plain
+   * substring match over an array that is loaded once.
+   */
+  visibleVendors(): VendorOption[] {
+    const q = this.vendorQuery.trim().toUpperCase();
+    const matches = q
+      ? this.vendors.filter(v => (v.vendorName || '').toUpperCase().includes(q))
+      : this.vendors;
+    return matches.slice(0, this.VENDOR_LIST_LIMIT);
+  }
+
+  /** How many matched but were not rendered, so the footer can say so. */
+  hiddenVendorCount(): number {
+    const q = this.vendorQuery.trim().toUpperCase();
+    const total = q
+      ? this.vendors.filter(v => (v.vendorName || '').toUpperCase().includes(q)).length
+      : this.vendors.length;
+    return Math.max(0, total - this.VENDOR_LIST_LIMIT);
+  }
+
+  /** True when a column has a filter actually doing something. */
+  filterActive(col: ReportColumn): boolean {
+    if (col.key === 'CURRENCY')   { return this.selectedCurrency !== 'ALL'; }
+    if (col.key === 'VENDORNAME') { return this.selectedVendor !== 'ALL'; }
+    return false;
+  }
+
+  /** Any click outside closes whichever popover is open. */
   @HostListener('document:click')
-  onDocumentClick(): void { this.currencyFilterOpen = false; }
+  onDocumentClick(): void { this.openFilter = null; }
 
   /** Select DEFAULT_BRANCH if the list contains it; otherwise stay on ALL. */
   private applyDefaultBranch(): void {
@@ -233,7 +349,7 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
       branchName: this.selectedBranchName || 'ALL',
       branchId: this.selectedBranchName === 'ALL' ? 1 : Number(picked?.branchId ?? 1),
       projectCode: this.fixedProjectCode,
-      vendorName: this.fixedVendorName,
+      vendorName: this.selectedVendor || 'ALL',
       outstandingStatus: this.fixedOutstandingStatus,
       currency: this.selectedCurrency || 'ALL',
       sortColumn: this.sortColumn,
@@ -256,6 +372,7 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
           this.batchNo = batchNo;
           this.totalCount = res.totalCount || this.batch.length;
           this.totalPages = Math.ceil(this.totalCount / this.pageSize) || 0;
+          this.asOf = res.asOf ? new Date(res.asOf) : null;
           this.showPage();
         } else {
           this.clearResults();
@@ -309,12 +426,25 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
 
   /** Branch picked - a different result set, so start at page 1 again. */
   onBranchChange(): void {
+    // A vendor that has something outstanding in one branch may have nothing
+    // in another, so the picked vendor is cleared rather than silently
+    // carried over into a branch where it would return an empty report.
+    this.selectedVendor = 'ALL';
+    this.vendorQuery = '';
+    this.loadVendors();
     this.pageNo = 1;
     this.runReport(1);
   }
 
   resetFilters(): void {
     this.selectedBranchName = 'ALL';
+    this.selectedCurrency = 'ALL';
+    this.selectedVendor = 'ALL';
+    this.vendorQuery = '';
+    // Back to ALL branches means a different vendor list.
+    this.loadVendors();
+    this.sortColumn = 'VENDORNAME';
+    this.sortDir = 'ASC';
     this.pageNo = 1;
     this.runReport(1);
   }

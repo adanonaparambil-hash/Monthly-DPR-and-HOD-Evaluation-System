@@ -609,10 +609,21 @@ export class layout implements OnInit, OnDestroy {
     });
   }
 
-  /** Format menu name to proper case */
+  /**
+   * Format a menu name from the menu master to proper case.
+   *
+   * The master stores some names shouting (FINANCE, PURCHASE-DASHBOARD) and
+   * others already cased (PMC Module), so the sidebar used to mix the two.
+   * This normalises them.
+   *
+   * The acronym list below is NOT optional padding: title-casing alone turns
+   * QAQC into "Qaqc", PMC into "Pmc" and WIR into "Wir". Every acronym that
+   * appears in TM_MENU_MASTER has to be listed here, so add to it when a new
+   * menu is created rather than letting the sidebar mangle it.
+   */
   formatMenuName(menuName: string): string {
     if (!menuName) return '';
-    
+
     return menuName
       .toLowerCase()
       .replace(/-/g, ' ')
@@ -626,7 +637,17 @@ export class layout implements OnInit, OnDestroy {
       .replace(/\bUi\b/gi, 'UI')
       .replace(/\bDpr\b/gi, 'DPR')
       .replace(/\bMpr\b/gi, 'MPR')
-      .replace(/\bApr\b/gi, 'APR');
+      .replace(/\bApr\b/gi, 'APR')
+      // In TM_MENU_MASTER today: QAQC (124), PMC Module (41), WIR Report (125)
+      .replace(/\bQaqc\b/gi, 'QAQC')
+      .replace(/\bPmc\b/gi, 'PMC')
+      .replace(/\bWir\b/gi, 'WIR')
+      // Not in the master yet, but used elsewhere in the portal
+      .replace(/\bByod\b/gi, 'BYOD')
+      .replace(/\bHod\b/gi, 'HOD')
+      .replace(/\bCed\b/gi, 'CED')
+      .replace(/\bLpo\b/gi, 'LPO')
+      .replace(/\bGrn\b/gi, 'GRN');
   }
 
   // markAllAsRead() {

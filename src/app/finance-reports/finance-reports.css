@@ -64,6 +64,24 @@
 }
 .fin-icon-btn:disabled { opacity: .45; cursor: not-allowed; }
 
+/* "As of" chip.
+   Deliberately understated in the normal case and loud when the rebuild has
+   FAILED: stale figures shown as though they were current is the one way this
+   screen can mislead someone into paying the wrong thing. */
+.fin-asof {
+  height: 36px; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 11px;
+  border: 1px solid #e2e8f0; border-radius: 9px;
+  background: #f8fafc; color: #64748b;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  cursor: default;
+}
+.fin-asof > i { font-size: 11px; }
+.fin-asof.stale {
+  border-color: #fca5a5; background: #fef2f2; color: #b91c1c;
+}
+
 .fin-btn {
   height: 36px;
   display: inline-flex; align-items: center; gap: 7px;
@@ -121,6 +139,12 @@
   min-height: 220px;
 }
 
+/* While a filter popover is open the box has to be tall enough to contain it.
+   The popover is a child of a sticky th inside this overflow:auto box, so a
+   short result set - one row, say - would otherwise clip the vendor list to a
+   sliver and there would be no way to scroll to the rest of it. */
+.fin-table-wrap.pop-open { min-height: 430px; }
+
 /* Scrollbars, scoped to this box.
    The global rule in styles.css paints every thumb with var(--accent-color),
    which ThemeService sets to #cc9933 - that is the gold bar. It also sets only
@@ -164,7 +188,13 @@ table.fin-table { width: 100%; border-collapse: collapse; }
   display: flex; align-items: center; gap: 3px;
   justify-content: flex-end; padding: 8px 8px;
 }
-.fin-table thead th.tx-l .th-inner { justify-content: flex-start; }
+/* Label stays LEFT, funnel goes to the column's RIGHT edge.
+   flex-start bunched the funnel up against the label, so on a wide column like
+   Vendor it floated in the middle of nowhere and the filter icons did not line
+   up with each other down the header row. space-between pins each funnel to
+   the edge its column ends at, which is also where the money columns' funnels
+   already sit. */
+.fin-table thead th.tx-l .th-inner { justify-content: space-between; }
 
 .th-label {
   display: inline-flex; align-items: center; gap: 6px;
@@ -193,6 +223,13 @@ table.fin-table { width: 100%; border-collapse: collapse; }
   box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
   padding: 5px;
 }
+
+/* LEFT-aligned columns open their popover to the RIGHT.
+   right:6px is correct for a money column near the right edge, but on Vendor -
+   the leftmost data column - a 300px popover anchored right runs off the left
+   of the table and .fin-table-wrap's overflow:auto cuts it in half. That is
+   what made the vendor names read "/S. AL ..." instead of "M/S. AL ...". */
+.fin-table thead th.tx-l .th-pop { left: 6px; right: auto; }
 .th-pop-item {
   display: block; width: 100%; text-align: left;
   padding: 7px 10px; border: none; border-radius: 7px; background: none;
@@ -205,6 +242,40 @@ table.fin-table { width: 100%; border-collapse: collapse; }
   padding: 9px 10px; font: 500 11.5px "Segoe UI"; color: #94a3b8;
   text-transform: none; letter-spacing: 0;
 }
+.th-pop-note {
+  padding: 7px 10px; margin-top: 3px; border-top: 1px solid #f1f5f9;
+  font: 500 10.5px "Segoe UI"; color: #94a3b8;
+  text-transform: none; letter-spacing: 0;
+}
+
+/* the vendor popover needs room for long names */
+.th-pop.wide { min-width: 300px; max-height: 340px; }
+
+/* search box at the top of the vendor popover */
+.th-pop-search { position: relative; margin-bottom: 4px; }
+.th-pop-search i {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: #94a3b8; pointer-events: none;
+}
+.th-pop-search input {
+  width: 100%; height: 32px; padding: 0 10px 0 29px;
+  border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;
+  font: 600 12px "Segoe UI"; color: #1e293b;
+  text-transform: none; letter-spacing: 0;
+}
+.th-pop-search input:focus {
+  outline: none; border-color: #138271; background: #fff;
+  box-shadow: 0 0 0 3px rgba(19, 130, 113, .12);
+}
+/* names are long - wrap rather than clip inside the popover */
+.th-pop.wide .th-pop-item { white-space: normal; line-height: 1.35; }
+
+/* The vendor list scrolls, the search box does NOT.
+   .th-pop scrolls as a whole, which would carry the search box off the top the
+   moment you scrolled - exactly when you still need it. Giving the list its own
+   scroll area keeps the box pinned. */
+.th-pop.wide { overflow: visible; display: flex; flex-direction: column; }
+.th-pop-list { overflow-y: auto; max-height: 250px; }
 
 /* the # column stays narrow */
 .fin-table .idx { width: 52px; color: #94a3b8; font-weight: 600; }
@@ -275,6 +346,12 @@ table.fin-table { width: 100%; border-collapse: collapse; }
 :host-context(.dark-theme) .fin-title-sub { color: var(--text-secondary); }
 :host-context(.dark-theme) .fin-branch select,
 :host-context(.dark-theme) .fin-icon-btn { background: var(--background-primary); border-color: rgba(255,255,255,.12); color: var(--text-primary); }
+:host-context(.dark-theme) .fin-asof {
+  background: var(--background-primary); border-color: rgba(255,255,255,.12); color: var(--text-secondary);
+}
+:host-context(.dark-theme) .fin-asof.stale {
+  background: rgba(185,28,28,.18); border-color: rgba(248,113,113,.45); color: #fca5a5;
+}
 /* The table is hard-coded light now, so dark mode has to restate it rather
    than lean on variables that ThemeService repaints. */
 :host-context(.dark-theme) .fin-table thead th {
@@ -287,6 +364,11 @@ table.fin-table { width: 100%; border-collapse: collapse; }
 :host-context(.dark-theme) .th-pop-item { color: #e2e8f0; }
 :host-context(.dark-theme) .th-pop-item:hover { background: #273449; }
 :host-context(.dark-theme) .th-pop-item.on { background: rgba(19,130,113,.25); color: #5eead4; }
+:host-context(.dark-theme) .th-pop-search input {
+  background: var(--background-primary); border-color: rgba(255,255,255,.12); color: var(--text-primary);
+}
+:host-context(.dark-theme) .th-pop-note,
+:host-context(.dark-theme) .th-pop-empty { color: #94a3b8; border-top-color: #334155; }
 :host-context(.dark-theme) .fin-table tbody td { border-left-color: #1a2536; }
 :host-context(.dark-theme) .fin-table tfoot td { border-left-color: #1e293b; }
 :host-context(.dark-theme) .fin-table tbody td { color: #e2e8f0; border-bottom-color: #1e293b; }
@@ -301,6 +383,13 @@ table.fin-table { width: 100%; border-collapse: collapse; }
 }
 
 /* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  /* The table stops fitting here, so let it scroll sideways rather than
+     crushing nine money columns into the width. */
+  table.fin-table { min-width: 860px; }
+  .fin-table-wrap { max-height: calc(100vh - 250px); }
+}
+
 @media (max-width: 768px) {
   .fin-page { padding: 12px; }
   .fin-hero { flex-direction: column; align-items: stretch; padding: 13px 14px; }
@@ -311,4 +400,38 @@ table.fin-table { width: 100%; border-collapse: collapse; }
   .fin-meta-sp { display: none; }
   .fin-ps { width: 100%; justify-content: flex-end; }
   .fin-btn { flex: 1 1 auto; justify-content: center; }
+
+  /* The "As of" chip goes full width above the buttons instead of being
+     squeezed between them, where the timestamp was the first thing to be
+     truncated - and the timestamp is the whole point of the chip. */
+  .fin-asof { flex: 1 1 100%; justify-content: center; }
+
+  /* A 300px popover does not fit a 375px screen once the column it hangs off
+     is scrolled. Pin it to the left of the header cell and let it use the
+     viewport width instead. */
+  .th-pop { right: 4px; }
+  .fin-table thead th.tx-l .th-pop { left: 4px; right: auto; }
+  .th-pop.wide { min-width: 0; width: min(82vw, 320px); }
+  .th-pop-list { max-height: 200px; }
+  .fin-table-wrap.pop-open { min-height: 380px; }
+
+  .fin-meta { flex-wrap: wrap; row-gap: 4px; }
+}
+
+@media (max-width: 480px) {
+  .fin-page { padding: 8px; }
+  .fin-hero { padding: 11px 12px; gap: 10px; }
+  .fin-hero-icon { width: 34px; height: 34px; font-size: 14px; }
+  .fin-title-main { font-size: 15px; }
+  .fin-title-sub { font-size: 11px; }
+
+  /* Export loses its label and becomes an icon button, so the whole toolbar
+     row - branch, reload, reset, export - still fits on one line. */
+  .fin-btn { flex: 0 0 auto; padding: 0 12px; }
+  .fin-btn .fin-btn-text { display: none; }
+
+  table.fin-table { min-width: 760px; }
+  .fin-table thead th { font-size: 10px; }
+  .fin-table tbody td { font-size: 11.5px; }
+  .th-pop.wide { width: min(88vw, 300px); }
 }

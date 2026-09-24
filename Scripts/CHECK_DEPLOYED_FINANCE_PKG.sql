@@ -2,7 +2,7 @@
 --  WHAT IS ACTUALLY DEPLOYED?
 --  ---------------------------------------------------------------------------
 --  Run this in the environment the portal talks to. It answers, in one go,
---  whether the package in the database is the one in PKG_FINANCE_REPORTS.sql.
+--  whether the package in the database is the one in PKG_FIN_SUPPLIER_REPORTS.sql.
 --
 --  We have now seen three different symptoms from the same root cause:
 --      Error parsing column 6 (OVERDUE=OUTSTANDING - String)
@@ -18,13 +18,13 @@ SET LINESIZE 200
 -- 1) Is it even valid?
 SELECT OBJECT_TYPE, STATUS, TO_CHAR (LAST_DDL_TIME, 'DD-MON-YY HH24:MI') AS LAST_DEPLOYED
   FROM USER_OBJECTS
- WHERE OBJECT_NAME = 'PKG_FINANCE_REPORTS'
+ WHERE OBJECT_NAME = 'PKG_FIN_SUPPLIER_REPORTS'
  ORDER BY OBJECT_TYPE;
 
 -- 2) Any compilation errors outstanding?
 SELECT LINE, POSITION, TEXT
   FROM USER_ERRORS
- WHERE NAME = 'PKG_FINANCE_REPORTS'
+ WHERE NAME = 'PKG_FIN_SUPPLIER_REPORTS'
  ORDER BY SEQUENCE;
 
 -- 3) THE IMPORTANT ONE - the deployed SELECT lists.
@@ -32,7 +32,7 @@ SELECT LINE, POSITION, TEXT
 --    OUTSTAND, and every "AS OVERDUE" sits on an END) of a SUM(CASE ...).
 SELECT LINE, RTRIM (TEXT) AS SOURCE_LINE
   FROM USER_SOURCE
- WHERE NAME = 'PKG_FINANCE_REPORTS'
+ WHERE NAME = 'PKG_FIN_SUPPLIER_REPORTS'
    AND TYPE = 'PACKAGE BODY'
    AND (   UPPER (TEXT) LIKE '%SELECT VENDORNAME%'
         OR UPPER (TEXT) LIKE '%AS BRANCHNAME%'
@@ -48,7 +48,7 @@ SELECT LINE, RTRIM (TEXT) AS SOURCE_LINE
 --    Expect P_PAGE_NO and P_PAGE_SIZE on both report procedures.
 SELECT OBJECT_NAME, ARGUMENT_NAME, DATA_TYPE, IN_OUT, POSITION
   FROM USER_ARGUMENTS
- WHERE PACKAGE_NAME = 'PKG_FINANCE_REPORTS'
+ WHERE PACKAGE_NAME = 'PKG_FIN_SUPPLIER_REPORTS'
    AND OBJECT_NAME IN ('SP_GET_SUPPLIER_PAYMENT_FORECAST', 'SP_GET_SUPPLIER_OVERDUE_AGING')
  ORDER BY OBJECT_NAME, POSITION;
 
@@ -65,7 +65,7 @@ SELECT OBJECT_NAME, ARGUMENT_NAME, DATA_TYPE, IN_OUT, POSITION
 --  and NOTHING at all for BRANCHNAME / BID / PROJECTCODE / OUTSTAND.
 --
 --  If BRANCHNAME or OUTSTAND appear, an older body is still in the database:
---  re-run PKG_FINANCE_REPORTS.sql in THIS environment. Running it elsewhere,
+--  re-run PKG_FIN_SUPPLIER_REPORTS.sql in THIS environment. Running it elsewhere,
 --  or compiling only the spec, leaves the old body in place and every symptom
 --  above comes straight back.
 -- ============================================================================

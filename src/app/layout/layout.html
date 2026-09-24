@@ -44,7 +44,7 @@
             <div class="menu-content">
               <i class="fas fa-folder-open" *ngIf="openMenuGroups[menu.menuId]"></i>
               <i class="fas fa-folder" *ngIf="!openMenuGroups[menu.menuId]"></i>
-              <span>{{ menu.menuName }}</span>
+              <span>{{ formatMenuName(menu.menuName) }}</span>
             </div>
             <i class="fas fa-chevron-down" [class.rotated]="openMenuGroups[menu.menuId]"></i>
           </a>
@@ -57,7 +57,7 @@
               <!-- the icon follows what the link ACTUALLY is, not just the flag -->
               <i class="fas fa-external-link-alt" *ngIf="isExternalMenu(child)"></i>
               <i class="fas fa-tachometer-alt" *ngIf="!isExternalMenu(child)"></i>
-              {{ child.menuName }}
+              {{ formatMenuName(child.menuName) }}
             </a>
           </div>
         </div>
@@ -75,7 +75,7 @@
            [href]="isExternalMenu(menu) ? 'javascript:void(0)' : null">
           <i class="fas fa-external-link-alt" *ngIf="isExternalMenu(menu)"></i>
           <i class="fas fa-tachometer-alt" *ngIf="!isExternalMenu(menu)"></i>
-          {{ menu.menuName }}
+          {{ formatMenuName(menu.menuName) }}
         </a>
       </ng-container>
 

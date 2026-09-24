@@ -1,6 +1,6 @@
 /**
  * Supplier payment reports (Finance menu).
- * Served by PKG_FINANCE_REPORTS, which reads the ADK2026 (Axpert) schema.
+ * Served by PKG_FIN_SUPPLIER_REPORTS, which reads the ADK2026 (Axpert) schema.
  */
 
 /** One branch for the filter dropdown — id and name arrive together. */
@@ -74,6 +74,17 @@ export interface CurrencyOption {
   currency?: string;
 }
 
+/**
+ * One vendor for the Vendor column's filter.
+ *
+ * Built from the snapshot, so it only lists vendors that can actually appear
+ * in the report - the vendor master has nearly three times as many, and most
+ * of them would return an empty report.
+ */
+export interface VendorOption {
+  vendorName?: string;
+}
+
 /** A column heading that can be sorted, and optionally filtered. */
 export interface ReportColumn {
   /** Name the PROCEDURE knows it by - this is what goes to the server. */
@@ -81,6 +92,6 @@ export interface ReportColumn {
   label: string;
   /** Left-aligned text column vs right-aligned money column. */
   text?: boolean;
-  /** Show the funnel (only Currency has one today). */
+  /** Show the funnel. Currency and Vendor have one. */
   filter?: boolean;
 }

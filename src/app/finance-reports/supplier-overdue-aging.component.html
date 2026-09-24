@@ -21,7 +21,18 @@
         </select>
       </div>
 
-      <button type="button" class="fin-icon-btn" (click)="runReport()" [disabled]="loading" title="Refresh">
+      <!-- How old the figures are. This is NOT decoration: the report reads a
+           snapshot rebuilt every 4 hours, so a payment made this morning may
+           not be reflected yet and whoever is chasing a balance needs to know. -->
+      <div class="fin-asof" *ngIf="asOf" [class.stale]="snapshotFailed"
+           [title]="snapshotFailed
+                    ? 'The last scheduled rebuild failed - these are the previous figures.'
+                    : 'Figures are rebuilt automatically every 4 hours.'">
+        <i class="fas" [class.fa-clock]="!snapshotFailed" [class.fa-triangle-exclamation]="snapshotFailed"></i>
+        <span>{{ snapshotFailed ? 'Stale —' : 'As of' }} {{ asOf | date:'dd MMM, HH:mm' }}</span>
+      </div>
+
+      <button type="button" class="fin-icon-btn" (click)="runReport()" [disabled]="loading" title="Reload the report">
         <i class="fas fa-rotate"></i>
       </button>
       <button type="button" class="fin-icon-btn" (click)="resetFilters()" [disabled]="loading" title="Reset to all branches">
@@ -31,18 +42,18 @@
       <button type="button" class="fin-btn" (click)="exportCsv()"
               [disabled]="loading || exporting || !totalCount" title="Export every row to CSV">
         <i class="fas" [class.fa-file-csv]="!exporting" [class.fa-spinner]="exporting" [class.fa-spin]="exporting"></i>
-        {{ exporting ? 'Exporting…' : 'Export' }}
+        <span class="fin-btn-text">{{ exporting ? 'Exporting…' : 'Export' }}</span>
       </button>
     </div>
   </div>
 
-  <!-- loading. The elapsed count matters: a bare spinner on a query that runs
-       for minutes is indistinguishable from a dead page. -->
+  <!-- Loading. The elapsed count is kept deliberately: the report should now
+       come back in well under a second, so a count that starts climbing is the
+       fastest signal that something is wrong again. -->
   <div class="fin-state" *ngIf="loading">
     <i class="fas fa-spinner fa-spin"></i>
-    <span>Running the report… <strong>{{ elapsed }}s</strong></span>
-    <small>Supplier payment data is read live from Axpert, so this can take a while.</small>
-    <small *ngIf="elapsed > 20">Still going. Narrowing to a single branch is usually much quicker.</small>
+    <span>Loading… <strong>{{ elapsed }}s</strong></span>
+    <small *ngIf="elapsed > 5">Taking longer than expected — this normally returns almost immediately.</small>
     <button type="button" class="fin-icon-btn fin-cancel" (click)="cancelRun()" title="Stop waiting">
       <i class="fas fa-xmark"></i> Cancel
     </button>
@@ -62,6 +73,10 @@
       <span>Showing <strong>{{ pageRange() }}</strong> of <strong>{{ totalCount }}</strong> supplier{{ totalCount === 1 ? '' : 's' }}</span>
       <span>·</span>
       <span>Branch: <strong>{{ selectedBranchName === 'ALL' ? 'All branches' : selectedBranchName }}</strong></span>
+      <ng-container *ngIf="selectedVendor !== 'ALL'">
+        <span>·</span>
+        <span>Vendor: <strong>{{ selectedVendor }}</strong></span>
+      </ng-container>
       <span class="fin-meta-sp"></span>
       <div class="fin-ps">
         <label for="soaPs">Per page:</label>
@@ -71,7 +86,7 @@
       </div>
     </div>
 
-    <div class="fin-table-wrap" #tableWrap *ngIf="totalCount">
+    <div class="fin-table-wrap" #tableWrap [class.pop-open]="openFilter" *ngIf="totalCount">
       <table class="fin-table">
         <thead>
           <tr>
@@ -81,23 +96,28 @@
                  is how the TOTAL row lost a cell last time. -->
             <th *ngFor="let c of COLUMNS" [class.tx-l]="c.text" [class.sorted]="sortColumn === c.key">
               <span class="th-inner">
+                <!-- The whole label is the sort control; the arrow shows the
+                     current direction, grey when this column is not the one
+                     being sorted. Sorting is done by the procedure, so it
+                     covers every row, not just the batch on screen. -->
                 <button type="button" class="th-label" (click)="sortBy(c)"
                         [title]="'Sort by ' + c.label">
                   {{ c.label }}
                   <i class="fas" [ngClass]="sortIcon(c)"></i>
                 </button>
 
-                <!-- filter: Currency only, for now -->
                 <button *ngIf="c.filter" type="button" class="th-filter"
-                        [class.on]="selectedCurrency !== 'ALL'"
-                        (click)="toggleCurrencyFilter($event)"
-                        [title]="selectedCurrency === 'ALL' ? 'Filter by currency' : 'Currency: ' + selectedCurrency">
+                        [class.on]="filterActive(c)"
+                        (click)="toggleFilter(c, $event)"
+                        [title]="'Filter by ' + c.label">
                   <i class="fas fa-filter"></i>
                 </button>
               </span>
 
-              <!-- popover. stop() keeps the document click-away from firing. -->
-              <div class="th-pop" *ngIf="c.filter && currencyFilterOpen" (click)="$event.stopPropagation()">
+              <!-- Currency: a short list, so a plain list of options.
+                   stop() keeps the document click-away from firing. -->
+              <div class="th-pop" *ngIf="c.key === 'CURRENCY' && openFilter === 'CURRENCY'"
+                   (click)="$event.stopPropagation()">
                 <button type="button" class="th-pop-item" [class.on]="selectedCurrency === 'ALL'"
                         (click)="pickCurrency('ALL')">All currencies</button>
                 <button type="button" class="th-pop-item" *ngFor="let cur of currencies"
@@ -105,6 +125,33 @@
                         (click)="pickCurrency(cur.currency || 'ALL')">{{ cur.currency }}</button>
                 <div class="th-pop-empty" *ngIf="!currencies.length">No currencies found.</div>
               </div>
+
+              <!-- Vendor: hundreds of entries, so a search box rather than a
+                   bare list. The list is narrowed by the SAME branch and
+                   outstanding filters as the report, so everything in it has
+                   something to show - an unfiltered list would be 6,183 names
+                   of which only ~900 return a single row. -->
+              <div class="th-pop wide" *ngIf="c.key === 'VENDORNAME' && openFilter === 'VENDORNAME'"
+                   (click)="$event.stopPropagation()">
+                <div class="th-pop-search">
+                  <i class="fas fa-magnifying-glass"></i>
+                  <input type="text" [(ngModel)]="vendorQuery" placeholder="Search vendor…"
+                         (click)="$event.stopPropagation()" autocomplete="off" />
+                </div>
+                <div class="th-pop-list">
+                  <button type="button" class="th-pop-item" [class.on]="selectedVendor === 'ALL'"
+                          (click)="pickVendor('ALL')">All vendors</button>
+                  <button type="button" class="th-pop-item" *ngFor="let v of visibleVendors()"
+                          [class.on]="selectedVendor === v.vendorName"
+                          [title]="v.vendorName"
+                          (click)="pickVendor(v.vendorName || 'ALL')">{{ v.vendorName }}</button>
+                </div>
+                <div class="th-pop-empty" *ngIf="!visibleVendors().length">No vendor matches that.</div>
+                <div class="th-pop-note" *ngIf="hiddenVendorCount()">
+                  +{{ hiddenVendorCount() }} more — keep typing to narrow it down.
+                </div>
+              </div>
+
             </th>
           </tr>
         </thead>
