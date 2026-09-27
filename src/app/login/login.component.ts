@@ -1,4 +1,5 @@
 import { Component, signal, OnDestroy, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { homeRouteFor } from '../utils/home-route';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -291,15 +292,9 @@ export class LoginComponent implements OnInit, OnDestroy {
           // Use AuthService for proper session management
           this.authService.login(token, res.data);
 
-          const code = (res?.data?.isHOD || '').toString().toUpperCase();
-          if (code === 'H') {
-            this.router.navigate(['/hod-dashboard']);
-          } else if (code === 'C') {
-            // CED lands on the DPR usage dashboard first
-            this.router.navigate(['/ced-dpr-analytics']);
-          } else {
-            this.router.navigate(['/employee-dashboard']);
-          }
+          // Employees land on the new DPR dashboard; HOD and CED are unchanged.
+          // The role → page map lives in utils/home-route.ts.
+          this.router.navigate([homeRouteFor(res?.data)]);
 
         } else if (res?.message === "F") {
           

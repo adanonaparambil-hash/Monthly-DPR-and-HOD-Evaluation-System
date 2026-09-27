@@ -1,0 +1,970 @@
+<title>Adrak DPR Dashboards</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   DPR DASHBOARDS v2 — static design, for 1:1 port into the Angular components
+   Chrome tokens match dpr-hod-dashboard.component.css so the port stays literal.
+   Chart-mark tokens (--c1..--c6) are a CORRECTED set: the brand teal #138271
+   fails the chroma floor as a chart fill (0.095, reads grey beside slate ink).
+   Brand teal is kept for chrome; charts use --c1 #0d9488. Both the light and
+   dark sets pass all six palette checks.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  color-scheme:light;
+  --ground:#eef2f7;
+  --glass:rgba(255,255,255,.66); --glassb:rgba(255,255,255,.95);
+  --solid:#ffffff;
+  --line:rgba(148,163,184,.24); --track:rgba(148,163,184,.20);
+  --ink:#0f172a; --ink2:#475569; --ink3:#94a3b8;
+  --brand:#138271;
+  --c1:#0d9488; --c2:#4f46e5; --c3:#d97706; --c4:#e11d48; --c5:#0284c7; --c6:#7c3aed;
+  --s0:rgba(148,163,184,.14); --s1:#ccfbf1; --s2:#7dd3c0; --s3:#2da395; --s4:#0d9488; --s5:#115e59;
+  --dpos:#d97706; --dmid:#94a3b8; --dneg:#0d9488;
+  --good:#16a34a; --warn:#b45309; --bad:#dc2626;
+  --goodbg:rgba(22,163,74,.12); --warnbg:rgba(180,83,9,.12); --badbg:rgba(220,38,38,.12);
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 14px 40px rgba(93,100,255,.09),inset 0 1px 0 rgba(255,255,255,.8);
+  --tip:#0f172a; --tipink:#f8fafc;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#0a1120;
+  --glass:rgba(23,34,54,.66); --glassb:rgba(148,163,184,.16);
+  --solid:#111c2f;
+  --line:rgba(148,163,184,.20); --track:rgba(148,163,184,.16);
+  --ink:#e6edf7; --ink2:#9fb0c6; --ink3:#6b7f99;
+  --brand:#2dd4bf;
+  --c2:#6366f1;
+  --s0:rgba(148,163,184,.10); --s1:#0f3d38; --s2:#146157; --s3:#0d8578; --s4:#14b8a6; --s5:#5eead4;
+  --dmid:#64748b;
+  --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --goodbg:rgba(74,222,128,.14); --warnbg:rgba(251,191,36,.14); --badbg:rgba(248,113,113,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.05);
+  --tip:#e6edf7; --tipink:#0a1120;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0a1120;
+  --glass:rgba(23,34,54,.66); --glassb:rgba(148,163,184,.16);
+  --solid:#111c2f;
+  --line:rgba(148,163,184,.20); --track:rgba(148,163,184,.16);
+  --ink:#e6edf7; --ink2:#9fb0c6; --ink3:#6b7f99;
+  --brand:#2dd4bf;
+  --c2:#6366f1;
+  --s0:rgba(148,163,184,.10); --s1:#0f3d38; --s2:#146157; --s3:#0d8578; --s4:#14b8a6; --s5:#5eead4;
+  --dmid:#64748b;
+  --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --goodbg:rgba(74,222,128,.14); --warnbg:rgba(251,191,36,.14); --badbg:rgba(248,113,113,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.05);
+  --tip:#e6edf7; --tipink:#0a1120;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:13px/1.5 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{padding-inline:clamp(16px,2.4vw,28px);padding-block:0 72px;max-width:1560px;margin:0 auto}
+h1,h2,h3,h4{margin:0;text-wrap:balance;-webkit-text-fill-color:currentColor}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:60;
+  margin-inline:calc(clamp(16px,2.4vw,28px) * -1);padding:10px clamp(16px,2.4vw,28px);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line)}
+.brandmark{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0}
+.brandmark .bx{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;
+  font:800 12px "Segoe UI";background:linear-gradient(135deg,var(--c1),var(--c5));flex-shrink:0}
+.brandmark b{font:800 13.5px "Segoe UI";letter-spacing:-.01em;display:block}
+.brandmark span{font:600 11px "Segoe UI";color:var(--ink3);display:block}
+.seg{display:flex;background:var(--track);border-radius:11px;padding:3px;gap:3px}
+.seg button{border:0;background:none;color:var(--ink2);font:700 12px "Segoe UI";padding:7px 15px;
+  border-radius:9px;cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--solid);color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.14)}
+.seg button:focus-visible,.tgl:focus-visible{outline:2px solid var(--c5);outline-offset:2px}
+.tgl{border:1px solid var(--line);background:var(--glass);color:var(--ink2);font:700 11px "Segoe UI";
+  padding:7px 12px;border-radius:9px;cursor:pointer}
+.tgl[aria-pressed="true"]{border-color:var(--c2);color:var(--c2);background:color-mix(in srgb,var(--c2) 10%,transparent)}
+
+.notice{margin-top:14px;padding:11px 14px;border-radius:13px;background:var(--warnbg);
+  border:1px solid color-mix(in srgb,var(--warn) 34%,transparent)}
+.notice b{color:var(--warn);font-size:12px}
+.notice p{font-size:12px;color:var(--ink2);margin-top:3px}
+
+.band{display:flex;align-items:center;gap:11px;margin:26px 0 12px}
+.band h3{font:800 12px "Segoe UI";letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.band .bi{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;color:#fff;
+  font:800 11px "Segoe UI";flex-shrink:0;
+  background:linear-gradient(135deg,var(--bc,var(--c1)),color-mix(in srgb,var(--bc,var(--c1)) 52%,#fff))}
+.band .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.band .cnt{font:700 10px "Segoe UI";color:var(--ink3);background:var(--glass);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
+.card{grid-column:span 12;background:var(--glass);backdrop-filter:blur(22px) saturate(1.35);
+  border:1px solid var(--glassb);border-radius:18px;box-shadow:var(--shadow);padding:16px 17px;min-width:0}
+.card.q3{grid-column:span 3}.card.q4{grid-column:span 4}.card.q5{grid-column:span 5}
+.card.q6{grid-column:span 6}.card.q7{grid-column:span 7}.card.q8{grid-column:span 8}.card.q9{grid-column:span 9}
+.ch{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.ch h2{font:700 13px "Segoe UI";letter-spacing:-.01em;flex:1;min-width:0}
+.ch .ic{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font:800 10px "Segoe UI";
+  flex-shrink:0;background:color-mix(in srgb,var(--kc,var(--c1)) 15%,transparent);color:var(--kc,var(--c1))}
+.ch .lk{font:700 11px "Segoe UI";color:var(--c5);white-space:nowrap}
+.sub{font-size:11.5px;color:var(--ink3);margin:-6px 0 12px}
+
+.src{display:none;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);
+  font:600 10.5px/1.6 ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--ink3)}
+.src b{color:var(--c2);font-weight:700}
+.src em{color:var(--warn);font-style:normal;font-weight:700}
+body.showsrc .src{display:block}
+
+.strip{display:grid;gap:14px;grid-template-columns:repeat(3,1fr);margin-top:16px}
+.dc{position:relative;overflow:hidden;border-radius:18px;padding:16px 17px 16px 22px;
+  border:1px solid var(--glassb);background:var(--glass);backdrop-filter:blur(22px);box-shadow:var(--shadow)}
+.dc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--dcc,var(--c1))}
+.dc .q{font:700 11px "Segoe UI";color:var(--ink3);margin-bottom:7px}
+.dc .a{font:800 clamp(19px,2.3vw,24px)/1.15 "Segoe UI";letter-spacing:-.02em;color:var(--dcc,var(--c1));
+  font-variant-numeric:tabular-nums}
+.dc .a small{font:700 12px "Segoe UI";color:var(--ink2);letter-spacing:0}
+.dc .why{font-size:11.5px;color:var(--ink2);margin-top:8px}
+.dc .why b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;
+  font:700 10.5px "Segoe UI";border:1px solid transparent;white-space:nowrap}
+.pill.good{background:var(--goodbg);color:var(--good);border-color:color-mix(in srgb,var(--good) 30%,transparent)}
+.pill.warn{background:var(--warnbg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
+.pill.bad{background:var(--badbg);color:var(--bad);border-color:color-mix(in srgb,var(--bad) 30%,transparent)}
+.pill.mute{background:var(--track);color:var(--ink2);border-color:var(--line)}
+.pill i{font-style:normal}
+
+.lg{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:11px}
+.lg span{display:inline-flex;align-items:center;gap:6px;font:600 11px "Segoe UI";color:var(--ink2)}
+.lg i{width:10px;height:10px;border-radius:3px;background:var(--lc);display:block;flex-shrink:0}
+.lg i.dash{background:repeating-linear-gradient(135deg,var(--lc) 0 4px,transparent 4px 8px);
+  border:1px solid var(--lc)}
+.lg i.mk{width:3px;height:13px;border-radius:2px}
+
+.bul .row{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.bul .row:last-child{margin-bottom:0}
+.bul .nm{width:108px;flex-shrink:0;font:600 11.5px "Segoe UI";color:var(--ink2)}
+.bul .tr{position:relative;flex:1;height:20px;background:var(--track);border-radius:6px;min-width:0}
+.bul .fl{position:absolute;left:0;top:0;bottom:0;border-radius:6px 4px 4px 6px;background:var(--bc,var(--c1))}
+.bul .gh{position:absolute;top:0;bottom:0;border-radius:0 4px 4px 0;
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c2) 42%,transparent) 0 5px,transparent 5px 10px);
+  border:1px solid color-mix(in srgb,var(--c2) 48%,transparent);border-left:0}
+.bul .mk{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px;
+  box-shadow:0 0 0 2px var(--glass)}
+.bul .vl{width:78px;flex-shrink:0;text-align:right;font:700 12px "Segoe UI";font-variant-numeric:tabular-nums}
+
+.bars{display:flex;align-items:flex-end;gap:6px;height:118px;padding-top:14px;position:relative}
+.bars .tg{position:absolute;left:0;right:0;border-top:1.5px dashed color-mix(in srgb,var(--ink2) 50%,transparent)}
+.bars .tg span{position:absolute;right:0;top:-14px;background:var(--glass);padding:0 4px;border-radius:4px;
+  font:700 9.5px "Segoe UI";color:var(--ink2)}
+.bcol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;
+  height:100%;min-width:0;cursor:default}
+.bcol .bb{width:100%;border-radius:4px 4px 0 0;background:var(--bc,var(--c1));min-height:2px;transition:filter .15s}
+.bcol:hover .bb{filter:brightness(1.14)}
+.bcol .lb{font:600 9.5px "Segoe UI";color:var(--ink3);white-space:nowrap}
+.bcol.td .lb{color:var(--ink);font-weight:800}
+.bcol.off .bb{background:var(--track)}
+
+.dv .row{display:grid;grid-template-columns:136px 1fr 74px;align-items:center;gap:10px;margin-bottom:9px}
+.dv .row:last-child{margin-bottom:0}
+.dv .nm{font:600 11.5px "Segoe UI";color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dv .tr{position:relative;height:18px;background:var(--track);border-radius:5px;min-width:0}
+.dv .mid{position:absolute;left:50%;top:-4px;bottom:-4px;width:1.5px;background:var(--dmid)}
+.dv .sg{position:absolute;top:0;bottom:0;border-radius:4px}
+.dv .vl{text-align:right;font:700 11.5px "Segoe UI";font-variant-numeric:tabular-nums}
+
+.stk{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--track);gap:2px}
+.stk span{display:block;height:100%;cursor:default}
+
+.tw{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
+table.dt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:560px}
+table.dt th{text-align:left;font:700 10px "Segoe UI";letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink3);padding:0 9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.dt th.r,table.dt td.r{text-align:right}
+table.dt td{padding:9px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}
+table.dt tbody tr:last-child td{border-bottom:0}
+table.dt tbody tr:hover{background:color-mix(in srgb,var(--c5) 7%,transparent)}
+.who{display:flex;align-items:center;gap:9px;min-width:0}
+.av{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;
+  font:800 10.5px "Segoe UI";color:#fff;background:var(--ac,var(--c1))}
+.who .tx{min-width:0}
+.who b{display:block;font:700 12px "Segoe UI";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who span{display:block;font:600 10.5px "Segoe UI";color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font:800 11px "Segoe UI";
+  background:var(--track);color:var(--ink2)}
+.rk.t1{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.rk.t2{background:linear-gradient(135deg,#cbd5e1,#94a3b8);color:#1e293b}
+.rk.t3{background:linear-gradient(135deg,#d6a77a,#b07d4f);color:#fff}
+
+.hm{width:100%;border-collapse:separate;border-spacing:3px;font-variant-numeric:tabular-nums;min-width:560px}
+.hm th{font:700 9.5px "Segoe UI";color:var(--ink3);text-align:center;padding:0 0 3px}
+.hm th.nm,.hm td.nm{text-align:left;font:600 11.5px "Segoe UI";color:var(--ink2);white-space:nowrap;
+  max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.hm td{height:26px;border-radius:5px;text-align:center;font:700 10px "Segoe UI";color:#fff;cursor:default}
+.hm td.l0{background:var(--s0);color:var(--ink3)}
+.hm td.l1{background:var(--s1);color:#134e4a}
+.hm td.l2{background:var(--s2);color:#0f3d38}
+.hm td.l3{background:var(--s3)}
+.hm td.l4{background:var(--s4)}
+.hm td.l5{background:var(--s5)}
+.scale{display:flex;align-items:center;gap:6px;margin-top:12px;font:600 10.5px "Segoe UI";color:var(--ink3);flex-wrap:wrap}
+.scale i{width:24px;height:11px;border-radius:3px;display:block}
+
+.lr{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)}
+.lr:last-child{border-bottom:0;padding-bottom:0}
+.lr .tx{flex:1;min-width:0}
+.lr .tx b{display:block;font:700 12px "Segoe UI";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr .tx span{display:block;font:600 10.5px "Segoe UI";color:var(--ink3)}
+.lr .rt{text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.lr .rt b{display:block;font:800 13px "Segoe UI"}
+.lr .rt span{display:block;font:600 10px "Segoe UI";color:var(--ink3)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:11px}
+.kpi{padding:11px 12px;border-radius:13px;background:color-mix(in srgb,var(--kc,var(--c1)) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--kc,var(--c1)) 22%,transparent)}
+.kpi .k{font:700 10px "Segoe UI";letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.kpi .v{font:800 20px "Segoe UI";letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums;
+  color:var(--kc,var(--c1))}
+.kpi .v small{font:700 11px "Segoe UI";color:var(--ink3)}
+.kpi .d{font:600 10.5px "Segoe UI";color:var(--ink2);margin-top:2px}
+
+.tl{position:relative;height:42px;background:var(--track);border-radius:9px;overflow:hidden;margin-top:4px}
+.tl .sg{position:absolute;top:0;bottom:0;display:grid;place-items:center;font:700 10px "Segoe UI";color:#fff;
+  overflow:hidden;white-space:nowrap;cursor:default}
+.tl .sg.gapz{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bad) 34%,transparent) 0 5px,transparent 5px 10px);
+  border-top:2px solid var(--bad);border-bottom:2px solid var(--bad);color:var(--bad)}
+.tlx{display:flex;justify-content:space-between;margin-top:6px;font:600 10px "Segoe UI";color:var(--ink3)}
+.ar{width:100%;height:auto;display:block;overflow:visible}
+
+#tip{position:fixed;z-index:99;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--tip);
+  color:var(--tipink);font:600 11.5px/1.45 "Segoe UI";padding:7px 10px;border-radius:9px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:250px}
+#tip b{font-weight:800}
+#tip.on{opacity:1}
+.view[hidden]{display:none!important}
+
+@media (max-width:1180px){
+  .card.q3,.card.q4,.card.q5{grid-column:span 6}
+  .card.q7,.card.q8,.card.q9{grid-column:span 12}
+  .strip{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .card.q3,.card.q4,.card.q5,.card.q6{grid-column:span 12}
+  .bul .nm{width:84px}.bul .vl{width:64px}
+  .dv .row{grid-template-columns:100px 1fr 60px}
+  .brandmark span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<div class="top">
+  <div class="brandmark">
+    <div class="bx">AD</div>
+    <div><b>DPR Dashboards</b><span>Design proposal &middot; v2</span></div>
+  </div>
+  <div class="seg" role="tablist" aria-label="Dashboard">
+    <button role="tab" id="tab-emp" aria-selected="true" aria-controls="v-emp">Employee</button>
+    <button role="tab" id="tab-hod" aria-selected="false" aria-controls="v-hod">HOD</button>
+  </div>
+  <button class="tgl" id="srcBtn" aria-pressed="false">Show data sources</button>
+</div>
+
+<div class="notice">
+  <b>Design preview &mdash; sample figures.</b>
+  <p>Every number below is illustrative, not a real employee record. Turn on <em>Show data sources</em> to see
+     which cursor and field feeds each card, and which three need a change to <code>PKG_DPR_DASH</code>.</p>
+</div>
+
+<!-- ══════════════════════════════════ EMPLOYEE ══════════════════════════════ -->
+<div class="view" id="v-emp" role="tabpanel" aria-labelledby="tab-emp">
+
+  <div class="band"><span class="bi" style="--bc:var(--c1)">1</span><h3>Where I stand</h3>
+    <span class="rule"></span><span class="cnt">Saturday 26 September 2026 &middot; Muscat &middot; IT</span></div>
+
+  <div class="strip">
+    <div class="dc" style="--dcc:var(--warn)">
+      <div class="q">Am I on pace this month?</div>
+      <div class="a">10.5 h behind <small>as of today</small></div>
+      <div class="why">Logged <b>178.5 h</b> against <b>189.0 h</b> expected over <b>21</b> net working days.
+        Fulfilment <b>94.4%</b>.</div>
+      <div class="src">P_CUR_TILES &middot; <b>monthHours</b>, <b>expectedHoursToDate</b>, <b>workingDaysToDate</b>, <b>leaveDays</b>
+        &mdash; all returned today, none rendered.</div>
+    </div>
+    <div class="dc" style="--dcc:var(--bad)">
+      <div class="q">Is today's time accounted for?</div>
+      <div class="a">1 h 35 m <small>unaccounted</small></div>
+      <div class="why">Punch span <b>9 h 14 m</b> &minus; logged <b>6 h 52 m</b> &minus; break <b>47 m</b>.
+        Fix it before your HOD sees it tomorrow.</div>
+      <div class="src">P_CUR_HERO &middot; <b>firstPunch</b>, <b>lastPunch</b>, <b>todayLoggedMin</b>, <b>breakMinToday</b>
+        &mdash; the HOD already sees this gap about you; you cannot see it about yourself.</div>
+    </div>
+    <div class="dc" style="--dcc:var(--c2)">
+      <div class="q">What is waiting on me?</div>
+      <div class="a">6 items <small>3 blocking others</small></div>
+      <div class="why"><b>2</b> logs awaiting my correction &middot; <b>3</b> approvals in my court &middot;
+        <b>1</b> task past its target date.</div>
+      <div class="src">P_CUR_TILES &middot; <b>openTasks</b>, <b>myLogsAwaitingApproval</b>, <b>formApprovalsWaitingMe</b>
+        &mdash; all returned today, none rendered.</div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+
+    <div class="card q7">
+      <div class="ch"><span class="ic" style="--kc:var(--c1)">&#9679;</span>
+        <h2>Month pace and projection</h2><span class="lk">Log history &rarr;</span></div>
+      <p class="sub">Where the month ends if nothing changes &mdash; the question a percentage alone never answers.</p>
+      <div class="lg">
+        <span style="--lc:var(--c1)"><i></i>Logged so far</span>
+        <span style="--lc:var(--c2)"><i class="dash"></i>Projected at current pace</span>
+        <span style="--lc:var(--ink)"><i class="mk"></i>Target</span>
+      </div>
+      <div class="bul">
+        <div class="row">
+          <span class="nm">To date</span>
+          <span class="tr">
+            <span class="fl" style="width:76.3%;--bc:var(--c1)" data-tip="Logged to date &mdash; <b>178.5 h</b> of 189.0 h expected"></span>
+            <span class="mk" style="left:80.8%" data-tip="Expected to date &mdash; <b>189.0 h</b>"></span>
+          </span>
+          <span class="vl">178.5 h</span>
+        </div>
+        <div class="row">
+          <span class="nm">Month end</span>
+          <span class="tr">
+            <span class="fl" style="width:76.3%;--bc:var(--c1)" data-tip="Already logged &mdash; <b>178.5 h</b>"></span>
+            <span class="gh" style="left:76.3%;width:14.5%" data-tip="4 working days left at your current <b>8.5 h/day</b> &rarr; <b>+34.0 h</b>"></span>
+            <span class="mk" style="left:100%" data-tip="Full-month target &mdash; <b>234.0 h</b> (26 working days &times; 9 h)"></span>
+          </span>
+          <span class="vl">212.5 h</span>
+        </div>
+      </div>
+      <div class="kpis" style="margin-top:15px">
+        <div class="kpi" style="--kc:var(--c3)"><div class="k">Pace</div><div class="v">8.5<small> h/day</small></div>
+          <div class="d">Target is 9 h</div></div>
+        <div class="kpi" style="--kc:var(--bad)"><div class="k">Projected short</div><div class="v">21.5<small> h</small></div>
+          <div class="d">If pace holds</div></div>
+        <div class="kpi" style="--kc:var(--c2)"><div class="k">Needed to recover</div><div class="v">13.9<small> h/day</small></div>
+          <div class="d">Over 4 days left</div></div>
+        <div class="kpi" style="--kc:var(--c1)"><div class="k">Days reported</div><div class="v">21<small>/22</small></div>
+          <div class="d">1 leave day</div></div>
+      </div>
+      <div class="src">P_CUR_TILES &middot; <b>monthHours</b>, <b>expectedHoursToDate</b>, <b>expectedHoursFullMonth</b>,
+        <b>workingDaysToDate</b>, <b>workingDaysFullMonth</b>, <b>daysReported</b>, <b>leaveDays</b>.
+        Pace, projection and recovery rate are arithmetic on those &mdash; <em>no SQL change</em>.</div>
+    </div>
+
+    <div class="card q5">
+      <div class="ch"><span class="ic" style="--kc:var(--c5)">&#9678;</span><h2>Today, minute by minute</h2></div>
+      <p class="sub">The striped block is time inside your punch span with no log against it.</p>
+      <div class="tl">
+        <span class="sg" style="left:0%;width:23%;background:var(--c1)" data-tip="Drawing review &mdash; 08:12 to 10:19 &middot; <b>2 h 07 m</b>">Drawing review</span>
+        <span class="sg" style="left:23.4%;width:8.5%;background:var(--c5)" data-tip="Quick break &mdash; 10:19 to 11:06 &middot; <b>47 m</b>"></span>
+        <span class="sg" style="left:32.2%;width:17.2%;background:var(--c1)" data-tip="Site coordination &mdash; 11:06 to 12:41 &middot; <b>1 h 35 m</b>">Site coord.</span>
+        <span class="sg gapz" style="left:49.7%;width:17.1%" data-tip="No log against this time &mdash; <b>1 h 35 m</b> unaccounted">1 h 35 m</span>
+        <span class="sg" style="left:67.1%;width:32.9%;background:var(--c2)" data-tip="App development &mdash; 14:16 to 17:26, still running &middot; <b>3 h 10 m</b>">App development &middot; running</span>
+      </div>
+      <div class="tlx"><span>08:12 first punch</span><span>17:26 now</span></div>
+      <div class="kpis" style="margin-top:14px">
+        <div class="kpi" style="--kc:var(--c1)"><div class="k">Logged</div><div class="v">6:52</div><div class="d">of 9 h</div></div>
+        <div class="kpi" style="--kc:var(--c5)"><div class="k">Break</div><div class="v">0:47</div><div class="d">1 spell</div></div>
+        <div class="kpi" style="--kc:var(--bad)"><div class="k">Unaccounted</div><div class="v">1:35</div><div class="d">Needs a log</div></div>
+        <div class="kpi" style="--kc:var(--ink2)"><div class="k">Punches</div><div class="v">4</div><div class="d">08:12 &rarr; 17:26</div></div>
+      </div>
+      <div class="src">P_CUR_TIMELINE (all rows) + P_CUR_HERO &middot; <b>firstPunch</b>, <b>lastPunch</b>,
+        <b>punchCount</b>, <b>breakMinToday</b>. The gap block is the same arithmetic the HOD cursor already
+        ships as <b>gapMin</b> &mdash; <em>no SQL change</em>.</div>
+    </div>
+
+    <div class="card q5">
+      <div class="ch"><span class="ic" style="--kc:var(--c6)">&#9680;</span><h2>How my score is built</h2></div>
+      <p class="sub">The same 80 / 10 / 10 composite the HOD ranks on. Seeing the split is what makes it actionable.</p>
+      <div class="lg">
+        <span style="--lc:var(--c1)"><i></i>Fulfilment &times; 0.8</span>
+        <span style="--lc:var(--c5)"><i></i>Consistency &times; 0.1</span>
+        <span style="--lc:var(--c6)"><i></i>Remark quality &times; 0.1</span>
+      </div>
+      <div class="stk">
+        <span style="width:81.9%;background:var(--c1)" data-tip="Fulfilment <b>94.4%</b> &times; 0.8 = <b>75.5</b> points"></span>
+        <span style="width:10.4%;background:var(--c5)" data-tip="Consistency <b>96%</b> &times; 0.1 = <b>9.6</b> points"></span>
+        <span style="width:7.7%;background:var(--c6)" data-tip="Remark quality <b>71%</b> &times; 0.1 = <b>7.1</b> points"></span>
+      </div>
+      <div class="kpis" style="margin-top:14px">
+        <div class="kpi" style="--kc:var(--c1)"><div class="k">Composite</div><div class="v">92.2</div>
+          <div class="d">Rank 7 of 24 in IT</div></div>
+        <div class="kpi" style="--kc:var(--c6)"><div class="k">Remark quality</div><div class="v">71<small>%</small></div>
+          <div class="d">Your weakest input</div></div>
+      </div>
+      <div class="lr" style="margin-top:12px">
+        <span class="pill warn"><i>&#9888;</i> Biggest single gain</span>
+        <div class="tx" style="margin-left:2px"><b>Write a remark on 4 more days</b>
+          <span>Remark coverage 71% &rarr; 90% would add 1.9 composite points</span></div>
+      </div>
+      <div class="src">P_CUR_TILES ships <b>fulfilPct</b> and <b>consistencyPct</b> today.
+        <em>Needs adding: remarkScore, compositeScore, teamRank</em> &mdash; all three already exist in
+        P_CUR_LEADERBOARD on the HOD side, so it is a SELECT-list change, not new logic.</div>
+    </div>
+
+    <div class="band"><span class="bi" style="--bc:var(--c5)">2</span><h3>My time</h3>
+      <span class="rule"></span><span class="cnt">week and month</span></div>
+
+    <div class="card q6">
+      <div class="ch"><span class="ic" style="--kc:var(--c1)">&#9646;</span><h2>Last 7 days</h2></div>
+      <div class="lg">
+        <span style="--lc:var(--c1)"><i></i>Hours logged</span>
+        <span style="--lc:var(--track)"><i></i>Weekly off or leave</span>
+        <span style="--lc:var(--ink2)"><i class="mk"></i>9 h target</span>
+      </div>
+      <div class="bars">
+        <div class="tg" style="top:14px"><span>9 h</span></div>
+        <div class="bcol" data-tip="Sunday 20 Sep &mdash; <b>9.2 h</b>"><span class="bb" style="height:92%"></span><span class="lb">SUN</span></div>
+        <div class="bcol" data-tip="Monday 21 Sep &mdash; <b>8.8 h</b>"><span class="bb" style="height:88%"></span><span class="lb">MON</span></div>
+        <div class="bcol" data-tip="Tuesday 22 Sep &mdash; <b>7.4 h</b>"><span class="bb" style="height:74%"></span><span class="lb">TUE</span></div>
+        <div class="bcol" data-tip="Wednesday 23 Sep &mdash; <b>9.6 h</b>"><span class="bb" style="height:96%"></span><span class="lb">WED</span></div>
+        <div class="bcol" data-tip="Thursday 24 Sep &mdash; <b>8.1 h</b>"><span class="bb" style="height:81%"></span><span class="lb">THU</span></div>
+        <div class="bcol off" data-tip="Friday 25 Sep &mdash; weekly off"><span class="bb" style="height:6%"></span><span class="lb">FRI</span></div>
+        <div class="bcol td" data-tip="Today, Saturday 26 Sep &mdash; <b>6.9 h</b> and still running"><span class="bb" style="height:69%;--bc:var(--c2)"></span><span class="lb">SAT</span></div>
+      </div>
+      <p class="sub" style="margin:12px 0 0">Friday is the only weekly off for expat staff in Oman &mdash; Saturday is a
+        working day, so today counts toward the target.</p>
+      <div class="src">P_CUR_WEEK &middot; <b>hours</b>, <b>isWorkingDay</b>, <b>onLeave</b>, <b>isToday</b>,
+        <b>targetHours</b> &mdash; rendered today, unchanged.</div>
+    </div>
+
+    <div class="card q6">
+      <div class="ch"><span class="ic" style="--kc:var(--c5)">&#9635;</span><h2>September at a glance</h2></div>
+      <p class="sub">Depth of colour is hours logged. Hollow cells are weekly offs, leave, or days still ahead.</p>
+      <div class="tw">
+        <table class="hm">
+          <thead><tr><th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th></tr></thead>
+          <tbody>
+            <tr><td class="l0"></td><td class="l3" data-tip="Tue 1 Sep &mdash; <b>8.4 h</b>">1</td><td class="l4" data-tip="Wed 2 Sep &mdash; <b>9.1 h</b>">2</td><td class="l3" data-tip="Thu 3 Sep &mdash; <b>8.2 h</b>">3</td><td class="l0" data-tip="Fri 4 Sep &mdash; weekly off">4</td><td class="l3" data-tip="Sat 5 Sep &mdash; <b>8.6 h</b>">5</td><td class="l2" data-tip="Sun 6 Sep &mdash; <b>6.8 h</b>">6</td></tr>
+            <tr><td class="l4" data-tip="Mon 7 Sep &mdash; <b>9.4 h</b>">7</td><td class="l3" data-tip="Tue 8 Sep &mdash; <b>8.1 h</b>">8</td><td class="l1" data-tip="Wed 9 Sep &mdash; <b>4.2 h</b>">9</td><td class="l3" data-tip="Thu 10 Sep &mdash; <b>8.8 h</b>">10</td><td class="l0" data-tip="Fri 11 Sep &mdash; weekly off">11</td><td class="l4" data-tip="Sat 12 Sep &mdash; <b>9.5 h</b>">12</td><td class="l3" data-tip="Sun 13 Sep &mdash; <b>8.3 h</b>">13</td></tr>
+            <tr><td class="l5" data-tip="Mon 14 Sep &mdash; <b>10.6 h</b>">14</td><td class="l3" data-tip="Tue 15 Sep &mdash; <b>8.0 h</b>">15</td><td class="l0" data-tip="Wed 16 Sep &mdash; approved leave">16</td><td class="l2" data-tip="Thu 17 Sep &mdash; <b>6.5 h</b>">17</td><td class="l0" data-tip="Fri 18 Sep &mdash; weekly off">18</td><td class="l3" data-tip="Sat 19 Sep &mdash; <b>8.7 h</b>">19</td><td class="l4" data-tip="Sun 20 Sep &mdash; <b>9.2 h</b>">20</td></tr>
+            <tr><td class="l3" data-tip="Mon 21 Sep &mdash; <b>8.8 h</b>">21</td><td class="l2" data-tip="Tue 22 Sep &mdash; <b>7.4 h</b>">22</td><td class="l4" data-tip="Wed 23 Sep &mdash; <b>9.6 h</b>">23</td><td class="l3" data-tip="Thu 24 Sep &mdash; <b>8.1 h</b>">24</td><td class="l0" data-tip="Fri 25 Sep &mdash; weekly off">25</td><td class="l2" data-tip="Today &mdash; <b>6.9 h</b> so far">26</td><td class="l0" data-tip="Sun 27 Sep &mdash; still ahead">27</td></tr>
+            <tr><td class="l0" data-tip="Mon 28 Sep &mdash; still ahead">28</td><td class="l0" data-tip="Tue 29 Sep &mdash; still ahead">29</td><td class="l0" data-tip="Wed 30 Sep &mdash; still ahead">30</td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="scale">Lighter
+        <i style="background:var(--s1)"></i><i style="background:var(--s2)"></i><i style="background:var(--s3)"></i>
+        <i style="background:var(--s4)"></i><i style="background:var(--s5)"></i>
+        more hours &middot; <i style="background:var(--s0)"></i> off, leave or ahead
+      </div>
+      <div class="src">P_CUR_MONTH_CAL &middot; <b>hours</b>, <b>isFuture</b>, <b>isWorkingDay</b>, <b>onLeave</b> &mdash;
+        rendered today; only the colour ramp changes (one hue, light to dark, instead of mixed hues).</div>
+    </div>
+
+    <div class="band"><span class="bi" style="--bc:var(--c2)">3</span><h3>My work</h3>
+      <span class="rule"></span><span class="cnt">7 open &middot; 1 overdue</span></div>
+
+    <div class="card q7">
+      <div class="ch"><span class="ic" style="--kc:var(--c2)">&#9776;</span><h2>My tasks</h2>
+        <span class="lk">Open all &rarr;</span></div>
+      <div class="tw">
+        <table class="dt">
+          <thead><tr><th>Task</th><th>Category</th><th>Target</th><th class="r">Estimate</th><th class="r">Logged</th><th>State</th></tr></thead>
+          <tbody>
+            <tr><td><b>Adrak Portal &mdash; DPR module</b></td><td>Development</td><td>30 Sep</td>
+              <td class="r">120.0 h</td><td class="r">96.5 h</td><td><span class="pill good"><i>&#9654;</i> Running</span></td></tr>
+            <tr><td><b>Supplier payment report tuning</b></td><td>Development</td><td>24 Sep</td>
+              <td class="r">16.0 h</td><td class="r">22.4 h</td><td><span class="pill bad"><i>&#9888;</i> Overdue</span></td></tr>
+            <tr><td><b>Helpdesk &mdash; Muscat office</b></td><td>Support</td><td>30 Sep</td>
+              <td class="r">40.0 h</td><td class="r">31.0 h</td><td><span class="pill mute">Open</span></td></tr>
+            <tr><td><b>Exit form approval flow</b></td><td>Development</td><td>05 Oct</td>
+              <td class="r">24.0 h</td><td class="r">11.5 h</td><td><span class="pill mute">Paused</span></td></tr>
+            <tr><td><b>WIR report access review</b></td><td>Admin</td><td>02 Oct</td>
+              <td class="r">6.0 h</td><td class="r">1.5 h</td><td><span class="pill mute">Open</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="src">P_CUR_MY_TASKS &middot; <b>taskTitle</b>, <b>categoryName</b>, <b>targetDate</b>,
+        <b>estimatedHours</b>, <b>myLoggedHours</b>, <b>isRunning</b>, <b>isOverdue</b> &mdash; unchanged.</div>
+    </div>
+
+    <div class="card q5">
+      <div class="ch"><span class="ic" style="--kc:var(--c3)">&#9670;</span><h2>Estimate accuracy</h2></div>
+      <p class="sub">Distance from the estimate, not two bars side by side. Left of centre is under, right is over.</p>
+      <div class="lg">
+        <span style="--lc:var(--dneg)"><i></i>Under estimate</span>
+        <span style="--lc:var(--dpos)"><i></i>Over estimate</span>
+        <span style="--lc:var(--dmid)"><i class="mk"></i>On estimate</span>
+      </div>
+      <div class="dv">
+        <div class="row"><span class="nm">DPR module</span>
+          <span class="tr"><span class="mid"></span>
+            <span class="sg" style="right:50.8%;width:9.8%;background:var(--dneg)" data-tip="Estimate 120.0 h, logged 96.5 h &mdash; <b>23.5 h under</b>"></span></span>
+          <span class="vl" style="color:var(--dneg)">&minus;23.5 h</span></div>
+        <div class="row"><span class="nm">Payment report</span>
+          <span class="tr"><span class="mid"></span>
+            <span class="sg" style="left:50.8%;width:2.7%;background:var(--dpos)" data-tip="Estimate 16.0 h, logged 22.4 h &mdash; <b>6.4 h over</b>"></span></span>
+          <span class="vl" style="color:var(--dpos)">+6.4 h</span></div>
+        <div class="row"><span class="nm">Helpdesk</span>
+          <span class="tr"><span class="mid"></span>
+            <span class="sg" style="right:50.8%;width:3.8%;background:var(--dneg)" data-tip="Estimate 40.0 h, logged 31.0 h &mdash; <b>9.0 h under</b>"></span></span>
+          <span class="vl" style="color:var(--dneg)">&minus;9.0 h</span></div>
+        <div class="row"><span class="nm">Exit approval flow</span>
+          <span class="tr"><span class="mid"></span>
+            <span class="sg" style="right:50.8%;width:5.2%;background:var(--dneg)" data-tip="Estimate 24.0 h, logged 11.5 h &mdash; <b>12.5 h under</b>"></span></span>
+          <span class="vl" style="color:var(--dneg)">&minus;12.5 h</span></div>
+        <div class="row"><span class="nm">Access review</span>
+          <span class="tr"><span class="mid"></span>
+            <span class="sg" style="right:50.8%;width:1.9%;background:var(--dneg)" data-tip="Estimate 6.0 h, logged 1.5 h &mdash; <b>4.5 h under</b>"></span></span>
+          <span class="vl" style="color:var(--dneg)">&minus;4.5 h</span></div>
+      </div>
+      <div class="src">P_CUR_EST_ACT &middot; <b>estimatedHours</b>, <b>totalActualHours</b> &mdash; same two fields,
+        drawn as one variance instead of two bars. <em>No SQL change.</em></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><span class="ic" style="--kc:var(--c4)">&#9993;</span><h2>My requests</h2>
+        <span class="lk">All forms &rarr;</span></div>
+      <div class="tw">
+        <table class="dt">
+          <thead><tr><th>Form</th><th>Submitted</th><th>Departure</th><th class="r">Days</th><th>Waiting on</th><th class="r">Age</th></tr></thead>
+          <tbody>
+            <tr><td><b>Planned Leave</b></td><td>18 Sep 2026</td><td>12 Oct 2026</td><td class="r">6</td>
+              <td><span class="pill warn"><i>&#9203;</i> HOD</span></td><td class="r">8 days</td></tr>
+            <tr><td><b>Emergency Leave</b></td><td>02 Sep 2026</td><td>03 Sep 2026</td><td class="r">1</td>
+              <td><span class="pill good"><i>&#10003;</i> Completed</span></td><td class="r">&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="src">P_CUR_MY_FORMS &middot; <b>formType</b>, <b>submittedDate</b>, <b>departureDate</b>,
+        <b>duration</b>, <b>currentStep</b> &mdash; unchanged. Age is <code>today &minus; submittedDate</code>.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ HOD ═════════════════════════════════ -->
+<div class="view" id="v-hod" role="tabpanel" aria-labelledby="tab-hod" hidden>
+
+  <div class="band"><span class="bi" style="--bc:var(--c1)">1</span><h3>Where the department stands</h3>
+    <span class="rule"></span><span class="cnt">IT &middot; 24 members &middot; September 2026</span></div>
+
+  <div class="strip">
+    <div class="dc" style="--dcc:var(--warn)">
+      <div class="q">Is the department on target?</div>
+      <div class="a">94.1% <small>of expected hours</small></div>
+      <div class="why"><b>3,914.5 h</b> logged against <b>4,158.0 h</b> expected.
+        <b>9</b> of 24 are individually below 85%.</div>
+      <div class="src">P_CUR_SUMMARY &middot; <b>monthHours</b>, <b>expectedHoursToDate</b>, <b>teamCount</b>.</div>
+    </div>
+    <div class="dc" style="--dcc:var(--bad)">
+      <div class="q">Who is not logging?</div>
+      <div class="a">4 members <small>oldest 6 days</small></div>
+      <div class="why">Punched in today but no log: <b>4</b>. Longest silence
+        <b>6 working days</b> &mdash; that is a whole week of missing DPR.</div>
+      <div class="src">P_CUR_NOT_DONE &middot; <b>firstPunch</b>, <b>lastLogDate</b>, <b>daysSinceLastLog</b>
+        &mdash; <b>daysSinceLastLog</b> is returned today and never rendered.</div>
+    </div>
+    <div class="dc" style="--dcc:var(--c2)">
+      <div class="q">What is in my queue?</div>
+      <div class="a">15 approvals <small>4 forms, 11 logs</small></div>
+      <div class="why">Oldest form waiting <b>8 days</b>. Log approvals cover
+        <b>63.5 h</b> of unconfirmed team time.</div>
+      <div class="src">P_CUR_SUMMARY &middot; <b>pendingFormApprovals</b>, <b>pendingLogApprovals</b>;
+        P_CUR_LOG_QUEUE &middot; <b>pendingMinutes</b>.</div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+
+    <div class="card q7">
+      <div class="ch"><span class="ic" style="--kc:var(--c5)">&#9650;</span>
+        <h2>DPR discipline &mdash; last 14 days</h2><span class="lk">CED analytics &rarr;</span></div>
+      <p class="sub">Of the people who punched in each day, the share that actually filed a DPR.
+        This ratio is the discipline number; raw headcount is not.</p>
+      <svg class="ar" viewBox="0 0 700 186" role="img"
+           aria-label="Share of punched-in members who filed a DPR, 14 days, ranging from 72 percent to 96 percent">
+        <defs><linearGradient id="agr" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--c5)" stop-opacity=".30"/>
+          <stop offset="100%" stop-color="var(--c5)" stop-opacity="0"/></linearGradient></defs>
+        <g stroke="var(--line)" stroke-width="1">
+          <line x1="40" y1="150" x2="690" y2="150"/><line x1="40" y1="117.5" x2="690" y2="117.5"/>
+          <line x1="40" y1="85" x2="690" y2="85"/><line x1="40" y1="52.5" x2="690" y2="52.5"/>
+          <line x1="40" y1="20" x2="690" y2="20"/>
+        </g>
+        <g fill="var(--ink3)" font-size="10" font-weight="600" text-anchor="end" font-family="Segoe UI">
+          <text x="32" y="153">0%</text><text x="32" y="120.5">25%</text><text x="32" y="88">50%</text>
+          <text x="32" y="55.5">75%</text><text x="32" y="23">100%</text>
+        </g>
+        <path fill="url(#agr)" d="M40,35.6 L90,30.4 L140,47.3 L190,26.5 L240,31.7 L290,40.8 L340,56.4 L390,33
+          L440,29.1 L490,35.6 L540,25.2 L590,43.4 L640,49.9 L690,27.8 L690,150 L40,150 Z"/>
+        <polyline fill="none" stroke="var(--c5)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
+          points="40,35.6 90,30.4 140,47.3 190,26.5 240,31.7 290,40.8 340,56.4 390,33 440,29.1 490,35.6 540,25.2 590,43.4 640,49.9 690,27.8"/>
+        <line x1="40" y1="46" x2="690" y2="46" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="686" y="42" fill="var(--warn)" font-size="10" font-weight="700" text-anchor="end" font-family="Segoe UI">80% floor</text>
+        <circle cx="690" cy="27.8" r="4.5" fill="var(--c5)" stroke="var(--glassb)" stroke-width="2"/>
+        <text x="690" y="17" fill="var(--ink)" font-size="11" font-weight="800" text-anchor="end" font-family="Segoe UI">94%</text>
+        <g fill="var(--ink3)" font-size="9.5" font-weight="600" text-anchor="middle" font-family="Segoe UI">
+          <text x="40" y="168">13</text><text x="140" y="168">15</text><text x="240" y="168">17</text>
+          <text x="340" y="168">19</text><text x="440" y="168">21</text><text x="540" y="168">23</text>
+          <text x="640" y="168">25</text>
+          <text x="365" y="182" fill="var(--ink3)" font-size="10">September</text>
+        </g>
+      </svg>
+      <div class="src">P_CUR_TREND &middot; <b>membersLogged</b>, <b>membersPunched</b>, <b>theDate</b>.
+        Both are returned today; the card currently plots total hours. The ratio is
+        <code>membersLogged / membersPunched</code> &mdash; <em>no SQL change</em>.</div>
+    </div>
+
+    <div class="card q5">
+      <div class="ch"><span class="ic" style="--kc:var(--bad)">&#9888;</span><h2>At risk of missing the month</h2></div>
+      <p class="sub">Projected from each member's own pace against their own target &mdash; expected hours
+        already account for category, location, weekly off, holidays and approved leave.</p>
+      <div class="lr"><span class="av" style="--ac:var(--c4)">SN</span>
+        <div class="tx"><b>S. Nandakumar</b><span>Projected 168 h of 234 h &middot; 71%</span></div>
+        <div class="rt"><b style="color:var(--bad)">&minus;66 h</b><span>needs 16.5 h/day</span></div></div>
+      <div class="lr"><span class="av" style="--ac:var(--c3)">RA</span>
+        <div class="tx"><b>R. Abdulla</b><span>Projected 191 h of 234 h &middot; 82%</span></div>
+        <div class="rt"><b style="color:var(--bad)">&minus;43 h</b><span>needs 13.8 h/day</span></div></div>
+      <div class="lr"><span class="av" style="--ac:var(--c2)">MJ</span>
+        <div class="tx"><b>M. Joseph</b><span>Projected 205 h of 234 h &middot; 88%</span></div>
+        <div class="rt"><b style="color:var(--warn)">&minus;29 h</b><span>needs 12.3 h/day</span></div></div>
+      <div class="lr"><span class="av" style="--ac:var(--c6)">AK</span>
+        <div class="tx"><b>A. Kumar S</b><span>Projected 213 h of 234 h &middot; 91%</span></div>
+        <div class="rt"><b style="color:var(--warn)">&minus;21 h</b><span>needs 11.3 h/day</span></div></div>
+      <div class="lr"><span class="av" style="--ac:var(--c1)">PT</span>
+        <div class="tx"><b>P. Thomas</b><span>Projected 228 h of 234 h &middot; 97%</span></div>
+        <div class="rt"><b style="color:var(--warn)">&minus;6 h</b><span>needs 10.5 h/day</span></div></div>
+      <div class="src">P_CUR_TEAM &middot; <b>monthHours</b>, <b>expectedHoursToDate</b>, <b>daysReported</b>.
+        Projection is arithmetic on rows already returned &mdash; <em>no SQL change</em>.
+        Today the proc returns no full-month expected per member; using the dept
+        <b>workingDaysFullMonth</b> ratio is exact for members with no leave and close enough otherwise.</div>
+    </div>
+
+    <div class="band"><span class="bi" style="--bc:var(--c3)">2</span><h3>Ranking and discipline</h3>
+      <span class="rule"></span><span class="cnt">80 / 10 / 10 composite</span></div>
+
+    <div class="card q7">
+      <div class="ch"><span class="ic" style="--kc:var(--c3)">&#9733;</span><h2>Team ranking, and what drives it</h2>
+        <span class="lk">Full table &rarr;</span></div>
+      <p class="sub">The bar shows where each person's score comes from, so a low rank points at a cause
+        instead of just a number.</p>
+      <div class="lg">
+        <span style="--lc:var(--c1)"><i></i>Fulfilment &times; 0.8</span>
+        <span style="--lc:var(--c5)"><i></i>Consistency &times; 0.1</span>
+        <span style="--lc:var(--c6)"><i></i>Remark quality &times; 0.1</span>
+      </div>
+      <div class="tw">
+        <table class="dt">
+          <thead><tr><th style="width:34px">#</th><th>Member</th><th style="min-width:150px">Score build-up</th>
+            <th class="r">Composite</th><th class="r">Hours</th></tr></thead>
+          <tbody>
+            <tr><td><span class="rk t1">1</span></td>
+              <td><div class="who"><span class="av" style="--ac:var(--c1)">VK</span>
+                <div class="tx"><b>V. Krishnan</b><span>Senior Engineer</span></div></div></td>
+              <td><div class="stk">
+                <span style="width:86.4%;background:var(--c1)" data-tip="Fulfilment <b>108.0%</b> &times; 0.8 = <b>86.4</b>"></span>
+                <span style="width:10.0%;background:var(--c5)" data-tip="Consistency <b>100%</b> &times; 0.1 = <b>10.0</b>"></span>
+                <span style="width:9.4%;background:var(--c6)" data-tip="Remark quality <b>94%</b> &times; 0.1 = <b>9.4</b>"></span></div></td>
+              <td class="r"><b>105.8</b></td><td class="r">252.5 h</td></tr>
+            <tr><td><span class="rk t2">2</span></td>
+              <td><div class="who"><span class="av" style="--ac:var(--c5)">FH</span>
+                <div class="tx"><b>F. Hussain</b><span>Systems Analyst</span></div></div></td>
+              <td><div class="stk">
+                <span style="width:81.6%;background:var(--c1)" data-tip="Fulfilment <b>102.0%</b> &times; 0.8 = <b>81.6</b>"></span>
+                <span style="width:9.6%;background:var(--c5)" data-tip="Consistency <b>96%</b> &times; 0.1 = <b>9.6</b>"></span>
+                <span style="width:8.8%;background:var(--c6)" data-tip="Remark quality <b>88%</b> &times; 0.1 = <b>8.8</b>"></span></div></td>
+              <td class="r"><b>100.0</b></td><td class="r">238.6 h</td></tr>
+            <tr><td><span class="rk t3">3</span></td>
+              <td><div class="who"><span class="av" style="--ac:var(--c6)">NR</span>
+                <div class="tx"><b>N. Rahman</b><span>Developer</span></div></div></td>
+              <td><div class="stk">
+                <span style="width:78.4%;background:var(--c1)" data-tip="Fulfilment <b>98.0%</b> &times; 0.8 = <b>78.4</b>"></span>
+                <span style="width:9.8%;background:var(--c5)" data-tip="Consistency <b>98%</b> &times; 0.1 = <b>9.8</b>"></span>
+                <span style="width:8.1%;background:var(--c6)" data-tip="Remark quality <b>81%</b> &times; 0.1 = <b>8.1</b>"></span></div></td>
+              <td class="r"><b>96.3</b></td><td class="r">203.8 h</td></tr>
+            <tr><td><span class="rk">7</span></td>
+              <td><div class="who"><span class="av" style="--ac:var(--c2)">AO</span>
+                <div class="tx"><b>A. Onaparambil</b><span>Developer &mdash; DPR module</span></div></div></td>
+              <td><div class="stk">
+                <span style="width:75.5%;background:var(--c1)" data-tip="Fulfilment <b>94.4%</b> &times; 0.8 = <b>75.5</b>"></span>
+                <span style="width:9.6%;background:var(--c5)" data-tip="Consistency <b>96%</b> &times; 0.1 = <b>9.6</b>"></span>
+                <span style="width:7.1%;background:var(--c6)" data-tip="Remark quality <b>71%</b> &times; 0.1 = <b>7.1</b>"></span></div></td>
+              <td class="r"><b>92.2</b></td><td class="r">178.5 h</td></tr>
+            <tr><td><span class="rk">22</span></td>
+              <td><div class="who"><span class="av" style="--ac:var(--c3)">RA</span>
+                <div class="tx"><b>R. Abdulla</b><span>Support Engineer</span></div></div></td>
+              <td><div class="stk">
+                <span style="width:59.2%;background:var(--c1)" data-tip="Fulfilment <b>74.0%</b> &times; 0.8 = <b>59.2</b>"></span>
+                <span style="width:7.1%;background:var(--c5)" data-tip="Consistency <b>71%</b> &times; 0.1 = <b>7.1</b>"></span>
+                <span style="width:4.2%;background:var(--c6)" data-tip="Remark quality <b>42%</b> &times; 0.1 = <b>4.2</b>"></span></div></td>
+              <td class="r"><b>70.5</b></td><td class="r">153.2 h</td></tr>
+            <tr><td><span class="rk">24</span></td>
+              <td><div class="who"><span class="av" style="--ac:var(--c4)">SN</span>
+                <div class="tx"><b>S. Nandakumar</b><span>Trainee</span></div></div></td>
+              <td><div class="stk">
+                <span style="width:51.2%;background:var(--c1)" data-tip="Fulfilment <b>64.0%</b> &times; 0.8 = <b>51.2</b>"></span>
+                <span style="width:5.8%;background:var(--c5)" data-tip="Consistency <b>58%</b> &times; 0.1 = <b>5.8</b>"></span>
+                <span style="width:2.9%;background:var(--c6)" data-tip="Remark quality <b>29%</b> &times; 0.1 = <b>2.9</b>"></span></div></td>
+              <td class="r"><b>59.9</b></td><td class="r">132.4 h</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="sub" style="margin:12px 0 0">Fulfilment is uncapped, so hours above target raise the score &mdash;
+        that is why rank 1 exceeds 100.</p>
+      <div class="src">P_CUR_LEADERBOARD &middot; <b>compositeScore</b>, <b>teamRank</b>, <b>fulfilPct</b>,
+        <b>consistencyPct</b>, <b>remarkScore</b>, <b>monthHours</b>.
+        <b>teamRank</b> is returned today and never rendered; <b>compositeScore</b> is used twice but never broken out.</div>
+    </div>
+
+    <div class="card q5">
+      <div class="ch"><span class="ic" style="--kc:var(--c4)">&#9679;</span><h2>Punch vs logged &mdash; today</h2></div>
+      <p class="sub">Time inside the punch span with nothing logged against it. Sorted worst first, which is
+        the order you would act in.</p>
+      <div class="lg">
+        <span style="--lc:var(--c1)"><i></i>Logged</span>
+        <span style="--lc:var(--c5)"><i></i>Break</span>
+        <span style="--lc:var(--bad)"><i class="dash"></i>Unaccounted</span>
+      </div>
+      <div class="bul">
+        <div class="row"><span class="nm">S. Nandakumar</span>
+          <span class="tr">
+            <span class="fl" style="width:41%;--bc:var(--c1)" data-tip="Logged <b>3 h 42 m</b>"></span>
+            <span class="fl" style="left:41.6%;width:8%;--bc:var(--c5);border-radius:4px" data-tip="Break <b>43 m</b>"></span>
+            <span class="gh" style="left:50.2%;width:42.8%;border-color:var(--bad);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bad) 34%,transparent) 0 5px,transparent 5px 10px)" data-tip="Unaccounted <b>3 h 52 m</b>"></span>
+          </span>
+          <span class="vl" style="color:var(--bad)">3:52</span></div>
+        <div class="row"><span class="nm">R. Abdulla</span>
+          <span class="tr">
+            <span class="fl" style="width:58%;--bc:var(--c1)" data-tip="Logged <b>5 h 14 m</b>"></span>
+            <span class="fl" style="left:58.6%;width:6%;--bc:var(--c5);border-radius:4px" data-tip="Break <b>32 m</b>"></span>
+            <span class="gh" style="left:65.2%;width:27.8%;border-color:var(--bad);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bad) 34%,transparent) 0 5px,transparent 5px 10px)" data-tip="Unaccounted <b>2 h 30 m</b>"></span>
+          </span>
+          <span class="vl" style="color:var(--bad)">2:30</span></div>
+        <div class="row"><span class="nm">A. Onaparambil</span>
+          <span class="tr">
+            <span class="fl" style="width:74%;--bc:var(--c1)" data-tip="Logged <b>6 h 52 m</b>"></span>
+            <span class="fl" style="left:74.6%;width:8%;--bc:var(--c5);border-radius:4px" data-tip="Break <b>47 m</b>"></span>
+            <span class="gh" style="left:83.2%;width:16.8%;border-color:var(--bad);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bad) 34%,transparent) 0 5px,transparent 5px 10px)" data-tip="Unaccounted <b>1 h 35 m</b>"></span>
+          </span>
+          <span class="vl" style="color:var(--warn)">1:35</span></div>
+        <div class="row"><span class="nm">M. Joseph</span>
+          <span class="tr">
+            <span class="fl" style="width:82%;--bc:var(--c1)" data-tip="Logged <b>7 h 36 m</b>"></span>
+            <span class="fl" style="left:82.6%;width:7%;--bc:var(--c5);border-radius:4px" data-tip="Break <b>38 m</b>"></span>
+            <span class="gh" style="left:90.2%;width:9.8%;border-color:var(--bad);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bad) 34%,transparent) 0 5px,transparent 5px 10px)" data-tip="Unaccounted <b>55 m</b>"></span>
+          </span>
+          <span class="vl" style="color:var(--warn)">0:55</span></div>
+        <div class="row"><span class="nm">V. Krishnan</span>
+          <span class="tr">
+            <span class="fl" style="width:91%;--bc:var(--c1)" data-tip="Logged <b>8 h 24 m</b>"></span>
+            <span class="fl" style="left:91.6%;width:6%;--bc:var(--c5);border-radius:4px" data-tip="Break <b>34 m</b>"></span>
+            <span class="gh" style="left:98.2%;width:1.8%;border-color:var(--good);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--good) 34%,transparent) 0 5px,transparent 5px 10px)" data-tip="Unaccounted <b>10 m</b>"></span>
+          </span>
+          <span class="vl" style="color:var(--good)">0:10</span></div>
+      </div>
+      <div class="src">P_CUR_ATTENDANCE &middot; <b>loggedMin</b>, <b>breakMin</b>, <b>elapsedMin</b>, <b>gapMin</b>
+        &mdash; <b>gapMin</b> is floored at 0 in SQL, so a negative gap (logged exceeds the punch span) is
+        invisible here. Worth surfacing separately: it usually means a forgotten punch-out.</div>
+    </div>
+
+    <div class="card q8">
+      <div class="ch"><span class="ic" style="--kc:var(--c5)">&#9635;</span><h2>Compliance heatmap &mdash; member by day</h2></div>
+      <p class="sub">Ten working days. A row of pale cells is a person to talk to; a pale column is a day
+        something went wrong for everyone.</p>
+      <div class="tw">
+        <table class="hm">
+          <thead><tr><th class="nm">Member</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th>
+            <th>19</th><th>20</th><th>21</th><th>22</th><th>23</th></tr></thead>
+          <tbody>
+            <tr><td class="nm">V. Krishnan</td>
+              <td class="l4" data-tip="V. Krishnan &middot; 13 Sep &mdash; <b>9.4 h</b>">9.4</td><td class="l5" data-tip="V. Krishnan &middot; 14 Sep &mdash; <b>10.6 h</b>">10.6</td>
+              <td class="l4" data-tip="V. Krishnan &middot; 15 Sep &mdash; <b>9.2 h</b>">9.2</td><td class="l4" data-tip="V. Krishnan &middot; 16 Sep &mdash; <b>9.8 h</b>">9.8</td>
+              <td class="l3" data-tip="V. Krishnan &middot; 17 Sep &mdash; <b>8.6 h</b>">8.6</td><td class="l5" data-tip="V. Krishnan &middot; 19 Sep &mdash; <b>10.2 h</b>">10.2</td>
+              <td class="l4" data-tip="V. Krishnan &middot; 20 Sep &mdash; <b>9.5 h</b>">9.5</td><td class="l4" data-tip="V. Krishnan &middot; 21 Sep &mdash; <b>9.1 h</b>">9.1</td>
+              <td class="l3" data-tip="V. Krishnan &middot; 22 Sep &mdash; <b>8.8 h</b>">8.8</td><td class="l4" data-tip="V. Krishnan &middot; 23 Sep &mdash; <b>9.7 h</b>">9.7</td></tr>
+            <tr><td class="nm">F. Hussain</td>
+              <td class="l3" data-tip="F. Hussain &middot; 13 Sep &mdash; <b>8.8 h</b>">8.8</td><td class="l4" data-tip="F. Hussain &middot; 14 Sep &mdash; <b>9.3 h</b>">9.3</td>
+              <td class="l3" data-tip="F. Hussain &middot; 15 Sep &mdash; <b>8.1 h</b>">8.1</td><td class="l4" data-tip="F. Hussain &middot; 16 Sep &mdash; <b>9.5 h</b>">9.5</td>
+              <td class="l3" data-tip="F. Hussain &middot; 17 Sep &mdash; <b>8.4 h</b>">8.4</td><td class="l3" data-tip="F. Hussain &middot; 19 Sep &mdash; <b>8.9 h</b>">8.9</td>
+              <td class="l4" data-tip="F. Hussain &middot; 20 Sep &mdash; <b>9.1 h</b>">9.1</td><td class="l2" data-tip="F. Hussain &middot; 21 Sep &mdash; <b>6.2 h</b>">6.2</td>
+              <td class="l3" data-tip="F. Hussain &middot; 22 Sep &mdash; <b>8.6 h</b>">8.6</td><td class="l4" data-tip="F. Hussain &middot; 23 Sep &mdash; <b>9.4 h</b>">9.4</td></tr>
+            <tr><td class="nm">A. Onaparambil</td>
+              <td class="l3" data-tip="A. Onaparambil &middot; 13 Sep &mdash; <b>8.3 h</b>">8.3</td><td class="l5" data-tip="A. Onaparambil &middot; 14 Sep &mdash; <b>10.6 h</b>">10.6</td>
+              <td class="l3" data-tip="A. Onaparambil &middot; 15 Sep &mdash; <b>8.0 h</b>">8.0</td><td class="l0" data-tip="A. Onaparambil &middot; 16 Sep &mdash; approved leave">&mdash;</td>
+              <td class="l2" data-tip="A. Onaparambil &middot; 17 Sep &mdash; <b>6.5 h</b>">6.5</td><td class="l3" data-tip="A. Onaparambil &middot; 19 Sep &mdash; <b>8.7 h</b>">8.7</td>
+              <td class="l4" data-tip="A. Onaparambil &middot; 20 Sep &mdash; <b>9.2 h</b>">9.2</td><td class="l3" data-tip="A. Onaparambil &middot; 21 Sep &mdash; <b>8.8 h</b>">8.8</td>
+              <td class="l2" data-tip="A. Onaparambil &middot; 22 Sep &mdash; <b>7.4 h</b>">7.4</td><td class="l4" data-tip="A. Onaparambil &middot; 23 Sep &mdash; <b>9.6 h</b>">9.6</td></tr>
+            <tr><td class="nm">M. Joseph</td>
+              <td class="l2" data-tip="M. Joseph &middot; 13 Sep &mdash; <b>7.2 h</b>">7.2</td><td class="l3" data-tip="M. Joseph &middot; 14 Sep &mdash; <b>8.5 h</b>">8.5</td>
+              <td class="l1" data-tip="M. Joseph &middot; 15 Sep &mdash; <b>4.6 h</b>">4.6</td><td class="l3" data-tip="M. Joseph &middot; 16 Sep &mdash; <b>8.2 h</b>">8.2</td>
+              <td class="l2" data-tip="M. Joseph &middot; 17 Sep &mdash; <b>7.0 h</b>">7.0</td><td class="l3" data-tip="M. Joseph &middot; 19 Sep &mdash; <b>8.4 h</b>">8.4</td>
+              <td class="l2" data-tip="M. Joseph &middot; 20 Sep &mdash; <b>6.9 h</b>">6.9</td><td class="l3" data-tip="M. Joseph &middot; 21 Sep &mdash; <b>8.1 h</b>">8.1</td>
+              <td class="l1" data-tip="M. Joseph &middot; 22 Sep &mdash; <b>4.2 h</b>">4.2</td><td class="l2" data-tip="M. Joseph &middot; 23 Sep &mdash; <b>7.6 h</b>">7.6</td></tr>
+            <tr><td class="nm">R. Abdulla</td>
+              <td class="l1" data-tip="R. Abdulla &middot; 13 Sep &mdash; <b>4.8 h</b>">4.8</td><td class="l2" data-tip="R. Abdulla &middot; 14 Sep &mdash; <b>6.6 h</b>">6.6</td>
+              <td class="l0" data-tip="R. Abdulla &middot; 15 Sep &mdash; no log">&mdash;</td><td class="l1" data-tip="R. Abdulla &middot; 16 Sep &mdash; <b>5.2 h</b>">5.2</td>
+              <td class="l2" data-tip="R. Abdulla &middot; 17 Sep &mdash; <b>6.8 h</b>">6.8</td><td class="l0" data-tip="R. Abdulla &middot; 19 Sep &mdash; no log">&mdash;</td>
+              <td class="l1" data-tip="R. Abdulla &middot; 20 Sep &mdash; <b>5.4 h</b>">5.4</td><td class="l2" data-tip="R. Abdulla &middot; 21 Sep &mdash; <b>6.1 h</b>">6.1</td>
+              <td class="l1" data-tip="R. Abdulla &middot; 22 Sep &mdash; <b>4.9 h</b>">4.9</td><td class="l2" data-tip="R. Abdulla &middot; 23 Sep &mdash; <b>6.3 h</b>">6.3</td></tr>
+            <tr><td class="nm">S. Nandakumar</td>
+              <td class="l0" data-tip="S. Nandakumar &middot; 13 Sep &mdash; no log">&mdash;</td><td class="l1" data-tip="S. Nandakumar &middot; 14 Sep &mdash; <b>4.2 h</b>">4.2</td>
+              <td class="l0" data-tip="S. Nandakumar &middot; 15 Sep &mdash; no log">&mdash;</td><td class="l0" data-tip="S. Nandakumar &middot; 16 Sep &mdash; no log">&mdash;</td>
+              <td class="l1" data-tip="S. Nandakumar &middot; 17 Sep &mdash; <b>3.8 h</b>">3.8</td><td class="l1" data-tip="S. Nandakumar &middot; 19 Sep &mdash; <b>5.1 h</b>">5.1</td>
+              <td class="l0" data-tip="S. Nandakumar &middot; 20 Sep &mdash; no log">&mdash;</td><td class="l0" data-tip="S. Nandakumar &middot; 21 Sep &mdash; no log">&mdash;</td>
+              <td class="l1" data-tip="S. Nandakumar &middot; 22 Sep &mdash; <b>4.4 h</b>">4.4</td><td class="l0" data-tip="S. Nandakumar &middot; 23 Sep &mdash; no log">&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="scale">Lighter
+        <i style="background:var(--s1)"></i><i style="background:var(--s2)"></i><i style="background:var(--s3)"></i>
+        <i style="background:var(--s4)"></i><i style="background:var(--s5)"></i>
+        more hours &middot; <i style="background:var(--s0)"></i> no log, leave or weekly off
+      </div>
+      <div class="src">P_CUR_HEATMAP &middot; <b>empId</b>, <b>theDate</b>, <b>hours</b> &mdash; rendered today.
+        One change only: a single-hue ramp replaces the mixed-hue scale, so depth reads as magnitude.</div>
+    </div>
+
+    <div class="card q4">
+      <div class="ch"><span class="ic" style="--kc:var(--bad)">&#9866;</span><h2>How long since the last DPR</h2></div>
+      <p class="sub">Ageing, not a headcount. Six working days of silence is a different problem from one.</p>
+      <div class="bars" style="height:104px">
+        <div class="bcol" data-tip="<b>11 members</b> filed a DPR today"><span class="bb" style="height:100%;--bc:var(--c1)"></span><span class="lb">Today</span></div>
+        <div class="bcol" data-tip="<b>6 members</b> last filed 1 working day ago"><span class="bb" style="height:55%;--bc:var(--c1)"></span><span class="lb">1 day</span></div>
+        <div class="bcol" data-tip="<b>3 members</b> last filed 2 working days ago"><span class="bb" style="height:27%;--bc:var(--c3)"></span><span class="lb">2 days</span></div>
+        <div class="bcol" data-tip="<b>2 members</b> last filed 3 to 5 working days ago"><span class="bb" style="height:18%;--bc:var(--c3)"></span><span class="lb">3&ndash;5</span></div>
+        <div class="bcol" data-tip="<b>2 members</b> have not filed for 6 or more working days"><span class="bb" style="height:18%;--bc:var(--bad)"></span><span class="lb">6+</span></div>
+      </div>
+      <div class="lr" style="margin-top:13px">
+        <span class="av" style="--ac:var(--c4)">SN</span>
+        <div class="tx"><b>S. Nandakumar</b><span>Last DPR 17 Sep &middot; punched in all 6 days since</span></div>
+        <div class="rt"><b style="color:var(--bad)">6</b><span>days</span></div></div>
+      <div class="lr">
+        <span class="av" style="--ac:var(--c3)">KT</span>
+        <div class="tx"><b>K. Thomas</b><span>Last DPR 18 Sep &middot; punched in all 5 days since</span></div>
+        <div class="rt"><b style="color:var(--bad)">5</b><span>days</span></div></div>
+      <div class="src">P_CUR_NOT_DONE &middot; <b>daysSinceLastLog</b>, <b>lastLogDate</b>, <b>firstPunch</b>
+        &mdash; <b>daysSinceLastLog</b> is returned today and never rendered. 999 means never logged; bucket it
+        as its own column rather than letting it skew the axis.</div>
+    </div>
+
+    <div class="card q8">
+      <div class="ch"><span class="ic" style="--kc:var(--c4)">&#9993;</span><h2>Approvals waiting on me</h2>
+        <span class="lk">Open queue &rarr;</span></div>
+      <p class="sub">Sorted by age. The oldest item is the one that damages trust in the process.</p>
+      <div class="tw">
+        <table class="dt">
+          <thead><tr><th>Member</th><th>Form</th><th>Submitted</th><th class="r">Days</th><th>Step</th><th class="r">Waiting</th></tr></thead>
+          <tbody>
+            <tr><td><div class="who"><span class="av" style="--ac:var(--c2)">AO</span>
+                <div class="tx"><b>A. Onaparambil</b><span>Developer</span></div></div></td>
+              <td>Planned Leave</td><td>18 Sep 2026</td><td class="r">6</td>
+              <td><span class="pill mute">HOD</span></td>
+              <td class="r"><span class="pill bad"><i>&#9888;</i> 8 days</span></td></tr>
+            <tr><td><div class="who"><span class="av" style="--ac:var(--c5)">FH</span>
+                <div class="tx"><b>F. Hussain</b><span>Systems Analyst</span></div></div></td>
+              <td>Resignation</td><td>21 Sep 2026</td><td class="r">&mdash;</td>
+              <td><span class="pill mute">HOD</span></td>
+              <td class="r"><span class="pill warn"><i>&#9203;</i> 5 days</span></td></tr>
+            <tr><td><div class="who"><span class="av" style="--ac:var(--c3)">RA</span>
+                <div class="tx"><b>R. Abdulla</b><span>Support Engineer</span></div></div></td>
+              <td>Emergency Leave</td><td>24 Sep 2026</td><td class="r">2</td>
+              <td><span class="pill mute">HOD</span></td>
+              <td class="r"><span class="pill warn"><i>&#9203;</i> 2 days</span></td></tr>
+            <tr><td><div class="who"><span class="av" style="--ac:var(--c6)">NR</span>
+                <div class="tx"><b>N. Rahman</b><span>Developer</span></div></div></td>
+              <td>Planned Leave</td><td>25 Sep 2026</td><td class="r">3</td>
+              <td><span class="pill mute">HOD</span></td>
+              <td class="r"><span class="pill good"><i>&#10003;</i> 1 day</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="src">P_CUR_FORM_QUEUE &middot; <b>employeeName</b>, <b>formType</b>, <b>requestDate</b>,
+        <b>duration</b>, <b>approverRole</b>, <b>approvalLevel</b>. Note this cursor is <em>not</em> department-scoped,
+        so the count here will not always match the department pills.</div>
+    </div>
+
+    <div class="card q4">
+      <div class="ch"><span class="ic" style="--kc:var(--c3)">&#9888;</span><h2>Exceptions</h2></div>
+      <p class="sub">Computed in SQL, not inferred. Each row is a rule that fired.</p>
+      <div class="lr"><span class="pill bad"><i>&#9888;</i> Fulfilment</span>
+        <div class="tx" style="margin-left:2px"><b>S. Nandakumar &mdash; 64%</b>
+          <span>Below the 70% floor for the month</span></div></div>
+      <div class="lr"><span class="pill bad"><i>&#9888;</i> Fulfilment</span>
+        <div class="tx" style="margin-left:2px"><b>R. Abdulla &mdash; 74%</b>
+          <span>Below the 85% department average</span></div></div>
+      <div class="lr"><span class="pill warn"><i>&#9203;</i> Stale</span>
+        <div class="tx" style="margin-left:2px"><b>K. Thomas &mdash; 5 days</b>
+          <span>No DPR since 18 Sep, punched in every day</span></div></div>
+      <div class="lr"><span class="pill warn"><i>&#9998;</i> Remarks</span>
+        <div class="tx" style="margin-left:2px"><b>M. Joseph &mdash; 7 duplicates</b>
+          <span>Same remark text across 7 different tasks</span></div></div>
+      <p class="sub" style="margin:12px 0 0">Repeating a remark on the same continuing task is never flagged &mdash;
+        only identical text across different tasks.</p>
+      <div class="src">P_CUR_EXCEPTIONS &middot; <b>excType</b> (LOW_FULFIL / STALE / REMARK_DUP),
+        <b>metricValue</b>, <b>detail</b> &mdash; rendered today. One member can appear on several rows.</div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ── view switch ──────────────────────────────────────────────────────────
+  var tabs = { "tab-emp": "v-emp", "tab-hod": "v-hod" };
+  function show(tabId) {
+    Object.keys(tabs).forEach(function (t) {
+      var on = t === tabId;
+      document.getElementById(t).setAttribute("aria-selected", on ? "true" : "false");
+      document.getElementById(tabs[t]).hidden = !on;
+    });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  Object.keys(tabs).forEach(function (t) {
+    document.getElementById(t).addEventListener("click", function () { show(t); });
+  });
+  // a bare #hod in the artifact link opens straight onto the HOD view
+  if ((location.hash || "").toLowerCase() === "#hod") { show("tab-hod"); }
+
+  // ── data-source annotations ──────────────────────────────────────────────
+  var srcBtn = document.getElementById("srcBtn");
+  srcBtn.addEventListener("click", function () {
+    var on = document.body.classList.toggle("showsrc");
+    srcBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    srcBtn.textContent = on ? "Hide data sources" : "Show data sources";
+  });
+
+  // ── one shared tooltip for every [data-tip] mark ─────────────────────────
+  var tip = document.getElementById("tip");
+  var shown = null;
+
+  function place(e) {
+    var pad = 12, w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = e.clientX + pad, y = e.clientY + pad;
+    if (x + w > window.innerWidth - 8) { x = e.clientX - w - pad; }
+    if (y + h > window.innerHeight - 8) { y = e.clientY - h - pad; }
+    tip.style.left = Math.max(8, x) + "px";
+    tip.style.top = Math.max(8, y) + "px";
+  }
+
+  document.addEventListener("mouseover", function (e) {
+    var t = e.target.closest("[data-tip]");
+    if (!t || t === shown) { return; }
+    shown = t;
+    tip.innerHTML = t.getAttribute("data-tip");
+    tip.classList.add("on");
+    place(e);
+  });
+
+  document.addEventListener("mousemove", function (e) {
+    if (shown) { place(e); }
+  });
+
+  document.addEventListener("mouseout", function (e) {
+    if (!shown) { return; }
+    if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest("[data-tip]") === shown) { return; }
+    shown = null;
+    tip.classList.remove("on");
+  });
+})();
+</script>

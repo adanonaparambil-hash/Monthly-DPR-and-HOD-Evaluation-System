@@ -1,0 +1,890 @@
+<title>HOD Dashboard Extended</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOD DPR DASHBOARD — the CURRENT approved design, extended.
+   Every token, class name and card below is copied from
+   dpr-hod-dashboard.component.css so the port stays literal. Cards marked NEW
+   are additions; nothing existing is moved or restyled.
+   Added here and missing from the component: a dark palette. The component is
+   light-only, so on a dark theme it currently renders dark text on dark glass.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  color-scheme:light;
+  --ink:#0f172a;--ink2:#475569;--ink3:#94a3b8;--line:rgba(148,163,184,.22);
+  --teal:#138271;--tealL:#2dd4bf;--indigo:#6366f1;--sky:#0ea5e9;
+  --amber:#f59e0b;--rose:#f43f5e;--violet:#8b5cf6;
+  --good:#16a34a;--warn:#b45309;--bad:#dc2626;
+  --glass:rgba(255,255,255,.64);--glassb:rgba(255,255,255,.95);--track:rgba(148,163,184,.20);
+  --page:#eef2f7;--box:rgba(255,255,255,.6);--solid:#fff;
+  --hm0:rgba(148,163,184,.14);--hm1:#ccfbf1;--hm2:#7dd3c0;--hm3:#2da395;--hm4:#0d9488;--hm5:#115e59;
+  --tip:#0f172a;--tipink:#f8fafc;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ink:#e6edf7;--ink2:#9fb0c6;--ink3:#6b7f99;--line:rgba(148,163,184,.20);
+  --teal:#2dd4bf;--good:#4ade80;--warn:#fbbf24;--bad:#f87171;
+  --glass:rgba(23,34,54,.66);--glassb:rgba(148,163,184,.16);--track:rgba(148,163,184,.16);
+  --page:#0a1120;--box:rgba(15,23,42,.5);--solid:#111c2f;
+  --hm0:rgba(148,163,184,.10);--hm1:#0f3d38;--hm2:#146157;--hm3:#0d8578;--hm4:#14b8a6;--hm5:#5eead4;
+  --tip:#e6edf7;--tipink:#0a1120;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#e6edf7;--ink2:#9fb0c6;--ink3:#6b7f99;--line:rgba(148,163,184,.20);
+  --teal:#2dd4bf;--good:#4ade80;--warn:#fbbf24;--bad:#f87171;
+  --glass:rgba(23,34,54,.66);--glassb:rgba(148,163,184,.16);--track:rgba(148,163,184,.16);
+  --page:#0a1120;--box:rgba(15,23,42,.5);--solid:#111c2f;
+  --hm0:rgba(148,163,184,.10);--hm1:#0f3d38;--hm2:#146157;--hm3:#0d8578;--hm4:#14b8a6;--hm5:#5eead4;
+  --tip:#e6edf7;--tipink:#0a1120;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink)}
+.dpr-page{font:13px/1.5 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+  padding-inline:clamp(16px,2.2vw,26px);padding-block:14px 70px;min-height:100%;position:relative;isolation:isolate;
+  background:radial-gradient(1100px 520px at 85% -10%,color-mix(in srgb,var(--teal) 13%,transparent),transparent 60%),
+   radial-gradient(900px 480px at -10% 22%,color-mix(in srgb,var(--indigo) 12%,transparent),transparent 60%),
+   radial-gradient(760px 440px at 55% 112%,color-mix(in srgb,var(--sky) 10%,transparent),transparent 60%),var(--page)}
+.orb{position:fixed;border-radius:50%;filter:blur(72px);opacity:.5;z-index:-1;pointer-events:none}
+.o1{width:360px;height:360px;top:-90px;right:4%;background:linear-gradient(135deg,#13827166,#0ea5e966)}
+.o2{width:300px;height:300px;top:45%;left:-100px;background:linear-gradient(135deg,#6366f159,#8b5cf659)}
+.o3{width:260px;height:260px;bottom:-70px;right:24%;background:linear-gradient(135deg,#f59e0b4d,#f43f5e4d)}
+.glass{background:var(--glass);backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid var(--glassb);border-radius:20px;
+  box-shadow:0 1px 2px rgba(15,23,42,.04),0 14px 40px rgba(93,100,255,.09),inset 0 1px 0 rgba(255,255,255,.8)}
+h1,h2,h3,h4{text-wrap:balance}
+.ico{width:1em;height:1em;fill:currentColor;flex-shrink:0;vertical-align:-.11em}
+
+/* hero — unchanged */
+.hero{position:relative;overflow:hidden;color:#f8fafc;padding:22px 26px;border-radius:24px;
+  display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;
+  background:radial-gradient(1000px 460px at 88% -35%,rgba(45,212,191,.42),transparent 60%),
+   radial-gradient(820px 420px at -10% 135%,rgba(129,140,248,.42),transparent 62%),
+   linear-gradient(118deg,#123a5c 0%,#14446b 42%,#0d5a54 100%);
+  border:1px solid rgba(255,255,255,.16);box-shadow:0 24px 60px rgba(9,30,50,.4),inset 0 1px 0 rgba(255,255,255,.14)}
+.hg{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 46px),
+             repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 46px);
+  mask-image:radial-gradient(720px 300px at 30% 40%,#000,transparent 75%)}
+.hl,.hr{position:relative;z-index:1}
+.eyeb{display:inline-flex;align-items:center;gap:7px;font:800 10px "Segoe UI";letter-spacing:.2em;
+  text-transform:uppercase;color:#99f6e4;margin-bottom:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:#34d399}
+.htitle{font:800 clamp(19px,2.4vw,26px)/1.2 "Segoe UI";letter-spacing:-.02em}
+.hsub{margin-top:5px;font-size:12px;color:#bae6fd}
+.chips{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:6px 11px;
+  font:600 11.5px "Segoe UI";display:flex;align-items:center;gap:6px}
+.chip b{font-variant-numeric:tabular-nums}
+.chip.hot{background:rgba(244,63,94,.22);border-color:rgba(244,63,94,.45)}
+.chip.ok{background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.4)}
+.hr{display:flex;align-items:center;gap:16px}
+.ring{position:relative;width:122px;height:122px;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring .tr{stroke:rgba(255,255,255,.16)}
+.ring .vl{stroke:url(#hdash-gr);stroke-linecap:round;stroke-dasharray:314}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .mid b{font:800 23px/1 "Segoe UI";font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.ring .mid span{font:700 8.5px "Segoe UI";letter-spacing:.14em;text-transform:uppercase;color:#99f6e4;margin-top:4px}
+.rside{font-size:11.5px;color:#cfe8ff;display:flex;flex-direction:column;gap:6px;min-width:132px}
+.rrow{display:flex;align-items:center;gap:7px}
+.rrow b{margin-left:auto;font-variant-numeric:tabular-nums;color:#fff}
+.sq{width:8px;height:8px;border-radius:2.5px;flex-shrink:0}
+.deptbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.deptlbl{font:800 9.5px "Segoe UI";letter-spacing:.16em;text-transform:uppercase;color:#99f6e4}
+.dpill{border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.10);color:#e6f6ff;border-radius:999px;
+  padding:6px 14px;font:700 11.5px "Segoe UI";cursor:pointer;display:flex;align-items:center;gap:7px}
+.dpill.on{background:#fff;color:#0d5a54;border-color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.dpill .cnt{font-size:9.5px;background:rgba(0,0,0,.16);border-radius:999px;padding:1px 7px}
+.dpill.on .cnt{background:#0d5a5418;color:#0d5a54}
+
+/* band */
+.band{display:flex;align-items:center;gap:11px;margin:22px 0 11px}
+.band h3{font:800 12px "Segoe UI";letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.band .bi{width:29px;height:29px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;
+  font-size:12px;flex-shrink:0;background:linear-gradient(135deg,var(--bc,#138271),color-mix(in srgb,var(--bc,#138271) 55%,#fff))}
+.band .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.band .cnt{font:700 10px "Segoe UI";color:var(--ink3);background:var(--glass);border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+/* grid + cards */
+.grid{display:grid;gap:13px;grid-template-columns:repeat(12,1fr)}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}
+.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}.c3{grid-column:span 3}
+.card{padding:16px 18px;position:relative;overflow:hidden;min-width:0}
+.card h2{font:800 10.5px "Segoe UI";letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);
+  margin-bottom:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .ic{width:25px;height:25px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--kc,#138271) 14%,transparent);color:var(--kc,#138271);font-size:11px;flex-shrink:0}
+.lk{margin-left:auto;font:700 10.5px "Segoe UI";color:var(--teal);cursor:pointer}
+.lock{font:700 8.5px "Segoe UI";letter-spacing:.1em;background:var(--track);color:var(--ink2);
+  border:1px solid var(--line);border-radius:6px;padding:2px 7px;display:flex;align-items:center;gap:4px}
+/* Opt out of the global h1–h6 gradient-text rule in styles.css — without this the
+   headings and everything nested inside them render invisible. Keep on the port. */
+.band h3,.card h2{background:none;-webkit-background-clip:border-box;background-clip:border-box;
+  -webkit-text-fill-color:currentColor}
+.card h2 *{-webkit-text-fill-color:currentColor}
+
+/* NEW / status badges on a card heading */
+.nb{font:800 8.5px "Segoe UI";letter-spacing:.1em;border-radius:6px;padding:2px 7px;display:inline-flex;
+  align-items:center;gap:4px;border:1px solid transparent}
+.nb.new{background:color-mix(in srgb,var(--violet) 15%,transparent);color:var(--violet);
+  border-color:color-mix(in srgb,var(--violet) 35%,transparent)}
+.nb.live{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good);
+  border-color:color-mix(in srgb,var(--good) 32%,transparent)}
+.nb.sql{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);
+  border-color:color-mix(in srgb,var(--warn) 34%,transparent)}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{padding:14px 16px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden}
+.tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--tc,#138271),transparent);opacity:.55}
+.tile .lb{font:800 9.5px "Segoe UI";letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);
+  display:flex;align-items:center;gap:6px}
+.tile .lb i.d{width:7px;height:7px;border-radius:2px;display:block;flex-shrink:0}
+.tile b{font:800 24px/1.1 "Segoe UI";font-variant-numeric:tabular-nums;letter-spacing:-.03em;margin-top:2px}
+.tile small{font:600 10.5px "Segoe UI"}
+.up{color:var(--good)}.dn{color:var(--bad)}.fl{color:var(--ink3)}
+
+/* attendance boxes */
+.attrow{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap}
+.attbox{flex:1;min-width:110px;background:var(--box);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.attbox .k{font:800 8.5px "Segoe UI";letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
+.attbox .v{font:800 15px "Segoe UI";font-variant-numeric:tabular-nums;margin-top:2px}
+.attbox .v small{font:600 10px "Segoe UI";color:var(--ink3)}
+
+/* tables */
+.tw{overflow-x:auto;margin-inline:-2px;padding-inline:2px}
+table.atbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:600px}
+table.atbl th{text-align:left;font:800 8.5px "Segoe UI";letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink3);padding:0 8px 7px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.atbl th.r,table.atbl td.r{text-align:right}
+table.atbl td{padding:8px;border-bottom:1px solid var(--line);font-size:11.5px;white-space:nowrap}
+table.atbl tbody tr:last-child td{border-bottom:0}
+table.atbl td.n{font-weight:700;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.mut{color:var(--ink3)}
+
+/* punch strip — one row per member */
+.pstrip{position:relative;height:20px;background:var(--track);border-radius:6px;min-width:150px}
+.pstrip .span{position:absolute;top:0;bottom:0;border-radius:6px;background:color-mix(in srgb,var(--sky) 22%,transparent);
+  border:1px solid color-mix(in srgb,var(--sky) 40%,transparent)}
+.pstrip .work{position:absolute;top:3px;bottom:3px;border-radius:4px;background:var(--teal)}
+.pstrip .brk{position:absolute;top:3px;bottom:3px;border-radius:4px;background:var(--amber)}
+.pstrip .gap{position:absolute;top:3px;bottom:3px;border-radius:4px;
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bad) 40%,transparent) 0 4px,transparent 4px 8px)}
+.pstrip .pk{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:2px}
+
+/* people rows */
+.ap{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.ap:last-child{border-bottom:0}
+.av{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font:800 11px "Segoe UI";color:#fff;background:var(--ac,#138271)}
+.ap .tx{flex:1;min-width:0}
+.apn{font:700 12px "Segoe UI";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aps{font:600 10.5px "Segoe UI";color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.age{font:800 9.5px "Segoe UI";border-radius:7px;padding:3px 8px;flex-shrink:0;white-space:nowrap;
+  background:var(--track);color:var(--ink2)}
+.age.a1{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.age.a2{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.age.a3{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.rt2{text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.rt2 b{display:block;font:800 12.5px "Segoe UI"}
+.rt2 span{display:block;font:600 9.5px "Segoe UI";color:var(--ink3)}
+
+/* score header */
+.score{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+.scoreN{font:800 30px/1 "Segoe UI";letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.scoreN small{font:700 13px "Segoe UI";color:var(--ink3)}
+.bandchip{font:800 8.5px "Segoe UI";letter-spacing:.1em;border-radius:7px;padding:3px 8px;
+  background:var(--track);color:var(--ink2)}
+.bandchip.b30{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.bandchip.b50{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--warn)}
+.bandchip.b80{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+
+/* legend */
+.lg{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:10px}
+.lg span{display:inline-flex;align-items:center;gap:6px;font:600 10.5px "Segoe UI";color:var(--ink2)}
+.lg i{width:10px;height:10px;border-radius:3px;background:var(--lc);display:block;flex-shrink:0}
+.lg i.st{background:repeating-linear-gradient(135deg,var(--lc) 0 4px,transparent 4px 8px);border:1px solid var(--lc)}
+
+/* bars */
+.bars{display:flex;align-items:flex-end;gap:6px;height:112px;padding-top:12px;position:relative}
+.bcol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%;min-width:0}
+.bcol .bb{width:100%;border-radius:4px 4px 0 0;background:var(--bc,var(--teal));min-height:2px}
+.bcol .lb2{font:600 9.5px "Segoe UI";color:var(--ink3);white-space:nowrap}
+/* stacked break bar */
+.bstack{width:100%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;gap:2px}
+.bstack span{display:block;width:100%}
+
+/* heatmap */
+.hm{width:100%;border-collapse:separate;border-spacing:3px;font-variant-numeric:tabular-nums;min-width:560px}
+.hm th{font:800 8.5px "Segoe UI";letter-spacing:.06em;color:var(--ink3);text-align:center;padding:0 0 3px}
+.hm th.nm,.hm td.nm{text-align:left;font:700 11.5px "Segoe UI";color:var(--ink2);white-space:nowrap;
+  max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.hm td{height:25px;border-radius:5px;text-align:center;font:700 9.5px "Segoe UI";color:#fff}
+.hm td.l0{background:var(--hm0);color:var(--ink3)}
+.hm td.l1{background:var(--hm1);color:#134e4a}
+.hm td.l2{background:var(--hm2);color:#0f3d38}
+.hm td.l3{background:var(--hm3)}.hm td.l4{background:var(--hm4)}.hm td.l5{background:var(--hm5)}
+.scale{display:flex;align-items:center;gap:6px;margin-top:10px;font:600 10px "Segoe UI";color:var(--ink3);flex-wrap:wrap}
+.scale i{width:22px;height:10px;border-radius:3px;display:block}
+
+/* note + buttons */
+.note{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:9px}
+.note b{color:var(--warn)}
+.btn{border:1px solid var(--line);border-radius:9px;padding:6px 11px;font:700 10.5px "Segoe UI";cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;background:var(--box);color:var(--ink2)}
+.btn.bt{background:var(--teal);color:#fff;border-color:transparent}
+.btns{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+
+/* filter row */
+.fr{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
+.fchip{border:1px solid var(--line);background:var(--box);color:var(--ink2);border-radius:999px;padding:5px 12px;
+  font:700 10.5px "Segoe UI";cursor:pointer}
+.fchip.on{background:var(--teal);color:#fff;border-color:transparent}
+
+/* validation panel */
+.vp{margin-top:14px;border-radius:18px;padding:16px 18px}
+.vp h4{font:800 11px "Segoe UI";letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:4px}
+.vp p.intro{font-size:11.5px;color:var(--ink2);margin-bottom:12px}
+table.vt{width:100%;border-collapse:collapse;min-width:620px}
+table.vt th{text-align:left;font:800 8.5px "Segoe UI";letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);
+  padding:0 8px 7px;border-bottom:1px solid var(--line)}
+table.vt td{padding:8px;border-bottom:1px solid var(--line);font-size:11.5px;vertical-align:top}
+table.vt tbody tr:last-child td{border-bottom:0}
+table.vt code{font:600 10.5px ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--indigo)}
+
+/* tooltip */
+#tip{position:fixed;z-index:99;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--tip);
+  color:var(--tipink);font:600 11.5px/1.45 "Segoe UI";padding:7px 10px;border-radius:9px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:250px}
+#tip b{font-weight:800}
+#tip.on{opacity:1}
+
+@media (max-width:1180px){
+  .c8,.c7,.c5,.c4,.c3{grid-column:span 12}.c6{grid-column:span 12}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .hero{grid-template-columns:1fr}
+}
+@media (max-width:620px){.tiles{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="hdash-gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
+  <symbol id="i-gauge" viewBox="0 0 512 512"><path d="M256 64C132 64 32 164 32 288c0 42 12 82 32 116h384c20-34 32-74 32-116 0-124-100-224-224-224zm0 64a16 16 0 110 32 16 16 0 010-32zm-128 48a16 16 0 110 32 16 16 0 010-32zm256 0a16 16 0 110 32 16 16 0 010-32zM96 288a16 16 0 110 32 16 16 0 010-32zm192-64l64 96-32 22-64-96z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 512 512"><path d="M121 64h270c20 0 38 12 45 31l52 138v187c0 16-13 29-29 29H53c-16 0-29-13-29-29V233L76 95c7-19 25-31 45-31zm0 42l-38 101h100l16 48h114l16-48h100l-38-101zM66 249v162h380V249H331l-16 48H197l-16-48z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 640 512"><path d="M144 160a64 64 0 110-128 64 64 0 010 128zm352 0a64 64 0 110-128 64 64 0 010 128zM0 352c0-53 43-96 96-96h32c15 0 29 3 41 9-1 6-1 12-1 19v96H0zm472 28v-96c0-7 0-13-1-19 12-6 26-9 41-9h32c53 0 96 43 96 96v28zM320 176a80 80 0 110-160 80 80 0 010 160zm-48 48h96c61 0 112 50 112 112v44H160v-44c0-62 50-112 112-112z"/></symbol>
+  <symbol id="i-finger" viewBox="0 0 512 512"><path d="M256 0c-49 0-95 16-132 44a16 16 0 1019 25 192 192 0 01226 0 16 16 0 1019-25A219 219 0 00256 0zm0 96a160 160 0 00-160 160v112a16 16 0 0032 0V256a128 128 0 01256 0c0 66-11 130-32 190a16 16 0 1030 10c22-64 34-132 34-200A160 160 0 00256 96zm0 64a96 96 0 00-96 96v160a16 16 0 0032 0V256a64 64 0 01128 0c0 78-16 154-46 224a16 16 0 1029 13c33-75 49-155 49-237a96 96 0 00-96-96zm0 64a32 32 0 00-32 32v192a16 16 0 0032 0V256a16 16 0 0116 16c0 90-22 178-64 257a16 16 0 1028 15c45-84 68-177 68-272a32 32 0 00-48-32z"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 576 512"><path d="M482 200H360L268 40c-5-9-14-14-24-14h-38c-11 0-19 10-16 21l44 153H128l-40-53c-4-5-10-8-16-8H36c-10 0-18 9-15 19l30 106-30 106c-3 10 5 19 15 19h36c6 0 12-3 16-8l40-53h106l-44 153c-3 11 5 21 16 21h38c10 0 19-5 24-14l92-160h122c40 0 94-25 94-64s-54-64-94-64z"/></symbol>
+  <symbol id="i-calcheck" viewBox="0 0 448 512"><path d="M152 24v40h144V24a24 24 0 0148 0v40h56c22 0 40 18 40 40v56H8v-56c0-22 18-40 40-40h56V24a24 24 0 0148 0zM8 192h432v280c0 22-18 40-40 40H48c-22 0-40-18-40-40zm325 97a20 20 0 00-29-28l-98 98-45-45a20 20 0 00-29 28l59 60c8 8 21 8 29 0z"/></symbol>
+  <symbol id="i-coffee" viewBox="0 0 640 512"><path d="M192 0c9 0 16 7 16 16v64a16 16 0 01-32 0V16c0-9 7-16 16-16zm96 0c9 0 16 7 16 16v64a16 16 0 01-32 0V16c0-9 7-16 16-16zm96 0c9 0 16 7 16 16v64a16 16 0 01-32 0V16c0-9 7-16 16-16zM32 128h448v32h48a80 80 0 010 160h-52c-22 63-82 108-152 108h-88C142 428 64 350 64 254V160H32zm448 64v96h48a48 48 0 000-96zM16 448h480a16 16 0 010 32H16a16 16 0 010-32z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 576 512"><path d="M569 440L327 24c-17-30-61-30-78 0L7 440c-17 29 4 66 39 66h484c35 0 56-37 39-66zM288 158c13 0 24 11 23 24l-7 128a16 16 0 01-32 0l-7-128c-1-13 10-24 23-24zm0 224a28 28 0 110-56 28 28 0 010 56z"/></symbol>
+  <symbol id="i-slash" viewBox="0 0 640 512"><path d="M224 256a128 128 0 110-256 128 128 0 010 256zm89 32c66 0 119 53 119 119v25c0 22-18 40-40 40H32c-22 0-40-18-40-40v-25c0-66 53-119 119-119zM496 208a16 16 0 0123 0l33 33 33-33a16 16 0 0123 23l-33 33 33 33a16 16 0 01-23 23l-33-33-33 33a16 16 0 01-23-23l33-33-33-33a16 16 0 010-23z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 576 512"><path d="M316 15l70 141 156 23c26 4 37 36 18 55L447 344l26 155c5 26-23 46-46 34l-139-73-139 73c-23 12-51-8-46-34l26-155L16 234c-19-19-8-51 18-55l156-23 70-141c11-24 45-24 56 0z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 512 512"><path d="M256 0a256 256 0 110 512 256 256 0 010-512zm-24 120v136c0 8 4 15 11 20l96 64a24 24 0 0026-40l-85-57V120a24 24 0 00-48 0z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 512 512"><path d="M32 32a16 16 0 0116 16v368h432a16 16 0 010 32H32a16 16 0 01-16-16V48a16 16 0 0116-16zm448 64L352 224l-80-64-112 112-32-32 144-144 80 64 96-96z"/></symbol>
+</defs></svg>
+
+<div class="dpr-page">
+<span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
+
+<!-- ══════════════════════════ HERO — unchanged ══════════════════════════ -->
+<header class="hero">
+  <span class="hg"></span>
+  <div class="hl">
+    <div class="eyeb"><span class="dot"></span> DPR command center &middot; V. Pachupillai</div>
+    <div class="htitle">Good afternoon &mdash; here is your department today</div>
+    <div class="hsub">Saturday 26 September 2026 &middot; Muscat &middot; 24 team members &middot; September cycle</div>
+    <div class="deptbar">
+      <span class="deptlbl">My departments</span>
+      <button class="dpill on">IT <span class="cnt">24</span></button>
+      <button class="dpill">MAS <span class="cnt">18</span></button>
+      <button class="dpill">QA / QC <span class="cnt">11</span></button>
+    </div>
+    <div class="chips">
+      <span class="chip hot"><svg class="ico"><use href="#i-inbox"/></svg> Forms to approve <b>4</b></span>
+      <span class="chip hot"><svg class="ico"><use href="#i-calcheck"/></svg> DPR logs to approve <b>11</b></span>
+      <span class="chip hot"><svg class="ico"><use href="#i-slash"/></svg> No DPR today <b>4</b></span>
+      <span class="chip ok"><svg class="ico"><use href="#i-users"/></svg> Logged today <b>19</b></span>
+      <span class="chip"><svg class="ico"><use href="#i-plane"/></svg> On leave today <b>2</b></span>
+      <span class="chip"><svg class="ico"><use href="#i-coffee"/></svg> On break now <b>3</b></span>
+    </div>
+  </div>
+  <div class="hr">
+    <div class="ring">
+      <svg width="122" height="122"><circle class="tr" cx="61" cy="61" r="50" fill="none" stroke-width="10"/>
+        <circle class="vl" cx="61" cy="61" r="50" fill="none" stroke-width="10" stroke-dashoffset="19"/></svg>
+      <div class="mid"><b>94%</b><span>adoption</span></div>
+    </div>
+    <div class="rside">
+      <div class="rrow"><i class="sq" style="background:#2dd4bf"></i> Logged <b>3,914.5 h</b></div>
+      <div class="rrow"><i class="sq" style="background:#818cf8"></i> Expected <b>4,158.0 h</b></div>
+      <div class="rrow"><i class="sq" style="background:#f59e0b"></i> Working days <b>22</b></div>
+      <div class="rrow" style="opacity:.7;border-top:1px solid rgba(255,255,255,.15);padding-top:6px">Fulfilment <b>94.1%</b></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════ WHAT THE DATA SUPPORTS ════════════════════════ -->
+<div class="vp glass">
+  <h4>What the HOD can be shown &mdash; checked against the code, not assumed</h4>
+  <p class="intro">Sample figures throughout. Six of the eight things you asked for are already in the database
+    and reachable today. Two are not, and both are the same gap: there is no list-shaped read of leave.</p>
+  <div class="tw">
+    <table class="vt">
+      <thead><tr><th style="width:27%">What you asked for</th><th style="width:13%">Status</th><th>Where it comes from</th></tr></thead>
+      <tbody>
+        <tr><td><b>Today's attendance detail</b></td><td><span class="nb live">AVAILABLE</span></td>
+          <td><code>P_CUR_ATTENDANCE</code> &mdash; firstPunch, lastPunch, punchCount, punchTimes, loggedMin,
+            breakMin, elapsedMin, gapMin. Already returned; the card draws only six of these.</td></tr>
+        <tr><td><b>Who submitted leave</b></td><td><span class="nb live">AVAILABLE</span></td>
+          <td><code>P_CUR_FORM_QUEUE</code> &mdash; employeeName, formType, requestDate, departureDate,
+            duration, reason. Richer than <code>SP_GET_APPROVAL_INBOX_ALL</code>, whose DTO has no dates at all.</td></tr>
+        <tr><td><b>How many are on leave</b></td><td><span class="nb live">AVAILABLE</span></td>
+          <td><code>P_CUR_SUMMARY.onLeaveToday</code> (count) and <code>P_CUR_TEAM.onLeaveToday</code> ('Y'/'N' per member).</td></tr>
+        <tr><td><b>Who exactly is on leave</b></td><td><span class="nb live">AVAILABLE</span></td>
+          <td><code>P_CUR_TEAM</code> filtered on <code>onLeaveToday = 'Y'</code> &mdash; gives the names, nothing more.</td></tr>
+        <tr><td><b>Their return date</b></td><td><span class="nb sql">NEEDS SQL</span></td>
+          <td>The data exists &mdash; <code>approvedLeaveArrivalDate</code>, <code>extensionDate</code>,
+            <code>arrivedOn</code> on the rejoining record &mdash; but the only read is
+            <code>SP_GET_EMP_REJOINING_BY_ID</code>, one row at a time. No list procedure exists.</td></tr>
+        <tr><td><b>Leave type and reason</b></td><td><span class="nb sql">NEEDS SQL</span></td>
+          <td>Same gap. <code>leaveType</code> and <code>reasonForLeave</code> are stored on the form and the
+            rejoining record, but unreachable as a department list.</td></tr>
+        <tr><td><b>Break detail today</b></td><td><span class="nb live">AVAILABLE</span></td>
+          <td><code>PKG_TMST_TASK.SP_GET_OPEN_BREAKS</code> and <code>SP_GET_LUNCH_MONITOR</code> &mdash; reason,
+            remarks, start, end, duration, live on-break flag. Both already power the Lunch Monitor screen.</td></tr>
+        <tr><td><b>Break history over a range</b></td><td><span class="nb live">AVAILABLE</span></td>
+          <td><code>SP_GET_OPEN_BREAKS</code> takes fromDate, toDate, departmentId, breakReason and paging.
+            It is a history read already &mdash; nothing new is needed.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><svg class="ico" style="color:var(--warn)"><use href="#i-warn"/></svg>
+    <span>The <b>Lunch &amp; break monitor</b> card on the live dashboard is a placeholder &mdash; its own comment says
+      <i>"not wired to a data source yet"</i> and it renders em-dashes. The two procedures behind it already exist and
+      work. Wiring it needs <b>no new SQL at all</b>.</span></div>
+</div>
+
+<!-- ══════════════════════ DEPARTMENT PULSE — unchanged ══════════════════ -->
+<div class="band"><span class="bi" style="--bc:#138271"><svg class="ico"><use href="#i-gauge"/></svg></span>
+  <h3>Department Pulse</h3><span class="rule"></span><span class="cnt">live</span></div>
+<div class="grid">
+  <div class="c12 tiles">
+    <div class="tile glass" style="--tc:#138271"><span class="lb"><i class="d" style="background:#138271"></i>Team adoption</span>
+      <b>94%</b><small class="up">19 of 24 logged today</small></div>
+    <div class="tile glass" style="--tc:#0ea5e9"><span class="lb"><i class="d" style="background:#0ea5e9"></i>Hours logged</span>
+      <b>3,914.5</b><small class="fl">94.1% of expected</small></div>
+    <div class="tile glass" style="--tc:#f43f5e"><span class="lb"><i class="d" style="background:#f43f5e"></i>Awaiting me</span>
+      <b>15</b><small class="dn">4 forms &middot; 11 logs</small></div>
+    <div class="tile glass" style="--tc:#f59e0b"><span class="lb"><i class="d" style="background:#f59e0b"></i>Oldest pending</span>
+      <b>8</b><small class="dn">days &mdash; planned leave</small></div>
+  </div>
+</div>
+
+<!-- ══════════════════ TODAY'S ATTENDANCE — expanded ═════════════════════ -->
+<div class="band"><span class="bi" style="--bc:#0ea5e9"><svg class="ico"><use href="#i-finger"/></svg></span>
+  <h3>Today's Attendance</h3><span class="rule"></span><span class="cnt">24 members &middot; live</span></div>
+<div class="grid">
+
+  <div class="c12 card glass">
+    <h2><span class="ic" style="--kc:#0ea5e9"><svg class="ico"><use href="#i-finger"/></svg></span>
+      Attendance summary &mdash; today <span class="nb new">EXPANDED</span>
+      <span class="lk">Export &rarr;</span></h2>
+    <div class="attrow">
+      <div class="attbox"><div class="k">Punched in</div><div class="v">21 <small>of 24</small></div></div>
+      <div class="attbox"><div class="k">Logged a DPR</div><div class="v" style="color:var(--good)">19 <small>of 21</small></div></div>
+      <div class="attbox"><div class="k">On leave</div><div class="v" style="color:var(--indigo)">2</div></div>
+      <div class="attbox"><div class="k">No punch, no leave</div><div class="v" style="color:var(--bad)">1</div></div>
+      <div class="attbox"><div class="k">Avg in office</div><div class="v">8:47</div></div>
+      <div class="attbox"><div class="k">Avg logged</div><div class="v">7:12</div></div>
+      <div class="attbox"><div class="k">Total unaccounted</div><div class="v" style="color:var(--bad)">14:22</div></div>
+    </div>
+    <div class="note"><svg class="ico" style="color:var(--warn)"><use href="#i-warn"/></svg>
+      <span><b>gapMin is floored at zero in SQL</b>, so a member who logged MORE than their punch span shows a
+        gap of 0 rather than a negative. That usually means a forgotten punch-out &mdash; worth its own column
+        rather than hiding inside a zero.</span></div>
+  </div>
+
+  <div class="c8 card glass">
+    <h2><span class="ic" style="--kc:#0ea5e9"><svg class="ico"><use href="#i-clock"/></svg></span>
+      Punch vs logged &mdash; member detail <span class="nb new">EXPANDED</span></h2>
+    <div class="lg">
+      <span style="--lc:color-mix(in srgb,var(--sky) 30%,transparent)"><i></i>Punch span</span>
+      <span style="--lc:var(--teal)"><i></i>Logged</span>
+      <span style="--lc:var(--amber)"><i></i>Break</span>
+      <span style="--lc:var(--bad)"><i class="st"></i>Unaccounted</span>
+      <span style="--lc:var(--ink)"><i style="width:3px;height:12px"></i>Punch</span>
+    </div>
+    <div class="tw">
+      <table class="atbl">
+        <thead><tr><th>Member</th><th>In</th><th>Out</th><th style="min-width:170px">Day</th>
+          <th class="r">In office</th><th class="r">DPR</th><th class="r">Gap</th><th class="r">Punches</th></tr></thead>
+        <tbody>
+          <tr><td class="n">V. Krishnan</td><td>07:58</td><td>17:34</td>
+            <td><span class="pstrip" data-tip="07:58 to 17:34 &mdash; logged <b>8:24</b>, break <b>34 m</b>, unaccounted <b>10 m</b>">
+              <span class="span" style="left:0;right:0"></span>
+              <span class="work" style="left:2%;width:81%"></span>
+              <span class="brk" style="left:84%;width:6%"></span>
+              <span class="gap" style="left:91%;width:2%"></span>
+              <span class="pk" style="left:0"></span><span class="pk" style="left:46%"></span>
+              <span class="pk" style="left:52%"></span><span class="pk" style="left:99%"></span></span></td>
+            <td class="r">9:36</td><td class="r" style="color:var(--good);font-weight:700">8:24</td>
+            <td class="r"><span class="age a1">0:10</span></td><td class="r">4</td></tr>
+
+          <tr><td class="n">F. Hussain</td><td>08:04</td><td>17:12</td>
+            <td><span class="pstrip" data-tip="08:04 to 17:12 &mdash; logged <b>7:48</b>, break <b>41 m</b>, unaccounted <b>39 m</b>">
+              <span class="span" style="left:0;right:0"></span>
+              <span class="work" style="left:2%;width:76%"></span>
+              <span class="brk" style="left:79%;width:7%"></span>
+              <span class="gap" style="left:87%;width:7%"></span>
+              <span class="pk" style="left:0"></span><span class="pk" style="left:44%"></span>
+              <span class="pk" style="left:99%"></span></span></td>
+            <td class="r">9:08</td><td class="r" style="color:var(--good);font-weight:700">7:48</td>
+            <td class="r"><span class="age a1">0:39</span></td><td class="r">3</td></tr>
+
+          <tr><td class="n">A. Onaparambil</td><td>08:12</td><td>&mdash;</td>
+            <td><span class="pstrip" data-tip="08:12, still in &mdash; logged <b>6:52</b>, break <b>47 m</b>, unaccounted <b>1:35</b>">
+              <span class="span" style="left:0;right:0"></span>
+              <span class="work" style="left:2%;width:64%"></span>
+              <span class="brk" style="left:67%;width:8%"></span>
+              <span class="gap" style="left:76%;width:17%"></span>
+              <span class="pk" style="left:0"></span><span class="pk" style="left:40%"></span>
+              <span class="pk" style="left:47%"></span><span class="pk" style="left:99%"></span></span></td>
+            <td class="r">9:14</td><td class="r" style="color:var(--warn);font-weight:700">6:52</td>
+            <td class="r"><span class="age a2">1:35</span></td><td class="r">4</td></tr>
+
+          <tr><td class="n">R. Abdulla</td><td>08:41</td><td>17:02</td>
+            <td><span class="pstrip" data-tip="08:41 to 17:02 &mdash; logged <b>5:14</b>, break <b>32 m</b>, unaccounted <b>2:30</b>">
+              <span class="span" style="left:0;right:0"></span>
+              <span class="work" style="left:2%;width:53%"></span>
+              <span class="brk" style="left:56%;width:6%"></span>
+              <span class="gap" style="left:63%;width:30%"></span>
+              <span class="pk" style="left:0"></span><span class="pk" style="left:99%"></span></span></td>
+            <td class="r">8:21</td><td class="r" style="color:var(--bad);font-weight:700">5:14</td>
+            <td class="r"><span class="age a3">2:30</span></td><td class="r">2</td></tr>
+
+          <tr><td class="n">S. Nandakumar</td><td>09:18</td><td>16:44</td>
+            <td><span class="pstrip" data-tip="09:18 to 16:44 &mdash; logged <b>3:42</b>, break <b>43 m</b>, unaccounted <b>3:52</b>">
+              <span class="span" style="left:0;right:0"></span>
+              <span class="work" style="left:2%;width:38%"></span>
+              <span class="brk" style="left:41%;width:8%"></span>
+              <span class="gap" style="left:50%;width:43%"></span>
+              <span class="pk" style="left:0"></span><span class="pk" style="left:99%"></span></span></td>
+            <td class="r">7:26</td><td class="r" style="color:var(--bad);font-weight:700">3:42</td>
+            <td class="r"><span class="age a3">3:52</span></td><td class="r">2</td></tr>
+
+          <tr><td class="n">M. Joseph</td><td>08:22</td><td>17:19</td>
+            <td><span class="pstrip" data-tip="08:22 to 17:19 &mdash; logged <b>7:36</b>, break <b>38 m</b>, unaccounted <b>55 m</b>">
+              <span class="span" style="left:0;right:0"></span>
+              <span class="work" style="left:2%;width:74%"></span>
+              <span class="brk" style="left:77%;width:7%"></span>
+              <span class="gap" style="left:85%;width:9%"></span>
+              <span class="pk" style="left:0"></span><span class="pk" style="left:43%"></span>
+              <span class="pk" style="left:99%"></span></span></td>
+            <td class="r">8:57</td><td class="r" style="color:var(--good);font-weight:700">7:36</td>
+            <td class="r"><span class="age a2">0:55</span></td><td class="r">3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><span class="mut">Hover any day strip for the exact punch times.
+      <code style="font:600 10.5px ui-monospace,Consolas,monospace;color:var(--indigo)">punchTimes</code>
+      already carries the full list and is currently unused.</span></div>
+  </div>
+
+  <div class="c4 card glass">
+    <h2><span class="ic" style="--kc:#f43f5e"><svg class="ico"><use href="#i-slash"/></svg></span>
+      DPR not done &mdash; today <span class="lock">HOD + SURVEILLANCE</span></h2>
+    <div class="score"><span class="scoreN">4</span><span class="bandchip b30">NOT DONE TODAY</span></div>
+    <div class="ap"><span class="av" style="--ac:#f43f5e">SN</span>
+      <div class="tx"><div class="apn">S. Nandakumar</div><div class="aps">Punched 09:18 &middot; last DPR 17 Sep</div></div>
+      <span class="age a3">6 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#f59e0b">KT</span>
+      <div class="tx"><div class="apn">K. Thomas</div><div class="aps">Punched 08:36 &middot; last DPR 18 Sep</div></div>
+      <span class="age a3">5 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#6366f1">BN</span>
+      <div class="tx"><div class="apn">B. Nair</div><div class="aps">Punched 08:11 &middot; last DPR 24 Sep</div></div>
+      <span class="age a2">2 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#0ea5e9">HS</span>
+      <div class="tx"><div class="apn">H. Salim</div><div class="aps">Punched 08:49 &middot; last DPR 25 Sep</div></div>
+      <span class="age a1">1 day</span></div>
+    <div class="btns"><button class="btn bt">Send reminder</button><button class="btn">CSV</button></div>
+    <div class="note"><span class="mut"><code style="font:600 10.5px ui-monospace,Consolas,monospace;color:var(--indigo)">daysSinceLastLog</code>
+      is returned today and never shown. 999 means never logged &mdash; badge it, don't print it.</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ LEAVE & ABSENCE — NEW ═════════════════════ -->
+<div class="band"><span class="bi" style="--bc:#6366f1"><svg class="ico"><use href="#i-plane"/></svg></span>
+  <h3>Leave &amp; Absence</h3><span class="rule"></span><span class="cnt">new section</span></div>
+<div class="grid">
+
+  <div class="c7 card glass">
+    <h2><span class="ic" style="--kc:#6366f1"><svg class="ico"><use href="#i-plane"/></svg></span>
+      On leave right now <span class="nb new">NEW</span><span class="nb sql">NEEDS SQL</span></h2>
+    <div class="attrow" style="margin-bottom:12px">
+      <div class="attbox"><div class="k">On leave today</div><div class="v" style="color:var(--indigo)">2</div></div>
+      <div class="attbox"><div class="k">Due back this week</div><div class="v">1</div></div>
+      <div class="attbox"><div class="k">Overdue to return</div><div class="v" style="color:var(--bad)">1</div></div>
+      <div class="attbox"><div class="k">Extended</div><div class="v" style="color:var(--warn)">1</div></div>
+    </div>
+    <div class="tw">
+      <table class="atbl">
+        <thead><tr><th>Member</th><th>Leave type</th><th>Left</th><th>Due back</th>
+          <th class="r">Days</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="n">A. Rahiman</td><td>Annual Leave</td><td>08 Sep 2026</td><td>28 Sep 2026</td>
+            <td class="r">20</td><td><span class="age a1">Back in 2 days</span></td></tr>
+          <tr><td class="n">J. Mathew</td><td>Emergency Leave</td><td>14 Sep 2026</td><td>22 Sep 2026</td>
+            <td class="r">8</td><td><span class="age a3">4 days overdue</span></td></tr>
+          <tr><td class="n">S. Pillai</td><td>Annual Leave</td><td>01 Sep 2026</td>
+            <td>18 Sep &rarr; <b>05 Oct</b></td><td class="r">34</td>
+            <td><span class="age a2">Extended 17 d</span></td></tr>
+          <tr><td class="n">D. Kumar</td><td>Annual Leave</td><td>20 Aug 2026</td><td>21 Sep 2026</td>
+            <td class="r">32</td><td><span class="age a1">Rejoined 21 Sep</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><svg class="ico" style="color:var(--warn)"><use href="#i-warn"/></svg>
+      <span>Everything in this table exists on the rejoining record &mdash; <b>leaveType</b>, <b>dateOfDeparture</b>,
+        <b>approvedLeaveArrivalDate</b>, <b>extensionDate</b>, <b>arrivedOn</b>, <b>status</b> &mdash; but the only read
+        is <b>SP_GET_EMP_REJOINING_BY_ID</b>, one row at a time. This card needs one new list procedure,
+        department-scoped. It is the single biggest thing missing from the HOD's view.</span></div>
+  </div>
+
+  <div class="c5 card glass">
+    <h2><span class="ic" style="--kc:#8b5cf6"><svg class="ico"><use href="#i-calcheck"/></svg></span>
+      Leave submitted &mdash; awaiting me <span class="nb new">NEW</span><span class="nb live">AVAILABLE</span></h2>
+    <div class="score"><span class="scoreN">4<small> forms</small></span><span class="bandchip b50">OLDEST 8 DAYS</span></div>
+    <div class="ap"><span class="av" style="--ac:#6366f1">AO</span>
+      <div class="tx"><div class="apn">A. Onaparambil &middot; Planned Leave</div>
+        <div class="aps">Leaves 12 Oct &middot; 6 days &middot; "Family wedding"</div></div>
+      <span class="age a3">8 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#0ea5e9">FH</span>
+      <div class="tx"><div class="apn">F. Hussain &middot; Resignation</div>
+        <div class="aps">Last working day 20 Oct &middot; 30-day notice</div></div>
+      <span class="age a2">5 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#f59e0b">RA</span>
+      <div class="tx"><div class="apn">R. Abdulla &middot; Emergency Leave</div>
+        <div class="aps">Leaves 28 Sep &middot; 2 days &middot; "Medical &mdash; father"</div></div>
+      <span class="age a2">2 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#8b5cf6">NR</span>
+      <div class="tx"><div class="apn">N. Rahman &middot; Planned Leave</div>
+        <div class="aps">Leaves 15 Nov &middot; 3 days &middot; "Personal"</div></div>
+      <span class="age a1">1 day</span></div>
+    <div class="btns"><button class="btn bt">Open approval queue</button></div>
+    <div class="note"><span class="mut">All of this is in <b>P_CUR_FORM_QUEUE</b> today &mdash; departureDate,
+      duration and reason included. The current card shows only the name and form type.</span></div>
+  </div>
+
+  <div class="c12 card glass">
+    <h2><span class="ic" style="--kc:#6366f1"><svg class="ico"><use href="#i-calcheck"/></svg></span>
+      Absence calendar &mdash; who is away, and when <span class="nb new">NEW</span><span class="nb sql">NEEDS SQL</span></h2>
+    <p style="font-size:11.5px;color:var(--ink3);margin:-6px 0 12px">Next 14 days. Overlapping leave in a small team
+      is the thing a month-end number can never warn you about in time.</p>
+    <div class="lg">
+      <span style="--lc:var(--indigo)"><i></i>Approved leave</span>
+      <span style="--lc:var(--amber)"><i></i>Extended</span>
+      <span style="--lc:var(--bad)"><i class="st"></i>Overdue to return</span>
+      <span style="--lc:var(--track)"><i></i>Weekly off</span>
+    </div>
+    <div class="tw">
+      <table class="hm">
+        <thead><tr><th class="nm">Member</th>
+          <th>26</th><th>27</th><th>28</th><th>29</th><th>30</th><th>01</th><th>02</th>
+          <th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th></tr></thead>
+        <tbody>
+          <tr><td class="nm">A. Rahiman</td>
+            <td style="background:var(--indigo)" data-tip="A. Rahiman &mdash; annual leave, due back 28 Sep"></td>
+            <td style="background:var(--indigo)"></td>
+            <td style="background:var(--indigo)" data-tip="Due back today"></td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td></tr>
+          <tr><td class="nm">J. Mathew</td>
+            <td style="background:repeating-linear-gradient(135deg,var(--bad) 0 4px,transparent 4px 8px);border:1px solid var(--bad)" data-tip="J. Mathew &mdash; <b>4 days overdue</b>, was due back 22 Sep"></td>
+            <td style="background:repeating-linear-gradient(135deg,var(--bad) 0 4px,transparent 4px 8px);border:1px solid var(--bad)"></td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td></tr>
+          <tr><td class="nm">S. Pillai</td>
+            <td style="background:var(--amber)" data-tip="S. Pillai &mdash; extended to 05 Oct"></td>
+            <td style="background:var(--amber)"></td><td style="background:var(--amber)"></td>
+            <td style="background:var(--amber)"></td><td style="background:var(--amber)"></td>
+            <td style="background:var(--amber)"></td><td style="background:var(--amber)"></td>
+            <td style="background:var(--amber)"></td><td style="background:var(--amber)"></td>
+            <td style="background:var(--amber)" data-tip="Returns 05 Oct"></td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td></tr>
+          <tr><td class="nm">A. Onaparambil</td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td>
+            <td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td><td class="l0"></td>
+            <td class="l0"></td>
+            <td style="background:color-mix(in srgb,var(--indigo) 40%,transparent);border:1px dashed var(--indigo)" data-tip="A. Onaparambil &mdash; planned leave, <b>not yet approved</b>"></td>
+            <td style="background:color-mix(in srgb,var(--indigo) 40%,transparent);border:1px dashed var(--indigo)"></td>
+            <td style="background:color-mix(in srgb,var(--indigo) 40%,transparent);border:1px dashed var(--indigo)"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><svg class="ico" style="color:var(--warn)"><use href="#i-warn"/></svg>
+      <span><b>Two different sources disagree, and the HOD should see which is which.</b> Approved leave in the HR
+        system (<b>lbasic</b> / <b>rejoinbasic</b> in Oman, <b>ADKIND_UAT</b> in India) is what reduces the expected-hours
+        target. A leave form submitted in the portal is a request and changes nothing until HR records it.
+        Solid cells are HR-recorded; dashed cells are portal requests not yet in HR.</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ BREAK & LUNCH — was a placeholder ═════════════ -->
+<div class="band"><span class="bi" style="--bc:#f59e0b"><svg class="ico"><use href="#i-coffee"/></svg></span>
+  <h3>Break &amp; Lunch</h3><span class="rule"></span><span class="cnt">procedures already exist</span></div>
+<div class="grid">
+
+  <div class="c5 card glass">
+    <h2><span class="ic" style="--kc:#f59e0b"><svg class="ico"><use href="#i-coffee"/></svg></span>
+      On break right now <span class="nb live">AVAILABLE</span><span class="lock">HOD + SURVEILLANCE</span></h2>
+    <div class="attrow" style="margin-bottom:12px">
+      <div class="attbox"><div class="k">On break now</div><div class="v" style="color:var(--warn)">3</div></div>
+      <div class="attbox"><div class="k">Worked in lunch</div><div class="v" style="color:var(--good)">5</div></div>
+      <div class="attbox"><div class="k">Idle</div><div class="v">2</div></div>
+    </div>
+    <div class="ap"><span class="av" style="--ac:#f59e0b">MJ</span>
+      <div class="tx"><div class="apn">M. Joseph &middot; Lunch</div>
+        <div class="aps">Since 13:04 &middot; "Cafeteria"</div></div>
+      <div class="rt2"><b style="color:var(--warn)">1:12</b><span>running</span></div></div>
+    <div class="ap"><span class="av" style="--ac:#0ea5e9">HS</span>
+      <div class="tx"><div class="apn">H. Salim &middot; Travel</div>
+        <div class="aps">Since 14:40 &middot; "Site visit &mdash; Ghala"</div></div>
+      <div class="rt2"><b>0:36</b><span>running</span></div></div>
+    <div class="ap"><span class="av" style="--ac:#8b5cf6">BN</span>
+      <div class="tx"><div class="apn">B. Nair &middot; Quick break</div>
+        <div class="aps">Since 15:02 &middot; no remark</div></div>
+      <div class="rt2"><b>0:14</b><span>running</span></div></div>
+    <div class="note"><span class="mut">Oman window <b style="color:var(--ink2)">13:00&ndash;14:00</b> &middot;
+      India <b style="color:var(--ink2)">13:00&ndash;13:30</b>. From <b style="color:var(--ink2)">SP_GET_LUNCH_MONITOR</b>
+      and <b style="color:var(--ink2)">SP_GET_OPEN_BREAKS</b> &mdash; both live today.</span></div>
+  </div>
+
+  <div class="c7 card glass">
+    <h2><span class="ic" style="--kc:#f59e0b"><svg class="ico"><use href="#i-chart"/></svg></span>
+      Break history <span class="nb new">NEW</span><span class="nb live">AVAILABLE</span></h2>
+    <div class="fr">
+      <button class="fchip on">Last 7 days</button><button class="fchip">This month</button>
+      <button class="fchip">Custom range</button>
+      <span style="flex:1"></span>
+      <button class="fchip">All reasons</button><button class="fchip">Lunch</button>
+      <button class="fchip">Quick</button><button class="fchip">Travel</button>
+    </div>
+    <div class="lg">
+      <span style="--lc:var(--amber)"><i></i>Lunch</span>
+      <span style="--lc:var(--sky)"><i></i>Quick break</span>
+      <span style="--lc:var(--violet)"><i></i>Travel</span>
+    </div>
+    <div class="bars">
+      <div class="bcol" data-tip="Sun 20 Sep &mdash; lunch <b>11.2 h</b>, quick <b>3.1 h</b>, travel <b>2.4 h</b>">
+        <span class="bstack" style="height:73%">
+          <span style="height:65%;background:var(--amber)"></span>
+          <span style="height:20%;background:var(--sky)"></span>
+          <span style="height:15%;background:var(--violet)"></span></span><span class="lb2">SUN</span></div>
+      <div class="bcol" data-tip="Mon 21 Sep &mdash; lunch <b>12.0 h</b>, quick <b>3.8 h</b>, travel <b>1.9 h</b>">
+        <span class="bstack" style="height:80%">
+          <span style="height:68%;background:var(--amber)"></span>
+          <span style="height:21%;background:var(--sky)"></span>
+          <span style="height:11%;background:var(--violet)"></span></span><span class="lb2">MON</span></div>
+      <div class="bcol" data-tip="Tue 22 Sep &mdash; lunch <b>10.4 h</b>, quick <b>2.6 h</b>, travel <b>4.8 h</b>">
+        <span class="bstack" style="height:76%">
+          <span style="height:59%;background:var(--amber)"></span>
+          <span style="height:14%;background:var(--sky)"></span>
+          <span style="height:27%;background:var(--violet)"></span></span><span class="lb2">TUE</span></div>
+      <div class="bcol" data-tip="Wed 23 Sep &mdash; lunch <b>11.8 h</b>, quick <b>4.2 h</b>, travel <b>2.1 h</b>">
+        <span class="bstack" style="height:80%">
+          <span style="height:65%;background:var(--amber)"></span>
+          <span style="height:23%;background:var(--sky)"></span>
+          <span style="height:12%;background:var(--violet)"></span></span><span class="lb2">WED</span></div>
+      <div class="bcol" data-tip="Thu 24 Sep &mdash; lunch <b>11.0 h</b>, quick <b>3.4 h</b>, travel <b>3.0 h</b>">
+        <span class="bstack" style="height:76%">
+          <span style="height:63%;background:var(--amber)"></span>
+          <span style="height:19%;background:var(--sky)"></span>
+          <span style="height:18%;background:var(--violet)"></span></span><span class="lb2">THU</span></div>
+      <div class="bcol" data-tip="Fri 25 Sep &mdash; weekly off, <b>no breaks recorded</b>">
+        <span class="bstack" style="height:4%"><span style="height:100%;background:var(--track)"></span></span>
+        <span class="lb2">FRI</span></div>
+      <div class="bcol" data-tip="Today, Sat 26 Sep &mdash; lunch <b>8.6 h</b>, quick <b>2.2 h</b>, travel <b>1.4 h</b> so far">
+        <span class="bstack" style="height:58%">
+          <span style="height:70%;background:var(--amber)"></span>
+          <span style="height:18%;background:var(--sky)"></span>
+          <span style="height:12%;background:var(--violet)"></span></span><span class="lb2">SAT</span></div>
+    </div>
+    <div class="tw" style="margin-top:14px">
+      <table class="atbl">
+        <thead><tr><th>Member</th><th class="r">Lunch</th><th class="r">Quick</th><th class="r">Travel</th>
+          <th class="r">Total</th><th class="r">Per day</th><th>Longest single break</th></tr></thead>
+        <tbody>
+          <tr><td class="n">M. Joseph</td><td class="r">4:42</td><td class="r">2:18</td><td class="r">0:00</td>
+            <td class="r" style="font-weight:700;color:var(--bad)">7:00</td><td class="r">1:10</td>
+            <td>1:48 &mdash; Lunch, 22 Sep &middot; "Cafeteria"</td></tr>
+          <tr><td class="n">H. Salim</td><td class="r">3:10</td><td class="r">0:54</td><td class="r">5:22</td>
+            <td class="r" style="font-weight:700;color:var(--bad)">9:26</td><td class="r">1:34</td>
+            <td>2:40 &mdash; Travel, 22 Sep &middot; "Site visit"</td></tr>
+          <tr><td class="n">B. Nair</td><td class="r">3:28</td><td class="r">1:46</td><td class="r">0:30</td>
+            <td class="r" style="font-weight:700">5:44</td><td class="r">0:57</td>
+            <td>1:04 &mdash; Quick break, 23 Sep &middot; no remark</td></tr>
+          <tr><td class="n">A. Onaparambil</td><td class="r">2:56</td><td class="r">1:12</td><td class="r">0:00</td>
+            <td class="r" style="font-weight:700">4:08</td><td class="r">0:41</td>
+            <td>0:52 &mdash; Lunch, 21 Sep</td></tr>
+          <tr><td class="n">V. Krishnan</td><td class="r">2:34</td><td class="r">0:38</td><td class="r">0:00</td>
+            <td class="r" style="font-weight:700;color:var(--good)">3:12</td><td class="r">0:32</td>
+            <td>0:41 &mdash; Lunch, 24 Sep</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><span class="mut"><b style="color:var(--ink2)">SP_GET_OPEN_BREAKS</b> already accepts
+      fromDate, toDate, departmentId, breakReason and paging, and returns BreakStartTime, BreakEndTime,
+      BreakDurationMinutes, Remarks and Status. Every column above comes from it. <b>No new SQL.</b></span></div>
+  </div>
+</div>
+
+<!-- ══════════════════ EXISTING SECTIONS — unchanged ═════════════════════ -->
+<div class="band"><span class="bi" style="--bc:#0ea5e9"><svg class="ico"><use href="#i-users"/></svg></span>
+  <h3>Team DPR Discipline</h3><span class="rule"></span><span class="cnt">24 members</span></div>
+<div class="grid">
+  <div class="c8 card glass">
+    <h2><span class="ic" style="--kc:#0ea5e9"><svg class="ico"><use href="#i-chart"/></svg></span>
+      Compliance heatmap &mdash; member &times; day</h2>
+    <div class="tw">
+      <table class="hm">
+        <thead><tr><th class="nm">Member</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th>
+          <th>19</th><th>20</th><th>21</th><th>22</th><th>23</th></tr></thead>
+        <tbody>
+          <tr><td class="nm">V. Krishnan</td><td class="l4">9.4</td><td class="l5">10.6</td><td class="l4">9.2</td>
+            <td class="l4">9.8</td><td class="l3">8.6</td><td class="l5">10.2</td><td class="l4">9.5</td>
+            <td class="l4">9.1</td><td class="l3">8.8</td><td class="l4">9.7</td></tr>
+          <tr><td class="nm">F. Hussain</td><td class="l3">8.8</td><td class="l4">9.3</td><td class="l3">8.1</td>
+            <td class="l4">9.5</td><td class="l3">8.4</td><td class="l3">8.9</td><td class="l4">9.1</td>
+            <td class="l2">6.2</td><td class="l3">8.6</td><td class="l4">9.4</td></tr>
+          <tr><td class="nm">A. Onaparambil</td><td class="l3">8.3</td><td class="l5">10.6</td><td class="l3">8.0</td>
+            <td class="l0">&mdash;</td><td class="l2">6.5</td><td class="l3">8.7</td><td class="l4">9.2</td>
+            <td class="l3">8.8</td><td class="l2">7.4</td><td class="l4">9.6</td></tr>
+          <tr><td class="nm">M. Joseph</td><td class="l2">7.2</td><td class="l3">8.5</td><td class="l1">4.6</td>
+            <td class="l3">8.2</td><td class="l2">7.0</td><td class="l3">8.4</td><td class="l2">6.9</td>
+            <td class="l3">8.1</td><td class="l1">4.2</td><td class="l2">7.6</td></tr>
+          <tr><td class="nm">R. Abdulla</td><td class="l1">4.8</td><td class="l2">6.6</td><td class="l0">&mdash;</td>
+            <td class="l1">5.2</td><td class="l2">6.8</td><td class="l0">&mdash;</td><td class="l1">5.4</td>
+            <td class="l2">6.1</td><td class="l1">4.9</td><td class="l2">6.3</td></tr>
+          <tr><td class="nm">S. Nandakumar</td><td class="l0">&mdash;</td><td class="l1">4.2</td><td class="l0">&mdash;</td>
+            <td class="l0">&mdash;</td><td class="l1">3.8</td><td class="l1">5.1</td><td class="l0">&mdash;</td>
+            <td class="l0">&mdash;</td><td class="l1">4.4</td><td class="l0">&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="scale">Lighter
+      <i style="background:var(--hm1)"></i><i style="background:var(--hm2)"></i><i style="background:var(--hm3)"></i>
+      <i style="background:var(--hm4)"></i><i style="background:var(--hm5)"></i> more hours &middot;
+      <i style="background:var(--hm0)"></i> no log, leave or weekly off</div>
+  </div>
+
+  <div class="c4 card glass">
+    <h2><span class="ic" style="--kc:#f59e0b"><svg class="ico"><use href="#i-star"/></svg></span>
+      Top loggers &amp; most consistent</h2>
+    <div class="ap"><span class="av" style="--ac:#f59e0b">1</span>
+      <div class="tx"><div class="apn">V. Krishnan</div><div class="aps">252.5 h &middot; 108% fulfilment</div></div>
+      <div class="rt2"><b>105.8</b><span>composite</span></div></div>
+    <div class="ap"><span class="av" style="--ac:#94a3b8">2</span>
+      <div class="tx"><div class="apn">F. Hussain</div><div class="aps">238.6 h &middot; 102% fulfilment</div></div>
+      <div class="rt2"><b>100.0</b><span>composite</span></div></div>
+    <div class="ap"><span class="av" style="--ac:#b07d4f">3</span>
+      <div class="tx"><div class="apn">N. Rahman</div><div class="aps">203.8 h &middot; 98% fulfilment</div></div>
+      <div class="rt2"><b>96.3</b><span>composite</span></div></div>
+    <div class="ap"><span class="av" style="--ac:#6366f1">7</span>
+      <div class="tx"><div class="apn">A. Onaparambil</div><div class="aps">178.5 h &middot; 94% fulfilment</div></div>
+      <div class="rt2"><b>92.2</b><span>composite</span></div></div>
+    <div class="note"><span class="mut">Composite = 0.8 fulfilment + 0.1 consistency + 0.1 remark quality.
+      Fulfilment is uncapped, so rank 1 can exceed 100.</span></div>
+  </div>
+</div>
+
+<div class="band"><span class="bi" style="--bc:#f43f5e"><svg class="ico"><use href="#i-warn"/></svg></span>
+  <h3>Exceptions &amp; Discipline</h3><span class="rule"></span><span class="cnt">computed &mdash; no AI</span></div>
+<div class="grid">
+  <div class="c4 card glass">
+    <h2><span class="ic" style="--kc:#f59e0b"><svg class="ico"><use href="#i-warn"/></svg></span>
+      Fulfilment below 70</h2>
+    <div class="score"><span class="scoreN">2<small> of 24</small></span><span class="bandchip b50">BELOW 70</span></div>
+    <div class="ap"><span class="av" style="--ac:#f43f5e">SN</span>
+      <div class="tx"><div class="apn">S. Nandakumar</div><div class="aps">64% &mdash; 132.4 h of 207 h</div></div>
+      <span class="age a3">64%</span></div>
+    <div class="ap"><span class="av" style="--ac:#f59e0b">RA</span>
+      <div class="tx"><div class="apn">R. Abdulla</div><div class="aps">74% &mdash; 153.2 h of 207 h</div></div>
+      <span class="age a2">74%</span></div>
+  </div>
+  <div class="c4 card glass">
+    <h2><span class="ic" style="--kc:#dc2626"><svg class="ico"><use href="#i-slash"/></svg></span>
+      Non-submitters</h2>
+    <div class="score"><span class="scoreN">4<small> of 24</small></span><span class="bandchip b30">STALE</span></div>
+    <div class="ap"><span class="av" style="--ac:#f43f5e">SN</span>
+      <div class="tx"><div class="apn">S. Nandakumar</div><div class="aps">No DPR since 17 Sep</div></div>
+      <span class="age a3">6 days</span></div>
+    <div class="ap"><span class="av" style="--ac:#f59e0b">KT</span>
+      <div class="tx"><div class="apn">K. Thomas</div><div class="aps">No DPR since 18 Sep</div></div>
+      <span class="age a3">5 days</span></div>
+  </div>
+  <div class="c4 card glass">
+    <h2><span class="ic" style="--kc:#8b5cf6"><svg class="ico"><use href="#i-star"/></svg></span>
+      Remark discipline</h2>
+    <div class="score"><span class="scoreN">73<small>%</small></span><span class="bandchip b50">DEPT AVERAGE</span></div>
+    <div class="ap"><span class="av" style="--ac:#8b5cf6">MJ</span>
+      <div class="tx"><div class="apn">M. Joseph</div><div class="aps">Same remark across 7 different tasks</div></div>
+      <span class="age a2">7 dups</span></div>
+    <div class="note"><span class="mut">Repeating a remark on the <b style="color:var(--ink2)">same continuing task</b>
+      is never flagged &mdash; only identical text across different tasks.</span></div>
+  </div>
+</div>
+
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var tip = document.getElementById("tip"), shown = null;
+
+  function place(e) {
+    var pad = 12, w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = e.clientX + pad, y = e.clientY + pad;
+    if (x + w > window.innerWidth - 8) { x = e.clientX - w - pad; }
+    if (y + h > window.innerHeight - 8) { y = e.clientY - h - pad; }
+    tip.style.left = Math.max(8, x) + "px";
+    tip.style.top = Math.max(8, y) + "px";
+  }
+
+  document.addEventListener("mouseover", function (e) {
+    var t = e.target.closest("[data-tip]");
+    if (!t || t === shown) { return; }
+    shown = t;
+    tip.innerHTML = t.getAttribute("data-tip");
+    tip.classList.add("on");
+    place(e);
+  });
+  document.addEventListener("mousemove", function (e) { if (shown) { place(e); } });
+  document.addEventListener("mouseout", function (e) {
+    if (!shown) { return; }
+    if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest("[data-tip]") === shown) { return; }
+    shown = null; tip.classList.remove("on");
+  });
+
+  // Filter chips are illustrative here. Two groups share one row: the range
+  // chips (pick one) and the reason chips (pick any), split at "All reasons".
+  document.querySelectorAll(".fr").forEach(function (row) {
+    var chips = [].slice.call(row.querySelectorAll(".fchip"));
+    var split = chips.findIndex(function (c) { return /reason/i.test(c.textContent); });
+    row.addEventListener("click", function (e) {
+      var b = e.target.closest(".fchip");
+      if (!b) { return; }
+      var i = chips.indexOf(b);
+      if (split > -1 && i < split) {
+        chips.slice(0, split).forEach(function (c) { c.classList.remove("on"); });
+        b.classList.add("on");
+      } else {
+        b.classList.toggle("on");
+      }
+    });
+  });
+})();
+</script>

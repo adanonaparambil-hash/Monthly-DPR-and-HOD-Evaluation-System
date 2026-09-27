@@ -1,0 +1,632 @@
+<title>Adrak Portal Shell</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Inter:wght@400..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADRAK PORTAL SHELL — sidebar + header, Luminous Emerald system.
+   Every menu item, mode and control here exists in layout.html today; the
+   "Show mapping" toggle names the property or method behind each one.
+   Plain CSS with tokens, so it ports into layout.css the way the dashboard did.
+   Dark theme here follows the artifact contract; in the port the same tokens
+   sit under body.dark-theme (that is what ThemeService toggles).
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  color-scheme:light;
+  --bg:#f8fafc; --card:#ffffff; --card2:#f8fafc; --raise:#f1f5f9;
+  --line:#e2e8f0; --line2:#edf2f7; --line3:#cbd5e1;
+  --ink:#0f172a; --ink2:#334155; --ink3:#64748b; --ink4:#94a3b8;
+  --brand:#006d4e; --brand-d:#00583e; --brand-l:#059669; --brand-fix:#9df4cd; --brand-on-fix:#002115;
+  --a1:#059669; --a2:#4f46e5; --a3:#d97706; --a4:#e11d48; --a5:#0284c7; --a6:#7c3aed;
+  --ok:#065f46; --okbg:#ecfdf5; --okbd:#a7f3d0;
+  --wt:#92400e; --wtbg:#fffbeb; --wtbd:#fde68a;
+  --cr:#9f1239; --crbg:#fff1f2; --crbd:#fecdd3;
+  --sb:#ffffff; --sbhover:#f1f5f9; --sbline:#e8edf3;
+  --e1:0 1px 3px rgba(15,23,42,.04),0 1px 2px -1px rgba(15,23,42,.02);
+  --e3:0 10px 15px -3px rgba(15,23,42,.08),0 4px 6px -4px rgba(15,23,42,.04);
+  --e4:0 20px 25px -5px rgba(15,23,42,.10),0 8px 10px -6px rgba(15,23,42,.05);
+  --fh:Geist,Inter,"Segoe UI",system-ui,sans-serif; --fb:Inter,"Segoe UI",system-ui,sans-serif;
+  --sbw:272px; --railw:76px; --hdh:66px;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f172a; --card:#1e293b; --card2:#172033; --raise:#263447;
+  --line:#334155; --line2:#2b3a50; --line3:#475569;
+  --ink:#e2e8f0; --ink2:#cbd5e1; --ink3:#94a3b8; --ink4:#64748b;
+  --brand:#10b981; --brand-d:#059669; --brand-l:#34d399; --brand-fix:#064e3b; --brand-on-fix:#9df4cd;
+  --a2:#6366f1;
+  --ok:#6ee7b7; --okbg:rgba(16,185,129,.12); --okbd:rgba(16,185,129,.34);
+  --wt:#fcd34d; --wtbg:rgba(217,119,6,.14); --wtbd:rgba(217,119,6,.36);
+  --cr:#fda4af; --crbg:rgba(225,29,72,.13); --crbd:rgba(225,29,72,.34);
+  --sb:#131c30; --sbhover:#1e2a42; --sbline:#243149;
+  --e1:0 1px 3px rgba(0,0,0,.35); --e3:0 12px 24px rgba(0,0,0,.45); --e4:0 20px 30px rgba(0,0,0,.55);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f172a; --card:#1e293b; --card2:#172033; --raise:#263447;
+  --line:#334155; --line2:#2b3a50; --line3:#475569;
+  --ink:#e2e8f0; --ink2:#cbd5e1; --ink3:#94a3b8; --ink4:#64748b;
+  --brand:#10b981; --brand-d:#059669; --brand-l:#34d399; --brand-fix:#064e3b; --brand-on-fix:#9df4cd;
+  --a2:#6366f1;
+  --ok:#6ee7b7; --okbg:rgba(16,185,129,.12); --okbd:rgba(16,185,129,.34);
+  --wt:#fcd34d; --wtbg:rgba(217,119,6,.14); --wtbd:rgba(217,119,6,.36);
+  --cr:#fda4af; --crbg:rgba(225,29,72,.13); --crbd:rgba(225,29,72,.34);
+  --sb:#131c30; --sbhover:#1e2a42; --sbline:#243149;
+  --e1:0 1px 3px rgba(0,0,0,.35); --e3:0 12px 24px rgba(0,0,0,.45); --e4:0 20px 30px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:400 14px/22px var(--fb);-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;transition:background-color .3s,color .3s}
+h1,h2,h3,h4{font-family:var(--fh);font-weight:600;text-wrap:balance;-webkit-text-fill-color:currentColor}
+button{font-family:inherit;color:inherit}
+.ms{font-family:"Material Symbols Outlined";font-weight:400;font-style:normal;line-height:1;letter-spacing:normal;
+  text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;font-size:20px;flex-shrink:0;
+  -webkit-font-feature-settings:"liga";font-feature-settings:"liga"}
+
+/* ── motion ─────────────────────────────────────────────────────────────── */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes drop{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes popIn{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:rotate(0)}15%{transform:rotate(-18deg)}30%{transform:rotate(14deg)}45%{transform:rotate(-10deg)}60%{transform:rotate(6deg)}75%{transform:rotate(-3deg)}}
+@keyframes ping{75%,100%{transform:scale(2.3);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sweep{0%{transform:translateX(-110%)}60%,100%{transform:translateX(320%)}}
+
+/* ── app frame ──────────────────────────────────────────────────────────── */
+.app{display:flex;min-height:100vh}
+
+/* ── sidebar ────────────────────────────────────────────────────────────── */
+.sb{width:var(--sbw);flex-shrink:0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
+  background:var(--sb);border-right:1px solid var(--sbline);z-index:50;
+  transition:width .32s cubic-bezier(.22,1,.36,1),background-color .3s,border-color .3s;overflow:hidden}
+.app.rail .sb{width:var(--railw)}
+/* brand */
+.brand{height:var(--hdh);display:flex;align-items:center;gap:11px;padding:0 16px;border-bottom:1px solid var(--sbline);
+  position:relative;overflow:hidden;flex-shrink:0}
+.brand::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(260px 90px at 0% 0%,color-mix(in srgb,var(--a1) 14%,transparent),transparent 70%)}
+.mark{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;color:#fff;font:700 15px var(--fh);
+  background:linear-gradient(135deg,var(--brand),var(--a5));box-shadow:0 6px 16px color-mix(in srgb,var(--brand) 32%,transparent);
+  position:relative;z-index:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.brand:hover .mark{transform:rotate(-6deg) scale(1.06)}
+.bt{position:relative;z-index:1;min-width:0;white-space:nowrap;transition:opacity .2s,transform .3s}
+.bt b{display:flex;align-items:center;gap:6px;font:700 15px var(--fh);letter-spacing:-.01em}
+.hq{font:700 10px var(--fh);letter-spacing:.06em;padding:1px 7px;border-radius:999px;background:var(--brand-fix);color:var(--brand-on-fix)}
+.bt span{display:block;font:500 11.5px var(--fh);color:var(--ink3)}
+.app.rail .bt{opacity:0;transform:translateX(-8px);pointer-events:none}
+/* nav */
+.nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 10px 14px;scrollbar-width:thin;position:relative}
+.sect{padding:12px 10px 5px;font:600 10.5px var(--fh);letter-spacing:.08em;text-transform:uppercase;color:var(--ink4);
+  white-space:nowrap;transition:opacity .2s}
+.app.rail .sect{opacity:0;height:14px;padding:0}
+.it{position:relative;display:flex;align-items:center;gap:11px;width:100%;padding:9px 11px;border:0;border-radius:10px;
+  background:none;color:var(--ink2);font:500 13.5px var(--fh);cursor:pointer;text-align:left;white-space:nowrap;
+  transition:background-color .18s,color .18s,transform .18s;animation:slideL .45s cubic-bezier(.22,1,.36,1) backwards;
+  animation-delay:calc(var(--i,0) * 32ms)}
+.it .ms{color:var(--ink3);transition:transform .3s cubic-bezier(.34,1.56,.64,1),color .18s}
+.it:hover{background:var(--sbhover);color:var(--ink);transform:translateX(2px)}
+.it:hover .ms{transform:scale(1.12) rotate(-6deg);color:var(--brand)}
+.it:focus-visible{outline:2px solid var(--a5);outline-offset:-2px}
+.it .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s}
+.it .chev{margin-left:auto;font-size:18px;transition:transform .3s}
+.it[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.it .cnt{margin-left:auto;font:700 11px var(--fh);padding:1px 7px;border-radius:999px;background:var(--crbg);color:var(--cr);border:1px solid var(--crbd)}
+.it .ext{margin-left:auto;font-size:16px;color:var(--ink4)}
+.it.on{background:var(--brand);color:#fff;font-weight:600;box-shadow:0 6px 16px color-mix(in srgb,var(--brand) 30%,transparent)}
+.it.on .ms{color:#fff}
+.it.on .cnt{background:rgba(255,255,255,.22);color:#fff;border-color:transparent}
+.it.on::after{content:"";position:absolute;top:0;left:0;width:34%;height:100%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-110%)}
+.it.on:hover::after{animation:sweep .8s ease forwards}
+/* the indicator that slides between active items */
+.ind{position:absolute;left:4px;width:3px;height:22px;border-radius:3px;background:var(--brand);
+  transition:top .35s cubic-bezier(.22,1,.36,1),opacity .2s;opacity:0;pointer-events:none;
+  box-shadow:0 0 0 2px var(--sb)}
+.ind.show{opacity:1}
+/* groups */
+.grp .kids{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1)}
+.grp.open .kids{grid-template-rows:1fr}
+.kids>div{overflow:hidden;min-height:0}
+.kids .it{padding-left:22px;font-size:13px;margin-top:2px}
+.kids .it::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--line3);flex-shrink:0;margin-right:1px;transition:background .18s,transform .18s}
+.kids .it:hover::before{background:var(--brand);transform:scale(1.3)}
+.kids .it.on::before{background:#fff}
+.kids .it .ms{font-size:18px}
+/* rail mode */
+.app.rail .it{padding:10px 0;justify-content:center;gap:0}
+.app.rail .it .lb,.app.rail .it .chev,.app.rail .it .cnt,.app.rail .it .ext{display:none}
+.app.rail .kids{display:none}
+.app.rail .ind{display:none}
+.app.rail .it.on{border-radius:12px}
+.app.rail .grp{position:relative}
+.app.rail .grp:hover .fly{opacity:1;pointer-events:auto;transform:translateX(0)}
+.fly{position:absolute;left:calc(100% + 6px);top:0;min-width:210px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--e4);padding:6px;opacity:0;pointer-events:none;transform:translateX(-6px);
+  transition:opacity .18s,transform .18s;z-index:60;display:none}
+.app.rail .fly{display:block}
+.fly .ft{padding:6px 10px 4px;font:600 10.5px var(--fh);letter-spacing:.06em;text-transform:uppercase;color:var(--ink4)}
+.fly .it{animation:none;padding:8px 10px;justify-content:flex-start;gap:9px}
+.fly .it .lb{display:block!important}
+/* footer */
+.sbfoot{padding:10px;border-top:1px solid var(--sbline);flex-shrink:0}
+.sess{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--card2);margin-bottom:6px;white-space:nowrap;overflow:hidden}
+.pulse{position:relative;width:8px;height:8px;flex-shrink:0}
+.pulse i{position:absolute;inset:0;border-radius:50%;background:var(--brand-l);display:block}
+.pulse i:first-child{animation:ping 1.8s cubic-bezier(0,0,.2,1) infinite}
+.sess b{font:600 12px var(--fh)}
+.sess span{margin-left:auto;font:600 11px ui-monospace,Consolas,monospace;color:var(--ink3)}
+.app.rail .sess b,.app.rail .sess span{display:none}
+.app.rail .sess{justify-content:center;padding:8px}
+.it.out{color:var(--a4)}
+.it.out:hover{background:var(--crbg);color:var(--cr)}
+.it.out .ms{color:var(--a4)}
+
+/* ── main + header ──────────────────────────────────────────────────────── */
+.mainarea{flex:1;min-width:0;display:flex;flex-direction:column}
+.hd{height:var(--hdh);position:sticky;top:env(safe-area-inset-top,0px);z-index:40;display:flex;align-items:center;gap:14px;
+  padding:0 20px;background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);animation:rise .5s cubic-bezier(.22,1,.36,1) backwards;transition:background-color .3s,border-color .3s}
+.hb{width:38px;height:38px;border:0;border-radius:10px;background:none;display:grid;place-items:center;cursor:pointer;
+  color:var(--ink2);flex-shrink:0;transition:background .18s}
+.hb:hover{background:var(--raise)}
+.hb .bars{width:18px;height:12px;position:relative}
+.hb .bars i{position:absolute;left:0;width:18px;height:2px;border-radius:2px;background:currentColor;transition:transform .3s,width .3s,top .3s,opacity .2s}
+.hb .bars i:nth-child(1){top:0}.hb .bars i:nth-child(2){top:5px;width:12px}.hb .bars i:nth-child(3){top:10px}
+.app.rail .hb .bars i:nth-child(2){width:18px}
+.app.rail .hb .bars i:nth-child(1){transform:translateX(3px)}
+.app.drawer .hb .bars i:nth-child(1){top:5px;transform:rotate(45deg)}
+.app.drawer .hb .bars i:nth-child(2){opacity:0}
+.app.drawer .hb .bars i:nth-child(3){top:5px;transform:rotate(-45deg)}
+.ttl{min-width:0;flex:1}
+.crumb{display:flex;align-items:center;gap:6px;font:500 11.5px var(--fh);color:var(--ink3);white-space:nowrap}
+.crumb b{color:var(--brand);font-weight:600}
+.crumb .ms{font-size:14px}
+.ttl h1{font-size:17px;line-height:22px;letter-spacing:-.015em;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity .2s,transform .2s}
+.ttl h1.sw{opacity:0;transform:translateY(-4px)}
+.ttl .wel{font-size:12px;line-height:16px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl .wel b{color:var(--ink);font-weight:600}
+.hr{display:flex;align-items:center;gap:6px;margin-left:auto}
+.srch{position:relative;display:flex;align-items:center;margin-right:6px}
+.srch .ms{position:absolute;left:10px;font-size:18px;color:var(--ink4);pointer-events:none}
+.srch input{width:250px;height:38px;padding:0 54px 0 36px;border-radius:10px;background:var(--card2);border:1px solid var(--line);
+  font:400 12.5px var(--fb);color:var(--ink);transition:width .3s,border-color .2s,box-shadow .2s}
+.srch input::placeholder{color:var(--ink4)}
+.srch input:focus{outline:none;width:320px;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 15%,transparent)}
+.kbd{position:absolute;right:8px;font:600 10.5px ui-monospace,Consolas,monospace;color:var(--ink3);background:var(--raise);
+  border:1px solid var(--line);border-radius:5px;padding:1px 5px;pointer-events:none}
+.ib{position:relative;width:40px;height:40px;border:0;border-radius:10px;background:none;display:grid;place-items:center;cursor:pointer;
+  color:var(--ink2);transition:background .18s,color .18s,transform .18s}
+.ib:hover{background:var(--raise);color:var(--ink);transform:translateY(-1px)}
+.ib:focus-visible{outline:2px solid var(--a5);outline-offset:2px}
+.ib .ms{transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.ib.theme:hover .ms{transform:rotate(30deg)}
+.ib.theme.flip .ms{animation:spin .45s cubic-bezier(.34,1.56,.64,1)}
+.ib.bell.ring .ms{animation:shake .7s ease-in-out;transform-origin:50% 10%}
+.badge{position:absolute;top:5px;right:5px;min-width:17px;height:17px;border-radius:999px;background:var(--a4);color:#fff;
+  font:700 10.5px var(--fh);display:grid;place-items:center;padding:0 4px;border:2px solid var(--card);
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1) backwards}
+.badge.urg{background:var(--a4);box-shadow:0 0 0 0 color-mix(in srgb,var(--a4) 50%,transparent);animation:popIn .5s cubic-bezier(.34,1.56,.64,1) backwards,badgePulse 1.6s ease-out .5s infinite}
+@keyframes badgePulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--a4) 50%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+.vd{width:1px;height:26px;background:var(--line);margin:0 6px}
+.pf{display:flex;align-items:center;gap:9px;padding:4px 8px 4px 4px;border:0;border-radius:12px;background:none;cursor:pointer;
+  transition:background .18s}
+.pf:hover{background:var(--raise)}
+.av{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;color:#fff;font:700 12px var(--fh);
+  background:linear-gradient(135deg,var(--brand),var(--a5));box-shadow:0 0 0 2px var(--card),0 0 0 3.5px color-mix(in srgb,var(--brand) 45%,transparent)}
+.pf .nm{text-align:left;line-height:1.15}
+.pf .nm b{display:block;font:600 12.5px var(--fh)}
+.pf .nm span{display:block;font:500 11px var(--fh);color:var(--ink3)}
+.pf .chev{font-size:18px;color:var(--ink4);transition:transform .3s}
+.pf[aria-expanded="true"] .chev{transform:rotate(180deg)}
+
+/* dropdowns */
+.dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--e4);width:380px;max-width:calc(100vw - 32px);transform-origin:top right;
+  animation:drop .22s cubic-bezier(.22,1,.36,1);z-index:80;overflow:hidden}
+.dd[hidden]{display:none}
+.wrap{position:relative}
+.ddh{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line2)}
+.ddh h3{font-size:14px;flex:1}
+.ddh h3 small{font:600 12px var(--fh);color:var(--ink3);margin-left:5px}
+.mini{width:30px;height:30px;border:0;border-radius:8px;background:none;display:grid;place-items:center;cursor:pointer;color:var(--ink3);transition:background .18s,color .18s}
+.mini:hover{background:var(--raise);color:var(--ink)}
+.mini .ms{font-size:17px}
+.mini.danger:hover{background:var(--crbg);color:var(--cr)}
+.nl{max-height:380px;overflow-y:auto;scrollbar-width:thin}
+.ni{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border-bottom:1px solid var(--line2);cursor:pointer;position:relative;
+  transition:background .16s;animation:rise .35s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(var(--i,0) * 55ms)}
+.ni:hover{background:var(--card2)}
+.ni:last-child{border-bottom:0}
+.ni.unread{background:color-mix(in srgb,var(--brand) 4%,var(--card))}
+.ni .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;flex-shrink:0;background:var(--kc,var(--a1))}
+.ni .ic .ms{font-size:17px}
+.ni .tx{flex:1;min-width:0}
+.ni .tx p{font-size:13px;line-height:18px;color:var(--ink)}
+.ni.unread .tx p{font-weight:500}
+.ni .meta{display:flex;align-items:center;gap:8px;margin-top:3px;font:500 11px var(--fh);color:var(--ink3)}
+.npill{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:999px;background:var(--wtbg);color:var(--wt);border:1px solid var(--wtbd);font:600 10px var(--fh);letter-spacing:.03em}
+.npill .ms{font-size:12px}
+.ni .act{display:flex;gap:2px;opacity:0;transition:opacity .16s;flex-shrink:0}
+.ni:hover .act{opacity:1}
+.ni .act .mini{width:26px;height:26px}
+.udot{width:8px;height:8px;border-radius:50%;background:var(--a4);flex-shrink:0;margin-top:6px;box-shadow:0 0 0 3px color-mix(in srgb,var(--a4) 18%,transparent)}
+.ddf{padding:9px 14px;border-top:1px solid var(--line2);display:flex;justify-content:center}
+.ddf button{border:0;background:none;font:600 12px var(--fh);color:var(--brand);cursor:pointer}
+.ddf button:hover{text-decoration:underline}
+.dd.prof{width:270px}
+.pinfo{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line2);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--a1) 9%,var(--card)),var(--card) 70%)}
+.pinfo .av{width:44px;height:44px;font-size:15px}
+.pinfo h4{font-size:14px}
+.pinfo p{font-size:12px;color:var(--ink3);line-height:16px}
+.pm{padding:6px}
+.pm .it{animation:none}
+.pm .it .ms{font-size:18px}
+
+/* ── content placeholder (context for the shell) ────────────────────────── */
+.content{padding:20px;display:flex;flex-direction:column;gap:18px;flex:1;
+  background:radial-gradient(900px 420px at 88% -8%,color-mix(in srgb,var(--a1) 11%,transparent),transparent 60%),
+             radial-gradient(720px 380px at -8% 32%,color-mix(in srgb,var(--a5) 9%,transparent),transparent 60%),var(--bg)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--e1);animation:rise .5s cubic-bezier(.22,1,.36,1) backwards}
+.panel h2{font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.panel h2 .ms{color:var(--a6);font-size:19px}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap}
+.tg{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:var(--card2);
+  font:600 12.5px var(--fh);cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.tg:hover{transform:translateY(-1px)}
+.tg[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 12%,transparent);border-color:color-mix(in srgb,var(--brand) 45%,transparent);color:var(--brand)}
+.tg .ms{font-size:17px}
+.ghost{opacity:.55;pointer-events:none;user-select:none}
+.ghero{border-radius:14px;padding:20px 22px;border:1px solid var(--line);background:linear-gradient(118deg,color-mix(in srgb,var(--a1) 12%,var(--card)),var(--card) 42%,color-mix(in srgb,var(--a5) 10%,var(--card)));
+  display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+.ghero h1{font-size:26px;letter-spacing:-.02em;margin:6px 0 2px}
+.ghero p{color:var(--ink2);font-size:13px}
+.gring{width:110px;height:110px;border-radius:50%;border:10px solid var(--line);border-top-color:var(--a1);border-right-color:var(--a5);display:grid;place-items:center;font:600 22px var(--fh)}
+.gk{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.gk div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:var(--e1)}
+.gk small{font:600 10.5px var(--fh);letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);display:block}
+.gk b{font:600 28px var(--fh);letter-spacing:-.03em;display:block;margin-top:4px}
+.gk div:nth-child(1) b{color:var(--a1)}.gk div:nth-child(2) b{color:var(--a5)}.gk div:nth-child(3) b{color:var(--a2)}.gk div:nth-child(4) b{color:var(--a6)}
+
+/* ── mapping notes ──────────────────────────────────────────────────────── */
+.map{display:none;font:500 10px ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--a2);
+  background:color-mix(in srgb,var(--a2) 8%,transparent);border:1px dashed color-mix(in srgb,var(--a2) 40%,transparent);
+  border-radius:6px;padding:1px 6px;margin-left:6px;white-space:nowrap;letter-spacing:0;text-transform:none;flex-shrink:0}
+body.showmap .map{display:inline-block}
+.app.rail .map{display:none!important}
+.mapnote{display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--a2) 6%,transparent);
+  border:1px dashed color-mix(in srgb,var(--a2) 35%,transparent);font:500 11.5px/1.6 var(--fb);color:var(--ink2)}
+body.showmap .mapnote{display:block}
+.mapnote code{font:600 11px ui-monospace,Consolas,monospace;color:var(--a2)}
+
+/* ── mobile drawer ──────────────────────────────────────────────────────── */
+.bd{position:fixed;inset:0;background:rgba(15,23,42,.45);opacity:0;pointer-events:none;transition:opacity .28s;z-index:45;backdrop-filter:blur(2px)}
+@media (max-width:900px){
+  .sb{position:fixed;left:0;top:0;height:100dvh;width:min(300px,84vw);transform:translateX(-100%);transition:transform .3s cubic-bezier(.22,1,.36,1),background-color .3s;box-shadow:var(--e4)}
+  .app.drawer .sb{transform:none}
+  .app.drawer .bd{opacity:1;pointer-events:auto}
+  .app.rail .sb{width:min(300px,84vw)}
+  .app.rail .bt,.app.rail .sect,.app.rail .it .lb,.app.rail .it .chev,.app.rail .it .cnt,.app.rail .it .ext,.app.rail .sess b{opacity:1;display:block;transform:none;pointer-events:auto}
+  .app.rail .kids{display:grid}.app.rail .fly{display:none}.app.rail .it{padding:9px 11px;justify-content:flex-start;gap:11px}
+  .app.rail .ind{display:block}
+  .srch{display:none}
+  .pf .nm,.pf .chev{display:none}
+  .pf{padding:3px}
+  .hd{padding:0 14px;gap:10px}
+  .content{padding:14px}
+  .gk{grid-template-columns:repeat(2,1fr)}
+  .ghero{grid-template-columns:1fr}
+  .dd{position:fixed;top:calc(var(--hdh) + 6px);right:12px;left:12px;width:auto;max-width:none}
+}
+@media (max-width:520px){.gk{grid-template-columns:1fr}.ttl .wel{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app" id="app">
+  <!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+  <aside class="sb" id="sb" aria-label="Main menu">
+    <div class="brand">
+      <div class="mark">A</div>
+      <div class="bt"><b>AL ADRAK<span class="hq">HQ</span></b><span>Enterprise Portal</span></div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <span class="ind" id="ind"></span>
+
+      <!-- normal mode -->
+      <div id="normalMenu">
+        <div class="sect">Dashboards <span class="map">role-gated links</span></div>
+        <button class="it" style="--i:0" data-title="Employee Analytics" data-crumb="Analytics"><span class="ms">badge</span><span class="lb">Employee Analytics</span><span class="map">isEmployee</span></button>
+        <button class="it on" style="--i:1" data-title="Employee DPR Dashboard" data-crumb="Daily Progress Report"><span class="ms">assignment</span><span class="lb">DPR Dashboard</span><span class="map">/dpr-employee-dashboard</span></button>
+        <button class="it" style="--i:2" data-title="HOD Dashboard" data-crumb="Department"><span class="ms">groups</span><span class="lb">HOD Dashboard</span><span class="map">isHod</span></button>
+        <button class="it" style="--i:3" data-title="APR Dashboard" data-crumb="Annual Progress"><span class="ms">insights</span><span class="lb">APR Dashboard</span><span class="map">isCed</span></button>
+        <button class="it" style="--i:4" data-title="Purchase Dashboard" data-crumb="Purchase"><span class="ms">shopping_bag</span><span class="lb">Purchase Dashboard</span><span class="map">isPurchaseDashboardUser</span></button>
+
+        <div class="sect">Modules <span class="map">menuTree from TM_MENU_MASTER</span></div>
+        <div class="grp" style="--i:5">
+          <button class="it" style="--i:5" aria-expanded="false" data-grp><span class="ms">account_balance</span><span class="lb">Finance</span><span class="map">121</span><span class="ms chev">expand_more</span></button>
+          <div class="kids"><div>
+            <button class="it" data-title="Supplier Payment Forecast" data-crumb="Finance"><span class="lb">Supplier Payment Forecast</span><span class="map">122</span></button>
+            <button class="it" data-title="Supplier Overdue Aging" data-crumb="Finance"><span class="lb">Supplier Overdue Aging</span><span class="map">123</span></button>
+          </div></div>
+          <div class="fly"><div class="ft">Finance</div>
+            <button class="it"><span class="ms">payments</span><span class="lb">Supplier Payment Forecast</span></button>
+            <button class="it"><span class="ms">event_busy</span><span class="lb">Supplier Overdue Aging</span></button></div>
+        </div>
+        <div class="grp" style="--i:6">
+          <button class="it" style="--i:6" aria-expanded="false" data-grp><span class="ms">verified_user</span><span class="lb">QA / QC</span><span class="map">124</span><span class="ms chev">expand_more</span></button>
+          <div class="kids"><div>
+            <button class="it" data-title="WIR Report" data-crumb="QA / QC"><span class="lb">WIR Report</span><span class="map">125 → /wir-reports</span></button>
+          </div></div>
+          <div class="fly"><div class="ft">QA / QC</div><button class="it"><span class="ms">fact_check</span><span class="lb">WIR Report</span></button></div>
+        </div>
+
+        <div class="sect">Work</div>
+        <div class="grp" style="--i:7">
+          <button class="it" style="--i:7" aria-expanded="false" data-grp><span class="ms">trending_up</span><span class="lb">Productivity</span><span class="map">isProductivityMenuOpen</span><span class="ms chev">expand_more</span></button>
+          <div class="kids"><div>
+            <button class="it" data-title="Monthly Progress Report" data-crumb="Productivity"><span class="lb">MPR</span><span class="map">/monthly-dpr</span></button>
+            <button class="it" data-title="Annual Progress Report" data-crumb="Productivity"><span class="lb">APR</span><span class="map">/apr</span></button>
+          </div></div>
+          <div class="fly"><div class="ft">Productivity</div><button class="it"><span class="ms">description</span><span class="lb">MPR</span></button><button class="it"><span class="ms">contract</span><span class="lb">APR</span></button></div>
+        </div>
+        <button class="it" style="--i:8" data-title="DPR" data-crumb="Work" data-ext><span class="ms">task_alt</span><span class="lb">DPR</span><span class="map">openDPRInNewTab()</span><span class="ms ext">open_in_new</span></button>
+        <div class="grp" style="--i:9">
+          <button class="it" style="--i:9" aria-expanded="false" data-grp><span class="ms">verified</span><span class="lb">Approvals</span><span class="cnt">3</span><span class="ms chev">expand_more</span></button>
+          <div class="kids"><div>
+            <button class="it" data-title="Form Approvals" data-crumb="Approvals"><span class="lb">Form Approvals</span><span class="cnt">3</span><span class="map">/leave-approval</span></button>
+            <button class="it" data-title="MPR Past Reports" data-crumb="Approvals"><span class="lb">MPR Past Reports</span><span class="map">/past-reports</span></button>
+            <button class="it" data-title="APR Past Reports" data-crumb="Approvals"><span class="lb">APR Past Reports</span><span class="map">/apr-past-reports</span></button>
+          </div></div>
+          <div class="fly"><div class="ft">Approvals</div><button class="it"><span class="ms">fact_check</span><span class="lb">Form Approvals</span></button><button class="it"><span class="ms">history</span><span class="lb">MPR Past Reports</span></button><button class="it"><span class="ms">history</span><span class="lb">APR Past Reports</span></button></div>
+        </div>
+        <div class="grp" style="--i:10">
+          <button class="it" style="--i:10" aria-expanded="false" data-grp><span class="ms">dynamic_form</span><span class="lb">Form Services</span><span class="ms chev">expand_more</span></button>
+          <div class="kids"><div>
+            <button class="it" data-title="Exit Form" data-crumb="Form Services"><span class="lb">Exit Form</span><span class="map">/exit-form</span></button>
+            <button class="it" data-title="Rejoining Form" data-crumb="Form Services"><span class="lb">Rejoining Form</span><span class="map">/rejoining-form</span></button>
+            <button class="it" data-title="BYOD Form" data-crumb="Form Services"><span class="lb">BYOD Form</span><span class="map">/byod-form</span></button>
+          </div></div>
+          <div class="fly"><div class="ft">Form Services</div><button class="it"><span class="ms">flight_takeoff</span><span class="lb">Exit Form</span></button><button class="it"><span class="ms">person_add</span><span class="lb">Rejoining Form</span></button><button class="it"><span class="ms">laptop_mac</span><span class="lb">BYOD Form</span></button></div>
+        </div>
+
+        <div class="sect">System <span class="map">isHod || isCed || isEmployeeMasterUser</span></div>
+        <div class="grp" style="--i:11">
+          <button class="it" style="--i:11" aria-expanded="false" data-grp><span class="ms">hub</span><span class="lb">System Master</span><span class="ms chev">expand_more</span></button>
+          <div class="kids"><div>
+            <button class="it" data-title="Communication Master" data-crumb="System Master"><span class="lb">Communication Master</span><span class="map">/notice-management</span></button>
+            <button class="it" data-title="HOD Master" data-crumb="System Master"><span class="lb">HOD Master</span><span class="map">isHod</span></button>
+            <button class="it" data-title="Employee Master" data-crumb="System Master"><span class="lb">Employee Master</span><span class="map">/employee-master</span></button>
+          </div></div>
+          <div class="fly"><div class="ft">System Master</div><button class="it"><span class="ms">campaign</span><span class="lb">Communication Master</span></button><button class="it"><span class="ms">supervisor_account</span><span class="lb">HOD Master</span></button><button class="it"><span class="ms">group</span><span class="lb">Employee Master</span></button></div>
+        </div>
+        <button class="it" style="--i:12" data-title="My Profile" data-crumb="Account"><span class="ms">manage_accounts</span><span class="lb">My Profile</span><span class="map">/profile</span></button>
+      </div>
+
+      <!-- DPR-only mode -->
+      <div id="dprMenu" hidden>
+        <div class="sect">DPR Management <span class="map">isDPROnlyMode</span></div>
+        <button class="it on" style="--i:0" data-title="My Task" data-crumb="DPR"><span class="ms">checklist</span><span class="lb">My Task</span><span class="map">/my-task</span></button>
+        <button class="it" style="--i:1" data-title="Log History" data-crumb="DPR"><span class="ms">history</span><span class="lb">Log History</span><span class="map">/my-logged-hours</span></button>
+        <button class="it" style="--i:2" data-title="Log Analytics" data-crumb="DPR"><span class="ms">query_stats</span><span class="lb">Log Analytics</span><span class="map">/log-analytics</span></button>
+        <button class="it" style="--i:3" data-title="DPR Approval" data-crumb="DPR"><span class="ms">approval</span><span class="lb">DPR Approval</span><span class="map">isHod</span></button>
+      </div>
+    </nav>
+
+    <div class="sbfoot">
+      <div class="sess"><span class="pulse"><i></i><i></i></span><b>Session active</b><span>7h 12m</span><span class="map">app-session-monitor</span></div>
+      <button class="it out" id="logoutBtn"><span class="ms">logout</span><span class="lb">Logout</span><span class="map">logout()</span></button>
+    </div>
+  </aside>
+  <div class="bd" id="bd"></div>
+
+  <!-- ═══════════════════════ MAIN ═══════════════════════ -->
+  <div class="mainarea">
+    <header class="hd">
+      <button class="hb" id="hb" aria-label="Toggle menu"><span class="bars"><i></i><i></i><i></i></span></button>
+      <div class="ttl">
+        <div class="crumb"><span>Dashboard</span><span class="ms">chevron_right</span><b id="crumb">Daily Progress Report</b><span class="map">getPageSubtitle()</span></div>
+        <h1 id="ptitle">Employee DPR Dashboard <span class="map">getPageTitle()</span></h1>
+        <div class="wel">Welcome, <b>Adan</b>. Wishing you a great day ahead. <span class="map">isDashboardRoute()</span></div>
+      </div>
+      <div class="hr">
+        <div class="srch"><span class="ms">search</span><input id="q" type="text" placeholder="Search tasks, forms, people…" autocomplete="off"><span class="kbd">Ctrl K</span><span class="map">new — optional</span></div>
+        <button class="ib theme" id="themeBtn" aria-label="Theme"><span class="ms">dark_mode</span></button>
+        <div class="wrap">
+          <button class="ib bell" id="bellBtn" aria-label="Notifications" aria-expanded="false"><span class="ms">notifications</span><span class="badge" id="badge">4</span></button>
+          <div class="dd" id="notifDd" hidden>
+            <div class="ddh"><h3>Notifications<small id="ncount">(4)</small></h3>
+              <button class="mini" title="Refresh"><span class="ms">refresh</span></button>
+              <button class="mini" title="Mark all as read"><span class="ms">done_all</span></button>
+              <button class="mini danger" title="Clear all"><span class="ms">delete_sweep</span></button>
+              <span class="map">refresh / markAllAsRead / clearAll</span></div>
+            <div class="nl" id="nl">
+              <div class="ni unread" style="--i:0;--kc:var(--a3)"><span class="ic"><span class="ms">campaign</span></span>
+                <div class="tx"><p>Eid Al Adha holiday circular has been published</p>
+                  <div class="meta"><span>2 hours ago</span><span class="npill"><span class="ms">campaign</span>Notice</span></div></div>
+                <div class="act"><button class="mini" title="Mark as read"><span class="ms">check</span></button><button class="mini danger" title="Delete"><span class="ms">close</span></button></div>
+                <span class="udot"></span></div>
+              <div class="ni unread" style="--i:1;--kc:var(--a1)"><span class="ic"><span class="ms">check_circle</span></span>
+                <div class="tx"><p>Your emergency leave request was approved by HOD</p><div class="meta"><span>Yesterday</span></div></div>
+                <div class="act"><button class="mini" title="Mark as read"><span class="ms">check</span></button><button class="mini danger" title="Delete"><span class="ms">close</span></button></div>
+                <span class="udot"></span></div>
+              <div class="ni unread" style="--i:2;--kc:var(--a5)"><span class="ic"><span class="ms">assignment_ind</span></span>
+                <div class="tx"><p>New task assigned: WIR report access review</p><div class="meta"><span>2 days ago</span></div></div>
+                <div class="act"><button class="mini" title="Mark as read"><span class="ms">check</span></button><button class="mini danger" title="Delete"><span class="ms">close</span></button></div>
+                <span class="udot"></span></div>
+              <div class="ni unread" style="--i:3;--kc:var(--a2)"><span class="ic"><span class="ms">edit_note</span></span>
+                <div class="tx"><p>2 DPR logs are missing a remark (23 and 24 Sep)</p><div class="meta"><span>3 days ago</span></div></div>
+                <div class="act"><button class="mini" title="Mark as read"><span class="ms">check</span></button><button class="mini danger" title="Delete"><span class="ms">close</span></button></div>
+                <span class="udot"></span></div>
+              <div class="ni" style="--i:4;--kc:var(--ink4)"><span class="ic"><span class="ms">notifications</span></span>
+                <div class="tx"><p>Portal maintenance completed successfully</p><div class="meta"><span>18 Sep</span></div></div>
+                <div class="act"><button class="mini danger" title="Delete"><span class="ms">close</span></button></div></div>
+            </div>
+            <div class="ddf"><button>Open all notifications</button></div>
+          </div>
+        </div>
+        <span class="vd"></span>
+        <div class="wrap">
+          <button class="pf" id="pfBtn" aria-expanded="false"><span class="av">AO</span>
+            <span class="nm"><b>Adan Onaparambil</b><span>IT Application Dev · OM</span></span><span class="ms chev">expand_more</span></button>
+          <div class="dd prof" id="profDd" hidden>
+            <div class="pinfo"><span class="av">AO</span><div><h4>Adan Onaparambil</h4><p>IT Application Dev · Muscat</p><p class="map">userProfile.name / role / avatar</p></div></div>
+            <div class="pm">
+              <button class="it"><span class="ms">manage_accounts</span><span class="lb">My Profile</span></button>
+              <button class="it"><span class="ms">tune</span><span class="lb">Switch to DPR-only view</span><span class="map">isDPROnlyMode</span></button>
+              <button class="it out"><span class="ms">logout</span><span class="lb">Logout</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="panel" style="--d:0">
+        <h2><span class="ms">tune</span>Try the shell</h2>
+        <div class="ctrls">
+          <button class="tg" id="tRail" aria-pressed="false"><span class="ms">view_sidebar</span>Collapse to rail</button>
+          <button class="tg" id="tDpr" aria-pressed="false"><span class="ms">task_alt</span>DPR-only mode</button>
+          <button class="tg" id="tDark" aria-pressed="false"><span class="ms">dark_mode</span>Dark theme</button>
+          <button class="tg" id="tNew"><span class="ms">notification_add</span>Simulate a new notification</button>
+          <button class="tg" id="tMap" aria-pressed="false"><span class="ms">schema</span>Show mapping to current shell</button>
+        </div>
+        <div class="mapnote">Each <code>blue tag</code> names the property, method, route or menu-master id in <code>layout.html</code> / <code>layout.ts</code> that already drives that element. Nothing is new except the search box, which is marked optional. Dark theme here uses the artifact contract; in the port the tokens sit under <code>body.dark-theme</code>, which <code>ThemeService</code> already toggles.</div>
+      </div>
+
+      <div class="ghost">
+        <div class="ghero"><div><div style="font:600 11px var(--fh);letter-spacing:.04em;text-transform:uppercase;color:var(--brand)">My DPR · live work session</div>
+          <h1>Good afternoon, Adan</h1><p>Saturday, 26 September 2026 · Corporate HQ (OM) · IT Systems · 9 h expected today</p></div>
+          <div class="gring">7:21</div></div>
+        <div class="gk"><div><small>Logged today</small><b>7.35 h</b></div><div><small>This week</small><b>56.33 h</b></div><div><small>Open work</small><b>5 tasks</b></div><div><small>Month achieved</small><b>105.3%</b></div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var app = document.getElementById("app");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var mobile = function () { return window.matchMedia("(max-width: 900px)").matches; };
+
+  // ── active indicator: slides to whichever item is active ─────────────────
+  var ind = document.getElementById("ind"), nav = document.getElementById("nav");
+  function moveInd() {
+    var on = nav.querySelector(".it.on");
+    if (!on || app.classList.contains("rail")) { ind.classList.remove("show"); return; }
+    var r = on.getBoundingClientRect(), n = nav.getBoundingClientRect();
+    ind.style.top = (r.top - n.top + nav.scrollTop + (r.height - 22) / 2) + "px";
+    ind.classList.add("show");
+  }
+  requestAnimationFrame(function () { setTimeout(moveInd, 60); });
+  nav.addEventListener("scroll", moveInd);
+  window.addEventListener("resize", moveInd);
+
+  // ── item activation + header title swap ──────────────────────────────────
+  var h1 = document.getElementById("ptitle"), crumb = document.getElementById("crumb");
+  nav.addEventListener("click", function (e) {
+    var it = e.target.closest(".it");
+    if (!it) { return; }
+    if (it.hasAttribute("data-grp")) {
+      var grp = it.closest(".grp"), open = !grp.classList.contains("open");
+      grp.classList.toggle("open", open);
+      it.setAttribute("aria-expanded", open ? "true" : "false");
+      setTimeout(moveInd, 340);
+      return;
+    }
+    if (it.hasAttribute("data-ext") || it.id === "logoutBtn") { return; }
+    nav.querySelectorAll(".it.on").forEach(function (x) { x.classList.remove("on"); });
+    it.classList.add("on");
+    moveInd();
+    var t = it.getAttribute("data-title"), c = it.getAttribute("data-crumb");
+    if (t) {
+      h1.classList.add("sw");
+      setTimeout(function () { h1.firstChild.textContent = t + " "; crumb.textContent = c || ""; h1.classList.remove("sw"); }, reduce ? 0 : 180);
+    }
+    if (mobile()) { app.classList.remove("drawer"); }
+  });
+
+  // ── hamburger: rail on desktop, drawer on mobile ─────────────────────────
+  var tRail = document.getElementById("tRail");
+  function setRail(on) { app.classList.toggle("rail", on); tRail.setAttribute("aria-pressed", on ? "true" : "false"); setTimeout(moveInd, 340); }
+  document.getElementById("hb").addEventListener("click", function () {
+    if (mobile()) { app.classList.toggle("drawer"); } else { setRail(!app.classList.contains("rail")); }
+  });
+  document.getElementById("bd").addEventListener("click", function () { app.classList.remove("drawer"); });
+  tRail.addEventListener("click", function () { setRail(!app.classList.contains("rail")); });
+
+  // ── DPR-only mode ────────────────────────────────────────────────────────
+  var tDpr = document.getElementById("tDpr"), normal = document.getElementById("normalMenu"), dpr = document.getElementById("dprMenu");
+  tDpr.addEventListener("click", function () {
+    var on = normal.hidden = !normal.hidden;
+    dpr.hidden = !on;
+    tDpr.setAttribute("aria-pressed", on ? "true" : "false");
+    var first = (on ? dpr : normal).querySelector(".it.on");
+    if (first) { first.click(); } else { moveInd(); }
+  });
+
+  // ── theme ────────────────────────────────────────────────────────────────
+  var root = document.documentElement, tDark = document.getElementById("tDark"), themeBtn = document.getElementById("themeBtn");
+  function isDark() { var t = root.getAttribute("data-theme"); return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; }
+  function paint() { var d = isDark(); themeBtn.querySelector(".ms").textContent = d ? "light_mode" : "dark_mode"; tDark.setAttribute("aria-pressed", d ? "true" : "false"); }
+  function flip() { root.setAttribute("data-theme", isDark() ? "light" : "dark"); themeBtn.classList.remove("flip"); void themeBtn.offsetWidth; themeBtn.classList.add("flip"); paint(); }
+  themeBtn.addEventListener("click", flip); tDark.addEventListener("click", flip); paint();
+
+  // ── dropdowns ────────────────────────────────────────────────────────────
+  var bellBtn = document.getElementById("bellBtn"), notifDd = document.getElementById("notifDd");
+  var pfBtn = document.getElementById("pfBtn"), profDd = document.getElementById("profDd");
+  function closeAll() { notifDd.hidden = true; profDd.hidden = true; bellBtn.setAttribute("aria-expanded", "false"); pfBtn.setAttribute("aria-expanded", "false"); }
+  bellBtn.addEventListener("click", function (e) { e.stopPropagation(); var o = notifDd.hidden; closeAll(); notifDd.hidden = !o; bellBtn.setAttribute("aria-expanded", o ? "true" : "false"); });
+  pfBtn.addEventListener("click", function (e) { e.stopPropagation(); var o = profDd.hidden; closeAll(); profDd.hidden = !o; pfBtn.setAttribute("aria-expanded", o ? "true" : "false"); });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".wrap")) { closeAll(); } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeAll(); app.classList.remove("drawer"); } });
+
+  // per-item mark-read / delete inside the dropdown
+  var nl = document.getElementById("nl"), badge = document.getElementById("badge"), ncount = document.getElementById("ncount");
+  function recount() {
+    var n = nl.querySelectorAll(".ni.unread").length;
+    badge.textContent = n; ncount.textContent = "(" + n + ")";
+    badge.hidden = n === 0; badge.classList.toggle("urg", n > 5);
+  }
+  nl.addEventListener("click", function (e) {
+    var b = e.target.closest(".mini"); var ni = e.target.closest(".ni");
+    if (!ni) { return; }
+    if (b && b.title === "Delete") { ni.style.transition = "opacity .2s,transform .2s"; ni.style.opacity = "0"; ni.style.transform = "translateX(24px)"; setTimeout(function () { ni.remove(); recount(); }, 200); return; }
+    ni.classList.remove("unread"); var d = ni.querySelector(".udot"); if (d) { d.remove(); }
+    var m = ni.querySelector('.mini[title="Mark as read"]'); if (m) { m.remove(); }
+    recount();
+  });
+  notifDd.querySelector('.mini[title="Mark all as read"]').addEventListener("click", function () {
+    nl.querySelectorAll(".ni.unread").forEach(function (ni) { ni.classList.remove("unread"); ni.querySelector(".udot")?.remove(); ni.querySelector('.mini[title="Mark as read"]')?.remove(); });
+    recount();
+  });
+  notifDd.querySelector('.mini[title="Clear all"]').addEventListener("click", function () { nl.innerHTML = '<div class="ni" style="justify-content:center;color:var(--ink3);font-size:13px;padding:22px">No notifications</div>'; recount(); });
+
+  // simulate a new notification arriving: bell shakes, badge pops, item slides in
+  document.getElementById("tNew").addEventListener("click", function () {
+    var msgs = ["Your planned leave moved to the IT step", "HOD approved your DPR log for 25 Sep", "Reminder: DPR not filed yet today", "New notice: Safety refresher training on Monday"];
+    var msg = msgs[Math.floor(Math.random() * msgs.length)];
+    var ni = document.createElement("div");
+    ni.className = "ni unread"; ni.style.setProperty("--kc", "var(--a6)"); ni.style.setProperty("--i", "0");
+    ni.innerHTML = '<span class="ic"><span class="ms">notifications_active</span></span><div class="tx"><p></p><div class="meta"><span>Just now</span></div></div>' +
+      '<div class="act"><button class="mini" title="Mark as read"><span class="ms">check</span></button><button class="mini danger" title="Delete"><span class="ms">close</span></button></div><span class="udot"></span>';
+    ni.querySelector("p").textContent = msg;
+    if (nl.querySelector(".ni") && !nl.querySelector(".ni.unread") && nl.children.length === 1 && /No notifications/.test(nl.textContent)) { nl.innerHTML = ""; }
+    nl.prepend(ni);
+    recount();
+    badge.classList.remove("badge"); void badge.offsetWidth; badge.classList.add("badge");
+    bellBtn.classList.remove("ring"); void bellBtn.offsetWidth; bellBtn.classList.add("ring");
+  });
+
+  // ── mapping toggle ───────────────────────────────────────────────────────
+  var tMap = document.getElementById("tMap");
+  tMap.addEventListener("click", function () { var on = document.body.classList.toggle("showmap"); tMap.setAttribute("aria-pressed", on ? "true" : "false"); setTimeout(moveInd, 50); });
+
+  // Ctrl+K focuses search, like the reference
+  document.addEventListener("keydown", function (e) { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); document.getElementById("q").focus(); } });
+})();
+</script>

@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DPR · Employee Dashboard</title>
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       TOKENS
+    ═══════════════════════════════════════════════════ */
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface2:    #1c2330;
+      --surface3:    #21262d;
+      --border:      rgba(255,255,255,0.07);
+      --border2:     rgba(255,255,255,0.13);
+
+      --teal:        #2dd4bf;
+      --teal-d:      #0f9488;
+      --indigo:      #818cf8;
+      --indigo-d:    #4f46e5;
+      --amber:       #fbbf24;
+      --amber-d:     #d97706;
+      --rose:        #f87171;
+      --rose-d:      #dc2626;
+      --sky:         #38bdf8;
+      --sky-d:       #0369a1;
+      --green:       #4ade80;
+      --green-d:     #16a34a;
+      --purple:      #c084fc;
+      --purple-d:    #7c3aed;
+
+      --g-teal:      linear-gradient(135deg,#2dd4bf,#138271);
+      --g-indigo:    linear-gradient(135deg,#818cf8,#4f46e5);
+      --g-amber:     linear-gradient(135deg,#fbbf24,#d97706);
+      --g-rose:      linear-gradient(135deg,#f87171,#dc2626);
+      --g-sky:       linear-gradient(135deg,#38bdf8,#0369a1);
+      --g-green:     linear-gradient(135deg,#4ade80,#16a34a);
+      --g-purple:    linear-gradient(135deg,#c084fc,#7c3aed);
+      --g-brand:     linear-gradient(135deg,#2dd4bf 0%,#818cf8 100%);
+
+      --text:        #e6edf3;
+      --text-2:      #8b949e;
+      --text-3:      #6e7681;
+
+      --r-sm:        10px;
+      --r-md:        16px;
+      --r-lg:        22px;
+
+      --sh:          0 4px 24px rgba(0,0,0,0.45);
+      --sh-glow:     0 0 0 1px rgba(45,212,191,0.2), 0 8px 32px rgba(45,212,191,0.15);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       LAYOUT SHELL
+    ═══════════════════════════════════════════════════ */
+    .shell {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      grid-template-rows: 56px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topnav-logo {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--g-brand);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .topnav-name {
+      font-weight: 700;
+      font-size: 15px;
+      background: var(--g-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .topnav-divider { flex: 1; }
+
+    .topnav-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      font-size: 12px; color: var(--text-2);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .topnav-chip:hover { background: var(--surface2); }
+    .topnav-chip .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(0.8); }
+    }
+
+    .topnav-icon-btn {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-2); cursor: pointer; position: relative;
+      transition: background 0.2s, color 0.2s;
+    }
+    .topnav-icon-btn:hover { background: var(--surface2); color: var(--text); }
+    .topnav-badge {
+      position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--rose);
+      font-size: 9px; font-weight: 700; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--surface);
+    }
+
+    .topnav-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--g-brand);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0; gap: 4px;
+    }
+
+    .sb-btn {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-size: 16px; position: relative;
+    }
+    .sb-btn:hover { background: var(--surface3); color: var(--text); }
+    .sb-btn.active {
+      background: rgba(45,212,191,0.12);
+      color: var(--teal);
+    }
+    .sb-btn.active::before {
+      content: '';
+      position: absolute; left: 0; top: 8px; bottom: 8px;
+      width: 3px; border-radius: 0 3px 3px 0;
+      background: var(--teal);
+    }
+    .sb-spacer { flex: 1; }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      overflow-y: auto;
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       CARDS
+    ═══════════════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--sh);
+    }
+
+    .card-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px 0;
+    }
+    .card-title {
+      font-size: 13px; font-weight: 600; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .card-title-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .card-action {
+      margin-left: auto;
+      font-size: 11px; color: var(--teal); cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .card-action:hover { text-decoration: underline; }
+
+    /* ═══════════════════════════════════════════════════
+       SECTION LABEL
+    ═══════════════════════════════════════════════════ */
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       ROW 1 — HERO
+    ═══════════════════════════════════════════════════ */
+    .hero-card {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 28px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* decorative glow blobs */
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: -60px;
+      width: 250px; height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45,212,191,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; right: 80px;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(129,140,248,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Ring clock */
+    .ring-wrap {
+      position: relative;
+      width: 110px; height: 110px; flex-shrink: 0;
+    }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+    .ring-prog  {
+      fill: none; stroke-width: 10;
+      stroke-linecap: round;
+      stroke: url(#ringGrad);
+      stroke-dasharray: 314;
+      stroke-dashoffset: 78; /* ≈75% */
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .ring-inner {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0;
+    }
+    .ring-hm   { font-size: 20px; font-weight: 800; line-height: 1; }
+    .ring-sub  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+    /* Hero middle */
+    .hero-mid { min-width: 0; }
+    .hero-title {
+      font-size: 22px; font-weight: 800;
+      background: var(--g-brand);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .hero-date { font-size: 12px; color: var(--text-3); margin-bottom: 14px; }
+
+    .chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      font-size: 12px; color: var(--text-2);
+      background: var(--surface3);
+      white-space: nowrap;
+    }
+    .chip i { font-size: 11px; }
+    .chip.run  { border-color: rgba(129,140,248,0.4); color: var(--indigo); background: rgba(129,140,248,0.08); }
+    .chip.brk  { border-color: rgba(56,189,248,0.4);  color: var(--sky);    background: rgba(56,189,248,0.08); }
+    .chip.trv  { border-color: rgba(251,191,36,0.4);  color: var(--amber);  background: rgba(251,191,36,0.08); }
+    .chip.warn { border-color: rgba(248,113,113,0.4); color: var(--rose);   background: rgba(248,113,113,0.08); }
+    .chip.ok   { border-color: rgba(74,222,128,0.4);  color: var(--green);  background: rgba(74,222,128,0.08); }
+
+    /* Category split */
+    .split-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+    .split-row  { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .split-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .split-lbl  { flex: 1; color: var(--text-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .split-val  { font-weight: 600; }
+
+    /* Hero right — month total */
+    .hero-right {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+      flex-shrink: 0;
+    }
+    .month-big {
+      text-align: right;
+    }
+    .month-num {
+      font-size: 36px; font-weight: 800;
+      background: var(--g-teal);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .month-label { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    .hero-quote {
+      max-width: 220px;
+      text-align: right;
+      font-size: 11px; color: var(--text-3);
+      font-style: italic;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .hero-quote cite { color: var(--text-2); font-style: normal; font-weight: 500; }
+
+    /* ═══════════════════════════════════════════════════
+       ROW 2 — KPI TILES
+    ═══════════════════════════════════════════════════ */
+    .tiles-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 18px 18px 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      position: relative; overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .tile:hover { transform: translateY(-2px); border-color: var(--border2); }
+    .tile::after {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .tile-t { color: var(--teal); }
+    .tile-t::after { background: var(--g-teal); }
+    .tile-i { color: var(--indigo); }
+    .tile-i::after { background: var(--g-indigo); }
+    .tile-r { color: var(--rose); }
+    .tile-r::after { background: var(--g-rose); }
+    .tile-a { color: var(--amber); }
+    .tile-a::after { background: var(--g-amber); }
+
+    .tile-icon-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .tile-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .tile-t .tile-icon { background: rgba(45,212,191,0.12); color: var(--teal); }
+    .tile-i .tile-icon { background: rgba(129,140,248,0.12); color: var(--indigo); }
+    .tile-r .tile-icon { background: rgba(248,113,113,0.12); color: var(--rose); }
+    .tile-a .tile-icon { background: rgba(251,191,36,0.12);  color: var(--amber); }
+
+    .tile-trend {
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 10px;
+    }
+    .trend-up   { color: var(--green);  background: rgba(74,222,128,0.12); }
+    .trend-dn   { color: var(--rose);   background: rgba(248,113,113,0.12); }
+    .trend-fl   { color: var(--text-2); background: var(--surface3); }
+
+    .tile-value { font-size: 28px; font-weight: 800; line-height: 1; }
+    .tile-name  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .tile-sub   { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    /* ═══════════════════════════════════════════════════
+       ROW 3 — TODAY TIMELINE + ACTIVE TASK
+    ═══════════════════════════════════════════════════ */
+    .today-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 14px;
+    }
+
+    /* Timeline card */
+    .timeline-card { padding: 20px; }
+    .timeline-bar-wrap { margin: 16px 0 8px; position: relative; }
+    .timeline-track {
+      height: 36px; border-radius: 8px;
+      background: var(--surface3);
+      position: relative; overflow: hidden;
+      display: flex;
+    }
+    .tl-seg {
+      height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.85);
+      overflow: hidden; white-space: nowrap;
+      transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+      position: absolute; top: 0; border-radius: 4px;
+    }
+    .tl-seg.running { animation: shimmer 2s linear infinite; }
+    @keyframes shimmer {
+      0%   { filter: brightness(1); }
+      50%  { filter: brightness(1.25); }
+      100% { filter: brightness(1); }
+    }
+
+    .tl-marks {
+      display: flex; justify-content: space-between;
+      padding: 0 2px;
+      font-size: 10px; color: var(--text-3);
+    }
+
+    .tl-legend {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-top: 12px;
+    }
+    .tl-leg-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-2);
+    }
+    .tl-leg-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    .gap-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 8px;
+      background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.25);
+      color: var(--amber); font-size: 11px;
+      margin-top: 10px;
+    }
+
+    /* Active task card */
+    .active-card {
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    .active-title-row {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .active-pill {
+      flex-shrink: 0;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .pill-run    { background: rgba(129,140,248,0.2); color: var(--indigo); border: 1px solid rgba(129,140,248,0.4); }
+    .pill-idle   { background: rgba(139,148,158,0.15); color: var(--text-2); border: 1px solid var(--border2); }
+    .pill-paused { background: rgba(251,191,36,0.15);  color: var(--amber); border: 1px solid rgba(251,191,36,0.35); }
+
+    .active-task-name  { font-size: 14px; font-weight: 700; line-height: 1.4; }
+    .active-task-sub   { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+    .active-progress-row { display: flex; align-items: center; gap: 10px; }
+    .progress-bar-bg {
+      flex: 1; height: 7px; border-radius: 4px;
+      background: var(--surface3);
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 4px;
+      background: var(--g-indigo);
+      transition: width 1s ease;
+    }
+    .progress-pct { font-size: 12px; font-weight: 700; color: var(--indigo); }
+
+    .active-stats {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 10px;
+    }
+    .astat {
+      background: var(--surface3);
+      border-radius: var(--r-sm);
+      padding: 10px;
+      text-align: center;
+    }
+    .astat-val { font-size: 16px; font-weight: 800; }
+    .astat-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+    .live-timer {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      border-radius: var(--r-sm);
+      background: rgba(129,140,248,0.08);
+      border: 1px solid rgba(129,140,248,0.25);
+    }
+    .live-timer-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--indigo);
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+    .live-timer-val { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--indigo); letter-spacing: 0.04em; }
+    .live-timer-lbl { font-size: 11px; color: var(--text-3); margin-left: auto; }
+
+    /* ═══════════════════════════════════════════════════
+       ROW 4 — WEEK BARS + CALENDAR
+    ═══════════════════════════════════════════════════ */
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Week bars */
+    .week-card { padding: 20px; }
+    .week-bars-wrap {
+      position: relative;
+      height: 160px;
+      display: flex; align-items: flex-end; gap: 6px;
+      padding: 0 0 20px;
+      margin-top: 16px;
+    }
+    .week-bar-col {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center;
+      height: 100%; justify-content: flex-end; gap: 4px;
+      position: relative;
+    }
+    .week-bar {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      transition: height 1s cubic-bezier(0.4,0,0.2,1);
+      min-height: 4px;
+    }
+    .week-bar.normal { background: rgba(45,212,191,0.4); }
+    .week-bar.today  { background: var(--g-teal); }
+    .week-bar.low    { background: rgba(248,113,113,0.3); }
+    .week-bar.leave  { background: rgba(56,189,248,0.25); }
+
+    .week-bar-val {
+      font-size: 10px; font-weight: 600; color: var(--text-2);
+      white-space: nowrap;
+    }
+    .week-bar-day {
+      position: absolute; bottom: -18px;
+      font-size: 10px; color: var(--text-3);
+      left: 50%; transform: translateX(-50%);
+      white-space: nowrap;
+    }
+    .week-bar-day.today { color: var(--teal); font-weight: 700; }
+
+    /* target line */
+    .target-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: repeating-linear-gradient(90deg, var(--amber) 0, var(--amber) 4px, transparent 4px, transparent 8px);
+      pointer-events: none;
+    }
+    .target-line-label {
+      position: absolute; right: 0;
+      top: -10px;
+      font-size: 9px; color: var(--amber);
+      font-weight: 600;
+    }
+
+    .week-notes {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 6px; margin-top: 20px;
+    }
+    .week-note-item {
+      background: var(--surface3);
+      border-radius: var(--r-sm);
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .wn-val { font-size: 13px; font-weight: 700; }
+    .wn-key { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+    /* Calendar heatmap */
+    .cal-card { padding: 20px; }
+    .cal-header-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .cal-month-label { font-size: 14px; font-weight: 700; }
+    .cal-nav-btn {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: var(--surface3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-2); cursor: pointer; font-size: 12px;
+    }
+    .cal-dows {
+      display: grid; grid-template-columns: repeat(7,1fr);
+      text-align: center; font-size: 10px; color: var(--text-3);
+      margin-bottom: 4px;
+    }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7,1fr);
+      gap: 3px;
+    }
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      font-size: 10px; cursor: pointer;
+      position: relative;
+      transition: transform 0.15s;
+    }
+    .cal-cell:hover { transform: scale(1.1); z-index: 2; }
+    .cal-cell.empty { background: transparent; pointer-events: none; }
+    .cal-cell.future { background: var(--surface3); color: var(--text-3); opacity: 0.4; }
+    .cal-cell.off    { background: var(--surface3); color: var(--text-3); }
+    .cal-cell.miss   { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.2); color: var(--rose); }
+    .cal-cell.leave  { background: rgba(56,189,248,0.12); color: var(--sky); }
+    .cal-cell.low    { background: rgba(45,212,191,0.12); }
+    .cal-cell.med    { background: rgba(45,212,191,0.28); }
+    .cal-cell.high   { background: rgba(45,212,191,0.55); }
+    .cal-cell.full   { background: var(--g-teal); color: #fff; }
+    .cal-cell.today-cell { outline: 2px solid var(--teal); outline-offset: 1px; }
+    .cal-day-num { font-size: 10px; font-weight: 600; }
+    .cal-day-h   { font-size: 8px; opacity: 0.75; margin-top: 1px; }
+
+    .cal-legend {
+      display: flex; align-items: center; gap: 4px;
+      justify-content: flex-end; margin-top: 8px;
+      font-size: 10px; color: var(--text-3);
+    }
+    .cal-leg-box {
+      width: 11px; height: 11px; border-radius: 3px;
+    }
+
+    .cal-stats {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 6px; margin-top: 12px;
+    }
+    .cal-stat-item {
+      background: var(--surface3); border-radius: var(--r-sm);
+      padding: 8px 10px;
+    }
+    .cs-val { font-size: 13px; font-weight: 700; }
+    .cs-key { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+    /* ═══════════════════════════════════════════════════
+       ROW 5 — MY WORK: TASKS + EST VS ACTUAL
+    ═══════════════════════════════════════════════════ */
+    .work-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Task status card */
+    .tasks-card { padding: 20px; }
+    .task-band {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface3);
+      border-radius: var(--r-sm);
+      padding: 10px 14px;
+      margin: 14px 0;
+      font-size: 12px;
+    }
+    .task-band-count { font-weight: 700; }
+    .task-band-label { color: var(--text-2); }
+
+    .task-stat-rows { display: flex; flex-direction: column; gap: 6px; }
+    .task-stat-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface3);
+      border-radius: var(--r-sm);
+      transition: background 0.2s;
+    }
+    .task-stat-row:hover { background: var(--surface2); }
+    .task-stat-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0;
+    }
+    .tsi-warn { background: rgba(248,113,113,0.12); color: var(--rose); }
+    .tsi-run  { background: rgba(129,140,248,0.12); color: var(--indigo); }
+    .tsi-pau  { background: rgba(251,191,36,0.12);  color: var(--amber); }
+    .tsi-ns   { background: rgba(139,148,158,0.12); color: var(--text-2); }
+    .tsi-all  { background: rgba(45,212,191,0.12);  color: var(--teal); }
+
+    .tsr-text { flex: 1; }
+    .tsr-label { font-size: 13px; font-weight: 600; }
+    .tsr-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .tsr-count {
+      font-size: 18px; font-weight: 800;
+      min-width: 24px; text-align: right;
+    }
+    .tsr-count.warn { color: var(--rose); }
+    .tsr-count.run  { color: var(--indigo); }
+    .tsr-count.pau  { color: var(--amber); }
+    .tsr-count.ns   { color: var(--text-2); }
+    .tsr-count.all  { color: var(--teal); }
+
+    /* open tasks mini list */
+    .open-tasks-list {
+      margin-top: 14px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .open-task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      background: var(--surface3); border-radius: var(--r-sm);
+      cursor: pointer; transition: background 0.2s;
+    }
+    .open-task-item:hover { background: var(--surface2); }
+    .oti-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .oti-title { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .oti-date  { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+    .oti-overdue { color: var(--rose); font-weight: 600; }
+
+    /* Est vs Actual */
+    .est-card { padding: 20px; }
+    .est-bars-wrap {
+      display: flex; align-items: flex-end; gap: 8px;
+      height: 150px; margin: 16px 0;
+      position: relative;
+    }
+    .est-pair { display: flex; align-items: flex-end; gap: 3px; flex: 1; }
+    .est-bar-col {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      height: 100%; justify-content: flex-end; gap: 4px;
+    }
+    .est-bar {
+      width: 100%; border-radius: 6px 6px 0 0;
+      transition: height 1s ease;
+    }
+    .est-bar.est-col   { background: rgba(139,148,158,0.25); }
+    .est-bar.act-col   { background: var(--g-teal); }
+    .est-bar.act-today { background: var(--g-indigo); }
+    .est-bar-val { font-size: 10px; font-weight: 600; color: var(--text-2); }
+    .est-bar-lbl { font-size: 9px; color: var(--text-3); text-align: center; }
+
+    .est-notes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
+    .est-note-item { font-size: 12px; color: var(--text-2); }
+    .est-note-item strong { color: var(--text); }
+
+    /* top task table */
+    .top-tasks-table { margin-top: 14px; }
+    .ttt-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .ttt-row:last-child { border-bottom: none; }
+    .ttt-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ttt-est  { color: var(--text-3); text-align: right; }
+    .ttt-act  { font-weight: 700; text-align: right; }
+    .ttt-act.over { color: var(--rose); }
+    .ttt-act.ok   { color: var(--teal); }
+
+    /* ═══════════════════════════════════════════════════
+       ROW 6 — MY FORMS + MONTHLY REVIEW
+    ═══════════════════════════════════════════════════ */
+    .comms-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Forms card */
+    .forms-card { padding: 20px; }
+    .form-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .form-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface3); border-radius: var(--r-sm);
+      cursor: pointer; transition: background 0.2s;
+    }
+    .form-row:hover { background: var(--surface2); }
+    .form-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .form-text { flex: 1; min-width: 0; }
+    .form-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .form-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .form-badge {
+      padding: 3px 9px; border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .fb-pend { background: rgba(251,191,36,0.15); color: var(--amber); border: 1px solid rgba(251,191,36,0.3); }
+    .fb-appr { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+    .fb-rejt { background: rgba(248,113,113,0.12); color: var(--rose); border: 1px solid rgba(248,113,113,0.3); }
+    .fb-resb { background: rgba(192,132,252,0.12); color: var(--purple); border: 1px solid rgba(192,132,252,0.3); }
+
+    .new-form-btn {
+      width: 100%; margin-top: 12px;
+      padding: 10px;
+      border-radius: var(--r-sm);
+      background: rgba(45,212,191,0.06);
+      border: 1px dashed rgba(45,212,191,0.3);
+      color: var(--teal); font-size: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .new-form-btn:hover { background: rgba(45,212,191,0.12); }
+
+    /* Monthly review card */
+    .review-card { padding: 20px; }
+    .review-months {
+      display: flex; gap: 6px; margin: 14px 0;
+      overflow-x: auto; padding-bottom: 4px;
+    }
+    .review-month-chip {
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      background: var(--surface3); border: 1px solid var(--border);
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .review-month-chip:hover { border-color: var(--border2); }
+    .review-month-chip.active { background: rgba(45,212,191,0.12); border-color: rgba(45,212,191,0.4); color: var(--teal); font-weight: 700; }
+
+    .review-status-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface3); border-radius: var(--r-sm);
+      margin-bottom: 12px;
+    }
+    .rst-icon { font-size: 18px; }
+    .rst-text { flex: 1; }
+    .rst-title { font-size: 13px; font-weight: 600; }
+    .rst-sub   { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .rst-badge {
+      padding: 4px 10px; border-radius: 10px;
+      font-size: 11px; font-weight: 700;
+    }
+    .rb-pend { background: rgba(251,191,36,0.15); color: var(--amber); }
+    .rb-sub  { background: rgba(56,189,248,0.15);  color: var(--sky); }
+    .rb-appr { background: rgba(74,222,128,0.12);  color: var(--green); }
+
+    .review-kpis {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+    }
+    .rkpi {
+      background: var(--surface3); border-radius: var(--r-sm);
+      padding: 10px; text-align: center;
+    }
+    .rkpi-val { font-size: 18px; font-weight: 800; }
+    .rkpi-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+    .review-scores {
+      margin-top: 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .score-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px;
+    }
+    .score-label { width: 110px; color: var(--text-2); flex-shrink: 0; }
+    .score-bar-bg {
+      flex: 1; height: 6px; border-radius: 3px;
+      background: var(--surface3);
+    }
+    .score-bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 1s ease;
+    }
+    .score-val { width: 28px; text-align: right; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════
+       FLOATING AI BUTTON
+    ═══════════════════════════════════════════════════ */
+    .ai-fab {
+      position: fixed; bottom: 28px; right: 28px;
+      width: 52px; height: 52px; border-radius: 16px;
+      background: var(--g-brand);
+      box-shadow: 0 4px 20px rgba(45,212,191,0.4);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 200;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ai-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(45,212,191,0.55); }
+    .ai-fab i { font-size: 20px; color: #fff; }
+
+    /* ═══════════════════════════════════════════════════
+       SCROLLBAR STYLING
+    ═══════════════════════════════════════════════════ */
+    ::-webkit-scrollbar       { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* ═══════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .tiles-row  { grid-template-columns: repeat(2,1fr); }
+      .today-grid,
+      .time-grid,
+      .work-grid,
+      .comms-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .hero-card { grid-template-columns: auto 1fr; }
+      .hero-right { display: none; }
+      .tiles-row { grid-template-columns: 1fr 1fr; }
+      .main { padding: 14px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="shell">
+
+  <!-- ══════════════════════════════ TOP NAV ══════════════════════════════ -->
+  <nav class="topnav">
+    <div class="topnav-logo">A</div>
+    <span class="topnav-name">Adrak Portal</span>
+    <span style="font-size:12px;color:var(--text-3);margin-left:4px;">/</span>
+    <span style="font-size:12px;color:var(--text-2);margin-left:4px;">DPR Dashboard</span>
+
+    <div class="topnav-divider"></div>
+
+    <div class="topnav-chip">
+      <span class="dot"></span>
+      Timer running · 01:47
+    </div>
+
+    <div class="topnav-icon-btn">
+      <i class="fas fa-bell"></i>
+      <span class="topnav-badge">3</span>
+    </div>
+    <div class="topnav-icon-btn">
+      <i class="fas fa-robot"></i>
+    </div>
+    <div class="topnav-avatar">AO</div>
+  </nav>
+
+  <!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
+  <aside class="sidebar">
+    <button class="sb-btn" title="Dashboard Home"><i class="fas fa-house"></i></button>
+    <button class="sb-btn active" title="My DPR Dashboard"><i class="fas fa-chart-line"></i></button>
+    <button class="sb-btn" title="Log Time"><i class="fas fa-clock"></i></button>
+    <button class="sb-btn" title="My Tasks"><i class="fas fa-list-check"></i></button>
+    <button class="sb-btn" title="Monthly DPR"><i class="fas fa-file-lines"></i></button>
+    <button class="sb-btn" title="Past Reports"><i class="fas fa-folder-open"></i></button>
+    <div class="sb-spacer"></div>
+    <button class="sb-btn" title="Profile"><i class="fas fa-user"></i></button>
+    <button class="sb-btn" title="Notifications"><i class="fas fa-bell"></i></button>
+  </aside>
+
+  <!-- ══════════════════════════════ MAIN ══════════════════════════════ -->
+  <main class="main">
+
+    <!-- ─── ROW 1 — HERO ─────────────────────────────────────── -->
+    <div class="hero-card card">
+
+      <!-- SVG gradient def -->
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#2dd4bf"/>
+            <stop offset="100%" stop-color="#818cf8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <!-- Ring Clock -->
+      <div class="ring-wrap">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle class="ring-track" cx="55" cy="55" r="50"/>
+          <circle class="ring-prog"  cx="55" cy="55" r="50"/>
+        </svg>
+        <div class="ring-inner">
+          <span class="ring-hm">06:52</span>
+          <span class="ring-sub">of 9h today</span>
+        </div>
+      </div>
+
+      <!-- Middle: greeting + chips + split -->
+      <div class="hero-mid">
+        <div class="hero-title">Good afternoon, Adan Onaparambil</div>
+        <div class="hero-date">Thursday, 24 September 2026 · Muscat · IT Department</div>
+
+        <div class="chips-row">
+          <span class="chip run"><i class="fas fa-circle-play"></i> Muscat warehouse — structural detailing · 01:47</span>
+          <span class="chip"><i class="fas fa-clock"></i> Last punch 02:03 PM</span>
+          <span class="chip brk"><i class="fas fa-mug-hot"></i> Break 00:47</span>
+          <span class="chip trv"><i class="fas fa-car"></i> Travel 01:35</span>
+          <span class="chip warn"><i class="fas fa-triangle-exclamation"></i> 2 auto-closed — timer locked</span>
+        </div>
+
+        <div class="split-rows">
+          <div class="split-row">
+            <span class="split-dot" style="background:#2dd4bf;"></span>
+            <span class="split-lbl">Design</span>
+            <span class="split-val">02:18</span>
+          </div>
+          <div class="split-row">
+            <span class="split-dot" style="background:#818cf8;"></span>
+            <span class="split-lbl">Site Coordination</span>
+            <span class="split-val">02:06</span>
+          </div>
+          <div class="split-row">
+            <span class="split-dot" style="background:#fbbf24;"></span>
+            <span class="split-lbl">Documentation</span>
+            <span class="split-val">01:14</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Month total + quote -->
+      <div class="hero-right">
+        <div class="month-big">
+          <div class="month-num">167.5h</div>
+          <div class="month-label">September total</div>
+        </div>
+        <div class="hero-quote">
+          "Success is not final, failure is not fatal: it is the courage to continue that counts."
+          <br/><cite>— Winston Churchill</cite>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ROW 2 — KPI TILES ────────────────────────────────── -->
+    <div class="tiles-row">
+
+      <div class="tile tile-t">
+        <div class="tile-icon-row">
+          <div class="tile-icon"><i class="fas fa-clock"></i></div>
+          <span class="tile-trend trend-fl">412 min</span>
+        </div>
+        <div class="tile-value" style="color:var(--teal)">6.87<span style="font-size:16px;font-weight:600"> h</span></div>
+        <div class="tile-name">Logged Today</div>
+        <div class="tile-sub">On pace · 2h 8m to target</div>
+      </div>
+
+      <div class="tile tile-i">
+        <div class="tile-icon-row">
+          <div class="tile-icon"><i class="fas fa-calendar-week"></i></div>
+          <span class="tile-trend trend-up">↑ +3%</span>
+        </div>
+        <div class="tile-value" style="color:var(--indigo)">38.25<span style="font-size:16px;font-weight:600"> h</span></div>
+        <div class="tile-name">This Week</div>
+        <div class="tile-sub">Avg 6.42 h/day · 5 active days</div>
+      </div>
+
+      <div class="tile tile-r">
+        <div class="tile-icon-row">
+          <div class="tile-icon"><i class="fas fa-triangle-exclamation"></i></div>
+          <span class="tile-trend trend-dn">Blocks timers</span>
+        </div>
+        <div class="tile-value" style="color:var(--rose)">2</div>
+        <div class="tile-name">Auto-Closed Tasks</div>
+        <div class="tile-sub">Needs review before approval</div>
+      </div>
+
+      <div class="tile tile-a">
+        <div class="tile-icon-row">
+          <div class="tile-icon"><i class="fas fa-star"></i></div>
+          <span class="tile-trend trend-up">76% target</span>
+        </div>
+        <div class="tile-value" style="color:var(--amber)">4<span style="font-size:16px;font-weight:600"> / 5</span></div>
+        <div class="tile-name">Fulfilment Score</div>
+        <div class="tile-sub">78% days reported · 88% consistency</div>
+      </div>
+
+    </div>
+
+    <!-- ─── ROW 3 — TODAY: TIMELINE + ACTIVE TASK ─────────────── -->
+    <div class="section-label">Today at a Glance</div>
+    <div class="today-grid">
+
+      <!-- Timeline card -->
+      <div class="card timeline-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(45,212,191,0.1)"><i class="fas fa-timeline" style="color:var(--teal);font-size:13px"></i></div>
+          <span class="card-title">Day Timeline</span>
+          <div class="card-action"><i class="fas fa-expand"></i> Full view</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:14px 20px 0;font-size:12px;color:var(--text-2)">
+          <span><i class="fas fa-door-open" style="color:var(--teal);margin-right:4px"></i>First in: <strong style="color:var(--text)">07:58 AM</strong></span>
+          <span><i class="fas fa-door-closed" style="color:var(--rose);margin-right:4px"></i>Last punch: <strong style="color:var(--text)">02:03 PM</strong></span>
+          <span><i class="fas fa-hashtag" style="color:var(--text-2);margin-right:4px"></i>5 punches</span>
+        </div>
+
+        <div class="timeline-bar-wrap" style="padding:0 0 24px">
+          <div class="timeline-track">
+            <!-- work seg 1 -->
+            <div class="tl-seg" style="left:0;width:26%;background:linear-gradient(90deg,#2dd4bf,#138271)">Work 2h 10m</div>
+            <!-- break -->
+            <div class="tl-seg" style="left:27%;width:8%;background:linear-gradient(90deg,#38bdf8,#0369a1)"></div>
+            <!-- work seg 2 -->
+            <div class="tl-seg" style="left:36%;width:30%;background:linear-gradient(90deg,#2dd4bf,#138271)">Work 2h 32m</div>
+            <!-- travel -->
+            <div class="tl-seg" style="left:67%;width:11%;background:linear-gradient(90deg,#fbbf24,#d97706)"></div>
+            <!-- running -->
+            <div class="tl-seg running" style="left:79%;width:21%;background:linear-gradient(90deg,#818cf8,#4f46e5)">Running</div>
+          </div>
+          <div class="tl-marks" style="margin-top:6px">
+            <span>07:58</span><span>09:20</span><span>11:00</span><span>12:30</span><span>14:00</span><span>02:03</span>
+          </div>
+        </div>
+
+        <div style="padding:0 0 4px">
+          <div class="tl-legend">
+            <div class="tl-leg-item"><span class="tl-leg-dot" style="background:linear-gradient(135deg,#2dd4bf,#138271)"></span>Work</div>
+            <div class="tl-leg-item"><span class="tl-leg-dot" style="background:linear-gradient(135deg,#818cf8,#4f46e5)"></span>Running now</div>
+            <div class="tl-leg-item"><span class="tl-leg-dot" style="background:linear-gradient(135deg,#38bdf8,#0369a1)"></span>Break</div>
+            <div class="tl-leg-item"><span class="tl-leg-dot" style="background:linear-gradient(135deg,#fbbf24,#d97706)"></span>Travel</div>
+          </div>
+          <div class="gap-badge"><i class="fas fa-clock-rotate-left"></i> Unlogged gap: 1h 51m</div>
+        </div>
+      </div>
+
+      <!-- Active Task card -->
+      <div class="card active-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(129,140,248,0.1)"><i class="fas fa-circle-play" style="color:var(--indigo);font-size:13px"></i></div>
+          <span class="card-title">Active Task</span>
+        </div>
+
+        <div class="active-title-row" style="margin-top:14px">
+          <div>
+            <div class="active-task-name">Muscat warehouse — structural detailing</div>
+            <div class="active-task-sub">Design · started 12:16 · assigned by Sujith Kumar</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <span class="active-pill pill-run"><i class="fas fa-circle" style="font-size:7px;margin-right:4px"></i>RUNNING</span>
+          <span style="font-size:11px;color:var(--text-3);align-self:center">Due: 28 Sep</span>
+        </div>
+
+        <div class="active-progress-row">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width:65%"></div>
+          </div>
+          <span class="progress-pct">65%</span>
+        </div>
+
+        <div class="live-timer">
+          <div class="live-timer-dot"></div>
+          <span class="live-timer-val">01:47:32</span>
+          <span class="live-timer-lbl">live · this session</span>
+        </div>
+
+        <div class="active-stats">
+          <div class="astat">
+            <div class="astat-val" style="color:var(--indigo)">01:47</div>
+            <div class="astat-lbl">Today</div>
+          </div>
+          <div class="astat">
+            <div class="astat-val" style="color:var(--teal)">20:45</div>
+            <div class="astat-lbl">Total Logged</div>
+          </div>
+          <div class="astat">
+            <div class="astat-val" style="color:var(--amber)">40h</div>
+            <div class="astat-lbl">Estimated</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── ROW 4 — MY TIME ───────────────────────────────────── -->
+    <div class="section-label">My Time</div>
+    <div class="time-grid">
+
+      <!-- Week bars -->
+      <div class="card week-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(45,212,191,0.1)"><i class="fas fa-chart-bar" style="color:var(--teal);font-size:13px"></i></div>
+          <span class="card-title">Last 7 Days</span>
+          <div class="card-action"><i class="fas fa-arrow-right"></i> Log Analytics</div>
+        </div>
+
+        <div class="week-bars-wrap">
+          <!-- Target line at ~72% height (9h / 12.5h max ≈ 72%) -->
+          <div class="target-line" style="bottom:calc(20px + 72%)">
+            <span class="target-line-label">9h target</span>
+          </div>
+
+          <div class="week-bar-col">
+            <span class="week-bar-val">7.75h</span>
+            <div class="week-bar normal" style="height:62%"></div>
+            <span class="week-bar-day">MON</span>
+          </div>
+          <div class="week-bar-col">
+            <span class="week-bar-val">9.20h</span>
+            <div class="week-bar normal" style="height:74%"></div>
+            <span class="week-bar-day">TUE</span>
+          </div>
+          <div class="week-bar-col">
+            <span class="week-bar-val">6.40h</span>
+            <div class="week-bar low" style="height:51%"></div>
+            <span class="week-bar-day">WED</span>
+          </div>
+          <div class="week-bar-col">
+            <span class="week-bar-val">9.50h</span>
+            <div class="week-bar normal" style="height:76%"></div>
+            <span class="week-bar-day">THU</span>
+          </div>
+          <div class="week-bar-col">
+            <span class="week-bar-val">0h</span>
+            <div class="week-bar leave" style="height:4%"></div>
+            <span class="week-bar-day">FRI</span>
+          </div>
+          <div class="week-bar-col">
+            <span class="week-bar-val">5.00h</span>
+            <div class="week-bar low" style="height:40%"></div>
+            <span class="week-bar-day">SAT</span>
+          </div>
+          <div class="week-bar-col">
+            <span class="week-bar-val">6.87h</span>
+            <div class="week-bar today" style="height:55%"></div>
+            <span class="week-bar-day today">TODAY</span>
+          </div>
+        </div>
+
+        <div class="week-notes">
+          <div class="week-note-item"><div class="wn-val">38:15</div><div class="wn-key">Total</div></div>
+          <div class="week-note-item"><div class="wn-val">6.42h</div><div class="wn-key">Avg/Day</div></div>
+          <div class="week-note-item"><div class="wn-val">09:30</div><div class="wn-key">Peak</div></div>
+          <div class="week-note-item"><div class="wn-val">5 days</div><div class="wn-key">Active</div></div>
+        </div>
+      </div>
+
+      <!-- Calendar heatmap -->
+      <div class="card cal-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(129,140,248,0.1)"><i class="fas fa-calendar-days" style="color:var(--indigo);font-size:13px"></i></div>
+          <span class="card-title">Monthly Heatmap</span>
+        </div>
+
+        <div class="cal-header-row" style="margin-top:12px">
+          <div class="cal-nav-btn"><i class="fas fa-chevron-left"></i></div>
+          <span class="cal-month-label">September 2026</span>
+          <div class="cal-nav-btn"><i class="fas fa-chevron-right"></i></div>
+          <div style="flex:1"></div>
+          <div style="font-size:11px;color:var(--teal);font-weight:600">21 / 22 days ✓</div>
+        </div>
+
+        <div class="cal-dows">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="cal-grid">
+          <!-- Week 1 offset: Sep 1 is Tuesday (offset 2) -->
+          <div class="cal-cell empty"></div>
+          <div class="cal-cell empty"></div>
+          <div class="cal-cell high"><div class="cal-day-num">1</div><div class="cal-day-h">8.2h</div></div>
+          <div class="cal-cell full"><div class="cal-day-num">2</div><div class="cal-day-h">9.5h</div></div>
+          <div class="cal-cell full"><div class="cal-day-num">3</div><div class="cal-day-h">9.1h</div></div>
+          <div class="cal-cell off"><div class="cal-day-num">4</div></div>
+          <div class="cal-cell off"><div class="cal-day-num">5</div></div>
+          <!-- Week 2 -->
+          <div class="cal-cell high"><div class="cal-day-num">6</div><div class="cal-day-h">8.8h</div></div>
+          <div class="cal-cell full"><div class="cal-day-num">7</div><div class="cal-day-h">9.0h</div></div>
+          <div class="cal-cell med"><div class="cal-day-num">8</div><div class="cal-day-h">7.5h</div></div>
+          <div class="cal-cell full"><div class="cal-day-num">9</div><div class="cal-day-h">9.3h</div></div>
+          <div class="cal-cell high"><div class="cal-day-num">10</div><div class="cal-day-h">8.5h</div></div>
+          <div class="cal-cell off"><div class="cal-day-num">11</div></div>
+          <div class="cal-cell off"><div class="cal-day-num">12</div></div>
+          <!-- Week 3 -->
+          <div class="cal-cell full"><div class="cal-day-num">13</div><div class="cal-day-h">9.2h</div></div>
+          <div class="cal-cell full"><div class="cal-day-num">14</div><div class="cal-day-h">9.4h</div></div>
+          <div class="cal-cell low"><div class="cal-day-num">15</div><div class="cal-day-h">6.1h</div></div>
+          <div class="cal-cell full"><div class="cal-day-num">16</div><div class="cal-day-h">9.5h</div></div>
+          <div class="cal-cell high"><div class="cal-day-num">17</div><div class="cal-day-h">8.9h</div></div>
+          <div class="cal-cell off"><div class="cal-day-num">18</div></div>
+          <div class="cal-cell off"><div class="cal-day-num">19</div></div>
+          <!-- Week 4 -->
+          <div class="cal-cell miss"><div class="cal-day-num">20</div></div>
+          <div class="cal-cell leave"><div class="cal-day-num">21</div><div class="cal-day-h">leave</div></div>
+          <div class="cal-cell med"><div class="cal-day-num">22</div><div class="cal-day-h">7.8h</div></div>
+          <div class="cal-cell high"><div class="cal-day-num">23</div><div class="cal-day-h">8.4h</div></div>
+          <div class="cal-cell today-cell high"><div class="cal-day-num">24</div><div class="cal-day-h">6.9h</div></div>
+          <div class="cal-cell future"><div class="cal-day-num">25</div></div>
+          <div class="cal-cell future"><div class="cal-day-num">26</div></div>
+          <!-- Week 5 -->
+          <div class="cal-cell future"><div class="cal-day-num">27</div></div>
+          <div class="cal-cell future"><div class="cal-day-num">28</div></div>
+          <div class="cal-cell future"><div class="cal-day-num">29</div></div>
+          <div class="cal-cell future"><div class="cal-day-num">30</div></div>
+        </div>
+
+        <div class="cal-legend">
+          <span>Less</span>
+          <div class="cal-leg-box" style="background:rgba(45,212,191,0.12)"></div>
+          <div class="cal-leg-box" style="background:rgba(45,212,191,0.28)"></div>
+          <div class="cal-leg-box" style="background:rgba(45,212,191,0.55)"></div>
+          <div class="cal-leg-box" style="background:linear-gradient(135deg,#2dd4bf,#138271)"></div>
+          <span>More</span>
+          <div class="cal-leg-box" style="background:rgba(248,113,113,0.25);margin-left:8px"></div>
+          <span>Missed</span>
+          <div class="cal-leg-box" style="background:rgba(56,189,248,0.25)"></div>
+          <span>Leave</span>
+        </div>
+
+        <div class="cal-stats">
+          <div class="cal-stat-item"><div class="cs-val">167.5h</div><div class="cs-key">Total</div></div>
+          <div class="cal-stat-item"><div class="cs-val">7.98h</div><div class="cs-key">Avg/Day</div></div>
+          <div class="cal-stat-item"><div class="cs-val">11 days</div><div class="cs-key">Best Streak</div></div>
+          <div class="cal-stat-item"><div class="cs-val">21 / 22</div><div class="cs-key">Days Logged</div></div>
+          <div class="cal-stat-item"><div class="cs-val">1 day</div><div class="cs-key">Leave</div></div>
+          <div class="cal-stat-item"><div class="cs-val">1 day</div><div class="cs-key">Missed</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── ROW 5 — MY WORK ───────────────────────────────────── -->
+    <div class="section-label">My Work</div>
+    <div class="work-grid">
+
+      <!-- Task status -->
+      <div class="card tasks-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(251,191,36,0.1)"><i class="fas fa-list-check" style="color:var(--amber);font-size:13px"></i></div>
+          <span class="card-title">Task Status</span>
+          <div class="card-action"><i class="fas fa-arrow-right"></i> My Tasks</div>
+        </div>
+
+        <div class="task-band">
+          <span class="task-band-count">22 tasks</span>
+          <span class="task-band-label">assigned this month · 8 completed</span>
+        </div>
+
+        <div class="task-stat-rows">
+          <div class="task-stat-row">
+            <div class="task-stat-icon tsi-warn"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="tsr-text">
+              <div class="tsr-label">Auto Closed</div>
+              <div class="tsr-sub">Needs review before approval</div>
+            </div>
+            <div class="tsr-count warn">2</div>
+          </div>
+          <div class="task-stat-row">
+            <div class="task-stat-icon tsi-run"><i class="fas fa-circle-play"></i></div>
+            <div class="tsr-text">
+              <div class="tsr-label">Running Now</div>
+              <div class="tsr-sub">Timer active</div>
+            </div>
+            <div class="tsr-count run">1</div>
+          </div>
+          <div class="task-stat-row">
+            <div class="task-stat-icon tsi-pau"><i class="fas fa-pause"></i></div>
+            <div class="tsr-text">
+              <div class="tsr-label">Paused</div>
+              <div class="tsr-sub"></div>
+            </div>
+            <div class="tsr-count pau">2</div>
+          </div>
+          <div class="task-stat-row">
+            <div class="task-stat-icon tsi-ns"><i class="fas fa-hourglass-start"></i></div>
+            <div class="tsr-text">
+              <div class="tsr-label">Not Started</div>
+              <div class="tsr-sub"></div>
+            </div>
+            <div class="tsr-count ns">3</div>
+          </div>
+          <div class="task-stat-row">
+            <div class="task-stat-icon tsi-all"><i class="fas fa-layer-group"></i></div>
+            <div class="tsr-text">
+              <div class="tsr-label">Open Total</div>
+              <div class="tsr-sub">None overdue</div>
+            </div>
+            <div class="tsr-count all">14</div>
+          </div>
+        </div>
+
+        <!-- Open tasks mini list -->
+        <div class="open-tasks-list">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">OPEN ASSIGNMENTS</div>
+          <div class="open-task-item">
+            <span class="oti-dot" style="background:var(--indigo)"></span>
+            <span class="oti-title">Muscat warehouse — structural detailing</span>
+            <span class="oti-date">Due 28 Sep</span>
+          </div>
+          <div class="open-task-item">
+            <span class="oti-dot" style="background:var(--amber)"></span>
+            <span class="oti-title">Site layout — zone B revision</span>
+            <span class="oti-date">Due 30 Sep</span>
+          </div>
+          <div class="open-task-item">
+            <span class="oti-dot" style="background:var(--rose)"></span>
+            <span class="oti-title">Foundation load calcs (Block C)</span>
+            <span class="oti-date oti-overdue">Overdue 20 Sep</span>
+          </div>
+          <div class="open-task-item">
+            <span class="oti-dot" style="background:var(--text-3)"></span>
+            <span class="oti-title">MEP coordination meeting notes</span>
+            <span class="oti-date">Due 2 Oct</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Est vs Actual -->
+      <div class="card est-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(45,212,191,0.1)"><i class="fas fa-chart-column" style="color:var(--teal);font-size:13px"></i></div>
+          <span class="card-title">Estimated vs Actual</span>
+          <div class="card-action"><i class="fas fa-sparkles"></i> AI Insight</div>
+        </div>
+
+        <div class="est-bars-wrap">
+          <!-- Aug pair -->
+          <div class="est-pair">
+            <div class="est-bar-col">
+              <span class="est-bar-val">158h</span>
+              <div class="est-bar est-col" style="height:75%"></div>
+              <span class="est-bar-lbl">Aug Est</span>
+            </div>
+            <div class="est-bar-col">
+              <span class="est-bar-val">167.5h</span>
+              <div class="est-bar act-col" style="height:80%"></div>
+              <span class="est-bar-lbl">Aug Act</span>
+            </div>
+          </div>
+          <!-- Sep pair (current month) -->
+          <div class="est-pair">
+            <div class="est-bar-col">
+              <span class="est-bar-val">160h</span>
+              <div class="est-bar est-col" style="height:76%"></div>
+              <span class="est-bar-lbl">Sep Est</span>
+            </div>
+            <div class="est-bar-col">
+              <span class="est-bar-val">91.2h</span>
+              <div class="est-bar act-today" style="height:43%"></div>
+              <span class="est-bar-lbl">Sep Act↑</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="est-notes">
+          <div class="est-note-item"><strong>+6%</strong> over estimate (Aug)</div>
+          <div class="est-note-item"><strong>57%</strong> Sep target reached</div>
+        </div>
+
+        <!-- Top tasks by hours -->
+        <div class="top-tasks-table" style="margin-top:14px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:6px">TOP TASKS THIS MONTH — ESTIMATED VS ACTUAL</div>
+          <div class="ttt-row">
+            <span class="ttt-name">Muscat warehouse — structural detailing</span>
+            <span class="ttt-est">40h est</span>
+            <span class="ttt-act over">42.5h</span>
+          </div>
+          <div class="ttt-row">
+            <span class="ttt-name">Site layout — zone B revision</span>
+            <span class="ttt-est">20h est</span>
+            <span class="ttt-act ok">18.2h</span>
+          </div>
+          <div class="ttt-row">
+            <span class="ttt-name">Foundation load calcs (Block C)</span>
+            <span class="ttt-est">16h est</span>
+            <span class="ttt-act over">19.1h</span>
+          </div>
+          <div class="ttt-row">
+            <span class="ttt-name">MEP coordination meeting notes</span>
+            <span class="ttt-est">8h est</span>
+            <span class="ttt-act ok">5.8h</span>
+          </div>
+          <div class="ttt-row">
+            <span class="ttt-name">Shop drawing review — steelwork</span>
+            <span class="ttt-est">12h est</span>
+            <span class="ttt-act ok">5.6h</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── ROW 6 — FORMS + MONTHLY REVIEW ───────────────────── -->
+    <div class="section-label">Approvals &amp; Monthly Review</div>
+    <div class="comms-grid">
+
+      <!-- My forms -->
+      <div class="card forms-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(192,132,252,0.1)"><i class="fas fa-file-signature" style="color:var(--purple);font-size:13px"></i></div>
+          <span class="card-title">My Requests</span>
+          <div class="card-action"><i class="fas fa-plus"></i> New Request</div>
+        </div>
+
+        <div class="form-rows">
+
+          <div class="form-row">
+            <div class="form-icon" style="background:rgba(220,38,38,0.12);color:#f87171">
+              <i class="fas fa-person-walking-arrow-right"></i>
+            </div>
+            <div class="form-text">
+              <div class="form-name">REQ1042 · Emergency Exit</div>
+              <div class="form-sub">Submitted 12 Sep 09:41 · 14 days · With HR</div>
+            </div>
+            <span class="form-badge fb-pend">PENDING</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-icon" style="background:rgba(14,165,233,0.12);color:#38bdf8">
+              <i class="fas fa-laptop"></i>
+            </div>
+            <div class="form-text">
+              <div class="form-name">REQ1031 · BYOD — Laptop 1</div>
+              <div class="form-sub">300 OMR over 60 months</div>
+            </div>
+            <span class="form-badge fb-appr">APPROVED</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-icon" style="background:rgba(251,191,36,0.12);color:#fbbf24">
+              <i class="fas fa-umbrella-beach"></i>
+            </div>
+            <div class="form-text">
+              <div class="form-name">REQ1055 · Leave 12–14 Sep</div>
+              <div class="form-sub">With HR since 2 days ago</div>
+            </div>
+            <span class="form-badge fb-pend">PENDING</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-icon" style="background:rgba(124,58,237,0.12);color:#c084fc">
+              <i class="fas fa-rotate-left"></i>
+            </div>
+            <div class="form-text">
+              <div class="form-name">REQ1029 · Rejoining</div>
+              <div class="form-sub">Rejected by IT — "attach ticket copy"</div>
+            </div>
+            <span class="form-badge fb-resb">RESUBMIT</span>
+          </div>
+
+        </div>
+
+        <div class="new-form-btn">
+          <i class="fas fa-plus"></i> Submit New Request
+        </div>
+      </div>
+
+      <!-- Monthly review -->
+      <div class="card review-card">
+        <div class="card-header">
+          <div class="card-title-icon" style="background:rgba(74,222,128,0.1)"><i class="fas fa-file-lines" style="color:var(--green);font-size:13px"></i></div>
+          <span class="card-title">Monthly DPR Review</span>
+          <div class="card-action"><i class="fas fa-arrow-right"></i> Open Full Review</div>
+        </div>
+
+        <div class="review-months">
+          <span class="review-month-chip">Apr 2026</span>
+          <span class="review-month-chip">May 2026</span>
+          <span class="review-month-chip">Jun 2026</span>
+          <span class="review-month-chip">Jul 2026</span>
+          <span class="review-month-chip">Aug 2026</span>
+          <span class="review-month-chip active">Sep 2026</span>
+        </div>
+
+        <div class="review-status-row">
+          <span class="rst-icon">📋</span>
+          <div class="rst-text">
+            <div class="rst-title">September 2026 — DPR Report</div>
+            <div class="rst-sub">Submitted 18 Sep · Awaiting HOD review</div>
+          </div>
+          <span class="rst-badge rb-sub">SUBMITTED</span>
+        </div>
+
+        <div class="review-kpis">
+          <div class="rkpi"><div class="rkpi-val" style="color:var(--teal)">167.5h</div><div class="rkpi-lbl">Worked Hours</div></div>
+          <div class="rkpi"><div class="rkpi-val" style="color:var(--indigo)">78%</div><div class="rkpi-lbl">Target Met</div></div>
+          <div class="rkpi"><div class="rkpi-val" style="color:var(--amber)">72</div><div class="rkpi-lbl">Overall Score</div></div>
+        </div>
+
+        <!-- HOD evaluation scores (read-only for employee) -->
+        <div class="review-scores">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;margin-top:4px">HOD EVALUATION</div>
+          <div class="score-row">
+            <span class="score-label">Quality</span>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:76%;background:var(--g-teal)"></div></div>
+            <span class="score-val">76</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Timeliness</span>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:70%;background:var(--g-indigo)"></div></div>
+            <span class="score-val">70</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Initiative</span>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:80%;background:var(--g-amber)"></div></div>
+            <span class="score-val">80</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Team Work</span>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:85%;background:var(--g-green)"></div></div>
+            <span class="score-val">85</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Communication</span>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:68%;background:var(--g-purple)"></div></div>
+            <span class="score-val">68</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- bottom spacer -->
+    <div style="height:20px"></div>
+  </main>
+</div>
+
+<!-- Floating AI assistant button -->
+<div class="ai-fab" title="Ask AI Assistant">
+  <i class="fas fa-robot"></i>
+</div>
+
+</body>
+</html>

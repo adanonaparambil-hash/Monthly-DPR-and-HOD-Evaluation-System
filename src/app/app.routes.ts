@@ -21,6 +21,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { PurchaseDashboardGuard } from './guards/purchase-dashboard.guard';
 import { LogAnalyticsGuard } from './guards/log-analytics.guard';
 import { WirReportGuard } from './guards/wir-report.guard';
+import { MirReportGuard } from './guards/mir-report.guard';
 import { CedDprAnalyticsGuard } from './guards/ced-dpr-analytics.guard';
 
 export const routes: Routes = [
@@ -80,6 +81,7 @@ export const routes: Routes = [
       { path: 'employee-master',     loadComponent: () => import('./employee-master/employee-master.component').then(m => m.EmployeeMasterComponent) },
       { path: 'byod-form',           loadComponent: () => import('./byod-form/byod-form.component').then(m => m.ByodFormComponent) },
       { path: 'wir-reports',         loadComponent: () => import('./wir-report/wir-report.component').then(m => m.WirReportComponent), canActivate: [WirReportGuard] },
+      { path: 'mir-reports',         loadComponent: () => import('./mir-report/mir-report.component').then(m => m.MirReportComponent), canActivate: [MirReportGuard] },
       {
         path: 'purchase-dashboard',
         loadComponent: () => import('./purchase-dashboard/purchase-dashboard.component').then(m => m.PurchaseDashboardComponent),

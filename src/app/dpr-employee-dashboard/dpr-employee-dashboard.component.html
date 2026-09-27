@@ -1,191 +1,344 @@
-<div class="dpr-page">
-  <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
-  <svg width="0" height="0"><defs>
-    <linearGradient id="edash-gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
-    <linearGradient id="edash-ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13827155"/><stop offset="1" stop-color="#13827100"/></linearGradient>
+<div class="edash dpage">
+  <svg width="0" height="0" class="defs" aria-hidden="true"><defs>
+    <linearGradient id="edash-r1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#0284c7"/></linearGradient>
+    <linearGradient id="edash-r2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
   </defs></svg>
 
-  <header class="hero in">
-    <span class="aur"></span><span class="hg"></span>
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="hero an">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
     <div class="hl">
-      <div class="eyeb"><span class="dot"></span> My DPR · live</div>
-      <div class="htitle">{{ heroTitle }}</div>
-      <div class="hsub">{{ dateLine }}</div>
-      <div class="chips">
-        <span class="chip" [ngClass]="{ ok: runningChipOk }"><i class="fas fa-stopwatch"></i> Running <b>{{ runningText }}</b></span>
-        <span class="chip"><i class="fas fa-fingerprint"></i> Last punch <b>{{ lastPunchText }}</b></span>
-        <span class="chip"><i class="fas fa-mug-hot"></i> Break <b>{{ breakText }}</b></span>
-        <span class="chip"><i class="fas fa-car"></i> Travel <b>{{ travelText }}</b></span>
-        <span class="chip" [ngClass]="{ hot: autoClosedCount > 0 }"><i class="fas fa-lock"></i> <b>{{ autoClosedCount }}</b> {{ autoClosedChipText }}</span>
-        <span class="chip hot" *ngIf="loadError"><i class="fas fa-circle-info"></i> {{ loadError }}</span>
-        <span class="chip" *ngIf="loading"><i class="fas fa-spinner"></i> Loading live data…</span>
+      <span class="eyeb"><span class="pulse"><i></i><i></i></span>My DPR · live work session</span>
+      <h1>{{ greetingText }}{{ firstName ? ', ' + firstName : '' }}</h1>
+      <div class="hmeta">
+        <span class="mi"><span class="material-symbols-outlined">calendar_today</span>{{ dateText }}</span>
+        <ng-container *ngIf="locText"><span class="sep">·</span><span class="mi"><span class="material-symbols-outlined">corporate_fare</span>{{ locText }}</span></ng-container>
+        <ng-container *ngIf="deptText"><span class="sep">·</span><span class="mi">{{ deptText }}</span></ng-container>
+        <ng-container *ngIf="expDailyText"><span class="sep">·</span><span class="mi"><span class="material-symbols-outlined">schedule</span>{{ expDailyText }}</span></ng-container>
+      </div>
+      <div class="hchips">
+        <span class="hchip" [class.g]="timerRunning"><span class="livedot"></span>Timer <b>{{ runningText }}</b></span>
+        <span class="hchip"><span class="material-symbols-outlined">fingerprint</span>Last punch <b>{{ lastPunchText }}</b></span>
+        <span class="hchip"><span class="material-symbols-outlined">coffee</span>Break <b>{{ breakText }}</b></span>
+        <span class="hchip"><span class="material-symbols-outlined">commute</span>Travel <b>{{ travelText }}</b></span>
+        <span class="hchip" *ngIf="streakDays > 0"><span class="material-symbols-outlined flame">local_fire_department</span>Streak <b>{{ streakDays }} {{ streakDays === 1 ? 'day' : 'days' }}</b></span>
+        <span class="hchip hot" *ngIf="autoClosedCount > 0"><span class="material-symbols-outlined">lock</span><b>{{ autoClosedCount }}</b> auto-closed — timer locked</span>
+        <span class="hchip hot" *ngIf="loadError"><span class="material-symbols-outlined">info</span>{{ loadError }}</span>
+        <span class="hchip" *ngIf="loading"><span class="material-symbols-outlined spin">progress_activity</span>Loading live data…</span>
       </div>
     </div>
-    <div class="hr">
+    <div class="hrr">
       <div class="ring">
-        <svg width="122" height="122"><circle class="tr" cx="61" cy="61" r="50" fill="none" stroke-width="10"/>
-        <circle class="vl" cx="61" cy="61" r="50" fill="none" stroke-width="10" [style.stroke-dashoffset]="animate ? ringOffset : ringCircumference"/></svg>
-        <div class="mid"><b>{{ ringMid }}</b><span>{{ ringSub }}</span></div>
+        <svg width="132" height="132"><circle class="trk" cx="66" cy="66" r="50"/>
+          <circle class="val" cx="66" cy="66" r="50" [attr.stroke-dashoffset]="ring1Offset"/></svg>
+        <div class="mid"><b>{{ ring1Mid }}</b><span>{{ ring1Sub }}</span></div>
       </div>
-      <div class="rside">
-        <div class="rrow" *ngFor="let r of splitRows"><i class="sq" [style.background]="r.color"></i> {{ r.label }} <b>{{ r.val }}</b></div>
-        <div class="rrow" style="opacity:.7;border-top:1px solid rgba(255,255,255,.15);padding-top:6px">Month <b>{{ monthHoursText }}</b></div>
+      <div class="rlist">
+        <div class="rrow"><i class="sqd" style="background:var(--a1)"></i>Worked DPR <b>{{ heroWorked }}</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a4)"></i>Not logged <b>{{ heroGap }}</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a3)"></i>Target remaining <b>{{ heroRemaining }}</b></div>
+        <div class="rrow tot">Month total <b>{{ heroMonth }}</b></div>
       </div>
     </div>
-  </header>
+  </section>
 
-  <!-- TODAY -->
-  <div class="band"><span class="bi" style="--bc:#138271"><i class="fas fa-bolt"></i></span><h3>Today</h3><span class="rule"></span><span class="cnt">live</span></div>
-  <div class="grid">
-    <div class="c12 tiles">
-      <div class="tile glass in" style="--tc:#138271;--d:40ms"><span class="lb"><i class="d" style="background:#138271"></i>Logged today</span><b>{{ tileValues[0] }}</b><small [ngClass]="tileSmall[0].cls"><i class="fas fa-arrow-trend-up"></i> {{ tileSmall[0].txt }}</small></div>
-      <div class="tile glass in" style="--tc:#6366f1;--d:90ms"><span class="lb"><i class="d" style="background:#6366f1"></i>This week</span><b>{{ tileValues[1] }}</b><small [ngClass]="tileSmall[1].cls">{{ tileSmall[1].txt }}</small></div>
-      <div class="tile glass in" style="--tc:#f59e0b;--d:140ms"><span class="lb"><i class="d" style="background:#f59e0b"></i>Auto-closed</span><b>{{ tileValues[2] }}</b><small [ngClass]="tileSmall[2].cls"><i class="fas fa-triangle-exclamation"></i> {{ tileSmall[2].txt }}</small></div>
-      <div class="tile glass in" style="--tc:#0ea5e9;--d:190ms"><span class="lb"><i class="d" style="background:#0ea5e9"></i>Productivity</span><b>{{ tileValues[3] }}</b><small [ngClass]="tileSmall[3].cls">{{ tileSmall[3].txt }}</small></div>
+  <!-- ═══════════════ QUICK ACTIONS ═══════════════ -->
+  <section class="qa">
+    <button type="button" class="qbtn an" style="--kc:var(--a4);--d:60ms" (click)="openNotifications()">
+      <span class="qic"><span class="material-symbols-outlined">notifications_active</span></span>
+      <span class="qtx"><b>Notifications</b><span>{{ notifSub }}</span></span>
+      <span class="qct" [class.pop]="badgePop">{{ notifUnread }}</span></button>
+    <button type="button" class="qbtn an" style="--kc:var(--a3);--d:120ms" (click)="openAnnouncements()">
+      <span class="qic"><span class="material-symbols-outlined">campaign</span></span>
+      <span class="qtx"><b>Announcements</b><span>{{ noticeSub }}</span></span>
+      <span class="qct" [class.pop]="badgePop">{{ noticeUnread }}</span></button>
+    <button type="button" class="qbtn an" style="--kc:var(--a5);--d:180ms" (click)="openApprovals()">
+      <span class="qic"><span class="material-symbols-outlined">verified</span></span>
+      <span class="qtx"><b>My approvals</b><span>{{ approvalSub }}</span></span>
+      <span class="qct" [class.pop]="badgePop">{{ approvalCount }}</span></button>
+    <button type="button" class="qbtn an" style="--kc:var(--a6);--d:240ms" (click)="generateAi()">
+      <span class="qic"><span class="material-symbols-outlined">auto_awesome</span></span>
+      <span class="qtx"><b>AI DPR report</b><span>Generate my month summary</span></span>
+      <span class="qct"><span class="material-symbols-outlined">arrow_forward</span></span></button>
+  </section>
+
+  <!-- ═══════════════ KPI ROW ═══════════════ -->
+  <section class="grid">
+    <div class="card kpi s3 an" *ngFor="let k of kpis; let i = index" [style.--kc]="k.color" [style.--d]="(60 + i * 60) + 'ms'">
+      <div class="kh"><span class="lbl">{{ k.label }}</span><span class="pill" [ngClass]="k.pillCls">{{ k.pillTxt }}</span></div>
+      <div class="kv"><span [attr.data-cu]="k.value" [attr.data-dec]="k.dec">{{ fmt(k.value, k.dec) }}</span><small>{{ k.unit }}</small></div>
+      <div class="bar sh"><i [style.width.%]="k.barPct"></i></div>
+      <div class="kf"><span class="material-symbols-outlined">{{ k.icon }}</span>{{ k.foot }}</div>
     </div>
+  </section>
 
-    <div class="c5 card glass in" style="--d:230ms">
-      <h2><span class="ic" style="--kc:#0ea5e9"><i class="fas fa-fingerprint"></i></span>Today at a glance <span class="lk">Punch log →</span></h2>
-      <div class="att">
-        <div class="attrow">
-          <div class="attbox"><div class="k">Day logged</div><div class="v">{{ dayLoggedText }}</div></div>
-          <div class="attbox"><div class="k">Last punch</div><div class="v">{{ punchHm }} <small>{{ punchAmPm }}</small></div></div>
-          <div class="attbox"><div class="k">Break</div><div class="v" style="color:var(--sky)">{{ breakText }}</div></div>
-          <div class="attbox"><div class="k">Travel</div><div class="v" style="color:var(--warn)">{{ travelText }}</div></div>
+  <!-- ═══════════════ MONTH EXPECTED vs ACHIEVED + QUOTE ═══════════════ -->
+  <section class="grid">
+    <div class="card s8 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">target</span></span>
+        <h2>{{ monthName }} — expected vs achieved</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">Log history <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <p class="sub">{{ monthNote }}</p>
+      <div class="mx">
+        <div class="mxring">
+          <svg width="150" height="150"><circle class="t" cx="75" cy="75" r="60"/>
+            <circle class="v" cx="75" cy="75" r="60" [attr.stroke-dashoffset]="ring2Offset"/></svg>
+          <div class="mid"><b><span [attr.data-cu]="achievedPct" data-dec="1">{{ fmt(achievedPct, 1) }}</span>%</b><span>Achieved</span></div>
         </div>
-        <div>
-          <div class="tl">
-            <span class="seg" *ngFor="let s of tlSegs" [style.left.%]="s.left" [style.background]="s.bg" [style.width.%]="animate ? s.width : 0"><span class="lbl" *ngIf="s.lbl">{{ s.lbl }}</span></span>
+        <div class="mxr">
+          <div class="lg">
+            <span style="--lc:var(--a1)"><i></i>Achieved</span>
+            <span style="--lc:var(--a2)"><i class="st2"></i>Projected at current pace</span>
+            <span style="--lc:var(--ink)"><i class="mkl"></i>Expected</span>
           </div>
-          <div class="tlmarks"><span *ngFor="let m of tlMarks">{{ m }}</span></div>
+          <div class="bul">
+            <span class="n">So far</span>
+            <span class="t">
+              <span class="f" [style.width.%]="soFarFill" [attr.data-tip]="soFarTip"></span>
+              <span class="mk" [style.left.%]="soFarMark" [attr.data-tip]="soFarMarkTip"></span></span>
+            <span class="v" style="color:var(--a1)">{{ soFarText }}</span>
+          </div>
+          <div class="bul">
+            <span class="n">Month end</span>
+            <span class="t">
+              <span class="f" [style.width.%]="endFill"></span>
+              <span class="gh" [style.left.%]="endFill" [style.width.%]="endGhost" [attr.data-tip]="endGhostTip"></span>
+              <span class="mk" [style.left.%]="endMark" [attr.data-tip]="endMarkTip"></span></span>
+            <span class="v">{{ endText }}</span>
+          </div>
+          <div class="stats">
+            <div class="st" *ngFor="let s of monthStats" [style.--kc]="s.color">
+              <div class="k">{{ s.k }}</div><div class="v">{{ s.v }}<small>{{ s.unit }}</small></div><div class="d">{{ s.d }}</div></div>
+          </div>
         </div>
-        <div class="gapnote"><i class="fas fa-circle-info" style="color:var(--warn)"></i>
-          <span *ngIf="gapText">Unlogged gap <b>{{ gapText }}</b> — office time not covered by a task timer</span>
-          <span *ngIf="!gapText" class="mut">No punch span recorded for today yet</span></div>
       </div>
     </div>
 
-    <div class="c4 card glass in" style="--d:280ms">
-      <h2><span class="ic" style="--kc:#138271"><i class="fas fa-stopwatch"></i></span>Active task</h2>
-      <div class="tk" style="padding-top:0">
-        <span class="tki" style="background:#e6f7f3;color:#0d7a63"><i class="fas fa-stopwatch"></i></span>
-        <div class="tkm"><div class="tkn">{{ actTitle }}</div><div class="tks" *ngIf="actSub">{{ actSub }}</div></div>
-        <span class="pill" [ngClass]="actPillCls"><i></i>{{ actPillText }}</span>
+    <div class="card quote s4 an" style="--d:120ms">
+      <span class="qm">”</span>
+      <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">format_quote</span></span>
+        <h2>Quote of the day</h2></div>
+      <ng-container *ngIf="quoteText; else noQuote">
+        <q>{{ quoteText }}</q>
+        <div class="qa" *ngIf="quoteAuthor">{{ quoteAuthor }}</div>
+      </ng-container>
+      <ng-template #noQuote><p class="muted">No quote for today.</p></ng-template>
+      <div class="row qrow">
+        <span class="rico" style="--kc:var(--a1)"><span class="material-symbols-outlined flame">local_fire_department</span></span>
+        <div class="rtx" *ngIf="streakDays > 0"><b>{{ streakDays }}-day reporting streak</b><span>Consecutive working days with a DPR this month</span></div>
+        <div class="rrt" *ngIf="streakDays > 0"><b style="color:var(--a1)">{{ streakDays }}</b><span>{{ streakDays === 1 ? 'day' : 'days' }}</span></div>
+        <div class="rtx" *ngIf="streakDays === 0"><b>No streak yet</b><span>Log a DPR today to start one</span></div>
       </div>
-      <div class="mrow" style="margin-top:9px"><div><div class="mk">Progress</div><div class="mbar"><i style="background:linear-gradient(90deg,#2dd4bf,#138271)" [style.width.%]="animate ? actProgress : 0"></i></div></div><span class="mv">{{ actProgressText }}</span></div>
-      <div class="kv"><span>Live <b>{{ actLive }}</b></span><span>Today <b>{{ actToday }}</b></span><span>Total <b>{{ actTotal }}</b></span></div>
     </div>
+  </section>
 
-    <div class="c3 card glass in" style="--d:330ms">
-      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-quote-left"></i></span>Quote of the day</h2>
-      <div class="quote"><span class="qm">”</span>
-        <q *ngIf="quoteText">{{ quoteText }}</q>
-        <div class="qa" *ngIf="quoteText">{{ quoteAuthor }}</div>
-        <div class="mut" *ngIf="!quoteText">No quote available today</div></div>
-    </div>
-  </div>
-
-  <!-- MY TIME -->
-  <div class="band"><span class="bi" style="--bc:#0ea5e9"><i class="fas fa-clock"></i></span><h3>My Time</h3><span class="rule"></span><span class="cnt">week &amp; month</span></div>
-  <div class="grid">
-    <div class="c5 card glass in hrs" style="--d:40ms">
-      <h2><span class="ic" style="--kc:#138271"><i class="fas fa-chart-simple"></i></span>My hours — last 7 days <span class="lk">Log history →</span></h2>
-      <div class="bars">
-        <div class="bl" [style.bottom.%]="targetLinePct"><span>{{ targetLabel }}</span></div>
-        <div class="bcol" *ngFor="let b of weekBars" [ngClass]="{ lo: b.lo, td: b.td }"><div class="bv" [style.height.%]="animate ? b.h : 0"><em>{{ b.em }}</em></div><span class="bd">{{ b.bd }}</span></div>
+  <!-- ═══════════════ TODAY + ACTIVE TASK ═══════════════ -->
+  <section class="grid">
+    <div class="card s7 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">fingerprint</span></span>
+        <h2>Today at a glance</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">Punch log <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <div class="lg">
+        <span style="--lc:var(--a1)"><i></i>Task time</span>
+        <span style="--lc:var(--a2)"><i></i>Running</span>
+        <span style="--lc:var(--a5)"><i></i>Break</span>
+        <span style="--lc:var(--a3)"><i></i>Travel</span>
+        <span style="--lc:var(--a4)"><i class="st2"></i>Not logged</span>
       </div>
-      <div class="note"><span *ngFor="let n of weekNote">{{ n.k }} <b>{{ n.v }}</b></span></div>
+      <div class="tl">
+        <span *ngFor="let s of tlSegs" class="sg" [class.gapz]="s.gap"
+              [style.left.%]="s.left" [style.width.%]="s.width" [style.background]="s.gap ? null : s.bg"
+              [attr.data-tip]="s.tip">{{ s.label }}</span>
+        <span class="tlempty" *ngIf="!tlSegs.length">No time logged yet today</span>
+      </div>
+      <div class="tlx"><span>{{ tlStart }}</span><span>{{ tlPunches }}</span><span>{{ tlEnd }}</span></div>
+      <div class="stats mt">
+        <div class="st" *ngFor="let s of todayStats" [style.--kc]="s.color">
+          <div class="k">{{ s.k }}</div><div class="v">{{ s.v }}<small>{{ s.unit }}</small></div><div class="d">{{ s.d }}</div></div>
+      </div>
     </div>
 
-    <!-- FULL MONTH HEATMAP CALENDAR -->
-    <div class="c7 card glass in" style="--d:90ms">
-      <h2><span class="ic" style="--kc:#0ea5e9"><i class="fas fa-calendar-days"></i></span>My DPR calendar — {{ calMonthLabel }}
-        <span class="lk">Full history →</span></h2>
-      <div class="mcal">
-        <div class="dow" *ngFor="let d of dows">{{ d }}</div>
-        <ng-container *ngFor="let c of calCells">
-          <div *ngIf="c.empty" class="cell empty"></div>
-          <div *ngIf="!c.empty" class="cell" [ngClass]="c.cls" [style.animationDelay]="c.delay" [title]="c.title">
-            <span class="dn2">{{ c.day }}</span><span class="hh" *ngIf="c.hh">{{ c.hh }}</span>
+    <div class="card s5 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">play_circle</span></span>
+        <h2>Active assigned task</h2>
+        <span class="pill" [ngClass]="timerRunning ? 'ok' : 'nu'"><span class="material-symbols-outlined">{{ timerRunning ? 'bolt' : 'pause' }}</span>{{ timerRunning ? 'Running' : 'Idle' }}</span></div>
+      <div class="task">
+        <span class="lbl">{{ actCategory }}</span>
+        <div class="ttl">{{ actTitle }}</div>
+        <div class="tsub">{{ actSub }}</div>
+        <div class="tprow"><span class="lbl">Task progress</span><b>{{ actProgress | number:'1.0-0' }}%</b></div>
+        <div class="tprog"><i [style.width.%]="actProgress"></i></div>
+        <div class="tfoot">
+          <span>Today <b>{{ actToday }}</b></span>
+          <span>Total <b>{{ actTotal }}</b></span>
+          <span *ngIf="timerRunning">Live <b>{{ actLive }}</b></span>
+          <span class="flex1"></span>
+          <button type="button" class="btn pri" (click)="openTasks()"><span class="material-symbols-outlined">open_in_new</span>Open my tasks</button>
+        </div>
+      </div>
+      <div class="row mt" *ngIf="overdueRow as od">
+        <span class="rico" [style.--kc]="od.color"><span class="material-symbols-outlined">warning</span></span>
+        <div class="rtx"><b>{{ od.title }}</b><span>{{ od.sub }} · {{ od.logged }} {{ od.of }}</span></div>
+        <span class="pill cr">Overdue</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ WEEK + CALENDAR ═══════════════ -->
+  <section class="grid">
+    <div class="card s6 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">bar_chart</span></span>
+        <h2>My hours — last 7 days</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">Log history <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <div class="lg">
+        <span style="--lc:var(--a1)"><i></i>Hours logged</span>
+        <span style="--lc:var(--a2)"><i></i>Today</span>
+        <span style="--lc:var(--line2)"><i></i>Target track</span>
+        <span style="--lc:var(--ink3)"><i class="mkl"></i>{{ weekTargetLabel }} target</span>
+      </div>
+      <div class="wchart" *ngIf="weekCols.length; else noWeek">
+        <div class="plotrow" [style.--tp]="weekTargetPct + '%'">
+          <span class="tline"><span>{{ weekTargetLabel }}</span></span>
+          <div class="pcol" *ngFor="let c of weekCols" [style.--h]="c.h + '%'" [attr.data-tip]="c.tip">
+            <span class="trk"></span>
+            <ng-container *ngIf="!c.off; else offCol">
+              <span class="bb2" [class.short]="c.short" [class.peak]="c.peak" [class.today]="c.today"></span>
+              <span class="v2">{{ c.val }}</span>
+            </ng-container>
+            <ng-template #offCol><span class="offmark"><span class="material-symbols-outlined">{{ c.offIcon }}</span></span></ng-template>
           </div>
-        </ng-container>
+        </div>
+        <div class="labrow">
+          <div class="lcol" *ngFor="let c of weekCols" [class.td]="c.today"><b>{{ c.day }}</b><span class="var" [ngClass]="c.varCls">{{ c.varTxt }}</span></div>
+        </div>
       </div>
-      <div class="calleg">
-        <span>Less</span><i style="background:var(--track)"></i><i style="background:#a7f3d0"></i><i style="background:#5eead4"></i>
-        <i style="background:#2dd4bf"></i><i style="background:#14b8a6"></i><i style="background:#0f766e"></i><span>More</span>
-        <span style="margin-left:14px"><i style="background:#e0e7ff"></i> Leave</span>
-        <span><i style="background:#fecdd3"></i> Missed</span>
-        <span><i style="background:rgba(148,163,184,.10)"></i> Weekend</span>
+      <ng-template #noWeek><p class="muted pad">No hours logged in the last 7 days.</p></ng-template>
+      <div class="stats mt">
+        <div class="st" *ngFor="let s of weekStats" [style.--kc]="s.color">
+          <div class="k">{{ s.k }}</div><div class="v">{{ s.v }}<small>{{ s.unit }}</small></div><div class="d">{{ s.d }}</div></div>
       </div>
-      <div class="calstat">
-        <span *ngFor="let s of calStats">{{ s.k }} <b>{{ s.v }}</b>{{ s.s }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- MY WORK -->
-  <div class="band"><span class="bi" style="--bc:#6366f1"><i class="fas fa-list-check"></i></span><h3>My Work</h3><span class="rule"></span><span class="cnt">{{ tasksBandCount }}</span></div>
-  <div class="grid">
-    <div class="c4 card glass in" style="--d:40ms">
-      <h2><span class="ic" style="--kc:#138271"><i class="fas fa-list-check"></i></span>My tasks <span class="lk">Open →</span></h2>
-      <div class="tk" style="padding-top:0"><span class="tki" style="background:#fdecec;color:#dc2626"><i class="fas fa-lock"></i></span>
-        <div class="tkm"><div class="tkn">{{ taskStats[0].label }}</div><div class="tks" *ngIf="taskStats[0].sub">{{ taskStats[0].sub }}</div></div><b class="exn" style="color:var(--bad)">{{ taskStats[0].count }}</b></div>
-      <div class="tk"><span class="tki" style="background:#e6f7f3;color:#0d7a63"><i class="fas fa-play"></i></span>
-        <div class="tkm"><div class="tkn">{{ taskStats[1].label }}</div><div class="tks" *ngIf="taskStats[1].sub">{{ taskStats[1].sub }}</div></div><b class="exn" style="color:var(--teal)">{{ taskStats[1].count }}</b></div>
-      <div class="tk"><span class="tki" style="background:#fff4e2;color:#b45309"><i class="fas fa-pause"></i></span>
-        <div class="tkm"><div class="tkn">{{ taskStats[2].label }}</div><div class="tks" *ngIf="taskStats[2].sub">{{ taskStats[2].sub }}</div></div><b class="exn" style="color:var(--warn)">{{ taskStats[2].count }}</b></div>
-      <div class="tk"><span class="tki" style="background:#f1f5f9;color:#64748b"><i class="fas fa-circle"></i></span>
-        <div class="tkm"><div class="tkn">{{ taskStats[3].label }}</div><div class="tks" *ngIf="taskStats[3].sub">{{ taskStats[3].sub }}</div></div><b class="exn" style="color:var(--ink3)">{{ taskStats[3].count }}</b></div>
-      <div class="tk"><span class="tki" style="background:#eafaf1;color:#16a34a"><i class="fas fa-check"></i></span>
-        <div class="tkm"><div class="tkn">{{ taskStats[4].label }}</div><div class="tks" *ngIf="taskStats[4].sub">{{ taskStats[4].sub }}</div></div><b class="exn" style="color:var(--good)">{{ taskStats[4].count }}</b></div>
-    </div>
-
-    <div class="c4 card glass in" style="--d:90ms">
-      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-bullseye"></i></span>Estimated vs actual</h2>
-      <div class="bars" style="height:126px">
-        <div class="bcol" *ngFor="let b of estBars" [ngClass]="{ td: b.td }"><div class="bv" [style.background]="b.est ? 'linear-gradient(180deg,#c4b5fd,#8b5cf6)' : null" [style.height.%]="animate ? b.h : 0"><em>{{ b.em }}</em></div><span class="bd">{{ b.bd }}</span></div>
-      </div>
-      <div class="note"><span class="mut" *ngIf="estEmptyNote">{{ estEmptyNote }}</span><span *ngFor="let n of estNote">{{ n.k }} <b>{{ n.v }}</b></span></div>
-    </div>
-
-    <!-- AI insight: fully manual. Nothing is generated on login or by any
-         scheduler — the request is only made when the user presses the button. -->
-    <div class="c4 card glass in" style="--d:140ms">
-      <h2><span class="ic" style="--kc:#8b5cf6"><i class="fas fa-wand-magic-sparkles"></i></span>AI insight
-        <span class="lock" style="background:#eef2ff;color:#4338ca;border-color:#c7d2fe"><i class="fas fa-hand-pointer"></i> ON REQUEST</span></h2>
-      <div class="empty">
-        <i class="fas fa-wand-magic-sparkles"></i>
-        <p>Get a written read on your own DPR — hours against target, reporting consistency and remark quality.</p>
-        <button class="btn bt" type="button"><i class="fas fa-wand-magic-sparkles"></i> Generate my insight</button>
-        <small>Nothing is generated automatically. Takes 10–30 seconds when you ask for it.</small>
+      <div class="wkbul" *ngIf="weekCols.length">
+        <div class="wkhead"><span class="lbl">Week against target</span>
+          <span class="pill" [ngClass]="weekPillCls"><span class="material-symbols-outlined">{{ weekPillCls === 'ok' ? 'trending_up' : 'trending_down' }}</span>{{ weekPillTxt }}</span></div>
+        <div class="bul">
+          <span class="t">
+            <span class="f" [style.width.%]="weekFill" [attr.data-tip]="weekFillTip"></span>
+            <span class="mk" [style.left.%]="weekMark" [attr.data-tip]="weekMarkTip"></span></span>
+          <span class="v" style="color:var(--a1)">{{ weekTotalText }}</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- COMMS & FORMS -->
-  <div class="band"><span class="bi" style="--bc:#0ea5e9"><i class="fas fa-bullhorn"></i></span><h3>Communications &amp; Forms</h3><span class="rule"></span><span class="cnt">{{ formRows.length }} {{ formRows.length === 1 ? 'request' : 'requests' }}</span></div>
-  <div class="grid">
-    <div class="c4 card glass in" style="--d:40ms">
-      <h2><span class="ic" style="--kc:#f59e0b"><i class="fas fa-bullhorn"></i></span>Announcements <span class="lk">All notices →</span></h2>
-      <!-- not wired to a data source yet — empty state, never sample notices -->
-      <div class="ap" style="padding-top:0"><span class="av" style="background:#94a3b8"><i class="fas fa-bullhorn"></i></span>
-        <div><div class="apn">No announcements</div><div class="aps mut">Nothing published for you right now</div></div></div>
+    <div class="card s6 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">calendar_month</span></span>
+        <h2>My DPR calendar — {{ calMonthLabel }}</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">Full history <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <div class="cal">
+        <span class="dow" *ngFor="let d of dows">{{ d }}</span>
+        <span *ngFor="let c of calCells" class="cell" [class.e]="c.empty" [ngClass]="c.cls"
+              [style.--cd]="c.delay" [attr.data-tip]="c.tip || null">
+          <ng-container *ngIf="!c.empty"><b class="d">{{ c.day }}</b><span class="h" *ngIf="c.hh">{{ c.hh }}</span></ng-container>
+        </span>
+      </div>
+      <div class="scale">Lighter
+        <i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i>
+        <i style="background:var(--h4)"></i><i style="background:var(--h5)"></i> more hours ·
+        <i style="background:var(--h0)"></i> off or ahead ·
+        <i class="lvk"></i> leave · <i class="msk"></i> missed</div>
+      <div class="foot" *ngIf="calFoot.length">
+        <span *ngFor="let f of calFoot">{{ f.k }} <b>{{ f.v }}</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ WORK ═══════════════ -->
+  <section class="grid">
+    <div class="card s4 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a2)"><span class="material-symbols-outlined">checklist</span></span>
+        <h2>My tasks</h2>
+        <button type="button" class="lk" (click)="openTasks()">Open <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <div class="row" *ngFor="let t of taskRows">
+        <span class="rico" [style.--kc]="t.color"><span class="material-symbols-outlined">{{ t.icon }}</span></span>
+        <div class="rtx"><b>{{ t.title }}</b><span>{{ t.sub }}</span></div>
+        <div class="rrt"><b [class.over]="t.over">{{ t.logged }}</b><span>{{ t.of }}</span></div></div>
+      <p class="muted pad" *ngIf="!taskRows.length">No open assignments.</p>
     </div>
 
-    <div class="c3 card glass in" style="--d:90ms">
-      <h2><span class="ic" style="--kc:#6366f1"><i class="fas fa-bell"></i></span>My notifications</h2>
-      <!-- not wired to a data source yet — empty state, never sample notifications -->
-      <div class="ex" style="padding-top:0"><span class="exi" style="background:#f1f5f9"><i class="fas fa-bell" style="color:#64748b"></i></span>
-        <div><div class="ext">No notifications</div><div class="exs mut">Nothing new for you right now</div></div></div>
+    <div class="card s4 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="material-symbols-outlined">compare_arrows</span></span>
+        <h2>Estimate vs actual</h2></div>
+      <ng-container *ngIf="estRows.length; else noEst">
+        <p class="sub">Distance from the estimate. Left of centre is under, right is over.</p>
+        <div class="lg">
+          <span style="--lc:var(--a1)"><i></i>Under</span>
+          <span style="--lc:var(--a3)"><i></i>Over</span>
+          <span style="--lc:var(--ink4)"><i class="mkl"></i>On estimate</span>
+        </div>
+        <div class="dv">
+          <div class="dvr" *ngFor="let e of estRows">
+            <div class="top"><span class="nm">{{ e.name }}</span><span class="vv">{{ e.vv }}</span></div>
+            <div class="dvtr"><span class="mid"></span>
+              <span class="sg" [class.over]="e.over" [style.width.%]="e.width"
+                    [style.left.%]="e.over ? 50 : null" [style.right.%]="e.over ? null : 50" [attr.data-tip]="e.tip"></span></div>
+          </div>
+        </div>
+        <div class="foot"><span>{{ estFoot }}</span></div>
+      </ng-container>
+      <ng-template #noEst><p class="muted pad">None of your open tasks has an estimate set.</p></ng-template>
     </div>
 
-    <div class="c5 card glass in" style="--d:140ms">
-      <h2><span class="ic" style="--kc:#f43f5e"><i class="fas fa-file-circle-check"></i></span>My form requests <span class="lk">All forms →</span></h2>
-      <div class="ap" *ngFor="let f of formRows; let i = index" [style.padding-top]="i === 0 ? '0' : null">
-        <span class="av" [style.background]="f.color"><i [ngClass]="f.icon"></i></span>
-        <div><div class="apn">{{ f.apn }}</div><div class="aps">{{ f.aps }}</div></div><span class="age" [ngClass]="f.ageCls">{{ f.ageTxt }}</span></div>
-      <div class="ap" *ngIf="!formRows.length" style="padding-top:0"><span class="av" style="background:#94a3b8"><i class="fas fa-file-circle-check"></i></span>
-        <div><div class="apn">No form requests</div><div class="aps mut">Nothing submitted for this period</div></div></div>
+    <div class="card aipanel s4 an" style="--d:180ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">auto_awesome</span></span>
+        <h2>AI DPR insight</h2><span class="pill nu">On request</span></div>
+      <div class="aibox">
+        <h3><span class="material-symbols-outlined">auto_awesome</span>Generate my work summary</h3>
+        <p>A written read on your own DPR for this month. Nothing is generated until you press the button.</p>
+      </div>
+      <ul class="ailist">
+        <li><span class="material-symbols-outlined">target</span>Hours against your expected target</li>
+        <li><span class="material-symbols-outlined">event_available</span>How consistently you reported</li>
+        <li><span class="material-symbols-outlined">edit_note</span>Quality of your daily remarks</li>
+      </ul>
+      <button type="button" class="btn pri wide" (click)="generateAi()"><span class="material-symbols-outlined">auto_awesome</span>Generate my AI insight</button>
+      <small class="muted">Takes 10–30 seconds when you ask for it.</small>
     </div>
-  </div>
+  </section>
+
+  <!-- ═══════════════ COMMUNICATIONS ═══════════════ -->
+  <section class="grid">
+    <div #noticePanel class="card s4 an" style="--d:60ms" [class.pulse-ring]="pulseNotice">
+      <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="material-symbols-outlined">campaign</span></span>
+        <h2>Announcements</h2><span class="pill wt" *ngIf="noticeUnread > 0">{{ noticeUnread }} new</span></div>
+      <button type="button" class="row click" *ngFor="let n of noticeRows" (click)="openNotice(n)">
+        <span class="rico" [style.--kc]="n.color"><span class="material-symbols-outlined">{{ n.icon }}</span></span>
+        <span class="rtx"><b>{{ n.title }}</b><span>{{ n.sub }}</span></span>
+        <span class="pill" [ngClass]="n.unread ? 'wt' : 'nu'">{{ n.unread ? 'New' : 'Read' }}</span></button>
+      <p class="muted pad" *ngIf="!noticeRows.length">Nothing published for you right now.</p>
+    </div>
+
+    <div #notifPanel class="card s4 an" style="--d:120ms" [class.pulse-ring]="pulseNotif">
+      <div class="ch"><span class="cic" style="--kc:var(--a4)"><span class="material-symbols-outlined">notifications</span></span>
+        <h2>My notifications</h2><span class="pill cr" *ngIf="notifUnread > 0">{{ notifUnread }} unread</span></div>
+      <button type="button" class="row click" *ngFor="let n of notifRows" (click)="openNotification(n)">
+        <span class="rico" [style.--kc]="n.color"><span class="material-symbols-outlined">{{ n.icon }}</span></span>
+        <span class="rtx"><b>{{ n.message }}</b><span>{{ n.time }}</span></span>
+        <span class="unreaddot" *ngIf="n.unread"></span></button>
+      <p class="muted pad" *ngIf="!notifRows.length">Nothing new for you right now.</p>
+    </div>
+
+    <div class="card s4 an" style="--d:180ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">fact_check</span></span>
+        <h2>My requests</h2>
+        <button type="button" class="lk" (click)="openForms()">All forms <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <div class="row" *ngFor="let f of formRows">
+        <span class="rico" [style.--kc]="f.color"><span class="material-symbols-outlined">{{ f.icon }}</span></span>
+        <div class="rtx"><b>{{ f.title }}</b><span>{{ f.sub }}</span></div>
+        <span class="pill" [ngClass]="f.pillCls">{{ f.pillTxt }}</span></div>
+      <p class="muted pad" *ngIf="!formRows.length">Nothing submitted this period.</p>
+      <button type="button" class="btn wide" (click)="newRequest()"><span class="material-symbols-outlined">add</span>New request</button>
+    </div>
+  </section>
+
+  <app-ai-report #aiReport [hideLaunchButton]="true"></app-ai-report>
+  <div class="tip" #tip></div>
 </div>

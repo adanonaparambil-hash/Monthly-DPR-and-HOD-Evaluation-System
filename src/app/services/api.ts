@@ -9,6 +9,7 @@ import { EmployeeExitRequest, MyApprovalRequest, EmployeeApprovalInboxRequest, U
 import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, ToggleFavouriteCategoryRequest, TaskCategoryRequest, UserBreakRequest, TaskFieldMappingRequest, TaskBulkApprovalRequest, UserDailyLogHistoryRequest, DecreaseTimeLogRequest, UserTaskDayLogHistoryRequest } from '../models/TimeSheetDPR.model';
 import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest,SupplierTransactionRequest } from '../models/axpertDashBoard.model';
 import { WirListRequest } from '../models/wir.model';
+import { MirListRequest } from '../models/mir.model';
 import { SupplierReportRequest } from '../models/financeReport.model';
 
 
@@ -233,15 +234,7 @@ export class Api {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
 
-  /**
-   * Employee list WITH workers (EMPCATEGORY 'LABOUR'), same shape as
-   * GetEmployeeMasterList.
-   *
-   * Deliberately a second endpoint, not a flag on the first: that list feeds
-   * my-task, task-details-modal, rejoining-form and the flow-config page, and
-   * none of them should gain ~2,900 labour rows. Only two callers use this —
-   * the exit form's people pickers and the Approval Management employee filter.
-   */
+  
   GetEmployeeListAll(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeListAll`);
   }
@@ -771,6 +764,24 @@ export class Api {
     // docid goes as a query param — WIR numbers contain '/' which breaks URL paths
     const params = new HttpParams().set('docid', docid);
     return this.http.get(`${this.apiUrl}/WIR/GetWirPdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── MIR Reports ─────────────────────────────────────────────────────────────
+  // Served by the QAQC controller, which answers on both /api/QAQC and /api/WIR.
+  // MIR uses the QAQC path; the WIR calls above keep their original path so
+  // nothing about the live WIR screen changes.
+
+  getMirList(request: MirListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetMirList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getMirPdf(docid: string): Observable<Blob> {
+    // Same reason as WIR: a MIR number contains '/' (ATC/P. 363 ISHC/MIR/26067)
+    // and would be read as URL path segments if it were not a query param.
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/QAQC/GetMirPdf`, { params, responseType: 'blob' })
       .pipe(catchError(this.handleError));
   }
 

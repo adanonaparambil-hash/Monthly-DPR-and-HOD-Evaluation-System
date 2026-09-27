@@ -317,7 +317,10 @@
                   </div>
 
 
-                  <div class="form-group" *ngIf="formType === 'P' || formType === 'R'">
+                  <!-- Category is shown on every tab: it is what picks the approval
+                       chain (see approvalType), so Emergency needs it as much as
+                       Planned Leave and Resignation do. -->
+                  <div class="form-group" *ngIf="formType === 'E' || formType === 'P' || formType === 'R'">
                     <label>Category *</label>
                     <div class="radio-group">
                       <label class="radio-label">

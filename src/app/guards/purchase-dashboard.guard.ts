@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { homeRouteFor } from '../utils/home-route';
 import { CanActivate, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -14,7 +15,7 @@ export class PurchaseDashboardGuard implements CanActivate {
     const userId = session?.userId ?? session?.id ?? session?.empId;
 
     if (!userId) {
-      this.router.navigate(['/employee-dashboard']);
+      this.router.navigate([homeRouteFor()]);
       return of(false);
     }
 
@@ -27,13 +28,13 @@ export class PurchaseDashboardGuard implements CanActivate {
           (m.isActive ?? 'Y') === 'Y'
         );
         if (!hasAccess) {
-          this.router.navigate(['/employee-dashboard']);
+          this.router.navigate([homeRouteFor()]);
         }
         return hasAccess;
       }),
       catchError(() => {
         // On API error, deny access (secure by default)
-        this.router.navigate(['/employee-dashboard']);
+        this.router.navigate([homeRouteFor()]);
         return of(false);
       })
     );

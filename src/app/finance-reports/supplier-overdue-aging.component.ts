@@ -57,14 +57,20 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
   readonly COLUMNS: ReportColumn[] = [
     { key: 'VENDORNAME',        label: 'Vendor',            text: true, filter: true },
     { key: 'CURRENCY',          label: 'Currency',          text: true, filter: true },
+    // Total Outstanding sits HERE, not at the far right, matching the forecast
+    // report. It is the number people read first - what this supplier is owed
+    // in total - and the ageing buckets to its right explain how much of it is
+    // already past due. Off the end of ten columns it needed a scroll to reach.
+    { key: 'TOTAL_OUTSTANDING', label: 'Total Outstanding' },
     { key: 'DAYS_1_30',         label: '1-30 Days' },
     { key: 'DAYS_31_60',        label: '31-60 Days' },
     { key: 'DAYS_61_90',        label: '61-90 Days' },
     { key: 'DAYS_91_120',       label: '91-120 Days' },
     { key: 'DAYS_121_180',      label: '121-180 Days' },
     { key: 'ABOVE_180_DAYS',    label: 'Above 180 Days' },
-    { key: 'TOTAL_OVERDUE',     label: 'Total Overdue' },
-    { key: 'TOTAL_OUTSTANDING', label: 'Total Outstanding' }
+    // Total Overdue stays last: it is the sum of the six buckets to its left,
+    // so it reads as their total rather than as a second headline figure.
+    { key: 'TOTAL_OVERDUE',     label: 'Total Overdue' }
   ];
 
   /** Sorting is SERVER-side - the screen only holds one batch at a time. */
@@ -582,9 +588,12 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
   }
 
   private writeCsv(all: SupplierOverdueAgingRow[]): void {
-    const head = ['Vendor', 'Currency', '1-30 Days', '31-60 Days', '61-90 Days',
-                  '91-120 Days', '121-180 Days', 'Above 180 Days',
-                  'Total Overdue', 'Total Outstanding'];
+    // Same order as COLUMNS on screen - Total Outstanding next to Currency.
+    // The export and the table have to agree, or the file looks like a
+    // different report from the one that produced it.
+    const head = ['Vendor', 'Currency', 'Total Outstanding', '1-30 Days', '31-60 Days',
+                  '61-90 Days', '91-120 Days', '121-180 Days', 'Above 180 Days',
+                  'Total Overdue'];
 
     const esc = (v: any) => `"${(v ?? '').toString().replace(/"/g, '""')}"`;
     const sum = (f: keyof SupplierOverdueAgingRow) =>
@@ -593,14 +602,14 @@ export class SupplierOverdueAgingComponent implements OnInit, OnDestroy {
     const lines = [
       head.map(esc).join(','),
       ...all.map(r => [
-        r.vendorName, r.currency, r.days_1_30, r.days_31_60, r.days_61_90,
-        r.days_91_120, r.days_121_180, r.above_180_Days,
-        r.total_Overdue, r.total_Outstanding
+        r.vendorName, r.currency, r.total_Outstanding, r.days_1_30, r.days_31_60,
+        r.days_61_90, r.days_91_120, r.days_121_180, r.above_180_Days,
+        r.total_Overdue
       ].map(esc).join(',')),
       // Totals over the WHOLE file, not a page.
-      ['TOTAL', '', sum('days_1_30'), sum('days_31_60'), sum('days_61_90'),
-       sum('days_91_120'), sum('days_121_180'), sum('above_180_Days'),
-       sum('total_Overdue'), sum('total_Outstanding')].map(esc).join(',')
+      ['TOTAL', '', sum('total_Outstanding'), sum('days_1_30'), sum('days_31_60'),
+       sum('days_61_90'), sum('days_91_120'), sum('days_121_180'),
+       sum('above_180_Days'), sum('total_Overdue')].map(esc).join(',')
     ];
 
     const stamp = new Date().toISOString().slice(0, 10);

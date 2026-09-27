@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, Input } from '@angular/core';
+import { homeRouteFor } from '../utils/home-route';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -2194,8 +2195,9 @@ export class EmergencyExitFormComponent implements OnInit {
     this.applyFlightTimeValidator();
 
     if (this.formType === 'E') {
-      // Emergency form - only planned leave and resignation fields are not required
-      this.exitForm.get('category')?.clearValidators();
+      // Emergency form: Category is required here too — it drives the approval
+      // chain, so without it the form would be submitted with no approvers.
+      this.exitForm.get('category')?.setValidators([Validators.required]);
       this.exitForm.get('projectManagerName')?.clearValidators();
       // Remove old single dropdown validators (no longer used)
       this.exitForm.get('responsibilitiesHandedOverTo')?.clearValidators();
@@ -2675,8 +2677,12 @@ export class EmergencyExitFormComponent implements OnInit {
       }
     }
 
-    // Emergency form - validate responsibilities
+    // Emergency form - category picks the approval chain, then responsibilities
     if (this.formType === 'E') {
+      if (!formValue.category) {
+        console.log('Validation failed: category missing for E form');
+        return false;
+      }
       const responsibilitiesValid = this.validateResponsibilities();
       if (!responsibilitiesValid) {
         console.log('Validation failed: responsibilities invalid for E form');
@@ -3022,18 +3028,10 @@ export class EmergencyExitFormComponent implements OnInit {
    * Get the appropriate redirect route after form submission based on user context
    */
   getRedirectRoute(): string {
-    // You can customize this based on your application's routing structure
-    // Check user role or other factors to determine the correct route
-    if (this.currentUser?.role === 'employee') {
-      return '/employee-dashboard';
-    } else if (this.currentUser?.role === 'hod') {
-      return '/hod-dashboard';
-    } else if (this.currentUser?.role === 'ced') {
-      return '/ced-dashboard';
-    }
-    
-    // Default fallback routes
-    return '/employee-dashboard'; // or '/dashboard' or whatever your main listing page is
+    // Back to the user's own home page (utils/home-route.ts). The old version
+    // compared currentUser.role to 'employee' / 'hod', which the session never
+    // carries, so every submitter fell through to the old employee dashboard.
+    return homeRouteFor();
   }
 
   // Project Manager dropdown methods

@@ -1,0 +1,1045 @@
+<title>Adrak Employee DPR</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Inter:wght@400..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMPLOYEE DPR DASHBOARD v3 — "Luminous Emerald", extended.
+   Built on the supplied DESIGN.md: Geist + Inter, emerald #006D4E brand,
+   hairline borders, 8px card radius, full-round pills.
+   Written as plain CSS with tokens rather than Tailwind, so it ports straight
+   into the Angular component the way the existing dashboards are written.
+
+   ONE CORRECTION TO THE SUPPLIED PALETTE. DESIGN.md lists Teal #0D9488 and
+   Emerald #059669 as two separate data-viz roles, but they are the same colour
+   to the eye: ΔE 4.9 with FULL colour vision, where 15 is the floor. Teal is
+   dropped from the categorical set and indigo takes its place. Emerald stays
+   as the brand and "target met" colour. The set below passes all six palette
+   checks in light and dark.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  color-scheme:light;
+  /* surfaces — DESIGN.md */
+  --bg:#f8fafc; --card:#ffffff; --card2:#f8fafc; --raise:#f1f5f9;
+  --line:#e2e8f0; --line2:#edf2f7; --line3:#cbd5e1;
+  --ink:#0f172a; --ink2:#334155; --ink3:#64748b; --ink4:#94a3b8;
+  /* brand */
+  --brand:#006d4e; --brand-d:#00583e; --brand-l:#059669;
+  --brand-fix:#9df4cd; --brand-on-fix:#002115;
+  /* validated categorical accents */
+  --a1:#059669; --a2:#4f46e5; --a3:#d97706; --a4:#e11d48; --a5:#0284c7; --a6:#7c3aed;
+  /* status */
+  --ok:#065f46; --okbg:#ecfdf5; --okbd:#a7f3d0;
+  --wt:#92400e; --wtbg:#fffbeb; --wtbd:#fde68a;
+  --cr:#9f1239; --crbg:#fff1f2; --crbd:#fecdd3;
+  --nu:#334155; --nubg:#f1f5f9; --nubd:#e2e8f0;
+  /* heat ramp — one hue, light to dark */
+  --h0:#f1f5f9; --h1:#d1fae5; --h2:#8ee0bd; --h3:#34b98a; --h4:#059669; --h5:#065f46;
+  --e1:0 1px 3px 0 rgba(15,23,42,.03),0 1px 2px -1px rgba(15,23,42,.02);
+  --e2:0 4px 6px -1px rgba(15,23,42,.05),0 2px 4px -2px rgba(15,23,42,.03);
+  --e3:0 10px 15px -3px rgba(15,23,42,.07),0 4px 6px -4px rgba(15,23,42,.03);
+  --tip:#0f172a; --tipink:#f8fafc;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0a1120; --card:#111c2f; --card2:#0e1728; --raise:#16233a;
+  --line:#1e2d45; --line2:#18263c; --line3:#2b3c58;
+  --ink:#e6edf7; --ink2:#b6c4d8; --ink3:#8296b0; --ink4:#64748b;
+  --brand:#10b981; --brand-d:#059669; --brand-l:#34d399;
+  --brand-fix:#064e3b; --brand-on-fix:#9df4cd;
+  --a2:#6366f1;
+  --ok:#6ee7b7; --okbg:rgba(16,185,129,.12); --okbd:rgba(16,185,129,.34);
+  --wt:#fcd34d; --wtbg:rgba(217,119,6,.14); --wtbd:rgba(217,119,6,.36);
+  --cr:#fda4af; --crbg:rgba(225,29,72,.13); --crbd:rgba(225,29,72,.34);
+  --nu:#b6c4d8; --nubg:rgba(148,163,184,.12); --nubd:#1e2d45;
+  --h0:rgba(148,163,184,.10); --h1:#06382c; --h2:#0a5c45; --h3:#08805f; --h4:#10b981; --h5:#6ee7b7;
+  --e1:0 1px 3px rgba(0,0,0,.4); --e2:0 4px 10px rgba(0,0,0,.42); --e3:0 12px 24px rgba(0,0,0,.5);
+  --tip:#e6edf7; --tipink:#0a1120;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0a1120; --card:#111c2f; --card2:#0e1728; --raise:#16233a;
+  --line:#1e2d45; --line2:#18263c; --line3:#2b3c58;
+  --ink:#e6edf7; --ink2:#b6c4d8; --ink3:#8296b0; --ink4:#64748b;
+  --brand:#10b981; --brand-d:#059669; --brand-l:#34d399;
+  --brand-fix:#064e3b; --brand-on-fix:#9df4cd;
+  --a2:#6366f1;
+  --ok:#6ee7b7; --okbg:rgba(16,185,129,.12); --okbd:rgba(16,185,129,.34);
+  --wt:#fcd34d; --wtbg:rgba(217,119,6,.14); --wtbd:rgba(217,119,6,.36);
+  --cr:#fda4af; --crbg:rgba(225,29,72,.13); --crbd:rgba(225,29,72,.34);
+  --nu:#b6c4d8; --nubg:rgba(148,163,184,.12); --nubd:#1e2d45;
+  --h0:rgba(148,163,184,.10); --h1:#06382c; --h2:#0a5c45; --h3:#08805f; --h4:#10b981; --h5:#6ee7b7;
+  --e1:0 1px 3px rgba(0,0,0,.4); --e2:0 4px 10px rgba(0,0,0,.42); --e3:0 12px 24px rgba(0,0,0,.5);
+  --tip:#e6edf7; --tipink:#0a1120;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:400 14px/22px Inter,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums slashed-zero}
+h1,h2,h3,h4{font-family:Geist,"Segoe UI",system-ui,sans-serif;text-wrap:balance;
+  -webkit-text-fill-color:currentColor;font-weight:600}
+.ms{font-family:"Material Symbols Outlined";font-weight:400;font-style:normal;line-height:1;
+  letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;
+  -webkit-font-feature-settings:"liga";-webkit-font-smoothing:antialiased;font-size:20px;flex-shrink:0}
+.num{font-family:Geist,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums slashed-zero}
+
+/* ── motion ─────────────────────────────────────────────────────────────── */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes ping{75%,100%{transform:scale(2.2);opacity:0}}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(22px,-16px) scale(1.09)}}
+@keyframes sweep{0%{transform:translateX(-110%)}60%,100%{transform:translateX(320%)}}
+@keyframes growW{from{width:0}}
+@keyframes growH{from{height:0}}
+@keyframes ringA{from{stroke-dashoffset:314}}
+@keyframes ringB{from{stroke-dashoffset:377}}
+@keyframes spinaur{to{transform:rotate(360deg)}}
+.an{animation:rise .62s cubic-bezier(.22,1,.36,1) backwards;animation-delay:var(--d,0ms)}
+
+/* ── shell ──────────────────────────────────────────────────────────────── */
+.shell{display:flex;min-height:100vh}
+aside{width:256px;flex-shrink:0;background:var(--card);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brandrow{height:64px;padding:0 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line2)}
+.blogo{width:36px;height:36px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;
+  font:700 16px Geist,sans-serif;box-shadow:var(--e1)}
+.bname{display:flex;align-items:center;gap:6px}
+.bname b{font:600 16px Geist,sans-serif;letter-spacing:-.01em}
+.hqtag{font:700 11px Geist,sans-serif;letter-spacing:.04em;padding:1px 7px;border-radius:999px;
+  background:var(--brand-fix);color:var(--brand-on-fix)}
+.bsub{font:500 12px Geist,sans-serif;color:var(--ink2);display:block}
+nav{flex:1;overflow-y:auto;padding:8px}
+.navlbl{padding:10px 8px 4px;font:600 11px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink2);
+  font:500 14px Geist,sans-serif;cursor:pointer;border:0;background:none;width:100%;text-align:left;
+  transition:background .18s,color .18s,transform .18s}
+.nav:hover{background:var(--raise);color:var(--ink);transform:translateX(2px)}
+.nav.on{background:var(--brand);color:#fff;font-weight:600;box-shadow:var(--e1)}
+.nav .sp{margin-left:auto;display:flex;align-items:center;gap:6px}
+.nbadge{font:700 11px Geist,sans-serif;padding:1px 7px;border-radius:999px;background:var(--crbg);color:var(--cr);
+  border:1px solid var(--crbd)}
+.nav.on .nbadge{background:rgba(255,255,255,.22);color:#fff;border-color:transparent}
+.livedot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.asidefoot{padding:8px;border-top:1px solid var(--line2)}
+.sync{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;
+  background:var(--card2);margin-bottom:4px}
+.sync .l{display:flex;align-items:center;gap:7px;font:500 12px Geist,sans-serif}
+.pulse{position:relative;width:8px;height:8px}
+.pulse i{position:absolute;inset:0;border-radius:50%;background:var(--brand-l);display:block}
+.pulse i:first-child{animation:ping 1.8s cubic-bezier(0,0,.2,1) infinite}
+.vtag{font:600 11px ui-monospace,Consolas,monospace;color:var(--ink3)}
+.signout{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--a4);
+  font:500 14px Geist,sans-serif;cursor:pointer;transition:background .18s}
+.signout:hover{background:var(--crbg)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+header.top{height:64px;position:sticky;top:env(safe-area-inset-top,0px);z-index:40;
+  background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 20px}
+.crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink2);min-width:0}
+.crumb b{color:var(--brand);font-weight:600}
+.search{position:relative;margin-left:auto;display:flex;align-items:center}
+.search .ms{position:absolute;left:10px;font-size:18px;color:var(--ink4);pointer-events:none}
+.search input{width:280px;height:36px;padding:0 54px 0 36px;border-radius:8px;background:var(--card2);
+  border:1px solid var(--line);font:400 12px Inter,sans-serif;color:var(--ink)}
+.search input::placeholder{color:var(--ink4)}
+.search input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 15%,transparent)}
+.kbd{position:absolute;right:8px;font:600 11px ui-monospace,Consolas,monospace;color:var(--ink3);
+  background:var(--raise);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.ibtn{width:36px;height:36px;border-radius:8px;border:0;background:none;color:var(--ink2);cursor:pointer;
+  display:grid;place-items:center;position:relative;transition:background .18s,color .18s}
+.ibtn:hover{background:var(--raise);color:var(--ink)}
+.ibtn .dotn{position:absolute;top:5px;right:5px;min-width:16px;height:16px;border-radius:999px;background:var(--a4);
+  color:#fff;font:700 10px Geist,sans-serif;display:grid;place-items:center;padding:0 4px;border:2px solid var(--card)}
+.me{display:flex;align-items:center;gap:9px;cursor:pointer;padding-left:6px}
+.avatar{width:34px;height:34px;border-radius:999px;background:var(--brand);color:#fff;display:grid;place-items:center;
+  font:700 12px Geist,sans-serif}
+.me .nm{font:600 12px Geist,sans-serif;display:block;line-height:16px}
+.me .rl{font:500 11px Geist,sans-serif;color:var(--ink3);display:block;line-height:14px}
+.vdiv{width:1px;height:24px;background:var(--line)}
+
+.page{padding:20px;display:flex;flex-direction:column;gap:20px;padding-bottom:56px}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(12,1fr)}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}
+.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+
+/* ── card ───────────────────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:var(--e1);
+  min-width:0;transition:box-shadow .24s,border-color .24s,transform .24s}
+.card:hover{box-shadow:var(--e2);border-color:var(--line3);transform:translateY(-2px)}
+.ch{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.ch h2{font:600 16px Geist,sans-serif;letter-spacing:-.01em;flex:1;min-width:0}
+.ch .cic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+  background:color-mix(in srgb,var(--kc,var(--brand)) 13%,transparent);color:var(--kc,var(--brand))}
+.ch .cic .ms{font-size:18px}
+.ch .lk{font:600 12px Geist,sans-serif;color:var(--brand);cursor:pointer;display:flex;align-items:center;gap:3px;
+  white-space:nowrap}
+.ch .lk:hover{text-decoration:underline}
+.lbl{font:600 11px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.sub{font-size:12px;color:var(--ink3);margin:-8px 0 12px}
+
+/* ── pills ──────────────────────────────────────────────────────────────── */
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;
+  font:600 11px Geist,sans-serif;letter-spacing:.04em;border:1px solid transparent;white-space:nowrap}
+.pill .ms{font-size:13px}
+.pill.ok{background:var(--okbg);color:var(--ok);border-color:var(--okbd)}
+.pill.wt{background:var(--wtbg);color:var(--wt);border-color:var(--wtbd)}
+.pill.cr{background:var(--crbg);color:var(--cr);border-color:var(--crbd)}
+.pill.nu{background:var(--nubg);color:var(--nu);border-color:var(--nubd)}
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero{position:relative;overflow:hidden;border-radius:16px;padding:22px 24px;border:1px solid var(--line);
+  background:linear-gradient(115deg,var(--card2) 0%,var(--card) 44%,var(--card2) 100%);box-shadow:var(--e1);
+  display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center}
+.blob{position:absolute;border-radius:50%;filter:blur(64px);pointer-events:none;animation:drift 17s ease-in-out infinite}
+.blob.b1{width:300px;height:300px;right:-60px;top:-110px;background:color-mix(in srgb,var(--a1) 30%,transparent)}
+.blob.b2{width:230px;height:230px;left:16%;bottom:-140px;background:color-mix(in srgb,var(--a5) 24%,transparent);animation-delay:-6s}
+.blob.b3{width:200px;height:200px;right:26%;top:-90px;background:color-mix(in srgb,var(--a6) 20%,transparent);animation-delay:-11s}
+.hl,.hrr{position:relative;z-index:1}
+.eyeb{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:var(--card);
+  border:1px solid var(--line);box-shadow:var(--e1);
+  font:600 11px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--brand)}
+.eyeb .pulse i{background:var(--brand)}
+.hero h1{font:600 clamp(24px,2.7vw,36px)/1.18 Geist,sans-serif;letter-spacing:-.025em;margin:10px 0 4px}
+.hmeta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:14px;color:var(--ink2)}
+.hmeta .ms{font-size:16px;color:var(--ink4)}
+.hmeta .sep{color:var(--ink4)}
+.hchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hchip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:var(--card);
+  border:1px solid var(--line);font:500 12px Geist,sans-serif;color:var(--ink2);box-shadow:var(--e1)}
+.hchip b{color:var(--ink);font-weight:600}
+.hchip.g{border-color:var(--okbd);color:var(--ok)}
+.hchip.g b{color:var(--ok)}
+.hrr{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:132px;height:132px;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring .trk{stroke:var(--line);fill:none;stroke-width:11}
+.ring .val{fill:none;stroke-width:11;stroke-linecap:round;stroke:url(#rg);
+  stroke-dasharray:314;animation:ringA 1.6s cubic-bezier(.25,.9,.3,1) .2s backwards}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .mid b{font:600 26px/1 Geist,sans-serif;letter-spacing:-.03em}
+.ring .mid span{font:600 11px Geist,sans-serif;letter-spacing:.04em;color:var(--ink3);margin-top:4px}
+.rlist{display:flex;flex-direction:column;gap:7px;min-width:172px}
+.rrow{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.rrow b{margin-left:auto;color:var(--ink);font:600 13px Geist,sans-serif}
+.sqd{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── quick actions ──────────────────────────────────────────────────────── */
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.qbtn{position:relative;overflow:hidden;display:flex;align-items:center;gap:13px;padding:15px 16px;border-radius:12px;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--e1);cursor:pointer;text-align:left;
+  transition:transform .22s cubic-bezier(.34,1.4,.64,1),box-shadow .22s,border-color .22s}
+.qbtn:hover{transform:translateY(-4px);box-shadow:var(--e3);border-color:color-mix(in srgb,var(--kc) 45%,transparent)}
+.qbtn:focus-visible{outline:2px solid var(--kc);outline-offset:2px}
+.qbtn::after{content:"";position:absolute;top:0;left:0;width:36%;height:100%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--kc) 18%,transparent),transparent);
+  transform:translateX(-110%)}
+.qbtn:hover::after{animation:sweep .85s ease forwards}
+.qic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;color:#fff;
+  background:linear-gradient(135deg,var(--kc),color-mix(in srgb,var(--kc) 62%,#fff));
+  box-shadow:0 5px 14px color-mix(in srgb,var(--kc) 32%,transparent)}
+.qic .ms{font-size:21px}
+.qtx{flex:1;min-width:0}
+.qtx b{display:block;font:600 14px Geist,sans-serif;letter-spacing:-.01em}
+.qtx span{display:block;font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qct{font:600 18px Geist,sans-serif;color:var(--kc);flex-shrink:0}
+
+/* ── KPI tiles ──────────────────────────────────────────────────────────── */
+.kpi{position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--kc),transparent);opacity:.75}
+.kpi .kh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.kpi .kv{font:600 32px/38px Geist,sans-serif;letter-spacing:-.03em}
+.kpi .kv small{font:600 14px Geist,sans-serif;color:var(--ink3)}
+.kpi .kf{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);margin-top:7px}
+.kpi .kf .ms{font-size:14px}
+.bar{height:7px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:11px;position:relative}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--kc);
+  animation:growW 1.25s cubic-bezier(.25,.9,.3,1) .25s backwards}
+.bar.sh::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:translateX(-110%);animation:sweep 2.6s ease-in-out infinite;animation-delay:1.3s}
+
+/* ── month expected vs achieved ─────────────────────────────────────────── */
+.mx{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center}
+.mxring{position:relative;width:150px;height:150px;flex-shrink:0}
+.mxring svg{transform:rotate(-90deg)}
+.mxring .t{fill:none;stroke:var(--line);stroke-width:13}
+.mxring .v{fill:none;stroke-width:13;stroke-linecap:round;stroke:url(#mg);stroke-dasharray:377;
+  animation:ringB 1.7s cubic-bezier(.25,.9,.3,1) .25s backwards}
+.mxring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mxring .mid b{font:600 30px/1 Geist,sans-serif;letter-spacing:-.03em;color:var(--a1)}
+.mxring .mid span{font:600 10px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-top:5px}
+.mxr{display:flex;flex-direction:column;gap:13px;min-width:0}
+.bul{display:flex;align-items:center;gap:11px}
+.bul .n{width:96px;flex-shrink:0;font:500 12px Geist,sans-serif;color:var(--ink2)}
+.bul .t{position:relative;flex:1;height:22px;background:var(--line);border-radius:6px;min-width:0}
+.bul .f{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--bc,var(--a1));
+  animation:growW 1.4s cubic-bezier(.25,.9,.3,1) .2s backwards}
+.bul .gh{position:absolute;top:0;bottom:0;border-radius:0 6px 6px 0;
+  animation:growW 1.4s cubic-bezier(.25,.9,.3,1) .45s backwards;
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--a2) 42%,transparent) 0 5px,transparent 5px 10px);
+  border:1px solid color-mix(in srgb,var(--a2) 48%,transparent);border-left:0}
+.bul .mk{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px;
+  box-shadow:0 0 0 2px var(--card)}
+.bul .v{width:82px;flex-shrink:0;text-align:right;font:600 13px Geist,sans-serif}
+.mxst{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:11px;margin-top:4px}
+.st{padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--kc) 8%,transparent);
+  border:1px solid color-mix(in srgb,var(--kc) 22%,transparent)}
+.st .k{font:600 10px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.st .v{font:600 19px Geist,sans-serif;letter-spacing:-.02em;color:var(--kc);margin-top:2px}
+.st .v small{font:600 11px Geist,sans-serif;color:var(--ink3)}
+.st .d{font-size:11px;color:var(--ink2);margin-top:1px}
+
+/* ── legend ─────────────────────────────────────────────────────────────── */
+.lg{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:11px}
+.lg span{display:inline-flex;align-items:center;gap:6px;font:500 12px Geist,sans-serif;color:var(--ink2)}
+.lg i{width:10px;height:10px;border-radius:3px;background:var(--lc);display:block;flex-shrink:0}
+.lg i.st2{background:repeating-linear-gradient(135deg,var(--lc) 0 4px,transparent 4px 8px);border:1px solid var(--lc)}
+.lg i.mkl{width:3px;height:13px;border-radius:2px}
+
+/* ── timeline ───────────────────────────────────────────────────────────── */
+.tl{position:relative;height:40px;background:var(--line);border-radius:8px;overflow:hidden}
+.tl .sg{position:absolute;top:0;bottom:0;display:grid;place-items:center;color:#fff;
+  font:600 11px Geist,sans-serif;overflow:hidden;white-space:nowrap;
+  animation:growW 1.1s cubic-bezier(.25,.9,.3,1) .25s backwards}
+.tl .sg.gapz{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--a4) 36%,transparent) 0 5px,transparent 5px 10px);
+  border-top:2px solid var(--a4);border-bottom:2px solid var(--a4);color:var(--a4)}
+.tlx{display:flex;justify-content:space-between;margin-top:6px;font:500 11px Geist,sans-serif;color:var(--ink3)}
+
+/* ── week chart ─────────────────────────────────────────────────────────── */
+/* Two aligned rows: the plot, then the labels. Keeping them separate lets the
+   bars share one baseline and the target line sit at a true 9 h on the scale
+   (chart tops out at 12 h, so the line lands at 75%). */
+.wchart{margin-top:2px}
+.plotrow{position:relative;display:flex;align-items:flex-end;gap:10px;height:188px;padding-top:22px}
+.labrow{display:flex;gap:10px;margin-top:9px}
+.lcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px}
+.lcol b{font:600 11px Geist,sans-serif;letter-spacing:.03em;color:var(--ink3)}
+.labrow .lcol:last-child b{color:var(--a2);font-weight:700}
+.var{font:600 10px Geist,sans-serif;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.var.up{background:var(--okbg);color:var(--ok)}
+.var.dn{background:var(--wtbg);color:var(--wt)}
+.var.nx{background:var(--nubg);color:var(--ink3)}
+.var.run{background:color-mix(in srgb,var(--a2) 14%,transparent);color:var(--a2)}
+.tline{position:absolute;left:0;right:0;bottom:75%;border-top:1.5px dashed var(--line3);z-index:2}
+.tline span{position:absolute;right:0;top:-9px;background:var(--card);padding:0 5px;
+  font:600 10.5px Geist,sans-serif;color:var(--ink3)}
+.pcol{position:relative;flex:1;min-width:0;height:100%}
+.trk{position:absolute;left:10%;right:10%;bottom:0;height:75%;background:var(--line2);
+  border-radius:7px 7px 0 0}
+.bb2{position:absolute;left:10%;right:10%;bottom:0;height:var(--h);min-height:3px;border-radius:7px 7px 0 0;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bc,var(--a1)) 74%,#fff),var(--bc,var(--a1)));
+  box-shadow:0 2px 8px color-mix(in srgb,var(--bc,var(--a1)) 28%,transparent);z-index:1;
+  animation:growH 1.15s cubic-bezier(.25,.9,.3,1) .25s backwards;transition:filter .18s}
+.bb2.short{--bc:var(--a3)}
+.bb2.peak{box-shadow:0 3px 14px color-mix(in srgb,var(--a1) 44%,transparent)}
+.pcol:hover .bb2{filter:brightness(1.1)}
+.v2{position:absolute;left:0;right:0;bottom:calc(var(--h) + 8px);text-align:center;z-index:2;
+  font:600 11.5px Geist,sans-serif;color:var(--ink)}
+.offmark{position:absolute;left:10%;right:10%;bottom:0;height:75%;border-radius:7px 7px 0 0;
+  display:grid;place-items:center;color:var(--ink4);
+  background:repeating-linear-gradient(135deg,var(--line2) 0 6px,transparent 6px 12px)}
+.offmark .ms{font-size:17px}
+.wkbul{margin-top:16px;padding-top:14px;border-top:1px solid var(--line2)}
+.wkhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* ── calendar ───────────────────────────────────────────────────────────── */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow{font:600 10px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);
+  text-align:center;padding-bottom:3px}
+.cell{aspect-ratio:1.1;border-radius:8px;background:var(--h0);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;transition:transform .16s,box-shadow .16s;
+  animation:rise .4s cubic-bezier(.34,1.4,.64,1) backwards;animation-delay:var(--cd,0ms)}
+.cell:hover{transform:scale(1.12);box-shadow:var(--e3);z-index:3}
+.cell.e{background:transparent;pointer-events:none;animation:none}
+.cell .d{font:600 12px Geist,sans-serif;line-height:1}
+.cell .h{font:500 9px Geist,sans-serif;opacity:.88;line-height:1}
+.cell.l1{background:var(--h1);color:#065f46}.cell.l2{background:var(--h2);color:#064e3b}
+.cell.l3{background:var(--h3);color:#fff}.cell.l4{background:var(--h4);color:#fff}
+.cell.l5{background:var(--h5);color:#fff}
+.cell.off{color:var(--ink4)}
+.cell.lv{background:color-mix(in srgb,var(--a2) 22%,transparent);color:var(--a2)}
+.cell.today{outline:2.5px solid var(--a2);outline-offset:1px}
+.scale{display:flex;align-items:center;gap:6px;margin-top:12px;font:500 11px Geist,sans-serif;color:var(--ink3);flex-wrap:wrap}
+.scale i{width:22px;height:11px;border-radius:3px;display:block}
+.calfoot{display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px solid var(--line2);
+  font-size:12px;color:var(--ink2)}
+.calfoot b{color:var(--ink);font-family:Geist,sans-serif}
+
+/* ── lists / rows ───────────────────────────────────────────────────────── */
+.row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.row:last-child{border-bottom:0;padding-bottom:0}
+.rico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;color:#fff;
+  background:var(--kc,var(--a1))}
+.rico .ms{font-size:17px}
+.rtx{flex:1;min-width:0}
+.rtx b{display:block;font:600 13px Geist,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtx span{display:block;font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrt{text-align:right;flex-shrink:0}
+.rrt b{display:block;font:600 14px Geist,sans-serif}
+.rrt span{display:block;font:500 11px Geist,sans-serif;color:var(--ink3)}
+
+/* ── active task ────────────────────────────────────────────────────────── */
+.task{border-radius:10px;border:1px solid var(--line);background:var(--card2);padding:14px}
+.tprog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:9px}
+.tprog i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--a1),var(--a5));
+  animation:growW 1.3s cubic-bezier(.25,.9,.3,1) .3s backwards}
+.btn{border:1px solid var(--line);border-radius:8px;padding:8px 14px;font:600 13px Geist,sans-serif;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;background:var(--card);color:var(--ink);transition:background .18s,transform .18s}
+.btn:hover{background:var(--card2);transform:translateY(-1px)}
+.btn.pri{background:var(--brand);color:#fff;border-color:transparent}
+.btn.pri:hover{background:var(--brand-d)}
+.btn .ms{font-size:17px}
+
+/* ── quote ──────────────────────────────────────────────────────────────── */
+.quote{position:relative;overflow:hidden;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--a6) 9%,var(--card)),var(--card) 62%)}
+.quote .qm{position:absolute;right:6px;top:-42px;font:italic 700 140px Georgia,serif;color:var(--a6);opacity:.10;
+  pointer-events:none;user-select:none}
+.quote q{font:italic 400 16px/1.6 Georgia,serif;display:block;position:relative;z-index:1;color:var(--ink)}
+.quote .qa{margin-top:12px;font:600 11px Geist,sans-serif;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--a6);display:flex;align-items:center;gap:9px}
+.quote .qa::before{content:"";width:24px;height:1.5px;background:var(--a6)}
+
+/* ── est vs actual ──────────────────────────────────────────────────────── */
+.dv{display:grid;grid-template-columns:1fr;gap:11px}
+.dvr .top{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}
+.dvr .nm{font:500 13px Geist,sans-serif;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dvr .vv{font:600 12px Geist,sans-serif;color:var(--ink2)}
+.dvtr{position:relative;height:18px;background:var(--line);border-radius:5px}
+.dvtr .mid{position:absolute;left:50%;top:-4px;bottom:-4px;width:1.5px;background:var(--ink4)}
+.dvtr .sg{position:absolute;top:0;bottom:0;border-radius:4px;
+  animation:growW 1.2s cubic-bezier(.25,.9,.3,1) .3s backwards}
+
+/* ── notice / AI panels ─────────────────────────────────────────────────── */
+.aipanel{background:linear-gradient(135deg,color-mix(in srgb,var(--a6) 11%,var(--card)),var(--card) 66%)}
+.aibox{border:1px dashed color-mix(in srgb,var(--a6) 40%,transparent);border-radius:10px;padding:14px;
+  background:color-mix(in srgb,var(--a6) 5%,transparent)}
+.aibox h3{font:600 15px Geist,sans-serif;display:flex;align-items:center;gap:8px;color:var(--a6)}
+.aibox p{font-size:12px;color:var(--ink2);margin-top:6px}
+
+/* ── tooltip ────────────────────────────────────────────────────────────── */
+#tip{position:fixed;z-index:99;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--tip);
+  color:var(--tipink);font:500 12px/1.45 Inter,sans-serif;padding:7px 10px;border-radius:8px;
+  box-shadow:var(--e3);max-width:250px}
+#tip b{font-weight:700;font-family:Geist,sans-serif}
+#tip.on{opacity:1}
+
+/* ── responsive ─────────────────────────────────────────────────────────── */
+@media (max-width:1280px){
+  .s3,.s4,.s5{grid-column:span 6}.s7,.s8{grid-column:span 12}
+  .qa{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:1024px){
+  aside{position:fixed;left:0;top:0;z-index:70;transform:translateX(-100%);transition:transform .28s}
+  aside.open{transform:none}
+  .burger{display:grid!important}
+  .hero{grid-template-columns:1fr}
+  .mx{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .mxr{width:100%}
+}
+@media (max-width:760px){
+  .s3,.s4,.s5,.s6{grid-column:span 12}
+  .qa{grid-template-columns:1fr}
+  .search{display:none}
+  .me .nm,.me .rl{display:none}
+  .page{padding:16px}
+  .bul .n{width:76px}.bul .v{width:66px}
+}
+.burger{display:none;width:36px;height:36px;border-radius:8px;border:0;background:none;color:var(--ink2);
+  cursor:pointer;place-items:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#0284c7"/></linearGradient>
+  <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+</defs></svg>
+
+<div class="shell">
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+<aside id="side">
+  <div class="brandrow">
+    <div class="blogo">A</div>
+    <div>
+      <div class="bname"><b>AL ADRAK</b><span class="hqtag">HQ</span></div>
+      <span class="bsub">Enterprise Portal</span>
+    </div>
+  </div>
+  <nav>
+    <div class="navlbl">Operations</div>
+    <button class="nav"><span class="ms">badge</span>Employee Analytics</button>
+    <button class="nav"><span class="ms">shopping_bag</span>Purchase Dashboard</button>
+    <button class="nav"><span class="ms">apartment</span>PMC Module<span class="sp"><span class="ms" style="font-size:18px">expand_more</span></span></button>
+    <button class="nav"><span class="ms">account_balance</span>Finance<span class="sp"><span class="ms" style="font-size:18px">expand_more</span></span></button>
+    <button class="nav on"><span class="ms">assignment</span>DPR Dashboard<span class="sp"><span class="livedot"></span></span></button>
+    <button class="nav"><span class="ms">verified</span>Approvals<span class="sp"><span class="nbadge">3</span></span></button>
+    <button class="nav"><span class="ms">campaign</span>Announcements<span class="sp"><span class="nbadge">2</span></span></button>
+    <button class="nav"><span class="ms">auto_awesome</span>AI DPR Report</button>
+    <div class="navlbl">System Core</div>
+    <button class="nav"><span class="ms">dynamic_form</span>Form Services</button>
+    <button class="nav"><span class="ms">hub</span>System Master</button>
+    <button class="nav"><span class="ms">manage_accounts</span>My Profile</button>
+  </nav>
+  <div class="asidefoot">
+    <div class="sync"><span class="l"><span class="pulse"><i></i><i></i></span>Cloud Engine Sync</span><span class="vtag">v2.4</span></div>
+    <div class="signout"><span class="ms">logout</span>Sign Out</div>
+  </div>
+</aside>
+
+<div class="main">
+<!-- ═══════════════════════════ TOP BAR ═══════════════════════════ -->
+<header class="top">
+  <button class="burger" id="burger" aria-label="Menu"><span class="ms">menu</span></button>
+  <div class="crumb"><span>Dashboard</span><span style="color:var(--ink4)">/</span><b>Daily Progress Report</b></div>
+  <div class="search">
+    <span class="ms">search</span>
+    <input id="q" type="text" placeholder="Search tasks, logs, forms..." autocomplete="off">
+    <span class="kbd">Ctrl K</span>
+  </div>
+  <button class="ibtn" id="theme" aria-label="Theme"><span class="ms">light_mode</span></button>
+  <button class="ibtn" aria-label="Announcements"><span class="ms">campaign</span><span class="dotn">2</span></button>
+  <button class="ibtn" aria-label="Notifications"><span class="ms">notifications</span><span class="dotn">4</span></button>
+  <span class="vdiv"></span>
+  <div class="me"><div class="avatar">AO</div>
+    <div><span class="nm">ADAN ONAPARAMBIL</span><span class="rl">OM &middot; IT Application Dev</span></div>
+    <span class="ms" style="font-size:18px;color:var(--ink4)">arrow_drop_down</span></div>
+</header>
+
+<div class="page">
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero an">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <div class="hl">
+      <span class="eyeb"><span class="pulse"><i></i><i></i></span>My DPR &middot; live work session</span>
+      <h1>Good afternoon, Adan</h1>
+      <div class="hmeta">
+        <span class="ms">calendar_today</span><span>Saturday, 26 September 2026</span>
+        <span class="sep">&middot;</span><span class="ms">corporate_fare</span><span>Corporate HQ (OM)</span>
+        <span class="sep">&middot;</span><span>IT Systems</span>
+        <span class="sep">&middot;</span><span class="ms">schedule</span><span>9 h expected today</span>
+      </div>
+      <div class="hchips">
+        <span class="hchip g"><span class="livedot" style="background:currentColor"></span>Timer <b>Running</b></span>
+        <span class="hchip"><span class="ms" style="font-size:15px">fingerprint</span>Last punch <b>02:05 PM</b></span>
+        <span class="hchip"><span class="ms" style="font-size:15px">coffee</span>Break <b>47 m</b></span>
+        <span class="hchip"><span class="ms" style="font-size:15px">commute</span>Travel <b>&mdash;</b></span>
+        <span class="hchip"><span class="ms" style="font-size:15px">local_fire_department</span>Streak <b>21 days</b></span>
+      </div>
+    </div>
+    <div class="hrr">
+      <div class="ring">
+        <svg width="132" height="132"><circle class="trk" cx="66" cy="66" r="50"/>
+          <circle class="val" id="ring1" cx="66" cy="66" r="50" stroke-dashoffset="57.8"/></svg>
+        <div class="mid"><b class="num" data-count="7.35" data-fmt="hm">7:21</b><span>OF 9H TODAY</span></div>
+      </div>
+      <div class="rlist">
+        <div class="rrow"><i class="sqd" style="background:var(--a1)"></i>Worked DPR <b class="num">07:21</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a4)"></i>Idle gap <b class="num">00:00</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a3)"></i>Target remaining <b class="num">01:39</b></div>
+        <div class="rrow" style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px">
+          Month total <b class="num">199.1 h</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ QUICK ACTIONS ═══════════════════ -->
+  <section class="qa">
+    <button class="qbtn an" style="--kc:var(--a4);--d:60ms">
+      <span class="qic"><span class="ms">notifications_active</span></span>
+      <span class="qtx"><b>Notifications</b><span>2 approvals moved today</span></span>
+      <span class="qct num">4</span></button>
+    <button class="qbtn an" style="--kc:var(--a3);--d:120ms">
+      <span class="qic"><span class="ms">campaign</span></span>
+      <span class="qtx"><b>Announcements</b><span>Eid holiday circular posted</span></span>
+      <span class="qct num">2</span></button>
+    <button class="qbtn an" style="--kc:var(--a5);--d:180ms">
+      <span class="qic"><span class="ms">verified</span></span>
+      <span class="qtx"><b>My Approvals</b><span>1 leave form waiting on HOD</span></span>
+      <span class="qct num">3</span></button>
+    <button class="qbtn an" style="--kc:var(--a6);--d:240ms">
+      <span class="qic"><span class="ms">auto_awesome</span></span>
+      <span class="qtx"><b>AI DPR Report</b><span>Generate my month summary</span></span>
+      <span class="qct"><span class="ms" style="font-size:22px">arrow_forward</span></span></button>
+  </section>
+
+  <!-- ═══════════════════ KPI ROW ═══════════════════ -->
+  <section class="grid">
+    <div class="card kpi s3 an" style="--kc:var(--a1);--d:60ms">
+      <div class="kh"><span class="lbl">Logged today</span><span class="pill ok">81.6%</span></div>
+      <div class="kv num"><span data-count="7.35" data-dec="2">7.35</span><small> h / 9.0 h</small></div>
+      <div class="bar sh"><i data-w="81.6" style="width:81.6%;"></i></div>
+      <div class="kf"><span class="ms">schedule</span>441 min done &middot; 01:39 to target</div>
+    </div>
+    <div class="card kpi s3 an" style="--kc:var(--a5);--d:120ms">
+      <div class="kh"><span class="lbl">This week</span><span class="pill ok">On track</span></div>
+      <div class="kv num"><span data-count="57" data-dec="2">57.00</span><small> h total</small></div>
+      <div class="bar sh"><i data-w="88" style="width:88%;"></i></div>
+      <div class="kf"><span class="ms">trending_up</span>Avg 9.50 h / day &middot; 6 active days</div>
+    </div>
+    <div class="card kpi s3 an" style="--kc:var(--a2);--d:180ms">
+      <div class="kh"><span class="lbl">Open work</span><span class="pill nu">1 running</span></div>
+      <div class="kv num"><span data-count="5" data-dec="0">5</span><small> tasks</small></div>
+      <div class="bar sh"><i data-w="60" style="width:60%;"></i></div>
+      <div class="kf"><span class="ms">list_alt</span>1 overdue &middot; 2 logs awaiting approval</div>
+    </div>
+    <div class="card kpi s3 an" style="--kc:var(--a6);--d:240ms">
+      <div class="kh"><span class="lbl">Month achieved</span><span class="pill ok">Ahead</span></div>
+      <div class="kv num"><span data-count="105.3" data-dec="1">105.3</span><small>% of target</small></div>
+      <div class="bar sh"><i data-w="100" style="width:100%;"></i></div>
+      <div class="kf"><span class="ms">military_tech</span>199.1 h of 189.0 h expected so far</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ MONTH EXPECTED vs ACHIEVED ═══════════════════ -->
+  <section class="grid">
+    <div class="card s8 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="ms">target</span></span>
+        <h2>September &mdash; expected vs achieved</h2>
+        <span class="lk">Log history <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <p class="sub">Expected hours already allow for your weekly off, public holidays and approved leave.
+        Friday is your only weekly off, so Saturday counts.</p>
+      <div class="mx">
+        <div class="mxring">
+          <svg width="150" height="150"><circle class="t" cx="75" cy="75" r="60"/>
+            <circle class="v" id="ring2" cx="75" cy="75" r="60" stroke-dashoffset="0"/></svg>
+          <div class="mid"><b class="num"><span data-count="105.3" data-dec="1">105.3</span>%</b><span>Achieved</span></div>
+        </div>
+        <div class="mxr">
+          <div class="lg">
+            <span style="--lc:var(--a1)"><i></i>Achieved</span>
+            <span style="--lc:var(--a2)"><i class="st2"></i>Projected at current pace</span>
+            <span style="--lc:var(--ink)"><i class="mkl"></i>Expected</span>
+          </div>
+          <div class="bul">
+            <span class="n">So far</span>
+            <span class="t">
+              <span class="f" data-w="85" style="width:85%;--bc:var(--a1)" data-tip="Achieved <b>199.1 h</b> against <b>189.0 h</b> expected over 21 net working days"></span>
+              <span class="mk" style="left:80.8%" data-tip="Expected to date &mdash; <b>189.0 h</b>"></span></span>
+            <span class="v" style="color:var(--a1)">199.1 h</span>
+          </div>
+          <div class="bul">
+            <span class="n">Month end</span>
+            <span class="t">
+              <span class="f" data-w="80.8" style="width:80.8%;--bc:var(--a1)" data-tip="Already achieved &mdash; <b>199.1 h</b>"></span>
+              <span class="gh" data-w="19.2" data-left="80.8" data-tip="5 working days left at your pace of <b style="width:19.2%;left:80.8%;">9.48 h/day</b> &rarr; <b>+47.4 h</b>"></span>
+              <span class="mk" style="left:95%" data-tip="Full-month expected &mdash; <b>234.0 h</b> (26 working days &times; 9 h)"></span></span>
+            <span class="v">246.5 h</span>
+          </div>
+          <div class="mxst">
+            <div class="st" style="--kc:var(--a1)"><div class="k">Ahead by</div>
+              <div class="v">+10.1<small> h</small></div><div class="d">vs expected today</div></div>
+            <div class="st" style="--kc:var(--a5)"><div class="k">Your pace</div>
+              <div class="v">9.48<small> h/day</small></div><div class="d">Target is 9.0</div></div>
+            <div class="st" style="--kc:var(--a2)"><div class="k">Projected</div>
+              <div class="v">246.5<small> h</small></div><div class="d">+12.5 h over target</div></div>
+            <div class="st" style="--kc:var(--a3)"><div class="k">Days reported</div>
+              <div class="v">21<small>/26</small></div><div class="d">0 leave &middot; 0 missed</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card quote s4 an" style="--d:120ms">
+      <span class="qm">&rdquo;</span>
+      <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="ms">format_quote</span></span>
+        <h2>Quote of the day</h2></div>
+      <q>Small progress is still progress.</q>
+      <div class="qa">Nelson Mandela</div>
+      <div class="row" style="margin-top:16px;border-top:1px solid var(--line2);padding-top:14px">
+        <span class="rico" style="--kc:var(--a1)"><span class="ms">local_fire_department</span></span>
+        <div class="rtx"><b>21-day reporting streak</b><span>Your longest this year</span></div>
+        <div class="rrt"><b style="color:var(--a1)">21</b><span>days</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ TODAY ═══════════════════ -->
+  <section class="grid">
+    <div class="card s7 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="ms">fingerprint</span></span>
+        <h2>Today at a glance</h2>
+        <span class="lk">Punch log <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <div class="lg">
+        <span style="--lc:var(--a1)"><i></i>Task time</span>
+        <span style="--lc:var(--a5)"><i></i>Break</span>
+        <span style="--lc:var(--a4)"><i class="st2"></i>Not logged</span>
+      </div>
+      <div class="tl">
+        <span class="sg" style="width:23%;left:0;background:var(--a1)" data-w="23" data-tip="Drawing review &mdash; 08:12 to 10:19 &middot; <b>2 h 07 m</b>">Drawing review</span>
+        <span class="sg" style="width:8.5%;left:23.4%;background:var(--a5)" data-w="8.5" data-tip="Quick break &mdash; 10:19 to 11:06 &middot; <b>47 m</b>"></span>
+        <span class="sg" style="width:17.2%;left:32.2%;background:var(--a1)" data-w="17.2" data-tip="Site coordination &mdash; 11:06 to 12:41 &middot; <b>1 h 35 m</b>">Site coord.</span>
+        <span class="sg gapz" style="width:17.1%;left:49.7%" data-w="17.1" data-tip="No log against this time &mdash; <b>1 h 35 m</b>">1 h 35 m</span>
+        <span class="sg" style="width:32.9%;left:67.1%;background:var(--a2)" data-w="32.9" data-tip="App development &mdash; 14:16 to now, running &middot; <b>3 h 10 m</b>">App development &middot; running</span>
+      </div>
+      <div class="tlx"><span>08:12 first punch</span><span>4 punches</span><span>17:26 now</span></div>
+      <div class="mxst" style="margin-top:16px">
+        <div class="st" style="--kc:var(--a1)"><div class="k">Day logged</div><div class="v">07:21</div><div class="d">of 9 h</div></div>
+        <div class="st" style="--kc:var(--a5)"><div class="k">Break</div><div class="v">00:47</div><div class="d">1 spell</div></div>
+        <div class="st" style="--kc:var(--a4)"><div class="k">Not logged</div><div class="v">01:35</div><div class="d">Needs a log</div></div>
+        <div class="st" style="--kc:var(--a3)"><div class="k">Last punch</div><div class="v">02:05<small> PM</small></div><div class="d">Still in office</div></div>
+      </div>
+    </div>
+
+    <div class="card s5 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="ms">play_circle</span></span>
+        <h2>Active assigned task</h2><span class="pill ok"><span class="ms">bolt</span>Running</span></div>
+      <div class="task">
+        <span class="lbl">IT Application Development</span>
+        <div style="font:600 15px Geist,sans-serif;margin:5px 0 3px">Project #61729 &middot; DPR Employee Portal</div>
+        <div style="font-size:12px;color:var(--ink3)">Light theme system token architecture and dashboard rebuild</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:13px">
+          <span class="lbl">Task progress</span><b class="num" style="font-family:Geist">75%</b></div>
+        <div class="tprog"><i data-w="75" style="width:75%;"></i></div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:13px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--ink3)">Today <b class="num" style="color:var(--ink)">07:21</b></span>
+          <span style="font-size:12px;color:var(--ink3)">Total <b class="num" style="color:var(--ink)">34:10</b></span>
+          <span style="flex:1"></span>
+          <button class="btn pri"><span class="ms">pause</span>Pause</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <span class="rico" style="--kc:var(--a3)"><span class="ms">warning</span></span>
+        <div class="rtx"><b>Supplier payment report tuning</b><span>Target was 24 Sep &middot; 22.4 h logged of 16 h</span></div>
+        <span class="pill cr">Overdue</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ TIME ═══════════════════ -->
+  <section class="grid">
+    <div class="card s6 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="ms">bar_chart</span></span>
+        <h2>My hours &mdash; last 7 days</h2>
+        <span class="lk">Log history <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <div class="lg">
+        <span style="--lc:var(--a1)"><i></i>Hours logged</span>
+        <span style="--lc:var(--a2)"><i></i>Today, still running</span>
+        <span style="--lc:var(--line2)"><i></i>Target track</span>
+        <span style="--lc:var(--ink3)"><i class="mkl"></i>9 h target</span>
+      </div>
+
+      <div class="wchart">
+        <div class="plotrow">
+          <span class="tline"><span>9 h</span></span>
+          <div class="pcol" style="--h:76.9%" data-tip="Sunday 20 Sep &mdash; <b>9.23 h</b> &middot; 0.23 h over target">
+            <span class="trk"></span><span class="bb2"></span><span class="v2">9.23</span></div>
+          <div class="pcol" style="--h:91.3%" data-tip="Monday 21 Sep &mdash; <b>10.95 h</b> &middot; 1.95 h over target">
+            <span class="trk"></span><span class="bb2"></span><span class="v2">10.95</span></div>
+          <div class="pcol" style="--h:92.7%" data-tip="Tuesday 22 Sep &mdash; <b>11.12 h</b> &middot; your best day this week">
+            <span class="trk"></span><span class="bb2 peak"></span><span class="v2">11.12</span></div>
+          <div class="pcol" style="--h:86.1%" data-tip="Wednesday 23 Sep &mdash; <b>10.33 h</b> &middot; 1.33 h over target">
+            <span class="trk"></span><span class="bb2"></span><span class="v2">10.33</span></div>
+          <div class="pcol" style="--h:61.3%" data-tip="Thursday 24 Sep &mdash; <b>7.35 h</b> &middot; 1.65 h short of target">
+            <span class="trk"></span><span class="bb2 short"></span><span class="v2">7.35</span></div>
+          <div class="pcol off" style="--h:0%" data-tip="Friday 25 Sep &mdash; weekly off, no target">
+            <span class="trk"></span><span class="offmark"><span class="ms">bedtime</span></span></div>
+          <div class="pcol td2" style="--h:61.3%" data-tip="Today, Saturday 26 Sep &mdash; <b>7.35 h</b> so far and still running">
+            <span class="trk"></span><span class="bb2" style="--bc:var(--a2)"></span><span class="v2">7.35</span></div>
+        </div>
+        <div class="labrow">
+          <div class="lcol"><b>SUN</b><span class="var up">+0.2</span></div>
+          <div class="lcol"><b>MON</b><span class="var up">+2.0</span></div>
+          <div class="lcol"><b>TUE</b><span class="var up">+2.1</span></div>
+          <div class="lcol"><b>WED</b><span class="var up">+1.3</span></div>
+          <div class="lcol"><b>THU</b><span class="var dn">&minus;1.7</span></div>
+          <div class="lcol"><b>FRI</b><span class="var nx">OFF</span></div>
+          <div class="lcol"><b>TODAY</b><span class="var run">Running</span></div>
+        </div>
+      </div>
+
+      <div class="mxst" style="margin-top:18px">
+        <div class="st" style="--kc:var(--a1)"><div class="k">Week total</div>
+          <div class="v">56:20</div><div class="d">6 active days</div></div>
+        <div class="st" style="--kc:var(--a5)"><div class="k">Daily average</div>
+          <div class="v">9.39<small> h</small></div><div class="d">Target 9.0 h</div></div>
+        <div class="st" style="--kc:var(--a3)"><div class="k">Peak day</div>
+          <div class="v">11:07</div><div class="d">Tuesday 22 Sep</div></div>
+        <div class="st" style="--kc:var(--a6)"><div class="k">Days on target</div>
+          <div class="v">4<small>/6</small></div><div class="d">2 fell short</div></div>
+      </div>
+
+      <div class="wkbul">
+        <div class="wkhead"><span class="lbl">Week against target</span>
+          <span class="pill ok"><span class="ms">trending_up</span>2.33 h ahead</span></div>
+        <div class="bul" style="margin-top:9px">
+          <span class="t" style="height:20px">
+            <span class="f" data-w="93.9" style="width:93.9%;--bc:var(--a1)"
+              data-tip="Logged this week &mdash; <b>56.33 h</b>"></span>
+            <span class="mk" style="left:90%" data-tip="Week target &mdash; <b>54.0 h</b> (6 working days &times; 9 h)"></span>
+          </span>
+          <span class="v" style="color:var(--a1)">56.33 h</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card s6 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="ms">calendar_month</span></span>
+        <h2>My DPR calendar &mdash; September</h2>
+        <span class="lk">Full history <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <div class="cal">
+        <span class="dow">Su</span><span class="dow">Mo</span><span class="dow">Tu</span><span class="dow">We</span>
+        <span class="dow">Th</span><span class="dow">Fr</span><span class="dow">Sa</span>
+        <span class="cell e"></span>
+        <span class="cell l4" style="--cd:20ms" data-tip="Tue 1 Sep &mdash; <b>10.2 h</b>"><b class="d">1</b><span class="h">10.2</span></span>
+        <span class="cell l3" style="--cd:30ms" data-tip="Wed 2 Sep &mdash; <b>9.8 h</b>"><b class="d">2</b><span class="h">9.8</span></span>
+        <span class="cell l4" style="--cd:40ms" data-tip="Thu 3 Sep &mdash; <b>10.3 h</b>"><b class="d">3</b><span class="h">10.3</span></span>
+        <span class="cell off" style="--cd:50ms" data-tip="Fri 4 Sep &mdash; weekly off"><b class="d">4</b><span class="h">OFF</span></span>
+        <span class="cell l3" style="--cd:60ms" data-tip="Sat 5 Sep &mdash; <b>9.1 h</b>"><b class="d">5</b><span class="h">9.1</span></span>
+        <span class="cell l5" style="--cd:70ms" data-tip="Sun 6 Sep &mdash; <b>10.5 h</b>"><b class="d">6</b><span class="h">10.5</span></span>
+        <span class="cell l5" style="--cd:80ms" data-tip="Mon 7 Sep &mdash; <b>11.0 h</b>"><b class="d">7</b><span class="h">11.0</span></span>
+        <span class="cell l3" style="--cd:90ms" data-tip="Tue 8 Sep &mdash; <b>9.7 h</b>"><b class="d">8</b><span class="h">9.7</span></span>
+        <span class="cell l4" style="--cd:100ms" data-tip="Wed 9 Sep &mdash; <b>10.2 h</b>"><b class="d">9</b><span class="h">10.2</span></span>
+        <span class="cell l3" style="--cd:110ms" data-tip="Thu 10 Sep &mdash; <b>9.0 h</b>"><b class="d">10</b><span class="h">9.0</span></span>
+        <span class="cell off" style="--cd:120ms" data-tip="Fri 11 Sep &mdash; weekly off"><b class="d">11</b><span class="h">OFF</span></span>
+        <span class="cell l3" style="--cd:130ms" data-tip="Sat 12 Sep &mdash; <b>9.4 h</b>"><b class="d">12</b><span class="h">9.4</span></span>
+        <span class="cell l5" style="--cd:140ms" data-tip="Sun 13 Sep &mdash; <b>10.8 h</b>"><b class="d">13</b><span class="h">10.8</span></span>
+        <span class="cell l4" style="--cd:150ms" data-tip="Mon 14 Sep &mdash; <b>10.1 h</b>"><b class="d">14</b><span class="h">10.1</span></span>
+        <span class="cell l3" style="--cd:160ms" data-tip="Tue 15 Sep &mdash; <b>9.5 h</b>"><b class="d">15</b><span class="h">9.5</span></span>
+        <span class="cell l4" style="--cd:170ms" data-tip="Wed 16 Sep &mdash; <b>10.4 h</b>"><b class="d">16</b><span class="h">10.4</span></span>
+        <span class="cell l3" style="--cd:180ms" data-tip="Thu 17 Sep &mdash; <b>9.8 h</b>"><b class="d">17</b><span class="h">9.8</span></span>
+        <span class="cell off" style="--cd:190ms" data-tip="Fri 18 Sep &mdash; weekly off"><b class="d">18</b><span class="h">OFF</span></span>
+        <span class="cell l3" style="--cd:200ms" data-tip="Sat 19 Sep &mdash; <b>9.2 h</b>"><b class="d">19</b><span class="h">9.2</span></span>
+        <span class="cell l5" style="--cd:210ms" data-tip="Sun 20 Sep &mdash; <b>10.9 h</b>"><b class="d">20</b><span class="h">10.9</span></span>
+        <span class="cell l5" style="--cd:220ms" data-tip="Mon 21 Sep &mdash; <b>11.1 h</b>"><b class="d">21</b><span class="h">11.1</span></span>
+        <span class="cell l4" style="--cd:230ms" data-tip="Tue 22 Sep &mdash; <b>10.3 h</b>"><b class="d">22</b><span class="h">10.3</span></span>
+        <span class="cell l2" style="--cd:240ms" data-tip="Wed 23 Sep &mdash; <b>7.3 h</b>"><b class="d">23</b><span class="h">7.3</span></span>
+        <span class="cell l2" style="--cd:250ms" data-tip="Thu 24 Sep &mdash; <b>7.3 h</b>"><b class="d">24</b><span class="h">7.3</span></span>
+        <span class="cell off" style="--cd:260ms" data-tip="Fri 25 Sep &mdash; weekly off"><b class="d">25</b><span class="h">OFF</span></span>
+        <span class="cell l2 today" style="--cd:270ms" data-tip="Today &mdash; <b>7.35 h</b> so far, still running"><b class="d">26</b><span class="h">7.4</span></span>
+        <span class="cell e"></span><span class="cell e"></span><span class="cell e"></span><span class="cell e"></span>
+        <span class="cell" style="--cd:280ms" data-tip="Sun 27 Sep &mdash; still ahead"><b class="d" style="color:var(--ink4)">27</b></span>
+        <span class="cell" style="--cd:290ms" data-tip="Mon 28 Sep &mdash; still ahead"><b class="d" style="color:var(--ink4)">28</b></span>
+        <span class="cell" style="--cd:300ms" data-tip="Tue 29 Sep &mdash; still ahead"><b class="d" style="color:var(--ink4)">29</b></span>
+        <span class="cell" style="--cd:310ms" data-tip="Wed 30 Sep &mdash; still ahead"><b class="d" style="color:var(--ink4)">30</b></span>
+      </div>
+      <div class="scale">Lighter
+        <i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i>
+        <i style="background:var(--h4)"></i><i style="background:var(--h5)"></i> more hours &middot;
+        <i style="background:var(--h0)"></i> off, leave or ahead</div>
+      <div class="calfoot">
+        <span>Reported <b>21 of 26</b> working days</span><span>Total <b>199.1 h</b></span>
+        <span>Avg <b>9.48 h/d</b></span><span>Leave <b>0</b></span><span>Missed <b>0</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ WORK ═══════════════════ -->
+  <section class="grid">
+    <div class="card s4 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a2)"><span class="ms">checklist</span></span>
+        <h2>My tasks</h2>
+        <span class="lk">Open <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a1)"><span class="ms">play_arrow</span></span>
+        <div class="rtx"><b>DPR Employee Portal</b><span>Development &middot; due 30 Sep</span></div>
+        <div class="rrt"><b class="num">96.5</b><span>of 120 h</span></div></div>
+      <div class="row"><span class="rico" style="--kc:var(--a4)"><span class="ms">priority_high</span></span>
+        <div class="rtx"><b>Supplier payment report</b><span>Development &middot; was due 24 Sep</span></div>
+        <div class="rrt"><b class="num" style="color:var(--a4)">22.4</b><span>of 16 h</span></div></div>
+      <div class="row"><span class="rico" style="--kc:var(--a5)"><span class="ms">support_agent</span></span>
+        <div class="rtx"><b>Helpdesk &mdash; Muscat office</b><span>Support &middot; due 30 Sep</span></div>
+        <div class="rrt"><b class="num">31.0</b><span>of 40 h</span></div></div>
+      <div class="row"><span class="rico" style="--kc:var(--a3)"><span class="ms">pause</span></span>
+        <div class="rtx"><b>Exit form approval flow</b><span>Paused &middot; due 5 Oct</span></div>
+        <div class="rrt"><b class="num">11.5</b><span>of 24 h</span></div></div>
+      <div class="row"><span class="rico" style="--kc:var(--a6)"><span class="ms">shield</span></span>
+        <div class="rtx"><b>WIR report access review</b><span>Admin &middot; due 2 Oct</span></div>
+        <div class="rrt"><b class="num">1.5</b><span>of 6 h</span></div></div>
+    </div>
+
+    <div class="card s4 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="ms">compare_arrows</span></span>
+        <h2>Estimate vs actual</h2><span class="pill nu">Sprint 38</span></div>
+      <p class="sub">Distance from the estimate. Left of centre is under, right is over.</p>
+      <div class="lg">
+        <span style="--lc:var(--a1)"><i></i>Under</span>
+        <span style="--lc:var(--a3)"><i></i>Over</span>
+        <span style="--lc:var(--ink4)"><i class="mkl"></i>On estimate</span>
+      </div>
+      <div class="dv">
+        <div class="dvr"><div class="top"><span class="nm">DPR Employee Portal</span><span class="vv">96.5 / 120 h</span></div>
+          <div class="dvtr"><span class="mid"></span>
+            <span class="sg" data-w="9.8" data-right="50.8" style="width:9.8%;right:50.8%;background:var(--a1)" data-tip="<b>23.5 h under</b> estimate"></span></div></div>
+        <div class="dvr"><div class="top"><span class="nm">Supplier payment report</span><span class="vv">22.4 / 16 h</span></div>
+          <div class="dvtr"><span class="mid"></span>
+            <span class="sg" data-w="2.7" data-left="50.8" style="width:2.7%;left:50.8%;background:var(--a3)" data-tip="<b>6.4 h over</b> estimate"></span></div></div>
+        <div class="dvr"><div class="top"><span class="nm">Helpdesk &mdash; Muscat</span><span class="vv">31.0 / 40 h</span></div>
+          <div class="dvtr"><span class="mid"></span>
+            <span class="sg" data-w="3.8" data-right="50.8" style="width:3.8%;right:50.8%;background:var(--a1)" data-tip="<b>9.0 h under</b> estimate"></span></div></div>
+        <div class="dvr"><div class="top"><span class="nm">Exit approval flow</span><span class="vv">11.5 / 24 h</span></div>
+          <div class="dvtr"><span class="mid"></span>
+            <span class="sg" data-w="5.2" data-right="50.8" style="width:5.2%;right:50.8%;background:var(--a1)" data-tip="<b>12.5 h under</b> estimate"></span></div></div>
+        <div class="dvr"><div class="top"><span class="nm">Access review</span><span class="vv">1.5 / 6 h</span></div>
+          <div class="dvtr"><span class="mid"></span>
+            <span class="sg" data-w="1.9" data-right="50.8" style="width:1.9%;right:50.8%;background:var(--a1)" data-tip="<b>4.5 h under</b> estimate"></span></div></div>
+      </div>
+      <div class="calfoot"><span>Sprint actual <b>181.4 h</b></span><span>Estimated <b>206.0 h</b></span></div>
+    </div>
+
+    <div class="card aipanel s4 an" style="--d:180ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="ms">auto_awesome</span></span>
+        <h2>AI DPR insight</h2><span class="pill nu">On request</span></div>
+      <div class="aibox">
+        <h3><span class="ms" style="font-size:19px">auto_awesome</span>Generate my work summary</h3>
+        <p>Synthesises your September progress, task timesheets and milestone completion into a summary
+          you can send for management review.</p>
+      </div>
+      <button class="btn pri" style="width:100%;justify-content:center;margin-top:14px">
+        <span class="ms">auto_awesome</span>Generate my AI insight</button>
+      <div class="row" style="margin-top:14px">
+        <span class="rico" style="--kc:var(--a5)"><span class="ms">history</span></span>
+        <div class="rtx"><b>August summary</b><span>Generated 02 Sep &middot; ready to view</span></div>
+        <span class="ms" style="color:var(--ink4)">chevron_right</span></div>
+      <div class="row">
+        <span class="rico" style="--kc:var(--a2)"><span class="ms">forum</span></span>
+        <div class="rtx"><b>Ask about my DPR</b><span>Chat with the DPR assistant</span></div>
+        <span class="ms" style="color:var(--ink4)">chevron_right</span></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ COMMUNICATIONS ═══════════════════ -->
+  <section class="grid">
+    <div class="card s4 an" style="--d:60ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="ms">campaign</span></span>
+        <h2>Announcements</h2>
+        <span class="lk">All notices <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a3)"><span class="ms">celebration</span></span>
+        <div class="rtx"><b>Eid Al Adha holiday circular</b><span>Posted 24 Sep &middot; HR &amp; Admin</span></div>
+        <span class="pill wt">New</span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a5)"><span class="ms">construction</span></span>
+        <div class="rtx"><b>Portal maintenance &mdash; 28 Sep</b><span>Posted 22 Sep &middot; IT Systems</span></div>
+        <span class="pill wt">New</span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a2)"><span class="ms">school</span></span>
+        <div class="rtx"><b>Safety refresher training</b><span>Posted 18 Sep &middot; QA / QC</span></div>
+        <span class="pill nu">Read</span></div>
+    </div>
+
+    <div class="card s4 an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a4)"><span class="ms">notifications</span></span>
+        <h2>My notifications</h2>
+        <span class="lk">Mark all read <span class="ms" style="font-size:15px">done_all</span></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a1)"><span class="ms">check_circle</span></span>
+        <div class="rtx"><b>Emergency leave approved</b><span>2 hours ago &middot; by HOD</span></div>
+        <span class="livedot" style="background:var(--a4)"></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a3)"><span class="ms">pending</span></span>
+        <div class="rtx"><b>Planned leave moved to IT step</b><span>Yesterday &middot; 8 days in queue</span></div>
+        <span class="livedot" style="background:var(--a4)"></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a5)"><span class="ms">assignment_ind</span></span>
+        <div class="rtx"><b>New task assigned to you</b><span>2 days ago &middot; WIR access review</span></div>
+        <span class="livedot" style="background:var(--a4)"></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a2)"><span class="ms">edit_note</span></span>
+        <div class="rtx"><b>2 logs need a remark</b><span>3 days ago &middot; 23 and 24 Sep</span></div>
+        <span class="livedot" style="background:var(--a4)"></span></div>
+    </div>
+
+    <div class="card s4 an" style="--d:180ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="ms">fact_check</span></span>
+        <h2>My requests</h2>
+        <span class="lk">All forms <span class="ms" style="font-size:15px">arrow_forward</span></span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a3)"><span class="ms">flight_takeoff</span></span>
+        <div class="rtx"><b>Planned Leave &middot; 6 days</b><span>Leaves 12 Oct &middot; waiting on HOD</span></div>
+        <div class="rrt"><b style="color:var(--wt)">8</b><span>days</span></div></div>
+      <div class="row"><span class="rico" style="--kc:var(--a1)"><span class="ms">task_alt</span></span>
+        <div class="rtx"><b>Emergency Leave &middot; 1 day</b><span>03 Sep &middot; completed</span></div>
+        <span class="pill ok">Approved</span></div>
+      <div class="row"><span class="rico" style="--kc:var(--a2)"><span class="ms">devices</span></span>
+        <div class="rtx"><b>BYOD registration</b><span>Submitted 12 Sep &middot; with IT</span></div>
+        <span class="pill wt">In review</span></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:14px">
+        <span class="ms">add</span>New request</button>
+    </div>
+  </section>
+
+</div>
+</div>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ── theme toggle ────────────────────────────────────────────────────────
+  var root = document.documentElement, tbtn = document.getElementById("theme");
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    if (t) { return t === "dark"; }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function paintIcon() { tbtn.querySelector(".ms").textContent = isDark() ? "dark_mode" : "light_mode"; }
+  tbtn.addEventListener("click", function () {
+    root.setAttribute("data-theme", isDark() ? "light" : "dark");
+    paintIcon();
+  });
+  paintIcon();
+
+  // ── mobile drawer ───────────────────────────────────────────────────────
+  var side = document.getElementById("side");
+  document.getElementById("burger").addEventListener("click", function (e) {
+    e.stopPropagation();
+    side.classList.toggle("open");
+  });
+  document.addEventListener("click", function (e) {
+    if (side.classList.contains("open") && !side.contains(e.target)) { side.classList.remove("open"); }
+  });
+
+  // ── sidebar selection ───────────────────────────────────────────────────
+  document.querySelectorAll(".nav").forEach(function (n) {
+    n.addEventListener("click", function () {
+      document.querySelectorAll(".nav").forEach(function (m) { m.classList.remove("on"); });
+      n.classList.add("on");
+    });
+  });
+
+  // ── count-up ────────────────────────────────────────────────────────────
+  function hm(v) {
+    var h = Math.floor(v), m = Math.round((v - h) * 60);
+    if (m === 60) { h += 1; m = 0; }
+    return h + ":" + (m < 10 ? "0" : "") + m;
+  }
+  function countUp(el) {
+    var target = parseFloat(el.getAttribute("data-count"));
+    var dec = parseInt(el.getAttribute("data-dec") || "0", 10);
+    var fmt = el.getAttribute("data-fmt");
+    if (reduce) { el.textContent = fmt === "hm" ? hm(target) : target.toFixed(dec); return; }
+    var t0 = null, dur = 1250;
+    function step(ts) {
+      if (t0 === null) { t0 = ts; }
+      var p = Math.min(1, (ts - t0) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      var v = target * e;
+      el.textContent = fmt === "hm" ? hm(v) : v.toFixed(dec);
+      if (p < 1) { requestAnimationFrame(step); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  if (!reduce) { document.querySelectorAll("[data-count]").forEach(countUp); }
+
+  // ── tooltip ─────────────────────────────────────────────────────────────
+  var tip = document.getElementById("tip"), shown = null;
+  function place(e) {
+    var pad = 12, w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = e.clientX + pad, y = e.clientY + pad;
+    if (x + w > window.innerWidth - 8) { x = e.clientX - w - pad; }
+    if (y + h > window.innerHeight - 8) { y = e.clientY - h - pad; }
+    tip.style.left = Math.max(8, x) + "px";
+    tip.style.top = Math.max(8, y) + "px";
+  }
+  document.addEventListener("mouseover", function (e) {
+    var t = e.target.closest("[data-tip]");
+    if (!t || t === shown) { return; }
+    shown = t; tip.innerHTML = t.getAttribute("data-tip");
+    tip.classList.add("on"); place(e);
+  });
+  document.addEventListener("mousemove", function (e) { if (shown) { place(e); } });
+  document.addEventListener("mouseout", function (e) {
+    if (!shown) { return; }
+    if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest("[data-tip]") === shown) { return; }
+    shown = null; tip.classList.remove("on");
+  });
+})();
+</script>

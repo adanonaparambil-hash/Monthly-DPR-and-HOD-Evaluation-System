@@ -64,13 +64,17 @@ export class SupplierPaymentForecastComponent implements OnInit, OnDestroy {
   readonly COLUMNS: ReportColumn[] = [
     { key: 'VENDORNAME',        label: 'Vendor',            text: true, filter: true },
     { key: 'CURRENCY',          label: 'Currency',          text: true, filter: true },
+    // Total Outstanding sits HERE, not at the far right. It is the number
+    // people read first - what this supplier is owed in total - and the ageing
+    // buckets to its right explain how that total breaks down. Off the end of
+    // nine columns it needed a horizontal scroll to reach.
+    { key: 'TOTAL_OUTSTANDING', label: 'Total Outstanding' },
     { key: 'OVERDUE',           label: 'Overdue' },
     { key: 'NEXT_30_DAYS',      label: 'Next 30 Days' },
     { key: 'DAYS_31_60',        label: '31-60 Days' },
     { key: 'DAYS_61_90',        label: '61-90 Days' },
     { key: 'DAYS_91_120',       label: '91-120 Days' },
-    { key: 'ABOVE_120_DAYS',    label: 'Above 120 Days' },
-    { key: 'TOTAL_OUTSTANDING', label: 'Total Outstanding' }
+    { key: 'ABOVE_120_DAYS',    label: 'Above 120 Days' }
   ];
 
   /** Sorting is SERVER-side - the screen only holds one batch at a time. */
@@ -605,8 +609,11 @@ export class SupplierPaymentForecastComponent implements OnInit, OnDestroy {
   }
 
   private writeCsv(all: SupplierPaymentForecastRow[]): void {
-    const head = ['Vendor', 'Currency', 'Overdue', 'Next 30 Days', '31-60 Days',
-                  '61-90 Days', '91-120 Days', 'Above 120 Days', 'Total Outstanding'];
+    // Same order as COLUMNS on screen - Total Outstanding next to Currency.
+    // The export and the table have to agree, or the file looks like a
+    // different report from the one that produced it.
+    const head = ['Vendor', 'Currency', 'Total Outstanding', 'Overdue', 'Next 30 Days',
+                  '31-60 Days', '61-90 Days', '91-120 Days', 'Above 120 Days'];
 
     // Every field is quoted and internal quotes doubled: vendor names contain
     // commas ("AL ADRAK TRADING & CONT. CO. LLC") and would otherwise split
@@ -618,13 +625,13 @@ export class SupplierPaymentForecastComponent implements OnInit, OnDestroy {
     const lines = [
       head.map(esc).join(','),
       ...all.map(r => [
-        r.vendorName, r.currency, r.overdue, r.next_30_Days, r.days_31_60,
-        r.days_61_90, r.days_91_120, r.above_120_Days, r.total_Outstanding
+        r.vendorName, r.currency, r.total_Outstanding, r.overdue, r.next_30_Days,
+        r.days_31_60, r.days_61_90, r.days_91_120, r.above_120_Days
       ].map(esc).join(',')),
       // Totals over the WHOLE file, not a page.
-      ['TOTAL', '', sum('overdue'), sum('next_30_Days'), sum('days_31_60'),
-       sum('days_61_90'), sum('days_91_120'), sum('above_120_Days'),
-       sum('total_Outstanding')].map(esc).join(',')
+      ['TOTAL', '', sum('total_Outstanding'), sum('overdue'), sum('next_30_Days'),
+       sum('days_31_60'), sum('days_61_90'), sum('days_91_120'),
+       sum('above_120_Days')].map(esc).join(',')
     ];
 
     const stamp = new Date().toISOString().slice(0, 10);

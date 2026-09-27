@@ -11,7 +11,7 @@
 
     <nav class="menu">
       <!-- Dashboard Menu - Keep as is (hidden in DPR-only mode) -->
-      <a *ngIf="!isDPROnlyMode && isEmployee" routerLink="/employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <a *ngIf="!isDPROnlyMode && isEmployee" routerLink="/dpr-employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-chart-pie"></i> Employee Analytics
       </a>
       <a *ngIf="!isDPROnlyMode && isHod" routerLink="/hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">

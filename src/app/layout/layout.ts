@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { homeRouteFor } from '../utils/home-route';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -369,6 +370,8 @@ export class layout implements OnInit, OnDestroy {
     const routeTitles: { [key: string]: string } = {
       '/dashboard': 'Dashboard',
       '/employee-dashboard': 'Employee Analytics',
+      '/dpr-employee-dashboard': 'Employee Analytics',
+      '/dpr-hod-dashboard': 'HOD DPR Dashboard',
       '/hod-dashboard': 'HOD Dashboard',
       '/ced-dashboard': 'APR Dashboard',
       '/ced-dashboard-old': 'CED Dashboard (Old)',
@@ -873,13 +876,7 @@ export class layout implements OnInit, OnDestroy {
     switch (event.key) {
       case '1':
         // Navigate to Dashboard based on role
-        if (this.isEmployee) {
-          this.router.navigate(['/employee-dashboard']);
-        } else if (this.isHod) {
-          this.router.navigate(['/hod-dashboard']);
-        } else if (this.isCed) {
-          this.router.navigate(['/ced-dpr-analytics']);
-        }
+        this.router.navigate([homeRouteFor(this.userSession)]);
         break;
       case '2':
         // Navigate to MPR Entry

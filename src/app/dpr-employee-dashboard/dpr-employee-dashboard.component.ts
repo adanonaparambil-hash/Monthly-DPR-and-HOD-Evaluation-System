@@ -1,7 +1,11 @@
-import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Api } from '../services/api';
+import { NoticePopupService } from '../services/notice-popup.service';
+import { AiReportComponent } from '../components/ai-report/ai-report.component';
+import { bindTooltip, countUpAll, escHtml, fmtNum, reduceMotion, setupReveal } from '../utils/dash-fx';
 import {
   DprEmpCalendarDay,
   DprEmpEstAct,
@@ -13,235 +17,249 @@ import {
   DprEmpWeekDay
 } from '../models/dprDashboard.model';
 
-interface CountTile {
+// ── view models ─────────────────────────────────────────────────────────────
+// Every list the template loops over is a plain field, rebuilt once per load.
+// Getters that rebuild arrays make *ngFor tear down and recreate its rows on
+// every change-detection pass.
+
+interface KpiTile {
+  label: string;
+  pillCls: string;
+  pillTxt: string;
   value: number;
-  suffix: string;
   dec: number;
+  unit: string;
+  barPct: number;
+  icon: string;
+  foot: string;
+  color: string;
 }
 
-interface TileSmall {
-  cls: string;
-  txt: string;
+interface TlSeg {
+  left: number;
+  width: number;
+  bg: string;
+  label: string;
+  tip: string;
+  gap: boolean;
+}
+
+interface StatBox {
+  k: string;
+  v: string;
+  unit: string;
+  d: string;
+  color: string;
+}
+
+interface WeekCol {
+  h: number;
+  val: string;
+  day: string;
+  varTxt: string;
+  varCls: string;
+  off: boolean;
+  offIcon: string;
+  today: boolean;
+  short: boolean;
+  peak: boolean;
+  tip: string;
 }
 
 interface CalCell {
   empty: boolean;
   cls: string;
   day: number;
-  hh: string | null;
-  title: string;
+  hh: string;
+  tip: string;
   delay: string;
 }
 
-/** the 3 coloured hero rows + the separated month row */
-interface SplitRow {
+interface TaskRow {
+  icon: string;
   color: string;
-  label: string;
-  val: string;
-}
-
-/** one segment of today's timeline bar */
-interface TlSeg {
-  left: number;
-  width: number;
-  bg: string;
-  lbl: string | null;
-}
-
-interface WeekBar {
-  h: number;
-  em: string;
-  bd: string;
-  lo: boolean;
-  td: boolean;
-}
-
-interface EstBar {
-  h: number;
-  em: string;
-  bd: string;
-  est: boolean;
-  td: boolean;
-}
-
-interface NoteItem {
-  k: string;
-  v: string;
-  /** plain-text tail after the bold value, e.g. " working days" */
-  s?: string;
-}
-
-interface TaskStatRow {
-  label: string;
+  title: string;
   sub: string;
-  count: number;
+  logged: string;
+  of: string;
+  over: boolean;
+}
+
+interface EstRow {
+  name: string;
+  vv: string;
+  over: boolean;
+  width: number;
+  tip: string;
+}
+
+interface NoticeRow {
+  title: string;
+  sub: string;
+  unread: boolean;
+  icon: string;
+  color: string;
+  raw: any;
+}
+
+interface NotifRow {
+  id: number;
+  icon: string;
+  color: string;
+  message: string;
+  time: string;
+  unread: boolean;
+  link: string;
+  isNotice: boolean;
+  noticeId: number;
 }
 
 interface FormRow {
-  color: string;
   icon: string;
-  apn: string;
-  aps: string;
-  ageCls: string;
-  ageTxt: string;
+  color: string;
+  title: string;
+  sub: string;
+  pillCls: string;
+  pillTxt: string;
 }
 
-const WORK_G = 'linear-gradient(90deg,#2dd4bf,#138271)';
-const RUN_G = 'linear-gradient(90deg,#818cf8,#4f46e5)';
-const BREAK_G = 'linear-gradient(90deg,#38bdf8,#0369a1)';
-const TRAVEL_G = 'linear-gradient(90deg,#fbbf24,#d97706)';
-/** hero split colours are assigned by rank, never by category name */
-const SPLIT_COLORS = ['#2dd4bf', '#818cf8', '#f59e0b'];
+/** Categorical accents — validated set (light). Kept in step with the --a1..--a6
+ *  tokens in the stylesheet; used only where a colour is chosen per row in TS. */
+const A = {
+  emerald: 'var(--a1)',
+  indigo: 'var(--a2)',
+  amber: 'var(--a3)',
+  rose: 'var(--a4)',
+  sky: 'var(--a5)',
+  violet: 'var(--a6)'
+};
+
+const RING1_C = 314;   // 2πr, r = 50
+const RING2_C = 377;   // 2πr, r = 60
 
 @Component({
   selector: 'app-dpr-employee-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AiReportComponent],
   templateUrl: './dpr-employee-dashboard.component.html',
-  styleUrls: ['./dpr-employee-dashboard.component.css']
+  styleUrls: ['../styles/dpr-dash.css', './dpr-employee-dashboard.component.css']
 })
 export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  /** flips true 320ms after view init — drives all width/height/ring CSS transitions.
-   *  Replayed (false -> bind -> true) every time real data lands. */
-  animate = false;
+  @ViewChild('aiReport') aiReport?: AiReportComponent;
+  @ViewChild('notifPanel') notifPanel?: ElementRef<HTMLElement>;
+  @ViewChild('noticePanel') noticePanel?: ElementRef<HTMLElement>;
+  @ViewChild('tip') tipEl?: ElementRef<HTMLElement>;
 
-  /** true while the dashboard request is in flight — rendered non-destructively */
   loading = false;
-  /** inline notice shown inside the existing hero .chips row; never replaces the layout */
   loadError: string | null = null;
 
   // ── hero ───────────────────────────────────────────────────────────────────
-  readonly ringCircumference = 314;
-  ringOffset = 314 * (1 - 0.76);
-  ringMid = '06:52';
-  ringSub = 'of 9h today';
+  greetingText = this.greeting();
+  firstName = '';
+  dateText = this.todayLine();
+  locText = '';
+  deptText = '';
+  expDailyText = '—';
+  timerRunning = false;
+  runningText = 'No timer running';
+  lastPunchText = '—';
+  breakText = '—';
+  travelText = '—';
+  streakDays = 0;
+  autoClosedCount = 0;
+  readonly ring1C = RING1_C;
+  ring1Offset = RING1_C;
+  ring1Mid = '0:00';
+  ring1Sub = 'OF — TODAY';
+  heroWorked = '00:00';
+  heroGap = '00:00';
+  heroRemaining = '—';
+  heroMonth = '— h';
 
-  heroTitle = 'Good afternoon, Adan Onaparambil';
-  dateLine =
-    new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) +
-    ' · Muscat · IT Department';
+  // ── quick actions ──────────────────────────────────────────────────────────
+  notifUnread = 0;
+  notifSub = 'Nothing new';
+  noticeUnread = 0;
+  noticeSub = 'Nothing published';
+  approvalCount = 0;
+  approvalSub = 'Requests and approvals';
+  /** flips false→true after each loader lands, replaying the badge pop */
+  badgePop = false;
 
-  runningChipOk = true;
-  runningText = 'Muscat warehouse — detailing · 01:47';
-  lastPunchText = '02:03 PM';
-  breakText = '00:47';
-  travelText = '01:35';
-  autoClosedCount = 2;
-  autoClosedChipText = 'auto-closed — timer locked';
+  // ── KPI tiles ──────────────────────────────────────────────────────────────
+  kpis: KpiTile[] = this.blankKpis();
 
-  splitRows: SplitRow[] = [
-    { color: SPLIT_COLORS[0], label: 'Design', val: '02:18' },
-    { color: SPLIT_COLORS[1], label: 'Site coord.', val: '02:06' },
-    { color: SPLIT_COLORS[2], label: 'Docs', val: '01:14' }
-  ];
-  monthHoursText = '167.5 h';
-
-  // ── tiles ──────────────────────────────────────────────────────────────────
-  tiles: CountTile[] = [
-    { value: 6.87, suffix: 'h', dec: 2 },
-    { value: 38.25, suffix: 'h', dec: 2 },
-    { value: 2, suffix: '', dec: 0 },
-    { value: 4, suffix: ' / 5', dec: 0 }
-  ];
-  tileValues: string[] = this.tiles.map(t => this.fmt(t.value, t.dec, t.suffix));
-  tileSmall: TileSmall[] = [
-    { cls: 'up', txt: '412 min · on pace' },
-    { cls: 'fl', txt: 'Avg 6.42 h/day · 5 active days' },
-    { cls: 'dn', txt: 'blocks new timers' },
-    { cls: 'up', txt: '76% of month target' }
-  ];
-
-  // ── today at a glance ──────────────────────────────────────────────────────
-  dayLoggedText = '06:52';
-  punchHm = '02:03';
-  punchAmPm = 'PM';
-
-  tlSegs: TlSeg[] = [
-    { left: 0, width: 26, bg: WORK_G, lbl: 'Work 2h 10m' },
-    { left: 27, width: 8, bg: BREAK_G, lbl: null },
-    { left: 36, width: 30, bg: WORK_G, lbl: 'Work 2h 32m' },
-    { left: 67, width: 11, bg: TRAVEL_G, lbl: null },
-    { left: 79, width: 21, bg: RUN_G, lbl: 'Running' }
-  ];
-  tlMarks: string[] = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
-  gapText: string | null = '1h 51m';
-
-  // ── active task ────────────────────────────────────────────────────────────
-  actTitle = 'Muscat warehouse — structural detailing';
-  actSub = 'Design · assigned by Sujith Kumar';
-  actPillCls = 'pr';
-  actPillText = 'RUNNING';
-  actProgress = 65;
-  actProgressText = '65%';
-  actLive = '01:47:12';
-  actToday = '02:18';
-  actTotal = '20:45';
+  // ── month expected vs achieved ─────────────────────────────────────────────
+  monthName = new Date().toLocaleDateString('en-GB', { month: 'long' });
+  readonly ring2C = RING2_C;
+  ring2Offset = RING2_C;
+  achievedPct = 0;
+  soFarFill = 0;
+  soFarMark = 0;
+  endFill = 0;
+  endGhost = 0;
+  endMark = 0;
+  soFarText = '— h';
+  endText = '— h';
+  soFarTip = '';
+  soFarMarkTip = '';
+  endGhostTip = '';
+  endMarkTip = '';
+  monthStats: StatBox[] = [];
+  monthNote = '';
 
   // ── quote ──────────────────────────────────────────────────────────────────
-  quoteText: string | null = 'Success is not final, failure is not fatal: it is the courage to continue that counts.';
-  quoteAuthor = 'Winston Churchill';
+  quoteText: string | null = null;
+  quoteAuthor = '';
 
-  // ── week bars ──────────────────────────────────────────────────────────────
-  weekBars: WeekBar[] = [
-    { h: 70, em: '7.75', bd: 'MON', lo: false, td: false },
-    { h: 82, em: '9.20', bd: 'TUE', lo: false, td: false },
-    { h: 58, em: '6.40', bd: 'WED', lo: true, td: false },
-    { h: 86, em: '9.50', bd: 'THU', lo: false, td: false },
-    { h: 44, em: '5.00', bd: 'SAT', lo: true, td: false },
-    { h: 62, em: '6.87', bd: 'TODAY', lo: false, td: true }
-  ];
-  targetLinePct = 66;
-  targetLabel = '9h target';
-  weekNote: NoteItem[] = [
-    { k: 'Total', v: '38:15' },
-    { k: 'Avg', v: '6.42 h/day' },
-    { k: 'Peak', v: '09:30' },
-    { k: 'Active', v: '5 days' }
-  ];
+  // ── today ──────────────────────────────────────────────────────────────────
+  tlSegs: TlSeg[] = [];
+  tlStart = '';
+  tlEnd = '';
+  tlPunches = '';
+  todayStats: StatBox[] = [];
+
+  // ── active task ────────────────────────────────────────────────────────────
+  actCategory = '';
+  actTitle = 'No task running';
+  actSub = '';
+  actProgress = 0;
+  actToday = '—';
+  actTotal = '—';
+  actLive = '—';
+  overdueRow: TaskRow | null = null;
+
+  // ── week ───────────────────────────────────────────────────────────────────
+  weekCols: WeekCol[] = [];
+  weekTargetPct = 75;
+  weekTargetLabel = '— h';
+  weekStats: StatBox[] = [];
+  weekFill = 0;
+  weekMark = 0;
+  weekTotalText = '— h';
+  weekPillCls = 'nu';
+  weekPillTxt = '—';
+  weekFillTip = '';
+  weekMarkTip = '';
 
   // ── calendar ───────────────────────────────────────────────────────────────
-  readonly dows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  readonly dows = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   calCells: CalCell[] = [];
-  calMonthLabel = 'August 2026';
-  calStats: NoteItem[] = [
-    { k: 'Logged', v: '21 of 22', s: ' working days' },
-    { k: 'Total', v: '167.5 h' },
-    { k: 'Avg', v: '7.98 h/day' },
-    { k: 'Longest streak', v: '11 days' },
-    { k: 'Leave', v: '2 days' },
-    { k: 'Missed', v: '1 day' }
-  ];
+  calMonthLabel = '';
+  calFoot: { k: string; v: string }[] = [];
 
-  // ── my work ────────────────────────────────────────────────────────────────
-  tasksBandCount = '22 tasks';
-  taskStats: TaskStatRow[] = [
-    { label: 'Auto closed', sub: 'needs review before approval', count: 2 },
-    { label: 'Running', sub: '', count: 1 },
-    { label: 'Paused', sub: '', count: 2 },
-    { label: 'Not started', sub: '', count: 3 },
-    { label: 'Open total', sub: 'none overdue', count: 14 }
-  ];
+  // ── work ───────────────────────────────────────────────────────────────────
+  taskRows: TaskRow[] = [];
+  estRows: EstRow[] = [];
+  estFoot = '';
 
-  estBars: EstBar[] = [
-    { h: 76, em: '160', bd: 'JUL est', est: true, td: false },
-    { h: 80, em: '168', bd: 'JUL act', est: false, td: false },
-    { h: 75, em: '158', bd: 'AUG est', est: true, td: false },
-    { h: 79, em: '167.5', bd: 'AUG act', est: false, td: true }
-  ];
-  estNote: NoteItem[] = [
-    { k: 'Tasks completed', v: '+12%' },
-    { k: 'You run', v: '~6% over estimate' }
-  ];
-  estEmptyNote: string | null = null;
-
-  // ── my forms ───────────────────────────────────────────────────────────────
-  formRows: FormRow[] = [
-    { color: '#dc2626', icon: 'fas fa-person-walking-arrow-right', apn: 'REQ1042 · Emergency Exit', aps: 'Submitted 12 Aug 09:41 · 14 days', ageCls: 'ao', ageTxt: 'PENDING' },
-    { color: '#0ea5e9', icon: 'fas fa-laptop', apn: 'REQ1031 · BYOD — Laptop 1', aps: '300 OMR over 60 months', ageCls: 'ag', ageTxt: 'APPROVED' },
-    { color: '#f59e0b', icon: 'fas fa-umbrella-beach', apn: 'REQ1055 · Leave 12–14 Aug', aps: 'With HR since yesterday', ageCls: 'ao', ageTxt: 'PENDING' },
-    { color: '#7c3aed', icon: 'fas fa-rotate-left', apn: 'REQ1029 · Rejoining', aps: 'Rejected by IT — "attach ticket copy"', ageCls: 'ah', ageTxt: 'RESUBMIT' }
-  ];
+  // ── communications ─────────────────────────────────────────────────────────
+  noticeRows: NoticeRow[] = [];
+  notifRows: NotifRow[] = [];
+  formRows: FormRow[] = [];
+  pulseNotif = false;
+  pulseNotice = false;
 
   private empId = '';
   private runSinceMin: number | null = null;
@@ -250,13 +268,16 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   private intervals: ReturnType<typeof setInterval>[] = [];
   private subs: Subscription[] = [];
   private destroyed = false;
+  private fxCleanup: (() => void)[] = [];
 
   constructor(
     private api: Api,
+    private router: Router,
+    private noticePopup: NoticePopupService,
     private el: ElementRef<HTMLElement>,
     private zone: NgZone
   ) {
-    this.buildDemoCalendar();
+    this.buildSkeletonCalendar();
   }
 
   ngOnInit(): void {
@@ -264,32 +285,90 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     this.empId = (u.empId || u.employeeId || '').toString().trim();
 
     if (!this.empId) {
-      // "-demo" route with no session: keep the approved design visible, say why.
-      // Placeholders FIRST — the seed values are sample data, and leaving them on
-      // screen presents invented figures as if they were this user's real numbers.
-      this.applyPlaceholders();
       this.loadError = 'Sign in to load live data';
       return;
     }
 
-    this.applyPlaceholders();
     this.load();
     this.loadAutoClosed();
+    this.loadNotifications();
+    this.loadNotices();
   }
 
   ngAfterViewInit(): void {
-    this.timers.push(setTimeout(() => { this.animate = true; }, 320));
-    this.tiles.forEach((_, i) => this.countUp(i));
+    this.countUpAll();
+    const tip = this.tipEl?.nativeElement;
+    if (tip) { this.fxCleanup.push(bindTooltip(this.el.nativeElement, tip, this.zone)); }
+    this.fxCleanup.push(setupReveal(this.el.nativeElement));
   }
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.fxCleanup.forEach(fn => fn());
     this.rafIds.forEach(id => cancelAnimationFrame(id));
     this.timers.forEach(t => clearTimeout(t));
     this.intervals.forEach(t => clearInterval(t));
-    // without this an in-flight response lands on the destroyed instance and
-    // re-arms the 1s live ticker + the count-up frames that were just drained
     this.subs.forEach(s => s.unsubscribe());
+  }
+
+  // ══ NAVIGATION ════════════════════════════════════════════════════════════
+
+  openNotifications(): void { this.flash(this.notifPanel, 'notif'); }
+  openAnnouncements(): void { this.flash(this.noticePanel, 'notice'); }
+  openApprovals(): void { this.router.navigate(['/leave-approval']); }
+  openLogHistory(): void { this.router.navigate(['/my-logged-hours']); }
+  openTasks(): void { this.router.navigate(['/my-task']); }
+  openForms(): void { this.router.navigate(['/leave-approval']); }
+  newRequest(): void { this.router.navigate(['/exit-form']); }
+
+  /** The AI report is manual only — nothing is generated on load. */
+  generateAi(): void { this.aiReport?.generate(); }
+
+  /** Scroll a panel into view and pulse it once, so the button lands somewhere visible. */
+  private flash(ref: ElementRef<HTMLElement> | undefined, which: 'notif' | 'notice'): void {
+    ref?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (which === 'notif') { this.pulseNotif = false; } else { this.pulseNotice = false; }
+    this.timers.push(setTimeout(() => {
+      if (which === 'notif') { this.pulseNotif = true; } else { this.pulseNotice = true; }
+      this.timers.push(setTimeout(() => {
+        if (which === 'notif') { this.pulseNotif = false; } else { this.pulseNotice = false; }
+      }, 1400));
+    }, 30));
+  }
+
+  openNotice(row: NoticeRow): void {
+    this.noticePopup.showNotice(row.raw);
+    if (row.unread && row.raw?.noticeId != null) {
+      row.unread = false;
+      this.noticeUnread = Math.max(this.noticeUnread - 1, 0);
+      this.subs.push(this.api.markNoticeAsRead(row.raw.noticeId, this.empId).subscribe({ error: () => { } }));
+    }
+  }
+
+  openNotification(row: NotifRow): void {
+    if (row.unread) {
+      row.unread = false;
+      this.notifUnread = Math.max(this.notifUnread - 1, 0);
+      this.notifSub = this.notifUnread > 0 ? this.notifUnread + ' unread' : 'All caught up';
+      this.subs.push(this.api.markNotificationAsRead({
+        notificationId: row.id, userId: this.empId, actionType: 'S'
+      }).subscribe({ error: () => { } }));
+    }
+
+    if (row.isNotice && row.noticeId) {
+      this.subs.push(this.api.getUserNotices(this.empId, row.noticeId, 'N').subscribe({
+        next: (res: any) => {
+          const list: any[] = Array.isArray(res?.data) ? res.data : [];
+          if (list.length) { this.noticePopup.showNotice(list[0]); }
+        },
+        error: () => { }
+      }));
+      return;
+    }
+
+    if (row.link && row.link !== '#') {
+      this.router.navigateByUrl(row.link.startsWith('/') ? row.link : '/' + row.link);
+    }
   }
 
   // ══ API ═══════════════════════════════════════════════════════════════════
@@ -307,7 +386,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
         }
         this.loadError = null;
         this.applyDashboard(res?.data ?? null);
-        this.replayAnimations();
+        this.countUpAll();
       },
       error: (err: any) => {
         if (this.destroyed) { return; }
@@ -316,110 +395,59 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
         // ServiceResponse — show its message instead of blaming the network
         const msg = typeof err?.error?.message === 'string' ? err.error.message.trim() : '';
         this.loadError = msg
-          || (err?.status === 0
-            ? 'Could not reach the server — showing placeholders'
-            : 'Could not load your dashboard');
+          || (err?.status === 0 ? 'Could not reach the server' : 'Could not load your dashboard');
       }
     }));
   }
 
-  /** the auto-closed counter is not part of PKG_DPR_DASH — one value feeds the
-   *  hero chip, the tile and the "My tasks" row */
+  /** The auto-closed counter is not part of PKG_DPR_DASH. */
   private loadAutoClosed(): void {
     this.subs.push(this.api.GetAutoClosedTaskCount(this.empId).subscribe({
       next: (res: any) => {
         if (this.destroyed) { return; }
-        const n = this.num(res?.success === false ? 0 : res?.data);
-        this.autoClosedCount = n;
-        this.autoClosedChipText = n > 0 ? 'auto-closed — timer locked' : 'auto-closed — none';
-        this.taskStats[0].count = n;
-        this.taskStats[0].sub = n > 0 ? 'needs review before approval' : 'nothing to review';
-        this.tiles[2] = { value: n, suffix: '', dec: 0 };
-        this.tileSmall[2] = n > 0
-          ? { cls: 'dn', txt: 'blocks new timers' }
-          : { cls: 'up', txt: 'timers unlocked' };
-        this.tileValues[2] = this.fmt(n, 0, '');
-        this.countUp(2);
+        this.autoClosedCount = this.num(res?.success === false ? 0 : res?.data);
       },
-      error: () => { /* non-fatal: the dashboard itself still renders */ }
+      error: () => { }
     }));
   }
 
-  /** dashes + zeros in the existing boxes, so nothing reflows while loading */
-  private applyPlaceholders(): void {
-    this.heroTitle = this.greeting() + ', …';
-    this.dateLine = this.todayLine();
-    this.runningChipOk = false;
-    this.runningText = '—';
-    this.lastPunchText = '—';
-    this.breakText = '—';
-    this.travelText = '—';
-    this.autoClosedCount = 0;
-    this.autoClosedChipText = 'auto-closed';
-    this.ringMid = '00:00';
-    this.ringSub = 'of — today';
-    this.ringOffset = this.ringCircumference;
-    this.splitRows = SPLIT_COLORS.map(c => ({ color: c, label: '—', val: '—' }));
-    this.monthHoursText = '— h';
-
-    this.tiles = [
-      { value: 0, suffix: 'h', dec: 2 },
-      { value: 0, suffix: 'h', dec: 2 },
-      { value: 0, suffix: '', dec: 0 },
-      { value: 0, suffix: ' / 5', dec: 0 }
-    ];
-    this.tileValues = this.tiles.map(t => this.fmt(t.value, t.dec, t.suffix));
-    this.tileSmall = [
-      { cls: 'fl', txt: 'loading…' },
-      { cls: 'fl', txt: 'loading…' },
-      { cls: 'fl', txt: 'loading…' },
-      { cls: 'fl', txt: 'loading…' }
-    ];
-
-    this.dayLoggedText = '00:00';
-    this.punchHm = '—';
-    this.punchAmPm = '';
-    this.tlSegs = [];
-    this.tlMarks = [];
-    this.gapText = null;
-
-    this.actTitle = '—';
-    this.actSub = '';
-    this.actPillCls = 'pi';
-    this.actPillText = 'IDLE';
-    this.actProgress = 0;
-    this.actProgressText = '—';
-    this.actLive = '—';
-    this.actToday = '—';
-    this.actTotal = '—';
-
-    this.quoteText = null;
-    this.quoteAuthor = '';
-
-    this.weekBars = this.skeletonWeek();
-    this.targetLinePct = 66;
-    this.targetLabel = 'target';
-    this.weekNote = [{ k: 'Total', v: '—' }, { k: 'Avg', v: '—' }, { k: 'Peak', v: '—' }, { k: 'Active', v: '—' }];
-
-    this.buildSkeletonCalendar();
-    this.calStats = [
-      { k: 'Logged', v: '—' }, { k: 'Total', v: '—' }, { k: 'Avg', v: '—' },
-      { k: 'Longest streak', v: '—' }, { k: 'Leave', v: '—' }, { k: 'Missed', v: '—' }
-    ];
-
-    this.tasksBandCount = '— tasks';
-    this.taskStats = [
-      { label: 'Auto closed', sub: '', count: 0 },
-      { label: 'Running', sub: '', count: 0 },
-      { label: 'Paused', sub: '', count: 0 },
-      { label: 'Not started', sub: '', count: 0 },
-      { label: 'Open total', sub: '', count: 0 }
-    ];
-    this.estBars = [];
-    this.estNote = [];
-    this.estEmptyNote = 'Loading…';
-    this.formRows = [];
+  private loadNotifications(): void {
+    this.subs.push(this.api.getUserNotifications(this.empId).subscribe({
+      next: (res: any) => {
+        if (this.destroyed) { return; }
+        const list: any[] = Array.isArray(res?.data) ? res.data : [];
+        const rows = list.map(n => this.toNotifRow(n));
+        this.notifUnread = rows.filter(r => r.unread).length;
+        this.notifSub = this.notifUnread > 0
+          ? this.notifUnread + (this.notifUnread === 1 ? ' unread' : ' unread')
+          : (rows.length ? 'All caught up' : 'Nothing new');
+        this.notifRows = rows.slice(0, 5);
+        this.popBadges();
+      },
+      error: () => { }
+    }));
   }
+
+  /** Same call the login popup makes — it returns every notice aimed at this user. */
+  private loadNotices(): void {
+    this.subs.push(this.api.getUserNotices(this.empId, 0, 'Y').subscribe({
+      next: (res: any) => {
+        if (this.destroyed) { return; }
+        const list: any[] = Array.isArray(res?.data) ? res.data : [];
+        const sorted = list.slice().sort((a, b) => this.ts(b?.startDate) - this.ts(a?.startDate));
+        this.noticeRows = sorted.slice(0, 4).map(n => this.toNoticeRow(n));
+        this.noticeUnread = list.filter(n => (n?.isRead ?? '') === 'N').length;
+        const newest = sorted[0];
+        this.noticeSub = newest
+          ? ((newest.title ?? '').toString().trim() || 'Latest notice')
+          : 'Nothing published';
+        this.popBadges();
+      },
+      error: () => { }
+    }));
+  }
+
+  // ══ MAPPING ═══════════════════════════════════════════════════════════════
 
   private applyDashboard(d: any): void {
     const hero: DprEmpHero = d?.hero ?? {};
@@ -431,102 +459,65 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const estActual: DprEmpEstAct[] = d?.estVsActual ?? [];
     const myForms: DprEmpForm[] = d?.myForms ?? [];
 
-    this.applyHero(hero, tiles, timeline, myTasks);
-    this.applyTiles(hero, tiles, week);
-    this.applyTimeline(timeline);
+    const gapMin = this.applyTimeline(hero, timeline);
+    this.applyHero(hero, tiles, calendar, gapMin);
+    const weekInfo = this.applyWeek(week, hero);
+    const month = this.applyMonth(tiles, hero);
+    this.applyKpis(hero, tiles, myTasks, weekInfo, month);
     this.applyActiveTask(hero, timeline, myTasks);
-    this.applyWeek(week, hero);
     this.applyCalendar(calendar, tiles);
     this.applyTasks(myTasks);
     this.applyEstActual(estActual);
     this.applyForms(myForms);
+    this.applyApprovals(tiles, myForms);
   }
 
-  // ══ HERO ══════════════════════════════════════════════════════════════════
+  // ── hero ───────────────────────────────────────────────────────────────────
 
-  private applyHero(hero: DprEmpHero, tiles: DprEmpTiles, timeline: DprEmpTimelineSeg[], myTasks: DprEmpTask[]): void {
+  private applyHero(hero: DprEmpHero, tiles: DprEmpTiles, calendar: DprEmpCalendarDay[], gapMin: number): void {
     const name = (hero.employeeName ?? '').trim();
-    this.heroTitle = this.greeting() + (name ? ', ' + name : '');
-
-    const bits = [(hero.location ?? '').trim(), (hero.department ?? '').trim()].filter(b => b.length > 0);
-    this.dateLine = this.todayLine() + (bits.length ? ' · ' + bits.join(' · ') : '');
+    this.firstName = this.titleCase(name.split(/\s+/)[0] || '');
+    this.greetingText = this.greeting();
+    this.dateText = this.todayLine();
+    this.locText = (hero.location ?? '').trim();
+    this.deptText = (hero.department ?? '').trim();
 
     const logged = this.num(hero.todayLoggedMin);
     const expH = this.num(hero.expectedDailyHours);
     const expMin = expH * 60;
-    const frac = expMin > 0 ? this.clamp(logged / expMin, 0, 1) : 0;
-    this.ringOffset = this.ringCircumference * (1 - frac);
-    this.ringMid = this.hm(logged);
-    this.ringSub = 'of ' + (expH > 0 ? this.n1(expH) + 'h' : '—') + ' today';
+    this.expDailyText = expH > 0 ? this.trim1(expH) + ' h expected today' : '';
 
-    // running task chip
+    const frac = expMin > 0 ? this.clamp(logged / expMin, 0, 1) : 0;
+    this.ring1Offset = RING1_C * (1 - frac);
+    this.ring1Mid = this.hShort(logged);
+    this.ring1Sub = 'OF ' + (expH > 0 ? this.trim1(expH) + 'H' : '—') + ' TODAY';
+
     const runTitle = (hero.runningTaskTitle ?? '').trim();
     this.runSinceMin = this.parseHm(hero.runningSince);
-    if (runTitle) {
-      const el = this.elapsedFrom(this.runSinceMin);
-      this.runningChipOk = true;
-      this.runningText = runTitle + (el ? ' · ' + el : '');
-    } else {
-      this.runningChipOk = false;
-      this.runningText = 'No timer running';
-    }
+    this.timerRunning = runTitle.length > 0;
+    this.runningText = this.timerRunning ? 'Running' : 'Idle';
 
-    // punch chip + attbox
     const lp = this.parseHm(hero.lastPunch);
-    if (lp === null) {
-      this.lastPunchText = '—';
-      this.punchHm = '—';
-      this.punchAmPm = '';
-    } else {
-      const t12 = this.to12h(lp);
-      this.lastPunchText = t12.hm + ' ' + t12.ap;
-      this.punchHm = t12.hm;
-      this.punchAmPm = t12.ap;
-    }
+    this.lastPunchText = lp === null ? '—' : this.to12h(lp);
 
     const brk = this.num(hero.breakMinToday);
     const trv = this.num(hero.travelMinToday);
-    const openBrk = (hero.openBreakReason ?? '').trim();
-    this.breakText = brk > 0 ? this.hm(brk) + (openBrk && openBrk.toUpperCase() !== 'TRAVEL' ? ' · open' : '') : '—';
-    this.travelText = trv > 0 ? this.hm(trv) + (openBrk.toUpperCase() === 'TRAVEL' ? ' · open' : '') : '—';
-    this.dayLoggedText = this.hm(logged);
+    this.breakText = brk > 0 ? this.hmLong(brk) : '—';
+    this.travelText = trv > 0 ? this.hmLong(trv) : '—';
 
-    // today's split: WORK minutes per category (category recovered from myTasks by title)
-    const catOf = new Map<string, string>();
-    myTasks.forEach(t => {
-      const title = (t.taskTitle ?? '').trim();
-      const cat = (t.categoryName ?? '').trim();
-      if (title && cat) { catOf.set(title, cat); }
-    });
-    const buckets = new Map<string, number>();
-    timeline
-      .filter(s => (s.segType ?? '').toUpperCase() === 'WORK')
-      .forEach(s => {
-        const label = (s.label ?? '').trim();
-        const key = catOf.get(label) || label || 'Untitled';
-        buckets.set(key, (buckets.get(key) ?? 0) + this.num(s.minutes));
-      });
-    const top = Array.from(buckets.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    this.splitRows = SPLIT_COLORS.map((c, i) => top[i]
-      ? { color: c, label: top[i][0], val: this.hm(top[i][1]) }
-      : { color: c, label: '—', val: '—' });
+    this.heroWorked = this.hm(logged);
+    this.heroGap = this.hm(gapMin);
+    this.heroRemaining = expMin > 0 ? this.hm(Math.max(expMin - logged, 0)) : '—';
+    this.heroMonth = this.n1(this.num(tiles.monthHours)) + ' h';
 
-    this.monthHoursText = this.n1(this.num(tiles.monthHours)) + ' h';
     this.quoteText = (hero.quoteText ?? '').trim() || null;
     this.quoteAuthor = (hero.quoteAuthor ?? '').trim();
-
-    // unlogged gap: punch span minus logged minus breaks (HH:MI text, parsed first)
-    const fp = this.parseHm(hero.firstPunch);
-    if (fp === null || lp === null || lp <= fp) {
-      this.gapText = null;
-    } else {
-      this.gapText = this.hmLong(Math.max(lp - fp - logged - brk - trv, 0));
-    }
+    this.streakDays = this.currentStreak(calendar);
 
     // live ticker for the running timer
     this.intervals.forEach(t => clearInterval(t));
     this.intervals = [];
-    if (runTitle && this.runSinceMin !== null) {
+    if (this.timerRunning && this.runSinceMin !== null) {
       this.actLive = this.elapsedFrom(this.runSinceMin, true);
       this.intervals.push(setInterval(() => {
         this.actLive = this.elapsedFrom(this.runSinceMin, true);
@@ -534,91 +525,250 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     }
   }
 
-  private applyTiles(hero: DprEmpHero, tiles: DprEmpTiles, week: DprEmpWeekDay[]): void {
+  /** Consecutive reported working days ending today (or yesterday, while today is still open).
+   *  Weekly offs and leave neither count nor break it. This month only — that is what the cursor holds. */
+  private currentStreak(rows: DprEmpCalendarDay[]): number {
+    const past = rows.filter(r => (r.isFuture ?? '') !== 'Y');
+    let streak = 0;
+    for (let i = past.length - 1; i >= 0; i--) {
+      const r = past[i];
+      const working = (r.isWorkingDay ?? '') === 'Y';
+      const leave = (r.onLeave ?? '') === 'Y';
+      if (!working || leave) { continue; }
+      const h = this.num(r.hours);
+      if ((r.isToday ?? '') === 'Y' && h <= 0) { continue; }
+      if (h > 0) { streak++; } else { break; }
+    }
+    return streak;
+  }
+
+  // ── KPIs ───────────────────────────────────────────────────────────────────
+
+  private applyKpis(
+    hero: DprEmpHero, tiles: DprEmpTiles, myTasks: DprEmpTask[],
+    week: { total: number; target: number; active: number },
+    month: { pct: number; achieved: number; expected: number }
+  ): void {
     const logged = this.num(hero.todayLoggedMin);
-    const expMin = this.num(hero.expectedDailyHours) * 60;
+    const expH = this.num(hero.expectedDailyHours);
+    const expMin = expH * 60;
+    const dayPct = expMin > 0 ? (logged / expMin) * 100 : 0;
 
-    const weekTotal = week.reduce((s, w) => s + this.num(w.hours), 0);
-    const activeDays = week.filter(w => this.num(w.hours) > 0).length;
-    const avg = activeDays > 0 ? weekTotal / activeDays : 0;
-
-    const fulfil = this.num(tiles.fulfilPct);
-    const consistency = this.num(tiles.consistencyPct);
-
-    this.tiles = [
-      { value: logged / 60, suffix: 'h', dec: 2 },
-      { value: weekTotal, suffix: 'h', dec: 2 },
-      { value: this.autoClosedCount, suffix: '', dec: 0 },
-      { value: this.clamp(Math.round(fulfil / 20), 0, 5), suffix: ' / 5', dec: 0 }
-    ];
-
-    let pace: TileSmall;
+    let dayFoot: string;
     if ((hero.onLeaveToday ?? '') === 'Y') {
-      pace = { cls: 'fl', txt: logged + ' min · on leave today' };
+      dayFoot = 'On leave today';
     } else if ((hero.isWorkingDayToday ?? '') === 'N') {
-      pace = { cls: 'fl', txt: logged + ' min · non-working day' };
+      dayFoot = 'Not a working day';
     } else if (expMin > 0 && logged >= expMin) {
-      pace = { cls: 'up', txt: logged + ' min · target met' };
+      dayFoot = logged + ' min done · target met';
     } else if (expMin > 0) {
-      pace = { cls: 'fl', txt: logged + ' min · ' + this.hm(expMin - logged) + ' to target' };
+      dayFoot = logged + ' min done · ' + this.hm(expMin - logged) + ' to target';
     } else {
-      pace = { cls: 'fl', txt: logged + ' min today' };
+      dayFoot = logged + ' min done';
     }
 
-    this.tileSmall = [
-      pace,
-      { cls: 'fl', txt: 'Avg ' + this.n2(avg) + ' h/day · ' + activeDays + ' active days' },
-      this.autoClosedCount > 0
-        ? { cls: 'dn', txt: 'blocks new timers' }
-        : { cls: 'up', txt: 'timers unlocked' },
+    const weekPct = week.target > 0 ? (week.total / week.target) * 100 : 0;
+    const openTasks = this.num(tiles.openTasks) || myTasks.length;
+    const running = myTasks.filter(t => (t.isRunning ?? '') === 'Y').length;
+    const overdue = myTasks.filter(t => (t.isOverdue ?? '') === 'Y').length;
+    const awaiting = this.num(tiles.myLogsAwaitingApproval);
+
+    this.kpis = [
       {
-        cls: fulfil >= 100 ? 'up' : fulfil < 70 ? 'dn' : 'fl',
-        txt: this.n1(fulfil) + '% of target · ' + this.n1(consistency) + '% days reported'
+        label: 'Logged today', color: A.emerald, icon: 'schedule',
+        pillCls: dayPct >= 100 ? 'ok' : dayPct >= 60 ? 'ok' : 'wt',
+        pillTxt: this.n1(dayPct) + '%',
+        value: logged / 60, dec: 2, unit: ' h / ' + (expH > 0 ? this.trim1(expH) + ' h' : '—'),
+        barPct: this.clamp(dayPct, 0, 100), foot: dayFoot
+      },
+      {
+        label: 'This week', color: A.sky, icon: 'trending_up',
+        pillCls: weekPct >= 100 ? 'ok' : weekPct >= 85 ? 'nu' : 'wt',
+        pillTxt: weekPct >= 100 ? 'On track' : weekPct >= 85 ? 'Close' : 'Behind',
+        value: week.total, dec: 2, unit: ' h total',
+        barPct: this.clamp(weekPct, 0, 100),
+        foot: 'Avg ' + this.n2(week.active > 0 ? week.total / week.active : 0) + ' h / day · '
+          + week.active + (week.active === 1 ? ' active day' : ' active days')
+      },
+      {
+        label: 'Open work', color: A.indigo, icon: 'list_alt',
+        pillCls: overdue > 0 ? 'cr' : 'nu',
+        pillTxt: running > 0 ? running + ' running' : (overdue > 0 ? overdue + ' overdue' : 'Idle'),
+        value: openTasks, dec: 0, unit: openTasks === 1 ? ' task' : ' tasks',
+        barPct: openTasks > 0 ? this.clamp(((openTasks - overdue) / openTasks) * 100, 0, 100) : 0,
+        foot: overdue + ' overdue · ' + awaiting + (awaiting === 1 ? ' log awaiting approval' : ' logs awaiting approval')
+      },
+      {
+        label: 'Month achieved', color: A.violet, icon: 'military_tech',
+        pillCls: month.pct >= 100 ? 'ok' : month.pct >= 85 ? 'nu' : 'wt',
+        pillTxt: month.pct >= 100 ? 'Ahead' : month.pct >= 85 ? 'Close' : 'Behind',
+        value: month.pct, dec: 1, unit: '% of target',
+        barPct: this.clamp(month.pct, 0, 100),
+        foot: this.n1(month.achieved) + ' h of ' + this.n1(month.expected) + ' h expected so far'
       }
     ];
-    this.tileValues = this.tiles.map(t => this.fmt(t.value, t.dec, t.suffix));
   }
 
-  // ══ TIMELINE ══════════════════════════════════════════════════════════════
+  // ── month expected vs achieved ─────────────────────────────────────────────
 
-  private applyTimeline(timeline: DprEmpTimelineSeg[]): void {
-    const rows = timeline.filter(s => this.parseHm(s.startTime) !== null);
-    if (!rows.length) {
+  private applyMonth(tiles: DprEmpTiles, hero: DprEmpHero): { pct: number; achieved: number; expected: number } {
+    const achieved = this.num(tiles.monthHours);
+    const expToDate = this.num(tiles.expectedHoursToDate);
+    const expFull = this.num(tiles.expectedHoursFullMonth);
+    const daysToDate = this.num(tiles.workingDaysToDate);
+    const daysFull = this.num(tiles.workingDaysFullMonth);
+    const reported = this.num(tiles.daysReported);
+    const leave = this.num(tiles.leaveDays);
+    const daily = this.num(hero.expectedDailyHours);
+
+    this.monthName = this.monthOnly(tiles.monthKey);
+    const pct = expToDate > 0 ? (achieved / expToDate) * 100 : 0;
+    this.achievedPct = pct;
+    this.ring2Offset = RING2_C * (1 - this.clamp(pct / 100, 0, 1));
+
+    // Days still ahead come from the expected hours themselves, so leave and
+    // holidays are already out of them — the working-day counts can differ in
+    // whether they are net of leave.
+    const remainingExp = Math.max(expFull - expToDate, 0);
+    const daysLeft = daily > 0 ? remainingExp / daily : Math.max(daysFull - daysToDate, 0);
+    const pace = daysToDate > 0 ? achieved / daysToDate : 0;
+    const projected = achieved + pace * daysLeft;
+    const needed = daysLeft > 0 ? Math.max(expFull - achieved, 0) / daysLeft : 0;
+    const ahead = achieved - expToDate;
+
+    const scale = Math.max(expFull, projected, achieved, 1) * 1.05;
+    this.soFarFill = this.clamp((achieved / scale) * 100, 0, 100);
+    this.soFarMark = this.clamp((expToDate / scale) * 100, 0, 100);
+    this.endFill = this.soFarFill;
+    this.endGhost = this.clamp(((projected - achieved) / scale) * 100, 0, 100 - this.endFill);
+    this.endMark = this.clamp((expFull / scale) * 100, 0, 100);
+
+    this.soFarText = this.n1(achieved) + ' h';
+    this.endText = this.n1(projected) + ' h';
+    this.soFarTip = 'Achieved <b>' + this.n1(achieved) + ' h</b> against <b>' + this.n1(expToDate)
+      + ' h</b> expected over ' + this.trim1(daysToDate) + ' working days';
+    this.soFarMarkTip = 'Expected to date — <b>' + this.n1(expToDate) + ' h</b>';
+    this.endGhostTip = this.trim1(daysLeft) + ' working days left at your pace of <b>' + this.n2(pace)
+      + ' h/day</b> → <b>+' + this.n1(projected - achieved) + ' h</b>';
+    this.endMarkTip = 'Full-month expected — <b>' + this.n1(expFull) + ' h</b>';
+
+    const projDelta = projected - expFull;
+    this.monthStats = [
+      {
+        k: ahead >= 0 ? 'Ahead by' : 'Behind by', v: (ahead >= 0 ? '+' : '−') + this.n1(Math.abs(ahead)),
+        unit: ' h', d: 'vs expected today', color: ahead >= 0 ? A.emerald : A.rose
+      },
+      {
+        k: 'Your pace', v: this.n2(pace), unit: ' h/day',
+        d: 'Target is ' + (daily > 0 ? this.trim1(daily) : '—'), color: A.sky
+      },
+      {
+        k: 'Projected', v: this.n1(projected), unit: ' h',
+        d: (projDelta >= 0 ? '+' : '−') + this.n1(Math.abs(projDelta)) + ' h ' + (projDelta >= 0 ? 'over' : 'under') + ' target',
+        color: A.indigo
+      },
+      daysLeft > 0 && projDelta < 0
+        ? { k: 'Needed to recover', v: this.n1(needed), unit: ' h/day', d: 'Over ' + this.trim1(daysLeft) + ' days left', color: A.amber }
+        : { k: 'Days reported', v: this.n0(reported), unit: '/' + this.trim1(daysFull), d: this.trim1(leave) + ' leave', color: A.amber }
+    ];
+    this.monthNote = 'Expected hours already allow for your weekly off, public holidays and approved leave.';
+
+    return { pct, achieved, expected: expToDate };
+  }
+
+  // ── timeline ───────────────────────────────────────────────────────────────
+
+  /** Draws today's segments and returns the unlogged minutes inside the punch span.
+   *  The same number feeds the hero, so the page never shows two different gaps. */
+  private applyTimeline(hero: DprEmpHero, timeline: DprEmpTimelineSeg[]): number {
+    const rows = timeline
+      .map(s => {
+        const start = this.parseHm(s.startTime);
+        const mins = Math.max(this.num(s.minutes), 0);
+        const end = this.parseHm(s.endTime) ?? (start === null ? null : start + mins);
+        return { s, start, end };
+      })
+      .filter(r => r.start !== null && r.end !== null)
+      .sort((a, b) => (a.start as number) - (b.start as number)) as { s: DprEmpTimelineSeg; start: number; end: number }[];
+
+    const fp = this.parseHm(hero.firstPunch);
+    const lp = this.parseHm(hero.lastPunch);
+    const now = this.nowMin();
+
+    if (!rows.length && fp === null) {
       this.tlSegs = [];
-      this.tlMarks = [];
-      return;
+      this.tlStart = '';
+      this.tlEnd = '';
+      this.tlPunches = '';
+      this.todayStats = this.buildTodayStats(hero, 0);
+      return 0;
     }
 
-    const starts = rows.map(s => this.parseHm(s.startTime) as number);
-    const ends = rows.map((s, i) => this.parseHm(s.endTime) ?? (starts[i] + this.num(s.minutes)));
-    let winStart = Math.floor(Math.min(...starts) / 60) * 60;
-    let winEnd = Math.ceil(Math.max(...ends) / 60) * 60;
-    if (winEnd <= winStart) { winEnd = winStart + 60; }
+    const winStart = Math.min(fp ?? Infinity, ...rows.map(r => r.start));
+    const lastEnd = rows.length ? Math.max(...rows.map(r => r.end)) : winStart;
+    const running = rows.some(r => (r.s.isRunning ?? '') === 'Y');
+    const winEnd = Math.max(running ? now : Math.max(lastEnd, lp ?? lastEnd), winStart + 30);
     const span = winEnd - winStart;
+    const pct = (m: number) => this.clamp((m / span) * 100, 0, 100);
 
-    this.tlSegs = rows.map((s, i) => {
-      const isWork = (s.segType ?? '').toUpperCase() === 'WORK';
-      const running = (s.isRunning ?? '') === 'Y';
-      const label = (s.label ?? '').trim();
-      const mins = Math.max(this.num(s.minutes), 0);
-      const width = this.clamp((mins / span) * 100, 0, 100);
-      const bg = isWork
-        ? (running ? RUN_G : WORK_G)
-        : (label.toUpperCase().indexOf('TRAVEL') >= 0 ? TRAVEL_G : BREAK_G);
-      let lbl: string | null = null;
-      if (width >= 18) {
-        lbl = running ? 'Running' : (isWork ? 'Work ' + this.hmLong(mins) : label + ' ' + this.hmLong(mins));
-      }
-      return {
-        left: this.clamp(((starts[i] - winStart) / span) * 100, 0, 100),
-        width,
-        bg,
-        lbl
-      };
+    const segs: TlSeg[] = [];
+    let cursor = winStart;
+    let gapTotal = 0;
+    const pushGap = (from: number, to: number) => {
+      const g = to - from;
+      if (g < 5) { return; }
+      gapTotal += g;
+      const w = pct(g);
+      segs.push({
+        left: pct(from - winStart), width: w, bg: '', gap: true,
+        label: w >= 11 ? this.hmLong(g) : '',
+        tip: 'No log against this time — <b>' + this.hmLong(g) + '</b>'
+      });
+    };
+
+    rows.forEach(r => {
+      if (r.start > cursor) { pushGap(cursor, r.start); }
+      const isWork = (r.s.segType ?? '').toUpperCase() === 'WORK';
+      const isRun = (r.s.isRunning ?? '') === 'Y';
+      const label = (r.s.label ?? '').trim();
+      const isTravel = !isWork && label.toUpperCase().indexOf('TRAVEL') >= 0;
+      const mins = r.end - r.start;
+      const w = pct(mins);
+      segs.push({
+        left: pct(r.start - winStart), width: w, gap: false,
+        bg: isWork ? (isRun ? A.indigo : A.emerald) : (isTravel ? A.amber : A.sky),
+        label: w >= 14 ? (label || (isWork ? 'Work' : 'Break')) + (isRun ? ' · running' : '') : '',
+        tip: escHtml(label || (isWork ? 'Work' : 'Break')) + ' — ' + this.hm(r.start) + ' to '
+          + (isRun ? 'now, running' : this.hm(r.end)) + ' · <b>' + this.hmLong(mins) + '</b>'
+      });
+      cursor = Math.max(cursor, r.end);
     });
+    if (!running && lp !== null && lp > cursor) { pushGap(cursor, lp); }
 
-    this.tlMarks = [0, 1, 2, 3, 4, 5].map(i => this.hm(winStart + Math.round((span / 5) * i)));
+    this.tlSegs = segs;
+    this.tlStart = (fp !== null ? this.to12h(fp) : this.to12h(winStart)) + ' first punch';
+    this.tlEnd = running ? this.to12h(now) + ' now' : this.to12h(winEnd);
+    const pc = this.num(hero.punchCount);
+    this.tlPunches = pc > 0 ? pc + (pc === 1 ? ' punch' : ' punches') : '';
+    this.todayStats = this.buildTodayStats(hero, gapTotal);
+    return gapTotal;
   }
+
+  private buildTodayStats(hero: DprEmpHero, gapMin: number): StatBox[] {
+    const logged = this.num(hero.todayLoggedMin);
+    const expH = this.num(hero.expectedDailyHours);
+    const brk = this.num(hero.breakMinToday);
+    const lp = this.parseHm(hero.lastPunch);
+    const t12 = lp === null ? null : this.to12hParts(lp);
+    return [
+      { k: 'Day logged', v: this.hm(logged), unit: '', d: expH > 0 ? 'of ' + this.trim1(expH) + ' h' : '', color: A.emerald },
+      { k: 'Break', v: this.hm(brk), unit: '', d: brk > 0 ? (hero.openBreakReason ? 'On break now' : 'Taken today') : 'None yet', color: A.sky },
+      { k: 'Not logged', v: this.hm(gapMin), unit: '', d: gapMin > 0 ? 'Needs a log' : 'All accounted for', color: gapMin > 0 ? A.rose : A.emerald },
+      { k: 'Last punch', v: t12 ? t12.hm : '—', unit: t12 ? ' ' + t12.ap : '', d: this.num(hero.punchCount) + ' punches today', color: A.amber }
+    ];
+  }
+
+  // ── active task ────────────────────────────────────────────────────────────
 
   private applyActiveTask(hero: DprEmpHero, timeline: DprEmpTimelineSeg[], myTasks: DprEmpTask[]): void {
     const runTitle = (hero.runningTaskTitle ?? '').trim();
@@ -626,409 +776,390 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const match = myTasks.find(t => (runId !== null && this.num(t.taskId) === this.num(runId))
       || (runTitle && (t.taskTitle ?? '').trim() === runTitle)) ?? null;
 
-    const todayMinOnTask = timeline
+    const todayOnTask = timeline
       .filter(s => (s.segType ?? '').toUpperCase() === 'WORK' && (s.label ?? '').trim() === runTitle)
       .reduce((sum, s) => sum + this.num(s.minutes), 0);
 
+    const pick = match ?? (runTitle ? null : myTasks[0] ?? null);
+    this.actCategory = ((pick?.categoryName ?? '').trim() || 'Uncategorised');
     if (runTitle) {
       this.actTitle = runTitle;
-      const cat = (match?.categoryName ?? '').trim();
       const since = (hero.runningSince ?? '').trim();
-      this.actSub = [cat || 'Uncategorised', since ? 'started ' + since : ''].filter(b => b).join(' · ');
-      this.actPillCls = 'pr';
-      this.actPillText = 'RUNNING';
-      this.actLive = this.elapsedFrom(this.runSinceMin, true);
-      this.actToday = this.hm(todayMinOnTask);
-    } else {
-      const open = myTasks[0] ?? null;
-      this.actTitle = open ? (open.taskTitle ?? '—') : 'No task running';
-      this.actSub = open
-        ? [(open.categoryName ?? '').trim() || 'Uncategorised', 'not started'].join(' · ')
-        : this.num(hero.tasksToday) + ' tasks touched today';
-      this.actPillCls = 'pi';
-      this.actPillText = 'IDLE';
+      this.actSub = since ? 'Started ' + since + ' today' : 'Running now';
+      this.actToday = this.hm(todayOnTask);
+    } else if (pick) {
+      this.actTitle = (pick.taskTitle ?? '').trim() || 'Untitled task';
+      this.actSub = 'Not running · next in your list';
+      this.actToday = '00:00';
       this.actLive = '—';
-      this.actToday = this.hm(this.num(hero.todayLoggedMin));
+    } else {
+      this.actTitle = 'No task running';
+      this.actSub = this.num(hero.tasksToday) + ' tasks touched today';
+      this.actToday = '—';
+      this.actLive = '—';
     }
+    this.actProgress = this.clamp(this.num(pick?.progress), 0, 100);
+    this.actTotal = pick ? this.hm(this.num(pick.myLoggedHours) * 60) : '—';
 
-    const prog = this.clamp(this.num(match?.progress), 0, 100);
-    this.actProgress = prog;
-    this.actProgressText = Math.round(prog) + '%';
-    this.actTotal = match ? this.hm(this.num(match.myLoggedHours) * 60) : '—';
+    const od = myTasks.find(t => (t.isOverdue ?? '') === 'Y' && t !== match) ?? null;
+    this.overdueRow = od ? this.toTaskRow(od) : null;
   }
 
-  // ══ WEEK ══════════════════════════════════════════════════════════════════
+  // ── week ───────────────────────────────────────────────────────────────────
 
-  private applyWeek(week: DprEmpWeekDay[], hero: DprEmpHero): void {
+  private applyWeek(week: DprEmpWeekDay[], hero: DprEmpHero): { total: number; target: number; active: number } {
     if (!week.length) {
-      this.weekBars = this.skeletonWeek();
-      this.weekNote = [{ k: 'Total', v: '—' }, { k: 'Avg', v: '—' }, { k: 'Peak', v: '—' }, { k: 'Active', v: '—' }];
-      return;
+      this.weekCols = [];
+      this.weekStats = [];
+      this.weekFill = 0;
+      this.weekMark = 0;
+      return { total: 0, target: 0, active: 0 };
     }
 
     const target = this.num(week[0].targetHours) || this.num(hero.expectedDailyHours);
-    const maxH = Math.max(...week.map(w => this.num(w.hours)));
-    const axisMax = Math.max(target, maxH, 1) * 1.25;
+    const hours = week.map(w => this.num(w.hours));
+    const maxH = Math.max(...hours, 0);
+    // Chart ceiling leaves headroom above the tallest bar for its value label.
+    const axisMax = Math.max(target * 1.33, maxH * 1.1, 1);
+    this.weekTargetPct = this.clamp((target / axisMax) * 100, 0, 100);
+    this.weekTargetLabel = target > 0 ? this.trim1(target) + ' h' : '—';
 
-    this.weekBars = week.map(w => {
-      const h = this.num(w.hours);
-      const isToday = (w.isToday ?? '') === 'Y';
-      const working = (w.isWorkingDay ?? '') === 'Y';
+    const isOff = (w: DprEmpWeekDay) => (w.isWorkingDay ?? '') !== 'Y' || (w.onLeave ?? '') === 'Y';
+    const pastIdx = week.map((w, i) => ({ w, i })).filter(x => (x.w.isToday ?? '') !== 'Y' && !isOff(x.w));
+    const peakH = pastIdx.length ? Math.max(...pastIdx.map(x => hours[x.i])) : 0;
+
+    let onTarget = 0;
+    let working = 0;
+    this.weekCols = week.map((w, i) => {
+      const h = hours[i];
+      const today = (w.isToday ?? '') === 'Y';
+      const off = isOff(w);
       const leave = (w.onLeave ?? '') === 'Y';
+      const diff = h - target;
+      if (!off && !today) {
+        working++;
+        if (target > 0 && h >= target) { onTarget++; }
+      }
+      const running = today && this.timerRunning;
       return {
-        h: this.clamp((h / axisMax) * 100, 0, 100),
-        em: this.n2(h),
-        bd: isToday ? 'TODAY' : (w.dayName ?? '').toUpperCase(),
-        lo: !isToday && working && !leave && target > 0 && h < target * 0.8,
-        td: isToday
+        h: off && h <= 0 ? 0 : this.clamp((h / axisMax) * 100, 0, 100),
+        val: this.n2(h),
+        day: today ? 'TODAY' : (w.dayName ?? '').trim().toUpperCase().slice(0, 3),
+        varTxt: off ? (leave ? 'LEAVE' : 'OFF') : running ? 'Live' : (diff >= 0 ? '+' : '−') + this.n1(Math.abs(diff)),
+        varCls: off ? 'nx' : running ? 'run' : diff >= 0 ? 'up' : 'dn',
+        off: off && h <= 0,
+        offIcon: leave ? 'beach_access' : 'bedtime',
+        today,
+        short: !off && !today && target > 0 && h < target,
+        peak: !off && !today && h > 0 && h === peakH,
+        tip: this.fmtDate(w.theDate) + ' — '
+          + (off && h <= 0 ? (leave ? 'approved leave' : 'weekly off, no target')
+            : '<b>' + this.n2(h) + ' h</b>' + (today ? ' so far' : '')
+            + (target > 0 && !today ? ' · ' + this.n2(Math.abs(diff)) + ' h ' + (diff >= 0 ? 'over' : 'short of') + ' target' : ''))
       };
     });
 
-    this.targetLinePct = this.clamp((target / axisMax) * 100, 0, 100);
-    this.targetLabel = (target > 0 ? this.n1(target) : '—') + 'h target';
+    const total = hours.reduce((s, v) => s + v, 0);
+    const active = hours.filter(v => v > 0).length;
+    const weekTarget = week.filter(w => !isOff(w)).reduce((s, w) => s + (this.num(w.targetHours) || target), 0);
+    const peakIdx = hours.indexOf(Math.max(...hours));
+    const peakDay = peakIdx >= 0 ? this.fmtDay(week[peakIdx].theDate) : '—';
 
-    const total = week.reduce((s, w) => s + this.num(w.hours), 0);
-    const active = week.filter(w => this.num(w.hours) > 0).length;
-    this.weekNote = [
-      { k: 'Total', v: this.hm(total * 60) },
-      { k: 'Avg', v: this.n2(active > 0 ? total / active : 0) + ' h/day' },
-      { k: 'Peak', v: this.hm(maxH * 60) },
-      { k: 'Active', v: active + (active === 1 ? ' day' : ' days') }
+    this.weekStats = [
+      { k: 'Week total', v: this.hm(total * 60), unit: '', d: active + (active === 1 ? ' active day' : ' active days'), color: A.emerald },
+      { k: 'Daily average', v: this.n2(active > 0 ? total / active : 0), unit: ' h', d: 'Target ' + this.trim1(target) + ' h', color: A.sky },
+      { k: 'Peak day', v: this.hm(Math.max(...hours) * 60), unit: '', d: peakDay, color: A.amber },
+      { k: 'Days on target', v: String(onTarget), unit: '/' + working, d: (working - onTarget) + ' fell short', color: A.violet }
     ];
+
+    const wkScale = Math.max(weekTarget, total, 1) * 1.1;
+    this.weekFill = this.clamp((total / wkScale) * 100, 0, 100);
+    this.weekMark = this.clamp((weekTarget / wkScale) * 100, 0, 100);
+    this.weekTotalText = this.n2(total) + ' h';
+    const delta = total - weekTarget;
+    this.weekPillCls = delta >= 0 ? 'ok' : 'wt';
+    this.weekPillTxt = this.n2(Math.abs(delta)) + ' h ' + (delta >= 0 ? 'ahead' : 'behind');
+    this.weekFillTip = 'Logged this week — <b>' + this.n2(total) + ' h</b>';
+    this.weekMarkTip = 'Week target — <b>' + this.n1(weekTarget) + ' h</b>';
+
+    return { total, target: weekTarget, active };
   }
 
-  // ══ CALENDAR ══════════════════════════════════════════════════════════════
+  // ── calendar ───────────────────────────────────────────────────────────────
 
   private applyCalendar(rows: DprEmpCalendarDay[], tiles: DprEmpTiles): void {
-    this.calMonthLabel = this.monthLabel(tiles.monthKey ?? (rows[0]?.theDate ?? null));
-
+    this.calMonthLabel = this.monthOnly(tiles.monthKey ?? (rows[0]?.theDate ?? null));
     if (!rows.length) {
       this.buildSkeletonCalendar();
-      this.calStats = [
-        { k: 'Logged', v: 'no records', s: ' this month' }, { k: 'Total', v: '0 h' }, { k: 'Avg', v: '0 h/day' },
-        { k: 'Longest streak', v: '0 days' }, { k: 'Leave', v: '0 days' }, { k: 'Missed', v: '0 days' }
-      ];
+      this.calFoot = [];
       return;
     }
 
-    const lead = this.leadingBlanks(rows[0]);
     const cells: CalCell[] = [];
+    const lead = this.leadingBlanks(rows[0]);
     for (let i = 0; i < lead; i++) {
-      cells.push({ empty: true, cls: '', day: 0, hh: null, title: '', delay: '' });
+      cells.push({ empty: true, cls: '', day: 0, hh: '', tip: '', delay: '' });
     }
 
-    let idx = 0;
     let missed = 0;
-    let streak = 0;
-    let bestStreak = 0;
-
-    rows.forEach(r => {
+    rows.forEach((r, idx) => {
       const h = this.num(r.hours);
       const target = this.num(r.targetHours);
       const working = (r.isWorkingDay ?? '') === 'Y';
       const leave = (r.onLeave ?? '') === 'Y';
       const future = (r.isFuture ?? '') === 'Y';
+      const today = (r.isToday ?? '') === 'Y';
 
       let cls = '';
+      let hh = '';
       let lab = '';
       if (leave) {
-        cls = 'lv'; lab = 'Leave';
+        cls = 'lv'; hh = 'LEAVE'; lab = 'approved leave';
       } else if (h > 0) {
         const ratio = h / Math.max(target, 1);
-        cls = ratio >= 1.125 ? 'g5' : ratio >= 1 ? 'g4' : ratio >= 0.875 ? 'g3' : ratio >= 0.75 ? 'g2' : 'g1';
-        lab = this.n1(h) + ' h';
-      } else if (working && !future) {
-        cls = 'ms'; lab = 'Missed';
+        cls = ratio >= 1.15 ? 'l5' : ratio >= 1.05 ? 'l4' : ratio >= 0.95 ? 'l3' : ratio >= 0.75 ? 'l2' : 'l1';
+        hh = this.n1(h);
+        lab = '<b>' + this.n1(h) + ' h</b>' + (today ? ' so far' : '');
+      } else if (future) {
+        cls = 'ahead'; lab = 'still ahead';
       } else if (!working) {
-        cls = 'wknd'; lab = 'Weekend';
+        cls = 'off'; hh = 'OFF'; lab = 'weekly off';
+      } else if (!today) {
+        cls = 'ms'; hh = 'MISS'; lab = 'no DPR logged'; missed++;
       } else {
-        lab = 'No log';
+        lab = 'nothing logged yet';
       }
-      if ((r.isToday ?? '') === 'Y') { cls = (cls + ' today').trim(); }
-
-      if (working && !leave && !future) {
-        if (h > 0) { streak++; bestStreak = Math.max(bestStreak, streak); } else { missed++; streak = 0; }
-      }
-
+      if (today) { cls = (cls + ' today').trim(); }
       cells.push({
-        empty: false,
-        cls,
+        empty: false, cls, hh,
         day: this.num(r.dayNum) || idx + 1,
-        hh: h > 0 ? this.n1(h) : null,
-        title: this.fmtDate(r.theDate) + ' · ' + lab,
-        delay: (idx * 18) + 'ms'
+        tip: this.fmtDate(r.theDate) + ' — ' + lab,
+        delay: (idx * 14) + 'ms'
       });
-      idx++;
     });
-
     this.calCells = cells;
 
     const reported = this.num(tiles.daysReported);
     const monthHours = this.num(tiles.monthHours);
-    const fullMonthDays = this.num(tiles.workingDaysFullMonth);
-    this.calStats = [
-      { k: 'Logged', v: this.n0(reported) + ' of ' + this.n1(fullMonthDays), s: ' working days' },
+    this.calFoot = [
+      { k: 'Reported', v: this.n0(reported) + ' of ' + this.trim1(this.num(tiles.workingDaysFullMonth)) },
       { k: 'Total', v: this.n1(monthHours) + ' h' },
-      { k: 'Avg', v: this.n2(reported > 0 ? monthHours / reported : 0) + ' h/day' },
-      { k: 'Longest streak', v: bestStreak + (bestStreak === 1 ? ' day' : ' days') },
-      { k: 'Leave', v: this.n1(this.num(tiles.leaveDays)) + ' days' },
-      { k: 'Missed', v: missed + (missed === 1 ? ' day' : ' days') }
+      { k: 'Avg', v: this.n2(reported > 0 ? monthHours / reported : 0) + ' h/d' },
+      { k: 'Leave', v: this.trim1(this.num(tiles.leaveDays)) },
+      { k: 'Missed', v: String(missed) }
     ];
   }
 
-  /** Sunday-first index of the month's first row, taken from Oracle's DY value
-   *  (never new Date().getDay() — that shifts with the browser timezone) */
+  /** Sunday-first index of the month's first row, from Oracle's DY value
+   *  (never new Date().getDay() — that shifts with the browser timezone). */
   private leadingBlanks(first: DprEmpCalendarDay): number {
     const dy = (first.dayName ?? '').trim().toUpperCase().slice(0, 3);
     const i = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].indexOf(dy);
     if (i >= 0) { return i; }
-    const parts = (first.theDate ?? '').split('-');
-    if (parts.length === 3) {
-      return new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2])).getUTCDay();
-    }
-    return 0;
+    const p = (first.theDate ?? '').split('-');
+    return p.length === 3 ? new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay() : 0;
   }
 
-  // ══ MY WORK ═══════════════════════════════════════════════════════════════
+  /** Neutral grid of the right size so the calendar does not reflow while loading. */
+  private buildSkeletonCalendar(): void {
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+    const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const cells: CalCell[] = [];
+    for (let i = 0; i < first; i++) {
+      cells.push({ empty: true, cls: '', day: 0, hh: '', tip: '', delay: '' });
+    }
+    for (let d = 1; d <= days; d++) {
+      cells.push({ empty: false, cls: d === now.getDate() ? 'today' : '', day: d, hh: '', tip: '', delay: '' });
+    }
+    this.calCells = cells;
+    this.calMonthLabel = now.toLocaleDateString('en-GB', { month: 'long' });
+  }
+
+  // ── tasks, estimates, forms ────────────────────────────────────────────────
 
   private applyTasks(rows: DprEmpTask[]): void {
-    const st = (t: DprEmpTask) => (t.assigneeStatus ?? '').trim().toUpperCase();
-    const running = rows.filter(t => st(t) === 'RUNNING' || (t.isRunning ?? '') === 'Y').length;
-    const paused = rows.filter(t => st(t) === 'PAUSED').length;
-    const notStarted = rows.filter(t => st(t) === 'OPEN').length;
-    const overdue = rows.filter(t => (t.isOverdue ?? '') === 'Y').length;
-
-    this.tasksBandCount = rows.length + (rows.length === 1 ? ' task' : ' tasks');
-    this.taskStats = [
-      {
-        label: 'Auto closed',
-        sub: this.autoClosedCount > 0 ? 'needs review before approval' : 'nothing to review',
-        count: this.autoClosedCount
-      },
-      { label: 'Running', sub: '', count: running },
-      { label: 'Paused', sub: '', count: paused },
-      { label: 'Not started', sub: '', count: notStarted },
-      {
-        label: 'Open total',
-        sub: rows.length === 0 ? 'no open assignments' : (overdue > 0 ? overdue + ' overdue' : 'none overdue'),
-        count: rows.length
-      }
-    ];
+    this.taskRows = rows.slice(0, 5).map(t => this.toTaskRow(t));
   }
 
-  /** the cursor is per-task, so the card shows est/act pairs for the top tasks */
+  private toTaskRow(t: DprEmpTask): TaskRow {
+    const st = (t.assigneeStatus ?? '').trim().toUpperCase();
+    const running = (t.isRunning ?? '') === 'Y' || st === 'RUNNING';
+    const overdue = (t.isOverdue ?? '') === 'Y';
+    const paused = st === 'PAUSED';
+    const cat = (t.categoryName ?? '').trim() || 'Uncategorised';
+    const due = t.targetDate ? (overdue ? 'was due ' : 'due ') + this.fmtDay(t.targetDate) : 'no target date';
+    const est = this.num(t.estimatedHours);
+    const mine = this.num(t.myLoggedHours);
+    return {
+      icon: running ? 'play_arrow' : overdue ? 'priority_high' : paused ? 'pause' : 'task_alt',
+      color: running ? A.emerald : overdue ? A.rose : paused ? A.amber : A.sky,
+      title: (t.taskTitle ?? '').trim() || 'Untitled task',
+      sub: (paused ? 'Paused · ' : '') + cat + ' · ' + due,
+      logged: this.n1(mine),
+      of: est > 0 ? 'of ' + this.trim1(est) + ' h' : 'h logged',
+      over: est > 0 && mine > est
+    };
+  }
+
+  /** Distance from the estimate on one axis — left of centre is under, right is over. */
   private applyEstActual(rows: DprEmpEstAct[]): void {
-    const top = rows.slice(0, 2);
-    if (!top.length) {
-      this.estBars = [];
-      this.estNote = [];
-      this.estEmptyNote = 'No estimated-vs-actual data for this month';
+    const withEst = rows.filter(r => this.num(r.estimatedHours) > 0).slice(0, 5);
+    if (!withEst.length) {
+      this.estRows = [];
+      this.estFoot = '';
       return;
     }
-
-    this.estEmptyNote = null;
-    const values: number[] = [];
-    top.forEach(r => { values.push(this.num(r.estimatedHours), this.num(r.monthHours)); });
-    const axisMax = Math.max(...values, 1) * 1.25;
-
-    const bars: EstBar[] = [];
-    top.forEach((r, i) => {
+    const diffs = withEst.map(r => this.num(r.totalActualHours) - this.num(r.estimatedHours));
+    const maxAbs = Math.max(...diffs.map(Math.abs), 1) * 1.1;
+    this.estRows = withEst.map((r, i) => {
       const est = this.num(r.estimatedHours);
-      const act = this.num(r.monthHours);
-      const short = this.shortTitle(r.taskTitle);
-      bars.push({ h: this.clamp((est / axisMax) * 100, 0, 100), em: this.n1(est), bd: short + ' est', est: true, td: false });
-      bars.push({ h: this.clamp((act / axisMax) * 100, 0, 100), em: this.n1(act), bd: short + ' act', est: false, td: i === 0 });
+      const act = this.num(r.totalActualHours);
+      const d = diffs[i];
+      return {
+        name: (r.taskTitle ?? '').trim() || 'Untitled task',
+        vv: this.n1(act) + ' / ' + this.trim1(est) + ' h',
+        over: d > 0,
+        width: this.clamp((Math.abs(d) / maxAbs) * 50, 0.8, 50),
+        tip: 'Estimate ' + this.n1(est) + ' h, your hours ' + this.n1(act) + ' h — <b>'
+          + this.n1(Math.abs(d)) + ' h ' + (d > 0 ? 'over' : 'under') + '</b>'
+      };
     });
-    this.estBars = bars;
-
-    const estTotal = top.reduce((s, r) => s + this.num(r.estimatedHours), 0);
-    const actTotal = top.reduce((s, r) => s + this.num(r.monthHours), 0);
-    const delta = estTotal > 0 ? ((actTotal - estTotal) / estTotal) * 100 : 0;
-    this.estNote = [
-      { k: 'Estimated', v: this.n1(estTotal) + ' h vs ' + this.n1(actTotal) + ' h actual' },
-      {
-        k: 'You run',
-        v: estTotal > 0 ? '~' + this.n0(Math.abs(delta)) + '% ' + (delta >= 0 ? 'over' : 'under') + ' estimate' : 'no estimate set'
-      }
-    ];
+    const estSum = withEst.reduce((s, r) => s + this.num(r.estimatedHours), 0);
+    const actSum = withEst.reduce((s, r) => s + this.num(r.totalActualHours), 0);
+    this.estFoot = this.n1(actSum) + ' h actual of ' + this.n1(estSum) + ' h estimated';
   }
 
   private applyForms(rows: DprEmpForm[]): void {
-    this.formRows = rows.map(f => {
-      const type = (f.formType ?? '').trim();
-      const look = this.formLook(type);
+    this.formRows = rows.slice(0, 4).map(f => {
+      const type = (f.formType ?? '').trim() || 'Request';
+      const t = type.toUpperCase();
       const st = (f.status ?? '').trim().toUpperCase();
-      const age = this.daysSince(f.submittedDate);
       const step = (f.currentStep ?? '').trim();
+      const age = this.daysSince(f.submittedDate);
+      const days = this.num(f.duration);
+      const icon = t.indexOf('EMERGENCY') >= 0 ? 'emergency'
+        : t.indexOf('RESIGN') >= 0 ? 'logout'
+          : t.indexOf('LEAVE') >= 0 ? 'flight_takeoff' : 'description';
+      const color = t.indexOf('EMERGENCY') >= 0 ? A.rose
+        : t.indexOf('RESIGN') >= 0 ? A.violet
+          : t.indexOf('LEAVE') >= 0 ? A.amber : A.sky;
+      const approved = st.charAt(0) === 'A' || step.toUpperCase() === 'COMPLETED';
+      const rejected = st.charAt(0) === 'R' || step.toUpperCase() === 'REJECTED';
       const parts = [
-        f.submittedDate ? 'Submitted ' + this.fmtDate(f.submittedDate) : '',
-        step,
-        age !== null ? age + (age === 1 ? ' day' : ' days') : ''
-      ].filter(p => p.length > 0);
+        f.departureDate ? 'Leaves ' + this.fmtDay(f.departureDate) : '',
+        f.submittedDate ? 'submitted ' + this.fmtDay(f.submittedDate) : '',
+        !approved && !rejected && age !== null ? age + (age === 1 ? ' day' : ' days') + ' in queue' : ''
+      ].filter(p => p);
       return {
-        color: look.color,
-        icon: look.icon,
-        apn: (f.exitId != null ? 'REQ' + f.exitId + ' · ' : '') + (type || 'Request'),
-        aps: parts.join(' · ') || 'No detail',
-        ageCls: st.charAt(0) === 'A' ? 'ag' : st.charAt(0) === 'R' ? 'ah' : 'ao',
-        ageTxt: st.charAt(0) === 'A' ? 'APPROVED' : st.charAt(0) === 'R' ? 'RESUBMIT' : 'PENDING'
+        icon, color,
+        title: type + (days > 0 ? ' · ' + this.trim1(days) + (days === 1 ? ' day' : ' days') : ''),
+        sub: parts.join(' · ') || 'No detail',
+        pillCls: approved ? 'ok' : rejected ? 'cr' : 'wt',
+        pillTxt: approved ? 'Approved' : rejected ? 'Rejected' : (step ? 'With ' + this.roleLabel(step) : 'Pending')
       };
     });
   }
 
-  private formLook(type: string): { color: string; icon: string } {
-    const t = type.toUpperCase();
-    if (t.indexOf('EMERGENCY') >= 0) { return { color: '#dc2626', icon: 'fas fa-person-walking-arrow-right' }; }
-    if (t.indexOf('PLANNED') >= 0 || t.indexOf('LEAVE') >= 0) { return { color: '#f59e0b', icon: 'fas fa-umbrella-beach' }; }
-    if (t.indexOf('RESIGN') >= 0) { return { color: '#7c3aed', icon: 'fas fa-rotate-left' }; }
-    return { color: '#0ea5e9', icon: 'fas fa-file-circle-check' };
+  private applyApprovals(tiles: DprEmpTiles, forms: DprEmpForm[]): void {
+    const waitingMe = this.num(tiles.formApprovalsWaitingMe);
+    const mineOpen = forms.filter(f => {
+      const st = (f.status ?? '').trim().toUpperCase();
+      const step = (f.currentStep ?? '').trim().toUpperCase();
+      return st.charAt(0) !== 'A' && st.charAt(0) !== 'R' && step !== 'COMPLETED' && step !== 'REJECTED';
+    }).length;
+    this.approvalCount = waitingMe + mineOpen;
+    this.approvalSub = waitingMe > 0
+      ? waitingMe + (waitingMe === 1 ? ' form waiting on you' : ' forms waiting on you')
+      : mineOpen > 0
+        ? mineOpen + (mineOpen === 1 ? ' of your requests in progress' : ' of your requests in progress')
+        : 'Nothing waiting';
+    this.popBadges();
   }
 
-  // ══ ANIMATION (unchanged contract) ════════════════════════════════════════
-
-  /** replay the exact 320ms flip so widths/heights/rings transition to real values */
-  private replayAnimations(): void {
-    this.animate = false;
-    this.timers.push(setTimeout(() => { this.animate = true; }, 320));
-    this.tileValues = this.tiles.map(t => this.fmt(t.value, t.dec, t.suffix));
-    this.tiles.forEach((_, i) => this.countUp(i));
-  }
-
-  /** same formatter as the design: fixed decimals + space thousand grouping + suffix */
-  private fmt(v: number, dec: number, suffix: string): string {
-    return v.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + suffix;
-  }
-
-  /** the `<b>` of tile i — written imperatively so the count-up needs no change detection */
-  private tileEl(i: number): HTMLElement | null {
-    return this.el.nativeElement.querySelectorAll<HTMLElement>('.tiles .tile b')[i] ?? null;
-  }
-
-  /** cubic ease-out count-up over ~1.3s with the design's 1.5s snap-to-final safety */
-  private countUp(i: number): void {
-    const tile = this.tiles[i];
-    if (!tile) { return; }
-    const final = this.fmt(tile.value, tile.dec, tile.suffix);
-    const el = this.tileEl(i);
-    if (!el) { this.tileValues[i] = final; return; }   // view not built yet
-    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-    const t0 = performance.now();
-    let live = false;
-    // zone.js patches requestAnimationFrame, so an in-zone loop costs one
-    // whole-app change-detection pass per frame — decorate the DOM directly
-    // and re-enter the zone once, at the end, to publish the final value
-    this.zone.runOutsideAngular(() => {
-      const frame = (now: number) => {
-        if (this.destroyed) { return; }
-        const p = Math.min((now - t0) / 1300, 1);
-        live = true;
-        el.textContent = this.fmt(tile.value * ease(p), tile.dec, tile.suffix);
-        if (p < 1) {
-          this.rafIds.push(requestAnimationFrame(frame));
-        } else {
-          live = false;
-          this.zone.run(() => { this.tileValues[i] = final; });
-        }
-      };
-      this.rafIds.push(requestAnimationFrame(frame));
-    });
-    this.timers.push(setTimeout(() => {
-      if (live) { this.tileValues[i] = final; }
-    }, 1500));
-  }
-
-  // ══ CALENDAR SEEDS ════════════════════════════════════════════════════════
-
-  /** same data + rules as the design's monthCal(): 0 = none, -1 = leave, -2 = missed.
-   *  Only used on the "-demo" route when there is no session to load. */
-  private buildDemoCalendar(): void {
-    const year = 2026;
-    const month = 7; // August 2026
-    const first = new Date(year, month, 1).getDay();
-    const days = new Date(year, month + 1, 0).getDate();
-    const hrs: { [d: number]: number } = {
-      1: 0, 2: 0, 3: 7.9, 4: 8.6, 5: 7.2, 6: 9.1, 7: 8.4, 8: 5.0, 9: 0, 10: 6.9, 11: 8.8, 12: 9.2, 13: 7.6, 14: 8.1,
-      15: -1, 16: 0, 17: 8.3, 18: 7.7, 19: 9.4, 20: 8.9, 21: 8.2, 22: 4.5, 23: 0, 24: 8.0, 25: -2, 26: 8.5, 27: 9.0,
-      28: 7.8, 29: 5.2, 30: 0, 31: 6.9
+  private toNoticeRow(n: any): NoticeRow {
+    const pr = (n?.priority ?? '').toString().trim().toUpperCase();
+    const high = pr.startsWith('H') || pr === 'URGENT';
+    return {
+      title: (n?.title ?? '').toString().trim() || 'Notice',
+      sub: [n?.startDate ? 'Posted ' + this.fmtIsoDay(n.startDate) : '', (n?.createdBy ?? '').toString().trim()]
+        .filter((p: string) => p).join(' · '),
+      unread: (n?.isRead ?? '') === 'N',
+      icon: high ? 'priority_high' : 'campaign',
+      color: high ? A.rose : A.amber,
+      raw: n
     };
-    const cells: CalCell[] = [];
-    for (let i = 0; i < first; i++) {
-      cells.push({ empty: true, cls: '', day: 0, hh: null, title: '', delay: '' });
-    }
-    let idx = 0;
-    for (let d = 1; d <= days; d++) {
-      const dw = new Date(year, month, d).getDay();
-      const wknd = (dw === 5 || dw === 6);
-      const v = hrs[d];
-      let cls = '';
-      let lab = '';
-      if (v === -1) { cls = 'lv'; lab = 'Leave'; }
-      else if (v === -2) { cls = 'ms'; lab = 'Missed'; }
-      else if (v > 0) {
-        cls = v >= 9 ? 'g5' : v >= 8 ? 'g4' : v >= 7 ? 'g3' : v >= 6 ? 'g2' : 'g1';
-        lab = v.toFixed(1) + ' h';
-      } else {
-        if (wknd) { cls = 'wknd'; }
-        lab = wknd ? 'Weekend' : 'No log';
-      }
-      if (d === 30) { cls = (cls + ' today').trim(); }
-      cells.push({
-        empty: false,
-        cls,
-        day: d,
-        hh: v > 0 ? v.toFixed(1) : null,
-        title: d + ' Aug 2026 · ' + lab,
-        delay: (idx * 18) + 'ms'
-      });
-      idx++;
-    }
-    this.calCells = cells;
   }
 
-  /** neutral grid of the right size so the calendar does not reflow while loading */
-  private buildSkeletonCalendar(): void {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const first = new Date(year, month, 1).getDay();
-    const days = new Date(year, month + 1, 0).getDate();
-    const cells: CalCell[] = [];
-    for (let i = 0; i < first; i++) {
-      cells.push({ empty: true, cls: '', day: 0, hh: null, title: '', delay: '' });
-    }
-    for (let d = 1; d <= days; d++) {
-      cells.push({
-        empty: false,
-        cls: d === now.getDate() ? 'today' : '',
-        day: d,
-        hh: null,
-        title: '',
-        delay: ((d - 1) * 18) + 'ms'
-      });
-    }
-    this.calCells = cells;
-    this.calMonthLabel = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  private toNotifRow(n: any): NotifRow {
+    const title = (n?.title ?? '').toString().toLowerCase();
+    const msg = (n?.message ?? '').toString();
+    const m = (title + ' ' + msg).toLowerCase();
+    const icon = m.indexOf('reject') >= 0 ? 'cancel'
+      : m.indexOf('approv') >= 0 ? 'check_circle'
+        : m.indexOf('notice') >= 0 || n?.isNotice ? 'campaign'
+          : m.indexOf('task') >= 0 || m.indexOf('assign') >= 0 ? 'assignment_ind'
+            : m.indexOf('leave') >= 0 ? 'flight_takeoff' : 'notifications';
+    const color = icon === 'cancel' ? A.rose : icon === 'check_circle' ? A.emerald
+      : icon === 'campaign' ? A.amber : icon === 'assignment_ind' ? A.sky : A.indigo;
+    return {
+      id: this.num(n?.id),
+      icon, color,
+      message: msg.trim() || (n?.title ?? '').toString().trim() || 'Notification',
+      time: this.relTime(n?.createdAt),
+      unread: !(n?.isRead === true || n?.isRead === 'Y'),
+      link: (n?.link ?? '').toString().trim(),
+      isNotice: !!n?.isNotice,
+      noticeId: this.num(n?.noticeID)
+    };
   }
 
-  private skeletonWeek(): WeekBar[] {
-    const names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-    return names.map(n => ({ h: 0, em: '0.00', bd: n, lo: false, td: false }));
+  private blankKpis(): KpiTile[] {
+    const b = (label: string, color: string, icon: string, unit: string, dec: number): KpiTile =>
+      ({ label, color, icon, unit, dec, value: 0, pillCls: 'nu', pillTxt: '—', barPct: 0, foot: 'Loading…' });
+    return [
+      b('Logged today', A.emerald, 'schedule', ' h', 2),
+      b('This week', A.sky, 'trending_up', ' h total', 2),
+      b('Open work', A.indigo, 'list_alt', ' tasks', 0),
+      b('Month achieved', A.violet, 'military_tech', '% of target', 1)
+    ];
+  }
+
+  // ══ ANIMATION ═════════════════════════════════════════════════════════════
+  // Bars, rings and timeline segments grow through CSS keyframes that end at
+  // their bound value, so the resting frame is always the real one. Only the
+  // KPI numbers count up, and they are written outside Angular's zone.
+
+  private countUpAll(): void {
+    this.fxCleanup.push(countUpAll(this.el.nativeElement, this.zone, () => !this.destroyed));
+  }
+
+  // ══ REVEAL + BADGES ═══════════════════════════════════════════════════════
+
+  private popBadges(): void {
+    this.badgePop = false;
+    this.timers.push(setTimeout(() => { this.badgePop = true; }, 20));
   }
 
   // ══ FORMATTERS ════════════════════════════════════════════════════════════
+
+  fmt(v: number, dec: number): string { return fmtNum(v, dec); }
 
   private num(v: unknown): number {
     const n = typeof v === 'number' ? v : parseFloat(String(v ?? ''));
     return isFinite(n) ? n : 0;
   }
 
-  private clamp(v: number, lo: number, hi: number): number {
-    return Math.min(Math.max(v, lo), hi);
-  }
+  private clamp(v: number, lo: number, hi: number): number { return Math.min(Math.max(v, lo), hi); }
+  private n0(v: number): string { return this.fmt(v, 0); }
+  private n1(v: number): string { return this.fmt(v, 1); }
+  private n2(v: number): string { return this.fmt(v, 2); }
 
-  private n0(v: number): string { return this.fmt(v, 0, ''); }
-  private n1(v: number): string { return this.fmt(v, 1, ''); }
-  private n2(v: number): string { return this.fmt(v, 2, ''); }
+  /** 9 -> '9', 8.5 -> '8.5' */
+  private trim1(v: number): string {
+    const r = Math.round(v * 10) / 10;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
+  }
 
   /** minutes -> 'HH:MM' */
   private hm(min: number): string {
@@ -1036,30 +1167,42 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   }
 
-  /** minutes -> 'Xh YYm' */
+  /** minutes -> 'H:MM' (ring centre) */
+  private hShort(min: number): string {
+    const m = Math.max(Math.round(min), 0);
+    return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+  }
+
+  /** minutes -> '1 h 35 m' / '47 m' */
   private hmLong(min: number): string {
     const m = Math.max(Math.round(min), 0);
     const h = Math.floor(m / 60);
-    return h > 0 ? h + 'h ' + String(m % 60).padStart(2, '0') + 'm' : (m % 60) + 'm';
+    return h > 0 ? h + ' h ' + String(m % 60).padStart(2, '0') + ' m' : (m % 60) + ' m';
   }
 
   /** 'HH:MI' TEXT -> minutes since midnight (never subtract HHMM numerically) */
   private parseHm(txt: string | null | undefined): number | null {
-    const s = (txt ?? '').trim();
-    const m = /^(\d{1,2}):(\d{2})/.exec(s);
+    const m = /^(\d{1,2}):(\d{2})/.exec((txt ?? '').trim());
     if (!m) { return null; }
     const h = +m[1];
     const mi = +m[2];
-    if (h > 23 || mi > 59) { return null; }
-    return h * 60 + mi;
+    return h > 23 || mi > 59 ? null : h * 60 + mi;
   }
 
-  private to12h(min: number): { hm: string; ap: string } {
+  private to12hParts(min: number): { hm: string; ap: string } {
     const h24 = Math.floor(min / 60) % 24;
-    const mi = min % 60;
-    const ap = h24 >= 12 ? 'PM' : 'AM';
     const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-    return { hm: String(h12).padStart(2, '0') + ':' + String(mi).padStart(2, '0'), ap };
+    return { hm: String(h12).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'), ap: h24 >= 12 ? 'PM' : 'AM' };
+  }
+
+  private to12h(min: number): string {
+    const p = this.to12hParts(min);
+    return p.hm + ' ' + p.ap;
+  }
+
+  private nowMin(): number {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
   }
 
   /** elapsed from a user-local 'HH:MI' start to now */
@@ -1068,9 +1211,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const now = new Date();
     let sec = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) - startMin * 60;
     if (sec < 0) { sec += 24 * 3600; }
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const base = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    const base = String(Math.floor(sec / 3600)).padStart(2, '0') + ':' + String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
     return withSeconds ? base + ':' + String(sec % 60).padStart(2, '0') : base;
   }
 
@@ -1083,36 +1224,70 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
 
-  /** 'YYYY-MM-DD' -> 'd MMM yyyy' (parsed as UTC so the day never shifts) */
+  /** Approver role codes: short ones are acronyms (HOD, IT, HR) and stay upper;
+   *  longer ones (HANDOVER) read better title-cased. */
+  private roleLabel(code: string): string {
+    const t = code.trim();
+    return t.length <= 3 ? t.toUpperCase() : this.titleCase(t);
+  }
+
+  private titleCase(s: string): string {
+    return s.toLowerCase().replace(/\b\p{L}/gu, c => c.toUpperCase());
+  }
+
+  /** 'YYYY-MM-DD' -> 'Tue 22 Sep' (parsed as UTC so the day never shifts) */
   private fmtDate(iso: string | null | undefined): string {
     const p = (iso ?? '').split('-');
     if (p.length < 3) { return (iso ?? '').trim() || '—'; }
-    const d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]))
+      .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   }
 
-  /** 'YYYY-MM' or 'YYYY-MM-DD' -> 'August 2026' */
-  private monthLabel(key: string | null | undefined): string {
+  /** 'YYYY-MM-DD' -> '22 Sep' */
+  private fmtDay(iso: string | null | undefined): string {
+    const p = (iso ?? '').split('-');
+    if (p.length < 3) { return (iso ?? '').trim() || '—'; }
+    return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]))
+      .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  }
+
+  /** a DateTime from .NET (ISO string) -> '22 Sep' */
+  private fmtIsoDay(v: unknown): string {
+    const t = this.ts(v);
+    return t ? new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+  }
+
+  private ts(v: unknown): number {
+    const t = v ? Date.parse(String(v)) : NaN;
+    return isFinite(t) ? t : 0;
+  }
+
+  /** 'YYYY-MM' -> 'September' */
+  private monthOnly(key: string | null | undefined): string {
     const p = (key ?? '').split('-');
-    if (p.length < 2) { return this.calMonthLabel; }
-    const d = new Date(Date.UTC(+p[0], +p[1] - 1, 1));
-    return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    if (p.length < 2) { return new Date().toLocaleDateString('en-GB', { month: 'long' }); }
+    return new Date(Date.UTC(+p[0], +p[1] - 1, 1)).toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' });
   }
 
   private daysSince(iso: string | null | undefined): number | null {
     const p = (iso ?? '').split('-');
     if (p.length < 3) { return null; }
-    const then = Date.UTC(+p[0], +p[1] - 1, +p[2]);
     const now = new Date();
-    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-    const d = Math.round((today - then) / 86400000);
+    const d = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(+p[0], +p[1] - 1, +p[2])) / 86400000);
     return isFinite(d) && d >= 0 ? d : null;
   }
 
-  private shortTitle(t: string | null | undefined): string {
-    const s = (t ?? '').trim();
-    if (!s) { return 'TASK'; }
-    const w = s.split(/\s+/)[0].replace(/[^A-Za-z0-9]/g, '');
-    return (w || s).slice(0, 6).toUpperCase();
+  private relTime(v: unknown): string {
+    const t = this.ts(v);
+    if (!t) { return ''; }
+    const mins = Math.max(Math.round((Date.now() - t) / 60000), 0);
+    if (mins < 1) { return 'Just now'; }
+    if (mins < 60) { return mins + (mins === 1 ? ' minute ago' : ' minutes ago'); }
+    const h = Math.round(mins / 60);
+    if (h < 24) { return h + (h === 1 ? ' hour ago' : ' hours ago'); }
+    const d = Math.round(h / 24);
+    if (d === 1) { return 'Yesterday'; }
+    if (d < 7) { return d + ' days ago'; }
+    return new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
 }
