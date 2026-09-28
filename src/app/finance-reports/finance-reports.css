@@ -24,7 +24,7 @@
 .fin-hero-icon {
   width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff; font-size: 19px;
 }
 /* Plain divs, NOT h1-h6. styles.css paints every heading with a gradient and a
@@ -87,7 +87,7 @@
   display: inline-flex; align-items: center; gap: 7px;
   padding: 0 15px; border: none; border-radius: 9px; cursor: pointer;
   font: 700 12.5px "Segoe UI";
-  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #10b981); color: #fff;
 }
 .fin-btn:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -121,7 +121,7 @@
 .pg-btn:hover:not(:disabled) { border-color: #138271; color: #138271; }
 .pg-btn:disabled { opacity: .4; cursor: not-allowed; }
 .pg-btn.active {
-  background: linear-gradient(135deg, #1B2A38, #138271); border-color: transparent; color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #10b981); border-color: transparent; color: #fff;
 }
 .pg-info { margin-left: 8px; font-size: 12px; color: #64748b; }
 

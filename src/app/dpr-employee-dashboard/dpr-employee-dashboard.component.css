@@ -16,12 +16,6 @@
 .mxr{display:flex;flex-direction:column;gap:13px;min-width:0}
 .ring .val{stroke:url(#edash-r1)}
 
-/* ── quote ─────────────────────────────────────────────────────────────── */
-.quote{position:relative;overflow:hidden;background:linear-gradient(135deg,color-mix(in srgb,var(--a6) 9%,var(--card)),var(--card) 62%)}
-.quote .qm{position:absolute;right:6px;top:-42px;font:italic 700 140px Georgia,serif;color:var(--a6);opacity:.10;pointer-events:none;user-select:none}
-.quote q{font:italic 400 16px/1.6 Georgia,serif;display:block;position:relative;z-index:1;color:var(--ink)}
-.quote .qa{margin-top:12px;font:600 11px var(--fh);letter-spacing:.04em;text-transform:uppercase;color:var(--a6);display:flex;align-items:center;gap:9px}
-.quote .qa::before{content:"";width:24px;height:1.5px;background:var(--a6)}
 .qrow{margin-top:auto!important;border-top:1px solid var(--line2);padding-top:14px!important}
 .flame{color:var(--a3);animation:flick 2.2s ease-in-out infinite;transform-origin:50% 90%}
 .rico .flame{color:#fff}

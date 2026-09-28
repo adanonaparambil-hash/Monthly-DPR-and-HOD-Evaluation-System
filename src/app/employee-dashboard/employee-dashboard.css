@@ -269,7 +269,7 @@
 }
 
 .stat-card:hover .stat-icon {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -464,7 +464,7 @@
 
 .chart-icon {
   font-size: 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -472,7 +472,7 @@
 }
 
 .gsap-chart:hover .chart-icon {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -512,7 +512,7 @@
 }
 
 .legend-color.completed {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .legend-color.in-progress {
@@ -909,7 +909,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 4px;
 }
 
@@ -1123,7 +1123,7 @@ html {
 
 .title-icon i {
   font-size: 18px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1146,7 +1146,7 @@ html {
   color: var(--text-primary);
   margin: 0 0 3px 0;
   letter-spacing: -0.3px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1229,7 +1229,7 @@ html {
 
 .selector-group label i {
   font-size: 12px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

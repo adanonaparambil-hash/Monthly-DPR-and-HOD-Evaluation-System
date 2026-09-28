@@ -58,6 +58,7 @@
 
 /* ── fonts (see header) ──────────────────────────────────────────────────── */
 :host :not(#_){font-family:var(--ff) !important}
+:host .quote q:not(#_),:host .quote .qm:not(#_){font-family:Georgia,serif !important}
 :host .material-symbols-outlined:not(#_){
   font-family:'Material Symbols Outlined' !important;font-weight:400;font-style:normal;
   letter-spacing:normal;text-transform:none;white-space:nowrap;word-wrap:normal;direction:ltr;
@@ -314,6 +315,13 @@
 .scale i{width:22px;height:11px;border-radius:3px;display:block}
 .scale i.lvk{background:color-mix(in srgb,var(--a2) 20%,transparent)}
 .scale i.msk{background:color-mix(in srgb,var(--a4) 14%,transparent)}
+
+/* ── quote ─────────────────────────────────────────────────────────────── */
+.quote{position:relative;overflow:hidden;background:linear-gradient(135deg,color-mix(in srgb,var(--a6) 9%,var(--card)),var(--card) 62%)}
+.quote .qm{position:absolute;right:6px;top:-42px;font:italic 700 140px Georgia,serif;color:var(--a6);opacity:.10;pointer-events:none;user-select:none}
+.quote q{font:italic 400 16px/1.6 Georgia,serif;display:block;position:relative;z-index:1;color:var(--ink)}
+.quote .qa{margin-top:12px;font:600 11px var(--fh);letter-spacing:.04em;text-transform:uppercase;color:var(--a6);display:flex;align-items:center;gap:9px}
+.quote .qa::before{content:"";width:24px;height:1.5px;background:var(--a6)}
 
 /* ── tooltip ────────────────────────────────────────────────────────────── */
 .tip{position:fixed;z-index:3200;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--tipbg);color:var(--tipink);

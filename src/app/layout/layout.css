@@ -40,7 +40,7 @@
 /* Sidebar */
 .sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   display: flex;
   flex-direction: column;
@@ -817,7 +817,7 @@
   background: none;
   border: none;
   font-size: 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

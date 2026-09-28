@@ -39,6 +39,7 @@ interface StackSeg { w: number; c: string; }
 interface LeadRow { rank: number; rkCls: string; ini: string; color: string; name: string; sub: string; segs: StackSeg[]; comp: string; hours: string; tip: string; }
 interface RemarkSeg { w: number; c: string; label: string; n: number; }
 interface BreakRow { ini: string; color: string; name: string; sub: string; mins: string; }
+interface LeaveRow { ini: string; color: string; name: string; sub: string; type: string; chipCls: string; chipTxt: string; tip: string; order: number; }
 
 const A = { emerald: 'var(--a1)', indigo: 'var(--a2)', amber: 'var(--a3)', rose: 'var(--a4)', sky: 'var(--a5)', violet: 'var(--a6)' };
 const AV = [A.emerald, A.indigo, A.sky, A.violet, A.amber, A.rose];
@@ -107,7 +108,10 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   attRows: AttRow[] = [];
   attNote = '';
   notDoneRows: PersonRow[] = [];
-  leaveRows: PersonRow[] = [];
+  /** On leave & returning — every source combined (see leaveSet). */
+  leaveRows: LeaveRow[] = [];
+  leaveOnLeave = 0; leaveDueWeek = 0; leaveOverdue = 0;
+  leaveNote = '';
   hmDays: HeatDay[] = [];
   hmRows: HeatRow[] = [];
 
@@ -125,8 +129,25 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   lunchWindow = '';
   lunchOnBreak = 0; lunchWorked = 0; lunchIdle = 0;
   breakRows: BreakRow[] = [];
+  lunchFailed = false;
+  /** Last lunch-monitor rows, unfiltered — re-filtered whenever the team list changes. */
+  private lunchRaw: any[] | null = null;
+
+  /** Members counted as on leave today: employee master CURRENTSTATUS = LEAVE, the
+   *  HR leave function (P_CUR_TEAM.onLeaveToday) and SP_GET_HOD_LEAVE_STATUS.
+   *  Drives the hero chip, the KPI, the leave card, and which members are hidden
+   *  from the live cards (team pulse, punch vs logged, no DPR today). */
+  private leaveSet = new Set<string>();
+  private leaveIds = new Set<string>();
+  private leaveRaw: any[] = [];
+  private lastPayload: any = null;
 
   aiMonth = '';
+
+  /** 'HH:MM' of the cached payload on screen while live data loads; null = live. */
+  staleSince: string | null = null;
+  quoteText: string | null = null;
+  quoteAuthor = '';
 
   private hodId = '';
   private currentDept: string | null = null;
@@ -164,6 +185,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.loadDeptIds();
     this.loadNotifications();
     this.loadNotices();
+    this.loadQuote();
     // the hero promises a 5-minute refresh — silent, no re-entrance animation
     this.intervals.push(setInterval(() => { if (!this.loading) { this.load(this.currentDept, false); } }, 300000));
   }
@@ -198,7 +220,14 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   openForms(): void { this.router.navigate(['/leave-approval']); }
   openLogs(): void { this.router.navigate(['/dpr-approval']); }
   openAnalytics(): void { this.router.navigate(['/log-analytics']); }
-  openLunch(): void { this.router.navigate(['/lunch-monitor']); }
+  /** There is no /lunch-monitor route (it fell through to the login redirect); the
+   *  monitor lives as a modal on Log History, which opens it from ?open=lunch. */
+  openLunch(): void { this.router.navigate(['/my-logged-hours'], { queryParams: { open: 'lunch' } }); }
+  retryLunch(): void { this.lunchFailed = false; this.loadLunch(); }
+  /** Employee Master, pre-filtered to the department on screen (all of them when the HOD has several). */
+  openTeamList(): void {
+    this.router.navigate(['/employee-master'], this.currentDept ? { queryParams: { department: this.currentDept } } : {});
+  }
   /** The department audit is manual only — nothing is generated on load. */
   generateAi(): void { this.aiReport?.generate(); }
 
@@ -209,25 +238,132 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const seq = ++this.reqSeq;
     this.loading = true;
     this.loadError = null;
+    // The live query takes ~40 s (it reads the punch view four times — see
+    // Scripts/DPR_PUNCH_SNAPSHOT.sql). Paint the last payload this HOD saw TODAY
+    // straight away, then swap in the live one. Background refreshes skip this:
+    // the page already shows data.
+    let painted = false;
+    if (replay) {
+      const cached = this.readCache(dept);
+      if (cached) {
+        this.applyAll(cached.data);
+        this.staleSince = cached.at;
+        this.countUp();
+        painted = true;
+      }
+    }
+    // leave status is a 140 ms call — fire it now, not after the 40 s dashboard proc,
+    // or the card says "return date not recorded" until the slow call lands
+    this.loadLeave();
+    // the lunch proc takes ~15 s on its own — start it now instead of after the dashboard
+    this.loadLunch();
     this.subs.push(this.api.getDprHodDashboard(this.hodId, dept).subscribe({
       next: (res: any) => {
         if (this.destroyed || seq !== this.reqSeq) { return; }
         this.loading = false;
         this.firstLoadDone = true;
-        if (res?.success === false) { this.loadError = res?.message || 'Could not load live data'; return; }
+        if (res?.success === false) { this.failRefresh(res?.message || 'Could not load live data'); return; }
         const d = res?.data ?? null;
-        if (!d) { this.loadError = 'No dashboard data returned'; return; }
+        if (!d) { this.failRefresh('No dashboard data returned'); return; }
         this.applyAll(d);
-        this.loadLunch();
-        if (replay) { this.countUp(); }
+        this.staleSince = null;
+        this.writeCache(dept, d);
+        // the numbers were already counted up from the cached paint
+        if (replay && !painted) { this.countUp(); }
       },
       error: (err: any) => {
         if (this.destroyed || seq !== this.reqSeq) { return; }
         this.loading = false;
         this.firstLoadDone = true;
         const msg = typeof err?.error?.message === 'string' ? err.error.message.trim() : '';
-        this.loadError = err?.status === 401 ? 'Session expired — sign in again' : (msg || 'Could not load live data');
+        this.failRefresh(err?.status === 401 ? 'Session expired — sign in again' : (msg || 'Could not load live data'));
       }
+    }));
+  }
+
+  /** A failed refresh keeps any cached data on screen and says how old it is. */
+  private failRefresh(msg: string): void {
+    this.loadError = this.staleSince ? msg + ' — showing data from ' + this.staleSince : msg;
+  }
+
+  // ══ CACHE ═════════════════════════════════════════════════════════════════
+  // localStorage, one entry per HOD + department scope. Only ever painted for
+  // the HOD who owns it, and only on the day it was saved: an entry from
+  // yesterday would put yesterday's "no DPR today" list under today's heading.
+  // The key prefix is deliberately not one clearSession() removes, so the
+  // cache survives logout and the next login paints instantly.
+
+  private static readonly CACHE_PREFIX = 'dprHodDash:v1:';
+  private static readonly CACHE_MAX_CHARS = 1_500_000;
+
+  private cacheKey(dept: string | null): string {
+    return DprHodDashboardComponent.CACHE_PREFIX + this.key(this.hodId) + ':' + (dept ? this.key(dept) : '*');
+  }
+
+  private localDay(): string {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  private readCache(dept: string | null): { data: any; at: string } | null {
+    try {
+      const raw = localStorage.getItem(this.cacheKey(dept));
+      if (!raw) { return null; }
+      const c = JSON.parse(raw);
+      if (c?.owner !== this.key(this.hodId) || c?.day !== this.localDay() || !c?.data) { return null; }
+      return { data: c.data, at: String(c.at || '') };
+    } catch { return null; }
+  }
+
+  private writeCache(dept: string | null, data: any): void {
+    try {
+      const now = new Date();
+      const at = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const json = JSON.stringify({ owner: this.key(this.hodId), day: this.localDay(), at, data });
+      if (json.length > DprHodDashboardComponent.CACHE_MAX_CHARS) { return; }
+      this.purgeCache();
+      localStorage.setItem(this.cacheKey(dept), json);
+    } catch { /* storage full or blocked — the page works without a cache */ }
+  }
+
+  /** Drop entries from other days or other users, so at most today's data lingers. */
+  private purgeCache(): void {
+    const day = this.localDay();
+    const owner = this.key(this.hodId);
+    const stale: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(DprHodDashboardComponent.CACHE_PREFIX)) { continue; }
+      try {
+        const c = JSON.parse(localStorage.getItem(k) || '{}');
+        if (c?.day !== day || c?.owner !== owner) { stale.push(k); }
+      } catch { stale.push(k); }
+    }
+    stale.forEach(k => localStorage.removeItem(k));
+  }
+
+  // ══ QUOTE ═════════════════════════════════════════════════════════════════
+  // General/GetTodaysBirthdaysAndQuotes returns a RANDOM quote on every call, so
+  // the first one fetched each day is kept for the rest of that day — a real
+  // quote of the day, and one request per day instead of one per load.
+
+  private loadQuote(): void {
+    const KEY = 'dprQuote:v1';
+    try {
+      const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (c?.day === this.localDay() && c?.text) { this.quoteText = c.text; this.quoteAuthor = c.author || ''; return; }
+    } catch { /* fall through to the API */ }
+    this.subs.push(this.api.GetTodaysBirthdaysAndQuotes().subscribe({
+      next: (res: any) => {
+        if (this.destroyed) { return; }
+        const q = Array.isArray(res?.data?.quotes) ? res.data.quotes[0] : null;
+        const text = (q?.quoteText ?? '').toString().trim();
+        if (!text) { return; }
+        this.quoteText = text;
+        this.quoteAuthor = (q?.author ?? '').toString().trim();
+        try { localStorage.setItem(KEY, JSON.stringify({ day: this.localDay(), text, author: this.quoteAuthor })); } catch { /* optional */ }
+      },
+      error: () => { }
     }));
   }
 
@@ -260,10 +396,11 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.subs.push(this.api.getLunchMonitor({ date: null, departmentId: id, comLoc: null, status: null, isDpr: null, minOverlapMin: 5 }).subscribe({
       next: (res: any) => {
         if (this.destroyed) { return; }
-        const rows: any[] = Array.isArray(res?.data?.rows) ? res.data.rows : [];
-        this.applyLunch(this.teamIds.size ? rows.filter(r => this.teamIds.has(this.key(r?.employeeId))) : rows);
+        this.lunchRaw = Array.isArray(res?.data?.rows) ? res.data.rows : [];
+        this.lunchFailed = false;
+        this.renderLunch();
       },
-      error: () => { this.lunchReady = false; }
+      error: () => { if (this.destroyed) { return; } this.lunchFailed = !this.lunchReady; }
     }));
   }
 
@@ -297,6 +434,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   // ══ MAPPING ═══════════════════════════════════════════════════════════════
 
   private applyAll(d: any): void {
+    this.lastPayload = d;
     const depts: DprHodDept[] = d?.departments ?? [];
     const summary: DprHodSummary | null = d?.summary ?? null;
     const trend: DprHodTrendDay[] = d?.trend ?? [];
@@ -315,6 +453,8 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     // profile pictures arrives twice, so de-duplicate before counting anything
     const members = this.dedupeTeam(d?.team ?? []);
     this.teamIds = new Set(members.map(m => this.key(m.empId)).filter(k => k));
+    this.rebuildLeaveSet(members);
+    this.renderLunch();
     this.deriveExpectations(leaderboard);
 
     const attByEmp = new Map<string, DprHodAttendanceRow>();
@@ -325,17 +465,19 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     members.forEach(m => { const k = this.key(m.empId); if (k) { roleByEmp.set(k, (m.designation ?? '').trim()); } });
 
     this.applyHero(summary, members, notDone, formQueue);
-    const trendAvg = this.applyTrend(trend);
+    const trendAvg = this.applyTrend(trend, members.length);
     this.applyFormQueue(formQueue, summary);
     this.applyLogQueue(logQueue, summary);
     this.applyDecisions(summary, leaderboard, notDone, formQueue, logQueue, trendAvg);
     this.applyKpis(summary, members, formQueue, logQueue);
     this.applyTeam(members, attByEmp, lbByEmp);
     this.applyAttendance(attendance, members);
-    this.applyNotDone(notDone, members);
+    this.applyNotDone(notDone, members, exceptions);
+    this.chipNoDpr = this.notDoneRows.length;                // the hero chip counts what the card lists
     this.applyHeatmap(heatmap, trend, members);
     this.applyLeaderboard(leaderboard, roleByEmp);
     this.applyExceptions(exceptions, lbByEmp, members.length);
+    this.applyLeave(members);
     if (summary?.monthKey) { this.aiMonth = this.monthLabel(summary.monthKey); this.monthText = this.monthOnly(summary.monthKey); }
   }
 
@@ -371,7 +513,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.chipLogs = this.num(s?.pendingLogApprovals);
     this.chipNoDpr = notDone.length;
     this.chipLogged = logged;
-    this.chipLeave = this.num(s?.onLeaveToday) || members.filter(m => m.onLeaveToday === 'Y').length;
+    this.chipLeave = this.leaveSet.size;
 
     this.rsLogged = fmtNum(monthHours, 1) + ' h';
     this.rsExpected = fmtNum(expected, 1) + ' h';
@@ -458,8 +600,8 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const fulfil = expected > 0 ? monthHours / expected * 100 : 0;
     const pf = this.num(s?.pendingFormApprovals) || forms.length;
     const pl = this.num(s?.pendingLogApprovals);
-    const leave = members.filter(m => m.onLeaveToday === 'Y');
-    const leaveN = this.num(s?.onLeaveToday) || leave.length;
+    const leave = members.filter(m => this.leaveSet.has(this.key(m.empId)));
+    const leaveN = leave.length;
     const names = leave.slice(0, 2).map(m => this.firstName(m.employeeName)).join(', ');
 
     this.kpis = [
@@ -481,17 +623,22 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   // ── trend: the discipline ratio, not raw hours ─────────────────────────────
 
   /** Of the people who punched in each day, the share that filed a DPR. Returns the mean. */
-  private applyTrend(rows: DprHodTrendDay[]): number | null {
+  private applyTrend(rows: DprHodTrendDay[], teamSize: number): number | null {
     const n = rows.length;
     if (n < 2) { this.trHas = false; this.trPts = ''; this.trArea = ''; this.trEnd = null; this.trX = []; this.hourBars = []; return null; }
     const W = 700, L = 40, R = 690, top = 20, base = 150;
     const x = (i: number) => this.r2(L + i * (R - L) / (n - 1));
     const y = (v: number) => this.r2(base - v / 100 * (base - top));
 
+    // Punch coverage is partial (site and mobile punches do not all reach the
+    // view), so "logged ÷ punched" capped at 100% and told the HOD nothing.
+    // Logged ÷ active team is the honest measure. Friday is the weekly off.
+    const active = Math.max(teamSize - this.leaveSet.size, 1);
     const ratio = rows.map(r => {
       const p = this.num(r.membersPunched), l = this.num(r.membersLogged);
-      if (p <= 0 && l <= 0) { return null; }                 // nobody in: a non-working day
-      return this.clamp(l / Math.max(p, l, 1) * 100, 0, 100);
+      const fri = (r.dayName ?? '').trim().toUpperCase().startsWith('FRI');
+      if (fri || (p <= 0 && l <= 0)) { return null; }
+      return this.clamp(l / active * 100, 0, 100);
     });
     const pts: string[] = [];
     let lastI = -1;
@@ -505,7 +652,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const vals = ratio.filter((v): v is number => v != null);
     const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
     this.trAvg = avg != null ? this.trim1(avg) + '%' : '—';
-    this.trAria = 'Share of punched-in members who filed a DPR over ' + n + ' days'
+    this.trAria = 'Share of the active team that filed a DPR over ' + n + ' days'
       + (vals.length ? ', from ' + Math.round(Math.min(...vals)) + ' to ' + Math.round(Math.max(...vals)) + ' percent' : '');
 
     const hrs = rows.map(r => this.num(r.totalHours));
@@ -516,7 +663,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
       label: this.dayNum(r.theDate),
       today: r.isToday === 'Y',
       off: ratio[i] == null,
-      tip: this.fmtDate(r.theDate) + ' — <b>' + fmtNum(hrs[i], 1) + ' h</b> logged by ' + this.num(r.membersLogged) + ' of ' + this.num(r.membersPunched) + ' punched in'
+      tip: this.fmtDate(r.theDate) + ' — <b>' + fmtNum(hrs[i], 1) + ' h</b> logged by ' + this.num(r.membersLogged) + ' of ' + active + ' active members'
     }));
     return avg;
   }
@@ -569,7 +716,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   // ── team ───────────────────────────────────────────────────────────────────
 
   private applyTeam(members: DprHodTeamMember[], att: Map<string, DprHodAttendanceRow>, lb: Map<string, DprHodLeaderboardRow>): void {
-    this.team = members.map((m, i) => {
+    this.team = members.filter(m => !this.leaveSet.has(this.key(m.empId))).map((m, i) => {
       const todayMin = this.num(m.todayMin);
       const running = m.runningNow === 'Y';
       const onLeave = m.onLeaveToday === 'Y';
@@ -601,8 +748,8 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private applyAttendance(rows: DprHodAttendanceRow[], members: DprHodTeamMember[]): void {
-    const leave = new Set(members.filter(m => m.onLeaveToday === 'Y').map(m => this.key(m.empId)));
-    const prepared = rows.map(r => {
+    const leave = this.leaveSet;
+    const prepared = rows.filter(r => !leave.has(this.key(r.empId))).map(r => {
       const punches = this.num(r.punchCount), loggedMin = this.num(r.loggedMin), breakMin = this.num(r.breakMin);
       const gapMin = r.gapMin ?? null;
       // gapMin is GREATEST(span − logged − break, 0) inside the proc, so inverting it
@@ -640,12 +787,15 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
       };
     }).sort((a, b) => b.sortKey - a.sortKey);
     const overs = this.attRows.filter(r => r.gap === 'over').length;
-    this.attNote = 'Sorted worst first.' + (overs > 0 ? ' ' + overs + (overs === 1 ? ' member' : ' members') + ' logged more than the punch span — usually a forgotten punch-out, not extra work.' : '');
+    this.attNote = 'Active members only, sorted worst first.' + (overs > 0 ? ' ' + overs + (overs === 1 ? ' member' : ' members') + ' logged more than the punch span — usually a forgotten punch-out, not extra work.' : '');
   }
 
-  private applyNotDone(rows: DprHodNotDone[], members: DprHodTeamMember[]): void {
-    const sorted = rows.slice().sort((a, b) => this.num(b.daysSinceLastLog) - this.num(a.daysSinceLastLog));
+  private applyNotDone(rows: DprHodNotDone[], members: DprHodTeamMember[], exceptions: DprHodException[]): void {
+    const seen = new Set<string>();
+    const sorted = rows.filter(r => !this.leaveSet.has(this.key(r.empId)))
+      .sort((a, b) => this.num(b.daysSinceLastLog) - this.num(a.daysSinceLastLog));
     this.notDoneRows = sorted.map(r => {
+      seen.add(this.key(r.empId));
       const d = r.daysSinceLastLog == null ? null : this.num(r.daysSinceLastLog);
       const never = d == null || d >= 999 || !r.lastLogDate;
       return {
@@ -656,13 +806,107 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
         ageTxt: never ? 'Never' : d === 0 ? 'Today' : d + (d === 1 ? ' day' : ' days')
       };
     });
-    // P_CUR_NOT_DONE needs a punch today, so people on approved leave never appear there
-    this.leaveRows = members.filter(m => m.onLeaveToday === 'Y').map(m => ({
-      ini: this.initials(m.employeeName), color: A.violet,
-      name: (m.employeeName ?? '').trim() || '—',
-      sub: ((m.designation ?? '').trim() || '—') + ' · approved leave',
-      ageCls: '', ageTxt: 'Leave'
+    // STALE (no DPR for 3+ days) without a punch today would otherwise be invisible —
+    // it used to have its own "Non-submitters" card, which repeated most of this list.
+    const role = new Map(members.map(m => [this.key(m.empId), (m.designation ?? '').trim()]));
+    exceptions
+      .filter(r => (r.excType ?? '').trim().toUpperCase() === 'STALE')
+      .filter(r => !seen.has(this.key(r.empId)) && !this.leaveSet.has(this.key(r.empId)))
+      .sort((a, b) => this.num(b.metricValue) - this.num(a.metricValue))
+      .forEach(r => {
+        const d = this.num(r.metricValue);
+        const never = d >= 999;
+        this.notDoneRows.push({
+          ini: this.initials(r.employeeName), color: A.rose,
+          name: (r.employeeName ?? '').trim() || '—',
+          sub: (role.get(this.key(r.empId)) || '—') + ' · no punch today · ' + ((r.detail ?? '').trim() || 'no recent DPR'),
+          ageCls: 'a3', ageTxt: never ? 'Never' : d + (d === 1 ? ' day' : ' days')
+        });
+      });
+  }
+
+  // ── leave: master status + HR function + SP_GET_HOD_LEAVE_STATUS ──────────
+
+  private isLeaveStatus(m: DprHodTeamMember): boolean {
+    return this.key(m.currentStatus) === 'LEAVE' || (m.onLeaveToday ?? '') === 'Y';
+  }
+
+  private rebuildLeaveSet(members: DprHodTeamMember[]): void {
+    const ids = new Set<string>(this.leaveIds);
+    members.forEach(m => { if (this.isLeaveStatus(m)) { ids.add(this.key(m.empId)); } });
+    this.leaveSet = ids;
+  }
+
+  private loadLeave(): void {
+    this.subs.push(this.api.getDprHodLeave(this.hodId, this.currentDept).subscribe({
+      next: (res: any) => {
+        if (this.destroyed) { return; }
+        const rows: any[] = res?.success === false ? [] : (Array.isArray(res?.data) ? res.data : []);
+        this.leaveRaw = rows;
+        this.leaveIds = new Set(rows
+          .filter(r => this.key(r?.leaveStatus) !== 'REJOINED')
+          .map(r => this.key(r?.empId)).filter(k => k));
+        this.refreshLeaveViews();
+      },
+      // Until SP_GET_HOD_LEAVE_STATUS is deployed the card still lists members the
+      // employee master marks as Leave — just without return dates.
+      error: () => { this.leaveRaw = []; this.leaveIds = new Set(); this.refreshLeaveViews(); }
     }));
+  }
+
+  /** A late leave answer can add or remove members from the leave set, which changes
+   *  the hero chip, the KPI, team pulse, punch vs logged and no-DPR alike — so re-map
+   *  the last payload instead of patching each card. Pure computation, no request. */
+  private refreshLeaveViews(): void {
+    if (this.lastPayload) { this.applyAll(this.lastPayload); } else { this.applyLeave([]); }
+  }
+
+  private applyLeave(members: DprHodTeamMember[]): void {
+    const byId = new Map<string, any>();
+    this.leaveRaw.forEach(r => { const k = this.key(r?.empId); if (k) { byId.set(k, r); } });
+    const rows: LeaveRow[] = [];
+    let onLeave = 0, dueWeek = 0, overdue = 0;
+
+    byId.forEach((r, k) => {
+      const st = this.key(r.leaveStatus);
+      const over = this.num(r.overdueDays);
+      const until = r.daysUntilBack == null ? null : this.num(r.daysUntilBack);
+      const type = (r.leaveType ?? '').toString().trim() || 'Leave';
+      const parts = [
+        r.departedOn ? 'left ' + this.shortDate(r.departedOn) : '',
+        r.dueBack ? (r.extendedTo ? 'extended to ' : 'due back ') + this.shortDate(r.dueBack) : 'return date not recorded',
+        this.num(r.daysApproved) > 0 ? this.trim1(this.num(r.daysApproved)) + ' days approved' : ''
+      ].filter(p => p);
+      let chipCls = 'a2', chipTxt = 'On leave', order = 2, color = A.violet;
+      if (st === 'REJOINED') { chipCls = 'a1'; chipTxt = 'Back ' + this.shortDate(r.rejoinedOn); order = 3; color = A.emerald; }
+      else if (st === 'OVERDUE') { chipCls = 'a3'; chipTxt = 'Overdue ' + over + (over === 1 ? ' day' : ' days'); order = 0; color = A.rose; overdue++; onLeave++; }
+      else if (st === 'DUE_TODAY') { chipCls = 'a2'; chipTxt = 'Due today'; order = 1; color = A.amber; dueWeek++; onLeave++; }
+      else { onLeave++; if (until != null && until <= 7) { dueWeek++; chipTxt = 'Back in ' + until + (until === 1 ? ' day' : ' days'); } }
+      rows.push({
+        ini: this.initials(r.employeeName), color,
+        name: (r.employeeName ?? '').toString().trim() || k,
+        sub: parts.join(' · '), type, chipCls, chipTxt, order,
+        tip: escHtml(type) + (r.reason ? ' — ' + escHtml((r.reason ?? '').toString()) : '')
+          + (r.plannedReturn && r.extendedTo ? ' · planned return ' + this.shortDate(r.plannedReturn) : '')
+      });
+    });
+    // marked Leave in the master but no approved form found: still on leave, no dates
+    members.filter(m => this.isLeaveStatus(m) && !byId.has(this.key(m.empId))).forEach(m => {
+      onLeave++;
+      rows.push({
+        ini: this.initials(m.employeeName), color: A.violet,
+        name: (m.employeeName ?? '').trim() || '—',
+        sub: ((m.designation ?? '').trim() || '—') + ' · return date not recorded',
+        type: 'Leave', chipCls: 'a2', chipTxt: 'On leave', order: 2,
+        tip: (m.onLeaveToday ?? '') === 'Y' ? 'Approved leave in HR' : 'Employee master status: Leave'
+      });
+    });
+    rows.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+    this.leaveRows = rows;
+    this.leaveOnLeave = onLeave; this.leaveDueWeek = dueWeek; this.leaveOverdue = overdue;
+    this.leaveNote = overdue > 0
+      ? overdue + (overdue === 1 ? ' member is' : ' members are') + ' past the return date with no rejoining form — check before the month closes.'
+      : (rows.length ? 'Return dates come from the approved exit form, or the rejoining form when it extends them.' : '');
   }
 
   private applyHeatmap(cells: DprHodHeatmapCell[], trend: DprHodTrendDay[], members: DprHodTeamMember[]): void {
@@ -786,6 +1030,12 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   // ── break & lunch ──────────────────────────────────────────────────────────
+
+  /** Team filter needs the dashboard's member list; until it arrives, show nothing rather than the whole company. */
+  private renderLunch(): void {
+    if (this.lunchRaw == null || !this.teamIds.size) { return; }
+    this.applyLunch(this.lunchRaw.filter(r => this.teamIds.has(this.key(r?.employeeId))));
+  }
 
   private applyLunch(rows: any[]): void {
     this.lunchReady = true;

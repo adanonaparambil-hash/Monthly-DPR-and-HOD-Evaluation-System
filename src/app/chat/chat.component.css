@@ -34,7 +34,7 @@
 }
 
 .sidebar-header {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   padding: 24px;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(27, 42, 56, 0.15);
@@ -165,7 +165,7 @@
 
 .section-icon {
   font-size: 16px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -276,7 +276,7 @@
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,7 +363,7 @@
 
 .pinned-icon {
   font-size: 12px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -411,7 +411,7 @@
 }
 
 .unread-badge {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   font-size: 11px;
   font-weight: 700;
@@ -441,7 +441,7 @@
 .create-group-btn {
   width: 100%;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   border-radius: 12px;
@@ -531,7 +531,7 @@
 }
 
 .action-btn:hover {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(27, 42, 56, 0.2);
@@ -618,7 +618,7 @@
 }
 
 .own-message .message-text {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   box-shadow: 0 4px 15px rgba(27, 42, 56, 0.2);
@@ -682,7 +682,7 @@
 }
 
 .file-download:hover {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(27, 42, 56, 0.2);
@@ -716,7 +716,7 @@
 .typing-dots span {
   width: 8px;
   height: 8px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 50%;
   animation: typing 1.4s infinite ease-in-out;
 }
@@ -820,7 +820,7 @@
 }
 
 .send-btn {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   padding: 12px 20px;
@@ -909,7 +909,7 @@
 
 .empty-content i {
   font-size: 64px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1411,7 +1411,7 @@
 .chat-list::-webkit-scrollbar-thumb,
 .messages-container::-webkit-scrollbar-thumb,
 .message-textarea::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 3px;
 }
 

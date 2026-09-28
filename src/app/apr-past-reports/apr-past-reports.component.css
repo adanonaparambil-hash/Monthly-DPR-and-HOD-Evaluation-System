@@ -97,7 +97,7 @@
   align-items: center;
   gap: 7px;
   padding: 10px 22px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -190,7 +190,7 @@
 .table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .table-scroll::-webkit-scrollbar-track { background: #f8fafc; }
 .table-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 4px;
 }
 
@@ -264,7 +264,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -346,7 +346,7 @@
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -463,7 +463,7 @@
   background: #f0fdf4;
 }
 .pg-btn.pg-active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border-color: transparent;
   box-shadow: 0 3px 10px rgba(19, 130, 113, .3);

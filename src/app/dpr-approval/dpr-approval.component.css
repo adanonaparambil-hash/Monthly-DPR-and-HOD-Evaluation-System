@@ -138,7 +138,7 @@
 }
 
 .user-count-badge {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -218,7 +218,7 @@
 
 .users-empty-icon i {
   font-size: 32px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -509,7 +509,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   border-radius: 6px;
@@ -744,7 +744,7 @@
 
 .empty-icon i {
   font-size: 48px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -851,7 +851,7 @@
 }
 
 .dpr-table thead {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   position: sticky;
   top: 0;
@@ -1161,7 +1161,7 @@
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border-color: #1B2A38;
   transform: translateY(-1px);
@@ -1215,7 +1215,7 @@
 }
 
 .page-number-btn.active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border-color: #1B2A38;
   box-shadow: 0 3px 8px rgba(27, 42, 56, 0.3);

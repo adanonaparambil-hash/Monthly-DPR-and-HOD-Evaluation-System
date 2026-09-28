@@ -29,7 +29,12 @@
         <span class="hchip"><span class="material-symbols-outlined">flight_takeoff</span>On leave <b>{{ chipLeave }}</b></span>
         <span class="hchip" *ngIf="chipBreak !== null"><span class="material-symbols-outlined">coffee</span>On break now <b>{{ chipBreak }}</b></span>
         <span class="hchip hot" *ngIf="loadError"><span class="material-symbols-outlined">info</span>{{ loadError }}</span>
-        <span class="hchip" *ngIf="loading"><span class="material-symbols-outlined spin">progress_activity</span>Loading live data…</span>
+        <span class="hchip" *ngIf="loading && !staleSince"><span class="material-symbols-outlined spin">progress_activity</span>Loading live data…</span>
+        <span class="hchip stale" *ngIf="staleSince"><span class="material-symbols-outlined" [class.spin]="loading">{{ loading ? 'progress_activity' : 'history' }}</span>Showing data from <b>{{ staleSince }}</b><ng-container *ngIf="loading"> · refreshing</ng-container></span>
+      </div>
+      <div class="hquote" *ngIf="quoteText">
+        <span class="qm">“</span>
+        <div class="qb"><q>{{ quoteText }}</q><span class="qauth"><ng-container *ngIf="quoteAuthor">{{ quoteAuthor }}<i>·</i></ng-container>quote of the day</span></div>
       </div>
     </div>
     <div class="hrr">
@@ -60,7 +65,11 @@
       <span class="qic"><span class="material-symbols-outlined">notifications_active</span></span>
       <span class="qtx"><b>Notifications</b><span>{{ notifSub }}<ng-container *ngIf="noticeUnread > 0"> · {{ noticeUnread }} new {{ noticeUnread === 1 ? 'notice' : 'notices' }}</ng-container></span></span>
       <span class="qct" [class.pop]="badgePop">{{ notifUnread + noticeUnread }}</span></button>
-    <button type="button" class="qbtn an" style="--kc:var(--a6);--d:240ms" (click)="generateAi()">
+    <button type="button" class="qbtn an" style="--kc:var(--a5);--d:240ms" (click)="openTeamList()">
+      <span class="qic"><span class="material-symbols-outlined">badge</span></span>
+      <span class="qtx"><b>Team directory</b><span>{{ teamCount ? teamCount + ' members · ' : '' }}{{ scopeText }} in Employee Master</span></span>
+      <span class="qct"><span class="material-symbols-outlined">arrow_forward</span></span></button>
+    <button type="button" class="qbtn an" style="--kc:var(--a6);--d:300ms" (click)="generateAi()">
       <span class="qic"><span class="material-symbols-outlined">auto_awesome</span></span>
       <span class="qtx"><b>Department AI audit</b><span>{{ aiMonth ? aiMonth + ' · on request' : 'Full DPR audit, on request' }}</span></span>
       <span class="qct"><span class="material-symbols-outlined">arrow_forward</span></span></button>
@@ -97,12 +106,13 @@
 
   <!-- ═══════════════ DISCIPLINE TREND + QUEUES ═══════════════ -->
   <section class="grid">
-    <div class="card s7 an" style="--d:60ms">
+    <div class="s7 col">
+    <div class="card an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">show_chart</span></span>
         <h2>DPR discipline — last 14 days</h2>
         <span class="pill nu" *ngIf="trHas">avg {{ trAvg }}</span>
         <button type="button" class="lk" (click)="openAnalytics()">Log analytics <span class="material-symbols-outlined">arrow_forward</span></button></div>
-      <p class="sub">Of the people who punched in each day, the share that filed a DPR. This ratio is the discipline number; raw hours are shown separately below.</p>
+      <p class="sub">Share of the active team that filed a DPR each day — members on leave are not counted. Fridays are the weekly off.</p>
       <ng-container *ngIf="trHas; else noTrend">
         <svg class="trend" viewBox="0 0 700 186" role="img" [attr.aria-label]="trAria">
           <g class="gl"><line x1="40" y1="150" x2="690" y2="150"/><line x1="40" y1="117.5" x2="690" y2="117.5"/><line x1="40" y1="85" x2="690" y2="85"/><line x1="40" y1="52.5" x2="690" y2="52.5"/><line x1="40" y1="20" x2="690" y2="20"/></g>
@@ -122,8 +132,21 @@
       </ng-container>
       <ng-template #noTrend><p class="muted pad">No activity recorded in the last 14 days.</p></ng-template>
     </div>
+    <div class="card an" style="--d:120ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">fact_check</span></span>
+        <h2>DPR logs awaiting me</h2><span class="pill" [ngClass]="logCount > 0 ? 'cr' : 'ok'">{{ logCount }}</span>
+        <button type="button" class="lk" (click)="openLogs()">Review <span class="material-symbols-outlined">arrow_forward</span></button></div>
+      <div class="row" *ngFor="let l of logRows">
+        <span class="av" [style.--kc]="l.color">{{ l.ini }}</span>
+        <div class="rtx"><b>{{ l.name }}</b><span>{{ l.sub }}</span></div>
+        <div class="rrt"><b>{{ l.count }}</b><span>{{ l.hours }}</span></div></div>
+      <p class="muted pad" *ngIf="!logRows.length">No DPR logs are waiting for your approval.</p>
+      <div class="foot" *ngIf="logNote"><span>{{ logNote }}</span></div>
+    </div>
+    </div>
 
-    <div class="card s5 an" style="--d:120ms">
+    <div class="s5 col">
+    <div class="card an" style="--d:90ms">
       <div class="ch"><span class="cic" style="--kc:var(--a4)"><span class="material-symbols-outlined">inbox</span></span>
         <h2>Forms awaiting me</h2><span class="pill" [ngClass]="formCount > 0 ? 'cr' : 'ok'">{{ formCount }}</span>
         <button type="button" class="lk" (click)="openForms()">Open queue <span class="material-symbols-outlined">arrow_forward</span></button></div>
@@ -134,15 +157,25 @@
         <span class="age" [ngClass]="f.ageCls">{{ f.ageTxt }}</span></div>
       <p class="muted pad" *ngIf="!formRows.length">No forms are waiting for your approval.</p>
       <div class="foot" *ngIf="formNote"><span>{{ formNote }}</span></div>
-      <div class="ch mt"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">fact_check</span></span>
-        <h2>DPR logs awaiting me</h2><span class="pill" [ngClass]="logCount > 0 ? 'cr' : 'ok'">{{ logCount }}</span>
-        <button type="button" class="lk" (click)="openLogs()">Review <span class="material-symbols-outlined">arrow_forward</span></button></div>
-      <div class="row" *ngFor="let l of logRows">
-        <span class="av" [style.--kc]="l.color">{{ l.ini }}</span>
-        <div class="rtx"><b>{{ l.name }}</b><span>{{ l.sub }}</span></div>
-        <div class="rrt"><b>{{ l.count }}</b><span>{{ l.hours }}</span></div></div>
-      <p class="muted pad" *ngIf="!logRows.length">No DPR logs are waiting for your approval.</p>
-      <div class="foot" *ngIf="logNote"><span>{{ logNote }}</span></div>
+    </div>
+
+    <div class="card an" style="--d:150ms">
+      <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">flight_takeoff</span></span>
+        <h2>On leave &amp; returning</h2><span class="pill" [ngClass]="leaveOverdue > 0 ? 'cr' : (leaveRows.length ? 'nu' : 'ok')">{{ leaveOnLeave }}</span></div>
+      <div class="stats" *ngIf="leaveRows.length">
+        <div class="st" style="--kc:var(--a6)"><div class="k">On leave</div><div class="v">{{ leaveOnLeave }}</div><div class="d">today</div></div>
+        <div class="st" style="--kc:var(--a5)"><div class="k">Due back</div><div class="v">{{ leaveDueWeek }}</div><div class="d">within 7 days</div></div>
+        <div class="st" style="--kc:var(--a4)"><div class="k">Overdue</div><div class="v">{{ leaveOverdue }}</div><div class="d">past return date</div></div>
+      </div>
+      <div class="mt" *ngIf="leaveRows.length">
+        <div class="row" *ngFor="let p of leaveRows" [attr.data-tip]="p.tip">
+          <span class="av" [style.--kc]="p.color">{{ p.ini }}</span>
+          <div class="rtx"><b>{{ p.name }} · {{ p.type }}</b><span>{{ p.sub }}</span></div>
+          <span class="age" [ngClass]="p.chipCls">{{ p.chipTxt }}</span></div>
+      </div>
+      <p class="muted pad" *ngIf="!leaveRows.length">Nobody in the team is on leave.</p>
+      <div class="foot" *ngIf="leaveNote"><span>{{ leaveNote }}</span></div>
+    </div>
     </div>
   </section>
 
@@ -150,7 +183,8 @@
   <section class="grid">
     <div class="card s12 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">groups</span></span>
-        <h2>Team pulse — right now</h2><span class="pill nu">{{ team.length }} members</span></div>
+        <h2>Team pulse — right now</h2><span class="pill nu">{{ team.length }} active</span>
+        <button type="button" class="lk" (click)="openTeamList()">Employee list <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <div class="team">
         <div class="mem an" *ngFor="let m of team; trackBy: trackMember" [style.--sc]="m.color" [style.--d]="m.delay">
           <div class="mtop">
@@ -173,7 +207,7 @@
     <div class="card s8 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">fingerprint</span></span>
         <h2>Punch vs logged — today</h2></div>
-      <p class="sub">{{ attNote || 'Time inside the punch span with nothing logged against it.' }}</p>
+      <p class="sub">{{ attNote || 'Active members only. Time inside the punch span with nothing logged against it.' }}</p>
       <div class="lg">
         <span style="--lc:color-mix(in srgb,var(--a5) 30%,transparent)"><i></i>Punch span</span>
         <span style="--lc:var(--a1)"><i></i>Logged</span>
@@ -205,19 +239,12 @@
     <div class="card s4 an" style="--d:120ms">
       <div class="ch"><span class="cic" style="--kc:var(--a4)"><span class="material-symbols-outlined">person_off</span></span>
         <h2>No DPR today</h2><span class="pill" [ngClass]="notDoneRows.length ? 'cr' : 'ok'">{{ notDoneRows.length }}</span></div>
-      <p class="sub">Punched in, nothing logged. The chip is how long since their last DPR.</p>
+      <p class="sub">No DPR logged today — punched in or not. The chip is how long since their last DPR. Members on leave are not listed.</p>
       <div class="row" *ngFor="let p of notDoneRows">
         <span class="av" [style.--kc]="p.color">{{ p.ini }}</span>
         <div class="rtx"><b>{{ p.name }}</b><span>{{ p.sub }}</span></div>
         <span class="age" [ngClass]="p.ageCls">{{ p.ageTxt }}</span></div>
-      <p class="muted pad" *ngIf="!notDoneRows.length">Everyone who punched in has logged a DPR today.</p>
-      <ng-container *ngIf="leaveRows.length">
-        <div class="ch mt"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">flight_takeoff</span></span><h2>On leave today</h2><span class="pill nu">{{ leaveRows.length }}</span></div>
-        <div class="row" *ngFor="let p of leaveRows">
-          <span class="av" [style.--kc]="p.color">{{ p.ini }}</span>
-          <div class="rtx"><b>{{ p.name }}</b><span>{{ p.sub }}</span></div>
-          <span class="pill nu">{{ p.ageTxt }}</span></div>
-      </ng-container>
+      <p class="muted pad" *ngIf="!notDoneRows.length">Every active member has logged a DPR today.</p>
     </div>
   </section>
 
@@ -262,7 +289,7 @@
 
   <!-- ═══════════════ EXCEPTIONS ═══════════════ -->
   <section class="grid">
-    <div class="card s4 an" style="--d:60ms">
+    <div class="card s6 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="material-symbols-outlined">warning</span></span>
         <h2>Fulfilment below 70%</h2><span class="pill" [ngClass]="lowCount ? 'wt' : 'ok'">{{ lowCount }}</span></div>
       <div class="row" *ngFor="let p of lowRows">
@@ -272,17 +299,7 @@
       <p class="muted pad" *ngIf="!lowRows.length">Nobody is below 70% fulfilment.</p>
       <div class="foot"><span>Flags are never shown to the flagged employee.</span></div>
     </div>
-    <div class="card s4 an" style="--d:120ms">
-      <div class="ch"><span class="cic" style="--kc:var(--a4)"><span class="material-symbols-outlined">history_toggle_off</span></span>
-        <h2>Non-submitters</h2><span class="pill" [ngClass]="staleCount ? 'cr' : 'ok'">{{ staleCount }}</span></div>
-      <div class="row" *ngFor="let p of staleRows">
-        <span class="av" [style.--kc]="p.color">{{ p.ini }}</span>
-        <div class="rtx"><b>{{ p.name }}</b><span>{{ p.sub }}</span></div>
-        <span class="age" [ngClass]="p.ageCls">{{ p.ageTxt }}</span></div>
-      <p class="muted pad" *ngIf="!staleRows.length">Everyone has logged within the last 3 days.</p>
-      <div class="foot"><span>Unlogged against target <b>{{ staleUnlogged }}</b></span><span>Never repeats the card to the left</span></div>
-    </div>
-    <div class="card s4 an" style="--d:180ms">
+    <div class="card s6 an" style="--d:120ms">
       <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">edit_note</span></span>
         <h2>Remark discipline</h2><span class="pill nu">avg {{ remarkAvg }}%</span></div>
       <div class="stk tall" *ngIf="remarkSegs.length"><span *ngFor="let s of remarkSegs" [style.width.%]="s.w" [style.background]="s.c" [attr.data-tip]="s.label + ' — <b>' + s.n + '</b>'"></span></div>
@@ -313,7 +330,10 @@
           <p class="muted pad" *ngIf="!breakRows.length">Nobody in the team is on a break right now.</p>
         </div>
       </ng-container>
-      <ng-template #noLunch><p class="muted pad">Break data is loading…</p></ng-template>
+      <ng-template #noLunch>
+        <p class="muted pad" *ngIf="!lunchFailed">Break data is loading…</p>
+        <p class="muted pad" *ngIf="lunchFailed">Break data could not be loaded. <button type="button" class="lk" (click)="retryLunch()">Try again <span class="material-symbols-outlined">refresh</span></button></p>
+      </ng-template>
     </div>
 
     <div class="card aipanel s5 an" style="--d:120ms">

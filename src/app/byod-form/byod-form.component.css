@@ -254,7 +254,7 @@
 }
 .byod-emp-avatar {
   width: 72px; height: 72px; border-radius: 16px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex; align-items: center; justify-content: center;
   font-size: 28px; color: #fff; flex-shrink: 0;
   box-shadow: 0 6px 16px rgba(19,130,113,.3);
@@ -568,7 +568,7 @@
 }
 .byod-btn-ghost:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .byod-btn-primary {
-  background: linear-gradient(135deg,#1B2A38,#138271);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   color: #fff; padding: 10px 26px;
   box-shadow: 0 4px 14px rgba(19,130,113,.3);
 }
@@ -659,7 +659,7 @@
 .byod-sw-item:hover { border-color: #7c3aed; background: #faf5ff; }
 .byod-sw-num {
   width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg,#1B2A38,#138271);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   color: #fff; font-size: 11px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2px 6px rgba(19,130,113,.3);
@@ -856,7 +856,7 @@
 }
 .byod-apv-avatar {
   width: 56px; height: 56px; border-radius: 14px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; color: #fff; flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(19,130,113,.25);
@@ -948,7 +948,7 @@
 
 .byod-apv-avatar-sm {
   width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; box-shadow: 0 3px 10px rgba(19,130,113,.2);
 }

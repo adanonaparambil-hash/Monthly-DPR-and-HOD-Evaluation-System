@@ -4,6 +4,25 @@
    and motion come from ../styles/dpr-dash.css (shared with the employee page).
    ════════════════════════════════════════════════════════════════════════ */
 .ring .val{stroke:url(#hdash-r1)}
+/* two cards stacked in one grid column; the lower one stretches so both columns end level */
+/* five quick actions on this page (the shared grid is four) */
+.qa{grid-template-columns:repeat(5,minmax(0,1fr))}
+/* quote of the day — a compact line inside the hero, under the chips */
+.hquote{display:inline-flex;align-items:flex-start;gap:10px;margin-top:14px;max-width:620px;padding:9px 14px 9px 12px;border-radius:12px;
+  background:color-mix(in srgb,var(--card) 62%,transparent);border:1px solid color-mix(in srgb,var(--a6) 26%,transparent);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:hqIn .6s cubic-bezier(.2,.8,.2,1) .35s both}
+.hquote .qm{font:italic 700 34px/.75 Georgia,serif;color:var(--a6);opacity:.75;margin-top:3px;flex-shrink:0}
+.hquote .qb{min-width:0}
+.hquote q{display:block;font:italic 400 14px/1.45 Georgia,serif;color:var(--ink);quotes:"" ""}
+.hquote .qauth{display:block;margin-top:3px;font:600 10.5px var(--fh);letter-spacing:.06em;text-transform:uppercase;color:var(--a6)}
+.hquote .qauth i{font-style:normal;margin:0 6px;opacity:.6}
+:host .hquote q:not(#_),:host .hquote .qm:not(#_){font-family:Georgia,serif !important}
+@keyframes hqIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hquote{animation:none}}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.col>.card:last-child{flex:1}
+.hchip.stale{border-color:color-mix(in srgb,var(--a5) 40%,transparent);color:var(--a5)}
+.hchip.stale b{color:var(--a5)}
 
 /* ── department pills ──────────────────────────────────────────────────── */
 .dpills{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -126,10 +145,16 @@
 .aipanel small{display:block;text-align:center;margin-top:8px}
 
 /* ═══ Mobile responsiveness (append-only — project convention) ═══ */
+@media (max-width:1280px){
+  .qa{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .qa .qbtn:last-child{grid-column:span 2}
+}
 @media (max-width:1024px){
   .lead{grid-template-columns:26px 34px minmax(0,1fr) minmax(70px,.8fr) 44px 52px}
 }
 @media (max-width:768px){
+  .qa .qbtn:last-child{grid-column:auto}
+  .hquote{max-width:none;display:flex}
   .team{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
   .lead{grid-template-columns:26px 34px minmax(0,1fr) 44px;gap:8px}
   .lead .stk,.lead .lhrs{display:none}

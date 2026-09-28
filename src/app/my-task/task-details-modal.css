@@ -1852,7 +1852,7 @@
   grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(90px, 0.6fr) minmax(130px, 0.8fr) minmax(80px, 0.5fr) minmax(80px, 0.5fr) minmax(50px, 0.4fr) minmax(90px, 0.6fr) minmax(90px, 0.6fr);
   gap: 12px;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px 16px 0 0;
   width: 100%;
@@ -5610,7 +5610,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   padding: 4px;
   border-radius: 50px;
   box-shadow: 0 4px 12px rgba(19, 130, 113, 0.3);
@@ -5728,7 +5728,7 @@
 }
 
 .action-btn.primary {
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(19, 130, 113, 0.3);
 }
@@ -5829,14 +5829,14 @@
 
 .progress-bar-full {
   height: 100%;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
 
 .progress-fill-animated {
   height: 100%;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
@@ -6384,7 +6384,7 @@
 
 .send-button {
   padding: 8px 20px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -6650,7 +6650,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   padding: 8px;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(19, 130, 113, 0.4);
@@ -6800,7 +6800,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 32px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -6927,7 +6927,7 @@
 
 .progress-fill-enhanced {
   height: 100%;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   border-radius: 4px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -7590,7 +7590,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 20px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -14379,7 +14379,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   border-radius: 8px;
@@ -15233,7 +15233,7 @@
 
 .category-icon i {
   font-size: 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -15489,7 +15489,7 @@
 
 .category-icon i {
   font-size: 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -15720,7 +15720,7 @@
 
 .empty-icon i {
   font-size: 32px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

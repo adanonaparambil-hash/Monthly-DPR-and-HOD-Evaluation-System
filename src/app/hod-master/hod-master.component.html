@@ -180,7 +180,7 @@
           <ng-container *ngIf="!isLoadingProfile && createProfileImage">
             <img [src]="'data:image/jpeg;base64,' + createProfileImage" class="modal-avatar-img" alt="Profile" (error)="createProfileImage = null" />
           </ng-container>          <ng-container *ngIf="!isLoadingProfile && !createProfileImage">
-            <div class="modal-avatar" [style.background]="createEmpName ? getAvatarColor(createEmpName) : 'linear-gradient(135deg,#1B2A38,#138271)'">
+            <div class="modal-avatar" [style.background]="createEmpName ? getAvatarColor(createEmpName) : 'linear-gradient(135deg,#1B2A38,#10b981)'">
               <span *ngIf="createEmpName">{{ getInitials(createEmpName) }}</span>
               <i *ngIf="!createEmpName" class="fas fa-user-plus" style="font-size:20px"></i>
             </div>

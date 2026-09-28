@@ -33,7 +33,7 @@
 }
 
 .requests-table thead {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -288,7 +288,7 @@
 }
 
 .btn-view-table {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -347,7 +347,7 @@
 
 /* Page Header */
 .page-header {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
@@ -445,7 +445,7 @@
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   box-shadow: var(--shadow-md);
 }
@@ -462,7 +462,7 @@
 }
 
 .tab-button:not(.active) .tab-badge {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -1923,7 +1923,7 @@
 }
 
 .btn-view-table {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   padding: 6px 10px;
@@ -2168,7 +2168,7 @@
   padding: 10px 20px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -2298,7 +2298,7 @@
 
 /* ── Modern Approval Table ─────────────────────────────────── */
 .requests-table thead tr {
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
 }
 .requests-table thead th {
   color: #fff;
@@ -2389,7 +2389,7 @@
 .btn-review {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 14px; border: none; border-radius: 8px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff; font-size: 12px; font-weight: 700;
   cursor: pointer; transition: all .2s;
   box-shadow: 0 2px 8px rgba(19,130,113,.25);
@@ -2467,7 +2467,7 @@
   border-radius: 10px;
   flex-shrink: 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2511,7 +2511,7 @@
   border-radius: 10px;
   flex-shrink: 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2556,7 +2556,7 @@
   width: 46px;
   height: 46px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2660,7 +2660,7 @@
   padding: 12px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -2806,7 +2806,7 @@
 }
 
 .pg-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #138271;
   color: #fff;
   transform: translateY(-1px);
@@ -2820,7 +2820,7 @@
 }
 
 .pg-btn.pg-num.active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #138271;
   color: #fff;
   box-shadow: 0 3px 8px rgba(19, 130, 113, 0.3);
@@ -2858,13 +2858,13 @@
 }
 
 .dark-theme .pg-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #138271;
   color: #fff;
 }
 
 .dark-theme .pg-btn.pg-num.active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #138271;
   color: #fff;
 }
@@ -3057,12 +3057,12 @@
   color: var(--text-secondary);
 }
 :host-context(.dark-theme) .pg-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #138271;
   color: #fff;
 }
 :host-context(.dark-theme) .pg-btn.pg-num.active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #138271;
   color: #fff;
 }

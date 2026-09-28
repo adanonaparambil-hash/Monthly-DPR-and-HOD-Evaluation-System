@@ -14,7 +14,7 @@
       <a *ngIf="!isDPROnlyMode && isEmployee" routerLink="/dpr-employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-chart-pie"></i> Employee Analytics
       </a>
-      <a *ngIf="!isDPROnlyMode && isHod" routerLink="/hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+      <a *ngIf="!isDPROnlyMode && isHod" routerLink="/dpr-hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
         <i class="fas fa-users-cog"></i> HOD Dashboard
       </a>
       <a *ngIf="!isDPROnlyMode && isCed" routerLink="/ced-dpr-analytics" routerLinkActive="active" (click)="closeSidebarOnMobile()">

@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Theme } from '../services/theme';
@@ -305,7 +306,9 @@ export class MyLoggedHoursComponent implements OnInit {
   constructor(
     private themeService: Theme,
     private api: Api,
-    private toasterService: ToasterService
+    private toasterService: ToasterService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -349,6 +352,14 @@ export class MyLoggedHoursComponent implements OnInit {
     
     // Load dropdown data from API first
     this.initializeDropdowns();
+
+    // Deep link from the HOD dashboard: ?open=lunch opens the Lunch Monitor,
+    // ?open=breaks the Travel & Break History. The param is then dropped so a
+    // refresh or Back does not reopen the modal.
+    const open = (this.route.snapshot.queryParamMap.get('open') || '').toLowerCase();
+    if (open === 'lunch' && this.canSeeLunchMonitor) { this.openLunchMonitorModal(); }
+    else if (open === 'breaks') { this.openBreakHistoryModal(); }
+    if (open) { this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true }); }
   }
 
   // Initialize all dropdowns before loading data

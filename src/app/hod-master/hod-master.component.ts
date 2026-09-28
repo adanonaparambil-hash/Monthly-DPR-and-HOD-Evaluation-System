@@ -230,7 +230,7 @@ export class HodMasterComponent implements OnInit {
   }
 
   private readonly avatarColors = [
-    'linear-gradient(135deg,#1B2A38,#138271)',
+    'linear-gradient(135deg,#1B2A38,#10b981)',
     'linear-gradient(135deg,#3b82f6,#6366f1)',
     'linear-gradient(135deg,#ec4899,#f43f5e)',
     'linear-gradient(135deg,#f59e0b,#ef4444)',

@@ -3,7 +3,7 @@
   position: fixed; right: 22px; bottom: 22px; z-index: 1200;
   width: 52px; height: 52px; border-radius: 50%;
   border: none; cursor: pointer;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff; font-size: 20px;
   box-shadow: 0 6px 18px rgba(19, 130, 113, .45);
   transition: transform .15s ease, box-shadow .15s ease;
@@ -31,7 +31,7 @@
 .aia-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 13px 16px;
-  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #10b981); color: #fff;
 }
 .aia-header-title { display: flex; align-items: center; gap: 10px; }
 .aia-header-title > i { font-size: 20px; }
@@ -81,7 +81,7 @@
   white-space: pre-wrap; word-break: break-word;
 }
 .aia-msg-user .aia-bubble {
-  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #10b981); color: #fff;
   border: none; border-radius: 12px 12px 4px 12px; white-space: pre-wrap;
 }
 .aia-msg-error .aia-bubble { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
@@ -128,7 +128,7 @@
 .aia-send {
   width: 38px; height: 38px; flex: 0 0 auto;
   border: none; border-radius: 10px; cursor: pointer;
-  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #10b981); color: #fff;
 }
 .aia-send:disabled { opacity: .5; cursor: default; }
 

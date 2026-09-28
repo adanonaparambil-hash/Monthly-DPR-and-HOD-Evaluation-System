@@ -132,7 +132,7 @@ button i,
   --info-color: #2C3E50;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #1B2A38, #138271);
+  --gradient-primary: linear-gradient(135deg, #1B2A38, #10b981);
   --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
   --gradient-accent: linear-gradient(135deg, #10b981, #059669);
 
@@ -162,7 +162,7 @@ button i,
   --info-color: #2C3E50;
 
   /* Dark Gradients */
-  --gradient-primary: linear-gradient(135deg, #1B2A38, #138271);
+  --gradient-primary: linear-gradient(135deg, #1B2A38, #10b981);
   --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
   --gradient-accent: linear-gradient(135deg, #10b981, #059669);
 

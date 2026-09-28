@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Api } from '../services/api';
 import { AvatarUtil } from '../utils/avatar.util';
@@ -99,9 +100,12 @@ export class EmployeeMasterComponent implements OnInit {
   editProfile: EmployeeProfileUpdateDto = {};
   departmentObjects: { deptId: string; deptName: string }[] = [];
 
-  constructor(private api: Api, private toastr: ToastrService) {}
+  constructor(private api: Api, private toastr: ToastrService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
+    // the HOD dashboard deep-links here with ?department=<name> to open its own team
+    const dept = (this.route.snapshot.queryParamMap.get('department') || '').trim();
+    if (dept) { this.filterDepartment = dept; }
     this.loadDepartments();
     this.fetchBatch(1);
   }
@@ -337,7 +341,7 @@ export class EmployeeMasterComponent implements OnInit {
   }
 
   private readonly avatarColors = [
-    'linear-gradient(135deg,#1B2A38,#138271)',
+    'linear-gradient(135deg,#1B2A38,#10b981)',
     'linear-gradient(135deg,#3b82f6,#6366f1)',
     'linear-gradient(135deg,#ec4899,#f43f5e)',
     'linear-gradient(135deg,#f59e0b,#ef4444)',

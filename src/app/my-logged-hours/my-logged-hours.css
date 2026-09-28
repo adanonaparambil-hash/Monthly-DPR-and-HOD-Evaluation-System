@@ -570,7 +570,7 @@
   display: grid;
   gap: 14px;
   padding: 12px 22px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 11px;
   font-weight: 700;
@@ -1081,7 +1081,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px 28px 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
 }
@@ -2820,7 +2820,7 @@
 }
 
 .break-table thead {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .break-table th {

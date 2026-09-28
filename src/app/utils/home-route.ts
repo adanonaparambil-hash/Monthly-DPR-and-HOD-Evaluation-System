@@ -4,12 +4,12 @@
  * One place, so changing a role's home is a one-line edit.
  *
  *   E (employee) → the new DPR employee dashboard
- *   H (HOD)      → the HOD dashboard (unchanged for now)
+ *   H (HOD)      → the new DPR HOD dashboard
  *   C (CED)      → the DPR usage dashboard
  */
 export const HOME_ROUTES: Record<string, string> = {
   E: '/dpr-employee-dashboard',
-  H: '/hod-dashboard',
+  H: '/dpr-hod-dashboard',
   C: '/ced-dpr-analytics'
 };
 

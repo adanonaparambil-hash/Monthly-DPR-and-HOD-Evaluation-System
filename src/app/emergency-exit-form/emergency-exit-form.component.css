@@ -12,7 +12,7 @@
 
 /* Header */
 .form-header {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 16px;
@@ -232,7 +232,7 @@
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
@@ -321,7 +321,7 @@
 }
 
 .step.active .step-circle {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #1B2A38;
   color: white;
   transform: scale(1.1);
@@ -350,7 +350,7 @@
 }
 
 .step.active .step-title {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -420,7 +420,7 @@
 }
 
 .section-header h3 i {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -893,7 +893,7 @@ textarea {
 }
 
 .dropdown-item.selected {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -907,7 +907,7 @@ textarea {
 .employee-name {
   font-weight: 600;
   font-size: 14px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -957,7 +957,7 @@ textarea {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -1026,7 +1026,7 @@ textarea {
   transition: all 0.3s ease;
   text-decoration: none;
   outline: none;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   min-width: 280px;
   box-shadow: var(--shadow-md);
@@ -1147,7 +1147,7 @@ textarea {
 }
 
 .checkbox-label input[type="checkbox"]:checked+.checkmark {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-color: #1B2A38;
 }
 
@@ -1198,7 +1198,7 @@ textarea {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1221,7 +1221,7 @@ textarea {
 }
 
 .btn-add {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -1332,7 +1332,7 @@ textarea {
 }
 
 .contact-info-note i {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1380,7 +1380,7 @@ textarea {
 }
 
 .contact-item label i {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1506,7 +1506,7 @@ textarea {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 4px;
   transition: width 0.5s ease;
 }
@@ -2169,7 +2169,7 @@ rehensive Approval Workflow Styles */
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   display: flex;
   align-items: center;
@@ -2572,7 +2572,7 @@ ropdown with refresh button */
 }
 
 .refresh-btn {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   padding: 8px 12px;
@@ -2699,7 +2699,7 @@ Approval Mode Styles */
 
 .request-id,
 .request-type {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   padding: 4px 12px;
   border-radius: 16px;
@@ -2733,7 +2733,7 @@ Approval Mode Styles */
 
 .approval-header h4 {
   margin: 0 0 8px 0;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2862,7 +2862,7 @@ Approval Mode Styles */
 
 .progress-fill-mini {
   height: 100%;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 2px;
   transition: width 0.3s ease;
 }
@@ -2882,7 +2882,7 @@ Approval Mode Styles */
 }
 
 .btn-view {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -2999,7 +2999,7 @@ Approval Mode Styles */
 
 .step-header-approval h2 {
   margin: 0 0 8px 0;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -3153,7 +3153,7 @@ Approval Mode Styles */
 
 /* Next Button Styling */
 .nav-right button {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -3332,7 +3332,7 @@ esponsive Design Improvements */
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -3433,7 +3433,7 @@ esponsive Design Improvements */
 
 /* Approval Card Styles */
 .approval-card {
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 8px 32px rgba(27, 42, 56, 0.3);
@@ -4031,7 +4031,7 @@ ced Approval Actions Column */
 .header-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -4971,7 +4971,7 @@ ced Approval Actions Column */
 
 /* Approval Actions Card - Above Current Approval Flow */
 .approval-actions-card {
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
@@ -5604,7 +5604,7 @@ ced Approval Actions Column */
 
 /* Better cards */
 .approval-actions-card {
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
@@ -6286,7 +6286,7 @@ ced Approval Actions Column */
 }
 
 .preview-badge {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   font-size: 10px;
   font-weight: 600;
@@ -6649,7 +6649,7 @@ ced Approval Actions Column */
 
 .assets-header {
   padding: 16px 20px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   color: white;
   cursor: pointer;
   display: flex;
@@ -7678,7 +7678,7 @@ ced Approval Actions Column */
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8411,7 +8411,7 @@ ced Approval Actions Column */
   /* the h4 above is subject to the global gradient text-fill rule; this label
      is not a heading, but pin the fill anyway so it can never inherit it */
   -webkit-text-fill-color: #fff;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   box-shadow: 0 2px 6px rgba(19, 130, 113, .25);
   transition: filter .15s, box-shadow .15s, transform .08s;
 }

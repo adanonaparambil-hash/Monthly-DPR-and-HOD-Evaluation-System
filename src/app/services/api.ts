@@ -744,6 +744,14 @@ export class Api {
   }
 
   /** HOD DPR dashboard — 11 cursors in one call. Omit department for all departments this HOD manages. */
+  /** Team members on leave / overdue to return / just back — SP_GET_HOD_LEAVE_STATUS. */
+  getDprHodLeave(hodId: string, department?: string | null): Observable<any> {
+    let params = new HttpParams().set('hodId', hodId);
+    if (department) params = params.set('department', department);
+    return this.http.get(`${this.apiUrl}/DprDash/HodLeave`, { params })
+      .pipe(catchError(this.handleError));
+  }
+
   getDprHodDashboard(hodId: string, department?: string | null, month?: number | null, year?: number | null): Observable<any> {
     let params = new HttpParams().set('hodId', hodId);
     if (department) params = params.set('department', department);

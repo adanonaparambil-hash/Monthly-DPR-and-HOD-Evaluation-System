@@ -94,7 +94,7 @@
 .apply-btn {
   height: 42px;
   padding: 0 24px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -175,7 +175,7 @@
 }
 
 .page-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border-color: transparent;
 }
@@ -186,7 +186,7 @@
 }
 
 .page-btn.batch-next {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border-color: transparent;
   padding: 0 16px;
@@ -219,7 +219,7 @@
 }
 
 .emp-table thead tr {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .emp-table thead th {
@@ -394,7 +394,7 @@
 }
 
 .view-btn:hover {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(19, 130, 113, 0.3);
@@ -457,7 +457,7 @@
 
 .empty-icon i {
   font-size: 28px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -798,7 +798,7 @@
 .em-btn-ghost:hover { background: #f1f5f9; border-color: #cbd5e1; }
 
 .em-btn-save {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   box-shadow: 0 4px 16px rgba(19,130,113,.35);
   padding: 0 28px;

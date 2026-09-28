@@ -931,7 +931,7 @@
    Does not restyle anything in the existing Log Analytics UI.
    ================================================================ */
 .ph-launch-btn {
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   color: #fff !important;
   border-color: transparent !important;
 }
@@ -974,7 +974,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 20px;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%);
   color: #fff;
   flex-shrink: 0;
 }
@@ -1044,7 +1044,7 @@
 .ph-f-actions { flex: 0 0 auto; flex-direction: row; gap: 8px; }
 .ph-btn-search {
   height: 34px; padding: 0 16px; border: none; border-radius: 8px;
-  background: linear-gradient(135deg, #1B2A38, #138271); color: #fff;
+  background: linear-gradient(135deg, #1B2A38, #10b981); color: #fff;
   font-size: 12.5px; font-weight: 700; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px;
 }
@@ -1163,7 +1163,7 @@
 }
 .ph-pg-btn:hover:not(:disabled) { background: #138271; border-color: #138271; color: #fff; }
 .ph-pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.ph-pg-num.active { background: linear-gradient(135deg, #1B2A38, #138271); border-color: #138271; color: #fff; pointer-events: none; }
+.ph-pg-num.active { background: linear-gradient(135deg, #1B2A38, #10b981); border-color: #138271; color: #fff; pointer-events: none; }
 .ph-pg-info { margin-left: 8px; font-size: 11.5px; color: #94a3b8; }
 
 /* Detail modal */
@@ -1311,7 +1311,7 @@
    DPR NOT DONE modal — nd-* additions (reuses ph-* modal shell styles)
    ═══════════════════════════════════════════════════════════════════════════ */
 .nd-launch-btn {
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   color: #fff !important;
   border-color: transparent !important;
 }

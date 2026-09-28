@@ -139,7 +139,7 @@
 /* Header */
 .dashboard-header {
   padding: 16px 20px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   backdrop-filter: blur(20px);
   border-radius: 14px;
   margin-bottom: 20px;
@@ -1077,7 +1077,7 @@
 }
 
 .rank-default {
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
@@ -1253,7 +1253,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   border-radius: 12px;
@@ -1274,7 +1274,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 18px;
   opacity: 0;
   z-index: -1;
@@ -1303,7 +1303,7 @@
 .empty-state-icon {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1332,7 +1332,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   border-radius: 12px;
@@ -2348,7 +2348,7 @@
   gap: 8px;
   padding: 0 20px;
   height: 38px;
-  background: linear-gradient(135deg, #1B2A38, #138271);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -6124,7 +6124,7 @@ mprehensive Dark Mode Support */
    HEADER GRADIENT RESTORE — overrides all conflicting rules
    ═══════════════════════════════════════════════════════ */
 .ced-dashboard-container .dashboard-header {
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 100%) !important;
+  background: linear-gradient(135deg, #1B2A38 0%, #10b981 100%) !important;
   border-bottom: none !important;
   color: #ffffff !important;
   border-radius: 14px !important;
@@ -6346,7 +6346,7 @@ mprehensive Dark Mode Support */
 .ced-dashboard-container .header-title-icon {
   width: 44px !important; height: 44px !important;
   border-radius: 12px !important;
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   border: none !important;
   display: flex !important; align-items: center !important; justify-content: center !important;
   font-size: 1.1rem !important; color: #ffffff !important; flex-shrink: 0 !important;
@@ -6404,7 +6404,7 @@ mprehensive Dark Mode Support */
 }
 
 .ced-dashboard-container .toggle-btn.active {
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   color: #ffffff !important; font-weight: 800 !important;
 }
 
@@ -6450,7 +6450,7 @@ mprehensive Dark Mode Support */
 
 .ced-dashboard-container .header-info-row .card-icon {
   width: 38px !important; height: 38px !important; border-radius: 10px !important;
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   border: none !important;
   display: flex !important; align-items: center !important; justify-content: center !important;
   font-size: 1rem !important; color: #ffffff !important; flex-shrink: 0 !important;
@@ -6534,7 +6534,7 @@ mprehensive Dark Mode Support */
   position: static !important;
   width: 38px !important; height: 38px !important;
   border-radius: 10px !important;
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   border: none !important;
   display: flex !important; align-items: center !important; justify-content: center !important;
   font-size: 1rem !important; color: #ffffff !important;
@@ -6616,7 +6616,7 @@ mprehensive Dark Mode Support */
   gap: 7px !important;
   height: 36px !important;
   padding: 0 16px !important;
-  background: linear-gradient(135deg, #1B2A38, #138271) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   color: #fff !important;
   border: none !important;
   border-radius: 9px !important;
