@@ -1,0 +1,259 @@
+<div class="la lr">
+
+  <!-- ═══════════ header + filters ═══════════ -->
+  <section class="la-card">
+    <div class="la-card-head">
+      <span class="la-head-ic"><i class="fas" [class.fa-umbrella-beach]="mode === 'inbox'" [class.fa-clock-rotate-left]="mode === 'report'"></i></span>
+      <div class="la-head-tx">
+        @if (mode === 'inbox') {
+          <h2>Leave Approvals</h2>
+          <p>Leave applications assigned to you — handover persons approve first, then the HOD</p>
+        } @else {
+          <h2>Leave Application Report</h2>
+          <p>Every leave you have applied for, with where each one is in its approval</p>
+        }
+      </div>
+      <div class="la-head-actions">
+        @if (mode === 'report') {
+          <button type="button" class="la-chip" (click)="newApplication()" title="Apply for leave">
+            <i class="fas fa-plus"></i>New application
+          </button>
+        }
+        <button type="button" class="la-chip" (click)="load()" [disabled]="loading" title="Reload">
+          <i class="fas fa-rotate-right" [class.fa-spin]="loading"></i>{{ loading ? 'Refreshing…' : 'Refresh' }}
+        </button>
+        <button type="button" class="la-filter-btn" (click)="showFilters = !showFilters" [attr.aria-expanded]="showFilters">
+          <i class="fas fa-filter"></i><span>Filter Options</span><i class="fas fa-chevron-down la-chev" [class.open]="showFilters"></i>
+        </button>
+      </div>
+    </div>
+
+    @if (showFilters) {
+      <div class="la-filters" [class.la-filters-my]="mode === 'report'" [class.lr-filters-inbox]="mode === 'inbox'">
+        @if (mode === 'inbox') {
+          <div class="la-f la-f-emp">
+            <label class="la-f-label">Employee</label>
+            <div class="filter-emp-wrap">
+              <div class="la-input" (click)="showEmpDd = true">
+                <i class="far fa-user"></i>
+                <input type="text" placeholder="Search employee name or ID" [(ngModel)]="empSearch" (ngModelChange)="onEmpSearch()"
+                       (focus)="showEmpDd = true" (blur)="onEmpBlur()" autocomplete="off">
+              </div>
+              @if (showEmpDd && filteredEmp.length) {
+                <div class="la-emp-dd">
+                  @for (e of filteredEmp; track e.idValue) {
+                    <div class="la-emp-opt" (mousedown)="pickEmp(e)"><span>{{ e.description }}</span><small>{{ e.idValue }}</small></div>
+                  }
+                </div>
+              } @else if (showEmpDd && empSearch.length) {
+                <div class="la-emp-dd empty"><span>No employees found</span></div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="la-f">
+            <label class="la-f-label">Leave type</label>
+            <select class="la-ctl" [(ngModel)]="leaveType" (ngModelChange)="typeChanged()">
+              <option value="all">All types</option>
+              @for (t of leaveTypes; track t) { <option [value]="t">{{ tc(t) }}</option> }
+            </select>
+          </div>
+        }
+        <div class="la-f">
+          <label class="la-f-label">From date</label>
+          <input type="date" class="la-ctl" [(ngModel)]="fromDate">
+        </div>
+        <div class="la-f">
+          <label class="la-f-label">To date</label>
+          <input type="date" class="la-ctl" [(ngModel)]="toDate">
+        </div>
+        <div class="la-f">
+          <label class="la-f-label">Status</label>
+          <select class="la-ctl" [(ngModel)]="status">
+            @if (mode === 'inbox') {
+              <option value="P">Pending</option>
+              <option value="A">Approved</option>
+              <option value="R">Rejected</option>
+              <option value="ALL">All</option>
+            } @else {
+              <option value="ALL">All</option>
+              <option value="P">Pending</option>
+              <option value="A">Approved</option>
+              <option value="R">Rejected</option>
+            }
+          </select>
+        </div>
+        <div class="la-f la-f-act">
+          <button type="button" class="la-search" (click)="search()"><i class="fas fa-magnifying-glass"></i>Search</button>
+          <button type="button" class="la-clear" (click)="clear()" title="Clear all filters">Clear</button>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- ═══════════ report summary ═══════════ -->
+  @if (mode === 'report' && !loading && !error) {
+    <section class="lr-kpis" aria-label="Summary">
+      <button type="button" class="lr-kpi" style="--k:#0f6b50" [class.on]="status === 'ALL'" (click)="quickStatus('ALL')">
+        <span class="lr-kpi-ic"><i class="fas fa-layer-group"></i></span>
+        <span class="lr-kpi-tx"><b>{{ kpi.total }}</b><small>Applications</small></span>
+      </button>
+      <button type="button" class="lr-kpi" style="--k:#b45309" [class.on]="status === 'P'" (click)="quickStatus('P')">
+        <span class="lr-kpi-ic"><i class="far fa-clock"></i></span>
+        <span class="lr-kpi-tx"><b>{{ kpi.pending }}</b><small>Pending</small></span>
+      </button>
+      <button type="button" class="lr-kpi" style="--k:#047857" [class.on]="status === 'A'" (click)="quickStatus('A')">
+        <span class="lr-kpi-ic"><i class="fas fa-circle-check"></i></span>
+        <span class="lr-kpi-tx"><b>{{ kpi.approved }}</b><small>Approved</small></span>
+      </button>
+      <button type="button" class="lr-kpi" style="--k:#be123c" [class.on]="status === 'R'" (click)="quickStatus('R')">
+        <span class="lr-kpi-ic"><i class="fas fa-circle-xmark"></i></span>
+        <span class="lr-kpi-tx"><b>{{ kpi.rejected }}</b><small>Rejected</small></span>
+      </button>
+      <div class="lr-kpi lr-kpi-static" style="--k:#1d4ed8">
+        <span class="lr-kpi-ic"><i class="fas fa-calendar-check"></i></span>
+        <span class="lr-kpi-tx"><b>{{ kpi.daysApproved }}</b><small>Days approved</small></span>
+      </div>
+    </section>
+  }
+
+  @if (loading) {
+    <div class="la-card la-loading">
+      <app-crane-loader size="auto" [message]="mode === 'inbox' ? 'Loading leave approvals' : 'Loading your leave applications'"
+                        sub="Fetching leave applications"></app-crane-loader>
+    </div>
+  } @else {
+    <section class="la-card la-table-card">
+      @if (error) {
+        <div class="lr-error"><i class="fas fa-triangle-exclamation"></i>{{ error }}
+          <button type="button" class="la-clear" (click)="load()">Try again</button></div>
+      }
+
+      @if (total > 0) {
+        <div class="la-meta">
+          <span class="la-meta-count">Showing <b class="la-range">{{ rangeText }}</b> of {{ total }} {{ total === 1 ? 'record' : 'records' }}
+            @if (myTurnCount > 0) { <span class="lr-turn-note"><i class="fas fa-bolt"></i>{{ myTurnCount }} waiting for you on this page</span> }
+          </span>
+          <div class="la-meta-right">
+            <label class="la-ps">Per page:
+              <select class="la-ps-select" [(ngModel)]="pageSize" (ngModelChange)="pageSizeChanged()">
+                @for (n of PAGE_SIZES; track n) { <option [ngValue]="n">{{ n }}</option> }
+              </select>
+            </label>
+            <button type="button" class="la-export" (click)="exportCsv()" title="Download the rows on this page as CSV">
+              <i class="fas fa-download"></i><span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="la-table-wrap">
+          <table class="la-table">
+            <thead>
+              <tr>
+                <th class="la-c-idx">#</th>
+                @if (mode === 'inbox') {
+                  <th>Employee</th><th>Leave dates</th><th>Leave type</th>
+                } @else {
+                  <th>Leave</th><th>Approvals</th><th>Leave type</th>
+                }
+                <th>Submitted date</th>
+                <th>Status</th>
+                <th class="la-c-act">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of pageRows; track trackRow($index, r); let i = $index) {
+                <tr class="request-row" [class.lr-my-turn]="r.canAct && r.status === 'Pending'">
+                  <td class="la-c-idx">{{ rowNo(i) }}</td>
+
+                  @if (mode === 'inbox') {
+                    <td class="la-c-emp">
+                      <div class="la-emp">
+                        <span class="la-av" [style.--av]="avatarColor(r.employeeName)">{{ initialsOf(r.employeeName) }}</span>
+                        <span class="la-emp-tx">
+                          <b>{{ tc(r.employeeName) }}</b>
+                          <small><i class="far fa-id-badge"></i>{{ r.employeeId }}@if (r.department) { · {{ tc(r.department) }} }</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="la-c-dept">
+                      <span class="lr-dates"><b>{{ fmtDate(r.fromDate) }} → {{ fmtDate(r.toDate) }}</b>
+                        <small>{{ r.noOfDays }} {{ r.noOfDays === 1 ? 'day' : 'days' }}</small></span>
+                    </td>
+                  } @else {
+                    <td class="la-c-emp">
+                      <span class="lr-dates"><b>{{ fmtDate(r.fromDate) }} → {{ fmtDate(r.toDate) }}</b>
+                        <small>{{ r.noOfDays }} {{ r.noOfDays === 1 ? 'day' : 'days' }} · #{{ r.leaveId }}</small></span>
+                    </td>
+                    <td class="la-c-dept">
+                      <span class="lr-prog" [attr.title]="r.approvedSteps + ' of ' + r.totalSteps + ' approvals'">
+                        <span class="lr-prog-bar"><i [style.width.%]="progressPct(r)" [class.rej]="r.status === 'Rejected'"></i></span>
+                        <small>{{ r.approvedSteps }}/{{ r.totalSteps }} approved
+                          @if (r.status === 'Pending' && r.approverName) { · with {{ tc(r.approverName) }} }</small>
+                      </span>
+                    </td>
+                  }
+
+                  <td class="la-c-type">
+                    <span class="la-type t-leave"><i class="fas fa-umbrella-beach"></i><span>{{ tc(r.leaveTypeName) }}</span></span>
+                  </td>
+                  <td class="la-c-date">
+                    <b>{{ fmtDate(r.requestDate) }}</b>
+                    <small>{{ fmtTime(r.requestDate) }}</small>
+                  </td>
+                  <td class="la-c-status">
+                    <span class="la-status"
+                      [class.s-pending]="r.status === 'Pending'"
+                      [class.s-approved]="r.status === 'Approved'"
+                      [class.s-rejected]="r.status === 'Rejected'"><i></i>{{ r.status }}</span>
+                    @if (mode === 'inbox' && r.stageName) {
+                      <small class="la-status-when">
+                        @if (r.canAct && r.status === 'Pending') { <span class="lr-turn">Your turn</span> }
+                        {{ stageText(r) }} step
+                      </small>
+                    } @else if (r.approvalDate && r.status !== 'Pending') {
+                      <small class="la-status-when">{{ fmtDate(r.approvalDate) }}</small>
+                    }
+                  </td>
+                  <td class="la-c-act">
+                    <button type="button" class="la-review" (click)="open(r)" [attr.title]="mode === 'inbox' && r.canAct ? 'Review and approve' : 'View'">
+                      <span>{{ mode === 'inbox' && r.canAct && r.status === 'Pending' ? 'Review' : 'View' }}</span><i class="fas fa-arrow-right la-review-go"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="la-foot">
+          <label class="la-ps">Rows per page:
+            <select class="la-ps-select" [(ngModel)]="pageSize" (ngModelChange)="pageSizeChanged()">
+              @for (n of PAGE_SIZES; track n) { <option [ngValue]="n">{{ n }}</option> }
+            </select>
+          </label>
+          <span class="la-foot-info">Page {{ pageNo }} of {{ totalPages }}</span>
+          <div class="la-pager">
+            <button type="button" class="la-pg" (click)="goTo(pageNo - 1)" [disabled]="pageNo === 1" aria-label="Previous page"><i class="fas fa-angle-left"></i></button>
+            @for (p of pageNumbers(); track p) {
+              <button type="button" class="la-pg num" [class.on]="p === pageNo" (click)="goTo(p)">{{ p }}</button>
+            }
+            <button type="button" class="la-pg" (click)="goTo(pageNo + 1)" [disabled]="pageNo >= totalPages" aria-label="Next page"><i class="fas fa-angle-right"></i></button>
+          </div>
+        </div>
+      } @else if (!error) {
+        <div class="la-empty">
+          <div class="lr-empty-ic"><i class="fas" [class.fa-umbrella-beach]="mode === 'inbox'" [class.fa-folder-open]="mode === 'report'"></i></div>
+          @if (mode === 'inbox') {
+            <h3>No leave applications here</h3>
+            <p>{{ status === 'P' ? 'Nothing is waiting for your approval right now.' : 'No leave applications match these filters.' }}</p>
+          } @else {
+            <h3>No leave applications yet</h3>
+            <p>{{ status === 'ALL' && !fromDate && !toDate ? 'Applications you submit will be listed here.' : 'No applications match these filters.' }}</p>
+            <button type="button" class="la-review" (click)="newApplication()"><span>Apply for leave</span><i class="fas fa-arrow-right la-review-go"></i></button>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

@@ -1,0 +1,84 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Leave Approvals / Leave Application Report — extras only.
+   The page is built from Approval Management's stylesheet
+   (../leave-approval/leave-approval.component.css, loaded first): its :host
+   tokens (--la-*), fonts, cards, filters, table, pager and phone layout all
+   apply here unchanged. Dark mode: :host-context(.dark-theme).
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* inbox filters: employee · from · to · status · buttons */
+.la-filters.lr-filters-inbox { grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(140px, 1fr)) auto; }
+
+/* ── report summary tiles ───────────────────────────────────────────────── */
+.lr-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.lr-kpi {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-width: 0; text-align: left;
+  background: var(--la-card); border: 1px solid var(--la-line); border-radius: 14px; box-shadow: var(--la-shadow);
+  color: var(--la-ink); cursor: pointer; font: inherit;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.lr-kpi:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--k) 40%, var(--la-line)); }
+.lr-kpi.on { border-color: var(--k); box-shadow: 0 0 0 3px color-mix(in srgb, var(--k) 14%, transparent), var(--la-shadow); }
+.lr-kpi:focus-visible { outline: 2px solid var(--k); outline-offset: 2px; }
+.lr-kpi-static { cursor: default; }
+.lr-kpi-static:hover { transform: none; border-color: var(--la-line); }
+.lr-kpi-ic {
+  width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; font-size: 16px;
+  color: var(--k); background: color-mix(in srgb, var(--k) 12%, transparent);
+}
+.lr-kpi-tx { display: flex; flex-direction: column; min-width: 0; }
+.lr-kpi-tx b { font-size: 22px; line-height: 26px; font-weight: 800; letter-spacing: -.02em; }
+.lr-kpi-tx small { font-size: 12px; color: var(--la-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── table extras ───────────────────────────────────────────────────────── */
+.lr-dates { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lr-dates b { font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+.lr-dates small { font-size: 12px; color: var(--la-mute); }
+
+.lr-prog { display: flex; flex-direction: column; gap: 6px; min-width: 140px; }
+.lr-prog-bar { display: block; height: 7px; border-radius: 99px; background: var(--la-line2); overflow: hidden; }
+.lr-prog-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #10b981, #0f6b50); transition: width .4s ease; }
+.lr-prog-bar i.rej { background: linear-gradient(90deg, #fb7185, #be123c); }
+.lr-prog small { font-size: 12px; color: var(--la-mute); }
+
+.lr-turn {
+  display: inline-block; margin-right: 6px; padding: 0 7px; border-radius: 99px; font-size: 11px; font-weight: 700; line-height: 18px;
+  color: #92400e; background: #fef3c7; box-shadow: inset 0 0 0 1px #fde68a;
+}
+.lr-turn-note { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; font-size: 12px; font-weight: 700; color: #b45309; }
+.la-table tbody tr.lr-my-turn td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
+
+.lr-error {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 20px 0; padding: 12px 14px; border-radius: 10px;
+  font-size: 13.5px; color: #9f1239; background: #fff1f2; border: 1px solid #fecdd3;
+}
+.lr-error .la-clear { margin-left: auto; }
+
+.lr-empty-ic {
+  width: 74px; height: 74px; border-radius: 22px; display: grid; place-items: center; margin-bottom: 6px; font-size: 30px;
+  color: #0f6b50; background: var(--la-green-t);
+}
+
+:host-context(.dark-theme) .lr-turn { color: #fcd34d; background: rgba(217, 119, 6, .16); box-shadow: inset 0 0 0 1px rgba(217, 119, 6, .4); }
+:host-context(.dark-theme) .lr-turn-note { color: #fcd34d; }
+:host-context(.dark-theme) .lr-error { color: #fda4af; background: rgba(225, 29, 72, .12); border-color: rgba(225, 29, 72, .35); }
+:host-context(.dark-theme) .lr-empty-ic { color: #34d399; }
+
+/* ── responsive (appended after the shared sheet's own breakpoints) ─────── */
+@media (max-width: 1280px) {
+  .la-filters.lr-filters-inbox { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lr-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .la-filters.lr-filters-inbox { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .lr-prog { min-width: 0; }
+  .lr-turn-note { display: flex; margin: 4px 0 0; }
+  .la-table tbody tr.lr-my-turn td:first-child { box-shadow: none; }
+  .la-table tbody tr.lr-my-turn { box-shadow: inset 3px 0 0 #f59e0b; }
+}
+@media (max-width: 480px) {
+  .lr-kpi { padding: 12px; gap: 10px; }
+  .lr-kpi-ic { width: 34px; height: 34px; font-size: 14px; }
+  .lr-kpi-tx b { font-size: 19px; }
+}

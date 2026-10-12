@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What's New Intro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --bg:#f4f7f6; --card:#fff; --soft:#f7faf9; --raise:#eef3f1; --line:#e3eae7; --line2:#eef3f1;
+  --ink:#13261f; --ink2:#3b4a45; --mute:#6b7c76; --mute2:#94a39e;
+  --brand:#0f6b50; --brand2:#10b981; --brand-t:#e9f5ef; --violet:#7c3aed; --violet-t:#ede9fe; --amber:#b45309; --amber-t:#fef3c7;
+  --side1:#0b3b2e; --side2:#0f6b50; --sideink:#d7efe6;
+  --shadow:0 1px 2px rgba(16,38,31,.04),0 6px 20px rgba(16,38,31,.05); --shadow2:0 24px 60px -16px rgba(16,38,31,.35);
+  --scrim:rgba(8,20,16,.55);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f172a; --card:#16222a; --soft:rgba(255,255,255,.04); --raise:rgba(255,255,255,.07); --line:rgba(255,255,255,.1); --line2:rgba(255,255,255,.06);
+  --ink:#e7efec; --ink2:#c3d0cb; --mute:#92a59f; --mute2:#6f8380; --brand:#34d399; --brand-t:rgba(52,211,153,.12);
+  --violet:#c4b5fd; --violet-t:rgba(124,58,237,.2); --amber:#fcd34d; --amber-t:rgba(217,119,6,.16);
+  --side1:#07231b; --side2:#0b4a38; --shadow:0 8px 24px rgba(0,0,0,.25); --shadow2:0 24px 60px -16px rgba(0,0,0,.7); --scrim:rgba(2,6,10,.7)}}
+:root[data-theme="dark"]{
+  --bg:#0f172a; --card:#16222a; --soft:rgba(255,255,255,.04); --raise:rgba(255,255,255,.07); --line:rgba(255,255,255,.1); --line2:rgba(255,255,255,.06);
+  --ink:#e7efec; --ink2:#c3d0cb; --mute:#92a59f; --mute2:#6f8380; --brand:#34d399; --brand-t:rgba(52,211,153,.12);
+  --violet:#c4b5fd; --violet-t:rgba(124,58,237,.2); --amber:#fcd34d; --amber-t:rgba(217,119,6,.16);
+  --side1:#07231b; --side2:#0b4a38; --shadow:0 8px 24px rgba(0,0,0,.25); --shadow2:0 24px 60px -16px rgba(0,0,0,.7); --scrim:rgba(2,6,10,.7)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.45 'Nunito Sans',system-ui,sans-serif;overflow-x:hidden}
+h1,h2,h3,b.h{font-family:Figtree,'Nunito Sans',sans-serif}
+h1,h2,h3{margin:0}
+button{font:inherit;color:inherit}
+
+/* ── preview ribbon (not part of the design) ── */
+.rib{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 16px;
+  background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+.rib .tag{font:800 10.5px Figtree;letter-spacing:.06em;text-transform:uppercase;color:var(--violet);background:var(--violet-t);padding:3px 8px;border-radius:99px}
+.rib .sp{flex:1}
+.rib button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 10px;cursor:pointer;font-weight:800;font-size:12px;color:var(--ink2);display:inline-flex;gap:6px;align-items:center}
+.rib button.on{background:var(--brand-t);border-color:color-mix(in srgb,var(--brand2) 50%,transparent);color:var(--brand)}
+
+/* ── app shell (mirrors the portal) ── */
+.app{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 44px)}
+.side{background:linear-gradient(180deg,var(--side1),var(--side2));color:var(--sideink);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.logo{font:800 20px Figtree;color:#fff;padding:6px 10px 14px;letter-spacing:-.02em}
+.logo span{color:#fbbf24}
+.sec{font:800 10.5px Figtree;letter-spacing:.12em;text-transform:uppercase;opacity:.6;padding:12px 10px 4px}
+.item{position:relative;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-weight:700;font-size:13.5px}
+.item i.ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.1);font-size:12px}
+.item .chev{margin-left:auto;font-size:10px;opacity:.6}
+.item.open{background:rgba(255,255,255,.1)}
+.leaf{position:relative;display:flex;align-items:center;gap:8px;padding:7px 10px 7px 48px;font-size:13px;font-weight:600;opacity:.88;border-radius:8px}
+.newpill{margin-left:auto;font:800 9.5px Figtree;letter-spacing:.06em;color:#0b3b2e;background:linear-gradient(135deg,#fde68a,#fbbf24);padding:2px 7px;border-radius:99px;
+  box-shadow:0 0 0 0 rgba(251,191,36,.6);animation:pill 2s ease-out infinite}
+.item .dot{position:absolute;left:30px;top:7px;width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 0 2px var(--side1)}
+@keyframes pill{0%{box-shadow:0 0 0 0 rgba(251,191,36,.55)}70%{box-shadow:0 0 0 7px rgba(251,191,36,0)}100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}}
+
+.main{display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;gap:12px;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line)}
+.top .crumb{font-size:12px;color:var(--mute)}
+.top h1{font-size:20px}
+.top .sp{flex:1}
+.hbtn{position:relative;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--ink2)}
+.hbtn .badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#e11d48;color:#fff;font:800 10.5px Figtree;display:grid;place-items:center;border:2px solid var(--card)}
+.hbtn.gift{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 35%,var(--line))}
+.hbtn.gift .badge{background:var(--violet)}
+.me{display:flex;align-items:center;gap:10px;padding:5px 12px 5px 5px;border-radius:12px;border:1px solid var(--line)}
+.me .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1B2A38,#10b981);color:#fff;display:grid;place-items:center;font:800 12px Figtree}
+.me b{font-size:13px;display:block}.me small{font-size:11px;color:var(--mute)}
+
+.dash{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.hero{border-radius:16px;padding:20px 22px;color:#fff;background:linear-gradient(120deg,#0b3b2e,#0f6b50 50%,#0369a1);box-shadow:var(--shadow)}
+.hero h2{font-size:22px}.hero p{margin:4px 0 0;opacity:.85}
+.ghostrow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.ghost{height:96px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}
+
+/* dashboard "What's new" strip (option C) */
+.wn-strip{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);
+  background-image:radial-gradient(420px 120px at 0% 50%,color-mix(in srgb,var(--violet) 12%,transparent),transparent 70%)}
+.wn-strip .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#7c3aed,#0284c7);flex-shrink:0}
+.wn-strip .tx{flex:1;min-width:0}.wn-strip .tx b{display:block;font:800 14.5px Figtree}.wn-strip .tx span{font-size:12.5px;color:var(--mute)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:800;background:var(--violet-t);color:var(--violet)}
+.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:800;font-size:13px;color:var(--ink2);white-space:nowrap}
+.btn.pri{color:#fff;border-color:transparent;background:linear-gradient(135deg,#0f6b50,#10b981);box-shadow:0 8px 18px -10px rgba(16,185,129,.9)}
+.btn.vio{color:#fff;border-color:transparent;background:linear-gradient(135deg,#7c3aed,#4f46e5)}
+.btn.link{border:0;background:none;color:var(--mute);padding:0 6px}
+
+/* ── A. spotlight modal ── */
+.scrim{position:fixed;inset:0;z-index:60;background:var(--scrim);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;animation:fade .25s ease}
+.spot{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border-radius:22px;box-shadow:var(--shadow2);animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+.spot-art{position:relative;height:210px;border-radius:22px 22px 0 0;overflow:hidden;background:linear-gradient(135deg,#0b3b2e,#0f6b50 55%,#7c3aed)}
+.spot-art .shot{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);width:76%;height:170px;border-radius:12px;background:var(--card);box-shadow:0 18px 40px rgba(0,0,0,.35);padding:12px;display:flex;flex-direction:column;gap:8px}
+.shot .bar{height:10px;border-radius:5px;background:var(--raise)}
+.shot .row{display:flex;gap:8px}.shot .row i{flex:1;height:44px;border-radius:9px;background:var(--brand-t)}
+.shot .row i:nth-child(2){background:var(--violet-t)}.shot .row i:nth-child(3){background:var(--amber-t)}
+.spot-art .ver{position:absolute;top:14px;left:16px;font:800 11px Figtree;letter-spacing:.08em;color:#fff;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:99px;backdrop-filter:blur(4px)}
+.spot-art .x{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}
+.spot-art .spark{position:absolute;color:#fde68a;animation:tw 2.4s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1.1)}}
+.spot-b{padding:26px 26px 8px}
+.spot-b .kicker{display:inline-flex;align-items:center;gap:6px;font:800 11px Figtree;letter-spacing:.1em;text-transform:uppercase;color:var(--violet)}
+.spot-b h2{font-size:23px;line-height:1.2;margin:6px 0 6px;letter-spacing:-.01em}
+.spot-b p{margin:0;color:var(--ink2)}
+.spot-b ul{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.spot-b li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink2)}
+.spot-b li i{margin-top:2px;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:10px;color:var(--brand);background:var(--brand-t);flex-shrink:0}
+.where{margin-top:14px;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--soft);border:1px dashed var(--line);font-size:12.5px;color:var(--mute)}
+.where b{color:var(--ink)}
+.spot-f{display:flex;align-items:center;gap:10px;padding:16px 26px 22px}
+.dots{display:flex;gap:6px;margin-right:auto}
+.dots i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:width .25s,background .25s;cursor:pointer}
+.dots i.on{width:22px;background:var(--violet)}
+.spot-f .count{font-size:12px;color:var(--mute2);font-weight:700}
+
+/* ── B. coach mark ── */
+.coach-scrim{position:fixed;inset:0;z-index:60;pointer-events:none}
+.hole{position:fixed;z-index:61;border-radius:12px;box-shadow:0 0 0 9999px var(--scrim),0 0 0 3px #fbbf24,0 0 24px 6px rgba(251,191,36,.5);transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none}
+.tip{position:fixed;z-index:62;width:300px;background:var(--card);border-radius:14px;box-shadow:var(--shadow2);padding:16px;animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.tip::before{content:"";position:absolute;left:-8px;top:22px;border:8px solid transparent;border-left:0;border-right-color:var(--card)}
+.tip .step{font:800 11px Figtree;letter-spacing:.08em;color:var(--violet);text-transform:uppercase}
+.tip h3{font-size:16px;margin:4px 0}
+.tip p{margin:0;font-size:13px;color:var(--ink2)}
+.tip .f{display:flex;align-items:center;gap:8px;margin-top:12px}
+.tip .f .sp{flex:1}
+
+/* ── C2. what's new drawer (changelog) ── */
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:61;width:min(440px,100%);background:var(--card);box-shadow:-20px 0 50px rgba(0,0,0,.25);display:flex;flex-direction:column;animation:slide .3s cubic-bezier(.22,1,.36,1)}
+.dh{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line2)}
+.dh h2{flex:1;font-size:17px}
+.dh .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#7c3aed,#0284c7)}
+.db{flex:1;overflow:auto;padding:14px 18px 20px}
+.rel{position:relative;padding:0 0 18px 22px;border-left:2px solid var(--line2);margin-left:6px}
+.rel::before{content:"";position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--violet);box-shadow:0 0 0 3px var(--card)}
+.rel.old::before{background:var(--mute2)}
+.rel .when{font:800 11px Figtree;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.feat{margin-top:8px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--soft);display:flex;gap:12px;align-items:flex-start}
+.feat .fi{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;color:var(--brand);background:var(--brand-t)}
+.feat b{display:block;font:800 14px Figtree}
+.feat span{font-size:12.5px;color:var(--mute)}
+.feat .go{margin-left:auto;align-self:center;font-weight:800;font-size:12px;color:var(--brand);white-space:nowrap;cursor:pointer}
+.unread{font:800 9.5px Figtree;letter-spacing:.06em;color:#fff;background:var(--violet);padding:1px 6px;border-radius:99px;margin-left:6px;vertical-align:2px}
+
+/* ── D. admin screen ── */
+.admin{padding:20px 22px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.card-h h3{font-size:15px;flex:1}
+.form{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f.w{grid-column:1/-1}
+.f>span{font:800 11px Figtree;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.f input,.f select,.f textarea{height:40px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-size:13.5px;outline:0;width:100%}
+.f textarea{height:auto;min-height:76px;padding:9px 11px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--brand2);background:var(--card)}
+.drop{grid-column:1/-1;height:92px;border-radius:12px;border:2px dashed var(--line);display:grid;place-items:center;color:var(--mute);font-size:12.5px;text-align:center;background:var(--soft)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-size:12.5px;font-weight:700;cursor:pointer}
+.seg label.on{border-color:color-mix(in srgb,var(--brand2) 55%,transparent);background:var(--brand-t);color:var(--brand)}
+.form-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line2)}
+.list{padding:6px 12px 12px}
+.lrow{display:flex;align-items:center;gap:12px;padding:11px 6px;border-bottom:1px solid var(--line2)}
+.lrow:last-child{border-bottom:0}
+.lrow .fi{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;color:var(--violet);background:var(--violet-t)}
+.lrow .t{flex:1;min-width:0}.lrow .t b{display:block;font:800 13.5px Figtree}.lrow .t small{font-size:12px;color:var(--mute)}
+.st{font:800 11px Figtree;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.st.live{color:var(--brand);background:var(--brand-t)}.st.sched{color:var(--amber);background:var(--amber-t)}.st.end{color:var(--mute);background:var(--raise)}
+.meter{width:110px;flex-shrink:0}
+.meter small{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);font-weight:700}
+.meter span{display:block;height:6px;border-radius:99px;background:var(--raise);overflow:hidden;margin-top:3px}
+.meter span i{display:block;height:100%;background:linear-gradient(90deg,#10b981,#0f6b50)}
+
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(12px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}.side{display:none}
+  .ghostrow{grid-template-columns:repeat(2,1fr)}
+  .admin{grid-template-columns:1fr}
+  .wn-strip{flex-wrap:wrap}
+}
+@media (max-width:520px){
+  .top{padding:12px}.me{display:none}.dash,.admin{padding:14px 12px}
+  .form{grid-template-columns:1fr}
+  .spot-art{height:170px}.spot-art .shot{height:130px}
+  .spot-b{padding:20px 18px 6px}.spot-b h2{font-size:20px}
+  .spot-f{padding:14px 18px 18px;flex-wrap:wrap}
+  .tip{width:calc(100vw - 32px)}
+}
+</style>
+</head>
+<body>
+
+<div class="rib">
+  <span class="tag">Design preview</span>
+  <span>What's New — how new modules are introduced. Pick a view:</span>
+  <button data-v="spot" class="on"><i class="fas fa-wand-magic-sparkles"></i>A · Spotlight popup</button>
+  <button data-v="tour"><i class="fas fa-location-crosshairs"></i>B · Sidebar badge + tour</button>
+  <button data-v="panel"><i class="fas fa-gift"></i>C · What's New panel</button>
+  <button data-v="admin"><i class="fas fa-user-shield"></i>D · Admin screen</button>
+  <span class="sp"></span>
+  <button id="theme"><i class="fas fa-circle-half-stroke"></i>Theme</button>
+</div>
+
+<div class="app">
+  <aside class="side">
+    <div class="logo">Adrak<span>Live</span></div>
+    <div class="sec">Overview</div>
+    <div class="item"><i class="ic fas fa-chart-pie"></i>Employee Analytics</div>
+    <div class="sec">Workspace</div>
+    <div class="item"><i class="ic fas fa-layer-group"></i>PMC Module<i class="chev fas fa-chevron-down"></i></div>
+    <div class="item"><i class="ic fas fa-coins"></i>Finance<i class="chev fas fa-chevron-down"></i></div>
+    <div class="item open" id="grp"><i class="ic fas fa-user-shield"></i><span class="dot"></span>IT Admin<i class="chev fas fa-chevron-up"></i></div>
+    <div class="leaf" id="leaf">Menu Management<span class="newpill">NEW</span></div>
+    <div class="sec">Services</div>
+    <div class="item"><i class="ic fas fa-circle-check"></i>Approvals<i class="chev fas fa-chevron-down"></i></div>
+    <div class="item"><i class="ic fas fa-box-archive"></i>Past Reports<i class="chev fas fa-chevron-down"></i></div>
+    <div class="item"><i class="ic fas fa-address-book"></i>Employee Directory<span class="newpill" style="margin-left:auto">NEW</span></div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div><div class="crumb">Overview / Dashboards</div><h1 id="pageTitle">Employee Analytics</h1></div>
+      <span class="sp"></span>
+      <button class="hbtn gift" id="giftBtn" title="What's new"><i class="fas fa-gift"></i><span class="badge">2</span></button>
+      <button class="hbtn" title="Notifications"><i class="fas fa-bell"></i><span class="badge">5</span></button>
+      <div class="me"><span class="av">AO</span><div><b>Adan Onaparambil</b><small>IT · Software Developer</small></div></div>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
+
+<div id="overlay"></div>
+
+<script>
+/* Sample release — in the real build this comes from the What's New API. */
+const FEATURES = [
+  { icon:'fa-sitemap', kicker:'New in IT Admin', title:'Menu Management is here',
+    text:'Create sidebar menus and decide who sees them — without a developer.',
+    points:['Add, edit or switch off any menu in seconds','Give or remove access for one person or many at once','Every change is logged in the Activity tab'],
+    where:'IT Admin → Menu Management', route:'/menu-management', target:'leaf' },
+  { icon:'fa-address-book', kicker:'New for everyone', title:'Find any colleague fast',
+    text:'The new Employee Directory lists everyone with photo, department and contact details.',
+    points:['Search by name, ID, department or location','Tap a card to call or e-mail','Works on your phone too'],
+    where:'Services → Employee Directory', route:'/employee-directory', target:'dir' }
+];
+const $ = s => document.querySelector(s);
+const view = $('#view'), overlay = $('#overlay');
+let slide = 0;
+
+function dashboard(withStrip){
+  return `<div class="dash">
+    <section class="hero"><h2>Good afternoon, Adan</h2><p>Wednesday, 8 October 2026 · IT</p></section>
+    ${withStrip ? `<section class="wn-strip">
+      <span class="ic"><i class="fas fa-gift"></i></span>
+      <div class="tx"><b>2 new features this week</b><span>Menu Management and Employee Directory are live.</span></div>
+      <div class="chips">${FEATURES.map(f=>`<span class="chip"><i class="fas ${f.icon}"></i>${f.title.replace(' is here','')}</span>`).join('')}</div>
+      <button class="btn vio" onclick="openPanel()"><i class="fas fa-eye"></i>See what's new</button>
+    </section>` : ''}
+    <div class="ghostrow"><div class="ghost"></div><div class="ghost"></div><div class="ghost"></div><div class="ghost"></div></div>
+    <div class="ghostrow" style="grid-template-columns:2fr 1fr"><div class="ghost" style="height:180px"></div><div class="ghost" style="height:180px"></div></div>
+  </div>`;
+}
+
+/* A — spotlight popup, shown once per user per release on first dashboard load */
+function spotlight(){
+  const f = FEATURES[slide];
+  overlay.innerHTML = `<div class="scrim" onclick="if(event.target===this)closeAll()">
+    <div class="spot" role="dialog" aria-modal="true" aria-labelledby="sp-t">
+      <div class="spot-art">
+        <span class="ver"><i class="fas fa-rocket"></i> RELEASE · OCT 2026</span>
+        <button class="x" onclick="closeAll()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+        <i class="spark fas fa-star" style="top:34px;left:18%"></i><i class="spark fas fa-star" style="top:64px;right:16%;animation-delay:.8s"></i><i class="spark fas fa-star" style="top:24px;right:34%;animation-delay:1.4s;font-size:10px"></i>
+        <div class="shot"><div class="bar" style="width:40%"></div><div class="row"><i></i><i></i><i></i></div><div class="bar"></div><div class="bar" style="width:70%"></div></div>
+      </div>
+      <div class="spot-b">
+        <span class="kicker"><i class="fas ${f.icon}"></i>${f.kicker}</span>
+        <h2 id="sp-t">${f.title}</h2>
+        <p>${f.text}</p>
+        <ul>${f.points.map(p=>`<li><i class="fas fa-check"></i>${p}</li>`).join('')}</ul>
+        <div class="where"><i class="fas fa-location-dot"></i>Find it in <b>${f.where}</b></div>
+      </div>
+      <div class="spot-f">
+        <div class="dots">${FEATURES.map((_,i)=>`<i class="${i===slide?'on':''}" onclick="go(${i})"></i>`).join('')}</div>
+        <span class="count">${slide+1} of ${FEATURES.length}</span>
+        <button class="btn link" onclick="closeAll()">Later</button>
+        ${slide < FEATURES.length-1
+          ? `<button class="btn" onclick="go(${slide+1})">Next <i class="fas fa-arrow-right"></i></button>`
+          : ''}
+        <button class="btn pri" onclick="tour(${slide})"><i class="fas fa-location-crosshairs"></i>Show me</button>
+      </div>
+    </div></div>`;
+}
+function go(i){ slide = i; spotlight(); }
+
+/* B — coach mark: dims the page and points at the new menu item */
+function tour(i){
+  const f = FEATURES[i];
+  overlay.innerHTML = '';
+  setView('tour', true);
+  requestAnimationFrame(() => {
+    const el = f.target === 'leaf' ? $('#leaf') : [...document.querySelectorAll('.side .item')].find(e => e.textContent.includes('Directory'));
+    if (!el || getComputedStyle(document.querySelector('.side')).display === 'none') {
+      overlay.innerHTML = `<div class="scrim" onclick="closeAll()"><div class="tip" style="position:relative;inset:auto"><span class="step">Where to find it</span>
+        <h3>${f.where}</h3><p>Open the menu (☰) at the top left, then go to <b>${f.where}</b>.</p>
+        <div class="f"><span class="sp"></span><button class="btn pri" onclick="closeAll()">Got it</button></div></div></div>`;
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    overlay.innerHTML = `<div class="coach-scrim"></div>
+      <div class="hole" style="left:${r.left-6}px;top:${r.top-5}px;width:${r.width+12}px;height:${r.height+10}px"></div>
+      <div class="tip" style="left:${r.right+18}px;top:${Math.max(12, r.top-12)}px">
+        <span class="step">Step ${i+1} of ${FEATURES.length}</span>
+        <h3>${f.title.replace(' is here','')} lives here</h3>
+        <p>${f.text}</p>
+        <div class="f"><button class="btn link" onclick="closeAll()">Skip tour</button><span class="sp"></span>
+          ${i < FEATURES.length-1 ? `<button class="btn" onclick="tour(${i+1})">Next</button>` : ''}
+          <button class="btn pri" onclick="closeAll()"><i class="fas fa-arrow-right"></i>Open it</button></div>
+      </div>`;
+  });
+}
+
+/* C — "What's new" panel from the gift button: the changelog people can come back to */
+function openPanel(){
+  overlay.innerHTML = `<div class="scrim" style="display:block" onclick="if(event.target===this)closeAll()"></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="What's new">
+    <div class="dh"><span class="ic"><i class="fas fa-gift"></i></span><h2>What's new</h2>
+      <button class="hbtn" style="width:34px;height:34px" onclick="closeAll()" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+    <div class="db">
+      <div class="rel"><span class="when">This week · Oct 2026</span>
+        ${FEATURES.map(f=>`<div class="feat"><span class="fi"><i class="fas ${f.icon}"></i></span>
+          <div><b>${f.title}<span class="unread">NEW</span></b><span>${f.text}</span></div><span class="go" onclick="closeAll()">Open →</span></div>`).join('')}
+      </div>
+      <div class="rel old"><span class="when">September 2026</span>
+        <div class="feat"><span class="fi"><i class="fas fa-umbrella-beach"></i></span><div><b>Leave Application</b><span>Apply for leave with handover approvals.</span></div><span class="go">Open →</span></div>
+        <div class="feat"><span class="fi"><i class="fas fa-user-plus"></i></span><div><b>New joiners on your dashboard</b><span>Meet last month's new colleagues.</span></div></div>
+      </div>
+      <div class="rel old"><span class="when">August 2026</span>
+        <div class="feat"><span class="fi"><i class="fas fa-file-signature"></i></span><div><b>Exit Form works on phones</b><span>Submit and approve from your mobile.</span></div></div>
+      </div>
+    </div>
+  </aside>`;
+}
+
+/* D — IT Admin → What's New: where releases are created */
+function admin(){
+  return `<div class="admin">
+    <section class="card">
+      <div class="card-h"><span class="dh" style="padding:0;border:0"><span class="ic" style="width:34px;height:34px"><i class="fas fa-plus"></i></span></span><h3>New announcement</h3></div>
+      <div class="form">
+        <label class="f w"><span>Title</span><input value="Menu Management is here"></label>
+        <label class="f w"><span>Short description</span><input value="Create sidebar menus and decide who sees them — without a developer."></label>
+        <label class="f w"><span>Highlights (one per line)</span><textarea>Add, edit or switch off any menu in seconds
+Give or remove access for one person or many at once
+Every change is logged in the Activity tab</textarea></label>
+        <div class="drop"><div><i class="fas fa-image" style="font-size:20px"></i><br>Screenshot / GIF (optional) — drop or click</div></div>
+        <label class="f"><span>Opens page</span><select><option>/menu-management — Menu Management</option><option>/employee-directory</option></select></label>
+        <label class="f"><span>Highlight in sidebar</span><select><option>IT Admin → Menu Management</option></select></label>
+        <div class="f w"><span>Who sees it</span>
+          <div class="seg"><label>Everyone</label><label class="on"><i class="fas fa-check"></i>People who can open this menu</label><label>Departments…</label><label>HODs</label><label>CED</label></div></div>
+        <div class="f w"><span>Show as</span>
+          <div class="seg"><label class="on"><i class="fas fa-check"></i>Popup on dashboard</label><label class="on"><i class="fas fa-check"></i>NEW badge in sidebar</label><label class="on"><i class="fas fa-check"></i>Guided pointer</label><label class="on"><i class="fas fa-check"></i>What's New list</label></div></div>
+        <label class="f"><span>Live from</span><input type="date" value="2026-10-08"></label>
+        <label class="f"><span>Badge until</span><input type="date" value="2026-10-22"></label>
+      </div>
+      <div class="form-f"><button class="btn" onclick="setView('spot')"><i class="fas fa-eye"></i>Preview</button><button class="btn pri"><i class="fas fa-paper-plane"></i>Publish</button></div>
+    </section>
+    <section class="card">
+      <div class="card-h"><h3>Announcements</h3><span class="chip">3 live</span></div>
+      <div class="list">
+        ${[['fa-sitemap','Menu Management is here','IT admins · popup + badge','live',2,3],
+           ['fa-address-book','Find any colleague fast','Everyone · popup + badge','live',312,554],
+           ['fa-umbrella-beach','Leave Application','Everyone · list only','end',540,554],
+           ['fa-chart-line','APR 2027 cycle','HODs · from 01 Nov','sched',0,79]]
+          .map(a=>`<div class="lrow"><span class="fi"><i class="fas ${a[0]}"></i></span>
+            <div class="t"><b>${a[1]}</b><small>${a[2]}</small></div>
+            <span class="st ${a[3]}">${a[3]==='live'?'Live':a[3]==='sched'?'Scheduled':'Ended'}</span>
+            <div class="meter"><small><span>Seen</span><span>${a[4]}/${a[5]}</span></small><span><i style="width:${Math.round(a[4]/a[5]*100)}%"></i></span></div></div>`).join('')}
+      </div>
+    </section>
+  </div>`;
+}
+
+function setView(v, keepOverlay){
+  document.querySelectorAll('.rib [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  $('#pageTitle').textContent = v === 'admin' ? "What's New" : 'Employee Analytics';
+  view.innerHTML = v === 'admin' ? admin() : dashboard(v === 'panel');
+  if (!keepOverlay) overlay.innerHTML = '';
+  if (v === 'spot') { slide = 0; spotlight(); }
+  if (v === 'tour' && !keepOverlay) tour(0);
+  if (v === 'panel') openPanel();
+}
+function closeAll(){ overlay.innerHTML = ''; }
+document.querySelectorAll('.rib [data-v]').forEach(b => b.onclick = () => setView(b.dataset.v));
+$('#giftBtn').onclick = openPanel;
+$('#theme').onclick = () => {
+  const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+window.addEventListener('resize', () => { if (document.querySelector('.hole')) tour(FEATURES.findIndex(f => document.querySelector('.tip h3')?.textContent.startsWith(f.title.replace(' is here','')))); });
+setView('spot');
+</script>
+</body>
+</html>

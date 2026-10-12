@@ -311,7 +311,7 @@
 }
 
 .stat-change.positive {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -516,7 +516,7 @@
 }
 
 .legend-color.in-progress {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .legend-color.pending {
@@ -914,7 +914,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 

@@ -1,0 +1,174 @@
+<div class="lvv">
+
+  <div class="lvv-card lvv-state" *ngIf="state === 'loading'">
+    <i class="fas fa-spinner fa-spin"></i><span>Loading the leave application…</span>
+  </div>
+
+  <div class="lvv-card lvv-state err" *ngIf="state === 'error'">
+    <i class="fas fa-circle-exclamation"></i>
+    <span>{{ error }}</span>
+    <button type="button" class="lvv-btn ghost" (click)="load()"><i class="fas fa-rotate-right"></i> Try again</button>
+  </div>
+
+  <ng-container *ngIf="state === 'ready' && leave as l">
+    <!-- ═══ top bar ═══ -->
+    <div class="lvv-top">
+      <button type="button" class="lvv-btn ghost" (click)="goBack()"><i class="fas fa-arrow-left"></i> Back</button>
+      <div class="lvv-top-r">
+        <span class="lvv-ref">Leave #{{ l.leaveId }}</span>
+        <button type="button" class="lvv-btn soft" *ngIf="isApplicant" (click)="newApplication.emit()"><i class="fas fa-plus"></i> New application</button>
+      </div>
+    </div>
+
+    <div class="lvv-grid">
+      <div class="lvv-main">
+        <!-- ═══ header ═══ -->
+        <section class="lvv-card lvv-head">
+          <div class="lvv-head-main">
+            <span class="lvv-av" [style.background]="profile?.photo ? null : avatarColor(l.employeeId)">
+              <img *ngIf="profile?.photo" [src]="profile!.photo" alt="" (error)="photoFailed()">
+              <ng-container *ngIf="!profile?.photo">{{ initials(l.employeeName) }}</ng-container>
+            </span>
+            <div class="lvv-head-id">
+              <span class="lvv-eyebrow">Applicant</span>
+              <h1>{{ tc(l.employeeName) || l.employeeId }}</h1>
+              <p *ngIf="(profile?.designation || l.designation) as desig">
+                {{ tc(desig) }}<ng-container *ngIf="profile?.department || l.department"> · {{ tc(profile?.department || l.department) }}</ng-container>
+              </p>
+              <div class="lvv-chips">
+                <span class="lvv-chip"><i class="fas fa-id-badge"></i>{{ l.employeeId }}</span>
+                <span class="lvv-chip" *ngIf="profile?.location"><i class="fas fa-location-dot"></i>{{ tc(profile!.location) }}</span>
+              </div>
+            </div>
+            <span class="lvv-status" [class.s-a]="status === 'A'" [class.s-r]="status === 'R'" [class.s-p]="status === 'P'">
+              <i class="fas" [ngClass]="status === 'A' ? 'fa-circle-check' : status === 'R' ? 'fa-circle-xmark' : 'fa-hourglass-half'"></i>{{ statusLabel }}
+            </span>
+          </div>
+          <!-- applicant details (same as the applicant card on the form) -->
+          <dl class="lvv-me-facts">
+            <div><dt><i class="fas fa-sitemap"></i>Department</dt><dd>{{ tc(profile?.department || l.department) || '—' }}</dd></div>
+            <div><dt><i class="fas fa-briefcase"></i>Designation</dt><dd>{{ tc(profile?.designation || l.designation) || '—' }}</dd></div>
+            <div><dt><i class="far fa-calendar"></i>Date of joining</dt><dd>{{ dojText || '—' }}<small *ngIf="serviceText">{{ serviceText }} of service</small></dd></div>
+            <div><dt><i class="far fa-envelope"></i>Email</dt><dd [title]="profile?.email || ''">{{ profile?.email || '—' }}</dd></div>
+            <div><dt><i class="fas fa-phone"></i>Phone</dt><dd>{{ profile?.phone || l.contactNumber || '—' }}</dd></div>
+          </dl>
+          <dl class="lvv-facts">
+            <div class="lvv-f-type">
+              <dt>Leave type</dt>
+              <dd><i class="fas" [ngClass]="typeIcon(l.leaveType)"></i>{{ l.leaveTypeName }}</dd>
+            </div>
+            <div><dt>From</dt><dd>{{ l.fromDate | date:'dd MMM yyyy' }}</dd></div>
+            <div><dt>To</dt><dd>{{ l.toDate | date:'dd MMM yyyy' }}</dd></div>
+            <div><dt>Days</dt><dd class="lvv-days"><b>{{ l.noOfDays }}</b> {{ l.noOfDays === 1 ? 'day' : 'days' }}</dd></div>
+            <div><dt>Submitted</dt><dd>{{ l.createdOn | date:'dd MMM yyyy, hh:mm a' }}</dd></div>
+            <div *ngIf="status === 'P'"><dt>Current stage</dt><dd>{{ l.currentStage || '—' }}</dd></div>
+          </dl>
+        </section>
+
+        <!-- ═══ my action ═══ -->
+        <section class="lvv-card lvv-act" *ngIf="myStep as step">
+          <div class="lvv-sh">
+            <span class="lvv-sh-ic grad"><i class="fas fa-stamp"></i></span>
+            <div>
+              <h2>Your approval</h2>
+              <p>{{ step.approverRole === 'HANDOVER' ? 'Approve if you will take over the work listed for you below.' : 'Every handover person has approved — you give the final approval.' }}</p>
+            </div>
+          </div>
+          <label class="lvv-lbl" for="lvv-remarks">Remarks <span class="opt">(required to reject)</span></label>
+          <textarea id="lvv-remarks" rows="3" maxlength="1000" [(ngModel)]="remarks" placeholder="Add a note for the employee"></textarea>
+          <div class="lvv-notice err" *ngIf="notice" role="status"><i class="fas fa-circle-exclamation"></i><span>{{ notice.text }}</span></div>
+          <div class="lvv-act-btns">
+            <button type="button" class="lvv-btn danger" (click)="act('R')" [disabled]="!!acting">
+              <i class="fas" [ngClass]="acting === 'R' ? 'fa-spinner fa-spin' : 'fa-xmark'"></i> Reject
+            </button>
+            <button type="button" class="lvv-btn primary" (click)="act('A')" [disabled]="!!acting">
+              <i class="fas" [ngClass]="acting === 'A' ? 'fa-spinner fa-spin' : 'fa-check'"></i> Approve
+            </button>
+          </div>
+        </section>
+
+        <div class="lvv-card lvv-wait" *ngIf="myWaitingStep">
+          <i class="fas fa-hourglass-half"></i>
+          <div><b>Not your turn yet</b><span>You can approve once all {{ handoverSteps.length }} handover {{ handoverSteps.length === 1 ? 'person has' : 'persons have' }} approved ({{ handoversApproved }} of {{ handoverSteps.length }} so far).</span></div>
+        </div>
+
+        <!-- ═══ details ═══ -->
+        <section class="lvv-card lvv-sec">
+          <div class="lvv-sh">
+            <span class="lvv-sh-ic"><i class="fas fa-circle-info"></i></span>
+            <div><h2>Details</h2><p>What the employee submitted</p></div>
+          </div>
+          <dl class="lvv-kv">
+            <div class="wide"><dt>Reason</dt><dd [class.empty]="!l.reason">{{ l.reason || 'No reason given' }}</dd></div>
+            <div><dt>Contact while on leave</dt><dd [class.empty]="!l.contactNumber">{{ l.contactNumber || '—' }}</dd></div>
+            <div *ngIf="l.travelRoute"><dt>Travel route</dt><dd>{{ l.travelRoute }}</dd></div>
+            <div><dt>Approver (HOD)</dt><dd>{{ tc(l.approverName) || l.approverId }}</dd></div>
+          </dl>
+
+          <div class="lvv-doc" *ngIf="l.fileName; else noDoc">
+            <span class="lvv-doc-ic"><i class="far fa-file-lines"></i></span>
+            <div class="lvv-doc-tx"><small>{{ docLabel(l.docCategory) }}</small><b [title]="l.fileName">{{ l.fileName }}</b><span>{{ fileSize(l.fileSizeKb) }}</span></div>
+            <button type="button" class="lvv-btn soft sm" (click)="openFile(false)" *ngIf="l.fileData"><i class="far fa-eye"></i> View</button>
+            <button type="button" class="lvv-btn soft sm" (click)="openFile(true)" *ngIf="l.fileData"><i class="fas fa-download"></i> Download</button>
+          </div>
+          <ng-template #noDoc><p class="lvv-muted">No document attached.</p></ng-template>
+        </section>
+
+        <!-- ═══ handovers ═══ -->
+        <section class="lvv-card lvv-sec">
+          <div class="lvv-sh">
+            <span class="lvv-sh-ic"><i class="fas fa-people-arrows"></i></span>
+            <div>
+              <h2>Handover <span class="lvv-pill" *ngIf="handovers.length">{{ handovers.length }}</span></h2>
+              <p>{{ handovers.length ? 'Colleagues covering the work — each approves their own handover' : 'No handover for this application' }}</p>
+            </div>
+          </div>
+          <div class="lvv-ho-list" *ngIf="handovers.length">
+            <article class="lvv-ho" *ngFor="let h of handovers">
+              <header>
+                <span class="lvv-ho-av" [style.background]="avatarColor(h.rpersonEmpId)">{{ initials(h.rpersonName || h.rpersonEmpId) }}</span>
+                <div class="lvv-ho-tt"><b>{{ tc(h.rpersonName) || h.rpersonEmpId }}</b><small>{{ h.rpersonEmpId }}<ng-container *ngIf="h.rpersonPhone"> · {{ h.rpersonPhone }}</ng-container><ng-container *ngIf="h.rpersonEmail"> · {{ h.rpersonEmail }}</ng-container></small></div>
+              </header>
+              <dl>
+                <div><dt>Project</dt><dd>{{ h.project }}</dd></div>
+                <div><dt>Activities</dt><dd>{{ h.activities }}</dd></div>
+                <div *ngIf="h.remarks"><dt>Remarks</dt><dd>{{ h.remarks }}</dd></div>
+              </dl>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ approval timeline ═══ -->
+      <aside class="lvv-side">
+        <section class="lvv-card lvv-tl">
+          <div class="lvv-sh">
+            <span class="lvv-sh-ic grad"><i class="fas fa-route"></i></span>
+            <div><h2>Approval progress</h2><p>Handover persons first, then the HOD</p></div>
+          </div>
+          <ol>
+            <li class="s-approved">
+              <span class="dot"><i class="fas fa-paper-plane"></i></span>
+              <div><small>Submitted</small><b>{{ tc(l.employeeName) }}</b><span>{{ l.createdOn | date:'dd MMM yyyy, hh:mm a' }}</span></div>
+            </li>
+            <li *ngFor="let a of approvals" [ngClass]="'s-' + stepState(a)">
+              <span class="dot">
+                <i class="fas" [ngClass]="stepState(a) === 'approved' ? 'fa-check' : stepState(a) === 'rejected' ? 'fa-xmark' : a.approverRole === 'HOD' ? 'fa-user-tie' : 'fa-people-arrows'"></i>
+              </span>
+              <div>
+                <small>{{ a.stageName }}</small>
+                <b>{{ tc(a.approverName) || a.approverId }}</b>
+                <span class="st">{{ stepText(a) }}<ng-container *ngIf="a.approvalDate"> · {{ a.approvalDate | date:'dd MMM yyyy, hh:mm a' }}</ng-container></span>
+                <q *ngIf="a.remarks">{{ a.remarks }}</q>
+              </div>
+            </li>
+            <li [ngClass]="status === 'A' ? 's-approved' : status === 'R' ? 's-rejected' : 's-waiting'" class="end">
+              <span class="dot"><i class="fas" [ngClass]="status === 'R' ? 'fa-circle-xmark' : 'fa-circle-check'"></i></span>
+              <div><small>Result</small><b>{{ status === 'A' ? 'Leave approved' : status === 'R' ? 'Leave rejected' : 'Awaiting decision' }}</b></div>
+            </li>
+          </ol>
+        </section>
+      </aside>
+    </div>
+  </ng-container>
+</div>

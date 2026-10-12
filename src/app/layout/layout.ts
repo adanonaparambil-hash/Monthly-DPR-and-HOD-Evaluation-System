@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy, AfterViewInit, ElementRef, inject } from '@angular/core';
 import { homeRouteFor } from '../utils/home-route';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
@@ -12,11 +12,33 @@ import { AvatarUtil } from '../utils/avatar.util';
 import { NoticePopupComponent } from '../components/notice-popup/notice-popup.component';
 import { NoticePopupService } from '../services/notice-popup.service';
 import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
+import { CelebrationOverlayComponent } from '../components/celebration-overlay/celebration-overlay.component';
+import { I18nService } from '../i18n/i18n.service';
+import { TPipe } from '../i18n/t.pipe';
+
+/** Sidebar: menu-master name → Font Awesome icon (first match wins). */
+const NAV_ICONS: [RegExp, string][] = [
+  [/PMC|PROJECT MANAGEMENT/, 'fa-helmet-safety'],
+  [/VARIATION/, 'fa-code-branch'],
+  [/FINANCE|ACCOUNT|PAYMENT/, 'fa-wallet'],
+  [/QAQC|QA\/QC|QUALITY/, 'fa-shield-halved'],
+  [/WIR|INSPECTION/, 'fa-clipboard-check'],
+  [/MIR|MATERIAL/, 'fa-boxes-stacked'],
+  [/CAD|DRAWING|DESIGN/, 'fa-compass-drafting'],
+  [/PURCHASE|PROCURE|LPO|GRN/, 'fa-bag-shopping'],
+  [/SUPPLIER|VENDOR/, 'fa-truck-field'],
+  [/\bHR\b|HUMAN|EMPLOYEE/, 'fa-id-card'],
+  [/FACILIT|ASSET/, 'fa-building'],
+  [/REPORT/, 'fa-file-lines'],
+  [/DASHBOARD|ANALYTIC/, 'fa-chart-simple']
+];
+/** Sidebar tile colours — light tints that read on the dark teal gradient. */
+const NAV_COLORS = ['#34d399', '#38bdf8', '#818cf8', '#fbbf24', '#fb7185', '#a78bfa'];
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent, NoticePopupComponent, AiAssistantComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SessionMonitorComponent, NoticePopupComponent, AiAssistantComponent, CelebrationOverlayComponent, TPipe],
   templateUrl: './layout.html',
   styleUrls: ['./layout.css'],
   animations: [
@@ -37,7 +59,7 @@ import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
     ])
   ]
 })
-export class layout implements OnInit, OnDestroy {
+export class layout implements OnInit, OnDestroy, AfterViewInit {
   isDarkMode = false;
   showNotifications = false;
   showProfile = false;
@@ -49,6 +71,15 @@ export class layout implements OnInit, OnDestroy {
   isAPRMenuOpen = false;
   isDPRMenuOpen = false;
   isApprovalsMenuOpen = false;
+  isPastReportsMenuOpen = false;
+  /** Leave module menu items (Leave Approvals, Leave Application Report, Leave Application).
+   *  Set false to hide all three again — the pages and routes stay either way. */
+  readonly showLeaveMenus = false;
+  /** Staff OT Request (Form Services) and Staff OT Approvals (Approvals) — hidden for now. Pages and routes stay; set true to show both. */
+  readonly showOtMenus = false;
+  /** Arabic pilot: the EN / ع switch in the header. Set false to hide it (the app then stays English). */
+  readonly showLangToggle = false;
+  readonly i18n = inject(I18nService);
   isSystemMasterMenuOpen = false;
   isFormServicesMenuOpen = false;
   isDPROnlyMode = false; // New property to control DPR-only mode
@@ -125,6 +156,49 @@ export class layout implements OnInit, OnDestroy {
     this.openMenuGroups[menuId] = !this.openMenuGroups[menuId];
   }
 
+  // ── Sidebar presentation (sections, tiles, icons) ─────────────────────────
+  // The menu master only stores names and URLs, so the icon and tile colour
+  // are chosen from the name. Unknown names get a neutral icon and a stable
+  // colour (same name → same colour on every load).
+
+  /** The icon set in Menu Management (TM_MENU_MASTER.ICON) when valid, else one chosen from the name. */
+  menuIcon(menu: any): string {
+    const i = (menu?.icon ?? '').toString().trim();
+    return /^fa-[a-z0-9-]+$/.test(i) ? i : this.navIcon(menu?.menuName);
+  }
+
+  navIcon(name: unknown): string {
+    const n = (name ?? '').toString().toUpperCase();
+    const hit = NAV_ICONS.find(([re]) => re.test(n));
+    return hit ? hit[1] : 'fa-layer-group';
+  }
+
+  navColor(name: unknown): string {
+    const n = (name ?? '').toString().trim().toUpperCase();
+    let h = 0;
+    for (let i = 0; i < n.length; i++) { h = (h * 31 + n.charCodeAt(i)) >>> 0; }
+    return NAV_COLORS[h % NAV_COLORS.length];
+  }
+
+  private isPlainRoot(m: any): boolean {
+    return !m?.children?.length && !!m?.menuUrl && !m.menuUrl.toLowerCase().includes('purchase-dashboard');
+  }
+
+  /** Menu-master roots named "... Dashboard" (e.g. CAD Dashboard) → Overview section. */
+  get navDashRoots(): any[] {
+    return this.menuTree.filter(m => this.isPlainRoot(m) && /DASHBOARD/i.test(m.menuName || ''));
+  }
+
+  /** Everything else from the menu master → Workspace section (groups + plain links). */
+  get navWorkMenus(): any[] {
+    return this.menuTree.filter(m => m?.children?.length > 0 || (this.isPlainRoot(m) && !/DASHBOARD/i.test(m.menuName || '')));
+  }
+
+  /** A menu-master group is highlighted when the current page is one of its children. */
+  isMenuGroupActive(menu: any): boolean {
+    return (menu?.children || []).some((c: any) => !this.isExternalMenu(c) && !!c.menuUrl && this.currentRoute.includes(c.menuUrl));
+  }
+
   /** Build the two-level tree: parentId == null are roots, others nest under their parent */
   private buildMenuTree(menus: any[]): any[] {
     const byOrder = (a: any, b: any) => (a.menuOrder ?? 0) - (b.menuOrder ?? 0);
@@ -191,6 +265,87 @@ export class layout implements OnInit, OnDestroy {
   }
 
 
+  // ── Sidebar profile card ──────────────────────────────────────────────────
+  /** True only when the session carries a real photo; otherwise the card shows initials. */
+  hasAvatarPhoto = !!(this.userSession?.profileImageBase64 || '').toString().trim();
+  isOnline = typeof navigator === 'undefined' ? true : navigator.onLine;
+
+  @HostListener('window:online') onOnline(): void { this.isOnline = true; }
+  @HostListener('window:offline') onOffline(): void { this.isOnline = false; }
+
+  /** "ADAN ONAPARAMBIL" → "Adan Onaparambil" (session names are upper-case). */
+  get userDisplayName(): string {
+    const n = (this.userProfile?.name || '').toString().trim();
+    return n ? n.toLowerCase().replace(/(^|[\s.'-])\p{L}/gu, (c: string) => c.toUpperCase()) : 'My account';
+  }
+  get userInitials(): string {
+    const w = (this.userProfile?.name || '').toString().trim().split(/\s+/).filter(Boolean);
+    return ((w[0]?.[0] || '') + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase() || '?';
+  }
+  /** Designation, falling back to department. */
+  get userSubline(): string {
+    return this.titleCase(this.userProfile?.role || this.userSession?.department || '');
+  }
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  private titleCase(v: unknown): string {
+    return (v ?? '').toString().trim().toLowerCase().replace(/(^|[\s.'(/-])\p{L}/gu, (c: string) => c.toUpperCase())
+      .replace(/\b(It|Hr|Hod|Ced|Qa|Qc|Qaqc|Mep|Pmc|Dpr|Cad)\b/g, (w: string) => w.toUpperCase());
+  }
+  /** Pill: first two words of the name ("Vinod Pachupillai"). */
+  get userShortName(): string {
+    const w = this.userDisplayName.split(/\s+/);
+    return w.slice(0, 2).join(' ');
+  }
+  private get userDept(): string { return this.titleCase(this.userSession?.department); }
+  private get userRoleTitle(): string { return this.titleCase(this.userProfile?.role); }
+  /** Pill subline: "IT · Assistant General Manager". */
+  get userHeaderSub(): string { return [this.userDept, this.userRoleTitle].filter(Boolean).join(' · '); }
+  /** Menu subline: "Assistant General Manager · IT". */
+  get userMenuSub(): string { return [this.userRoleTitle, this.userDept].filter(Boolean).join(' · '); }
+  get roleLabel(): string { return this.isCed ? 'CED account' : this.isHod ? 'HOD account' : 'Employee account'; }
+
+  /** Breadcrumb above the page title, following the sidebar sections. */
+  get breadcrumb(): string[] {
+    const r = (this.currentRoute || '').split('?')[0].split('#')[0];
+    const has = (...p: string[]) => p.some(x => r === x || r.startsWith(x + '/'));
+    if (has('/dpr-employee-dashboard', '/dpr-hod-dashboard', '/ced-dpr-analytics', '/ced-dashboard', '/ced-dashboard-new',
+            '/purchase-dashboard', '/employee-dashboard', '/hod-dashboard', '/dashboard')) { return ['Overview', 'Dashboards']; }
+    if (has('/monthly-dpr', '/apr')) { return ['Workspace', 'Productivity']; }
+    if (has('/my-task', '/my-logged-hours', '/log-analytics', '/dpr-approval')) { return ['Workspace', 'DPR']; }
+    if (has('/leave-approval', '/leave-inbox', '/ot-approvals')) { return ['Services', 'Approvals']; }
+    if (has('/past-reports', '/apr-past-reports', '/leave-report', '/form-requests')) { return ['Services', 'Past Reports']; }
+    if (has('/exit-form', '/rejoining-form', '/byod-form', '/leave-application', '/ot-request')) { return ['Services', 'Form Services']; }
+    if (has('/employee-directory')) { return ['Services', 'People']; }
+    if (has('/notice-management', '/hod-master', '/employee-master')) { return ['Admin', 'System Master']; }
+    if (has('/profile')) { return ['Account']; }
+    // menu-master pages: the group they sit under in the sidebar
+    for (const m of this.menuTree || []) {
+      const hit = (m.children || []).some((c: any) => c.menuUrl && !this.isExternalMenu(c) && r.includes(c.menuUrl));
+      if (hit) { return ['Workspace', this.formatMenuName(m.menuName)]; }
+      if (!m.children?.length && m.menuUrl && r.includes(m.menuUrl)) { return [/DASHBOARD/i.test(m.menuName || '') ? 'Overview' : 'Workspace']; }
+    }
+    return ['Workspace'];
+  }
+
+  // ── Logo block height = header height ────────────────────────────────────
+  // The header grows with its content (title, subtitle, welcome line); the logo
+  // block was a fixed 100 px, so the two dividing lines never met. Measure the
+  // header and publish it as --hdr-h on the layout root for the CSS to use.
+  private hostEl = inject(ElementRef<HTMLElement>);
+  private hdrObserver?: ResizeObserver;
+
+  ngAfterViewInit(): void {
+    const root = this.hostEl.nativeElement as HTMLElement;
+    const header = root.querySelector('.header') as HTMLElement | null;
+    const box = root.querySelector('.layout-container') as HTMLElement | null;
+    if (!header || !box || typeof ResizeObserver === 'undefined') { return; }
+    const sync = () => box.style.setProperty('--hdr-h', Math.round(header.getBoundingClientRect().height) + 'px');
+    this.hdrObserver = new ResizeObserver(sync);
+    this.hdrObserver.observe(header);
+    sync();
+  }
+
   userProfile = {
     name: this.userSession.employeeName || '',
     role: this.userSession.designation || '',
@@ -220,6 +375,8 @@ export class layout implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Language switch hidden → always English (nobody can be left stuck in Arabic)
+    if (!this.showLangToggle) { this.i18n.setLang('en'); }
     // Check if user is logged in
     if (!this.authService.isLoggedIn()) {
       this.authService.logout('unauthorized');
@@ -325,6 +482,7 @@ export class layout implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.hdrObserver?.disconnect();
     // Clean up the polling interval
     if (this.notificationCountInterval) {
       clearInterval(this.notificationCountInterval);
@@ -378,7 +536,9 @@ export class layout implements OnInit, OnDestroy {
       '/ced-dashboard-new': 'APR Dashboard',
       '/ced-dpr-analytics': 'DPR Dashboard',
       '/profile': 'My Profile',
-      '/leave-approval': 'Approval Management',
+      '/leave-approval': 'Form Approvals',
+      '/ot-approvals': 'Staff OT Approvals',
+      '/form-requests': 'Form Requests',
       '/supplier-payment-forecast': 'Supplier Payment Forecast',
       '/supplier-overdue-aging': 'Supplier Overdue Aging',
       '/dpr-approval': 'DPR Approval Management',
@@ -392,6 +552,12 @@ export class layout implements OnInit, OnDestroy {
       '/rejoining-form': 'Rejoining Form',
       '/exit-form': 'Exit Form',
       '/byod-form': 'BYOD Form',
+      '/ot-request': 'Staff OT Request',
+      '/leave-application': 'Leave Application',
+      '/leave-inbox': 'Leave Approvals',
+      '/menu-management': 'Menu Management',
+      '/leave-report': 'Leave Application Report',
+      '/employee-directory': 'Employee Directory',
       '/purchase-dashboard': 'Purchase Dashboard',
       '/wir-reports': 'WIR Reports'
     };
@@ -399,6 +565,14 @@ export class layout implements OnInit, OnDestroy {
     // Strip query params and fragments before lookup
     const cleanRoute = this.currentRoute.split('?')[0].split('#')[0];
     return routeTitles[cleanRoute] || 'Dashboard';
+  }
+
+  /** Page title in the current language. "Monthly Performance Review - Sep 2026" keeps its
+   *  month suffix as stored; only the fixed part before " - " is translated. */
+  pageTitleT(): string {
+    const t = this.getPageTitle();
+    const i = t.indexOf(' - ');
+    return i > 0 ? this.i18n.t(t.slice(0, i)) + ' - ' + t.slice(i + 3) : this.i18n.t(t);
   }
 
   getMPRTitle(): string {
@@ -718,7 +892,7 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isFormServicesRouteActive(): boolean {
-    return this.currentRoute.includes('/exit-form') || this.currentRoute.includes('/rejoining-form') || this.currentRoute.includes('/byod-form');
+    return this.currentRoute.includes('/exit-form') || this.currentRoute.includes('/rejoining-form') || this.currentRoute.includes('/byod-form') || this.currentRoute.includes('/leave-application') || this.currentRoute.includes('/ot-request');
   }
 
   toggleMPRMenu() {
@@ -734,7 +908,8 @@ export class layout implements OnInit, OnDestroy {
   }
 
   isAPRRouteActive(): boolean {
-    return this.currentRoute.includes('/apr');
+    // '/apr-past-reports' also contains '/apr' — it belongs to Past Reports, not Productivity
+    return this.currentRoute.includes('/apr') && !this.currentRoute.includes('/apr-past-reports');
   }
 
   toggleDPRMenu() {
@@ -773,8 +948,19 @@ export class layout implements OnInit, OnDestroy {
     return this.currentRoute.includes('/leave-approval') || 
            this.currentRoute.includes('/dpr-approval') || 
            this.currentRoute.includes('/approvals') ||
-           this.currentRoute.includes('/past-reports') ||
-           this.currentRoute.includes('/apr-past-reports');
+           this.currentRoute.includes('/leave-inbox') ||
+           this.currentRoute.includes('/ot-approvals');
+  }
+
+  togglePastReportsMenu() {
+    this.isPastReportsMenuOpen = !this.isPastReportsMenuOpen;
+  }
+
+  isPastReportsRouteActive(): boolean {
+    return this.currentRoute.includes('/past-reports') ||
+           this.currentRoute.includes('/apr-past-reports') ||
+           this.currentRoute.includes('/leave-report') ||
+           this.currentRoute.includes('/form-requests');
   }
 
   toggleSystemMasterMenu() {
@@ -817,9 +1003,14 @@ export class layout implements OnInit, OnDestroy {
       this.isExitFormMenuOpen = true;
     }
     
-    // Auto-open Approvals menu if on approval routes (includes past reports)
+    // Auto-open Approvals menu if on approval routes
     if (this.isApprovalsRouteActive()) {
       this.isApprovalsMenuOpen = true;
+    }
+
+    // Auto-open Past Reports menu on MPR / APR past-report routes
+    if (this.isPastReportsRouteActive()) {
+      this.isPastReportsMenuOpen = true;
     }
 
     // Auto-open System Master menu if on system master routes

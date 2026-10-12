@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../services/api';
 import { AiReportComponent } from '../components/ai-report/ai-report.component';
+import { NewJoinersCardComponent } from '../components/new-joiners-card/new-joiners-card.component';
 import { CraneLoaderComponent } from '../shared/crane-loader/crane-loader.component';
 
 // ── API response shapes (SP_GET_CED_DPR_DASHBOARD cursors) ───────────────────
@@ -85,7 +86,7 @@ interface HeatRow {
 @Component({
   selector: 'app-ced-dpr-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, AiReportComponent, CraneLoaderComponent],
+  imports: [CommonModule, FormsModule, AiReportComponent, CraneLoaderComponent, NewJoinersCardComponent],
   templateUrl: './ced-dpr-analytics.component.html',
   styleUrls: ['./ced-dpr-analytics.component.css']
 })

@@ -72,6 +72,11 @@
   <!-- AI INSIGHT REPORT — button lives in the hero row above; this renders the modal -->
   <app-ai-report #aiReport [hideLaunchButton]="true"></app-ai-report>
 
+  <!-- ══ NEW JOINERS (last month, staff only) — hidden in presentation mode ══ -->
+  @if (!displayMode) {
+    <app-new-joiners-card></app-new-joiners-card>
+  }
+
   @if (errorMsg) {
     <div class="ca-error ca-glass"><i class="fas fa-triangle-exclamation"></i> {{ errorMsg }}</div>
   }

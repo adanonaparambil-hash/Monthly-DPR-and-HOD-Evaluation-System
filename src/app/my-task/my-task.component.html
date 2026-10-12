@@ -42,7 +42,9 @@
       <!-- Active Task Content -->
       <div *ngIf="hasActiveTask && !hasAutoClosedTasks()">
         <div class="task-status">
-          <div class="status-indicator">
+          <div class="status-indicator"
+               [class.st-running]="activeTask?.status === 'RUNNING'"
+               [class.st-paused]="activeTask?.status === 'PAUSED'">
             <div class="status-dot"></div>
             <span class="status-text">{{ activeTask?.status || 'NO STATUS' }}</span>
           </div>

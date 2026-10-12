@@ -1,0 +1,186 @@
+<div class="ox">
+  <main>
+    <!-- ═══ hero ═══ -->
+    <section class="hero">
+      <div class="deco"></div>
+      <div class="hero-row">
+        <div>
+          <h1>Staff OT approvals</h1>
+          <p>Your team's requests as HOD, and HOD-approved requests for Operations — in one list.</p>
+        </div>
+        <div class="hero-actions">
+          <div class="monthnav" role="group" aria-label="Month">
+            <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month"><i class="fas fa-chevron-left"></i></button>
+            <span>{{ monthLabel }}</span>
+            <button type="button" (click)="shiftMonth(1)" [disabled]="atCurrent" aria-label="Next month"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <button type="button" class="btn white" (click)="exportCsv()" [disabled]="!list.length"><i class="fas fa-file-arrow-down"></i> Export CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ queue switch (only the queues this user's role allows) ═══ -->
+    <div class="queues" *ngIf="roles.hod && roles.ops" role="tablist">
+      <button type="button" role="tab" [class.on]="queue === 'hod'" (click)="setQueue('hod')">
+        <span class="qi"><i class="fas fa-user-tie"></i></span>
+        <span class="qt"><b>As HOD</b><small>Requests from your team</small></span>
+        <em *ngIf="pendingCount('hod')">{{ pendingCount('hod') }}</em>
+      </button>
+      <button type="button" role="tab" [class.on]="queue === 'ops'" (click)="setQueue('ops')">
+        <span class="qi"><i class="fas fa-building-shield"></i></span>
+        <span class="qt"><b>As Operations</b><small>HOD-approved, to confirm</small></span>
+        <em *ngIf="pendingCount('ops')">{{ pendingCount('ops') }}</em>
+      </button>
+    </div>
+
+    <!-- ═══ KPIs ═══ -->
+    <section class="kpis" aria-label="Summary">
+      <div class="kpi e"><div class="ico"><i class="fas fa-inbox"></i></div>
+        <div><small>Waiting for you</small><div class="v">{{ kpi.pending }}</div><div class="n">{{ queue === 'hod' ? 'To approve or reject' : 'To confirm or reject' }}</div></div></div>
+      <div class="kpi b"><div class="ico"><i class="fas fa-circle-check"></i></div>
+        <div><small>{{ queue === 'hod' ? 'Approved' : 'Confirmed' }}</small><div class="v">{{ kpi.approved }}</div><div class="n">{{ kpi.hours }} logged</div></div></div>
+      <div class="kpi a"><div class="ico"><i class="fas fa-ban"></i></div>
+        <div><small>Rejected</small><div class="v">{{ kpi.rejected }}</div><div class="n">This month</div></div></div>
+      <div class="kpi d"><div class="ico"><i class="fas fa-wallet"></i></div>
+        <div><small>Allowance days</small><div class="v">{{ kpi.days }}</div><div class="n">With the {{ payrollLabel }} salary</div></div></div>
+    </section>
+
+    <!-- ═══ list ═══ -->
+    <section class="panel">
+      <div class="ph" style="margin-bottom:12px">
+        <div><h2>{{ queue === 'hod' ? 'Team requests' : 'For Operations' }} · {{ monthLabel }}</h2>
+          <div class="sub">{{ list.length }} of {{ counts.all }} shown{{ queue === 'ops' ? ' · approved by every HOD' : '' }}</div></div>
+      </div>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Status filter">
+          <button type="button" [class.on]="status === 'pending'" (click)="setStatus('pending')">Pending <span class="c">{{ counts.pending }}</span></button>
+          <button type="button" [class.on]="status === 'approved'" (click)="setStatus('approved')">{{ queue === 'hod' ? 'Approved' : 'Confirmed' }} <span class="c">{{ counts.approved }}</span></button>
+          <button type="button" [class.on]="status === 'rejected'" (click)="setStatus('rejected')">Rejected <span class="c">{{ counts.rejected }}</span></button>
+          <button type="button" [class.on]="status === 'all'" (click)="setStatus('all')">All <span class="c">{{ counts.all }}</span></button>
+        </div>
+        <label class="field-s"><i class="fas fa-magnifying-glass"></i><input type="search" [(ngModel)]="q" placeholder="Search employee, ID, task or brief" aria-label="Search"></label>
+      </div>
+
+      <!-- bulk bar -->
+      <div class="bulk" *ngIf="selectable.length">
+        <label class="ck"><input type="checkbox" [checked]="allSelected" (change)="toggleAll()"><span>{{ selected.size ? selected.size + ' selected' : 'Select all pending' }}</span></label>
+        <span class="grow"></span>
+        <ng-container *ngIf="selected.size">
+          <button type="button" class="btn sm danger" (click)="decide(selectedItems, false)"><i class="fas fa-xmark"></i> Reject selected</button>
+          <button type="button" class="btn sm primary" (click)="decide(selectedItems, true)"><i class="fas fa-check"></i> {{ queue === 'hod' ? 'Approve' : 'Confirm' }} selected</button>
+        </ng-container>
+      </div>
+
+      <div class="rows" *ngIf="list.length">
+        <article class="row" *ngFor="let r of list; let i = index" [style.--i]="i" [class.sel]="selected.has(r.id)" tabindex="0" role="button"
+                 (click)="open(r)" (keydown.enter)="open(r)" [attr.aria-label]="'Open ' + r.empName + ', ' + long(r.date)">
+          <div class="row-main">
+            <label class="ck" *ngIf="canAct(r)" (click)="$event.stopPropagation()"><input type="checkbox" [checked]="selected.has(r.id)" (change)="toggleSel(r)" [attr.aria-label]="'Select ' + r.empName"></label>
+            <span class="ck-sp" *ngIf="!canAct(r)"></span>
+
+            <div class="who">
+              <span class="av" [style.--h]="hueOf(r.empId)">{{ ini(r.empName) }}</span>
+              <div><b>{{ r.empName }}</b><small>{{ r.empId }} · {{ r.dept }}<ng-container *ngIf="queue === 'ops'"> · HOD {{ r.hodName }}</ng-container></small></div>
+            </div>
+
+            <div class="when"><b>{{ short(r.date) }}</b><small>{{ r.special ? 'Special day' : 'Weekly off' }}</small></div>
+
+            <div class="pb">
+              <ng-container *ngTemplateOutlet="punchBar; context: { $implicit: r.punches, mini: true }"></ng-container>
+              <small>{{ r.punches.length }} punches · {{ work(r.punches) }} · DPR <b [class.miss]="!dpr(r)">{{ dpr(r) ? hm(dpr(r)) : 'missing' }}</b></small>
+            </div>
+
+            <div class="tags">
+              <span class="chip" [ngClass]="allowClass(r.punches)">{{ allowLabel(r.punches) }}</span>
+              <span class="chip" [ngClass]="stageClass(r)">{{ stageLabel(r) }}</span>
+            </div>
+
+            <div class="hrs"><b [class.flag]="over(r)" [title]="over(r) ? 'Logged more than the time between punches' : ''">{{ hhmm(r.worked) }}</b><small>Logged</small></div>
+
+            <div class="acts">
+              <ng-container *ngIf="canAct(r)">
+                <button type="button" class="btn sm danger" (click)="decide([r], false, $event)" title="Reject"><i class="fas fa-xmark"></i><span>Reject</span></button>
+                <button type="button" class="btn sm primary" (click)="decide([r], true, $event)" title="Approve"><i class="fas fa-check"></i><span>{{ queue === 'hod' ? 'Approve' : 'Confirm' }}</span></button>
+              </ng-container>
+              <button type="button" class="btn sm" *ngIf="canRevert(r)" (click)="revert(r, $event)"><i class="fas fa-rotate-left"></i><span>Revert</span></button>
+            </div>
+          </div>
+          <p class="brief"><i class="fas fa-quote-left"></i><span><b *ngIf="r.task">{{ r.task }} — </b>{{ r.brief }}</span></p>
+        </article>
+      </div>
+
+      <div class="empty" *ngIf="!list.length">
+        <div class="ill"><i class="fas fa-mug-hot"></i></div>
+        <b>{{ q ? 'Nothing matches your search' : (status === 'pending' ? 'All caught up' : 'Nothing here') }}</b>
+        <div>{{ q ? 'Try another name or ID.' : (status === 'pending' ? 'No OT requests are waiting for you in ' + monthLabel + '.' : 'No requests with this status in ' + monthLabel + '.') }}</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ═══ punch bar ═══ -->
+<ng-template #punchBar let-p let-mini="mini">
+  <div class="tl" [class.mini]="mini" aria-label="Punch timeline">
+    <i class="gridl" *ngFor="let g of grid" [style.left.%]="g"></i>
+    <i class="seg-b" *ngFor="let s of barOf(p).segs" [style.left.%]="s.l" [style.width.%]="s.w" [title]="s.t"></i>
+    <i class="pt" *ngFor="let s of barOf(p).pts" [style.left.%]="s.l" [title]="s.t"></i>
+  </div>
+  <div class="ticks" *ngIf="!mini"><span *ngFor="let t of ticks">{{ t }}</span></div>
+</ng-template>
+
+<!-- ═══ detail sheet ═══ -->
+<ng-container *ngIf="detail as r">
+  <div class="ov" (click)="close()"></div>
+  <aside class="sheet ox" role="dialog" aria-modal="true" aria-labelledby="oaT">
+    <div class="sh">
+      <div class="who"><span class="av" [style.--h]="hueOf(r.empId)">{{ ini(r.empName) }}</span>
+        <div><h3 id="oaT">{{ r.empName }}</h3><small>{{ r.empId }} · {{ r.dept }} · {{ long(r.date) }}</small></div></div>
+      <button type="button" class="x" (click)="close()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="sb">
+      <div class="chips" style="margin-bottom:16px">
+        <span class="chip" [ngClass]="stageClass(r)">{{ stageLabel(r) }}</span>
+        <span class="chip" [ngClass]="allowClass(r.punches)">{{ allowLabel(r.punches) }}</span>
+        <span class="chip info" *ngIf="r.special">{{ r.special }}</span>
+      </div>
+
+      <div class="box2">
+        <div class="ph" style="margin-bottom:10px"><div><b>Punch timeline</b><div class="fine">{{ r.punches.length }} punches · {{ work(r.punches) }} between punches · {{ r.site }}</div></div>
+          <div class="hrs"><b [class.flag]="over(r)">{{ hhmm(r.worked) }}</b><small>Logged</small></div></div>
+        <ng-container *ngTemplateOutlet="punchBar; context: { $implicit: r.punches, mini: false }"></ng-container>
+        <div class="two-col">
+          <div class="plist"><div class="punch" *ngFor="let p of r.punches; let k = index" [class.out]="k % 2"><i></i><b>{{ p }}</b><span class="fine">{{ k % 2 ? 'Out' : 'In' }}</span></div></div>
+          <ul class="checks"><li *ngFor="let c of checksOf(r)" [class.yes]="c.ok" [class.no]="!c.ok"><i class="fas" [ngClass]="c.ok ? 'fa-circle-check' : 'fa-circle-xmark'"></i>{{ c.text }}</li></ul>
+        </div>
+        <div class="warnline" *ngIf="over(r)"><i class="fas fa-triangle-exclamation"></i> Logged hours are more than the time between first and last punch.</div>
+      </div>
+
+      <h4 class="sec">DPR for the day</h4>
+      <ul class="dpr" *ngIf="r.tasks.length; else noDpr">
+        <li *ngFor="let t of r.tasks; let k = index"><em>{{ k + 1 }}</em><div><b>{{ t.name }}</b><span>{{ t.remark }}</span></div><small>{{ hm(t.mins) }}</small></li>
+      </ul>
+      <ng-template #noDpr><p class="fine">No DPR logged on this day — the policy makes it mandatory.</p></ng-template>
+
+      <h4 class="sec">Approval progress</h4>
+      <div class="vsteps">
+        <div class="vs" *ngFor="let s of vsteps(r); let k = index" [ngClass]="s.cls"><i>{{ s.cls === 'done' ? '✓' : s.cls === 'bad' ? '✕' : k + 1 }}</i><div><b>{{ s.label }}</b><span>{{ s.sub }}</span></div></div>
+      </div>
+
+      <dl class="kv">
+        <dt>Task</dt><dd>{{ r.task || '—' }}</dd>
+        <dt>Brief</dt><dd>{{ r.brief }}</dd>
+        <dt>HOD</dt><dd>{{ r.hodName }}</dd>
+        <dt>HOD remark</dt><dd>{{ r.hodRemark || '—' }}</dd>
+        <dt>Operations</dt><dd>{{ r.opsRemark || '—' }}</dd>
+      </dl>
+    </div>
+    <div class="sf" *ngIf="canAct(r) || canRevert(r)">
+      <button type="button" class="btn" *ngIf="canRevert(r)" (click)="revert(r)"><i class="fas fa-rotate-left"></i> Revert</button>
+      <span class="grow"></span>
+      <ng-container *ngIf="canAct(r)">
+        <button type="button" class="btn danger" (click)="decide([r], false)"><i class="fas fa-xmark"></i> Reject</button>
+        <button type="button" class="btn primary" (click)="decide([r], true)"><i class="fas fa-check"></i> {{ queue === 'hod' ? 'Approve' : 'Confirm' }}</button>
+      </ng-container>
+    </div>
+  </aside>
+</ng-container>

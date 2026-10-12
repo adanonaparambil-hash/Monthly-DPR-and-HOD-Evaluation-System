@@ -111,6 +111,8 @@ export class DprApprovalComponent implements OnInit {
   selectedUserIdForModal: string = '';
   selectedCategoryIdForModal: number = 0;
   isTaskModalViewOnly: boolean = true; // Always view-only in DPR Approval
+  /** The record the task modal was opened from — the modal's Approve button approves only this one. */
+  logForModal: DPRLog | null = null;
 
   // Day Log History modal properties
   showDayLogHistoryModal = false;
@@ -724,6 +726,26 @@ export class DprApprovalComponent implements OnInit {
     return colors[index];
   }
 
+  /** Approve button in the task modal header: approves only the record the modal was opened for. */
+  approveFromModal() {
+    const log = this.logForModal;
+    if (!log || this.isApproving) { return; }
+    Swal.fire({
+      title: 'Confirm Approval',
+      text: 'Do you want to approve this record?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performApproval([log], { fromModal: true });
+      }
+    });
+  }
+
   approveSelected() {
     const selectedLogs = this.displayedLogs.filter(log => log.isSelected);
     if (selectedLogs.length === 0) {
@@ -753,7 +775,7 @@ export class DprApprovalComponent implements OnInit {
     });
   }
 
-  performApproval(selectedLogs: DPRLog[]) {
+  performApproval(selectedLogs: DPRLog[], opts?: { fromModal?: boolean }) {
     // Set loading state
     this.isApproving = true;
     
@@ -804,7 +826,8 @@ export class DprApprovalComponent implements OnInit {
     // Determine fullApprove based on whether "Select All" checkbox was used
     // fullApprove = 'Y' if header checkbox is checked and all displayed logs are selected
     // fullApprove = 'N' if only individual checkboxes are selected
-    const fullApprove = (this.selectAll && selectedLogs.length === this.displayedLogs.length) ? 'Y' : 'N';
+    // A single record approved from the modal is never a "full" approval.
+    const fullApprove = !opts?.fromModal && (this.selectAll && selectedLogs.length === this.displayedLogs.length) ? 'Y' : 'N';
 
     // Create the approval request
     const approvalRequest: TaskBulkApprovalRequest = {
@@ -824,6 +847,12 @@ export class DprApprovalComponent implements OnInit {
         this.isApproving = false;
         
         if (response.success) {
+          // Approved from the modal: close it (the list reload below drops the record)
+          if (opts?.fromModal) {
+            this.showTaskDetailsModal = false;
+            this.logForModal = null;
+            document.body.style.overflow = '';
+          }
           // Reset selections
           this.selectAll = false;
           this.displayedLogs.forEach(log => log.isSelected = false);
@@ -883,6 +912,7 @@ export class DprApprovalComponent implements OnInit {
 
   // Open task details modal when clicking on a DPR log
   openTaskDetailsModal(log: DPRLog) {
+    this.logForModal = log;
     const taskId = log.taskId || 0;
     
     if (!taskId) {
@@ -944,6 +974,7 @@ export class DprApprovalComponent implements OnInit {
   // Close task details modal
   closeTaskDetailsModal() {
     this.showTaskDetailsModal = false;
+    this.logForModal = null;
     
     // Restore body scroll
     document.body.style.overflow = '';

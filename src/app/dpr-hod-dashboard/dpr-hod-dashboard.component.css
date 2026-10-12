@@ -110,6 +110,8 @@
 .hm th b{display:block;font:700 10.5px var(--fh);color:var(--ink2)}
 .hm th span{display:block;font:600 8.5px var(--fh);letter-spacing:.04em;color:var(--ink4)}
 .hm th.nm,.hm td.nm{text-align:left;font:600 11.5px var(--fh);color:var(--ink2);white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+/* full names: wrap to a second line instead of being cut (hover shows the whole name) */
+.hm td.nm{white-space:normal;min-width:140px;max-width:210px;line-height:1.25;padding-right:6px;overflow-wrap:anywhere}
 .hm td{height:26px;border-radius:5px;text-align:center;font:600 10px var(--fh);color:#fff;cursor:default;transition:transform .12s}
 .hm td:not(.nm):hover{transform:scale(1.12)}
 .hm td.off{background:var(--h0);color:var(--ink4)}
@@ -153,7 +155,9 @@
   .lead{grid-template-columns:26px 34px minmax(0,1fr) minmax(70px,.8fr) 44px 52px}
 }
 @media (max-width:768px){
-  .qa .qbtn:last-child{grid-column:auto}
+  /* five tiles: 2 + 2 + 1 wide on tablets and large phones */
+  .qa{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .qa .qbtn:last-child{grid-column:span 2}
   .hquote{max-width:none;display:flex}
   .team{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
   .lead{grid-template-columns:26px 34px minmax(0,1fr) 44px;gap:8px}
@@ -161,6 +165,8 @@
   .hbars{height:52px}
 }
 @media (max-width:480px){
+  .qa{grid-template-columns:minmax(0,1fr)}
+  .qa .qbtn:last-child{grid-column:auto}
   .team{grid-template-columns:minmax(0,1fr)}
   .dpills .lbl{display:none}
 }

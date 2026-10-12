@@ -45,6 +45,11 @@ export class TaskDetailsModalComponent implements OnInit, OnDestroy {
   @Input() isViewOnly: boolean = false; // View-only mode for "Assigned to Others"
   
   // Output events
+  /** Opt-in (DPR Approval): show an Approve button in the header for this record. */
+  @Input() approveAction: boolean = false;
+  /** True while the parent's approval request is running. */
+  @Input() approving: boolean = false;
+  @Output() approve = new EventEmitter<void>();
   @Output() closeModal = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<any>();
   @Output() taskPaused = new EventEmitter<number>();

@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { Api } from '../services/api';
 import { AvatarUtil } from '../utils/avatar.util';
@@ -51,14 +53,50 @@ export interface EmployeeProfileDto {
   place: string | null;
 }
 
+/** PKG_COMMON_LOOKUPS.SP_GET_WORKFORCE_INSIGHTS, via General/GetWorkforceInsights. */
+export interface WorkforceGroup { code?: string | null; name?: string | null; total: number; onLeave: number; dprUsers: number; }
+export interface WorkforceInsights {
+  summary: {
+    totalWorkforce: number; activeCount: number; onLeaveCount: number; onLeavePct: number | null;
+    staffCount: number; labourCount: number; dprUsers: number; portalUsers: number;
+    femaleCount: number; maleCount: number; departmentCount: number; nationalityCount: number;
+    joinedThisMonth: number; joinedLastMonth: number; avgTenureYears: number | null;
+    missingEmail: number; missingPhone: number; withPhoto: number;
+  } | null;
+  byLocation: WorkforceGroup[];
+  byCategory: WorkforceGroup[];
+  byDepartment: WorkforceGroup[];
+  byNationality: WorkforceGroup[];
+  joinTrend: { month: string; joined: number }[];
+}
+
 @Component({
   selector: 'app-employee-master',
   standalone: true,
   imports: [CommonModule, FormsModule, CraneLoaderComponent],
   templateUrl: './employee-master.component.html',
-  styleUrls: ['./employee-master.component.css']
+  // page.css = the redesigned page (wm-*); the original sheet still styles the edit popup (em-*)
+  styleUrls: ['./employee-master.component.css', './employee-master.page.css']
 })
-export class EmployeeMasterComponent implements OnInit {
+export class EmployeeMasterComponent implements OnInit, OnDestroy {
+  @ViewChild('listTop') listTop?: ElementRef<HTMLElement>;
+
+  // ── workforce insights: loaded ONCE when the page opens (not filter-dependent) ──
+  insights: WorkforceInsights | null = null;
+  insightsState: 'loading' | 'ready' | 'error' = 'loading';
+  showInsights = true;
+  showAllDepts = false;
+  readonly DEPT_TOP = 8;
+  /** "Average tenure" KPI tile — hidden for now; set true to show it again. */
+  readonly showTenureTile = false;
+  private static readonly INSIGHTS_PREF = 'empMaster.showInsights';
+
+  // ── live search (like the Employee Directory) ──
+  private typing$ = new Subject<void>();
+  private subs: Subscription[] = [];
+  private listSub?: Subscription;
+  openDd: 'dept' | 'loc' | null = null;
+  ddQuery = '';
   employeeList: EmployeeDto[] = [];   // current 100-record page shown in table
   filterEmpId: string = '';
   filterName: string = '';
@@ -106,9 +144,149 @@ export class EmployeeMasterComponent implements OnInit {
     // the HOD dashboard deep-links here with ?department=<name> to open its own team
     const dept = (this.route.snapshot.queryParamMap.get('department') || '').trim();
     if (dept) { this.filterDepartment = dept; }
+    try { this.showInsights = localStorage.getItem(EmployeeMasterComponent.INSIGHTS_PREF) !== '0'; } catch { /* storage blocked */ }
+
+    // typing in ID / name / designation searches after a short pause
+    this.subs.push(this.typing$.pipe(debounceTime(450)).subscribe(() => this.fetchBatch(1)));
+
     this.loadDepartments();
+    this.loadInsights();
     this.fetchBatch(1);
   }
+
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
+    this.listSub?.unsubscribe();
+  }
+
+  // ── insights ──────────────────────────────────────────────────────────────
+  loadInsights(): void {
+    this.insightsState = 'loading';
+    this.subs.push(this.api.getWorkforceInsights().subscribe({
+      next: (res: any) => {
+        const d = res?.data;
+        if (res?.success && d?.summary) {
+          this.insights = {
+            summary: d.summary,
+            byLocation: d.byLocation ?? [], byCategory: d.byCategory ?? [], byDepartment: d.byDepartment ?? [],
+            byNationality: d.byNationality ?? [], joinTrend: d.joinTrend ?? []
+          };
+          this.insightsState = 'ready';
+        } else {
+          this.insightsState = 'error';
+        }
+      },
+      error: () => { this.insightsState = 'error'; }
+    }));
+  }
+
+  toggleInsights(): void {
+    this.showInsights = !this.showInsights;
+    try { localStorage.setItem(EmployeeMasterComponent.INSIGHTS_PREF, this.showInsights ? '1' : '0'); } catch { /* storage blocked */ }
+  }
+
+  get deptRows(): WorkforceGroup[] {
+    const all = this.insights?.byDepartment ?? [];
+    return this.showAllDepts ? all : all.slice(0, this.DEPT_TOP);
+  }
+  maxOf(rows: WorkforceGroup[] | undefined): number { return Math.max(1, ...(rows ?? []).map(r => r.total || 0)); }
+  get trendMax(): number { return Math.max(1, ...(this.insights?.joinTrend ?? []).map(t => t.joined || 0)); }
+  pct(part: number | null | undefined, whole: number | null | undefined): number {
+    return whole ? Math.round(((part || 0) / whole) * 1000) / 10 : 0;
+  }
+  monthShort(ym: string): string {
+    const m = /^(\d{4})-(\d{2})$/.exec(ym || '');
+    return m ? EmployeeMasterComponent.MON[+m[2] - 1] : ym;
+  }
+  monthLong(ym: string): string {
+    const m = /^(\d{4})-(\d{2})$/.exec(ym || '');
+    return m ? EmployeeMasterComponent.MON[+m[2] - 1] + ' ' + m[1] : ym;
+  }
+  private static readonly MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  /** Clicking a location / department bar filters the list below. */
+  filterByLocation(code: string | null | undefined): void {
+    const c = (code || '').toUpperCase();
+    if (!this.comLocOptions.some(o => o.value === c)) { return; }
+    this.filterComLoc = this.filterComLoc === c ? '' : c;
+    this.fetchBatch(1);
+    this.scrollToList();
+  }
+  filterByDepartment(name: string | null | undefined): void {
+    const n = (name || '').trim();
+    if (!n) { return; }
+    this.filterDepartment = this.filterDepartment.toUpperCase() === n.toUpperCase() ? '' : n;
+    this.fetchBatch(1);
+    this.scrollToList();
+  }
+  private scrollToList(): void {
+    setTimeout(() => this.listTop?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  // ── filters ───────────────────────────────────────────────────────────────
+  onType(): void { this.typing$.next(); }
+
+  setDpr(v: string): void {
+    if (this.filterIsDpr === v) { return; }
+    this.filterIsDpr = v;
+    this.fetchBatch(1);
+  }
+
+  toggleDd(which: 'dept' | 'loc', ev: Event): void {
+    ev.stopPropagation();
+    this.openDd = this.openDd === which ? null : which;
+    this.ddQuery = '';
+  }
+  get deptMatches(): string[] {
+    const q = this.ddQuery.trim().toLowerCase();
+    return q ? this.departmentList.filter(d => d.toLowerCase().includes(q)) : this.departmentList;
+  }
+  pickDept(d: string, ev?: Event): void {
+    ev?.stopPropagation();
+    this.openDd = null;
+    if (this.filterDepartment === d) { return; }
+    this.filterDepartment = d;
+    this.fetchBatch(1);
+  }
+  pickLoc(v: string, ev?: Event): void {
+    ev?.stopPropagation();
+    this.openDd = null;
+    if (this.filterComLoc === v) { return; }
+    this.filterComLoc = v;
+    this.fetchBatch(1);
+  }
+
+  get hasFilters(): boolean {
+    return !!(this.filterEmpId || this.filterName || this.filterDepartment || this.filterDesignation || this.filterComLoc || this.filterIsDpr);
+  }
+  clearFilters(): void {
+    this.filterEmpId = this.filterName = this.filterDepartment = this.filterDesignation = this.filterComLoc = this.filterIsDpr = '';
+    this.fetchBatch(1);
+  }
+  locationLabel(code: string | null | undefined): string {
+    const c = (code || '').toUpperCase();
+    return this.comLocOptions.find(o => o.value === c)?.label ?? (c || 'Unknown');
+  }
+
+  @HostListener('document:click')
+  onDocClick(): void { this.openDd = null; }
+
+  @HostListener('document:keydown.escape')
+  onEsc(): void { this.openDd = null; }
+
+  // ── labels ────────────────────────────────────────────────────────────────
+  /** Title case that keeps short codes upper-case (QS, PMV, MEP, HR…). */
+  tc(v: string | null | undefined): string {
+    return (v || '').toLowerCase().replace(/(^|[\s.'(/&-])\p{L}/gu, c => c.toUpperCase())
+      .replace(/\b(It|Hr|Hod|Ced|Qa|Qc|Qs|Qaqc|Mep|Pmc|Dpr|Cad|Pmv|Fmt|Llc|Erp|Hse|Ceo|Cfo|Coo|Ac|Mis|Bim|Gm|Agm|Pm|Pro|Sr)\b/g, w => w.toUpperCase());
+  }
+  /** The phone, or '' when the record only holds a placeholder such as "+968-". */
+  phone(v: string | null | undefined): string {
+    const s = (v || '').trim();
+    return s.replace(/\D/g, '').length >= 7 ? s : '';
+  }
+  isOnLeave(e: EmployeeDto): boolean { return (e.status || '').trim().toUpperCase() === 'LEAVE'; }
+  trackEmp = (_: number, e: EmployeeDto) => e.empId;
 
   loadDepartments(): void {
     this.api.GetDepartmentList().subscribe({
@@ -130,9 +308,12 @@ export class EmployeeMasterComponent implements OnInit {
     this.apiBatchNo = batchNo;
     this.currentPage = 1;
 
-    this.api.getEmployeeList(
-      this.filterEmpId,
-      this.filterName, this.filterDepartment, this.filterDesignation,
+    // a newer search replaces an older one still in flight — the slower reply can
+    // never overwrite the list the user is now looking at
+    this.listSub?.unsubscribe();
+    this.listSub = this.api.getEmployeeList(
+      this.filterEmpId.trim(),
+      this.filterName.trim(), this.filterDepartment, this.filterDesignation.trim(),
       this.filterComLoc,
       this.filterIsDpr,
       batchNo, this.BATCH_SIZE

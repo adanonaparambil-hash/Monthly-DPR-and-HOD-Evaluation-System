@@ -4,20 +4,28 @@
     {
       "name": "angular-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"],
+      "runtimeArgs": [
+        "start"
+      ],
       "port": 4200,
       "autoPort": false
     },
     {
       "name": "mockup-preview",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/869560e2-8476-4acf-8e62-7851423b2efb/scratchpad/serve.js"],
+      "runtimeArgs": [
+        "C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/869560e2-8476-4acf-8e62-7851423b2efb/scratchpad/serve.js"
+      ],
       "port": 4390
     },
     {
       "name": "dist-dev-verify",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/5290d7dd-99b5-4fc2-8523-3729ddc3db76/scratchpad/spa.js", "C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/5290d7dd-99b5-4fc2-8523-3729ddc3db76/scratchpad/devbuild/browser", "4391"],
+      "runtimeArgs": [
+        "C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/c343fe43-9159-466c-b287-48b1029f5e38/scratchpad/spa.js",
+        "C:/Users/ITS48/AppData/Local/Temp/claude/C--Users-ITS48-Desktop-AdrakPortal-Monthly-DPR-and-HOD-Evaluation-System/c343fe43-9159-466c-b287-48b1029f5e38/scratchpad/devbuild/browser",
+        "4391"
+      ],
       "port": 4391
     }
   ]

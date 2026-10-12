@@ -540,6 +540,46 @@ export class Api {
     return this.http.get(url);
   }
 
+  // ── IT Admin → Menu Management (PKG_MENU_ADMIN; the acting user comes from the token) ──
+  menuAdminRights(): Observable<any> { return this.http.get(`${this.apiUrl}/MenuAdmin/Rights`); }
+  menuAdminMenus(): Observable<any> { return this.http.get(`${this.apiUrl}/MenuAdmin/Menus`); }
+  menuAdminSaveMenu(body: any): Observable<any> { return this.http.post(`${this.apiUrl}/MenuAdmin/SaveMenu`, body); }
+  menuAdminDeleteMenu(menuId: number): Observable<any> { return this.http.delete(`${this.apiUrl}/MenuAdmin/DeleteMenu/${menuId}`); }
+  menuAdminMenuUsers(menuId: number): Observable<any> { return this.http.get(`${this.apiUrl}/MenuAdmin/MenuUsers/${menuId}`); }
+  menuAdminUserAccess(userId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/MenuAdmin/UserAccess/${encodeURIComponent(userId)}`);
+  }
+  menuAdminSaveUserAccess(body: { userId: string; access: { menuId: number; canAdd: string; canEdit: string; canDelete: string }[] }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/MenuAdmin/SaveUserAccess`, body);
+  }
+  menuAdminGrantMenuUsers(body: { menuId: number; userIds: string[]; canAdd: string; canEdit: string; canDelete: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/MenuAdmin/GrantMenuUsers`, body);
+  }
+  menuAdminRevokeMenuUser(body: { menuId: number; userId: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/MenuAdmin/RevokeMenuUser`, body);
+  }
+  menuAdminAuditLog(maxRows = 300): Observable<any> { return this.http.get(`${this.apiUrl}/MenuAdmin/AuditLog?maxRows=${maxRows}`); }
+
+  /** Whole-company workforce numbers (PKG_COMMON_LOOKUPS.SP_GET_WORKFORCE_INSIGHTS) — Employee Master calls it once on open. */
+  getWorkforceInsights(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetWorkforceInsights`);
+  }
+
+  /** Staff who joined in a month (workers/labour excluded). month = 'YYYY-MM'; omit for the previous month. */
+  getNewJoiners(month: string = ''): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetNewJoiners` + (month ? `?month=${encodeURIComponent(month)}` : ''));
+  }
+
+  /** Today's birthday / work-anniversary celebration for the logged-in user, not yet shown (0–2 rows). */
+  getMyCelebrations(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/General/GetMyCelebrations`);
+  }
+
+  /** Marks a celebration as shown so it never appears again this year. celebType = 'BIRTHDAY' | 'ANNIVERSARY'. */
+  markCelebrationSeen(celebType: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/General/MarkCelebrationSeen`, { celebType });
+  }
+
   getEmployeeMasterList(): Observable<any> {
     return this.http.get(`${this.apiUrl}/General/GetEmployeeMasterList`);
   }
@@ -564,6 +604,35 @@ export class Api {
 
   GetExitApprovalList(request: EmployeeApprovalInboxRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/EmpExitForm/GetExitApprovalList`, request);
+  }
+
+  // ── Leave Application (PKG_LEAVEFORM) ────────────────────────────────────
+  GetLeaveTypes(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/LeaveForm/GetLeaveTypes`);
+  }
+
+  /** Submit. The document travels as base64 inside the JSON. */
+  SaveLeaveApplication(request: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/LeaveForm/SaveLeaveApplication`, request);
+  }
+
+  /** Details, handovers, approval steps, history and the document. */
+  GetLeaveById(leaveId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/LeaveForm/GetLeaveById/${leaveId}`);
+  }
+
+  GetMyLeaveApplications(request: { status?: string; fromDate?: string; toDate?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/LeaveForm/GetMyLeaveApplications`, request);
+  }
+
+  /** status: P (default) waiting for me | A | R | ALL. */
+  GetLeaveApprovalInbox(request: { status?: string; fromDate?: string | null; toDate?: string | null; employeeId?: string; department?: string; pageNo?: number; pageSize?: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/LeaveForm/GetLeaveApprovalInbox`, request);
+  }
+
+  /** status: A approve | R reject (remarks required). */
+  UpdateLeaveApproval(request: { approvalId: number; leaveId: number; status: 'A' | 'R'; remarks?: string; baseurl?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/LeaveForm/UpdateLeaveApproval`, request);
   }
 
   // ── Finance reports (ADK2026 / Axpert supplier payments) ────────────────

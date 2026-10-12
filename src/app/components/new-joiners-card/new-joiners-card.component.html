@@ -1,0 +1,153 @@
+<!-- Card + its card template (reused on the rail and in the "View all" panel) -->
+<ng-template #pcard let-j let-i="i">
+  <button type="button" class="nj-pc" [class.mine]="j.isMyDept === 'Y'" [style.--d]="(i < 8 ? i * 45 : 0) + 'ms'"
+          (click)="open(j)" [attr.aria-label]="tc(j.employeeName) + ', ' + tc(j.designation)">
+    @if (j.isMyDept === 'Y') {
+      <span class="nj-team"><span class="material-symbols-outlined">groups</span>Your team</span>
+    }
+    <span class="nj-days">{{ dayText(j.dateOfJoined) }}</span>
+    <span class="nj-av">
+      <span class="in" [style.background]="avatarBg(j)">
+        @if (photo(j); as src) { <img [src]="src" alt="" loading="lazy"> } @else { {{ initials(j.employeeName) }} }
+      </span>
+    </span>
+    <span class="nj-nm">{{ tc(j.employeeName) }}</span>
+    <span class="nj-ds">{{ tc(j.designation) || '—' }}</span>
+    <span class="nj-meta">
+      @if (j.department) { <span class="nj-pill" [title]="tc(j.department)">{{ tc(j.department) }}</span> }
+      @if (j.comLoc) { <span class="nj-pill">{{ location(j.comLoc) }}</span> }
+    </span>
+    <span class="nj-jd"><span class="material-symbols-outlined">login</span>Joined {{ fmtDate(j.dateOfJoined) }}</span>
+  </button>
+</ng-template>
+
+<ng-template #tabsTpl let-active let-pick="pick">
+  <div class="nj-seg" role="tablist">
+    <button type="button" role="tab" [attr.aria-selected]="active === 'all'" (click)="pick('all')">
+      All <span class="n">{{ joiners.length }}</span></button>
+    <button type="button" role="tab" [attr.aria-selected]="active === 'mine'" (click)="pick('mine')">
+      My department <span class="n">{{ mineCount }}</span></button>
+  </div>
+</ng-template>
+
+@if (visible) {
+  <div class="nj-cq">
+  <section class="nj-strip" aria-labelledby="nj-title">
+    <span class="nj-glow" aria-hidden="true"></span>
+
+    <div class="nj-intro">
+      <span class="nj-badge" aria-hidden="true"><span class="material-symbols-outlined">waving_hand</span></span>
+      <div class="nj-txt">
+        <h2 id="nj-title">Welcome our new colleagues</h2>
+        <p class="nj-sub">
+          <b>{{ joiners.length }}</b> joined in {{ monthLabel }}
+          @if (mineCount > 0) { <span class="nj-dot">·</span><button type="button" class="nj-mine" (click)="openDrawer('mine')"><span class="material-symbols-outlined">groups</span>{{ mineCount }} in your team</button> }
+        </p>
+      </div>
+    </div>
+
+    <div class="nj-faces" role="list" aria-label="New joiners">
+      @for (j of stack; track j.empId; let i = $index) {
+        <button type="button" role="listitem" class="nj-face" [class.mine]="j.isMyDept === 'Y'" [style.--i]="i"
+                (click)="open(j)" [attr.aria-label]="tc(j.employeeName) + ', ' + tc(j.designation)">
+          <span class="nj-av md"><span class="in" [style.background]="avatarBg(j)">
+            @if (photo(j); as src) { <img [src]="src" alt="" loading="lazy"> } @else { {{ initials(j.employeeName) }} }
+          </span></span>
+          <span class="nj-tip" aria-hidden="true"><b>{{ tc(j.employeeName) }}</b><span>{{ tc(j.designation) }}</span></span>
+        </button>
+      }
+      @if (restLg > 0) {
+        <button type="button" class="nj-plus lg" [style.--i]="STACK_MAX" (click)="openDrawer()" [attr.aria-label]="'See ' + restLg + ' more'">+{{ restLg }}</button>
+      }
+      @if (restSm > 0) {
+        <button type="button" class="nj-plus sm" (click)="openDrawer()" [attr.aria-label]="'See ' + restSm + ' more'">+{{ restSm }}</button>
+      }
+    </div>
+
+    <p class="nj-names">{{ namesLine }}</p>
+
+    <button type="button" class="nj-cta" (click)="openDrawer()">
+      Meet them <span class="material-symbols-outlined">arrow_forward</span>
+    </button>
+  </section>
+  </div>
+}
+
+<!-- popup + "Meet them" panel — moved to <body> by the component (see the .css header) -->
+<div #overlays class="nj-ov" [class.nj-dark]="dark">
+  @if (drawerOpen) {
+    <div class="nj-scrim" (click)="closeDrawer()"></div>
+    <aside class="nj-drawer" role="dialog" aria-modal="true" aria-label="All new joiners">
+      <div class="nj-dhead">
+        <div class="nj-drow">
+          <span class="nj-cic"><span class="material-symbols-outlined">group_add</span></span>
+          <h2>New joiners · {{ monthLabel }}</h2>
+          <button type="button" class="nj-arr" (click)="closeDrawer()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <label class="nj-search"><span class="material-symbols-outlined">search</span>
+          <input [(ngModel)]="query" placeholder="Search name, ID, designation, department…" autocomplete="off"></label>
+        @if (mineCount > 0) {
+          <ng-container *ngTemplateOutlet="tabsTpl; context: { $implicit: drawerTab, pick: setDrawerTabFn }"></ng-container>
+        }
+      </div>
+      <div class="nj-dgrid">
+        @for (j of drawerList; track j.empId; let i = $index) {
+          <ng-container *ngTemplateOutlet="pcard; context: { $implicit: j, i: i }"></ng-container>
+        } @empty {
+          <div class="nj-empty"><span class="material-symbols-outlined">search_off</span>No one matches “{{ query }}”.</div>
+        }
+      </div>
+    </aside>
+  }
+
+  @if (selected; as j) {
+    <div class="nj-scrim top" (click)="closeProfile()"></div>
+    <div class="nj-modal" role="dialog" aria-modal="true" aria-labelledby="nj-pname">
+      <div class="nj-mhead">
+        <button type="button" class="nj-arr nj-x" (click)="closeProfile()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+        <span class="nj-av lg"><span class="in" [style.background]="avatarBg(j)">
+          @if (photo(j); as src) { <img [src]="src" alt=""> } @else { {{ initials(j.employeeName) }} }
+        </span></span>
+        <h3 id="nj-pname">{{ tc(j.employeeName) }}</h3>
+        <div class="nj-mds">{{ tc(j.designation) }}</div>
+        <span class="nj-welcome"><span class="material-symbols-outlined">celebration</span>{{ dayText(j.dateOfJoined) === 'Today' ? 'First day' : dayText(j.dateOfJoined) }} at Adrak</span>
+      </div>
+      <div class="nj-mbody">
+        <div class="nj-fld">
+          <span class="nj-lbl"><span class="material-symbols-outlined">badge</span>Employee ID</span>
+          <div class="v">{{ j.empId }}
+            <button type="button" class="nj-cp" (click)="copy(j.empId)" aria-label="Copy employee ID">
+              <span class="material-symbols-outlined">{{ copied === j.empId ? 'check' : 'content_copy' }}</span></button></div>
+        </div>
+        <div class="nj-fld">
+          <span class="nj-lbl"><span class="material-symbols-outlined">event</span>Joined</span>
+          <div class="v">{{ fmtDate(j.dateOfJoined) }}</div>
+        </div>
+        <div class="nj-fld">
+          <span class="nj-lbl"><span class="material-symbols-outlined">apartment</span>Department</span>
+          <div class="v" [class.none]="!j.department">{{ tc(j.department) || 'Not provided' }}</div>
+        </div>
+        <div class="nj-fld">
+          <span class="nj-lbl"><span class="material-symbols-outlined">location_on</span>Location</span>
+          <div class="v" [class.none]="!j.comLoc">{{ location(j.comLoc) || 'Not provided' }}</div>
+        </div>
+        <div class="nj-fld w">
+          <span class="nj-lbl"><span class="material-symbols-outlined">mail</span>Email</span>
+          @if (j.email?.trim()) {
+            <div class="v"><a [href]="'mailto:' + j.email!.trim()">{{ j.email!.trim() }}</a>
+              <button type="button" class="nj-cp" (click)="copy(j.email!.trim())" aria-label="Copy email">
+                <span class="material-symbols-outlined">{{ copied === j.email!.trim() ? 'check' : 'content_copy' }}</span></button></div>
+          } @else { <div class="v none">Not provided</div> }
+        </div>
+        <div class="nj-fld w">
+          <span class="nj-lbl"><span class="material-symbols-outlined">call</span>Phone</span>
+          @if (phone(j.contactNumber); as ph) {
+            <div class="v"><a [href]="tel(ph)">{{ ph }}</a>
+              <button type="button" class="nj-cp" (click)="copy(ph)" aria-label="Copy phone">
+                <span class="material-symbols-outlined">{{ copied === ph ? 'check' : 'content_copy' }}</span></button></div>
+          } @else { <div class="v none">Not provided</div> }
+        </div>
+      </div>
+    </div>
+  }
+</div>

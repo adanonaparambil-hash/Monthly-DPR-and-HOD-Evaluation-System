@@ -193,7 +193,23 @@ export class LeaveApprovalComponent implements OnInit {
   // 'Submitted' status option visible to ADMINISTRATION and OPERATIONS dept users, and HODs
   canSeeSubmittedFilter = false;
 
+  /**
+   * One component, two pages (route data): Approvals → Form Approvals shows the
+   * pending inbox only; Past Reports → Form Requests (/form-requests) shows my
+   * submitted requests only. Same procedures and API as before.
+   */
+  pageView: 'pending' | 'myRequests' = 'pending';
+
   ngOnInit(): void {
+    this.pageView = this.route.snapshot.data['view'] === 'myRequests' ? 'myRequests' : 'pending';
+
+    // Old links / record views still return to /leave-approval?tab=myRequests (BYOD,
+    // Rejoin, Exit form): send them to the Form Requests page, list state untouched.
+    if (this.pageView === 'pending' && this.route.snapshot.queryParamMap.get('tab') === 'myRequests') {
+      this.router.navigate(['/form-requests'], { replaceUrl: true });
+      return;
+    }
+
     this.currentUser = this.sessionService.getCurrentUser();
 
     const userDept = (this.currentUser?.department || this.currentUser?.empDept || '').toString().toUpperCase().trim();
@@ -212,21 +228,27 @@ export class LeaveApprovalComponent implements OnInit {
       error: () => {}
     });
 
-    // Restore list state (filters/page) when returning from a record view
-    const savedState = this.restoreListState();
+    // Restore list state (filters/page) when returning from a record view — only the
+    // state this page saved (the two pages share the storage key)
+    if (this.peekSavedTab() === this.pageView) { this.restoreListState(); }
 
-    // Check for tab parameter in URL
-    this.route.queryParams.subscribe(params => {
-      const tab = params['tab'] || savedState?.activeTab;
-      if (tab === 'myRequests') {
-        this.activeTab = 'myRequests';
-        this.loadMyRequests();
-      } else {
-        this.activeTab = 'pending';
-        this.loadPendingApprovals();
-      }
-    });
+    // The page decides the list; the old ?tab= parameter is handled above.
+    if (this.pageView === 'myRequests') {
+      this.activeTab = 'myRequests';
+      this.loadMyRequests();
+    } else {
+      this.activeTab = 'pending';
+      this.loadPendingApprovals();
+    }
   }
+
+  /** The tab saved before opening a record, read without consuming it. */
+  private peekSavedTab(): string | null {
+    try { return JSON.parse(sessionStorage.getItem(this.LIST_STATE_KEY) || 'null')?.activeTab ?? null; } catch { return null; }
+  }
+
+  /** "No pending approvals" → the user's own requests, now a page of their own. */
+  openMyRequestsPage(): void { this.router.navigate(['/form-requests']); }
 
   // ── List state persistence (survive navigation to record view) ──
   private readonly LIST_STATE_KEY = 'leaveApprovalListState';
@@ -276,6 +298,9 @@ export class LeaveApprovalComponent implements OnInit {
       this.myPageNo              = s.myPageNo   || 1;
       this.myPageSize            = this.sanePageSize(s.myPageSize);
       this.showMyRequestsFilters = !!s.showMyRequestsFilters;
+      // leave applications moved to their own pages — an old saved 'Leave' type would list nothing
+      if (this.typeFilter === 'Leave') { this.typeFilter = 'all'; }
+      if (this.myTypeFilter === 'LEAVE') { this.myTypeFilter = 'all'; }
       return s;
     } catch {
       return null;
@@ -383,21 +408,23 @@ export class LeaveApprovalComponent implements OnInit {
     else if (this.typeFilter === 'BYOD')   typeParam = 'B';
     else if (this.typeFilter === 'Rejoin') typeParam = 'R';
 
+    const employeeId = this.employeeNameFilter ? this.empMasterList.find(e => e.description === this.employeeNameFilter)?.idValue || undefined : undefined;
+
     const requestParams: EmployeeApprovalInboxRequest = {
       approverId: this.currentUser.empId || this.currentUser.employeeId,
       formType:   typeParam   || undefined,
       status:     statusParam || undefined,
-      employeeId: this.employeeNameFilter ? this.empMasterList.find(e => e.description === this.employeeNameFilter)?.idValue || undefined : undefined,
+      employeeId,
       fromDate:   this.fromDateFilter ? new Date(this.fromDateFilter) : null,
       toDate:     this.toDateFilter   ? new Date(this.toDateFilter)   : null,
       // the SERVER pages in blocks of 500 — not in display pages
       pageNo:     batchNo,
       pageSize:   this.BATCH_SIZE,
     };
-
+    // Leave applications have their own page: Approvals → Leave Approvals (/leave-inbox).
     this.api.GetExitApprovalList(requestParams).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
+      next: (response: any) => {
+        if (response?.success && response.data) {
           this.inboxBatch = response.data.map((item: any) => ({
             id: `REQ${item.formId}`,
             exitId: item.formId,
@@ -482,10 +509,10 @@ export class LeaveApprovalComponent implements OnInit {
       pageNo:     batchNo,
       pageSize:   this.BATCH_SIZE,
     };
-
+    // My leave applications have their own page: Past Reports → Leave Application Report (/leave-report).
     this.api.GetMySubmittedRequests(requestParams).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
+      next: (response: any) => {
+        if (response?.success && response.data) {
           this.myBatch = response.data.map((item: any) => ({
             id:              `REQ${item.formId}`,
             exitId:          item.formId,
@@ -623,6 +650,7 @@ export class LeaveApprovalComponent implements OnInit {
 
   viewMyRequestDetails(request: LeaveRequest): void {
     this.saveListState();
+    sessionStorage.setItem('returnUrl', '/form-requests');
     if (request.leaveType === 'BYOD') {
       this.router.navigate(['/byod-form'], { queryParams: { byodId: request.exitID } });
       return;
@@ -949,6 +977,43 @@ export class LeaveApprovalComponent implements OnInit {
   /**
    * Get form type display text
    */
+  /** "PROJECTS-ELECTRICAL" → "Projects-Electrical"; short codes (IT, HR, QAQC, PMV…) stay upper case. */
+  tc(v: unknown): string {
+    const s = (v ?? '').toString().trim();
+    if (!s) { return ''; }
+    return s.toLowerCase().replace(/(^|[\s&(/-])(\p{L})/gu, (_m: string, p: string, c: string) => p + c.toUpperCase())
+      .replace(/\b(It|Hr|Hod|Ced|Qa|Qc|Qaqc|Mep|Pmc|Pmv|Mis|Dpr|Cad|Ai)\b/g, (w: string) => w.toUpperCase());
+  }
+
+  /** "FAHD ABDUL AZIZ" → "FA"; one word → one letter. */
+  initialsOf(name: unknown): string {
+    const w = (name ?? '').toString().trim().split(/\s+/).filter(Boolean);
+    return ((w[0]?.[0] || '?') + (w.length > 1 ? w[1][0] : '')).toUpperCase();
+  }
+
+  /** Stable avatar colour per person (same name → same colour). */
+  avatarColor(name: unknown): string {
+    const palette = ['#0f6b50', '#1d4ed8', '#7c3aed', '#b45309', '#be123c', '#0e7490'];
+    const n = (name ?? '').toString();
+    let h = 0; for (let i = 0; i < n.length; i++) { h = (h * 31 + n.charCodeAt(i)) >>> 0; }
+    return palette[h % palette.length];
+  }
+
+  /** Download the given rows (the page on screen) as a CSV file. */
+  exportCsv(rows: LeaveRequest[], name: string): void {
+    if (!rows?.length) { return; }
+    const esc = (v: unknown) => { const s = (v ?? '').toString(); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const fmt = (d: any) => { const t = d ? new Date(d) : null; return t && !isNaN(t.getTime()) ? t.toISOString().slice(0, 16).replace('T', ' ') : ''; };
+    const head = ['Employee', 'Employee ID', 'Department', 'Form Type', 'Submitted', 'Status', 'Actioned On'];
+    const body = rows.map(r => [r.employeeName, r.employeeId, r.department, this.getFormTypeText(r.leaveType), fmt(r.requestDate), r.status, fmt(r.approvedDate)].map(esc).join(','));
+    const blob = new Blob(['\ufeff' + [head.join(','), ...body].join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   getFormTypeText(leaveType: any): string {
     if (!leaveType) return 'N/A';
     switch (String(leaveType)) {

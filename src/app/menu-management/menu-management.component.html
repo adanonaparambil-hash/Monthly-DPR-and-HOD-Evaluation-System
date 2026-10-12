@@ -1,0 +1,405 @@
+<div class="mm">
+
+  @if (state === 'loading') {
+    <div class="mm-card mm-center"><app-crane-loader size="md" message="Checking your access"></app-crane-loader></div>
+  } @else if (state === 'denied' || state === 'error') {
+    <div class="mm-card mm-center mm-denied">
+      <span class="mm-denied-ic"><i class="fas" [class.fa-lock]="state === 'denied'" [class.fa-triangle-exclamation]="state === 'error'"></i></span>
+      <h2>{{ state === 'denied' ? 'Menu Management is restricted' : 'Could not open Menu Management' }}</h2>
+      <p>{{ state === 'denied' ? 'Ask an IT admin to grant you the “Menu Management” menu.' : 'Please refresh the page and try again.' }}</p>
+    </div>
+  } @else {
+
+  <!-- ═══════════ header ═══════════ -->
+  <section class="mm-head">
+    <span class="mm-head-ic"><i class="fas fa-sitemap"></i></span>
+    <div class="mm-head-tx">
+      <h2>Menu Management</h2>
+      <p>Create sidebar menus and control who can see them</p>
+    </div>
+    <span class="mm-role" [class.ro]="!canEdit"><i class="fas" [class.fa-user-shield]="canEdit" [class.fa-eye]="!canEdit"></i>{{ canEdit ? 'Admin · can edit' : 'View only' }}</span>
+  </section>
+
+  <nav class="mm-tabs" role="tablist">
+    <button type="button" role="tab" [class.on]="tab === 'menus'" [attr.aria-selected]="tab === 'menus'" (click)="setTab('menus')">
+      <i class="fas fa-bars-staggered"></i><span>Menus</span><b>{{ menus.length }}</b></button>
+    <button type="button" role="tab" [class.on]="tab === 'byUser'" [attr.aria-selected]="tab === 'byUser'" (click)="setTab('byUser')">
+      <i class="fas fa-user-gear"></i><span>Access by user</span></button>
+    <button type="button" role="tab" [class.on]="tab === 'byMenu'" [attr.aria-selected]="tab === 'byMenu'" (click)="setTab('byMenu')">
+      <i class="fas fa-users-gear"></i><span>Access by menu</span></button>
+    <button type="button" role="tab" [class.on]="tab === 'activity'" [attr.aria-selected]="tab === 'activity'" (click)="setTab('activity')">
+      <i class="fas fa-clock-rotate-left"></i><span>Activity</span></button>
+  </nav>
+
+  <!-- ═══════════ TAB: MENUS ═══════════ -->
+  @if (tab === 'menus') {
+    <section class="mm-stats">
+      <div><b>{{ stats.total }}</b><span>Menus</span></div>
+      <div><b>{{ stats.groups }}</b><span>Groups</span></div>
+      <div><b>{{ stats.external }}</b><span>External links</span></div>
+      <div [class.warn]="stats.inactive > 0"><b>{{ stats.inactive }}</b><span>Inactive</span></div>
+    </section>
+
+    <section class="mm-card">
+      <div class="mm-bar">
+        <label class="mm-search"><i class="fas fa-magnifying-glass"></i>
+          <input type="text" [(ngModel)]="menuQuery" placeholder="Search menu name or URL…" autocomplete="off"></label>
+        <label class="mm-check"><input type="checkbox" [(ngModel)]="showInactive"><span>Show inactive</span></label>
+        <span class="mm-grow"></span>
+        <button type="button" class="mm-btn ghost" (click)="loadMenus()" [disabled]="menusLoading" title="Reload">
+          <i class="fas fa-rotate-right" [class.fa-spin]="menusLoading"></i></button>
+        @if (canEdit) { <button type="button" class="mm-btn pri" (click)="openNew()"><i class="fas fa-plus"></i>New menu</button> }
+      </div>
+
+      @if (menusLoading && !menus.length) {
+        <div class="mm-center pad"><app-crane-loader size="md" message="Loading menus"></app-crane-loader></div>
+      } @else if (!menuTree.length) {
+        <div class="mm-empty"><i class="fas fa-folder-open"></i><b>No menus match</b><small>Try another search{{ showInactive ? '' : ', or show inactive menus' }}.</small></div>
+      } @else {
+        <div class="mm-tree">
+          @for (g of menuTree; track g.root.menuId) {
+            <div class="mm-group" [class.off]="g.root.isActive !== 'Y'">
+              <ng-container *ngTemplateOutlet="menuRow; context: { $implicit: g.root, root: true, kids: g.kids.length }"></ng-container>
+              @if (!collapsed[g.root.menuId]) {
+                @for (k of g.kids; track k.menuId) {
+                  <ng-container *ngTemplateOutlet="menuRow; context: { $implicit: k, root: false }"></ng-container>
+                }
+                @if (canEdit && kind(g.root) === 'group') {
+                  <button type="button" class="mm-addsub" (click)="openNew(g.root)"><i class="fas fa-plus"></i>Add sub-menu to {{ g.root.menuName }}</button>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <ng-template #menuRow let-m let-root="root" let-kids="kids">
+      <div class="mm-row" [class.child]="!root" [class.off]="m.isActive !== 'Y'">
+        @if (root && kids > 0) {
+          <button type="button" class="mm-caret" (click)="toggleGroup(m.menuId)" [attr.aria-expanded]="!collapsed[m.menuId]" aria-label="Show or hide sub-menus">
+            <i class="fas fa-chevron-down" [class.shut]="collapsed[m.menuId]"></i></button>
+        } @else { <span class="mm-caret-sp"></span> }
+        <span class="mm-ic" [class]="'mm-ic k-' + kind(m)"><i class="fas" [ngClass]="iconOf(m)"></i></span>
+        <div class="mm-name">
+          <b>{{ m.menuName }}
+            @if (m.isSystem === 'Y') { <span class="mm-tag sys" title="Protected: cannot be deleted or switched off"><i class="fas fa-lock"></i>System</span> }
+            @if (m.isActive !== 'Y') { <span class="mm-tag off">Inactive</span> }
+          </b>
+          <small>
+            <span class="mm-kind" [class]="'mm-kind k-' + kind(m)">{{ kindLabel(kind(m)) }}</span>
+            @if (m.menuUrl) { <span class="mm-url" [title]="m.menuUrl">{{ m.menuUrl }}</span> }
+            @if (kind(m) === 'external' && m.duration) { <span class="mm-dur"><i class="far fa-clock"></i>{{ m.duration }} min</span> }
+          </small>
+        </div>
+        <span class="mm-order" title="Order in the sidebar">#{{ m.menuOrder ?? '—' }}</span>
+        <button type="button" class="mm-users" (click)="openUsersOf(m)" title="See who has this menu">
+          <i class="fas fa-user-group"></i>{{ m.userCount }}</button>
+        <div class="mm-acts">
+          @if (canEdit && m.isSystem !== 'Y') {
+            <button type="button" class="mm-switch" [class.on]="m.isActive === 'Y'" (click)="toggleActive(m)"
+                    [title]="m.isActive === 'Y' ? 'Active — click to hide from everyone' : 'Inactive — click to activate'"
+                    role="switch" [attr.aria-checked]="m.isActive === 'Y'"><i></i></button>
+          }
+          <button type="button" class="mm-ib" (click)="openEdit(m)" [title]="canEdit ? 'Edit' : 'Details'"><i class="fas" [class.fa-pen]="canEdit" [class.fa-eye]="!canEdit"></i></button>
+          @if (canEdit && root && kind(m) === 'group') {
+            <button type="button" class="mm-ib" (click)="openNew(m)" title="Add sub-menu"><i class="fas fa-plus"></i></button>
+          }
+          @if (canEdit && m.isSystem !== 'Y') {
+            <button type="button" class="mm-ib danger" (click)="deleteMenu(m)" title="Delete"><i class="fas fa-trash-can"></i></button>
+          }
+        </div>
+      </div>
+    </ng-template>
+  }
+
+  <!-- ═══════════ TAB: ACCESS BY USER ═══════════ -->
+  @if (tab === 'byUser') {
+    <section class="mm-card">
+      <div class="mm-bar wrap">
+        <div class="mm-pick" (click)="$event.stopPropagation()">
+          <label class="mm-search lg"><i class="fas fa-user"></i>
+            <input type="text" [(ngModel)]="userQuery" (focus)="userDdOpen = true" (ngModelChange)="userDdOpen = true"
+                   [placeholder]="userPick ? 'Switch employee…' : 'Search an employee by name or ID…'" autocomplete="off"></label>
+          @if (userDdOpen && userQuery.trim()) {
+            <div class="mm-dd">
+              @for (e of matches(userQuery); track e.idValue) {
+                <button type="button" (click)="pickUser(e)"><span>{{ tc(e.description) }}</span><small>{{ e.idValue }}</small></button>
+              } @empty { <div class="mm-dd-empty">No employee matches “{{ userQuery }}”</div> }
+            </div>
+          }
+        </div>
+        @if (userPick && canEdit) {
+          <div class="mm-pick" (click)="$event.stopPropagation()">
+            <label class="mm-search"><i class="fas fa-copy"></i>
+              <input type="text" [(ngModel)]="copyQuery" (focus)="copyDdOpen = true" (ngModelChange)="copyDdOpen = true"
+                     placeholder="Copy access from…" autocomplete="off"></label>
+            @if (copyDdOpen && copyQuery.trim()) {
+              <div class="mm-dd">
+                @for (e of matches(copyQuery); track e.idValue) {
+                  <button type="button" (click)="copyFrom(e)"><span>{{ tc(e.description) }}</span><small>{{ e.idValue }}</small></button>
+                } @empty { <div class="mm-dd-empty">No employee matches</div> }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (!userPick) {
+        <div class="mm-empty"><i class="fas fa-user-gear"></i><b>Pick an employee</b><small>You will see every menu with this person’s access, and can change it in one go.</small></div>
+      } @else {
+        <div class="mm-who">
+          <span class="mm-av">{{ initials(userPick.description) }}</span>
+          <div><b>{{ tc(userPick.description) }}</b><small>{{ userPick.idValue }} · {{ grantedCount }} of {{ lines.length }} menus</small></div>
+          @if (dirty) { <span class="mm-tag warn"><i class="fas fa-circle"></i>Unsaved changes</span> }
+        </div>
+
+        @if (accessLoading) {
+          <div class="mm-center pad"><app-crane-loader size="md" message="Loading access"></app-crane-loader></div>
+        } @else {
+          <div class="mm-legend">
+            <span><b>Access</b> shows the menu in the sidebar</span>
+            <span><b>Admin</b> = CAN_ADD</span><span><b>Edit</b> = CAN_EDIT (external edit mode)</span><span><b>Delete</b> = CAN_DELETE</span>
+          </div>
+          <div class="mm-acc">
+            @for (r of rootLines; track r.menuId) {
+              <div class="mm-acc-group">
+                <ng-container *ngTemplateOutlet="accLine; context: { $implicit: r, root: true }"></ng-container>
+                @for (k of kidLines(r.menuId); track k.menuId) {
+                  <ng-container *ngTemplateOutlet="accLine; context: { $implicit: k, root: false }"></ng-container>
+                }
+                @if (canEdit && kidLines(r.menuId).length > 1) {
+                  <div class="mm-acc-bulk">
+                    <button type="button" (click)="setGroup(r, true)">Select all in {{ r.menuName }}</button>
+                    <button type="button" (click)="setGroup(r, false)">Clear</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          @if (canEdit) {
+            <div class="mm-savebar" [class.show]="dirty">
+              <span><i class="fas fa-circle-info"></i>Sub-menus need their parent — it is added for you.</span>
+              <span class="mm-grow"></span>
+              <button type="button" class="mm-btn ghost" (click)="resetAccess()" [disabled]="!dirty || accessSaving">Undo</button>
+              <button type="button" class="mm-btn pri" (click)="saveAccess()" [disabled]="!dirty || accessSaving">
+                @if (accessSaving) { <i class="fas fa-spinner fa-spin"></i>Saving… } @else { <i class="fas fa-check"></i>Save access }
+              </button>
+            </div>
+          }
+        }
+      }
+    </section>
+
+    <ng-template #accLine let-l let-root="root">
+      <div class="mm-acc-row" [class.child]="!root" [class.on]="l.has" [class.off]="l.isActive !== 'Y'">
+        <button type="button" class="mm-tick" [class.on]="l.has" (click)="toggleLine(l)" [disabled]="!canEdit || isLockedSelf(l)"
+                role="checkbox" [attr.aria-checked]="l.has" [attr.aria-label]="'Access to ' + l.menuName"><i class="fas fa-check"></i></button>
+        <div class="mm-name">
+          <b>{{ l.menuName }}
+            @if (l.isActive !== 'Y') { <span class="mm-tag off">Inactive</span> }
+            @if (isLockedSelf(l)) { <span class="mm-tag sys" title="You cannot remove your own Menu Management access"><i class="fas fa-lock"></i>Yours</span> }
+          </b>
+          <small><span class="mm-kind" [class]="'mm-kind k-' + kind(l)">{{ kindLabel(kind(l)) }}</span>@if (l.menuUrl) { <span class="mm-url">{{ l.menuUrl }}</span> }</small>
+        </div>
+        <div class="mm-flags" [class.dim]="!l.has">
+          <button type="button" [class.on]="l.canAdd" (click)="toggleFlag(l, 'canAdd')" [disabled]="!canEdit || !l.has">Admin</button>
+          <button type="button" [class.on]="l.canEdit" (click)="toggleFlag(l, 'canEdit')" [disabled]="!canEdit || !l.has">Edit</button>
+          <button type="button" [class.on]="l.canDelete" (click)="toggleFlag(l, 'canDelete')" [disabled]="!canEdit || !l.has">Delete</button>
+        </div>
+      </div>
+    </ng-template>
+  }
+
+  <!-- ═══════════ TAB: ACCESS BY MENU ═══════════ -->
+  @if (tab === 'byMenu') {
+    <section class="mm-card">
+      <div class="mm-bar wrap">
+        <label class="mm-select"><i class="fas fa-bars-staggered"></i>
+          <select [ngModel]="menuPick?.menuId ?? ''" (ngModelChange)="pickMenuById($event)" aria-label="Menu">
+            <option value="" disabled>Choose a menu…</option>
+            @for (r of roots; track r.menuId) {
+              <option [value]="r.menuId">{{ r.menuName }} ({{ r.userCount }})</option>
+              @for (k of childrenOf(r.menuId); track k.menuId) {
+                <option [value]="k.menuId">&nbsp;&nbsp;&nbsp;↳ {{ k.menuName }} ({{ k.userCount }})</option>
+              }
+            }
+          </select></label>
+        @if (menuPick) {
+          <label class="mm-search"><i class="fas fa-magnifying-glass"></i>
+            <input type="text" [(ngModel)]="menuUserQuery" placeholder="Filter users…" autocomplete="off"></label>
+        }
+      </div>
+
+      @if (!menuPick) {
+        <div class="mm-empty"><i class="fas fa-users-gear"></i><b>Choose a menu</b><small>See everyone who has it, add people in bulk, or remove them.</small></div>
+      } @else {
+        @if (canEdit) {
+          <div class="mm-grant">
+            <div class="mm-grant-h"><i class="fas fa-user-plus"></i>Give <b>{{ menuPick.menuName }}</b> to…
+              @if (menuPick.parentId != null) { <small>(they also get its parent, {{ menuPick.parentName }})</small> }</div>
+            <div class="mm-pick" (click)="$event.stopPropagation()">
+              <label class="mm-search lg"><i class="fas fa-user"></i>
+                <input type="text" [(ngModel)]="addQuery" (focus)="addDdOpen = true" (ngModelChange)="addDdOpen = true"
+                       placeholder="Search employees to add…" autocomplete="off"></label>
+              @if (addDdOpen && addQuery.trim()) {
+                <div class="mm-dd">
+                  @for (e of matches(addQuery, existingIds); track e.idValue) {
+                    <button type="button" (click)="queueAdd(e)"><span>{{ tc(e.description) }}</span><small>{{ e.idValue }}</small></button>
+                  } @empty { <div class="mm-dd-empty">No one else matches</div> }
+                </div>
+              }
+            </div>
+            @if (addList.length) {
+              <div class="mm-chips">
+                @for (a of addList; track a.idValue) {
+                  <span class="mm-chip">{{ tc(a.description) }} <small>{{ a.idValue }}</small><button type="button" (click)="unqueue(a)" aria-label="Remove">×</button></span>
+                }
+              </div>
+              <div class="mm-grant-f">
+                <span>Permissions:</span>
+                <label class="mm-check"><input type="checkbox" [(ngModel)]="addFlags.canAdd"><span>Admin</span></label>
+                <label class="mm-check"><input type="checkbox" [(ngModel)]="addFlags.canEdit"><span>Edit</span></label>
+                <label class="mm-check"><input type="checkbox" [(ngModel)]="addFlags.canDelete"><span>Delete</span></label>
+                <span class="mm-grow"></span>
+                <button type="button" class="mm-btn pri" (click)="grantQueued()" [disabled]="granting">
+                  @if (granting) { <i class="fas fa-spinner fa-spin"></i>Granting… } @else { <i class="fas fa-check"></i>Grant to {{ addList.length }} }
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="mm-list-h">{{ menuUsers.length }} {{ menuUsers.length === 1 ? 'person has' : 'people have' }} this menu</div>
+        @if (menuUsersLoading) {
+          <div class="mm-center pad"><app-crane-loader size="md" message="Loading users"></app-crane-loader></div>
+        } @else if (!filteredMenuUsers.length) {
+          <div class="mm-empty sm"><i class="fas fa-user-slash"></i><b>{{ menuUsers.length ? 'No one matches the filter' : 'Nobody has this menu yet' }}</b></div>
+        } @else {
+          <div class="mm-users-list">
+            @for (u of filteredMenuUsers; track u.userId) {
+              <div class="mm-urow" [class.busy]="busyUser === u.userId">
+                <span class="mm-av">{{ initials(u.employeeName || u.userId) }}</span>
+                <div class="mm-name">
+                  <b>{{ tc(u.employeeName) || u.userId }}
+                    @if (u.status && u.status !== 'ACTIVE' && u.status !== 'LEAVE') { <span class="mm-tag off">{{ tc(u.status) }}</span> }</b>
+                  <small>{{ u.userId }}@if (u.department) { · {{ tc(u.department) }} }@if (u.grantedOn) { · since {{ fmtDate(u.grantedOn) }} }</small>
+                </div>
+                <div class="mm-flags">
+                  <button type="button" [class.on]="u.canAdd === 'Y'" (click)="flipUserFlag(u, 'canAdd')" [disabled]="!canEdit || !!busyUser">Admin</button>
+                  <button type="button" [class.on]="u.canEdit === 'Y'" (click)="flipUserFlag(u, 'canEdit')" [disabled]="!canEdit || !!busyUser">Edit</button>
+                  <button type="button" [class.on]="u.canDelete === 'Y'" (click)="flipUserFlag(u, 'canDelete')" [disabled]="!canEdit || !!busyUser">Delete</button>
+                </div>
+                @if (canEdit) {
+                  <button type="button" class="mm-ib danger" (click)="revoke(u)" [disabled]="!!busyUser" title="Remove access"><i class="fas fa-user-minus"></i></button>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+
+  <!-- ═══════════ TAB: ACTIVITY ═══════════ -->
+  @if (tab === 'activity') {
+    <section class="mm-card">
+      <div class="mm-bar wrap">
+        <div class="mm-seg">
+          @for (a of [['ALL','All'],['GRANT','Granted'],['UPDATE','Changed'],['REVOKE','Removed'],['MENU','Menus']]; track a[0]) {
+            <button type="button" [class.on]="auditAction === a[0]" (click)="auditAction = a[0]">{{ a[1] }}</button>
+          }
+        </div>
+        <label class="mm-search"><i class="fas fa-magnifying-glass"></i>
+          <input type="text" [(ngModel)]="auditQuery" placeholder="Search menu, person, admin…" autocomplete="off"></label>
+        <span class="mm-grow"></span>
+        <button type="button" class="mm-btn ghost" (click)="loadAudit()" [disabled]="auditLoading" title="Reload"><i class="fas fa-rotate-right" [class.fa-spin]="auditLoading"></i></button>
+      </div>
+      @if (auditLoading && !audit.length) {
+        <div class="mm-center pad"><app-crane-loader size="md" message="Loading activity"></app-crane-loader></div>
+      } @else if (!filteredAudit.length) {
+        <div class="mm-empty"><i class="fas fa-clock-rotate-left"></i><b>No activity yet</b><small>Every menu change and access grant made here is recorded.</small></div>
+      } @else {
+        <div class="mm-log">
+          @for (a of filteredAudit; track a.auditId) {
+            <div class="mm-log-row">
+              <span class="mm-log-ic" [class]="'mm-log-ic a-' + a.action.toLowerCase()">
+                <i class="fas" [ngClass]="a.action === 'GRANT' ? 'fa-plus' : a.action === 'REVOKE' ? 'fa-minus' : a.action === 'UPDATE' ? 'fa-sliders' : a.action === 'MENU_DELETE' ? 'fa-trash-can' : 'fa-pen'"></i></span>
+              <div class="mm-log-tx">
+                <b>{{ actionLabel(a.action) }}</b>
+                <span>{{ a.menuName || ('Menu #' + a.menuId) }}@if (a.userId) { → {{ tc(a.userName) || a.userId }} <small>({{ a.userId }})</small> }</span>
+                @if (a.details) { <small class="mm-log-d">{{ a.details }}</small> }
+              </div>
+              <div class="mm-log-by"><span>{{ tc(a.actorName) || a.actor }}</span><small>{{ fmtDate(a.actionOn, true) }}</small></div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ═══════════ menu drawer ═══════════ -->
+  @if (form) {
+    <div class="mm-scrim" (click)="closeForm()"></div>
+    <aside class="mm-drawer" role="dialog" aria-modal="true" aria-labelledby="mm-form-t">
+      <div class="mm-drawer-h">
+        <span class="mm-head-ic sm"><i class="fas" [class.fa-plus]="!form.menuId" [class.fa-pen]="form.menuId"></i></span>
+        <h2 id="mm-form-t">{{ form.menuId ? (canEdit ? 'Edit menu' : 'Menu details') : 'New menu' }}</h2>
+        <button type="button" class="mm-ib" (click)="closeForm()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+      </div>
+      <fieldset class="mm-drawer-b" [disabled]="!canEdit">
+        @if (form._system) { <div class="mm-note"><i class="fas fa-lock"></i>This is the Menu Management screen itself. It cannot be deleted, switched off or re-pointed.</div> }
+
+        <label class="mm-f"><span>Menu name *</span>
+          <input type="text" [(ngModel)]="form.menuName" maxlength="100" placeholder="e.g. Supplier Payment Forecast"></label>
+
+        <label class="mm-f"><span>Place it under</span>
+          <select [(ngModel)]="form.parentId" [disabled]="form._children > 0">
+            <option [ngValue]="null">Top level (shows on its own / as a group)</option>
+            @for (p of parentOptions; track p.menuId) { <option [ngValue]="p.menuId">{{ p.menuName }}</option> }
+          </select>
+          @if (form._children > 0) { <small>Has {{ form._children }} sub-menu(s), so it stays top-level.</small> }</label>
+
+        <label class="mm-f"><span>Link</span>
+          <input type="text" [(ngModel)]="form.menuUrl" (ngModelChange)="onUrlChange()" maxlength="200" placeholder="/wir-reports  ·  https://…  ·  empty for a group">
+          <small class="mm-kindline">Opens as: <span class="mm-kind" [class]="'mm-kind k-' + kind({ menuUrl: form.menuUrl, isExternal: form.isExternal ? 'Y' : 'N' })">{{ formKind }}</span></small></label>
+
+        <div class="mm-f2">
+          <label class="mm-check"><input type="checkbox" [(ngModel)]="form.isExternal"><span>External site (new tab, signed link)</span></label>
+          @if (form.isExternal) {
+            <label class="mm-f sm"><span>Session (minutes)</span><input type="number" min="0" [(ngModel)]="form.duration"></label>
+          }
+        </div>
+
+        <div class="mm-f2">
+          <label class="mm-f sm"><span>Order</span><input type="number" min="0" [(ngModel)]="form.menuOrder" placeholder="auto"></label>
+          <label class="mm-f"><span>Icon</span>
+            <div class="mm-iconin"><i class="fas" [ngClass]="form.icon || 'fa-link'"></i>
+              <input type="text" [(ngModel)]="form.icon" maxlength="50" placeholder="fa-chart-line"></div></label>
+        </div>
+        <div class="mm-icons">
+          @for (i of ICONS; track i) {
+            <button type="button" [class.on]="form.icon === i" (click)="form.icon = i" [title]="i"><i class="fas" [ngClass]="i"></i></button>
+          }
+        </div>
+
+        <label class="mm-check big"><input type="checkbox" [(ngModel)]="form.isActive" [disabled]="form._system"><span>Active — visible to the people who have it</span></label>
+
+        @if (form.menuId) {
+          <p class="mm-meta">#{{ form.menuId }} · {{ form._users }} user(s) have it</p>
+        }
+        @if (formError) { <div class="mm-err"><i class="fas fa-circle-exclamation"></i>{{ formError }}</div> }
+      </fieldset>
+      @if (canEdit) {
+        <div class="mm-drawer-f">
+          <button type="button" class="mm-btn ghost" (click)="closeForm()">Cancel</button>
+          <button type="button" class="mm-btn pri" (click)="saveMenu()" [disabled]="saving">
+            @if (saving) { <i class="fas fa-spinner fa-spin"></i>Saving… } @else { <i class="fas fa-check"></i>{{ form.menuId ? 'Save changes' : 'Create menu' }} }
+          </button>
+        </div>
+      }
+    </aside>
+  }
+  }
+</div>

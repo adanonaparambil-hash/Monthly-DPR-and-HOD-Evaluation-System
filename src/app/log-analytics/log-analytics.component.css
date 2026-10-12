@@ -1129,7 +1129,7 @@
 
 .ph-progress { display: flex; align-items: center; gap: 6px; }
 .ph-progress-bar { flex: 0 0 44px; width: 44px; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
-.ph-progress-fill { height: 100%; background: linear-gradient(90deg, #138271, #1ABC9C); border-radius: 3px; }
+.ph-progress-fill { height: 100%; background: linear-gradient(90deg, #1B2A38, #10b981); border-radius: 3px; }
 .ph-progress-txt { font-size: 10.5px; font-weight: 700; color: #475569; white-space: nowrap; }
 /* detail modal keeps the larger full-width bar */
 .ph-progress-lg .ph-progress-bar { flex: 1; width: auto; height: 8px; }

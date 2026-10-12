@@ -34,7 +34,7 @@
 
   /* Progress Colors */
   --progress-bg: #e5e7eb;
-  --progress-fill: linear-gradient(90deg, #2C3E50, #1ABC9C);
+  --progress-fill: linear-gradient(90deg, #1B2A38, #10b981);
 
   /* Motion */
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);

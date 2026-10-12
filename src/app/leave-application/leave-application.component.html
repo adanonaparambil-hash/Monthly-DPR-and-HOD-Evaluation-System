@@ -1,0 +1,434 @@
+<!-- ?leaveId=… — a submitted application (read-only, Approve / Reject for the approver) -->
+<app-leave-view *ngIf="viewLeaveId" [leaveId]="viewLeaveId" [approvalId]="viewApprovalId" (newApplication)="openNewApplication()"></app-leave-view>
+
+<div class="lv" *ngIf="!viewLeaveId">
+
+  <div class="lv-grid">
+   <div class="lv-main">
+    <!-- ═══════════ Applicant + approver ═══════════ -->
+    <section class="lv-card lv-me" aria-label="Applicant">
+      <div class="lv-me-main">
+        <div class="lv-me-photo">
+          <img *ngIf="me.photo" [src]="me.photo" alt="" (error)="photoFailed()">
+          <span *ngIf="!me.photo">{{ initials(me.name) }}</span>
+        </div>
+        <div class="lv-me-id">
+          <span class="lv-eyebrow">Applicant</span>
+          <h1>{{ tc(me.name) || 'Employee' }}</h1>
+          <p>
+            <ng-container *ngIf="me.designation">{{ tc(me.designation) }}</ng-container>
+            <ng-container *ngIf="me.designation && me.department"> · </ng-container>
+            <ng-container *ngIf="me.department">{{ tc(me.department) }}</ng-container>
+          </p>
+          <div class="lv-me-chips">
+            <span *ngIf="me.empId"><i class="fas fa-id-badge"></i>{{ me.empId }}</span>
+            <span *ngIf="me.location"><i class="fas fa-location-dot"></i>{{ tc(me.location) }}</span>
+          </div>
+        </div>
+      </div>
+      <dl class="lv-me-facts">
+        <div><dt><i class="fas fa-sitemap"></i>Department</dt><dd>{{ tc(me.department) || '—' }}</dd></div>
+        <div><dt><i class="fas fa-briefcase"></i>Designation</dt><dd>{{ tc(me.designation) || '—' }}</dd></div>
+        <div><dt><i class="far fa-calendar"></i>Date of joining</dt><dd>{{ dojText || '—' }}<small *ngIf="serviceText">{{ serviceText }} of service</small></dd></div>
+        <div><dt><i class="far fa-envelope"></i>Email</dt><dd [title]="me.email">{{ me.email || '—' }}</dd></div>
+        <div><dt><i class="fas fa-phone"></i>Phone</dt><dd>{{ me.phone || '—' }}</dd></div>
+      </dl>
+
+      <!-- approver: final approval after every handover -->
+      <div class="lv-me-appr">
+        <div class="lv-me-appr-lbl">
+          <span class="lv-sh-ic"><i class="fas fa-user-tie"></i></span>
+          <div><b>Approver <span class="req">*</span></b><small>Your HOD gives the final approval</small></div>
+        </div>
+        <div class="lv-field">
+          <label class="lv-sr" for="lv-approver">Approved by (HOD)</label>
+          <div class="lv-select" [class.invalid]="show('approvedBy')">
+            <select id="lv-approver" name="approvedBy" [(ngModel)]="approvedBy" [class.ph]="!approvedBy" [disabled]="approversState !== 'ready'">
+              <option value="" disabled>{{ approversState === 'loading' ? 'Loading approvers…' : approversState === 'error' ? 'Could not load approvers' : 'Select approver (HOD)' }}</option>
+              <option *ngFor="let o of approvers" [value]="o.value">{{ o.label }}</option>
+            </select>
+            <i class="fas" [ngClass]="approversState === 'loading' ? 'fa-spinner fa-spin' : 'fa-chevron-down'"></i>
+          </div>
+          <small class="lv-err" *ngIf="show('approvedBy')">{{ show('approvedBy') }}</small>
+          <small class="lv-err" *ngIf="approversState === 'error'">Approver list could not be loaded. <a class="lv-retry" (click)="loadApprovers()">Try again</a></small>
+        </div>
+        <div class="lv-appr-who" *ngIf="approvedBy">
+          <span class="lv-opt-av lg" [style.background]="avatarColor(approvedBy)">{{ initials(approverName) }}</span>
+          <div><b>{{ approverName }}</b><small>{{ approvedBy }} · HOD</small></div>
+          <i class="fas fa-circle-check"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ Form ═══════════ -->
+    <form class="lv-card lv-form" (ngSubmit)="save()" novalidate>
+
+      <!-- Leave details -->
+      <section class="lv-sec">
+        <div class="lv-sh">
+          <span class="lv-sh-ic"><i class="fas fa-calendar-days"></i></span>
+          <div><h2>Leave details</h2><p>Choose the type of leave and your dates</p></div>
+        </div>
+
+        <div class="lv-field">
+          <span class="lv-lbl" id="lv-type-lbl">Leave type <span class="req">*</span></span>
+          <div class="lv-types" role="radiogroup" aria-labelledby="lv-type-lbl" [class.invalid]="show('leaveType')">
+            <button type="button" class="lv-type" *ngFor="let t of leaveTypes" role="radio"
+                    [class.on]="leaveType === t.value" [attr.aria-checked]="leaveType === t.value" (click)="pickType(t.value)">
+              <span class="lv-type-ic"><i class="fas" [ngClass]="t.icon"></i></span>
+              <b>{{ t.label }}</b>
+              <small [class.rule]="t.requires">
+                <i class="fas fa-circle-exclamation" *ngIf="t.requires"></i>{{ t.hint }}
+              </small>
+              <i class="fas fa-circle-check lv-type-tick"></i>
+            </button>
+          </div>
+          <small class="lv-err" *ngIf="show('leaveType')">{{ show('leaveType') }}</small>
+        </div>
+
+        <!-- rules for the two types that have them -->
+        <div class="lv-rule" *ngIf="needsTicket">
+          <i class="fas fa-plane-circle-check"></i>
+          <div>
+            <b>Annual leave rules</b>
+            <ul>
+              <li>Apply at least <strong>{{ typeDef?.noticeDays }} days</strong> before your leave starts — the earliest start date today is <strong>{{ minFromText }}</strong>.</li>
+              <li>Upload your <strong>air ticket</strong> in the section below.</li>
+              <li>Add at least <strong>one handover person</strong> who will cover your work.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="lv-rule med" *ngIf="needsMedical">
+          <i class="fas fa-file-medical"></i>
+          <div>
+            <b>Sick leave rule</b>
+            <ul><li>Upload the <strong>medical certificate</strong> from your doctor or hospital in the section below.</li></ul>
+          </div>
+        </div>
+
+        <div class="lv-row lv-row-dates">
+          <div class="lv-field">
+            <label for="lv-from">From date <span class="req">*</span></label>
+            <div class="lv-date" [class.invalid]="show('fromDate') || noticeError" [class.empty]="!fromDate">
+              <i class="far fa-calendar"></i>
+              <input id="lv-from" type="date" name="fromDate" [(ngModel)]="fromDate" [attr.min]="minFrom" [attr.max]="toDate || null">
+            </div>
+            <small class="lv-err" *ngIf="show('fromDate') || noticeError">{{ show('fromDate') || 'Apply at least ' + typeDef?.noticeDays + ' days ahead — the earliest start is ' + minFromText + '.' }}</small>
+          </div>
+          <div class="lv-field">
+            <label for="lv-to">To date <span class="req">*</span></label>
+            <div class="lv-date" [class.invalid]="show('toDate') || dateOrderError" [class.empty]="!toDate">
+              <i class="far fa-calendar"></i>
+              <input id="lv-to" type="date" name="toDate" [(ngModel)]="toDate" [attr.min]="fromDate || minFrom">
+            </div>
+            <small class="lv-err" *ngIf="show('toDate') || dateOrderError">{{ show('toDate') || 'The to date must be on or after the from date.' }}</small>
+          </div>
+          <div class="lv-field lv-f-days">
+            <label for="lv-days">No. of days <span class="lv-auto">Auto</span></label>
+            <!-- not editable: worked out from the from / to dates -->
+            <output id="lv-days" class="lv-dayout" [class.set]="totalDays" aria-live="polite"
+                    title="Calculated automatically from the from and to dates">
+              <i class="fas fa-calendar-check"></i>
+              <span *ngIf="totalDays; else noDays"><b>{{ totalDays }}</b> {{ totalDays === 1 ? 'day' : 'days' }}</span>
+              <ng-template #noDays><span class="ph">—</span></ng-template>
+            </output>
+          </div>
+        </div>
+      </section>
+
+      <!-- Air ticket: annual leave only -->
+      <section class="lv-sec lv-sec-req" *ngIf="needsTicket">
+        <div class="lv-sh">
+          <span class="lv-sh-ic"><i class="fas fa-plane"></i></span>
+          <div><h2>Air ticket <span class="lv-need">Required for annual leave</span></h2><p>Upload the ticket for your travel</p></div>
+        </div>
+        <div class="lv-row">
+          <div class="lv-field">
+            <label>Ticket copy <span class="req">*</span></label>
+            <ng-container *ngTemplateOutlet="drop; context: { slot: 'ticket', what: 'your ticket' }"></ng-container>
+            <small class="lv-err" *ngIf="show('ticket')">{{ show('ticket') }}</small>
+          </div>
+          <div class="lv-field">
+            <label for="lv-route">Travel route <span class="opt">(optional)</span></label>
+            <input id="lv-route" class="lv-input" type="text" name="travelRoute" [(ngModel)]="travelRoute" maxlength="120" placeholder="e.g. Muscat → Kochi → Muscat">
+          </div>
+        </div>
+      </section>
+
+      <!-- Medical certificate: sick leave only -->
+      <section class="lv-sec lv-sec-req" *ngIf="needsMedical">
+        <div class="lv-sh">
+          <span class="lv-sh-ic"><i class="fas fa-file-medical"></i></span>
+          <div><h2>Medical certificate <span class="lv-need">Required for sick leave</span></h2><p>Issued by your doctor or hospital</p></div>
+        </div>
+        <div class="lv-field">
+          <label>Certificate <span class="req">*</span></label>
+          <ng-container *ngTemplateOutlet="drop; context: { slot: 'medical', what: 'the certificate' }"></ng-container>
+          <small class="lv-err" *ngIf="show('medical')">{{ show('medical') }}</small>
+        </div>
+      </section>
+
+      <!-- Handover (optional): one card per person; each approves their own handover -->
+      <section class="lv-sec">
+        <div class="lv-sec-top">
+          <div class="lv-sh">
+            <span class="lv-sh-ic"><i class="fas fa-people-arrows"></i></span>
+            <div>
+              <h2>Handover <span class="lv-pill" *ngIf="handovers.length">{{ handovers.length }}</span><span class="lv-need" *ngIf="needsHandover">Required for annual leave</span><span class="lv-optional" *ngIf="!needsHandover">Optional</span></h2>
+              <p>Colleagues covering your work — each approves their own handover</p>
+            </div>
+          </div>
+          <span class="lv-ho-progress" *ngIf="handovers.length" [class.ok]="handoversComplete === handovers.length">
+            <i class="fas" [ngClass]="handoversComplete === handovers.length ? 'fa-circle-check' : 'fa-list-check'"></i>
+            {{ handoversComplete }} / {{ handovers.length }} complete
+          </span>
+        </div>
+
+        <small class="lv-err lv-err-block" *ngIf="colleaguesState === 'error'">Colleague list could not be loaded. <a class="lv-retry" (click)="loadColleagues()">Try again</a></small>
+
+        <small class="lv-err lv-err-block" *ngIf="show('handovers') && !handovers.length">{{ show('handovers') }}</small>
+
+        <div class="lv-ho-empty" *ngIf="!handovers.length" [class.invalid]="show('handovers')">
+          <span class="lv-ho-empty-ic"><i class="fas fa-user-group"></i></span>
+          <div>
+            <b>No handover added</b>
+            <span>{{ needsHandover ? 'Annual leave needs at least one colleague to look after your work while you are away.' : 'Add the colleagues who will look after your work while you are away. Skip this if nothing needs to be handed over.' }}</span>
+          </div>
+          <button type="button" class="lv-btn soft" (click)="addHandover()" [disabled]="colleaguesState === 'loading'">
+            <i class="fas fa-user-plus"></i> Add handover person
+          </button>
+        </div>
+
+        <div class="lv-ho-list" *ngIf="handovers.length">
+          <article class="lv-ho" *ngFor="let h of handovers; let i = index; trackBy: trackHo" [id]="'lv-ho-' + i"
+                   [class.done]="hoComplete(h)" [class.bad]="submitted && !hoComplete(h)" [class.lifted]="pickerFor === i">
+            <header class="lv-ho-head">
+              <span class="lv-ho-av" [class.empty]="!h.empId" [style.background]="h.empId ? avatarColor(h.empId) : null">
+                <ng-container *ngIf="h.empId; else avNum">{{ initials(h.name) }}</ng-container>
+                <ng-template #avNum>{{ i + 1 }}</ng-template>
+              </span>
+              <div class="lv-ho-tt">
+                <b>{{ h.name ? tc(h.name) : 'Handover person ' + (i + 1) }}</b>
+                <small>{{ h.empId ? h.empId + ' · ' : '' }}Approval {{ i + 1 }} of {{ handovers.length }}</small>
+              </div>
+              <span class="lv-ho-state" [class.ok]="hoComplete(h)">
+                <i class="fas" [ngClass]="hoComplete(h) ? 'fa-check' : 'fa-pen'"></i>{{ hoComplete(h) ? 'Ready' : 'Details needed' }}
+              </span>
+              <button type="button" class="lv-ho-x" *ngIf="canRemoveHandover()" (click)="removeHandover(i)"
+                      title="Remove this handover" aria-label="Remove this handover"><i class="far fa-trash-can"></i></button>
+            </header>
+
+            <div class="lv-ho-body">
+              <div class="lv-ho-grid">
+                <!-- responsible person: searchable, fills phone + email -->
+                <div class="lv-field lv-ho-person">
+                  <label [for]="'lv-ho-p-' + i">Responsible person <span class="req">*</span></label>
+                  <div class="lv-pick-wrap">
+                    <button type="button" class="lv-pick" [id]="'lv-ho-p-' + i" [class.open]="pickerFor === i" [class.invalid]="hoShow(h, 'person')"
+                            [disabled]="colleaguesState !== 'ready'" (click)="openPicker(i, $event)" [attr.aria-expanded]="pickerFor === i" aria-haspopup="listbox">
+                      <i class="fas fa-magnifying-glass lv-pick-ic"></i>
+                      <span class="lv-pick-val" [class.ph]="!h.empId">{{ h.empId ? tc(h.name) : colleaguesState === 'loading' ? 'Loading colleagues…' : colleaguesState === 'error' ? 'Could not load colleagues' : 'Search and select employee' }}</span>
+                      <i class="fas fa-xmark lv-pick-clear" *ngIf="h.empId" (click)="clearPerson(i, $event)" title="Clear"></i>
+                      <i class="fas lv-pick-chev" [ngClass]="colleaguesState === 'loading' ? 'fa-spinner fa-spin' : 'fa-chevron-down'"></i>
+                    </button>
+                    <div class="lv-ms-panel lv-pick-panel" *ngIf="pickerFor === i" role="listbox">
+                      <div class="lv-ms-search">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" [(ngModel)]="pickerQuery" [ngModelOptions]="{ standalone: true }" placeholder="Search by name or ID" autocomplete="off">
+                      </div>
+                      <div class="lv-ms-list">
+                        <button type="button" class="lv-ms-opt" *ngFor="let o of pickerShown" [class.on]="h.empId === o.value"
+                                [disabled]="takenElsewhere(o.value, i)" (click)="pickPerson(i, o)">
+                          <span class="lv-opt-av" [style.background]="avatarColor(o.value)">{{ initials(o.label) }}</span>
+                          <span class="lv-ms-tx"><b>{{ o.label }}</b><small>{{ o.value }}{{ takenElsewhere(o.value, i) ? ' · already added' : '' }}</small></span>
+                          <i class="fas fa-check lv-opt-tick" *ngIf="h.empId === o.value"></i>
+                        </button>
+                        <div class="lv-ms-empty" *ngIf="!pickerShown.length">No colleagues match "{{ pickerQuery }}"</div>
+                        <div class="lv-ms-more" *ngIf="pickerMore">{{ pickerMore }} more — type a name or ID to narrow the list</div>
+                      </div>
+                    </div>
+                  </div>
+                  <small class="lv-err" *ngIf="hoShow(h, 'person')">{{ hoShow(h, 'person') }}</small>
+                </div>
+
+                <div class="lv-field">
+                  <label [for]="'lv-ho-ph-' + i">Phone number <span class="req">*</span></label>
+                  <input class="lv-input" type="tel" [id]="'lv-ho-ph-' + i" [name]="'hoPhone' + i" [(ngModel)]="h.phone"
+                         [class.invalid]="hoShow(h, 'phone')" placeholder="Contact phone number" autocomplete="off">
+                  <small class="lv-err" *ngIf="hoShow(h, 'phone')">{{ hoShow(h, 'phone') }}</small>
+                </div>
+
+                <div class="lv-field">
+                  <label [for]="'lv-ho-em-' + i">Email ID <span class="req">*</span></label>
+                  <input class="lv-input" type="email" [id]="'lv-ho-em-' + i" [name]="'hoEmail' + i" [(ngModel)]="h.email"
+                         [class.invalid]="hoShow(h, 'email')" placeholder="Email address" autocomplete="off">
+                  <small class="lv-err" *ngIf="hoShow(h, 'email')">{{ hoShow(h, 'email') }}</small>
+                </div>
+
+                <div class="lv-field lv-ho-project">
+                  <label [for]="'lv-ho-pr-' + i">Project <span class="req">*</span></label>
+                  <input class="lv-input" type="text" [id]="'lv-ho-pr-' + i" [name]="'hoProject' + i" [(ngModel)]="h.project"
+                         [class.invalid]="hoShow(h, 'project')" placeholder="Enter project name" maxlength="150">
+                  <small class="lv-err" *ngIf="hoShow(h, 'project')">{{ hoShow(h, 'project') }}</small>
+                </div>
+
+                <div class="lv-field lv-ho-act">
+                  <label [for]="'lv-ho-ac-' + i">Activities <span class="req">*</span></label>
+                  <textarea [id]="'lv-ho-ac-' + i" [name]="'hoAct' + i" rows="2" maxlength="500" [(ngModel)]="h.activities"
+                            [class.invalid]="hoShow(h, 'activities')" placeholder="Describe the activities and responsibilities being handed over"></textarea>
+                  <small class="lv-err" *ngIf="hoShow(h, 'activities')">{{ hoShow(h, 'activities') }}</small>
+                </div>
+
+                <div class="lv-field lv-ho-rem">
+                  <label [for]="'lv-ho-re-' + i">Remarks <span class="opt">(optional)</span></label>
+                  <textarea [id]="'lv-ho-re-' + i" [name]="'hoRem' + i" rows="2" maxlength="300" [(ngModel)]="h.remarks"
+                            placeholder="Any additional remarks or special instructions"></textarea>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <button type="button" class="lv-ho-add" *ngIf="handovers.length" (click)="addHandover()">
+          <i class="fas fa-user-plus"></i><span>Add another handover person</span>
+        </button>
+      </section>
+
+      <!-- Additional information -->
+      <section class="lv-sec">
+        <div class="lv-sh">
+          <span class="lv-sh-ic"><i class="fas fa-circle-info"></i></span>
+          <div><h2>Additional information</h2><p>{{ typeDef?.requires ? 'A short note for your approver' : 'A short note and any supporting document' }}</p></div>
+        </div>
+        <div class="lv-field">
+          <label for="lv-reason">Reason <span class="opt">(optional)</span></label>
+          <textarea id="lv-reason" name="reason" rows="3" maxlength="500" [(ngModel)]="reason" placeholder="Add a short note about your leave"></textarea>
+          <small class="lv-count">{{ reason.length }}/500</small>
+        </div>
+        <div class="lv-field" *ngIf="!typeDef?.requires">
+          <label>Attachment <span class="opt">(optional)</span></label>
+          <ng-container *ngTemplateOutlet="drop; context: { slot: 'other', what: '' }"></ng-container>
+        </div>
+      </section>
+
+      <!-- Approval flow (bottom): handover people first, then the HOD -->
+      <section class="lv-sec lv-sec-flow">
+        <div class="lv-flow" aria-label="Approval flow">
+          <div class="lv-flow-head">
+            <span class="lv-flow-ic"><i class="fas fa-route"></i></span>
+            <div>
+              <b>How your application is approved</b>
+              <span *ngIf="handoverNames.length">It goes to each handover person first. Only after {{ handoverNames.length > 1 ? 'all ' + handoverNames.length + ' of them have' : 'they have' }} approved does it move to your HOD for final approval.</span>
+              <span *ngIf="!handoverNames.length">No handover is added, so it goes straight to your HOD for approval.</span>
+            </div>
+          </div>
+          <ol class="lv-flow-steps">
+            <li class="set">
+              <span class="dot"><i class="fas fa-paper-plane"></i></span>
+              <div><small>Step 1</small><b>You submit</b><span>Application sent for approval</span></div>
+            </li>
+            <li [class.set]="handoverNames.length" [class.skip]="!handovers.length">
+              <span class="dot"><i class="fas fa-people-arrows"></i><em *ngIf="handoverNames.length > 1">{{ handoverNames.length }}</em></span>
+              <div>
+                <small>Step 2 · Handover approval</small>
+                <ng-container *ngIf="handoverNames.length; else noHandover">
+                  <b [title]="handoverNames.join(', ')">{{ handoverFlowText }}</b>
+                  <span>{{ handoverNames.length > 1 ? 'Each of the ' + handoverNames.length + ' approves' : 'Approves the handover' }}</span>
+                </ng-container>
+                <ng-template #noHandover>
+                  <b class="muted">{{ handovers.length ? 'Handover person' : 'No handover' }}</b>
+                  <span>{{ handovers.length ? 'Choose them above' : needsHandover ? 'Required for annual leave' : 'Skipped (optional)' }}</span>
+                </ng-template>
+              </div>
+            </li>
+            <li [class.set]="approvedBy">
+              <span class="dot"><i class="fas fa-user-tie"></i></span>
+              <div>
+                <small>Step 3 · HOD approval</small>
+                <b [class.muted]="!approvedBy">{{ approverName || 'Your HOD' }}</b>
+                <span>{{ !approvedBy ? 'Select the approver above' : handoverNames.length ? 'After all handovers approve' : 'Approves your application' }}</span>
+              </div>
+            </li>
+            <li class="end">
+              <span class="dot"><i class="fas fa-circle-check"></i></span>
+              <div><small>Step 4</small><b>Leave approved</b><span>You are notified</span></div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <div class="lv-notice" *ngIf="notice" [class.err]="notice.kind === 'error'" role="status">
+        <i class="fas" [ngClass]="notice.kind === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'"></i><span>{{ notice.text }}</span>
+      </div>
+
+      <div class="lv-actions">
+        <button type="button" class="lv-btn ghost" (click)="reset()" [disabled]="saving"><i class="fas fa-rotate-left"></i> Reset</button>
+        <button type="submit" class="lv-btn primary" [disabled]="saving">
+          <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i> {{ saving ? 'Submitting…' : 'Submit application' }}
+        </button>
+      </div>
+    </form>
+   </div>
+
+    <!-- ═══════════ Side: live summary + rules ═══════════ -->
+    <div class="lv-side-col">
+      <section class="lv-card lv-sum" aria-label="Application summary">
+        <div class="lv-sum-head">
+          <h2>Application summary</h2>
+          <span class="lv-chip">Draft</span>
+        </div>
+        <div class="lv-prog">
+          <div class="lv-prog-top"><span>Required items</span><b>{{ requiredDone }} / {{ requiredTotal }}</b></div>
+          <div class="lv-prog-bar"><i [style.width.%]="requiredDone / requiredTotal * 100"></i></div>
+        </div>
+        <dl class="lv-sum-list">
+          <div><dt>Leave type</dt><dd [class.empty]="!leaveType">{{ typeDef?.label || 'Not selected' }}</dd></div>
+          <div><dt>Dates</dt><dd [class.empty]="!fromDate && !toDate" [class.bad]="dateOrderError || noticeError">{{ dateRange || 'Not selected' }}</dd></div>
+          <div *ngIf="needsTicket"><dt>Air ticket</dt><dd [class.empty]="!files.ticket" [title]="files.ticket?.name || ''">{{ files.ticket?.name || 'Not uploaded' }}</dd></div>
+          <div *ngIf="needsMedical"><dt>Medical certificate</dt><dd [class.empty]="!files.medical" [title]="files.medical?.name || ''">{{ files.medical?.name || 'Not uploaded' }}</dd></div>
+          <div><dt>Handover</dt><dd [class.empty]="!handoverNames.length" [title]="handoverNames.join(', ')">{{ handoverSummary || 'None (optional)' }}</dd></div>
+          <div><dt>Approver</dt><dd [class.empty]="!approvedBy">{{ approverName || 'Not selected' }}</dd></div>
+          <div><dt>Approvals</dt><dd>{{ handoverNames.length ? handoverNames.length + ' handover + HOD' : 'HOD' }}</dd></div>
+        </dl>
+      </section>
+
+      <aside class="lv-card lv-rules" aria-label="Leave rules">
+        <h2>Leave rules</h2>
+        <ul>
+          <li [class.on]="leaveType === 'ANNUAL'">
+            <span class="lv-rules-ic"><i class="fas fa-umbrella-beach"></i></span>
+            <div><b>Annual Leave</b><span>Apply 30 days in advance, upload your air ticket and add a handover person.</span></div>
+          </li>
+          <li [class.on]="leaveType === 'SICK'">
+            <span class="lv-rules-ic"><i class="fas fa-notes-medical"></i></span>
+            <div><b>Sick Leave</b><span>Upload a medical certificate.</span></div>
+          </li>
+          <li [class.on]="!!leaveType && !typeDef?.requires">
+            <span class="lv-rules-ic"><i class="fas fa-layer-group"></i></span>
+            <div><b>Other leave types</b><span>No extra documents needed.</span></div>
+          </li>
+        </ul>
+        <div class="lv-tip">
+          <i class="fas fa-lightbulb"></i>
+          <div><b>Keep your team informed</b><span>Discuss your planned leave with your HOD and the colleagues covering for you.</span></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- upload box, shared by the ticket, medical certificate and other attachment -->
+<ng-template #drop let-slot="slot" let-what="what">
+  <label class="lv-drop" *ngIf="!fileIn(slot)" [class.over]="dragSlot === slot" [class.invalid]="show(slot)"
+         (dragover)="onDragOver(slot, $event)" (dragleave)="dragSlot = null" (drop)="onDrop(slot, $event)">
+    <input type="file" (change)="onFilePicked(slot, $event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+    <i class="fas fa-arrow-up-from-bracket"></i>
+    <span><b>Click to upload</b> {{ what }} or drag and drop</span>
+    <small>PDF, JPG, PNG or Word · up to {{ maxFileMb }} MB</small>
+  </label>
+  <div class="lv-file" *ngIf="fileIn(slot) as f">
+    <span class="lv-file-ic"><i class="far fa-file-lines"></i></span>
+    <span class="lv-file-tx"><b>{{ f.name }}</b><small>{{ fileSize(f) }}</small></span>
+    <button type="button" class="lv-file-x" (click)="removeFile(slot)" title="Remove file" aria-label="Remove file"><i class="fas fa-xmark"></i></button>
+  </div>
+</ng-template>

@@ -51,7 +51,7 @@
 
 /* ===== HEADER — rich teal/slate ===== */
 .notice-header {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 40%, #134e4a 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   padding: 26px 28px 22px;
   display: flex;
   justify-content: space-between;
@@ -183,7 +183,7 @@
 .content-bar {
   width: 5px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #0d9488, #134e4a, #0d9488);
+  background: linear-gradient(180deg, #1B2A38, #10b981);
   background-size: 100% 300%;
   animation: barFlow 3s ease-in-out infinite;
 }
@@ -261,7 +261,7 @@
 }
 
 .dot-active {
-  background: linear-gradient(90deg, #0d9488, #134e4a);
+  background: linear-gradient(90deg, #1B2A38, #10b981);
   width: 26px;
   border-radius: 4px;
 }
@@ -296,7 +296,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #0d9488, #0f766e);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   border: none;
   font-size: 14px;

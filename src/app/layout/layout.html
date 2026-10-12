@@ -1,293 +1,267 @@
-<div class="layout-container" [class.dark-theme]="isDarkMode" [class.sidebar-collapsed]="sidebarCollapsed">
+<div class="layout-container" [class.dark-theme]="isDarkMode" [class.sidebar-collapsed]="sidebarCollapsed" [class.rtl]="i18n.isAr()">
   <!-- Session Monitor -->
   <app-session-monitor></app-session-monitor>
   <!-- Notice Popup -->
   <app-notice-popup></app-notice-popup>
   <!-- Sidebar -->
-  <aside class="sidebar" [class.dpr-only-mode]="isDPROnlyMode">
+  <aside class="sidebar" [class.dpr-only-mode]="isDPROnlyMode" [attr.dir]="i18n.dir()" [attr.lang]="i18n.lang()">
     <div class="logo">
-      <img src="assets/images/Logo_LoginScreen.png" alt="Company Logo" class="sidebar-logo-image">
+      <img src="assets/images/AdrakLivePortal.webp" alt="AdrakLive Portal" class="sidebar-logo-image">
     </div>
 
-    <nav class="menu">
-      <!-- Dashboard Menu - Keep as is (hidden in DPR-only mode) -->
-      <a *ngIf="!isDPROnlyMode && isEmployee" routerLink="/dpr-employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-chart-pie"></i> Employee Analytics
-      </a>
-      <a *ngIf="!isDPROnlyMode && isHod" routerLink="/dpr-hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-users-cog"></i> HOD Dashboard
-      </a>
-      <a *ngIf="!isDPROnlyMode && isCed" routerLink="/ced-dpr-analytics" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-gauge-high"></i> DPR Dashboard
-      </a>
-      <a *ngIf="!isDPROnlyMode && isCed" routerLink="/ced-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-chart-line"></i> APR Dashboard
-      </a>
+    <!-- ═══ Sidebar navigation ═══
+         Section headings + icon tiles + tree children. Class names are new (snav/sn-*)
+         so none of the older .menu / .submenu / .parent-menu rules (many !important)
+         reach this markup. Every link, role check and click handler is unchanged.
+         My Profile and Logout live in the header profile menu, not here. -->
+    <nav class="snav" aria-label="Main navigation">
 
-      <!-- Purchase Dashboard — specific users only (ITS48, ITS41, AIS557) -->
-      <a *ngIf="!isDPROnlyMode && isPurchaseDashboardUser" routerLink="/purchase-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-shopping-bag"></i> Purchase Dashboard
-      </a>
+      <!-- ── OVERVIEW ─────────────────────────────────────────── -->
+      <ng-container *ngIf="!isDPROnlyMode">
+        <div class="sn-sec" *ngIf="isEmployee || isHod || isCed || isPurchaseDashboardUser || navDashRoots.length"><span>{{ 'Overview' | t }}</span></div>
 
-      <!-- WIR Reports is NOT declared here any more. It comes from the menu
-           master (now under QAQC) and renders in the dynamic tree below, like
-           Finance. Keeping this link as well showed it twice and ignored the
-           parent it was given. -->
-
-      <!-- Dynamic Menu Items from API (parent → children tree) -->
-      <ng-container *ngFor="let menu of menuTree">
-
-        <!-- Parent WITH children → expandable group (parent itself has no URL) -->
-        <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode && menu.children.length > 0">
-          <a class="parent-menu" (click)="toggleMenuGroup(menu.menuId, $event)"
-             [title]="menu.menuName" href="javascript:void(0)">
-            <div class="menu-content">
-              <i class="fas fa-folder-open" *ngIf="openMenuGroups[menu.menuId]"></i>
-              <i class="fas fa-folder" *ngIf="!openMenuGroups[menu.menuId]"></i>
-              <span>{{ formatMenuName(menu.menuName) }}</span>
-            </div>
-            <i class="fas fa-chevron-down" [class.rotated]="openMenuGroups[menu.menuId]"></i>
-          </a>
-          <div class="submenu" *ngIf="openMenuGroups[menu.menuId]" [@slideDown]>
-            <a *ngFor="let child of menu.children"
-               (click)="handleMenuClick(child, $event)"
-               [title]="child.menuName"
-               [class.active]="!isExternalMenu(child) && child.menuUrl && currentRoute.includes(child.menuUrl)"
-               href="javascript:void(0)">
-              <!-- the icon follows what the link ACTUALLY is, not just the flag -->
-              <i class="fas fa-external-link-alt" *ngIf="isExternalMenu(child)"></i>
-              <i class="fas fa-tachometer-alt" *ngIf="!isExternalMenu(child)"></i>
-              {{ formatMenuName(child.menuName) }}
-            </a>
-          </div>
-        </div>
-
-        <!-- Root without children → plain link.
-             menu.menuUrl is required: a parent whose children are all hidden
-             would otherwise render as a label that goes nowhere.
-             Purchase Dashboard is skipped because it still has its own link. -->
-        <a *ngIf="!isDPROnlyMode && menu.children.length === 0 && menu.menuUrl
-                  && !menu.menuUrl?.toLowerCase().includes('purchase-dashboard')"
+        <a class="sn-item" *ngIf="isEmployee" routerLink="/dpr-employee-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'Employee Analytics' | t">
+          <span class="sn-ic" style="--c:#38bdf8"><i class="fas fa-chart-pie"></i></span><span class="sn-tx">{{ 'Employee Analytics' | t }}</span>
+        </a>
+        <a class="sn-item" *ngIf="isHod" routerLink="/dpr-hod-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'HOD Dashboard' | t">
+          <span class="sn-ic" style="--c:#34d399"><i class="fas fa-users-gear"></i></span><span class="sn-tx">{{ 'HOD Dashboard' | t }}</span>
+        </a>
+        <a class="sn-item" *ngIf="isCed" routerLink="/ced-dpr-analytics" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'DPR Dashboard' | t">
+          <span class="sn-ic" style="--c:#818cf8"><i class="fas fa-gauge-high"></i></span><span class="sn-tx">{{ 'DPR Dashboard' | t }}</span>
+        </a>
+        <a class="sn-item" *ngIf="isCed" routerLink="/ced-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'APR Dashboard' | t">
+          <span class="sn-ic" style="--c:#a78bfa"><i class="fas fa-chart-line"></i></span><span class="sn-tx">{{ 'APR Dashboard' | t }}</span>
+        </a>
+        <!-- Purchase Dashboard — specific users only (ITS48, ITS41, AIS557) -->
+        <a class="sn-item" *ngIf="isPurchaseDashboardUser" routerLink="/purchase-dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'Purchase Dashboard' | t">
+          <span class="sn-ic" style="--c:#fbbf24"><i class="fas fa-bag-shopping"></i></span><span class="sn-tx">{{ 'Purchase Dashboard' | t }}</span>
+        </a>
+        <!-- menu-master roots named "... Dashboard" (e.g. CAD Dashboard) sit with the other dashboards -->
+        <a class="sn-item" *ngFor="let menu of navDashRoots"
            [routerLink]="isExternalMenu(menu) ? null : menu.menuUrl"
            [class.active]="!isExternalMenu(menu) && currentRoute.includes(menu.menuUrl)"
-           (click)="handleMenuClick(menu, $event)"
-           [title]="menu.menuName"
+           (click)="handleMenuClick(menu, $event)" [title]="menu.menuName"
            [href]="isExternalMenu(menu) ? 'javascript:void(0)' : null">
-          <i class="fas fa-external-link-alt" *ngIf="isExternalMenu(menu)"></i>
-          <i class="fas fa-tachometer-alt" *ngIf="!isExternalMenu(menu)"></i>
-          {{ formatMenuName(menu.menuName) }}
+          <span class="sn-ic" [style.--c]="navColor(menu.menuName)"><i class="fas" [ngClass]="menuIcon(menu)"></i></span>
+          <span class="sn-tx">{{ formatMenuName(menu.menuName) | t }}</span>
+          <i class="fas fa-arrow-up-right-from-square sn-ext" *ngIf="isExternalMenu(menu)"></i>
         </a>
       </ng-container>
 
-      <!-- Productivity Menu with MPR and APR sub-menus (hidden in DPR-only mode) -->
-      <!-- Productivity Menu with direct MPR and APR links (hidden in DPR-only mode) -->
-      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
-        <a class="parent-menu" (click)="toggleProductivityMenu()" [class.active]="isProductivityRouteActive()">
-          <div class="menu-content">
-            <i class="fas fa-chart-bar"></i>
-            <span>Productivity</span>
+      <!-- ── WORKSPACE ────────────────────────────────────────── -->
+      <div class="sn-sec" *ngIf="!isDPROnlyMode"><span>{{ 'Workspace' | t }}</span></div>
+
+      <!-- Dynamic Menu Items from API (parent → children tree).
+           WIR Reports and Finance come from here (menu master), never hard-coded. -->
+      <ng-container *ngIf="!isDPROnlyMode">
+        <ng-container *ngFor="let menu of navWorkMenus">
+          <!-- Parent WITH children → expandable group (parent itself has no URL) -->
+          <div class="sn-group" *ngIf="menu.children.length > 0" [class.open]="openMenuGroups[menu.menuId]">
+            <a class="sn-item" (click)="toggleMenuGroup(menu.menuId, $event)" [class.active]="isMenuGroupActive(menu)"
+               [title]="menu.menuName" href="javascript:void(0)" [attr.aria-expanded]="!!openMenuGroups[menu.menuId]">
+              <span class="sn-ic" [style.--c]="navColor(menu.menuName)"><i class="fas" [ngClass]="menuIcon(menu)"></i></span>
+              <span class="sn-tx">{{ formatMenuName(menu.menuName) | t }}</span>
+              <i class="fas fa-chevron-down sn-chev"></i>
+            </a>
+            <div class="sn-tree" *ngIf="openMenuGroups[menu.menuId]" [@slideDown]>
+              <a *ngFor="let child of menu.children" class="sn-leaf"
+                 (click)="handleMenuClick(child, $event)" [title]="child.menuName"
+                 [class.active]="!isExternalMenu(child) && child.menuUrl && currentRoute.includes(child.menuUrl)"
+                 href="javascript:void(0)">
+                <span class="sn-tx">{{ formatMenuName(child.menuName) | t }}</span>
+                <i class="fas fa-arrow-up-right-from-square sn-ext" *ngIf="isExternalMenu(child)"></i>
+              </a>
+            </div>
           </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isProductivityMenuOpen"></i>
+          <!-- Root without children → plain link (menuUrl required; Purchase Dashboard has its own link) -->
+          <a class="sn-item" *ngIf="menu.children.length === 0"
+             [routerLink]="isExternalMenu(menu) ? null : menu.menuUrl"
+             [class.active]="!isExternalMenu(menu) && currentRoute.includes(menu.menuUrl)"
+             (click)="handleMenuClick(menu, $event)" [title]="menu.menuName"
+             [href]="isExternalMenu(menu) ? 'javascript:void(0)' : null">
+            <span class="sn-ic" [style.--c]="navColor(menu.menuName)"><i class="fas" [ngClass]="menuIcon(menu)"></i></span>
+            <span class="sn-tx">{{ formatMenuName(menu.menuName) | t }}</span>
+            <i class="fas fa-arrow-up-right-from-square sn-ext" *ngIf="isExternalMenu(menu)"></i>
+          </a>
+        </ng-container>
+      </ng-container>
+
+      <!-- Productivity: MPR and APR -->
+      <div class="sn-group" *ngIf="!isDPROnlyMode" [class.open]="isProductivityMenuOpen">
+        <a class="sn-item" (click)="toggleProductivityMenu()" [class.active]="isProductivityRouteActive()" href="javascript:void(0)" [attr.aria-expanded]="isProductivityMenuOpen" [title]="'Productivity' | t">
+          <span class="sn-ic" style="--c:#a78bfa"><i class="fas fa-chart-column"></i></span><span class="sn-tx">{{ 'Productivity' | t }}</span>
+          <i class="fas fa-chevron-down sn-chev"></i>
         </a>
-        <div class="submenu" *ngIf="isProductivityMenuOpen" [@slideDown]>
-          <a routerLink="/monthly-dpr" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-file-alt"></i>
-            <span>MPR</span>
-          </a>
-          <a routerLink="/apr" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-file-contract"></i>
-            <span>APR</span>
-          </a>
+        <div class="sn-tree" *ngIf="isProductivityMenuOpen" [@slideDown]>
+          <a class="sn-leaf" routerLink="/monthly-dpr" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'MPR' | t }}</span></a>
+          <a class="sn-leaf" routerLink="/apr" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'APR' | t }}</span></a>
         </div>
       </div>
 
-      <!-- DPR Menu - Modified behavior -->
-      <div class="menu-item-with-submenu" >
-        <!-- In normal mode, show parent menu that opens new tab -->
-        <a *ngIf="!isDPROnlyMode" class="parent-menu" (click)="openDPRInNewTab()" [class.active]="isDPRRouteActive()">
-          <div class="menu-content">
-            <i class="fas fa-tasks"></i>
-            <span>DPR</span>
-          </div>
-          <i class="fas fa-external-link-alt"></i>
-        </a>
-        
-        <!-- In DPR-only mode, show expanded menu items -->
-        <div *ngIf="isDPROnlyMode" class="dpr-only-menu">
-          <div class="dpr-only-header">
-            <i class="fas fa-tasks"></i>
-            <span>DPR Management</span>
-          </div>
-          <div class="dpr-menu-items">
-            <a routerLink="/my-task" routerLinkActive="active" (click)="navigateDPRRoute('/my-task')">
-              <i class="fas fa-list-check"></i>
-              <span>My Task</span>
-            </a>
-            <a routerLink="/my-logged-hours" routerLinkActive="active" (click)="navigateDPRRoute('/my-logged-hours')">
-              <i class="fas fa-clock"></i>
-              <span>Log History</span>
-            </a>
-            <a routerLink="/log-analytics" routerLinkActive="active" (click)="navigateDPRRoute('/log-analytics')">
-              <i class="fas fa-chart-line"></i>
-              <span>Log Analytics</span>
-            </a>
-            <!-- DPR Approval - Only visible for HOD -->
-            <a *ngIf="isHod" routerLink="/dpr-approval" routerLinkActive="active" (click)="navigateDPRRoute('/dpr-approval')">
-              <i class="fas fa-tasks"></i>
-              <span>DPR Approval</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Approvals Menu (hidden in DPR-only mode) -->
-      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
-        <a class="parent-menu" (click)="toggleApprovalsMenu()" [class.active]="isApprovalsRouteActive()">
-          <div class="menu-content">
-            <i class="fas fa-check-circle"></i>
-            <span>Approvals</span>
-          </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isApprovalsMenuOpen"></i>
-        </a>
-        <div class="submenu" *ngIf="isApprovalsMenuOpen" [@slideDown]>
-          <a routerLink="/leave-approval" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-clipboard-check"></i>
-            <span>Form Approvals</span>
-          </a>
-          <a routerLink="/past-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-history"></i>
-            <span>MPR Past Reports</span>
-          </a>
-          <a routerLink="/apr-past-reports" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-history"></i>
-            <span>APR Past Reports</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Chat Menu - Single Item (hidden in DPR-only mode) -->
-      <a routerLink="/chat" routerLinkActive="active" *ngIf="false && !isDPROnlyMode" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-comments"></i> Chat
+      <!-- DPR: opens in a new tab in normal mode -->
+      <a class="sn-item" *ngIf="!isDPROnlyMode" (click)="openDPRInNewTab()" [class.active]="isDPRRouteActive()" href="javascript:void(0)" [title]="'DPR — opens in a new tab' | t">
+        <span class="sn-ic" style="--c:#34d399"><i class="fas fa-list-check"></i></span><span class="sn-tx">{{ 'DPR' | t }}</span>
+        <i class="fas fa-arrow-up-right-from-square sn-ext"></i>
       </a>
 
-      <!-- Form Services Menu with Sub-items (hidden in DPR-only mode) -->
-      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode">
-        <a class="parent-menu" (click)="toggleFormServicesMenu()" [class.active]="isFormServicesRouteActive()">
-          <div class="menu-content">
-            <i class="fas fa-file-alt"></i>
-            <span>Form Services</span>
-          </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isFormServicesMenuOpen"></i>
+      <!-- DPR-only mode: the DPR tab shows its own pages -->
+      <ng-container *ngIf="isDPROnlyMode">
+        <div class="sn-sec"><span>{{ 'DPR management' | t }}</span></div>
+        <a class="sn-item" routerLink="/my-task" routerLinkActive="active" (click)="navigateDPRRoute('/my-task')" [title]="'My Task' | t">
+          <span class="sn-ic" style="--c:#34d399"><i class="fas fa-list-check"></i></span><span class="sn-tx">{{ 'My Task' | t }}</span>
         </a>
-        <div class="submenu" *ngIf="isFormServicesMenuOpen" [@slideDown]>
-          <a routerLink="/exit-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-plane-departure"></i>
-            <span>Exit Form</span>
-          </a>
-          <a routerLink="/rejoining-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-user-plus"></i>
-            <span>Rejoining Form</span>
-          </a>
-          <a routerLink="/byod-form" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-laptop"></i>
-            <span>BYOD Form</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Finance is NOT declared here. It comes from the menu master
-           (FINANCE 121, with 122 / 123 under it) and renders through the
-           dynamic "Menu Items from API" tree above, like every other
-           permission-driven menu. Adding it here as well would show it twice
-           and bypass the permission check. -->
-
-      <!-- System Master Menu with Sub-items (hidden in DPR-only mode).
-           Also shown to the Employee-Master whitelist (non-HOD users), who
-           only get the Employee Master item inside. -->
-      <div class="menu-item-with-submenu" *ngIf="!isDPROnlyMode && (isHod || isCed || isEmployeeMasterUser)">
-        <a class="parent-menu" (click)="toggleSystemMasterMenu()" [class.active]="isSystemMasterRouteActive()">
-          <div class="menu-content">
-            <i class="fas fa-cogs"></i>
-            <span>System Master</span>
-          </div>
-          <i class="fas fa-chevron-down" [class.rotated]="isSystemMasterMenuOpen"></i>
+        <a class="sn-item" routerLink="/my-logged-hours" routerLinkActive="active" (click)="navigateDPRRoute('/my-logged-hours')" [title]="'Log History' | t">
+          <span class="sn-ic" style="--c:#38bdf8"><i class="fas fa-clock-rotate-left"></i></span><span class="sn-tx">{{ 'Log History' | t }}</span>
         </a>
-        <div class="submenu" *ngIf="isSystemMasterMenuOpen" [@slideDown]>
-          <a *ngIf="isHod || isCed" routerLink="/notice-management" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-bell"></i>
-            <span>Communication Master</span>
-          </a>
-          <a *ngIf="isHod" routerLink="/hod-master" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-user-tie"></i>
-            <span>HOD Master</span>
-          </a>
-          <a routerLink="/employee-master" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <i class="fas fa-users"></i>
-            <span>Employee Master</span>
-          </a>
-        </div>
-      </div>
+        <a class="sn-item" routerLink="/log-analytics" routerLinkActive="active" (click)="navigateDPRRoute('/log-analytics')" [title]="'Log Analytics' | t">
+          <span class="sn-ic" style="--c:#818cf8"><i class="fas fa-chart-line"></i></span><span class="sn-tx">{{ 'Log Analytics' | t }}</span>
+        </a>
+        <!-- DPR Approval - Only visible for HOD -->
+        <a class="sn-item" *ngIf="isHod" routerLink="/dpr-approval" routerLinkActive="active" (click)="navigateDPRRoute('/dpr-approval')" [title]="'DPR Approval' | t">
+          <span class="sn-ic" style="--c:#fbbf24"><i class="fas fa-square-check"></i></span><span class="sn-tx">{{ 'DPR Approval' | t }}</span>
+        </a>
+      </ng-container>
 
-      <!-- Profile Menu - Keep as is (hidden in DPR-only mode) -->
-      <a routerLink="/profile" routerLinkActive="active" *ngIf="!isDPROnlyMode" (click)="closeSidebarOnMobile()">
-        <i class="fas fa-user"></i> My Profile
-      </a>
+      <!-- ── SERVICES ─────────────────────────────────────────── -->
+      <ng-container *ngIf="!isDPROnlyMode">
+        <div class="sn-sec"><span>{{ 'Services' | t }}</span></div>
+
+        <div class="sn-group" [class.open]="isApprovalsMenuOpen">
+          <a class="sn-item" (click)="toggleApprovalsMenu()" [class.active]="isApprovalsRouteActive()" href="javascript:void(0)" [attr.aria-expanded]="isApprovalsMenuOpen" [title]="'Approvals' | t">
+            <span class="sn-ic" style="--c:#34d399"><i class="fas fa-circle-check"></i></span><span class="sn-tx">{{ 'Approvals' | t }}</span>
+            <i class="fas fa-chevron-down sn-chev"></i>
+          </a>
+          <div class="sn-tree" *ngIf="isApprovalsMenuOpen" [@slideDown]>
+            <a class="sn-leaf" routerLink="/leave-approval" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Form Approvals' | t }}</span></a>
+            <a class="sn-leaf" *ngIf="showOtMenus" routerLink="/ot-approvals" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Staff OT Approvals' | t }}</span></a>
+            <a class="sn-leaf" *ngIf="showLeaveMenus" routerLink="/leave-inbox" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Leave Approvals' | t }}</span></a>
+          </div>
+        </div>
+
+        <!-- Past Reports — MPR / APR history (moved out of Approvals) -->
+        <div class="sn-group" [class.open]="isPastReportsMenuOpen">
+          <a class="sn-item" (click)="togglePastReportsMenu()" [class.active]="isPastReportsRouteActive()" href="javascript:void(0)" [attr.aria-expanded]="isPastReportsMenuOpen" [title]="'Past Reports' | t">
+            <span class="sn-ic" style="--c:#2dd4bf"><i class="fas fa-box-archive"></i></span><span class="sn-tx">{{ 'Past Reports' | t }}</span>
+            <i class="fas fa-chevron-down sn-chev"></i>
+          </a>
+          <div class="sn-tree" *ngIf="isPastReportsMenuOpen" [@slideDown]>
+            <a class="sn-leaf" routerLink="/past-reports" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'MPR Past Reports' | t }}</span></a>
+            <a class="sn-leaf" routerLink="/apr-past-reports" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'APR Past Reports' | t }}</span></a>
+            <a class="sn-leaf" routerLink="/form-requests" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Form Requests' | t }}</span></a>
+            <a class="sn-leaf" *ngIf="showLeaveMenus" routerLink="/leave-report" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Leave Application Report' | t }}</span></a>
+          </div>
+        </div>
+
+        <div class="sn-group" [class.open]="isFormServicesMenuOpen">
+          <a class="sn-item" (click)="toggleFormServicesMenu()" [class.active]="isFormServicesRouteActive()" href="javascript:void(0)" [attr.aria-expanded]="isFormServicesMenuOpen" [title]="'Form Services' | t">
+            <span class="sn-ic" style="--c:#fb7185"><i class="fas fa-file-signature"></i></span><span class="sn-tx">{{ 'Form Services' | t }}</span>
+            <i class="fas fa-chevron-down sn-chev"></i>
+          </a>
+          <div class="sn-tree" *ngIf="isFormServicesMenuOpen" [@slideDown]>
+            <a class="sn-leaf" routerLink="/exit-form" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Exit Form' | t }}</span></a>
+            <a class="sn-leaf" routerLink="/rejoining-form" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Rejoining Form' | t }}</span></a>
+            <a class="sn-leaf" routerLink="/byod-form" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'BYOD Form' | t }}</span></a>
+            <a class="sn-leaf" *ngIf="showOtMenus" routerLink="/ot-request" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Staff OT Request' | t }}</span></a>
+            <a class="sn-leaf" *ngIf="showLeaveMenus" routerLink="/leave-application" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Leave Application' | t }}</span></a>
+          </div>
+        </div>
+
+        <!-- Employee Directory — every user can look colleagues up -->
+        <a class="sn-item" routerLink="/employee-directory" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'Employee Directory' | t">
+          <span class="sn-ic" style="--c:#60a5fa"><i class="fas fa-address-book"></i></span><span class="sn-tx">{{ 'Employee Directory' | t }}</span>
+        </a>
+      </ng-container>
+
+      <!-- ── ADMIN — System Master (HOD / CED / Employee-Master whitelist) ── -->
+      <ng-container *ngIf="!isDPROnlyMode && (isHod || isCed || isEmployeeMasterUser)">
+        <div class="sn-sec"><span>{{ 'Admin' | t }}</span></div>
+        <div class="sn-group" [class.open]="isSystemMasterMenuOpen">
+          <a class="sn-item" (click)="toggleSystemMasterMenu()" [class.active]="isSystemMasterRouteActive()" href="javascript:void(0)" [attr.aria-expanded]="isSystemMasterMenuOpen" [title]="'System Master' | t">
+            <span class="sn-ic" style="--c:#fbbf24"><i class="fas fa-sliders"></i></span><span class="sn-tx">{{ 'System Master' | t }}</span>
+            <i class="fas fa-chevron-down sn-chev"></i>
+          </a>
+          <div class="sn-tree" *ngIf="isSystemMasterMenuOpen" [@slideDown]>
+            <a class="sn-leaf" *ngIf="isHod || isCed" routerLink="/notice-management" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Communication Master' | t }}</span></a>
+            <a class="sn-leaf" *ngIf="isHod" routerLink="/hod-master" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'HOD Master' | t }}</span></a>
+            <a class="sn-leaf" routerLink="/employee-master" routerLinkActive="active" (click)="closeSidebarOnMobile()"><span class="sn-tx">{{ 'Employee Master' | t }}</span></a>
+          </div>
+        </div>
+      </ng-container>
     </nav>
 
-    <div class="logout">
-      <b><a (click)="logout()" [class.disabled]="isLoggingOut">
-          <i class="fas fa-sign-out-alt"></i>Logout
-        </a></b>
+    <!-- Profile card — sticky at the bottom of the sidebar. Logout stays in the
+         header profile menu. In DPR-only mode the card is shown but not a link,
+         matching the old sidebar (no My Profile there). -->
+    <div class="sn-foot">
+      <a class="sn-me" *ngIf="!isDPROnlyMode" routerLink="/profile" routerLinkActive="active" (click)="closeSidebarOnMobile()" [title]="'Open my profile' | t">
+        <span class="sn-av"><img *ngIf="hasAvatarPhoto" [src]="userProfile.avatar" alt="" (error)="hasAvatarPhoto = false"><ng-container *ngIf="!hasAvatarPhoto">{{ userInitials }}</ng-container></span>
+        <span class="sn-me-tx"><b>{{ userDisplayName }}</b><small>{{ 'My profile' | t }}<ng-container *ngIf="userSubline"> · {{ userSubline }}</ng-container></small></span>
+        <i class="fas fa-chevron-right sn-me-go"></i>
+      </a>
+      <div class="sn-me" *ngIf="isDPROnlyMode">
+        <span class="sn-av"><img *ngIf="hasAvatarPhoto" [src]="userProfile.avatar" alt="" (error)="hasAvatarPhoto = false"><ng-container *ngIf="!hasAvatarPhoto">{{ userInitials }}</ng-container></span>
+        <span class="sn-me-tx"><b>{{ userDisplayName }}</b><small>{{ userSubline || ('DPR workspace' | t) }}</small></span>
+      </div>
+      <div class="sn-status">
+        <span class="sn-dot" [class.off]="!isOnline"></span>
+        <span class="sn-st-tx">{{ (isOnline ? 'Connected' : 'Offline — check your network') | t }}</span>
+        <span class="sn-brand">Adrak Portal</span>
+      </div>
     </div>
   </aside>
 
   <!-- Main Content Area -->
   <div class="main-area">
     <!-- Header -->
-    <header class="header" [@slideDown]>
-      <div class="header-left">
-        <button class="menu-toggle" (click)="toggleSidebar()">
+    <header class="header" [@slideDown] [attr.dir]="i18n.dir()" [attr.lang]="i18n.lang()">
+      <div class="header-left hd-left">
+        <button type="button" class="menu-toggle hd-ibtn" (click)="toggleSidebar()" [attr.aria-label]="(sidebarCollapsed ? 'Open menu' : 'Close menu') | t" [title]="'Menu' | t">
           <i class="fas fa-bars"></i>
         </button>
-        <div class="page-title-section">
-          <h1 class="page-title">{{ getPageTitle() }}</h1>
-          <p class="page-subtitle" *ngIf="getPageSubtitle()">{{ getPageSubtitle() }}</p>
-          <p class="welcome-text" *ngIf="isDashboardRoute()">Welcome, <strong>{{ userProfile.name }}</strong>. Wishing
-            you a great day ahead.</p>
+        <span class="hd-div" aria-hidden="true"></span>
+        <div class="hd-titles">
+          <nav class="hd-crumbs" [attr.aria-label]="'Breadcrumb' | t" *ngIf="breadcrumb.length">
+            <ng-container *ngFor="let c of breadcrumb; let last = last"><span>{{ c | t }}</span><i *ngIf="!last" aria-hidden="true">/</i></ng-container>
+          </nav>
+          <h1 class="hd-title">{{ pageTitleT() }}</h1>
+          <p class="hd-sub" *ngIf="getPageSubtitle()">{{ getPageSubtitle() | t }}</p>
         </div>
       </div>
 
       <div class="header-right">
+        <!-- Arabic pilot: language switch (layout.ts showLangToggle) -->
+        <button type="button" class="hd-ibtn hd-lang" *ngIf="showLangToggle" (click)="i18n.toggle()"
+                [title]="i18n.isAr() ? 'English' : 'العربية'" [attr.aria-label]="i18n.isAr() ? 'Switch to English' : 'التبديل إلى العربية'">
+          <span [attr.lang]="i18n.isAr() ? 'en' : 'ar'">{{ i18n.isAr() ? 'EN' : 'ع' }}</span>
+        </button>
+
         <!-- Dark Mode Toggle -->
-        <div class="theme-toggle-wrapper">
-          <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-            <i class="fas" [class.fa-sun]="isDarkMode" [class.fa-moon]="!isDarkMode"></i>
-          </button>
-        </div>
+        <button type="button" class="hd-ibtn" (click)="toggleTheme()" [title]="(isDarkMode ? 'Switch to light mode' : 'Switch to dark mode') | t" [attr.aria-label]="(isDarkMode ? 'Switch to light mode' : 'Switch to dark mode') | t">
+          <i class="fas" [class.fa-sun]="isDarkMode" [class.fa-moon]="!isDarkMode"></i>
+        </button>
 
         <!-- Notifications -->
         <div class="notification-wrapper">
-          <button class="notification-btn" [class.has-notifications]="notificationCount > 0"
-            [class.urgent-notifications]="notificationCount > 5" (click)="toggleNotifications()">
-            <i class="fas fa-bell"></i>
-            <span class="notification-badge" [class.urgent]="notificationCount > 5"
-              [class.new-notification]="hasNewNotifications" *ngIf="notificationCount > 0">{{ notificationCount
-              }}</span>
+          <button type="button" class="hd-ibtn hd-bell" [class.open]="showNotifications" (click)="toggleNotifications()"
+                  [title]="notificationCount > 0 ? ('{n} unread notifications' | t:{ n: notificationCount }) : ('Notifications' | t)"
+                  [attr.aria-label]="notificationCount > 0 ? ('{n} unread notifications' | t:{ n: notificationCount }) : ('Notifications' | t)">
+            <i class="fas fa-bell" [class.ring]="hasNewNotifications"></i>
+            <span class="hd-count" *ngIf="notificationCount > 0" [class.hot]="notificationCount > 5">{{ notificationCount > 99 ? '99+' : notificationCount }}</span>
           </button>
 
           <div class="notification-dropdown" *ngIf="showNotifications" [@slideDown]>
             <div class="notification-header">
-              <h3>Notifications ({{ notificationCount }})</h3>
+              <h3>{{ 'Notifications ({n})' | t:{ n: notificationCount } }}</h3>
               <div class="notification-actions">
-                <button class="refresh-btn" (click)="refreshNotifications()" title="Refresh notifications">
+                <button class="refresh-btn" (click)="refreshNotifications()" [title]="'Refresh notifications' | t">
                   <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingNotifications"></i>
                 </button>
                 <button class="mark-all-btn" (click)="markAllAsRead()" [disabled]="notificationCount === 0"
-                  title="Mark all as read">
+                  [title]="'Mark all as read' | t">
                   <i class="fas fa-check-double"></i>
                 </button>
                 <button class="clear-all-btn" (click)="clearAllNotifications()" [disabled]="notifications.length === 0"
-                  title="Clear all notifications">
+                  [title]="'Clear all notifications' | t">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -296,7 +270,7 @@
               <!-- Loading state -->
               <div class="notification-loading" *ngIf="isLoadingNotifications">
                 <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading notifications...</span>
+                <span>{{ 'Loading notifications...' | t }}</span>
               </div>
 
               <!-- Notifications -->
@@ -312,16 +286,16 @@
                   <p>{{ notification.message }}</p>
                   <span class="notification-time">{{ notification.time }}</span>
                   <span class="notice-tag-pill" *ngIf="notification.isNotice === 'Y' && notification.noticeID !== 0">
-                    <i class="fas fa-bullhorn"></i> Notice
+                    <i class="fas fa-bullhorn"></i> {{ 'Notice' | t }}
                   </span>
                 </div>
                 <div class="notification-actions-item">
                   <button *ngIf="!notification.isRead" class="mark-read-btn"
-                    (click)="markNotificationAsRead(notification.id, $event)" title="Mark as read">
+                    (click)="markNotificationAsRead(notification.id, $event)" [title]="'Mark as read' | t">
                     <i class="fas fa-check"></i>
                   </button>
                   <button class="delete-btn" (click)="clearNotification(notification.id, $event)"
-                    title="Delete notification">
+                    [title]="'Delete notification' | t">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -333,33 +307,51 @@
               <!-- Empty state -->
               <div class="notification-empty" *ngIf="!isLoadingNotifications && notifications.length === 0">
                 <i class="fas fa-bell-slash"></i>
-                <span>No notifications</span>
+                <span>{{ 'No notifications' | t }}</span>
               </div>
             </div>
           </div>
         </div>
 
+        <span class="hd-div" aria-hidden="true"></span>
+
         <!-- Profile -->
-        <div class="profile-wrapper">
-          <button class="profile-btn" (click)="toggleProfile()">
-            <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar" (error)="onAvatarError($event)">
-            <span class="profile-name">{{ userProfile.name }}</span>
-            <i class="fas fa-chevron-down"></i>
+        <div class="profile-wrapper hd-me-wrap">
+          <button type="button" class="hd-me" [class.open]="showProfile" (click)="toggleProfile()" [attr.aria-expanded]="showProfile" aria-haspopup="menu">
+            <span class="hd-av">
+              <img *ngIf="hasAvatarPhoto" [src]="userProfile.avatar" alt="" (error)="hasAvatarPhoto = false">
+              <ng-container *ngIf="!hasAvatarPhoto">{{ userInitials }}</ng-container>
+            </span>
+            <span class="hd-me-tx">
+              <b>{{ userShortName }}</b>
+              <small *ngIf="userHeaderSub">{{ userHeaderSub }}</small>
+            </span>
+            <i class="fas fa-chevron-down hd-chev"></i>
           </button>
 
-          <div class="profile-dropdown" *ngIf="showProfile" [@slideDown]>
-            <div class="profile-info">
-              <img [src]="userProfile.avatar" [alt]="userProfile.name" class="profile-avatar-large" (error)="onAvatarError($event)">
-              <div>
-                <h4>{{ userProfile.name }}</h4>
-                <p>{{ userProfile.role }}</p>
+          <div class="hd-menu" *ngIf="showProfile" [@slideDown] role="menu">
+            <div class="hd-menu-head">
+              <span class="hd-av lg">
+                <img *ngIf="hasAvatarPhoto" [src]="userProfile.avatar" alt="" (error)="hasAvatarPhoto = false">
+                <ng-container *ngIf="!hasAvatarPhoto">{{ userInitials }}</ng-container>
+              </span>
+              <div class="hd-menu-id">
+                <b>{{ userDisplayName }}</b>
+                <span *ngIf="userMenuSub">{{ userMenuSub }}</span>
+                <em class="hd-role">{{ roleLabel | t }}</em>
               </div>
             </div>
-            <div class="profile-menu">
-              <a routerLink="/profile"><i class="fas fa-user"></i> My Profile</a>
-              <!-- <a href="#"><i class="fas fa-cog"></i> Settings</a> -->
-              <a (click)="logout()" [class.disabled]="isLoggingOut"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
+            <a class="hd-mi" routerLink="/profile" (click)="showProfile = false" role="menuitem">
+              <span class="hd-mi-ic"><i class="fas fa-user"></i></span>
+              <span class="hd-mi-tx"><b>{{ 'My profile' | t }}</b><small>{{ 'View your personal details' | t }}</small></span>
+              <i class="fas fa-chevron-right hd-mi-go"></i>
+            </a>
+            <a class="hd-mi out" (click)="logout()" [class.disabled]="isLoggingOut" role="menuitem" href="javascript:void(0)">
+              <span class="hd-mi-ic"><i class="fas" [ngClass]="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-arrow-right-from-bracket'"></i></span>
+              <span class="hd-mi-tx"><b>{{ (isLoggingOut ? 'Signing out…' : 'Sign out') | t }}</b></span>
+              <i class="fas fa-chevron-right hd-mi-go"></i>
+            </a>
+            <div class="hd-menu-foot"><i class="fas fa-lock"></i>{{ 'Al Adrak Employee Portal' | t }}</div>
           </div>
         </div>
       </div>
@@ -373,4 +365,7 @@
 
   <!-- DPR AI Assistant — floating chat, available on every authenticated page -->
   <app-ai-assistant></app-ai-assistant>
+
+  <!-- Birthday / work-anniversary surprise for the logged-in user — once a year each -->
+  <app-celebration-overlay></app-celebration-overlay>
 </div>

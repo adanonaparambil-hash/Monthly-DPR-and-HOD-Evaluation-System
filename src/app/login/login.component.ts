@@ -77,7 +77,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   scrollY: number = 0;
   
   // Background image path that works with baseHref
-  backgroundImageUrl: string = 'assets/images/AlAdrakBgImage.jpg';
+  backgroundImageUrl: string = 'assets/images/login-bg.webp';
+  /** Footer copyright year. */
+  readonly currentYear = new Date().getFullYear();
+  /** Where 'Contact IT support' links to (mailto: or a page). Empty = shown as text only. */
+  readonly itSupportEmail = 'it.support@aladrak.com';
+  readonly itSupportUrl = 'mailto:' + this.itSupportEmail + '?subject=' + encodeURIComponent('Adrak Portal - login help');
 
   toggleForgotPassword(): void {
     this.currentView = 'forgot-password';

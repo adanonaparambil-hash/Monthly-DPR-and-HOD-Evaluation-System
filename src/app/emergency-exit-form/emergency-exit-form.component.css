@@ -68,7 +68,7 @@
 }
 
 .planned-icon {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   animation: plannedGlow 2s infinite;
 }
@@ -1035,7 +1035,7 @@ textarea {
 .btn-submit-large:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow: var(--shadow-xl);
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .btn-submit-large:disabled {
@@ -2107,7 +2107,7 @@ rehensive Approval Workflow Styles */
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #1B2A38, #138271);
+  background: linear-gradient(90deg, #1B2A38, #10b981);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -3158,19 +3158,19 @@ Approval Mode Styles */
 }
 
 .nav-right button:hover {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(27, 42, 56, 0.3);
 }
 
 /* Submit Button Styling */
 .nav-right .btn-submit {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
 }
 
 .nav-right .btn-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1ABC9C, #16a085);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(19, 130, 113, 0.3);
 }
@@ -3524,13 +3524,13 @@ esponsive Design Improvements */
 }
 
 .btn-approve {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   box-shadow: 0 4px 15px rgba(19, 130, 113, 0.4);
 }
 
 .btn-approve:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1ABC9C, #16a085);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(19, 130, 113, 0.5);
 }
@@ -6329,7 +6329,7 @@ ced Approval Actions Column */
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #1B2A38, #138271, #1B2A38);
+  background: linear-gradient(90deg, #1B2A38, #10b981, #1B2A38);
   background-size: 200% 100%;
   animation: gradientShift 3s ease-in-out infinite;
 }
@@ -6519,7 +6519,7 @@ ced Approval Actions Column */
 }
 
 .success-badge {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   font-size: 11px;
   font-weight: 600;
@@ -6659,7 +6659,7 @@ ced Approval Actions Column */
 }
 
 .assets-header:hover {
-  background: linear-gradient(135deg, #138271 0%, #1ABC9C 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .assets-title {
@@ -6980,112 +6980,112 @@ ced Approval Actions Column */
 }
 
 /* Dark Mode Specific Styles for Approval Workflow */
-.dark-theme .approval-actions-column {
+:host-context(.dark-theme) .approval-actions-column {
   background: var(--background-secondary);
   border-left-color: var(--border-color);
 }
 
-.dark-theme .approval-card {
+:host-context(.dark-theme) .approval-card {
   background: var(--background-primary);
   border-color: var(--border-color);
   box-shadow: var(--shadow-md);
 }
 
-.dark-theme .approval-card-header {
+:host-context(.dark-theme) .approval-card-header {
   border-bottom-color: var(--border-color);
 }
 
-.dark-theme .approval-card-header h3 {
+:host-context(.dark-theme) .approval-card-header h3 {
   color: var(--text-primary);
 }
 
-.dark-theme .dropdown-list {
+:host-context(.dark-theme) .dropdown-list {
   background: var(--background-primary) !important;
   border-color: var(--border-color) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
 }
 
-.dark-theme .dropdown-item {
+:host-context(.dark-theme) .dropdown-item {
   background: var(--background-primary);
   border-bottom-color: var(--border-color);
   color: var(--text-primary);
 }
 
-.dark-theme .dropdown-item:hover {
+:host-context(.dark-theme) .dropdown-item:hover {
   background: var(--background-secondary);
 }
 
-.dark-theme .no-results {
+:host-context(.dark-theme) .no-results {
   background: var(--background-primary);
   color: var(--text-secondary);
 }
 
-.dark-theme .approval-flow-card {
+:host-context(.dark-theme) .approval-flow-card {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
 
-.dark-theme .actions-card {
+:host-context(.dark-theme) .actions-card {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
 
-.dark-theme .step-comments-bubble {
+:host-context(.dark-theme) .step-comments-bubble {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
 
-.dark-theme .flow-card {
+:host-context(.dark-theme) .flow-card {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
 
-.dark-theme .workflow-sidebar {
+:host-context(.dark-theme) .workflow-sidebar {
   background: var(--background-secondary) !important;
   border-left-color: var(--border-color) !important;
 }
 
-.dark-theme .asset-item:hover {
+:host-context(.dark-theme) .asset-item:hover {
   background: var(--background-secondary);
 }
 
 /* Ensure approval workflow text is visible in dark mode */
-.dark-theme .approval-card .employee-name {
+:host-context(.dark-theme) .approval-card .employee-name {
   color: var(--text-primary);
 }
 
-.dark-theme .approval-card .employee-id {
+:host-context(.dark-theme) .approval-card .employee-id {
   color: var(--text-secondary);
 }
 
-.dark-theme .approval-textarea {
+:host-context(.dark-theme) .approval-textarea {
   background: var(--background-secondary);
   border-color: var(--border-color);
   color: var(--text-primary);
 }
 
-.dark-theme .approval-textarea:focus {
+:host-context(.dark-theme) .approval-textarea:focus {
   border-color: var(--primary-color);
   background: var(--background-primary);
 }
 
 /* Ensure form labels are visible in dark mode */
-.dark-theme .approval-form label {
+:host-context(.dark-theme) .approval-form label {
   color: var(--text-primary);
 }
 
-.dark-theme .required-badge {
+:host-context(.dark-theme) .required-badge {
   background: var(--error-color) !important;
   color: white !important;
   border: 1px solid var(--error-color) !important;
 }
 
 /* Header content in dark mode */
-.dark-theme .header-content h3 {
+:host-context(.dark-theme) .header-content h3 {
   color: var(--text-primary);
 }
 
-.dark-theme .header-content p {
+:host-context(.dark-theme) .header-content p {
   color: var(--text-secondary);
 }
 /* Override hardcoded colors for dark mode compatibility */
@@ -7095,7 +7095,7 @@ ced Approval Actions Column */
   border: 1px solid rgba(239, 68, 68, 0.3) !important;
 }
 
-.dark-theme .required-badge {
+:host-context(.dark-theme) .required-badge {
   background: rgba(239, 68, 68, 0.2) !important;
   color: #f87171 !important;
   border: 1px solid rgba(239, 68, 68, 0.4) !important;
@@ -7106,295 +7106,295 @@ ced Approval Actions Column */
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important;
 }
 
-.dark-theme .step-header-approval {
+:host-context(.dark-theme) .step-header-approval {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2)) !important;
 }
 
 /* Fix any remaining hardcoded backgrounds */
-.dark-theme .approval-card-header {
+:host-context(.dark-theme) .approval-card-header {
   border-bottom: 1px solid var(--border-color) !important;
 }
 
-.dark-theme .approval-form .form-group {
+:host-context(.dark-theme) .approval-form .form-group {
   color: var(--text-primary);
 }
 
-.dark-theme .approval-form label {
+:host-context(.dark-theme) .approval-form label {
   color: var(--text-primary) !important;
 }
 /* Comprehensive Dark Mode Support for Approval Workflow */
 
 /* Timeline Steps Dark Mode */
-.dark-theme .timeline-step {
+:host-context(.dark-theme) .timeline-step {
   color: var(--text-primary);
 }
 
-.dark-theme .timeline-step .step-content {
+:host-context(.dark-theme) .timeline-step .step-content {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
 
-.dark-theme .timeline-step .step-title {
+:host-context(.dark-theme) .timeline-step .step-title {
   color: var(--text-primary);
 }
 
-.dark-theme .timeline-step .step-description {
+:host-context(.dark-theme) .timeline-step .step-description {
   color: var(--text-secondary);
 }
 
 /* Timeline Step Status Colors for Dark Mode */
-.dark-theme .timeline-step.approved .indicator-dot {
+:host-context(.dark-theme) .timeline-step.approved .indicator-dot {
   background: rgba(16, 185, 129, 0.2);
   border-color: var(--success-color);
 }
 
-.dark-theme .timeline-step.approved .indicator-line {
+:host-context(.dark-theme) .timeline-step.approved .indicator-line {
   background: var(--success-color);
 }
 
-.dark-theme .timeline-step.rejected .indicator-dot {
+:host-context(.dark-theme) .timeline-step.rejected .indicator-dot {
   background: rgba(239, 68, 68, 0.2);
   border-color: var(--error-color);
 }
 
-.dark-theme .timeline-step.in_progress .indicator-dot {
+:host-context(.dark-theme) .timeline-step.in_progress .indicator-dot {
   background: rgba(245, 158, 11, 0.2);
   border-color: var(--warning-color);
 }
 
-.dark-theme .timeline-step.pending .indicator-dot {
+:host-context(.dark-theme) .timeline-step.pending .indicator-dot {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
 
 /* Approver Cards Dark Mode */
-.dark-theme .timeline-step.approved .approver-card {
+:host-context(.dark-theme) .timeline-step.approved .approver-card {
   background: rgba(16, 185, 129, 0.1);
   border-color: var(--success-color);
 }
 
-.dark-theme .timeline-step.in_progress .approver-card {
+:host-context(.dark-theme) .timeline-step.in_progress .approver-card {
   background: rgba(245, 158, 11, 0.1);
   border-color: var(--warning-color);
 }
 
-.dark-theme .timeline-step.pending .approver-card {
+:host-context(.dark-theme) .timeline-step.pending .approver-card {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
 
-.dark-theme .timeline-step.rejected .approver-card {
+:host-context(.dark-theme) .timeline-step.rejected .approver-card {
   background: rgba(239, 68, 68, 0.1);
   border-color: var(--error-color);
 }
 
 /* Actions Header Dark Mode */
-.dark-theme .actions-header {
+:host-context(.dark-theme) .actions-header {
   color: var(--text-primary);
 }
 
-.dark-theme .actions-header h3 {
+:host-context(.dark-theme) .actions-header h3 {
   color: var(--text-primary) !important;
 }
 
-.dark-theme .actions-header i {
+:host-context(.dark-theme) .actions-header i {
   color: var(--primary-color);
 }
 
 /* Empty Flow Dark Mode */
-.dark-theme .empty-flow {
+:host-context(.dark-theme) .empty-flow {
   color: var(--text-secondary);
 }
 
-.dark-theme .empty-flow i {
+:host-context(.dark-theme) .empty-flow i {
   color: var(--text-secondary);
 }
 
 /* Flow Header Dark Mode */
-.dark-theme .flow-header {
+:host-context(.dark-theme) .flow-header {
   color: var(--text-primary);
   border-bottom-color: var(--border-color);
 }
 
-.dark-theme .flow-header h4 {
+:host-context(.dark-theme) .flow-header h4 {
   color: var(--text-primary);
 }
 
 /* Step Line Dark Mode */
-.dark-theme .timeline-step .step-line {
+:host-context(.dark-theme) .timeline-step .step-line {
   background: var(--border-color);
 }
 
-.dark-theme .timeline-step.completed .step-line {
+:host-context(.dark-theme) .timeline-step.completed .step-line {
   background: var(--success-color);
 }
 
-.dark-theme .timeline-step.in-progress .step-line {
+:host-context(.dark-theme) .timeline-step.in-progress .step-line {
   background: linear-gradient(to bottom, var(--warning-color) 50%, var(--border-color) 50%);
 }
 
 /* Approval Mode Specific Dark Mode */
-.dark-theme .timeline-step.pending.approval-mode .indicator-dot {
+:host-context(.dark-theme) .timeline-step.pending.approval-mode .indicator-dot {
   background: rgba(59, 130, 246, 0.2);
   border-color: var(--info-color);
 }
 
 /* Step Comments Dark Mode */
-.dark-theme .step-comments {
+:host-context(.dark-theme) .step-comments {
   background: var(--background-secondary);
   border-color: var(--border-color);
   color: var(--text-primary);
 }
 
-.dark-theme .step-comments-bubble {
+:host-context(.dark-theme) .step-comments-bubble {
   background: var(--background-primary) !important;
   border-color: var(--border-color);
   color: var(--text-primary);
 }
 
 /* Approver Info Dark Mode */
-.dark-theme .approver-info {
+:host-context(.dark-theme) .approver-info {
   color: var(--text-primary);
 }
 
-.dark-theme .approver-name {
+:host-context(.dark-theme) .approver-name {
   color: var(--text-primary);
 }
 
-.dark-theme .approver-role {
+:host-context(.dark-theme) .approver-role {
   color: var(--text-secondary);
 }
 
 /* Timeline Indicator Dark Mode */
-.dark-theme .timeline-indicator {
+:host-context(.dark-theme) .timeline-indicator {
   background: var(--background-primary);
 }
 
-.dark-theme .indicator-dot {
+:host-context(.dark-theme) .indicator-dot {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
 
-.dark-theme .indicator-dot i {
+:host-context(.dark-theme) .indicator-dot i {
   color: var(--text-secondary);
 }
 
 /* Workflow Status Dark Mode */
-.dark-theme .workflow-status {
+:host-context(.dark-theme) .workflow-status {
   color: var(--text-primary);
 }
 
-.dark-theme .status-text {
+:host-context(.dark-theme) .status-text {
   color: var(--text-primary);
 }
 
 /* Form Layout Dark Mode */
-.dark-theme .form-layout.has-sidebar {
+:host-context(.dark-theme) .form-layout.has-sidebar {
   background: var(--background-primary);
 }
 
-.dark-theme .form-content-column {
+:host-context(.dark-theme) .form-content-column {
   background: var(--background-primary);
   border-right-color: var(--border-color);
 }
 
 /* Ensure all text in approval workflow is visible */
-.dark-theme .workflow-sidebar * {
+:host-context(.dark-theme) .workflow-sidebar * {
   color: var(--text-primary);
 }
 
-.dark-theme .workflow-sidebar h3,
-.dark-theme .workflow-sidebar h4,
-.dark-theme .workflow-sidebar h5 {
+:host-context(.dark-theme) .workflow-sidebar h3,
+:host-context(.dark-theme) .workflow-sidebar h4,
+:host-context(.dark-theme) .workflow-sidebar h5 {
   color: var(--text-primary) !important;
 }
 
-.dark-theme .workflow-sidebar p,
-.dark-theme .workflow-sidebar span {
+:host-context(.dark-theme) .workflow-sidebar p,
+:host-context(.dark-theme) .workflow-sidebar span {
   color: var(--text-secondary);
 }
 
 /* Override any remaining hardcoded colors */
-.dark-theme .approval-actions-card * {
+:host-context(.dark-theme) .approval-actions-card * {
   color: inherit;
 }
 
-.dark-theme .flow-card * {
+:host-context(.dark-theme) .flow-card * {
   color: inherit;
 }
 
 /* Ensure buttons in approval workflow work in dark mode */
-.dark-theme .btn-approve,
-.dark-theme .btn-reject {
+:host-context(.dark-theme) .btn-approve,
+:host-context(.dark-theme) .btn-reject {
   color: white !important;
 }
 
 /* Fix any remaining white backgrounds */
-.dark-theme .approval-actions-card,
-.dark-theme .flow-card,
-.dark-theme .actions-card,
-.dark-theme .workflow-sidebar {
+:host-context(.dark-theme) .approval-actions-card,
+:host-context(.dark-theme) .flow-card,
+:host-context(.dark-theme) .actions-card,
+:host-context(.dark-theme) .workflow-sidebar {
   background: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
 }
 /* Fix hardcoded border colors for dark mode */
-.dark-theme .approval-card-header {
+:host-context(.dark-theme) .approval-card-header {
   border-bottom: 1px solid var(--border-color) !important;
 }
 
-.dark-theme .actions-header {
+:host-context(.dark-theme) .actions-header {
   border-bottom: 1px solid var(--border-color) !important;
 }
 
-.dark-theme .flow-header {
+:host-context(.dark-theme) .flow-header {
   border-bottom: 1px solid var(--border-color) !important;
 }
 
-.dark-theme .step-comments-bubble {
+:host-context(.dark-theme) .step-comments-bubble {
   border: 1px solid var(--border-color) !important;
 }
 
-.dark-theme .step-comments-bubble::before {
+:host-context(.dark-theme) .step-comments-bubble::before {
   border-bottom-color: var(--border-color) !important;
 }
 
-.dark-theme .approver-card {
+:host-context(.dark-theme) .approver-card {
   border: 2px solid var(--border-color) !important;
 }
 
-.dark-theme .timeline-indicator {
+:host-context(.dark-theme) .timeline-indicator {
   border: 2px solid var(--border-color) !important;
   background: var(--background-secondary) !important;
 }
 
-.dark-theme .indicator-dot {
+:host-context(.dark-theme) .indicator-dot {
   border: 2px solid var(--border-color) !important;
   background: var(--background-secondary) !important;
 }
 
 /* Mobile responsive borders */
 @media (max-width: 768px) {
-  .dark-theme .workflow-sidebar {
+  :host-context(.dark-theme) .workflow-sidebar {
     border-left: none !important;
     border-top: 1px solid var(--border-color) !important;
   }
 }
 
 /* Override any remaining hardcoded borders */
-.dark-theme .approval-flow-card,
-.dark-theme .enhanced-approval-flow-card {
+:host-context(.dark-theme) .approval-flow-card,
+:host-context(.dark-theme) .enhanced-approval-flow-card {
   border: 1px solid var(--border-color) !important;
 }
 
-.dark-theme .step-content {
+:host-context(.dark-theme) .step-content {
   background: var(--background-primary) !important;
   border: 1px solid var(--border-color) !important;
 }
 
 /* Ensure proper contrast for all workflow elements */
-.dark-theme .workflow-sidebar .card,
-.dark-theme .workflow-sidebar .flow-card,
-.dark-theme .workflow-sidebar .approval-card {
+:host-context(.dark-theme) .workflow-sidebar .card,
+:host-context(.dark-theme) .workflow-sidebar .flow-card,
+:host-context(.dark-theme) .workflow-sidebar .approval-card {
   background: var(--background-primary) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
@@ -7414,7 +7414,7 @@ ced Approval Actions Column */
   max-width: fit-content !important;
 }
 
-.dark-theme .required-badge.action-required {
+:host-context(.dark-theme) .required-badge.action-required {
   background: #ef4444 !important;
   color: white !important;
   border: 2px solid #ef4444 !important;
@@ -7444,7 +7444,7 @@ ced Approval Actions Column */
   max-width: fit-content !important;
 }
 
-.dark-theme .required-badge:not(.action-required) {
+:host-context(.dark-theme) .required-badge:not(.action-required) {
   background: rgba(239, 68, 68, 0.25) !important;
   color: #f87171 !important;
   border: 1px solid rgba(239, 68, 68, 0.5) !important;
@@ -7470,10 +7470,10 @@ ced Approval Actions Column */
   vertical-align: middle !important;
 }
 
-.dark-theme .required-badge,
-.dark-theme .approval-card .required-badge,
-.dark-theme .approval-actions-card .required-badge,
-.dark-theme .workflow-sidebar .required-badge {
+:host-context(.dark-theme) .required-badge,
+:host-context(.dark-theme) .approval-card .required-badge,
+:host-context(.dark-theme) .approval-actions-card .required-badge,
+:host-context(.dark-theme) .workflow-sidebar .required-badge {
   background: #ef4444 !important;
   color: white !important;
   border: 1px solid #ef4444 !important;
@@ -7569,14 +7569,14 @@ ced Approval Actions Column */
   40%      { transform: scale(1); }
 }
 
-.dark-theme .doj-notice {
+:host-context(.dark-theme) .doj-notice {
   background: linear-gradient(135deg, rgba(220, 38, 38, 0.14), rgba(220, 38, 38, 0.08));
   border-color: rgba(220, 38, 38, 0.4);
 }
 
-.dark-theme .doj-notice-title { color: #f87171; }
-.dark-theme .doj-notice-desc  { color: #fca5a5; }
-.dark-theme .doj-notice-desc strong { color: #f87171; }
+:host-context(.dark-theme) .doj-notice-title { color: #f87171; }
+:host-context(.dark-theme) .doj-notice-desc  { color: #fca5a5; }
+:host-context(.dark-theme) .doj-notice-desc strong { color: #f87171; }
 
 /* ── Assets accordion header: force readable white text ─────── */
 /* A gradient-text rule (transparent -webkit-text-fill-color) leaks
@@ -7603,10 +7603,10 @@ ced Approval Actions Column */
   font-weight: 700;
 }
 
-.dark-theme .assets-header .assets-title h4,
-.dark-theme .assets-header .assets-title i,
-.dark-theme .assets-header .toggle-icon,
-.dark-theme .assets-header .asset-count-badge {
+:host-context(.dark-theme) .assets-header .assets-title h4,
+:host-context(.dark-theme) .assets-header .assets-title i,
+:host-context(.dark-theme) .assets-header .toggle-icon,
+:host-context(.dark-theme) .assets-header .asset-count-badge {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -7724,25 +7724,25 @@ ced Approval Actions Column */
 }
 
 /* Dark theme */
-.dark-theme .co-approvers-chip {
+:host-context(.dark-theme) .co-approvers-chip {
   background: rgba(19, 130, 113, 0.15);
   border-color: rgba(19, 130, 113, 0.4);
   color: #1ABC9C;
 }
-.dark-theme .co-approvers-chip:hover {
+:host-context(.dark-theme) .co-approvers-chip:hover {
   background: #138271;
   color: #fff;
 }
-.dark-theme .co-approvers-pop {
+:host-context(.dark-theme) .co-approvers-pop {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
-.dark-theme .co-approver-row {
+:host-context(.dark-theme) .co-approver-row {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
-.dark-theme .co-name { color: var(--text-primary); }
-.dark-theme .co-meta { color: var(--text-secondary); }
+:host-context(.dark-theme) .co-name { color: var(--text-primary); }
+:host-context(.dark-theme) .co-meta { color: var(--text-secondary); }
 
 /* ── Approval transaction history (previous approve/reject/resubmit actions) ── */
 .step-history-wrap {
@@ -7866,26 +7866,26 @@ ced Approval Actions Column */
 }
 
 /* Dark theme */
-.dark-theme .history-toggle-btn {
+:host-context(.dark-theme) .history-toggle-btn {
   background: rgba(29, 78, 216, 0.15);
   border-color: rgba(59, 130, 246, 0.4);
   color: #60a5fa;
 }
-.dark-theme .history-toggle-btn:hover {
+:host-context(.dark-theme) .history-toggle-btn:hover {
   background: #1d4ed8;
   color: #fff;
 }
-.dark-theme .step-history-list {
+:host-context(.dark-theme) .step-history-list {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
-.dark-theme .history-item {
+:host-context(.dark-theme) .history-item {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
-.dark-theme .history-remarks { color: var(--text-primary); }
-.dark-theme .history-approver,
-.dark-theme .history-date { color: var(--text-secondary); }
+:host-context(.dark-theme) .history-remarks { color: var(--text-primary); }
+:host-context(.dark-theme) .history-approver,
+:host-context(.dark-theme) .history-date { color: var(--text-secondary); }
 
 /* ── Submission-window hint under Travel/Resignation section header ── */
 .date-window-hint {
@@ -8460,3 +8460,139 @@ ced Approval Actions Column */
 }
 
 .emp-type-hint.warn { color: #b45309; font-weight: 600; }
+
+
+/* ═══ Dark mode — boxes that kept a light background (or dark text) in dark mode ═══
+   Found by a contrast check of the exit form (all three tabs) with body.dark-theme.
+   :host-context(.dark-theme) is required: the class sits on <body>, outside this component. */
+
+:host-context(.dark-theme) .static-flow-notice {
+  background: rgba(99, 102, 241, 0.12) !important;
+  border-color: rgba(129, 140, 248, 0.35) !important;
+}
+:host-context(.dark-theme) .static-flow-notice p,
+:host-context(.dark-theme) .static-flow-notice strong,
+:host-context(.dark-theme) .static-flow-notice span { color: #e0e7ff !important; -webkit-text-fill-color: currentColor; }
+:host-context(.dark-theme) .static-flow-notice i { color: #a5b4fc !important; }
+
+:host-context(.dark-theme) .approver-card {
+  background: #1f2a37 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+:host-context(.dark-theme) .approver-card .approver-info,
+:host-context(.dark-theme) .approver-card .approver-main-info,
+:host-context(.dark-theme) .approver-card .approver-main-info * { color: #e2e8f0; -webkit-text-fill-color: currentColor; }
+:host-context(.dark-theme) .approver-card .static-flow-subtitle { color: #94a3b8 !important; }
+:host-context(.dark-theme) .approver-card .avatar-icon { background: #334155; color: #e2e8f0; }
+
+:host-context(.dark-theme) .contact-info-note,
+:host-context(.dark-theme) .contact-info-note span { color: #cbd5e1 !important; }
+:host-context(.dark-theme) .photo-label { color: #94a3b8 !important; }
+:host-context(.dark-theme) .form-group small { color: #94a3b8 !important; }
+:host-context(.dark-theme) .declarations .note.info,
+:host-context(.dark-theme) .declarations .note.info span { color: #cbd5e1 !important; }
+
+:host-context(.dark-theme) .responsibility-card .card-header h4,
+:host-context(.dark-theme) .responsibility-card h4 { color: #e2e8f0 !important; -webkit-text-fill-color: currentColor; background: none; }
+:host-context(.dark-theme) .declarations .note.success,
+:host-context(.dark-theme) .declarations .note.success span { color: #6ee7b7 !important; }
+
+/* ═══ Dark mode, pass 2 — date-window hint on the Planned Leave / Resignation tabs ═══ */
+:host-context(.dark-theme) .date-window-hint {
+  background: rgba(249, 115, 22, 0.12) !important;
+  border-color: rgba(249, 115, 22, 0.32) !important;
+  color: #fed7aa !important;
+}
+:host-context(.dark-theme) .date-window-hint * { color: #fed7aa; }
+:host-context(.dark-theme) .date-window-hint strong,
+:host-context(.dark-theme) .date-window-hint i { color: #fdba74 !important; }
+
+
+/* ═══ Mobile responsiveness — exit form (appended; existing rules untouched) ═══
+   Must stay LAST in this file: an older non-responsive rule above
+   (".form-layout.has-sidebar .workflow-sidebar { width/min-width: 430px !important }")
+   comes after the earlier 991px block and beat it on every phone, making the page
+   443px wide on a 375px screen. Same selectors + !important here, later = wins. */
+@media (max-width: 991px) {
+  /* one column: form first, approval flow (and the approver's action card) below */
+  .form-layout.has-sidebar .form-content-column {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    order: 1 !important;
+  }
+  .form-layout.has-sidebar .workflow-sidebar {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    order: 2 !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 16px 0 0 !important;
+    border-left: none !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+  .workflow-sidebar * { max-width: 100%; box-sizing: border-box; }
+}
+
+@media (max-width: 768px) {
+  /* header: in approval / view mode the Back + PDF buttons drop under the title */
+  .form-header .header-content { flex-wrap: wrap; gap: 12px; }
+  .form-header .header-content .company-branding,
+  .form-header .header-content .form-title-section { flex: 1 1 100%; min-width: 0; }
+  .form-header .header-actions { flex: 1 1 100%; display: flex; gap: 8px; flex-wrap: wrap; }
+  .form-header .header-actions button { flex: 1 1 140px; min-height: 42px; justify-content: center; }
+
+  /* form-type tabs: icon above label, three equal columns, no wrapped labels */
+  .form-type-tabs .tab-container { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .form-type-tabs .tab-button {
+    flex-direction: column !important; align-items: center; justify-content: center; gap: 4px;
+    min-width: 0 !important; padding: 10px 4px !important; font-size: 12.5px !important; line-height: 1.2; text-align: center;
+  }
+  .form-type-tabs .tab-button span { white-space: normal; }
+
+  /* category radios: one selectable card per row, circle beside the text */
+  .radio-group { display: grid !important; grid-template-columns: 1fr; gap: 8px !important; }
+  .radio-group .radio-label {
+    display: flex !important; align-items: center; gap: 10px; width: 100% !important; min-height: 46px;
+    padding: 10px 14px !important; border: 1px solid rgba(27, 42, 56, .14); border-radius: 12px; box-sizing: border-box;
+  }
+  .radio-group .radio-label .radio-mark { flex-shrink: 0; margin: 0 !important; }
+  .radio-group .radio-label .cat-note { margin-left: auto; }
+  .radio-group .radio-label:has(input:checked) { border-color: #10b981; background: rgba(16, 185, 129, .08); }
+
+  /* 16px inputs: smaller text makes iPhone Safari zoom the page on focus */
+  .emergency-exit-container input:not([type="radio"]):not([type="checkbox"]),
+  .emergency-exit-container select,
+  .emergency-exit-container textarea { font-size: 16px !important; }
+
+  /* comfortable tap targets */
+  .btn-add { min-height: 42px; }
+  .submit-section button, .submit-container button { min-height: 46px; }
+}
+
+/* approval flow on phones: one card, not a card inside a padded frame */
+@media (max-width: 768px) {
+  .form-layout.has-sidebar .workflow-sidebar {
+    padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important;
+  }
+  .workflow-sidebar .flow-card { padding: 16px !important; }
+  .workflow-sidebar .flow-header {
+    flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; gap: 8px !important;
+  }
+  .workflow-sidebar .flow-header h4 { flex: 1 1 auto; min-width: 0; margin: 0 !important; }
+  .workflow-sidebar .flow-header .preview-badge { flex-shrink: 0; }
+}
+
+@media (max-width: 480px) {
+  .form-type-tabs .tab-button { font-size: 12px !important; padding: 9px 2px !important; }
+  .form-header h1 { font-size: 18px !important; line-height: 1.25; }
+  .form-header p { font-size: 12.5px !important; }
+}
+
+:host-context(.dark-theme) .radio-group .radio-label { border-color: rgba(255, 255, 255, .12); }
+:host-context(.dark-theme) .radio-group .radio-label:has(input:checked) { border-color: #34d399; background: rgba(52, 211, 153, .1); }

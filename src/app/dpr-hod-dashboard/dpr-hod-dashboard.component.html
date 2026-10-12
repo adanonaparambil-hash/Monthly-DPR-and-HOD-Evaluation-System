@@ -75,6 +75,9 @@
       <span class="qct"><span class="material-symbols-outlined">arrow_forward</span></span></button>
   </section>
 
+  <!-- ═══════════════ NEW JOINERS (last month, staff only) ═══════════════ -->
+  <app-new-joiners-card></app-new-joiners-card>
+
   <!-- ═══════════════ WHERE THE DEPARTMENT STANDS ═══════════════ -->
   <section class="strip">
     <div class="dc an" style="--d:60ms" [style.--dcc]="dcTarget.color">
@@ -257,7 +260,7 @@
       <div class="tw" *ngIf="hmRows.length; else noHeat">
         <table class="hm">
           <thead><tr><th class="nm">Member</th><th *ngFor="let d of hmDays"><b>{{ d.label }}</b><span>{{ d.name }}</span></th></tr></thead>
-          <tbody><tr *ngFor="let r of hmRows"><td class="nm">{{ r.name }}</td><td *ngFor="let c of r.cells" [ngClass]="c.cls" [attr.data-tip]="c.tip">{{ c.label }}</td></tr></tbody>
+          <tbody><tr *ngFor="let r of hmRows"><td class="nm" [attr.title]="r.name">{{ r.name }}</td><td *ngFor="let c of r.cells" [ngClass]="c.cls" [attr.data-tip]="c.tip">{{ c.label }}</td></tr></tbody>
         </table>
       </div>
       <ng-template #noHeat><p class="muted pad">No logged hours in the last 10 days.</p></ng-template>

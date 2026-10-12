@@ -13,7 +13,7 @@
 
 /* ── Banner ────────────────────────────────────────────────── */
 .rj-banner {
-  background: linear-gradient(135deg, #138271 0%, #0d6b5e 50%, #0a5a4f 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 14px;
@@ -166,7 +166,7 @@
 .rj-icon-blue   { background: linear-gradient(135deg,#3b82f6,#6366f1); box-shadow: 0 3px 8px rgba(59,130,246,.3); }
 .rj-icon-purple { background: linear-gradient(135deg,#8b5cf6,#a855f7); box-shadow: 0 3px 8px rgba(139,92,246,.3); }
 .rj-icon-cyan   { background: linear-gradient(135deg,#06b6d4,#0ea5e9); box-shadow: 0 3px 8px rgba(6,182,212,.3); }
-.rj-icon-green  { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 3px 8px rgba(19,130,113,.3); }
+.rj-icon-green  { background: linear-gradient(135deg,#1B2A38,#10b981); box-shadow: 0 3px 8px rgba(19,130,113,.3); }
 .rj-icon-amber  { background: linear-gradient(135deg,#f59e0b,#f97316); box-shadow: 0 3px 8px rgba(245,158,11,.3); }
 .rj-icon-violet { background: linear-gradient(135deg,#8b5cf6,#ec4899); box-shadow: 0 3px 8px rgba(139,92,246,.3); }
 
@@ -177,7 +177,7 @@
 .rj-emp-row { display: flex; gap: 18px; align-items: flex-start; }
 .rj-avatar {
   width: 72px; height: 72px; border-radius: 16px;
-  background: linear-gradient(135deg,#138271,#1aab96);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   display: flex; align-items: center; justify-content: center;
   font-size: 28px; color: #fff; flex-shrink: 0;
   box-shadow: 0 6px 16px rgba(19,130,113,.3);
@@ -266,7 +266,7 @@
   background: #fff; transition: all .25s cubic-bezier(.34,1.56,.64,1);
 }
 .rj-check-input:checked + .rj-check-mark {
-  background: linear-gradient(135deg,#138271,#1aab96);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   border-color: #138271;
   box-shadow: 0 3px 8px rgba(19,130,113,.25);
   transform: scale(1.1);
@@ -328,7 +328,7 @@
 .rj-btn-outline:hover { background: rgba(19,130,113,.06); box-shadow: 0 4px 12px rgba(19,130,113,.15); }
 
 .rj-btn-primary {
-  background: linear-gradient(135deg,#138271,#1aab96);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   color: #fff; padding: 10px 26px;
   box-shadow: 0 4px 14px rgba(19,130,113,.3);
 }
@@ -533,14 +533,14 @@
 
 .rj-flow-badge {
   margin-left: auto;
-  background: linear-gradient(135deg, #138271, #1aab96);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff;
   font-size: 10px; font-weight: 700;
   padding: 3px 10px; border-radius: 20px;
   letter-spacing: .4px;
 }
 
-.rj-icon-teal { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 3px 8px rgba(19,130,113,.3); }
+.rj-icon-teal { background: linear-gradient(135deg,#1B2A38,#10b981); box-shadow: 0 3px 8px rgba(19,130,113,.3); }
 
 .rj-flow-body { padding: 20px 18px 16px; }
 
@@ -1039,7 +1039,7 @@
 }
 .rj-type-tab:hover { background: #f1f5f9; color: #0f172a; }
 .rj-type-tab-active {
-  background: linear-gradient(135deg, #138271, #1aab96);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: #fff !important;
   box-shadow: 0 3px 10px rgba(19,130,113,.25);
 }
@@ -1503,26 +1503,26 @@
 }
 
 /* Dark theme */
-.dark-theme .history-toggle-btn {
+:host-context(.dark-theme) .history-toggle-btn {
   background: rgba(29, 78, 216, 0.15);
   border-color: rgba(59, 130, 246, 0.4);
   color: #60a5fa;
 }
-.dark-theme .history-toggle-btn:hover {
+:host-context(.dark-theme) .history-toggle-btn:hover {
   background: #1d4ed8;
   color: #fff;
 }
-.dark-theme .step-history-list {
+:host-context(.dark-theme) .step-history-list {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
-.dark-theme .history-item {
+:host-context(.dark-theme) .history-item {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
-.dark-theme .history-remarks { color: var(--text-primary); }
-.dark-theme .history-approver,
-.dark-theme .history-date { color: var(--text-secondary); }
+:host-context(.dark-theme) .history-remarks { color: var(--text-primary); }
+:host-context(.dark-theme) .history-approver,
+:host-context(.dark-theme) .history-date { color: var(--text-secondary); }
 
 
 /* ═══ Dark theme dead-selector fixes (2026-07) ═══ */
@@ -1635,4 +1635,62 @@
   background: #1e293b;
   border-color: #334155;
   color: #e2e8f0;
+}
+
+
+/* ═══ Dark mode — boxes that kept a light background (or dark text) in dark mode ═══
+   Found by a contrast check of the rejoining form with body.dark-theme.
+   :host-context(.dark-theme) is required: the class sits on <body>, outside this component. */
+
+:host-context(.dark-theme) .rj-check-item {
+  background: #1f2a37 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+:host-context(.dark-theme) .rj-check-item:hover { border-color: rgba(52, 211, 153, 0.4) !important; }
+:host-context(.dark-theme) .rj-check-text { color: #e2e8f0 !important; }
+
+:host-context(.dark-theme) .rj-fi-note-title { color: #5eead4 !important; }
+:host-context(.dark-theme) .rj-fi-note-list li { color: #cbd5e1 !important; }
+:host-context(.dark-theme) .rj-fi-note-list li i { color: #5eead4 !important; }
+
+:host-context(.dark-theme) .rj-fi-status.rj-fs-pending {
+  background: rgba(148, 163, 184, 0.14) !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: #cbd5e1 !important;
+}
+:host-context(.dark-theme) .rj-meta-label { color: rgba(255, 255, 255, 0.78) !important; }
+
+
+/* ═══ Dark mode, pass 2 — bright surfaces (read-only fields, declaration, pills) ═══ */
+:host-context(.dark-theme) .rj-readonly {
+  background: #172033 !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+:host-context(.dark-theme) .rj-passport-declaration {
+  background: rgba(139, 92, 246, 0.12) !important;
+  border-color: rgba(167, 139, 250, 0.35) !important;
+}
+:host-context(.dark-theme) .rj-passport-declaration,
+:host-context(.dark-theme) .rj-passport-declaration p,
+:host-context(.dark-theme) .rj-passport-declaration span { color: #e9e3ff !important; }
+:host-context(.dark-theme) .rj-fi-email-pill {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.32) !important;
+  color: #93c5fd !important;
+}
+:host-context(.dark-theme) .rj-fi-status.rj-fs-done {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.32) !important;
+  color: #6ee7b7 !important;
+}
+:host-context(.dark-theme) .rj-fi-status.rj-fs-active {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.32) !important;
+  color: #fcd34d !important;
+}
+:host-context(.dark-theme) .rj-fi-node.rj-fn-pending {
+  background: #263447 !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
 }

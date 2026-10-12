@@ -133,7 +133,7 @@ button i,
 
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, #1B2A38, #10b981);
-  --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
+  --gradient-secondary: linear-gradient(135deg, #1B2A38, #10b981);
   --gradient-accent: linear-gradient(135deg, #10b981, #059669);
 
   /* Shadows */
@@ -163,7 +163,7 @@ button i,
 
   /* Dark Gradients */
   --gradient-primary: linear-gradient(135deg, #1B2A38, #10b981);
-  --gradient-secondary: linear-gradient(135deg, #138271, #1ABC9C);
+  --gradient-secondary: linear-gradient(135deg, #1B2A38, #10b981);
   --gradient-accent: linear-gradient(135deg, #10b981, #059669);
 
   /* Dark Shadows */

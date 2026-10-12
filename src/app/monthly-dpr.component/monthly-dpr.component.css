@@ -215,7 +215,7 @@
 }
 
 .header-left i.fa-comment {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -466,7 +466,7 @@
 }
 
 .add-btn {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -477,7 +477,7 @@
 }
 
 .add-btn:hover {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   transform: translateY(-3px);
 }
 
@@ -493,7 +493,7 @@
 }
 
 .ptask:hover {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   transform: translateY(-3px);
 }
 
@@ -858,7 +858,7 @@ h3 i {
 /* ══ SECTION ICONS ══════════════════════════════════════════════════════════
    Each icon gets its OWN colour, animated by default.
 
-   What was here before: a shared `background: linear-gradient(#1B2A38,#138271)`
+   What was here before: a shared `background: linear-gradient(#1B2A38,#10b981)`
    with `-webkit-text-fill-color: transparent`, then per-icon `color: #e74c3c`
    (red) and `color: #2ecc71` (green), then `color: #3498db` on hover.
 
@@ -1066,7 +1066,7 @@ h2:hover i {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #138271 0%, #1B2A38 100%);
+  background: linear-gradient(135deg, #10b981, #1B2A38);
   color: #fff;
   padding: 12px 20px;
   font-size: 18px;
@@ -1469,7 +1469,7 @@ td {
 
 /* Copy success animation */
 .copy-btn.copied {
-  background: linear-gradient(135deg, #138271, #1ABC9C) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   animation: copySuccess 0.6s ease;
 }
 
@@ -2431,12 +2431,12 @@ th {
 
 /* Rating Classes with Colors */
 .rating-excellent {
-  background: linear-gradient(135deg, #138271, #1B2A38);
+  background: linear-gradient(135deg, #10b981, #1B2A38);
   border: 3px solid #138271;
 }
 
 .rating-good {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border: 3px solid #138271;
 }
 
@@ -2501,11 +2501,11 @@ th {
 }
 
 .legend-item.excellent .legend-color {
-  background: linear-gradient(135deg, #138271, #1B2A38);
+  background: linear-gradient(135deg, #10b981, #1B2A38);
 }
 
 .legend-item.good .legend-color {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 .legend-item.average .legend-color {

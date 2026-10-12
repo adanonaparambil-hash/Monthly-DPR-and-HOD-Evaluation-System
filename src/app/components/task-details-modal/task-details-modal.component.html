@@ -144,6 +144,12 @@
         </div>
 
         <div class="header-actions">
+          @if (approveAction) {
+            <button type="button" class="modal-approve-btn" (click)="approve.emit()" [disabled]="approving" title="Approve this record">
+              <i class="fas" [class.fa-check]="!approving" [class.fa-spinner]="approving" [class.fa-spin]="approving"></i>
+              <span>{{ approving ? 'Approving…' : 'Approve' }}</span>
+            </button>
+          }
           <button class="action-btn" (click)="close()">
             <i class="fas fa-times"></i>
           </button>

@@ -1,0 +1,245 @@
+<div class="ed">
+  <span #topMark class="ed-topmark" aria-hidden="true"></span>
+
+  <!-- ═══ filters (stay on top while scrolling) ═══ -->
+  <section class="ed-filters" aria-label="Find employees">
+    <div class="ed-f">
+      <label for="ed-id">Employee ID</label>
+      <div class="ed-ctl"><i class="fas fa-id-badge"></i>
+        <input id="ed-id" type="text" [(ngModel)]="filterEmpId" (ngModelChange)="onType()" (keydown.enter)="search()" placeholder="e.g. ITS48" autocomplete="off">
+      </div>
+    </div>
+    <div class="ed-f ed-f-wide">
+      <label for="ed-name">Employee name</label>
+      <div class="ed-ctl"><i class="fas fa-magnifying-glass"></i>
+        <input id="ed-name" type="text" [(ngModel)]="filterName" (ngModelChange)="onType()" (keydown.enter)="search()" placeholder="Search by name" autocomplete="off">
+      </div>
+    </div>
+    <!-- department: searchable dropdown -->
+    <div class="ed-f">
+      <label id="ed-dept-l">Department</label>
+      <div class="ed-dd" [class.open]="openDd === 'dept'">
+        <button type="button" class="ed-ctl ed-dd-btn" (click)="toggleDd('dept', $event)" aria-haspopup="listbox"
+                [attr.aria-expanded]="openDd === 'dept'" aria-labelledby="ed-dept-l">
+          <i class="fas fa-sitemap"></i>
+          <span class="ed-dd-val" [class.ph]="!filterDepartment">{{ filterDepartment ? tc(filterDepartment) : 'All departments' }}</span>
+          <i class="fas fa-xmark ed-dd-clear" *ngIf="filterDepartment" (click)="pickDept('', $event)" title="Clear department"></i>
+          <i class="fas fa-chevron-down ed-dd-chev"></i>
+        </button>
+        <div class="ed-dd-panel" *ngIf="openDd === 'dept'" (click)="$event.stopPropagation()" role="listbox" aria-labelledby="ed-dept-l">
+          <div class="ed-dd-search"><i class="fas fa-magnifying-glass"></i>
+            <input type="text" [(ngModel)]="ddQuery" placeholder="Search departments" autocomplete="off" aria-label="Search departments">
+          </div>
+          <div class="ed-dd-list">
+            <button type="button" class="ed-dd-opt" role="option" [attr.aria-selected]="!filterDepartment" [class.on]="!filterDepartment" (click)="pickDept('', $event)" *ngIf="!ddQuery">
+              <span class="ed-dd-ic"><i class="fas fa-layer-group"></i></span><span class="ed-dd-tx">All departments</span><i class="fas fa-check ed-dd-tick"></i>
+            </button>
+            <button type="button" class="ed-dd-opt" role="option" *ngFor="let d of deptMatches" [attr.aria-selected]="filterDepartment === d" [class.on]="filterDepartment === d" (click)="pickDept(d, $event)">
+              <span class="ed-dd-dot" [ngClass]="deptTone(d)"></span><span class="ed-dd-tx">{{ tc(d) }}</span><i class="fas fa-check ed-dd-tick"></i>
+            </button>
+            <div class="ed-dd-empty" *ngIf="!deptMatches.length">No department matches "{{ ddQuery }}"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- location -->
+    <div class="ed-f">
+      <label id="ed-loc-l">Location</label>
+      <div class="ed-dd" [class.open]="openDd === 'loc'">
+        <button type="button" class="ed-ctl ed-dd-btn" (click)="toggleDd('loc', $event)" aria-haspopup="listbox"
+                [attr.aria-expanded]="openDd === 'loc'" aria-labelledby="ed-loc-l">
+          <i class="fas fa-location-dot"></i>
+          <span class="ed-dd-val" [class.ph]="!filterLocation">{{ filterLocation ? locationLabel(filterLocation) : 'All locations' }}</span>
+          <i class="fas fa-xmark ed-dd-clear" *ngIf="filterLocation" (click)="pickLoc('', $event)" title="Clear location"></i>
+          <i class="fas fa-chevron-down ed-dd-chev"></i>
+        </button>
+        <div class="ed-dd-panel" *ngIf="openDd === 'loc'" (click)="$event.stopPropagation()" role="listbox" aria-labelledby="ed-loc-l">
+          <div class="ed-dd-list">
+            <button type="button" class="ed-dd-opt" role="option" [attr.aria-selected]="!filterLocation" [class.on]="!filterLocation" (click)="pickLoc('', $event)">
+              <span class="ed-dd-ic"><i class="fas fa-earth-asia"></i></span><span class="ed-dd-tx">All locations</span><i class="fas fa-check ed-dd-tick"></i>
+            </button>
+            <button type="button" class="ed-dd-opt" role="option" *ngFor="let l of locations" [attr.aria-selected]="filterLocation === l.value" [class.on]="filterLocation === l.value" (click)="pickLoc(l.value, $event)">
+              <span class="ed-dd-ic"><i class="fas fa-location-dot"></i></span><span class="ed-dd-tx">{{ l.label }}<small *ngIf="l.value !== l.label">{{ l.value }}</small></span><i class="fas fa-check ed-dd-tick"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ed-f ed-f-act">
+      <button type="button" class="ed-btn primary" (click)="search()"><i class="fas fa-magnifying-glass"></i> Search</button>
+      <button type="button" class="ed-btn ghost" (click)="clearFilters()" [disabled]="!hasFilters">Clear</button>
+    </div>
+  </section>
+
+  <!-- ═══ result line ═══ -->
+  <div class="ed-meta" *ngIf="state === 'ready' && batch.length">
+    <span>Showing <b>{{ rangeFrom }}–{{ rangeTo }}</b><ng-container *ngIf="knownTotal !== null"> of <b>{{ knownTotal }}</b></ng-container> employees<ng-container *ngIf="filterLocation"> in {{ locationLabel(filterLocation) }}</ng-container></span>
+    <span class="ed-copied" *ngIf="copied" role="status"><i class="fas fa-check"></i>{{ copied }} copied</span>
+  </div>
+
+  <!-- ═══ loading skeleton ═══ -->
+  <div class="ed-grid" *ngIf="state === 'loading'" aria-busy="true">
+    <div class="ed-emp ed-skel" *ngFor="let s of skeletons">
+      <div class="ed-top"><span class="sk sk-av"></span><div class="sk-lines"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></div></div>
+      <div class="ed-contact"><span class="sk sk-l2"></span><span class="sk sk-l2"></span></div>
+    </div>
+  </div>
+
+  <!-- ═══ error / empty ═══ -->
+  <div class="ed-state" *ngIf="state === 'error'">
+    <i class="fas fa-circle-exclamation"></i>
+    <div><b>The directory could not be loaded</b><span>Check your connection and try again.</span></div>
+    <button type="button" class="ed-btn ghost" (click)="search()"><i class="fas fa-rotate-right"></i> Try again</button>
+  </div>
+  <div class="ed-state" *ngIf="state === 'ready' && !batch.length">
+    <i class="fas fa-user-slash"></i>
+    <div><b>No employees found</b><span>Try a different name, ID, department or location.</span></div>
+    <button type="button" class="ed-btn ghost" *ngIf="hasFilters" (click)="clearFilters()">Clear filters</button>
+  </div>
+
+  <!-- ═══ cards, A–Z ═══ -->
+  <div class="ed-grid" *ngIf="state === 'ready' && batch.length">
+    <ng-container *ngFor="let g of groups; trackBy: trackGroup">
+      <div class="ed-letter"><span>{{ g.letter }}</span><i></i></div>
+
+      <article class="ed-emp" *ngFor="let e of g.items; trackBy: trackEmp" [ngClass]="deptTone(e.department)" [class.menu-open]="menuFor === e.empId">
+        <div class="ed-top">
+          <span class="ed-av" [style.background]="photo(e) ? null : avatarBg(e)">
+            <img *ngIf="photo(e) as src" [src]="src" alt="" loading="lazy">
+            <ng-container *ngIf="!photo(e)">{{ initials(e.employeeName) }}</ng-container>
+            <i class="ed-dot" [class.leave]="isOnLeave(e)" [title]="isOnLeave(e) ? 'On leave' : 'Active'"></i>
+          </span>
+          <div class="ed-id">
+            <b class="ed-name" [title]="e.employeeName">{{ e.employeeName }}</b>
+            <span class="ed-desig" *ngIf="e.designation; else noDesig" [title]="tc(e.designation)">{{ tc(e.designation) }}</span>
+            <ng-template #noDesig><span class="ed-desig muted">No designation</span></ng-template>
+          </div>
+          <div class="ed-more">
+            <button type="button" class="ed-kebab" (click)="toggleMenu(e, $event)" [attr.aria-expanded]="menuFor === e.empId" aria-label="More actions"><i class="fas fa-ellipsis-vertical"></i></button>
+            <div class="ed-menu" *ngIf="menuFor === e.empId" role="menu" (click)="$event.stopPropagation()">
+              <button type="button" role="menuitem" (click)="copy(e.empId, 'Employee ID', $event)"><i class="far fa-id-badge"></i>Copy employee ID</button>
+              <button type="button" role="menuitem" *ngIf="e.email" (click)="copy(e.email, 'Email', $event)"><i class="far fa-envelope"></i>Copy email</button>
+              <button type="button" role="menuitem" *ngIf="phone(e.contactNumber) as ph" (click)="copy(ph, 'Phone number', $event)"><i class="fas fa-phone"></i>Copy phone</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ed-chips">
+          <span class="ed-chip ed-chip-dept" *ngIf="e.department" [title]="tc(e.department)">{{ tc(e.department) }}</span>
+          <span class="ed-chip ed-chip-id">{{ e.empId }}</span>
+          <span class="ed-chip ed-chip-leave" *ngIf="isOnLeave(e)"><i class="fas fa-plane-departure"></i>On leave</span>
+        </div>
+
+        <div class="ed-contact">
+          <div class="ed-line" [class.muted]="!phone(e.contactNumber)">
+            <i class="fas fa-phone"></i><span>{{ phone(e.contactNumber) || 'No phone number' }}</span>
+            <a class="ed-act" *ngIf="phone(e.contactNumber)" [href]="tel(e.contactNumber)" title="Call" aria-label="Call"><i class="fas fa-phone"></i></a>
+          </div>
+          <div class="ed-line" [class.muted]="!e.email">
+            <i class="far fa-envelope"></i><span [title]="e.email || ''">{{ e.email || 'No email' }}</span>
+            <a class="ed-act" *ngIf="e.email" [href]="'mailto:' + e.email" title="Send email" aria-label="Send email"><i class="far fa-paper-plane"></i></a>
+          </div>
+        </div>
+
+        <footer class="ed-foot">
+          <span class="ed-joined" *ngIf="fmtDate(e.dateOfJoined) as j; else noDoj"><i class="far fa-calendar"></i>Joined <b>{{ j }}</b></span>
+          <ng-template #noDoj><span class="ed-joined"><i class="far fa-calendar"></i>Joining date not set</span></ng-template>
+          <span class="ed-loc" *ngIf="filterLocation"><i class="fas fa-location-dot"></i>{{ locationLabel(filterLocation) }}</span>
+          <button type="button" class="ed-view" (click)="openProfile(e)">Profile <i class="fas fa-arrow-right"></i></button>
+        </footer>
+      </article>
+    </ng-container>
+  </div>
+
+  <!-- draws the next cards when it comes into view -->
+  <div #moreMark class="ed-more-mark" *ngIf="state === 'ready' && batch.length && !allRendered">
+    <i class="fas fa-spinner fa-spin"></i> Loading more employees…
+  </div>
+
+  <!-- ═══ end of this 500 ═══ -->
+  <section class="ed-end" *ngIf="state === 'ready' && batch.length && allRendered">
+    <div class="ed-end-tx">
+      <span class="ed-end-ic"><i class="fas" [ngClass]="hasMoreBatches ? 'fa-layer-group' : 'fa-flag-checkered'"></i></span>
+      <div>
+        <b>{{ hasMoreBatches ? 'You have reached employee ' + rangeTo : 'That is everyone' }}</b>
+        <span>{{ hasMoreBatches ? 'Load the next ' + BATCH_SIZE + ' to keep going.' : (knownTotal + (knownTotal === 1 ? ' employee' : ' employees') + (hasFilters ? ' match your filters.' : ' in the directory.')) }}</span>
+      </div>
+    </div>
+    <div class="ed-end-btns">
+      <button type="button" class="ed-btn ghost" *ngIf="batchNo > 1" (click)="prevBatch()"><i class="fas fa-arrow-left"></i> Previous {{ BATCH_SIZE }}</button>
+      <button type="button" class="ed-btn primary" *ngIf="hasMoreBatches" (click)="nextBatch()">Next {{ BATCH_SIZE }} employees <i class="fas fa-arrow-right"></i></button>
+      <button type="button" class="ed-btn ghost" *ngIf="!hasMoreBatches" (click)="toTop()"><i class="fas fa-arrow-up"></i> Back to top</button>
+    </div>
+  </section>
+</div>
+
+<button type="button" class="ed-totop" *ngIf="showTopBtn && !selected" (click)="toTop()" aria-label="Back to top" title="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+<!-- ═══ profile panel ═══ -->
+<div class="ed-overlay" *ngIf="selected" (click)="closeProfile()"></div>
+<aside class="ed-panel" *ngIf="selected as e" role="dialog" aria-modal="true" [attr.aria-label]="'Profile of ' + e.employeeName">
+  <header class="ed-p-head">
+    <button type="button" class="ed-p-x" (click)="closeProfile()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+    <span class="ed-p-av" [style.background]="profile?.photo || photo(e) ? null : avatarBg(e)">
+      <img *ngIf="profile?.photo || photo(e)" [src]="profile?.photo || photo(e)" alt="" (error)="photoFailed()">
+      <ng-container *ngIf="!(profile?.photo || photo(e))">{{ initials(e.employeeName) }}</ng-container>
+    </span>
+    <h2>{{ e.employeeName }}</h2>
+    <p>{{ tc(e.designation) }}<ng-container *ngIf="e.designation && e.department"> · </ng-container>{{ tc(e.department) }}</p>
+    <div class="ed-chips center">
+      <span class="ed-chip ed-chip-id">{{ e.empId }}</span>
+      <span class="ed-chip" [class.ed-chip-leave]="isOnLeave(e)" [class.ed-chip-active]="!isOnLeave(e)">{{ isOnLeave(e) ? 'On leave' : 'Active' }}</span>
+    </div>
+    <div class="ed-p-quick" *ngIf="profile as p">
+      <a *ngIf="p.phone" [href]="tel(p.phone)"><i class="fas fa-phone"></i>Call</a>
+      <a *ngIf="p.email" [href]="'mailto:' + p.email"><i class="far fa-envelope"></i>Email</a>
+    </div>
+  </header>
+
+  <div class="ed-p-body">
+    <div class="ed-p-state" *ngIf="profileState === 'loading'"><i class="fas fa-spinner fa-spin"></i> Loading profile…</div>
+    <div class="ed-p-state err" *ngIf="profileState === 'error'"><i class="fas fa-circle-exclamation"></i> The full profile could not be loaded.</div>
+
+    <ng-container *ngIf="profile as p">
+      <section class="ed-p-sec">
+        <h3>Contact</h3>
+        <a class="ed-p-row" *ngIf="p.phone" [href]="tel(p.phone)"><i class="fas fa-phone"></i><span><small>Mobile</small>{{ p.phone }}</span></a>
+        <a class="ed-p-row" *ngIf="p.telephone" [href]="tel(p.telephone)"><i class="fas fa-tty"></i><span><small>Telephone</small>{{ p.telephone }}</span></a>
+        <a class="ed-p-row" *ngIf="p.email" [href]="'mailto:' + p.email"><i class="far fa-envelope"></i><span><small>Email</small>{{ p.email }}</span></a>
+        <p class="ed-p-none" *ngIf="!p.phone && !p.telephone && !p.email">No contact details on record.</p>
+      </section>
+
+      <section class="ed-p-sec">
+        <h3>Work</h3>
+        <dl class="ed-p-kv">
+          <div><dt>Department</dt><dd>{{ tc(e.department) || '—' }}</dd></div>
+          <div><dt>Designation</dt><dd>{{ tc(e.designation) || '—' }}</dd></div>
+          <div><dt>Location</dt><dd>{{ tc(p.location) || '—' }}</dd></div>
+          <div><dt>Nationality</dt><dd>{{ tc(p.nationality) || '—' }}</dd></div>
+          <div><dt>Date of joining</dt><dd>{{ fmtDate(p.doj) || '—' }}<small *ngIf="serviceText(p.doj)">{{ serviceText(p.doj) }} of service</small></dd></div>
+          <div *ngIf="p.experienceInd || p.experienceAbroad"><dt>Experience</dt><dd>
+            <ng-container *ngIf="p.experienceInd">{{ p.experienceInd }} yrs India</ng-container>
+            <ng-container *ngIf="p.experienceInd && p.experienceAbroad"> · </ng-container>
+            <ng-container *ngIf="p.experienceAbroad">{{ p.experienceAbroad }} yrs abroad</ng-container>
+          </dd></div>
+        </dl>
+      </section>
+
+      <section class="ed-p-sec" *ngIf="p.qualification">
+        <h3>Qualification</h3>
+        <p class="ed-p-text">{{ p.qualification }}</p>
+      </section>
+
+      <section class="ed-p-sec" *ngIf="p.skills.length">
+        <h3>Skills</h3>
+        <div class="ed-chips"><span class="ed-chip ed-chip-skill" *ngFor="let s of p.skills">{{ s }}</span></div>
+      </section>
+
+      <section class="ed-p-sec" *ngIf="p.careerSummary">
+        <h3>Career summary</h3>
+        <p class="ed-p-text">{{ p.careerSummary }}</p>
+      </section>
+    </ng-container>
+  </div>
+</aside>

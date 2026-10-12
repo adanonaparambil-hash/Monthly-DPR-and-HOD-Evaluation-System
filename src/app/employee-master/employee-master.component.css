@@ -536,7 +536,7 @@
 /* ── Hero header ──────────────────────────────────────────── */
 .em-hero {
   position: relative;
-  background: linear-gradient(135deg, #0d1f2d 0%, #138271 60%, #1aab96 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   padding: 32px 28px 28px;
   overflow: hidden;
   flex-shrink: 0;
@@ -712,7 +712,7 @@
 }
 
 .em-icon-blue   { background: linear-gradient(135deg,#3b82f6,#6366f1); box-shadow: 0 3px 8px rgba(59,130,246,.3); }
-.em-icon-teal   { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 3px 8px rgba(19,130,113,.3); }
+.em-icon-teal   { background: linear-gradient(135deg,#1B2A38,#10b981); box-shadow: 0 3px 8px rgba(19,130,113,.3); }
 .em-icon-purple { background: linear-gradient(135deg,#8b5cf6,#a855f7); box-shadow: 0 3px 8px rgba(139,92,246,.3); }
 
 .em-section-title {
@@ -1152,7 +1152,7 @@
 }
 
 :host-context(.dark-theme) .em-hero {
-  background: linear-gradient(135deg, #0a1622 0%, #106b5d 60%, #138271 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 :host-context(.dark-theme) .em-body {

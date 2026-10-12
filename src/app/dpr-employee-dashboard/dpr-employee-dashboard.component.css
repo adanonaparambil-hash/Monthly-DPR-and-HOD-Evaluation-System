@@ -135,3 +135,40 @@
   .v2{font-size:10px}
   .tfoot .btn{width:100%}
 }
+
+/* ═══ Arabic pilot — RTL (2026-10) ════════════════════════════════════════
+   The host carries .is-rtl and dir="rtl" only while Arabic is on (I18nService).
+   Lives in this component's own file so the HOD dashboard, which shares
+   dpr-dash.css, is untouched. Charts stay left-to-right (time and scale axes
+   read the same in both languages); text, cards, rows and the calendar flip. */
+
+/* Arabic type through the page's own font tokens; letter-spacing breaks Arabic joining */
+:host(.is-rtl){
+  --fh:'IBM Plex Sans Arabic',Geist,Inter,"Segoe UI",system-ui,sans-serif;
+  --fb:'IBM Plex Sans Arabic',Inter,"Segoe UI",system-ui,sans-serif;
+}
+:host(.is-rtl) :not(.material-symbols-outlined){letter-spacing:0 !important}
+
+/* physical left/right from dpr-dash.css, mirrored */
+:host(.is-rtl) .rrow b{margin-left:0;margin-right:auto}
+:host(.is-rtl) .qbtn{text-align:right}
+:host(.is-rtl) .kpi::before{left:auto;right:0}
+:host(.is-rtl) .row{text-align:right}
+:host(.is-rtl) .rrt{text-align:left}
+:host(.is-rtl) .bul .v{text-align:left}
+:host(.is-rtl) .quote .qm{right:auto;left:6px}
+
+/* "go" arrows point the reading direction */
+:host(.is-rtl) .lk .material-symbols-outlined,
+:host(.is-rtl) .qct .material-symbols-outlined{transform:scaleX(-1)}
+
+/* charts keep their left-to-right geometry (inline left:% values) */
+:host(.is-rtl) .tl,
+:host(.is-rtl) .tlx,
+:host(.is-rtl) .bul .t,
+:host(.is-rtl) .wchart,
+:host(.is-rtl) .dvtr{direction:ltr}
+
+/* free text from the database (quote, task titles, notices) keeps its own direction
+   (dir="auto"), so English punctuation lands correctly — but stays right-aligned */
+:host(.is-rtl) [dir="auto"]{text-align:right}

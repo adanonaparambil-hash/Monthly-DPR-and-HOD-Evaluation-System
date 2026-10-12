@@ -8,8 +8,8 @@
   <section class="hero an">
     <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
     <div class="hl">
-      <span class="eyeb"><span class="pulse"><i></i><i></i></span>My DPR · live work session</span>
-      <h1>{{ greetingText }}{{ firstName ? ', ' + firstName : '' }}</h1>
+      <span class="eyeb"><span class="pulse"><i></i><i></i></span>{{ 'My DPR · live work session' | t }}</span>
+      <h1>{{ firstName ? ('{g}, {name}' | t:{ g: greetingText, name: firstName }) : greetingText }}</h1>
       <div class="hmeta">
         <span class="mi"><span class="material-symbols-outlined">calendar_today</span>{{ dateText }}</span>
         <ng-container *ngIf="locText"><span class="sep">·</span><span class="mi"><span class="material-symbols-outlined">corporate_fare</span>{{ locText }}</span></ng-container>
@@ -17,14 +17,14 @@
         <ng-container *ngIf="expDailyText"><span class="sep">·</span><span class="mi"><span class="material-symbols-outlined">schedule</span>{{ expDailyText }}</span></ng-container>
       </div>
       <div class="hchips">
-        <span class="hchip" [class.g]="timerRunning"><span class="livedot"></span>Timer <b>{{ runningText }}</b></span>
-        <span class="hchip"><span class="material-symbols-outlined">fingerprint</span>Last punch <b>{{ lastPunchText }}</b></span>
-        <span class="hchip"><span class="material-symbols-outlined">coffee</span>Break <b>{{ breakText }}</b></span>
-        <span class="hchip"><span class="material-symbols-outlined">commute</span>Travel <b>{{ travelText }}</b></span>
-        <span class="hchip" *ngIf="streakDays > 0"><span class="material-symbols-outlined flame">local_fire_department</span>Streak <b>{{ streakDays }} {{ streakDays === 1 ? 'day' : 'days' }}</b></span>
-        <span class="hchip hot" *ngIf="autoClosedCount > 0"><span class="material-symbols-outlined">lock</span><b>{{ autoClosedCount }}</b> auto-closed — timer locked</span>
-        <span class="hchip hot" *ngIf="loadError"><span class="material-symbols-outlined">info</span>{{ loadError }}</span>
-        <span class="hchip" *ngIf="loading"><span class="material-symbols-outlined spin">progress_activity</span>Loading live data…</span>
+        <span class="hchip" [class.g]="timerRunning"><span class="livedot"></span>{{ 'Timer' | t }} <b>{{ runningText }}</b></span>
+        <span class="hchip"><span class="material-symbols-outlined">fingerprint</span>{{ 'Last punch' | t }} <b>{{ lastPunchText }}</b></span>
+        <span class="hchip"><span class="material-symbols-outlined">coffee</span>{{ 'Break' | t }} <b>{{ breakText }}</b></span>
+        <span class="hchip"><span class="material-symbols-outlined">commute</span>{{ 'Travel' | t }} <b>{{ travelText }}</b></span>
+        <span class="hchip" *ngIf="streakDays > 0"><span class="material-symbols-outlined flame">local_fire_department</span>{{ 'Streak' | t }} <b>{{ (streakDays === 1 ? '{n} day' : '{n} days') | t:{ n: streakDays } }}</b></span>
+        <span class="hchip hot" *ngIf="autoClosedCount > 0"><span class="material-symbols-outlined">lock</span><b>{{ autoClosedCount }}</b> {{ 'auto-closed — timer locked' | t }}</span>
+        <span class="hchip hot" *ngIf="loadError"><span class="material-symbols-outlined">info</span>{{ loadError | t }}</span>
+        <span class="hchip" *ngIf="loading"><span class="material-symbols-outlined spin">progress_activity</span>{{ 'Loading live data…' | t }}</span>
       </div>
     </div>
     <div class="hrr">
@@ -34,10 +34,10 @@
         <div class="mid"><b>{{ ring1Mid }}</b><span>{{ ring1Sub }}</span></div>
       </div>
       <div class="rlist">
-        <div class="rrow"><i class="sqd" style="background:var(--a1)"></i>Worked DPR <b>{{ heroWorked }}</b></div>
-        <div class="rrow"><i class="sqd" style="background:var(--a4)"></i>Not logged <b>{{ heroGap }}</b></div>
-        <div class="rrow"><i class="sqd" style="background:var(--a3)"></i>Target remaining <b>{{ heroRemaining }}</b></div>
-        <div class="rrow tot">Month total <b>{{ heroMonth }}</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a1)"></i>{{ 'Worked DPR' | t }} <b>{{ heroWorked }}</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a4)"></i>{{ 'Not logged' | t }} <b>{{ heroGap }}</b></div>
+        <div class="rrow"><i class="sqd" style="background:var(--a3)"></i>{{ 'Target remaining' | t }} <b>{{ heroRemaining }}</b></div>
+        <div class="rrow tot">{{ 'Month total' | t }} <b>{{ heroMonth }}</b></div>
       </div>
     </div>
   </section>
@@ -46,21 +46,24 @@
   <section class="qa">
     <button type="button" class="qbtn an" style="--kc:var(--a4);--d:60ms" (click)="openNotifications()">
       <span class="qic"><span class="material-symbols-outlined">notifications_active</span></span>
-      <span class="qtx"><b>Notifications</b><span>{{ notifSub }}</span></span>
+      <span class="qtx"><b>{{ 'Notifications' | t }}</b><span>{{ notifSub }}</span></span>
       <span class="qct" [class.pop]="badgePop">{{ notifUnread }}</span></button>
     <button type="button" class="qbtn an" style="--kc:var(--a3);--d:120ms" (click)="openAnnouncements()">
       <span class="qic"><span class="material-symbols-outlined">campaign</span></span>
-      <span class="qtx"><b>Announcements</b><span>{{ noticeSub }}</span></span>
+      <span class="qtx"><b>{{ 'Announcements' | t }}</b><span dir="auto">{{ noticeSub }}</span></span>
       <span class="qct" [class.pop]="badgePop">{{ noticeUnread }}</span></button>
     <button type="button" class="qbtn an" style="--kc:var(--a5);--d:180ms" (click)="openApprovals()">
       <span class="qic"><span class="material-symbols-outlined">verified</span></span>
-      <span class="qtx"><b>My approvals</b><span>{{ approvalSub }}</span></span>
+      <span class="qtx"><b>{{ 'My approvals' | t }}</b><span>{{ approvalSub }}</span></span>
       <span class="qct" [class.pop]="badgePop">{{ approvalCount }}</span></button>
     <button type="button" class="qbtn an" style="--kc:var(--a6);--d:240ms" (click)="generateAi()">
       <span class="qic"><span class="material-symbols-outlined">auto_awesome</span></span>
-      <span class="qtx"><b>AI DPR report</b><span>Generate my month summary</span></span>
+      <span class="qtx"><b>{{ 'AI DPR report' | t }}</b><span>{{ 'Generate my month summary' | t }}</span></span>
       <span class="qct"><span class="material-symbols-outlined">arrow_forward</span></span></button>
   </section>
+
+  <!-- ═══════════════ NEW JOINERS (last month, staff only) ═══════════════ -->
+  <app-new-joiners-card></app-new-joiners-card>
 
   <!-- ═══════════════ KPI ROW ═══════════════ -->
   <section class="grid">
@@ -76,30 +79,30 @@
   <section class="grid">
     <div class="card s8 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">target</span></span>
-        <h2>{{ monthName }} — expected vs achieved</h2>
-        <button type="button" class="lk" (click)="openLogHistory()">Log history <span class="material-symbols-outlined">arrow_forward</span></button></div>
+        <h2>{{ '{m} — expected vs achieved' | t:{ m: monthName } }}</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">{{ 'Log history' | t }} <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <p class="sub">{{ monthNote }}</p>
       <div class="mx">
         <div class="mxring">
           <svg width="150" height="150"><circle class="t" cx="75" cy="75" r="60"/>
             <circle class="v" cx="75" cy="75" r="60" [attr.stroke-dashoffset]="ring2Offset"/></svg>
-          <div class="mid"><b><span [attr.data-cu]="achievedPct" data-dec="1">{{ fmt(achievedPct, 1) }}</span>%</b><span>Achieved</span></div>
+          <div class="mid"><b><span [attr.data-cu]="achievedPct" data-dec="1">{{ fmt(achievedPct, 1) }}</span>%</b><span>{{ 'Achieved' | t }}</span></div>
         </div>
         <div class="mxr">
           <div class="lg">
-            <span style="--lc:var(--a1)"><i></i>Achieved</span>
-            <span style="--lc:var(--a2)"><i class="st2"></i>Projected at current pace</span>
-            <span style="--lc:var(--ink)"><i class="mkl"></i>Expected</span>
+            <span style="--lc:var(--a1)"><i></i>{{ 'Achieved' | t }}</span>
+            <span style="--lc:var(--a2)"><i class="st2"></i>{{ 'Projected at current pace' | t }}</span>
+            <span style="--lc:var(--ink)"><i class="mkl"></i>{{ 'Expected' | t }}</span>
           </div>
           <div class="bul">
-            <span class="n">So far</span>
+            <span class="n">{{ 'So far' | t }}</span>
             <span class="t">
               <span class="f" [style.width.%]="soFarFill" [attr.data-tip]="soFarTip"></span>
               <span class="mk" [style.left.%]="soFarMark" [attr.data-tip]="soFarMarkTip"></span></span>
             <span class="v" style="color:var(--a1)">{{ soFarText }}</span>
           </div>
           <div class="bul">
-            <span class="n">Month end</span>
+            <span class="n">{{ 'Month end' | t }}</span>
             <span class="t">
               <span class="f" [style.width.%]="endFill"></span>
               <span class="gh" [style.left.%]="endFill" [style.width.%]="endGhost" [attr.data-tip]="endGhostTip"></span>
@@ -117,17 +120,17 @@
     <div class="card quote s4 an" style="--d:120ms">
       <span class="qm">”</span>
       <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">format_quote</span></span>
-        <h2>Quote of the day</h2></div>
+        <h2>{{ 'Quote of the day' | t }}</h2></div>
       <ng-container *ngIf="quoteText; else noQuote">
-        <q>{{ quoteText }}</q>
-        <div class="qa" *ngIf="quoteAuthor">{{ quoteAuthor }}</div>
+        <q dir="auto">{{ quoteText }}</q>
+        <div class="qa" dir="auto" *ngIf="quoteAuthor">{{ quoteAuthor }}</div>
       </ng-container>
-      <ng-template #noQuote><p class="muted">No quote for today.</p></ng-template>
+      <ng-template #noQuote><p class="muted">{{ 'No quote for today.' | t }}</p></ng-template>
       <div class="row qrow">
         <span class="rico" style="--kc:var(--a1)"><span class="material-symbols-outlined flame">local_fire_department</span></span>
-        <div class="rtx" *ngIf="streakDays > 0"><b>{{ streakDays }}-day reporting streak</b><span>Consecutive working days with a DPR this month</span></div>
-        <div class="rrt" *ngIf="streakDays > 0"><b style="color:var(--a1)">{{ streakDays }}</b><span>{{ streakDays === 1 ? 'day' : 'days' }}</span></div>
-        <div class="rtx" *ngIf="streakDays === 0"><b>No streak yet</b><span>Log a DPR today to start one</span></div>
+        <div class="rtx" *ngIf="streakDays > 0"><b>{{ '{n}-day reporting streak' | t:{ n: streakDays } }}</b><span>{{ 'Consecutive working days with a DPR this month' | t }}</span></div>
+        <div class="rrt" *ngIf="streakDays > 0"><b style="color:var(--a1)">{{ streakDays }}</b><span>{{ (streakDays === 1 ? 'day' : 'days') | t }}</span></div>
+        <div class="rtx" *ngIf="streakDays === 0"><b>{{ 'No streak yet' | t }}</b><span>{{ 'Log a DPR today to start one' | t }}</span></div>
       </div>
     </div>
   </section>
@@ -136,20 +139,20 @@
   <section class="grid">
     <div class="card s7 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">fingerprint</span></span>
-        <h2>Today at a glance</h2>
-        <button type="button" class="lk" (click)="openLogHistory()">Punch log <span class="material-symbols-outlined">arrow_forward</span></button></div>
+        <h2>{{ 'Today at a glance' | t }}</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">{{ 'Punch log' | t }} <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <div class="lg">
-        <span style="--lc:var(--a1)"><i></i>Task time</span>
-        <span style="--lc:var(--a2)"><i></i>Running</span>
-        <span style="--lc:var(--a5)"><i></i>Break</span>
-        <span style="--lc:var(--a3)"><i></i>Travel</span>
-        <span style="--lc:var(--a4)"><i class="st2"></i>Not logged</span>
+        <span style="--lc:var(--a1)"><i></i>{{ 'Task time' | t }}</span>
+        <span style="--lc:var(--a2)"><i></i>{{ 'Running' | t }}</span>
+        <span style="--lc:var(--a5)"><i></i>{{ 'Break' | t }}</span>
+        <span style="--lc:var(--a3)"><i></i>{{ 'Travel' | t }}</span>
+        <span style="--lc:var(--a4)"><i class="st2"></i>{{ 'Not logged' | t }}</span>
       </div>
       <div class="tl">
         <span *ngFor="let s of tlSegs" class="sg" [class.gapz]="s.gap"
               [style.left.%]="s.left" [style.width.%]="s.width" [style.background]="s.gap ? null : s.bg"
               [attr.data-tip]="s.tip">{{ s.label }}</span>
-        <span class="tlempty" *ngIf="!tlSegs.length">No time logged yet today</span>
+        <span class="tlempty" *ngIf="!tlSegs.length">{{ 'No time logged yet today' | t }}</span>
       </div>
       <div class="tlx"><span>{{ tlStart }}</span><span>{{ tlPunches }}</span><span>{{ tlEnd }}</span></div>
       <div class="stats mt">
@@ -160,26 +163,26 @@
 
     <div class="card s5 an" style="--d:120ms">
       <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">play_circle</span></span>
-        <h2>Active assigned task</h2>
-        <span class="pill" [ngClass]="timerRunning ? 'ok' : 'nu'"><span class="material-symbols-outlined">{{ timerRunning ? 'bolt' : 'pause' }}</span>{{ timerRunning ? 'Running' : 'Idle' }}</span></div>
+        <h2>{{ 'Active assigned task' | t }}</h2>
+        <span class="pill" [ngClass]="timerRunning ? 'ok' : 'nu'"><span class="material-symbols-outlined">{{ timerRunning ? 'bolt' : 'pause' }}</span>{{ (timerRunning ? 'Running' : 'Idle') | t }}</span></div>
       <div class="task">
         <span class="lbl">{{ actCategory }}</span>
-        <div class="ttl">{{ actTitle }}</div>
+        <div class="ttl" dir="auto">{{ actTitle }}</div>
         <div class="tsub">{{ actSub }}</div>
-        <div class="tprow"><span class="lbl">Task progress</span><b>{{ actProgress | number:'1.0-0' }}%</b></div>
+        <div class="tprow"><span class="lbl">{{ 'Task progress' | t }}</span><b>{{ actProgress | number:'1.0-0' }}%</b></div>
         <div class="tprog"><i [style.width.%]="actProgress"></i></div>
         <div class="tfoot">
-          <span>Today <b>{{ actToday }}</b></span>
-          <span>Total <b>{{ actTotal }}</b></span>
-          <span *ngIf="timerRunning">Live <b>{{ actLive }}</b></span>
+          <span>{{ 'Today' | t }} <b>{{ actToday }}</b></span>
+          <span>{{ 'Total' | t }} <b>{{ actTotal }}</b></span>
+          <span *ngIf="timerRunning">{{ 'Live' | t }} <b>{{ actLive }}</b></span>
           <span class="flex1"></span>
-          <button type="button" class="btn pri" (click)="openTasks()"><span class="material-symbols-outlined">open_in_new</span>Open my tasks</button>
+          <button type="button" class="btn pri" (click)="openTasks()"><span class="material-symbols-outlined">open_in_new</span>{{ 'Open my tasks' | t }}</button>
         </div>
       </div>
       <div class="row mt" *ngIf="overdueRow as od">
         <span class="rico" [style.--kc]="od.color"><span class="material-symbols-outlined">warning</span></span>
-        <div class="rtx"><b>{{ od.title }}</b><span>{{ od.sub }} · {{ od.logged }} {{ od.of }}</span></div>
-        <span class="pill cr">Overdue</span>
+        <div class="rtx"><b dir="auto">{{ od.title }}</b><span>{{ od.sub }} · {{ od.logged }} {{ od.of }}</span></div>
+        <span class="pill cr">{{ 'Overdue' | t }}</span>
       </div>
     </div>
   </section>
@@ -188,13 +191,13 @@
   <section class="grid">
     <div class="card s6 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">bar_chart</span></span>
-        <h2>My hours — last 7 days</h2>
-        <button type="button" class="lk" (click)="openLogHistory()">Log history <span class="material-symbols-outlined">arrow_forward</span></button></div>
+        <h2>{{ 'My hours — last 7 days' | t }}</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">{{ 'Log history' | t }} <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <div class="lg">
-        <span style="--lc:var(--a1)"><i></i>Hours logged</span>
-        <span style="--lc:var(--a2)"><i></i>Today</span>
-        <span style="--lc:var(--line2)"><i></i>Target track</span>
-        <span style="--lc:var(--ink3)"><i class="mkl"></i>{{ weekTargetLabel }} target</span>
+        <span style="--lc:var(--a1)"><i></i>{{ 'Hours logged' | t }}</span>
+        <span style="--lc:var(--a2)"><i></i>{{ 'Today' | t }}</span>
+        <span style="--lc:var(--line2)"><i></i>{{ 'Target track' | t }}</span>
+        <span style="--lc:var(--ink3)"><i class="mkl"></i>{{ '{v} target' | t:{ v: weekTargetLabel } }}</span>
       </div>
       <div class="wchart" *ngIf="weekCols.length; else noWeek">
         <div class="plotrow" [style.--tp]="weekTargetPct + '%'">
@@ -212,13 +215,13 @@
           <div class="lcol" *ngFor="let c of weekCols" [class.td]="c.today"><b>{{ c.day }}</b><span class="var" [ngClass]="c.varCls">{{ c.varTxt }}</span></div>
         </div>
       </div>
-      <ng-template #noWeek><p class="muted pad">No hours logged in the last 7 days.</p></ng-template>
+      <ng-template #noWeek><p class="muted pad">{{ 'No hours logged in the last 7 days.' | t }}</p></ng-template>
       <div class="stats mt">
         <div class="st" *ngFor="let s of weekStats" [style.--kc]="s.color">
           <div class="k">{{ s.k }}</div><div class="v">{{ s.v }}<small>{{ s.unit }}</small></div><div class="d">{{ s.d }}</div></div>
       </div>
       <div class="wkbul" *ngIf="weekCols.length">
-        <div class="wkhead"><span class="lbl">Week against target</span>
+        <div class="wkhead"><span class="lbl">{{ 'Week against target' | t }}</span>
           <span class="pill" [ngClass]="weekPillCls"><span class="material-symbols-outlined">{{ weekPillCls === 'ok' ? 'trending_up' : 'trending_down' }}</span>{{ weekPillTxt }}</span></div>
         <div class="bul">
           <span class="t">
@@ -231,20 +234,20 @@
 
     <div class="card s6 an" style="--d:120ms">
       <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">calendar_month</span></span>
-        <h2>My DPR calendar — {{ calMonthLabel }}</h2>
-        <button type="button" class="lk" (click)="openLogHistory()">Full history <span class="material-symbols-outlined">arrow_forward</span></button></div>
+        <h2>{{ 'My DPR calendar — {m}' | t:{ m: calMonthLabel } }}</h2>
+        <button type="button" class="lk" (click)="openLogHistory()">{{ 'Full history' | t }} <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <div class="cal">
-        <span class="dow" *ngFor="let d of dows">{{ d }}</span>
+        <span class="dow" *ngFor="let d of dows">{{ d | t }}</span>
         <span *ngFor="let c of calCells" class="cell" [class.e]="c.empty" [ngClass]="c.cls"
               [style.--cd]="c.delay" [attr.data-tip]="c.tip || null">
           <ng-container *ngIf="!c.empty"><b class="d">{{ c.day }}</b><span class="h" *ngIf="c.hh">{{ c.hh }}</span></ng-container>
         </span>
       </div>
-      <div class="scale">Lighter
+      <div class="scale">{{ 'Lighter' | t }}
         <i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i>
-        <i style="background:var(--h4)"></i><i style="background:var(--h5)"></i> more hours ·
-        <i style="background:var(--h0)"></i> off or ahead ·
-        <i class="lvk"></i> leave · <i class="msk"></i> missed</div>
+        <i style="background:var(--h4)"></i><i style="background:var(--h5)"></i> {{ 'more hours' | t }} ·
+        <i style="background:var(--h0)"></i> {{ 'off or ahead' | t }} ·
+        <i class="lvk"></i> {{ 'leave' | t }} · <i class="msk"></i> {{ 'missed' | t }}</div>
       <div class="foot" *ngIf="calFoot.length">
         <span *ngFor="let f of calFoot">{{ f.k }} <b>{{ f.v }}</b></span>
       </div>
@@ -255,28 +258,28 @@
   <section class="grid">
     <div class="card s4 an" style="--d:60ms">
       <div class="ch"><span class="cic" style="--kc:var(--a2)"><span class="material-symbols-outlined">checklist</span></span>
-        <h2>My tasks</h2>
-        <button type="button" class="lk" (click)="openTasks()">Open <span class="material-symbols-outlined">arrow_forward</span></button></div>
+        <h2>{{ 'My tasks' | t }}</h2>
+        <button type="button" class="lk" (click)="openTasks()">{{ 'Open' | t }} <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <div class="row" *ngFor="let t of taskRows">
         <span class="rico" [style.--kc]="t.color"><span class="material-symbols-outlined">{{ t.icon }}</span></span>
-        <div class="rtx"><b>{{ t.title }}</b><span>{{ t.sub }}</span></div>
+        <div class="rtx"><b dir="auto">{{ t.title }}</b><span>{{ t.sub }}</span></div>
         <div class="rrt"><b [class.over]="t.over">{{ t.logged }}</b><span>{{ t.of }}</span></div></div>
-      <p class="muted pad" *ngIf="!taskRows.length">No open assignments.</p>
+      <p class="muted pad" *ngIf="!taskRows.length">{{ 'No open assignments.' | t }}</p>
     </div>
 
     <div class="card s4 an" style="--d:120ms">
       <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="material-symbols-outlined">compare_arrows</span></span>
-        <h2>Estimate vs actual</h2></div>
+        <h2>{{ 'Estimate vs actual' | t }}</h2></div>
       <ng-container *ngIf="estRows.length; else noEst">
-        <p class="sub">Distance from the estimate. Left of centre is under, right is over.</p>
+        <p class="sub">{{ 'Distance from the estimate. Left of centre is under, right is over.' | t }}</p>
         <div class="lg">
-          <span style="--lc:var(--a1)"><i></i>Under</span>
-          <span style="--lc:var(--a3)"><i></i>Over</span>
-          <span style="--lc:var(--ink4)"><i class="mkl"></i>On estimate</span>
+          <span style="--lc:var(--a1)"><i></i>{{ 'Under' | t }}</span>
+          <span style="--lc:var(--a3)"><i></i>{{ 'Over' | t }}</span>
+          <span style="--lc:var(--ink4)"><i class="mkl"></i>{{ 'On estimate' | t }}</span>
         </div>
         <div class="dv">
           <div class="dvr" *ngFor="let e of estRows">
-            <div class="top"><span class="nm">{{ e.name }}</span><span class="vv">{{ e.vv }}</span></div>
+            <div class="top"><span class="nm" dir="auto">{{ e.name }}</span><span class="vv">{{ e.vv }}</span></div>
             <div class="dvtr"><span class="mid"></span>
               <span class="sg" [class.over]="e.over" [style.width.%]="e.width"
                     [style.left.%]="e.over ? 50 : null" [style.right.%]="e.over ? null : 50" [attr.data-tip]="e.tip"></span></div>
@@ -284,23 +287,23 @@
         </div>
         <div class="foot"><span>{{ estFoot }}</span></div>
       </ng-container>
-      <ng-template #noEst><p class="muted pad">None of your open tasks has an estimate set.</p></ng-template>
+      <ng-template #noEst><p class="muted pad">{{ 'None of your open tasks has an estimate set.' | t }}</p></ng-template>
     </div>
 
     <div class="card aipanel s4 an" style="--d:180ms">
       <div class="ch"><span class="cic" style="--kc:var(--a6)"><span class="material-symbols-outlined">auto_awesome</span></span>
-        <h2>AI DPR insight</h2><span class="pill nu">On request</span></div>
+        <h2>{{ 'AI DPR insight' | t }}</h2><span class="pill nu">{{ 'On request' | t }}</span></div>
       <div class="aibox">
-        <h3><span class="material-symbols-outlined">auto_awesome</span>Generate my work summary</h3>
-        <p>A written read on your own DPR for this month. Nothing is generated until you press the button.</p>
+        <h3><span class="material-symbols-outlined">auto_awesome</span>{{ 'Generate my work summary' | t }}</h3>
+        <p>{{ 'A written read on your own DPR for this month. Nothing is generated until you press the button.' | t }}</p>
       </div>
       <ul class="ailist">
-        <li><span class="material-symbols-outlined">target</span>Hours against your expected target</li>
-        <li><span class="material-symbols-outlined">event_available</span>How consistently you reported</li>
-        <li><span class="material-symbols-outlined">edit_note</span>Quality of your daily remarks</li>
+        <li><span class="material-symbols-outlined">target</span>{{ 'Hours against your expected target' | t }}</li>
+        <li><span class="material-symbols-outlined">event_available</span>{{ 'How consistently you reported' | t }}</li>
+        <li><span class="material-symbols-outlined">edit_note</span>{{ 'Quality of your daily remarks' | t }}</li>
       </ul>
-      <button type="button" class="btn pri wide" (click)="generateAi()"><span class="material-symbols-outlined">auto_awesome</span>Generate my AI insight</button>
-      <small class="muted">Takes 10–30 seconds when you ask for it.</small>
+      <button type="button" class="btn pri wide" (click)="generateAi()"><span class="material-symbols-outlined">auto_awesome</span>{{ 'Generate my AI insight' | t }}</button>
+      <small class="muted">{{ 'Takes 10–30 seconds when you ask for it.' | t }}</small>
     </div>
   </section>
 
@@ -308,34 +311,34 @@
   <section class="grid">
     <div #noticePanel class="card s4 an" style="--d:60ms" [class.pulse-ring]="pulseNotice">
       <div class="ch"><span class="cic" style="--kc:var(--a3)"><span class="material-symbols-outlined">campaign</span></span>
-        <h2>Announcements</h2><span class="pill wt" *ngIf="noticeUnread > 0">{{ noticeUnread }} new</span></div>
+        <h2>{{ 'Announcements' | t }}</h2><span class="pill wt" *ngIf="noticeUnread > 0">{{ '{n} new' | t:{ n: noticeUnread } }}</span></div>
       <button type="button" class="row click" *ngFor="let n of noticeRows" (click)="openNotice(n)">
         <span class="rico" [style.--kc]="n.color"><span class="material-symbols-outlined">{{ n.icon }}</span></span>
-        <span class="rtx"><b>{{ n.title }}</b><span>{{ n.sub }}</span></span>
-        <span class="pill" [ngClass]="n.unread ? 'wt' : 'nu'">{{ n.unread ? 'New' : 'Read' }}</span></button>
-      <p class="muted pad" *ngIf="!noticeRows.length">Nothing published for you right now.</p>
+        <span class="rtx"><b dir="auto">{{ n.title }}</b><span>{{ n.sub }}</span></span>
+        <span class="pill" [ngClass]="n.unread ? 'wt' : 'nu'">{{ (n.unread ? 'New' : 'Read') | t }}</span></button>
+      <p class="muted pad" *ngIf="!noticeRows.length">{{ 'Nothing published for you right now.' | t }}</p>
     </div>
 
     <div #notifPanel class="card s4 an" style="--d:120ms" [class.pulse-ring]="pulseNotif">
       <div class="ch"><span class="cic" style="--kc:var(--a4)"><span class="material-symbols-outlined">notifications</span></span>
-        <h2>My notifications</h2><span class="pill cr" *ngIf="notifUnread > 0">{{ notifUnread }} unread</span></div>
+        <h2>{{ 'My notifications' | t }}</h2><span class="pill cr" *ngIf="notifUnread > 0">{{ '{n} unread' | t:{ n: notifUnread } }}</span></div>
       <button type="button" class="row click" *ngFor="let n of notifRows" (click)="openNotification(n)">
         <span class="rico" [style.--kc]="n.color"><span class="material-symbols-outlined">{{ n.icon }}</span></span>
-        <span class="rtx"><b>{{ n.message }}</b><span>{{ n.time }}</span></span>
+        <span class="rtx"><b dir="auto">{{ n.message }}</b><span>{{ n.time }}</span></span>
         <span class="unreaddot" *ngIf="n.unread"></span></button>
-      <p class="muted pad" *ngIf="!notifRows.length">Nothing new for you right now.</p>
+      <p class="muted pad" *ngIf="!notifRows.length">{{ 'Nothing new for you right now.' | t }}</p>
     </div>
 
     <div class="card s4 an" style="--d:180ms">
       <div class="ch"><span class="cic" style="--kc:var(--a5)"><span class="material-symbols-outlined">fact_check</span></span>
-        <h2>My requests</h2>
-        <button type="button" class="lk" (click)="openForms()">All forms <span class="material-symbols-outlined">arrow_forward</span></button></div>
+        <h2>{{ 'My requests' | t }}</h2>
+        <button type="button" class="lk" (click)="openForms()">{{ 'All forms' | t }} <span class="material-symbols-outlined">arrow_forward</span></button></div>
       <div class="row" *ngFor="let f of formRows">
         <span class="rico" [style.--kc]="f.color"><span class="material-symbols-outlined">{{ f.icon }}</span></span>
         <div class="rtx"><b>{{ f.title }}</b><span>{{ f.sub }}</span></div>
         <span class="pill" [ngClass]="f.pillCls">{{ f.pillTxt }}</span></div>
-      <p class="muted pad" *ngIf="!formRows.length">Nothing submitted this period.</p>
-      <button type="button" class="btn wide" (click)="newRequest()"><span class="material-symbols-outlined">add</span>New request</button>
+      <p class="muted pad" *ngIf="!formRows.length">{{ 'Nothing submitted this period.' | t }}</p>
+      <button type="button" class="btn wide" (click)="newRequest()"><span class="material-symbols-outlined">add</span>{{ 'New request' | t }}</button>
     </div>
   </section>
 

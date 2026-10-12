@@ -1,208 +1,359 @@
-<div class="emp-master-container">
+<div class="wm">
 
-  <!-- Filter Section -->
-  <div class="filter-card">
-    <div class="filter-row">
-      <div class="filter-group">
-        <label class="filter-label">Employee ID</label>
-        <div class="input-wrapper">
-          <i class="fas fa-id-badge input-icon"></i>
-          <input type="text" class="filter-input" placeholder="Search by ID..."
-                 [(ngModel)]="filterEmpId" (keyup.enter)="onApply()" />
-        </div>
+  <!-- ═══════════════ WORKFORCE OVERVIEW (loaded once on open) ═══════════════ -->
+  <section class="wm-ins" aria-labelledby="wm-ins-t">
+    <div class="wm-ins-head">
+      <span class="wm-ins-ic"><i class="fas fa-chart-pie"></i></span>
+      <div class="wm-ins-tx">
+        <h2 id="wm-ins-t">Workforce overview</h2>
+        <p>Whole company, active &amp; on-leave employees @if (insights?.summary) { · {{ insights!.summary!.departmentCount }} departments · {{ insights!.summary!.nationalityCount }} nationalities }</p>
       </div>
-      <div class="filter-group">
-        <label class="filter-label">Employee Name</label>
-        <div class="input-wrapper">
-          <i class="fas fa-user input-icon"></i>
-          <input type="text" class="filter-input" placeholder="Search by name..."
-                 [(ngModel)]="filterName" (keyup.enter)="onApply()" />
-        </div>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Department</label>
-        <div class="input-wrapper">
-          <i class="fas fa-building input-icon"></i>
-          <select class="filter-input filter-select" [(ngModel)]="filterDepartment">
-            <option value="">All Departments</option>
-            @for (dept of departmentList; track dept) {
-              <option [value]="dept">{{ dept }}</option>
-            }
-          </select>
-        </div>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Designation</label>
-        <div class="input-wrapper">
-          <i class="fas fa-briefcase input-icon"></i>
-          <input type="text" class="filter-input" placeholder="Search by designation..."
-                 [(ngModel)]="filterDesignation" (keyup.enter)="onApply()" />
-        </div>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Location</label>
-        <div class="input-wrapper">
-          <i class="fas fa-map-marker-alt input-icon"></i>
-          <select class="filter-input filter-select" [(ngModel)]="filterComLoc">
-            <option value="">All Locations</option>
-            @for (loc of comLocOptions; track loc.value) {
-              <option [value]="loc.value">{{ loc.label }}</option>
-            }
-          </select>
-        </div>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">DPR User</label>
-        <div class="input-wrapper">
-          <i class="fas fa-clipboard-check input-icon"></i>
-          <select class="filter-input filter-select" [(ngModel)]="filterIsDpr">
-            <option value="">All</option>
-            <option value="Y">Yes</option>
-            <option value="N">No</option>
-          </select>
-        </div>
-      </div>
-      <div class="filter-actions">
-        <button class="apply-btn" (click)="onApply()">
-          <i class="fas fa-search"></i>
-          Apply
-        </button>
-      </div>
+      <button type="button" class="wm-ghost" (click)="loadInsights()" [disabled]="insightsState === 'loading'" title="Reload the numbers">
+        <i class="fas fa-rotate-right" [class.fa-spin]="insightsState === 'loading'"></i></button>
+      <button type="button" class="wm-ghost wm-toggle" (click)="toggleInsights()" [attr.aria-expanded]="showInsights">
+        {{ showInsights ? 'Hide' : 'Show' }} insights <i class="fas fa-chevron-down" [class.up]="showInsights"></i></button>
     </div>
-  </div>
 
-  <!-- Employee Listing Table -->
-  <div class="table-card">
-    <!-- Table Header with count + pagination -->
-    <div class="table-header-bar">
-      @if (!isLoading && batchEmployees.length > 0) {
-        <div class="record-info">
-          Showing <strong>{{ globalStart }}–{{ globalEnd }}</strong>
-          <span class="batch-label">({{ batchLabel }})</span>
+    @if (showInsights) {
+      @if (insightsState === 'loading' && !insights) {
+        <div class="wm-kpis">
+          @for (k of [1,2,3,4,5,6]; track k) { <div class="wm-kpi wm-skel"></div> }
         </div>
-      }
-      @if (!isLoading && batchEmployees.length === 0) {
-        <div class="record-info">No records found</div>
-      }
-      @if (isLoading) {
-        <div class="record-info">Loading...</div>
-      }
-      <div class="pagination-controls">
-        <button class="page-btn" (click)="prevLocalPage()"
-                [disabled]="isFirstRecord || isLoading" title="Previous page">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <span class="page-indicator">Page {{ currentPage }} / {{ totalLocalPages }}</span>
-        <button class="page-btn next-btn" (click)="nextLocalPage()"
-                [disabled]="isLoading || (isLastLocalPage && !hasMoreBatches)"
-                [class.batch-next]="isLastLocalPage && hasMoreBatches"
-                title="{{ isLastLocalPage && hasMoreBatches ? 'Load next 500 records' : 'Next page' }}">
-          @if (isLastLocalPage && hasMoreBatches) {
-            <span>Next 500 <i class="fas fa-angle-double-right"></i></span>
-          } @else {
-            <span><i class="fas fa-chevron-right"></i></span>
+      } @else if (insightsState === 'error' && !insights) {
+        <div class="wm-ins-err"><i class="fas fa-triangle-exclamation"></i>The workforce numbers could not be loaded.
+          <button type="button" class="wm-link" (click)="loadInsights()">Try again</button></div>
+      } @else if (insights?.summary; as s) {
+        <!-- KPI tiles -->
+        <div class="wm-kpis">
+          <div class="wm-kpi" style="--k:#0f6b50">
+            <span class="wm-kpi-ic"><i class="fas fa-users"></i></span>
+            <span class="wm-kpi-lbl">Total workforce</span>
+            <b class="wm-kpi-val">{{ s.totalWorkforce | number }}</b>
+            <span class="wm-kpi-sub">{{ s.activeCount | number }} active at work</span>
+          </div>
+          <div class="wm-kpi" style="--k:#d97706">
+            <span class="wm-kpi-ic"><i class="fas fa-plane-departure"></i></span>
+            <span class="wm-kpi-lbl">On leave now</span>
+            <b class="wm-kpi-val">{{ s.onLeaveCount | number }}<small>{{ s.onLeavePct ?? 0 }}%</small></b>
+            <span class="wm-meter"><i [style.width.%]="s.onLeavePct ?? 0"></i></span>
+          </div>
+          <div class="wm-kpi" style="--k:#4f46e5">
+            <span class="wm-kpi-ic"><i class="fas fa-people-group"></i></span>
+            <span class="wm-kpi-lbl">Staff · Labour</span>
+            <b class="wm-kpi-val">{{ s.staffCount | number }}<small>· {{ s.labourCount | number }}</small></b>
+            <span class="wm-split" [attr.title]="pct(s.staffCount, s.totalWorkforce) + '% staff'">
+              <i class="a" [style.width.%]="pct(s.staffCount, s.totalWorkforce)"></i><i class="b"></i></span>
+          </div>
+          <div class="wm-kpi" style="--k:#0284c7">
+            <span class="wm-kpi-ic"><i class="fas fa-clipboard-check"></i></span>
+            <span class="wm-kpi-lbl">DPR users</span>
+            <b class="wm-kpi-val">{{ s.dprUsers | number }}<small>{{ pct(s.dprUsers, s.staffCount) }}% of staff</small></b>
+            <span class="wm-kpi-sub">{{ s.portalUsers | number }} have used the portal</span>
+          </div>
+          <div class="wm-kpi" style="--k:#7c3aed">
+            <span class="wm-kpi-ic"><i class="fas fa-user-plus"></i></span>
+            <span class="wm-kpi-lbl">New joiners</span>
+            <b class="wm-kpi-val">{{ s.joinedThisMonth | number }}<small>this month</small></b>
+            <span class="wm-kpi-sub">{{ s.joinedLastMonth | number }} last month</span>
+          </div>
+          @if (showTenureTile) {
+          <div class="wm-kpi" style="--k:#0d9488">
+            <span class="wm-kpi-ic"><i class="fas fa-hourglass-half"></i></span>
+            <span class="wm-kpi-lbl">Average tenure</span>
+            <b class="wm-kpi-val">{{ s.avgTenureYears ?? 0 }}<small>years</small></b>
+            <span class="wm-kpi-sub">{{ pct(s.femaleCount, s.totalWorkforce) }}% women · {{ s.femaleCount | number }}</span>
+          </div>
           }
+        </div>
+
+        <!-- breakdown panels -->
+        <div class="wm-panels">
+          <!-- departments -->
+          <div class="wm-panel wm-panel-wide">
+            <div class="wm-p-head"><i class="fas fa-sitemap"></i><span>By department</span>
+              <small>{{ insights!.byDepartment.length }} total · tap to filter</small></div>
+            <div class="wm-dept-grid">
+              @for (d of deptRows; track d.name) {
+                <button type="button" class="wm-bar" [class.on]="filterDepartment.toUpperCase() === (d.name || '').toUpperCase()" (click)="filterByDepartment(d.name)"
+                        [attr.title]="d.onLeave + ' on leave · ' + d.dprUsers + ' DPR users'">
+                  <span class="wm-bar-l">{{ tc(d.name) }}</span>
+                  <span class="wm-bar-t"><i [style.width.%]="(d.total / maxOf(insights!.byDepartment)) * 100"><em [style.width.%]="pct(d.onLeave, d.total)"></em></i></span>
+                  <span class="wm-bar-v">{{ d.total | number }}</span>
+                </button>
+              }
+            </div>
+            @if (insights!.byDepartment.length > DEPT_TOP) {
+              <button type="button" class="wm-link wm-more" (click)="showAllDepts = !showAllDepts">
+                {{ showAllDepts ? 'Show top ' + DEPT_TOP : 'Show all ' + insights!.byDepartment.length + ' departments' }}
+                <i class="fas fa-chevron-down" [class.up]="showAllDepts"></i></button>
+            }
+          </div>
+
+          <!-- location -->
+          <div class="wm-panel">
+            <div class="wm-p-head"><i class="fas fa-location-dot"></i><span>By location</span><small>tap to filter</small></div>
+            @for (l of insights!.byLocation; track l.code) {
+              <button type="button" class="wm-bar" [class.on]="filterComLoc === (l.code || '').toUpperCase()" (click)="filterByLocation(l.code)"
+                      [attr.title]="l.onLeave + ' on leave · ' + l.dprUsers + ' DPR users'">
+                <span class="wm-bar-l">{{ locationLabel(l.code) }}</span>
+                <span class="wm-bar-t"><i [style.width.%]="(l.total / maxOf(insights!.byLocation)) * 100"><em [style.width.%]="pct(l.onLeave, l.total)"></em></i></span>
+                <span class="wm-bar-v">{{ l.total | number }}</span>
+              </button>
+            }
+            <div class="wm-legend"><span><i class="tot"></i>Workforce</span><span><i class="lv"></i>On leave</span></div>
+          </div>
+
+          <!-- categories -->
+          <div class="wm-panel">
+            <div class="wm-p-head"><i class="fas fa-id-card-clip"></i><span>By category</span></div>
+            @for (c of insights!.byCategory; track c.code) {
+              <div class="wm-bar wm-bar-static" [attr.title]="c.onLeave + ' on leave · ' + c.dprUsers + ' DPR users'">
+                <span class="wm-bar-l">{{ tc(c.code) }}</span>
+                <span class="wm-bar-t"><i class="alt" [style.width.%]="(c.total / maxOf(insights!.byCategory)) * 100"><em [style.width.%]="pct(c.onLeave, c.total)"></em></i></span>
+                <span class="wm-bar-v">{{ c.total | number }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- nationality -->
+          <div class="wm-panel">
+            <div class="wm-p-head"><i class="fas fa-earth-asia"></i><span>By nationality</span></div>
+            <div class="wm-stack">
+              @for (n of insights!.byNationality; track n.name; let i = $index) {
+                <i [class]="'c' + (i % 9)" [style.width.%]="pct(n.total, s.totalWorkforce)" [attr.title]="tc(n.name) + ': ' + n.total"></i>
+              }
+            </div>
+            <div class="wm-nat">
+              @for (n of insights!.byNationality; track n.name; let i = $index) {
+                <span><i [class]="'c' + (i % 9)"></i>{{ tc(n.name) }}<b>{{ n.total | number }}</b></span>
+              }
+            </div>
+          </div>
+
+          <!-- data quality (admin) -->
+          <div class="wm-panel">
+            <div class="wm-p-head"><i class="fas fa-shield-halved"></i><span>Profile completeness</span></div>
+            <div class="wm-dq">
+              <div><span>Profile photo</span><span class="wm-meter g"><i [style.width.%]="pct(s.withPhoto, s.totalWorkforce)"></i></span><b>{{ pct(s.withPhoto, s.totalWorkforce) }}%</b></div>
+              <div><span>Valid phone</span><span class="wm-meter g"><i [style.width.%]="pct(s.totalWorkforce - s.missingPhone, s.totalWorkforce)"></i></span><b>{{ pct(s.totalWorkforce - s.missingPhone, s.totalWorkforce) }}%</b></div>
+              <div><span>E-mail</span><span class="wm-meter g"><i [style.width.%]="pct(s.totalWorkforce - s.missingEmail, s.totalWorkforce)"></i></span><b>{{ pct(s.totalWorkforce - s.missingEmail, s.totalWorkforce) }}%</b></div>
+              <div><span>Women</span><span class="wm-meter p"><i [style.width.%]="pct(s.femaleCount, s.totalWorkforce)"></i></span><b>{{ s.femaleCount | number }}</b></div>
+            </div>
+            <p class="wm-dq-note">{{ s.missingEmail | number }} without an e-mail · {{ s.missingPhone | number }} without a phone</p>
+          </div>
+          <!-- joiners trend -->
+          <div class="wm-panel wm-panel-full">
+            <div class="wm-p-head"><i class="fas fa-chart-column"></i><span>Joiners · last 12 months</span></div>
+            <div class="wm-trend">
+              @for (t of insights!.joinTrend; track t.month; let last = $last) {
+                <div class="wm-col" [class.now]="last" [attr.title]="monthLong(t.month) + ': ' + t.joined + ' joined'">
+                  <span class="wm-col-v">{{ t.joined }}</span>
+                  <span class="wm-col-b"><i [style.height.%]="(t.joined / trendMax) * 100"></i></span>
+                  <span class="wm-col-m">{{ monthShort(t.month) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ═══════════════ FILTERS (live) ═══════════════ -->
+  <section class="wm-filters" #listTop>
+    <div class="wm-f">
+      <label class="wm-f-l" for="wm-id">Employee ID</label>
+      <div class="wm-in"><i class="fas fa-id-badge"></i>
+        <input id="wm-id" type="text" placeholder="e.g. ADN4266" [(ngModel)]="filterEmpId" (ngModelChange)="onType()" (keyup.enter)="onApply()" autocomplete="off">
+        @if (filterEmpId) { <button type="button" class="wm-x" (click)="filterEmpId = ''; onApply()" aria-label="Clear ID"><i class="fas fa-xmark"></i></button> }
+      </div>
+    </div>
+    <div class="wm-f wm-f-wide">
+      <label class="wm-f-l" for="wm-nm">Employee name</label>
+      <div class="wm-in"><i class="fas fa-magnifying-glass"></i>
+        <input id="wm-nm" type="text" placeholder="Type any part of a name…" [(ngModel)]="filterName" (ngModelChange)="onType()" (keyup.enter)="onApply()" autocomplete="off">
+        @if (filterName) { <button type="button" class="wm-x" (click)="filterName = ''; onApply()" aria-label="Clear name"><i class="fas fa-xmark"></i></button> }
+      </div>
+    </div>
+    <div class="wm-f">
+      <label class="wm-f-l" for="wm-dg">Designation</label>
+      <div class="wm-in"><i class="fas fa-briefcase"></i>
+        <input id="wm-dg" type="text" placeholder="e.g. Engineer" [(ngModel)]="filterDesignation" (ngModelChange)="onType()" (keyup.enter)="onApply()" autocomplete="off">
+        @if (filterDesignation) { <button type="button" class="wm-x" (click)="filterDesignation = ''; onApply()" aria-label="Clear designation"><i class="fas fa-xmark"></i></button> }
+      </div>
+    </div>
+
+    <!-- department: searchable dropdown -->
+    <div class="wm-f">
+      <span class="wm-f-l" id="wm-dept-l">Department</span>
+      <div class="wm-dd" [class.open]="openDd === 'dept'">
+        <button type="button" class="wm-in wm-dd-btn" (click)="toggleDd('dept', $event)" aria-haspopup="listbox" [attr.aria-expanded]="openDd === 'dept'" aria-labelledby="wm-dept-l">
+          <i class="fas fa-building"></i>
+          <span class="wm-dd-val" [class.ph]="!filterDepartment">{{ filterDepartment ? tc(filterDepartment) : 'All departments' }}</span>
+          @if (filterDepartment) { <i class="fas fa-xmark wm-dd-clear" (click)="pickDept('', $event)" title="Clear department"></i> }
+          <i class="fas fa-chevron-down wm-dd-chev"></i>
+        </button>
+        @if (openDd === 'dept') {
+          <div class="wm-dd-panel" (click)="$event.stopPropagation()" role="listbox" aria-labelledby="wm-dept-l">
+            <div class="wm-dd-search"><i class="fas fa-magnifying-glass"></i>
+              <input type="text" [(ngModel)]="ddQuery" placeholder="Search departments…" autocomplete="off" autofocus></div>
+            <div class="wm-dd-list">
+              @if (!ddQuery) {
+                <button type="button" class="wm-dd-opt" role="option" [class.on]="!filterDepartment" (click)="pickDept('', $event)">
+                  <span class="wm-dd-tx">All departments</span><i class="fas fa-check wm-dd-tick"></i></button>
+              }
+              @for (d of deptMatches; track d) {
+                <button type="button" class="wm-dd-opt" role="option" [class.on]="filterDepartment === d" (click)="pickDept(d, $event)">
+                  <span class="wm-dd-tx">{{ tc(d) }}</span><i class="fas fa-check wm-dd-tick"></i></button>
+              }
+              @if (!deptMatches.length) { <div class="wm-dd-empty">No department matches “{{ ddQuery }}”</div> }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- location: dropdown -->
+    <div class="wm-f">
+      <span class="wm-f-l" id="wm-loc-l">Location</span>
+      <div class="wm-dd" [class.open]="openDd === 'loc'">
+        <button type="button" class="wm-in wm-dd-btn" (click)="toggleDd('loc', $event)" aria-haspopup="listbox" [attr.aria-expanded]="openDd === 'loc'" aria-labelledby="wm-loc-l">
+          <i class="fas fa-location-dot"></i>
+          <span class="wm-dd-val" [class.ph]="!filterComLoc">{{ filterComLoc ? locationLabel(filterComLoc) : 'All locations' }}</span>
+          @if (filterComLoc) { <i class="fas fa-xmark wm-dd-clear" (click)="pickLoc('', $event)" title="Clear location"></i> }
+          <i class="fas fa-chevron-down wm-dd-chev"></i>
+        </button>
+        @if (openDd === 'loc') {
+          <div class="wm-dd-panel" (click)="$event.stopPropagation()" role="listbox" aria-labelledby="wm-loc-l">
+            <div class="wm-dd-list">
+              <button type="button" class="wm-dd-opt" role="option" [class.on]="!filterComLoc" (click)="pickLoc('', $event)">
+                <span class="wm-dd-tx">All locations</span><i class="fas fa-check wm-dd-tick"></i></button>
+              @for (l of comLocOptions; track l.value) {
+                <button type="button" class="wm-dd-opt" role="option" [class.on]="filterComLoc === l.value" (click)="pickLoc(l.value, $event)">
+                  <span class="wm-dd-tx">{{ l.label }}</span><small class="wm-dd-code">{{ l.value }}</small><i class="fas fa-check wm-dd-tick"></i></button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- DPR user: segmented -->
+    <div class="wm-f">
+      <span class="wm-f-l">DPR user</span>
+      <div class="wm-seg" role="radiogroup" aria-label="DPR user">
+        <button type="button" role="radio" [attr.aria-checked]="filterIsDpr === ''" [class.on]="filterIsDpr === ''" (click)="setDpr('')">All</button>
+        <button type="button" role="radio" [attr.aria-checked]="filterIsDpr === 'Y'" [class.on]="filterIsDpr === 'Y'" (click)="setDpr('Y')">Yes</button>
+        <button type="button" role="radio" [attr.aria-checked]="filterIsDpr === 'N'" [class.on]="filterIsDpr === 'N'" (click)="setDpr('N')">No</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ LIST ═══════════════ -->
+  <section class="wm-list">
+    <div class="wm-list-bar">
+      <div class="wm-count">
+        @if (isLoading) {
+          <span class="wm-searching"><i class="fas fa-circle-notch fa-spin"></i>Searching…</span>
+        } @else if (batchEmployees.length) {
+          Showing <b>{{ globalStart | number }}–{{ globalEnd | number }}</b>
+          <span class="wm-count-sub">{{ hasMoreBatches ? '· more after record ' + (globalEnd | number) : '· end of results' }}</span>
+        } @else {
+          No employees found
+        }
+      </div>
+      @if (hasFilters) {
+        <div class="wm-chips">
+          @if (filterEmpId) { <span class="wm-chip">ID: {{ filterEmpId }}<button type="button" (click)="filterEmpId = ''; onApply()" aria-label="Remove ID filter">×</button></span> }
+          @if (filterName) { <span class="wm-chip">Name: {{ filterName }}<button type="button" (click)="filterName = ''; onApply()" aria-label="Remove name filter">×</button></span> }
+          @if (filterDesignation) { <span class="wm-chip">Designation: {{ filterDesignation }}<button type="button" (click)="filterDesignation = ''; onApply()" aria-label="Remove designation filter">×</button></span> }
+          @if (filterDepartment) { <span class="wm-chip">{{ tc(filterDepartment) }}<button type="button" (click)="pickDept('')" aria-label="Remove department filter">×</button></span> }
+          @if (filterComLoc) { <span class="wm-chip">{{ locationLabel(filterComLoc) }}<button type="button" (click)="pickLoc('')" aria-label="Remove location filter">×</button></span> }
+          @if (filterIsDpr) { <span class="wm-chip">DPR: {{ filterIsDpr === 'Y' ? 'Yes' : 'No' }}<button type="button" (click)="setDpr('')" aria-label="Remove DPR filter">×</button></span> }
+          <button type="button" class="wm-link" (click)="clearFilters()">Clear all</button>
+        </div>
+      }
+      <div class="wm-pager">
+        <button type="button" class="wm-pg" (click)="prevLocalPage()" [disabled]="isFirstRecord || isLoading" aria-label="Previous page"><i class="fas fa-chevron-left"></i></button>
+        <span class="wm-pg-i">Page {{ currentPage }} / {{ totalLocalPages }}</span>
+        <button type="button" class="wm-pg" [class.wm-pg-batch]="isLastLocalPage && hasMoreBatches" (click)="nextLocalPage()"
+                [disabled]="isLoading || (isLastLocalPage && !hasMoreBatches)" [attr.aria-label]="isLastLocalPage && hasMoreBatches ? 'Load next 500' : 'Next page'">
+          @if (isLastLocalPage && hasMoreBatches) { Next 500 <i class="fas fa-angles-right"></i> } @else { <i class="fas fa-chevron-right"></i> }
         </button>
       </div>
     </div>
 
-    <div class="table-wrapper">
-      <table class="emp-table">
+    <div class="wm-table-wrap" [class.dim]="isLoading && batchEmployees.length">
+      <table class="wm-table">
         <thead>
           <tr>
-            <th class="col-no">#</th>
-            <th class="col-empid">Emp ID</th>
-            <th>Employee Name</th>
+            <th class="c-no">#</th>
+            <th>Employee</th>
             <th>Department</th>
             <th>Designation</th>
-            <th class="col-contact">Contact</th>
-            <th class="col-actions">View</th>
+            <th>Contact</th>
+            <th class="c-st">Status</th>
+            <th class="c-act"><span class="sr">Open</span></th>
           </tr>
         </thead>
         <tbody>
-          <!-- Loading -->
-          @if (isLoading) {
-            <tr>
-              <td colspan="7" class="state-cell">
-                <div class="loading-state">
-                  <app-crane-loader size="md" message="Loading employee records"></app-crane-loader>
-                </div>
-              </td>
-            </tr>
+          @if (isLoading && !batchEmployees.length) {
+            <tr><td colspan="7" class="wm-state"><app-crane-loader size="md" message="Loading employee records"></app-crane-loader></td></tr>
           }
-
-          <!-- Data Rows -->
-          @for (emp of employeeList; track emp.empId; let i = $index) {
-            <tr class="table-row">
-              <td class="col-no">
-                <span class="row-num">{{ globalStart + i }}</span>
-              </td>
-              <td class="col-empid">
-                <span class="emp-id-badge">{{ emp.empId }}</span>
-              </td>
-              <td>
-                <div class="employee-cell">
-                  <div class="avatar-wrap">
+          @for (emp of employeeList; track trackEmp($index, emp); let i = $index) {
+            <tr (click)="openViewModal(emp)" tabindex="0" (keydown.enter)="openViewModal(emp)">
+              <td class="c-no">{{ globalStart + i }}</td>
+              <td class="c-emp">
+                <div class="wm-emp">
+                  <span class="wm-av">
                     @if (emp.profileImageBase64) {
-                      <img [src]="getProfileImage(emp)" [alt]="emp.employeeName"
-                           class="avatar-img" (error)="emp.profileImageBase64 = null" />
+                      <img [src]="getProfileImage(emp)" alt="" loading="lazy" (error)="emp.profileImageBase64 = null">
                     } @else {
-                      <div class="avatar" [style.background]="getAvatarColor(emp.employeeName)">
-                        {{ getInitials(emp.employeeName) }}
-                      </div>
+                      <span class="wm-av-in" [style.background]="getAvatarColor(emp.employeeName)">{{ getInitials(emp.employeeName) }}</span>
                     }
-                  </div>
-                  <div class="employee-info">
-                    <span class="employee-name">{{ emp.employeeName }}</span>
-                    <span class="employee-email">{{ emp.email || '—' }}</span>
-                  </div>
+                  </span>
+                  <span class="wm-emp-tx">
+                    <b>{{ tc(emp.employeeName) }}</b>
+                    <small><span class="wm-id">{{ emp.empId }}</span>@if (emp.email) { <span class="wm-mail">{{ emp.email }}</span> }</small>
+                  </span>
                 </div>
               </td>
-              <td><span class="dept-badge">{{ emp.department || '—' }}</span></td>
-              <td><span class="desig-text">{{ emp.designation || '—' }}</span></td>
-              <td class="col-contact"><span class="contact-text">{{ emp.contactNumber || '—' }}</span></td>
-              <td class="col-actions">
-                <button class="view-btn" (click)="openViewModal(emp)" title="View Employee">
-                  <i class="fas fa-eye"></i>
-                </button>
+              <td class="c-dept">@if (emp.department) { <span class="wm-dept">{{ tc(emp.department) }}</span> } @else { <span class="wm-none">—</span> }</td>
+              <td class="c-desig">{{ tc(emp.designation) || '—' }}</td>
+              <td class="c-ph">@if (phone(emp.contactNumber); as ph) { {{ ph }} } @else { <span class="wm-none">—</span> }</td>
+              <td class="c-st">
+                <span class="wm-st" [class.leave]="isOnLeave(emp)"><i></i>{{ isOnLeave(emp) ? 'On leave' : 'Active' }}</span>
+              </td>
+              <td class="c-act">
+                <button type="button" class="wm-open" (click)="$event.stopPropagation(); openViewModal(emp)" title="View / edit profile" aria-label="View or edit profile">
+                  <i class="fas fa-pen-to-square"></i></button>
               </td>
             </tr>
           }
-
-          <!-- Empty -->
-          @if (!isLoading && employeeList.length === 0) {
-            <tr>
-              <td colspan="7" class="state-cell">
-                <div class="empty-state">
-                  <div class="empty-icon"><i class="fas fa-users"></i></div>
-                  <p class="empty-title">No employee records found</p>
-                  <p class="empty-subtitle">Try adjusting your search filters</p>
-                </div>
-              </td>
-            </tr>
+          @if (!isLoading && !employeeList.length) {
+            <tr><td colspan="7" class="wm-state">
+              <div class="wm-empty"><span><i class="fas fa-user-slash"></i></span>
+                <b>No employees match these filters</b>
+                <small>Check the spelling, or clear a filter.</small>
+                @if (hasFilters) { <button type="button" class="wm-link" (click)="clearFilters()">Clear all filters</button> }
+              </div>
+            </td></tr>
           }
         </tbody>
       </table>
     </div>
 
-    <!-- Bottom Pagination -->
-    <div class="table-footer-bar">
-      <button class="page-btn" (click)="prevLocalPage()" [disabled]="isFirstRecord || isLoading">
-        <i class="fas fa-chevron-left"></i> Prev
-      </button>
-      <span class="page-indicator">Page {{ currentPage }} of {{ totalLocalPages }}</span>
-      <button class="page-btn next-btn" (click)="nextLocalPage()"
-              [disabled]="isLoading || (isLastLocalPage && !hasMoreBatches)"
-              [class.batch-next]="isLastLocalPage && hasMoreBatches">
-        @if (isLastLocalPage && hasMoreBatches) {
-          <span>Next 500 <i class="fas fa-angle-double-right"></i></span>
-        } @else {
-          <span>Next <i class="fas fa-chevron-right"></i></span>
-        }
-      </button>
-    </div>
-  </div>
-
+    @if (batchEmployees.length) {
+      <div class="wm-list-foot">
+        <button type="button" class="wm-pg wide" (click)="prevLocalPage()" [disabled]="isFirstRecord || isLoading"><i class="fas fa-chevron-left"></i> Prev</button>
+        <span class="wm-pg-i">Page {{ currentPage }} of {{ totalLocalPages }} <small>({{ batchLabel }})</small></span>
+        <button type="button" class="wm-pg wide" [class.wm-pg-batch]="isLastLocalPage && hasMoreBatches" (click)="nextLocalPage()" [disabled]="isLoading || (isLastLocalPage && !hasMoreBatches)">
+          @if (isLastLocalPage && hasMoreBatches) { Next 500 <i class="fas fa-angles-right"></i> } @else { Next <i class="fas fa-chevron-right"></i> }
+        </button>
+      </div>
+    }
+  </section>
 </div>
 
 <!-- Employee Profile Modal -->

@@ -1,10 +1,13 @@
-import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Api } from '../services/api';
 import { NoticePopupService } from '../services/notice-popup.service';
 import { AiReportComponent } from '../components/ai-report/ai-report.component';
+import { NewJoinersCardComponent } from '../components/new-joiners-card/new-joiners-card.component';
+import { I18nService } from '../i18n/i18n.service';
+import { TPipe } from '../i18n/t.pipe';
 import { bindTooltip, countUpAll, escHtml, fmtNum, reduceMotion, setupReveal } from '../utils/dash-fx';
 import {
   DprEmpCalendarDay,
@@ -140,11 +143,17 @@ const RING2_C = 377;   // 2πr, r = 60
 @Component({
   selector: 'app-dpr-employee-dashboard',
   standalone: true,
-  imports: [CommonModule, AiReportComponent],
+  imports: [CommonModule, AiReportComponent, NewJoinersCardComponent, TPipe],
+  // Arabic pilot: this page flips itself to RTL (the rest of the app is unaffected)
+  host: { '[class.is-rtl]': 'i18n.isAr()', '[attr.dir]': 'i18n.dir()', '[attr.lang]': 'i18n.lang()' },
   templateUrl: './dpr-employee-dashboard.component.html',
   styleUrls: ['../styles/dpr-dash.css', './dpr-employee-dashboard.component.css']
 })
 export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  /** declared first: the field initialisers below already translate */
+  readonly i18n = inject(I18nService);
+  private tr(text: string, params?: Record<string, unknown>): string { return this.i18n.t(text, params); }
 
   @ViewChild('aiReport') aiReport?: AiReportComponent;
   @ViewChild('notifPanel') notifPanel?: ElementRef<HTMLElement>;
@@ -162,7 +171,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   deptText = '';
   expDailyText = '—';
   timerRunning = false;
-  runningText = 'No timer running';
+  runningText = this.tr('No timer running');
   lastPunchText = '—';
   breakText = '—';
   travelText = '—';
@@ -171,7 +180,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   readonly ring1C = RING1_C;
   ring1Offset = RING1_C;
   ring1Mid = '0:00';
-  ring1Sub = 'OF — TODAY';
+  ring1Sub = this.tr('OF — TODAY');
   heroWorked = '00:00';
   heroGap = '00:00';
   heroRemaining = '—';
@@ -179,11 +188,11 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
 
   // ── quick actions ──────────────────────────────────────────────────────────
   notifUnread = 0;
-  notifSub = 'Nothing new';
+  notifSub = this.tr('Nothing new');
   noticeUnread = 0;
-  noticeSub = 'Nothing published';
+  noticeSub = this.tr('Nothing published');
   approvalCount = 0;
-  approvalSub = 'Requests and approvals';
+  approvalSub = this.tr('Requests and approvals');
   /** flips false→true after each loader lands, replaying the badge pop */
   badgePop = false;
 
@@ -191,7 +200,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   kpis: KpiTile[] = this.blankKpis();
 
   // ── month expected vs achieved ─────────────────────────────────────────────
-  monthName = new Date().toLocaleDateString('en-GB', { month: 'long' });
+  monthName = new Date().toLocaleDateString(this.i18n.locale(), { month: 'long' });
   readonly ring2C = RING2_C;
   ring2Offset = RING2_C;
   achievedPct = 0;
@@ -222,7 +231,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
 
   // ── active task ────────────────────────────────────────────────────────────
   actCategory = '';
-  actTitle = 'No task running';
+  actTitle = this.tr('No task running');
   actSub = '';
   actProgress = 0;
   actToday = '—';
@@ -269,6 +278,10 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   private subs: Subscription[] = [];
   private destroyed = false;
   private fxCleanup: (() => void)[] = [];
+  /** last API payloads, re-mapped when the language changes */
+  private lastData: any = null;
+  private lastNotifs: any[] | null = null;
+  private lastNotices: any[] | null = null;
 
   constructor(
     private api: Api,
@@ -283,6 +296,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   ngOnInit(): void {
     const u = JSON.parse(localStorage.getItem('current_user') || '{}');
     this.empId = (u.empId || u.employeeId || '').toString().trim();
+    this.subs.push(this.i18n.changed$.subscribe(() => this.relabel()));
 
     if (!this.empId) {
       this.loadError = 'Sign in to load live data';
@@ -309,6 +323,20 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     this.timers.forEach(t => clearTimeout(t));
     this.intervals.forEach(t => clearInterval(t));
     this.subs.forEach(s => s.unsubscribe());
+  }
+
+  /** Language switched: rebuild every TS-made label from the cached payloads (no API call). */
+  private relabel(): void {
+    this.greetingText = this.greeting();
+    this.dateText = this.todayLine();
+    if (this.lastData) {
+      this.applyDashboard(this.lastData);
+    } else {
+      this.kpis = this.blankKpis();
+      this.buildSkeletonCalendar();
+    }
+    if (this.lastNotifs) { this.applyNotifications(this.lastNotifs); }
+    if (this.lastNotices) { this.applyNotices(this.lastNotices); }
   }
 
   // ══ NAVIGATION ════════════════════════════════════════════════════════════
@@ -340,6 +368,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     this.noticePopup.showNotice(row.raw);
     if (row.unread && row.raw?.noticeId != null) {
       row.unread = false;
+      row.raw.isRead = 'Y';   // the cached payload too, so a relabel keeps it read
       this.noticeUnread = Math.max(this.noticeUnread - 1, 0);
       this.subs.push(this.api.markNoticeAsRead(row.raw.noticeId, this.empId).subscribe({ error: () => { } }));
     }
@@ -349,7 +378,9 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     if (row.unread) {
       row.unread = false;
       this.notifUnread = Math.max(this.notifUnread - 1, 0);
-      this.notifSub = this.notifUnread > 0 ? this.notifUnread + ' unread' : 'All caught up';
+      this.notifSub = this.notifUnread > 0 ? this.tr('{n} unread', { n: this.notifUnread }) : this.tr('All caught up');
+      const raw = this.lastNotifs?.find(n => this.num(n?.id) === row.id);
+      if (raw) { raw.isRead = 'Y'; }
       this.subs.push(this.api.markNotificationAsRead({
         notificationId: row.id, userId: this.empId, actionType: 'S'
       }).subscribe({ error: () => { } }));
@@ -385,7 +416,8 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
           return;
         }
         this.loadError = null;
-        this.applyDashboard(res?.data ?? null);
+        this.lastData = res?.data ?? null;
+        this.applyDashboard(this.lastData);
         this.countUpAll();
       },
       error: (err: any) => {
@@ -416,16 +448,21 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       next: (res: any) => {
         if (this.destroyed) { return; }
         const list: any[] = Array.isArray(res?.data) ? res.data : [];
-        const rows = list.map(n => this.toNotifRow(n));
-        this.notifUnread = rows.filter(r => r.unread).length;
-        this.notifSub = this.notifUnread > 0
-          ? this.notifUnread + (this.notifUnread === 1 ? ' unread' : ' unread')
-          : (rows.length ? 'All caught up' : 'Nothing new');
-        this.notifRows = rows.slice(0, 5);
+        this.lastNotifs = list;
+        this.applyNotifications(list);
         this.popBadges();
       },
       error: () => { }
     }));
+  }
+
+  private applyNotifications(list: any[]): void {
+    const rows = list.map(n => this.toNotifRow(n));
+    this.notifUnread = rows.filter(r => r.unread).length;
+    this.notifSub = this.notifUnread > 0
+      ? this.tr('{n} unread', { n: this.notifUnread })
+      : this.tr(rows.length ? 'All caught up' : 'Nothing new');
+    this.notifRows = rows.slice(0, 5);
   }
 
   /** Same call the login popup makes — it returns every notice aimed at this user. */
@@ -434,17 +471,22 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       next: (res: any) => {
         if (this.destroyed) { return; }
         const list: any[] = Array.isArray(res?.data) ? res.data : [];
-        const sorted = list.slice().sort((a, b) => this.ts(b?.startDate) - this.ts(a?.startDate));
-        this.noticeRows = sorted.slice(0, 4).map(n => this.toNoticeRow(n));
-        this.noticeUnread = list.filter(n => (n?.isRead ?? '') === 'N').length;
-        const newest = sorted[0];
-        this.noticeSub = newest
-          ? ((newest.title ?? '').toString().trim() || 'Latest notice')
-          : 'Nothing published';
+        this.lastNotices = list;
+        this.applyNotices(list);
         this.popBadges();
       },
       error: () => { }
     }));
+  }
+
+  private applyNotices(list: any[]): void {
+    const sorted = list.slice().sort((a, b) => this.ts(b?.startDate) - this.ts(a?.startDate));
+    this.noticeRows = sorted.slice(0, 4).map(n => this.toNoticeRow(n));
+    this.noticeUnread = list.filter(n => (n?.isRead ?? '') === 'N').length;
+    const newest = sorted[0];
+    this.noticeSub = newest
+      ? ((newest.title ?? '').toString().trim() || this.tr('Latest notice'))
+      : this.tr('Nothing published');
   }
 
   // ══ MAPPING ═══════════════════════════════════════════════════════════════
@@ -485,17 +527,17 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const logged = this.num(hero.todayLoggedMin);
     const expH = this.num(hero.expectedDailyHours);
     const expMin = expH * 60;
-    this.expDailyText = expH > 0 ? this.trim1(expH) + ' h expected today' : '';
+    this.expDailyText = expH > 0 ? this.tr('{h} h expected today', { h: this.trim1(expH) }) : '';
 
     const frac = expMin > 0 ? this.clamp(logged / expMin, 0, 1) : 0;
     this.ring1Offset = RING1_C * (1 - frac);
     this.ring1Mid = this.hShort(logged);
-    this.ring1Sub = 'OF ' + (expH > 0 ? this.trim1(expH) + 'H' : '—') + ' TODAY';
+    this.ring1Sub = expH > 0 ? this.tr('OF {h}H TODAY', { h: this.trim1(expH) }) : this.tr('OF — TODAY');
 
     const runTitle = (hero.runningTaskTitle ?? '').trim();
     this.runSinceMin = this.parseHm(hero.runningSince);
     this.timerRunning = runTitle.length > 0;
-    this.runningText = this.timerRunning ? 'Running' : 'Idle';
+    this.runningText = this.tr(this.timerRunning ? 'Running' : 'Idle');
 
     const lp = this.parseHm(hero.lastPunch);
     this.lastPunchText = lp === null ? '—' : this.to12h(lp);
@@ -508,7 +550,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     this.heroWorked = this.hm(logged);
     this.heroGap = this.hm(gapMin);
     this.heroRemaining = expMin > 0 ? this.hm(Math.max(expMin - logged, 0)) : '—';
-    this.heroMonth = this.n1(this.num(tiles.monthHours)) + ' h';
+    this.heroMonth = this.hrs(this.n1(this.num(tiles.monthHours)));
 
     this.quoteText = (hero.quoteText ?? '').trim() || null;
     this.quoteAuthor = (hero.quoteAuthor ?? '').trim();
@@ -556,15 +598,15 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
 
     let dayFoot: string;
     if ((hero.onLeaveToday ?? '') === 'Y') {
-      dayFoot = 'On leave today';
+      dayFoot = this.tr('On leave today');
     } else if ((hero.isWorkingDayToday ?? '') === 'N') {
-      dayFoot = 'Not a working day';
+      dayFoot = this.tr('Not a working day');
     } else if (expMin > 0 && logged >= expMin) {
-      dayFoot = logged + ' min done · target met';
+      dayFoot = this.tr('{n} min done · target met', { n: logged });
     } else if (expMin > 0) {
-      dayFoot = logged + ' min done · ' + this.hm(expMin - logged) + ' to target';
+      dayFoot = this.tr('{n} min done · {left} to target', { n: logged, left: this.hm(expMin - logged) });
     } else {
-      dayFoot = logged + ' min done';
+      dayFoot = this.tr('{n} min done', { n: logged });
     }
 
     const weekPct = week.target > 0 ? (week.total / week.target) * 100 : 0;
@@ -575,36 +617,36 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
 
     this.kpis = [
       {
-        label: 'Logged today', color: A.emerald, icon: 'schedule',
+        label: this.tr('Logged today'), color: A.emerald, icon: 'schedule',
         pillCls: dayPct >= 100 ? 'ok' : dayPct >= 60 ? 'ok' : 'wt',
         pillTxt: this.n1(dayPct) + '%',
-        value: logged / 60, dec: 2, unit: ' h / ' + (expH > 0 ? this.trim1(expH) + ' h' : '—'),
+        value: logged / 60, dec: 2, unit: ' ' + this.tr('h / {e}', { e: expH > 0 ? this.hrs(this.trim1(expH)) : '—' }),
         barPct: this.clamp(dayPct, 0, 100), foot: dayFoot
       },
       {
-        label: 'This week', color: A.sky, icon: 'trending_up',
+        label: this.tr('This week'), color: A.sky, icon: 'trending_up',
         pillCls: weekPct >= 100 ? 'ok' : weekPct >= 85 ? 'nu' : 'wt',
-        pillTxt: weekPct >= 100 ? 'On track' : weekPct >= 85 ? 'Close' : 'Behind',
-        value: week.total, dec: 2, unit: ' h total',
+        pillTxt: this.tr(weekPct >= 100 ? 'On track' : weekPct >= 85 ? 'Close' : 'Behind'),
+        value: week.total, dec: 2, unit: ' ' + this.tr('h total'),
         barPct: this.clamp(weekPct, 0, 100),
-        foot: 'Avg ' + this.n2(week.active > 0 ? week.total / week.active : 0) + ' h / day · '
-          + week.active + (week.active === 1 ? ' active day' : ' active days')
+        foot: this.tr(week.active === 1 ? 'Avg {avg} h / day · {n} active day' : 'Avg {avg} h / day · {n} active days',
+          { avg: this.n2(week.active > 0 ? week.total / week.active : 0), n: week.active })
       },
       {
-        label: 'Open work', color: A.indigo, icon: 'list_alt',
+        label: this.tr('Open work'), color: A.indigo, icon: 'list_alt',
         pillCls: overdue > 0 ? 'cr' : 'nu',
-        pillTxt: running > 0 ? running + ' running' : (overdue > 0 ? overdue + ' overdue' : 'Idle'),
-        value: openTasks, dec: 0, unit: openTasks === 1 ? ' task' : ' tasks',
+        pillTxt: running > 0 ? this.tr('{n} running', { n: running }) : (overdue > 0 ? this.tr('{n} overdue', { n: overdue }) : this.tr('Idle')),
+        value: openTasks, dec: 0, unit: ' ' + this.tr(openTasks === 1 ? 'task' : 'tasks'),
         barPct: openTasks > 0 ? this.clamp(((openTasks - overdue) / openTasks) * 100, 0, 100) : 0,
-        foot: overdue + ' overdue · ' + awaiting + (awaiting === 1 ? ' log awaiting approval' : ' logs awaiting approval')
+        foot: this.tr(awaiting === 1 ? '{o} overdue · {a} log awaiting approval' : '{o} overdue · {a} logs awaiting approval', { o: overdue, a: awaiting })
       },
       {
-        label: 'Month achieved', color: A.violet, icon: 'military_tech',
+        label: this.tr('Month achieved'), color: A.violet, icon: 'military_tech',
         pillCls: month.pct >= 100 ? 'ok' : month.pct >= 85 ? 'nu' : 'wt',
-        pillTxt: month.pct >= 100 ? 'Ahead' : month.pct >= 85 ? 'Close' : 'Behind',
-        value: month.pct, dec: 1, unit: '% of target',
+        pillTxt: this.tr(month.pct >= 100 ? 'Ahead' : month.pct >= 85 ? 'Close' : 'Behind'),
+        value: month.pct, dec: 1, unit: this.tr('% of target'),
         barPct: this.clamp(month.pct, 0, 100),
-        foot: this.n1(month.achieved) + ' h of ' + this.n1(month.expected) + ' h expected so far'
+        foot: this.tr('{a} h of {e} h expected so far', { a: this.n1(month.achieved), e: this.n1(month.expected) })
       }
     ];
   }
@@ -643,35 +685,35 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     this.endGhost = this.clamp(((projected - achieved) / scale) * 100, 0, 100 - this.endFill);
     this.endMark = this.clamp((expFull / scale) * 100, 0, 100);
 
-    this.soFarText = this.n1(achieved) + ' h';
-    this.endText = this.n1(projected) + ' h';
-    this.soFarTip = 'Achieved <b>' + this.n1(achieved) + ' h</b> against <b>' + this.n1(expToDate)
-      + ' h</b> expected over ' + this.trim1(daysToDate) + ' working days';
-    this.soFarMarkTip = 'Expected to date — <b>' + this.n1(expToDate) + ' h</b>';
-    this.endGhostTip = this.trim1(daysLeft) + ' working days left at your pace of <b>' + this.n2(pace)
-      + ' h/day</b> → <b>+' + this.n1(projected - achieved) + ' h</b>';
-    this.endMarkTip = 'Full-month expected — <b>' + this.n1(expFull) + ' h</b>';
+    this.soFarText = this.hrs(this.n1(achieved));
+    this.endText = this.hrs(this.n1(projected));
+    this.soFarTip = this.tr('Achieved <b>{a} h</b> against <b>{e} h</b> expected over {d} working days',
+      { a: this.n1(achieved), e: this.n1(expToDate), d: this.trim1(daysToDate) });
+    this.soFarMarkTip = this.tr('Expected to date — <b>{e} h</b>', { e: this.n1(expToDate) });
+    this.endGhostTip = this.tr('{d} working days left at your pace of <b>{p} h/day</b> → <b>+{x} h</b>',
+      { d: this.trim1(daysLeft), p: this.n2(pace), x: this.n1(projected - achieved) });
+    this.endMarkTip = this.tr('Full-month expected — <b>{e} h</b>', { e: this.n1(expFull) });
 
     const projDelta = projected - expFull;
     this.monthStats = [
       {
-        k: ahead >= 0 ? 'Ahead by' : 'Behind by', v: (ahead >= 0 ? '+' : '−') + this.n1(Math.abs(ahead)),
-        unit: ' h', d: 'vs expected today', color: ahead >= 0 ? A.emerald : A.rose
+        k: this.tr(ahead >= 0 ? 'Ahead by' : 'Behind by'), v: (ahead >= 0 ? '+' : '−') + this.n1(Math.abs(ahead)),
+        unit: ' ' + this.tr('h'), d: this.tr('vs expected today'), color: ahead >= 0 ? A.emerald : A.rose
       },
       {
-        k: 'Your pace', v: this.n2(pace), unit: ' h/day',
-        d: 'Target is ' + (daily > 0 ? this.trim1(daily) : '—'), color: A.sky
+        k: this.tr('Your pace'), v: this.n2(pace), unit: ' ' + this.tr('h/day'),
+        d: this.tr('Target is {t}', { t: daily > 0 ? this.trim1(daily) : '—' }), color: A.sky
       },
       {
-        k: 'Projected', v: this.n1(projected), unit: ' h',
-        d: (projDelta >= 0 ? '+' : '−') + this.n1(Math.abs(projDelta)) + ' h ' + (projDelta >= 0 ? 'over' : 'under') + ' target',
+        k: this.tr('Projected'), v: this.n1(projected), unit: ' ' + this.tr('h'),
+        d: this.tr(projDelta >= 0 ? '{v} h over target' : '{v} h under target', { v: (projDelta >= 0 ? '+' : '−') + this.n1(Math.abs(projDelta)) }),
         color: A.indigo
       },
       daysLeft > 0 && projDelta < 0
-        ? { k: 'Needed to recover', v: this.n1(needed), unit: ' h/day', d: 'Over ' + this.trim1(daysLeft) + ' days left', color: A.amber }
-        : { k: 'Days reported', v: this.n0(reported), unit: '/' + this.trim1(daysFull), d: this.trim1(leave) + ' leave', color: A.amber }
+        ? { k: this.tr('Needed to recover'), v: this.n1(needed), unit: ' ' + this.tr('h/day'), d: this.tr('Over {d} days left', { d: this.trim1(daysLeft) }), color: A.amber }
+        : { k: this.tr('Days reported'), v: this.n0(reported), unit: '/' + this.trim1(daysFull), d: this.tr('{n} leave', { n: this.trim1(leave) }), color: A.amber }
     ];
-    this.monthNote = 'Expected hours already allow for your weekly off, public holidays and approved leave.';
+    this.monthNote = this.tr('Expected hours already allow for your weekly off, public holidays and approved leave.');
 
     return { pct, achieved, expected: expToDate };
   }
@@ -722,7 +764,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       segs.push({
         left: pct(from - winStart), width: w, bg: '', gap: true,
         label: w >= 11 ? this.hmLong(g) : '',
-        tip: 'No log against this time — <b>' + this.hmLong(g) + '</b>'
+        tip: this.tr('No log against this time — <b>{d}</b>', { d: this.hmLong(g) })
       });
     };
 
@@ -737,19 +779,21 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       segs.push({
         left: pct(r.start - winStart), width: w, gap: false,
         bg: isWork ? (isRun ? A.indigo : A.emerald) : (isTravel ? A.amber : A.sky),
-        label: w >= 14 ? (label || (isWork ? 'Work' : 'Break')) + (isRun ? ' · running' : '') : '',
-        tip: escHtml(label || (isWork ? 'Work' : 'Break')) + ' — ' + this.hm(r.start) + ' to '
-          + (isRun ? 'now, running' : this.hm(r.end)) + ' · <b>' + this.hmLong(mins) + '</b>'
+        label: w >= 14 ? (isRun ? this.tr('{l} · running', { l: label || this.tr('Work') }) : (label || this.tr(isWork ? 'Work' : 'Break'))) : '',
+        tip: this.tr('{l} — {a} to {b} · <b>{d}</b>', {
+          l: escHtml(label || this.tr(isWork ? 'Work' : 'Break')), a: this.hm(r.start),
+          b: isRun ? this.tr('now, running') : this.hm(r.end), d: this.hmLong(mins)
+        })
       });
       cursor = Math.max(cursor, r.end);
     });
     if (!running && lp !== null && lp > cursor) { pushGap(cursor, lp); }
 
     this.tlSegs = segs;
-    this.tlStart = (fp !== null ? this.to12h(fp) : this.to12h(winStart)) + ' first punch';
-    this.tlEnd = running ? this.to12h(now) + ' now' : this.to12h(winEnd);
+    this.tlStart = this.tr('{t} first punch', { t: fp !== null ? this.to12h(fp) : this.to12h(winStart) });
+    this.tlEnd = running ? this.tr('{t} now', { t: this.to12h(now) }) : this.to12h(winEnd);
     const pc = this.num(hero.punchCount);
-    this.tlPunches = pc > 0 ? pc + (pc === 1 ? ' punch' : ' punches') : '';
+    this.tlPunches = pc > 0 ? this.tr(pc === 1 ? '{n} punch' : '{n} punches', { n: pc }) : '';
     this.todayStats = this.buildTodayStats(hero, gapTotal);
     return gapTotal;
   }
@@ -761,10 +805,10 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const lp = this.parseHm(hero.lastPunch);
     const t12 = lp === null ? null : this.to12hParts(lp);
     return [
-      { k: 'Day logged', v: this.hm(logged), unit: '', d: expH > 0 ? 'of ' + this.trim1(expH) + ' h' : '', color: A.emerald },
-      { k: 'Break', v: this.hm(brk), unit: '', d: brk > 0 ? (hero.openBreakReason ? 'On break now' : 'Taken today') : 'None yet', color: A.sky },
-      { k: 'Not logged', v: this.hm(gapMin), unit: '', d: gapMin > 0 ? 'Needs a log' : 'All accounted for', color: gapMin > 0 ? A.rose : A.emerald },
-      { k: 'Last punch', v: t12 ? t12.hm : '—', unit: t12 ? ' ' + t12.ap : '', d: this.num(hero.punchCount) + ' punches today', color: A.amber }
+      { k: this.tr('Day logged'), v: this.hm(logged), unit: '', d: expH > 0 ? this.tr('of {h} h', { h: this.trim1(expH) }) : '', color: A.emerald },
+      { k: this.tr('Break'), v: this.hm(brk), unit: '', d: this.tr(brk > 0 ? (hero.openBreakReason ? 'On break now' : 'Taken today') : 'None yet'), color: A.sky },
+      { k: this.tr('Not logged'), v: this.hm(gapMin), unit: '', d: this.tr(gapMin > 0 ? 'Needs a log' : 'All accounted for'), color: gapMin > 0 ? A.rose : A.emerald },
+      { k: this.tr('Last punch'), v: t12 ? t12.hm : '—', unit: t12 ? ' ' + t12.ap : '', d: this.tr('{n} punches today', { n: this.num(hero.punchCount) }), color: A.amber }
     ];
   }
 
@@ -781,20 +825,20 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       .reduce((sum, s) => sum + this.num(s.minutes), 0);
 
     const pick = match ?? (runTitle ? null : myTasks[0] ?? null);
-    this.actCategory = ((pick?.categoryName ?? '').trim() || 'Uncategorised');
+    this.actCategory = ((pick?.categoryName ?? '').trim() || this.tr('Uncategorised'));
     if (runTitle) {
       this.actTitle = runTitle;
       const since = (hero.runningSince ?? '').trim();
-      this.actSub = since ? 'Started ' + since + ' today' : 'Running now';
+      this.actSub = since ? this.tr('Started {t} today', { t: since }) : this.tr('Running now');
       this.actToday = this.hm(todayOnTask);
     } else if (pick) {
-      this.actTitle = (pick.taskTitle ?? '').trim() || 'Untitled task';
-      this.actSub = 'Not running · next in your list';
+      this.actTitle = (pick.taskTitle ?? '').trim() || this.tr('Untitled task');
+      this.actSub = this.tr('Not running · next in your list');
       this.actToday = '00:00';
       this.actLive = '—';
     } else {
-      this.actTitle = 'No task running';
-      this.actSub = this.num(hero.tasksToday) + ' tasks touched today';
+      this.actTitle = this.tr('No task running');
+      this.actSub = this.tr('{n} tasks touched today', { n: this.num(hero.tasksToday) });
       this.actToday = '—';
       this.actLive = '—';
     }
@@ -822,7 +866,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     // Chart ceiling leaves headroom above the tallest bar for its value label.
     const axisMax = Math.max(target * 1.33, maxH * 1.1, 1);
     this.weekTargetPct = this.clamp((target / axisMax) * 100, 0, 100);
-    this.weekTargetLabel = target > 0 ? this.trim1(target) + ' h' : '—';
+    this.weekTargetLabel = target > 0 ? this.hrs(this.trim1(target)) : '—';
 
     const isOff = (w: DprEmpWeekDay) => (w.isWorkingDay ?? '') !== 'Y' || (w.onLeave ?? '') === 'Y';
     const pastIdx = week.map((w, i) => ({ w, i })).filter(x => (x.w.isToday ?? '') !== 'Y' && !isOff(x.w));
@@ -844,8 +888,8 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       return {
         h: off && h <= 0 ? 0 : this.clamp((h / axisMax) * 100, 0, 100),
         val: this.n2(h),
-        day: today ? 'TODAY' : (w.dayName ?? '').trim().toUpperCase().slice(0, 3),
-        varTxt: off ? (leave ? 'LEAVE' : 'OFF') : running ? 'Live' : (diff >= 0 ? '+' : '−') + this.n1(Math.abs(diff)),
+        day: this.tr(today ? 'TODAY' : (w.dayName ?? '').trim().toUpperCase().slice(0, 3)),
+        varTxt: off ? this.tr(leave ? 'LEAVE' : 'OFF') : running ? this.tr('Live') : (diff >= 0 ? '+' : '−') + this.n1(Math.abs(diff)),
         varCls: off ? 'nx' : running ? 'run' : diff >= 0 ? 'up' : 'dn',
         off: off && h <= 0,
         offIcon: leave ? 'beach_access' : 'bedtime',
@@ -853,9 +897,9 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
         short: !off && !today && target > 0 && h < target,
         peak: !off && !today && h > 0 && h === peakH,
         tip: this.fmtDate(w.theDate) + ' — '
-          + (off && h <= 0 ? (leave ? 'approved leave' : 'weekly off, no target')
-            : '<b>' + this.n2(h) + ' h</b>' + (today ? ' so far' : '')
-            + (target > 0 && !today ? ' · ' + this.n2(Math.abs(diff)) + ' h ' + (diff >= 0 ? 'over' : 'short of') + ' target' : ''))
+          + (off && h <= 0 ? this.tr(leave ? 'approved leave' : 'weekly off, no target')
+            : this.tr('<b>{v} h</b>', { v: this.n2(h) }) + (today ? this.tr(' so far') : '')
+            + (target > 0 && !today ? this.tr(diff >= 0 ? ' · {v} h over target' : ' · {v} h short of target', { v: this.n2(Math.abs(diff)) }) : ''))
       };
     });
 
@@ -866,21 +910,21 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const peakDay = peakIdx >= 0 ? this.fmtDay(week[peakIdx].theDate) : '—';
 
     this.weekStats = [
-      { k: 'Week total', v: this.hm(total * 60), unit: '', d: active + (active === 1 ? ' active day' : ' active days'), color: A.emerald },
-      { k: 'Daily average', v: this.n2(active > 0 ? total / active : 0), unit: ' h', d: 'Target ' + this.trim1(target) + ' h', color: A.sky },
-      { k: 'Peak day', v: this.hm(Math.max(...hours) * 60), unit: '', d: peakDay, color: A.amber },
-      { k: 'Days on target', v: String(onTarget), unit: '/' + working, d: (working - onTarget) + ' fell short', color: A.violet }
+      { k: this.tr('Week total'), v: this.hm(total * 60), unit: '', d: this.tr(active === 1 ? '{n} active day' : '{n} active days', { n: active }), color: A.emerald },
+      { k: this.tr('Daily average'), v: this.n2(active > 0 ? total / active : 0), unit: ' ' + this.tr('h'), d: this.tr('Target {t} h', { t: this.trim1(target) }), color: A.sky },
+      { k: this.tr('Peak day'), v: this.hm(Math.max(...hours) * 60), unit: '', d: peakDay, color: A.amber },
+      { k: this.tr('Days on target'), v: String(onTarget), unit: '/' + working, d: this.tr('{n} fell short', { n: working - onTarget }), color: A.violet }
     ];
 
     const wkScale = Math.max(weekTarget, total, 1) * 1.1;
     this.weekFill = this.clamp((total / wkScale) * 100, 0, 100);
     this.weekMark = this.clamp((weekTarget / wkScale) * 100, 0, 100);
-    this.weekTotalText = this.n2(total) + ' h';
+    this.weekTotalText = this.hrs(this.n2(total));
     const delta = total - weekTarget;
     this.weekPillCls = delta >= 0 ? 'ok' : 'wt';
-    this.weekPillTxt = this.n2(Math.abs(delta)) + ' h ' + (delta >= 0 ? 'ahead' : 'behind');
-    this.weekFillTip = 'Logged this week — <b>' + this.n2(total) + ' h</b>';
-    this.weekMarkTip = 'Week target — <b>' + this.n1(weekTarget) + ' h</b>';
+    this.weekPillTxt = this.tr(delta >= 0 ? '{v} h ahead' : '{v} h behind', { v: this.n2(Math.abs(delta)) });
+    this.weekFillTip = this.tr('Logged this week — <b>{v} h</b>', { v: this.n2(total) });
+    this.weekMarkTip = this.tr('Week target — <b>{v} h</b>', { v: this.n1(weekTarget) });
 
     return { total, target: weekTarget, active };
   }
@@ -914,20 +958,20 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       let hh = '';
       let lab = '';
       if (leave) {
-        cls = 'lv'; hh = 'LEAVE'; lab = 'approved leave';
+        cls = 'lv'; hh = this.tr('LEAVE'); lab = this.tr('approved leave');
       } else if (h > 0) {
         const ratio = h / Math.max(target, 1);
         cls = ratio >= 1.15 ? 'l5' : ratio >= 1.05 ? 'l4' : ratio >= 0.95 ? 'l3' : ratio >= 0.75 ? 'l2' : 'l1';
         hh = this.n1(h);
-        lab = '<b>' + this.n1(h) + ' h</b>' + (today ? ' so far' : '');
+        lab = this.tr('<b>{v} h</b>', { v: this.n1(h) }) + (today ? this.tr(' so far') : '');
       } else if (future) {
-        cls = 'ahead'; lab = 'still ahead';
+        cls = 'ahead'; lab = this.tr('still ahead');
       } else if (!working) {
-        cls = 'off'; hh = 'OFF'; lab = 'weekly off';
+        cls = 'off'; hh = this.tr('OFF'); lab = this.tr('weekly off');
       } else if (!today) {
-        cls = 'ms'; hh = 'MISS'; lab = 'no DPR logged'; missed++;
+        cls = 'ms'; hh = this.tr('MISS'); lab = this.tr('no DPR logged'); missed++;
       } else {
-        lab = 'nothing logged yet';
+        lab = this.tr('nothing logged yet');
       }
       if (today) { cls = (cls + ' today').trim(); }
       cells.push({
@@ -942,11 +986,11 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const reported = this.num(tiles.daysReported);
     const monthHours = this.num(tiles.monthHours);
     this.calFoot = [
-      { k: 'Reported', v: this.n0(reported) + ' of ' + this.trim1(this.num(tiles.workingDaysFullMonth)) },
-      { k: 'Total', v: this.n1(monthHours) + ' h' },
-      { k: 'Avg', v: this.n2(reported > 0 ? monthHours / reported : 0) + ' h/d' },
-      { k: 'Leave', v: this.trim1(this.num(tiles.leaveDays)) },
-      { k: 'Missed', v: String(missed) }
+      { k: this.tr('Reported'), v: this.tr('{a} of {b}', { a: this.n0(reported), b: this.trim1(this.num(tiles.workingDaysFullMonth)) }) },
+      { k: this.tr('Total'), v: this.hrs(this.n1(monthHours)) },
+      { k: this.tr('Avg'), v: this.tr('{v} h/d', { v: this.n2(reported > 0 ? monthHours / reported : 0) }) },
+      { k: this.tr('Leave'), v: this.trim1(this.num(tiles.leaveDays)) },
+      { k: this.tr('Missed'), v: String(missed) }
     ];
   }
 
@@ -973,7 +1017,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       cells.push({ empty: false, cls: d === now.getDate() ? 'today' : '', day: d, hh: '', tip: '', delay: '' });
     }
     this.calCells = cells;
-    this.calMonthLabel = now.toLocaleDateString('en-GB', { month: 'long' });
+    this.calMonthLabel = now.toLocaleDateString(this.i18n.locale(), { month: 'long' });
   }
 
   // ── tasks, estimates, forms ────────────────────────────────────────────────
@@ -987,17 +1031,17 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const running = (t.isRunning ?? '') === 'Y' || st === 'RUNNING';
     const overdue = (t.isOverdue ?? '') === 'Y';
     const paused = st === 'PAUSED';
-    const cat = (t.categoryName ?? '').trim() || 'Uncategorised';
-    const due = t.targetDate ? (overdue ? 'was due ' : 'due ') + this.fmtDay(t.targetDate) : 'no target date';
+    const cat = (t.categoryName ?? '').trim() || this.tr('Uncategorised');
+    const due = t.targetDate ? this.tr(overdue ? 'was due {d}' : 'due {d}', { d: this.fmtDay(t.targetDate) }) : this.tr('no target date');
     const est = this.num(t.estimatedHours);
     const mine = this.num(t.myLoggedHours);
     return {
       icon: running ? 'play_arrow' : overdue ? 'priority_high' : paused ? 'pause' : 'task_alt',
       color: running ? A.emerald : overdue ? A.rose : paused ? A.amber : A.sky,
-      title: (t.taskTitle ?? '').trim() || 'Untitled task',
-      sub: (paused ? 'Paused · ' : '') + cat + ' · ' + due,
+      title: (t.taskTitle ?? '').trim() || this.tr('Untitled task'),
+      sub: (paused ? this.tr('Paused') + ' · ' : '') + cat + ' · ' + due,
       logged: this.n1(mine),
-      of: est > 0 ? 'of ' + this.trim1(est) + ' h' : 'h logged',
+      of: est > 0 ? this.tr('of {h} h', { h: this.trim1(est) }) : this.tr('h logged'),
       over: est > 0 && mine > est
     };
   }
@@ -1017,22 +1061,23 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       const act = this.num(r.totalActualHours);
       const d = diffs[i];
       return {
-        name: (r.taskTitle ?? '').trim() || 'Untitled task',
-        vv: this.n1(act) + ' / ' + this.trim1(est) + ' h',
+        name: (r.taskTitle ?? '').trim() || this.tr('Untitled task'),
+        vv: this.tr('{a} / {e} h', { a: this.n1(act), e: this.trim1(est) }),
         over: d > 0,
         width: this.clamp((Math.abs(d) / maxAbs) * 50, 0.8, 50),
-        tip: 'Estimate ' + this.n1(est) + ' h, your hours ' + this.n1(act) + ' h — <b>'
-          + this.n1(Math.abs(d)) + ' h ' + (d > 0 ? 'over' : 'under') + '</b>'
+        tip: this.tr(d > 0 ? 'Estimate {e} h, your hours {a} h — <b>{d} h over</b>' : 'Estimate {e} h, your hours {a} h — <b>{d} h under</b>',
+          { e: this.n1(est), a: this.n1(act), d: this.n1(Math.abs(d)) })
       };
     });
     const estSum = withEst.reduce((s, r) => s + this.num(r.estimatedHours), 0);
     const actSum = withEst.reduce((s, r) => s + this.num(r.totalActualHours), 0);
-    this.estFoot = this.n1(actSum) + ' h actual of ' + this.n1(estSum) + ' h estimated';
+    this.estFoot = this.tr('{a} h actual of {e} h estimated', { a: this.n1(actSum), e: this.n1(estSum) });
   }
 
   private applyForms(rows: DprEmpForm[]): void {
     this.formRows = rows.slice(0, 4).map(f => {
       const type = (f.formType ?? '').trim() || 'Request';
+      const typeLabel = this.tr(type);
       const t = type.toUpperCase();
       const st = (f.status ?? '').trim().toUpperCase();
       const step = (f.currentStep ?? '').trim();
@@ -1047,16 +1092,16 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
       const approved = st.charAt(0) === 'A' || step.toUpperCase() === 'COMPLETED';
       const rejected = st.charAt(0) === 'R' || step.toUpperCase() === 'REJECTED';
       const parts = [
-        f.departureDate ? 'Leaves ' + this.fmtDay(f.departureDate) : '',
-        f.submittedDate ? 'submitted ' + this.fmtDay(f.submittedDate) : '',
-        !approved && !rejected && age !== null ? age + (age === 1 ? ' day' : ' days') + ' in queue' : ''
+        f.departureDate ? this.tr('Leaves {d}', { d: this.fmtDay(f.departureDate) }) : '',
+        f.submittedDate ? this.tr('submitted {d}', { d: this.fmtDay(f.submittedDate) }) : '',
+        !approved && !rejected && age !== null ? this.tr(age === 1 ? '{n} day in queue' : '{n} days in queue', { n: age }) : ''
       ].filter(p => p);
       return {
         icon, color,
-        title: type + (days > 0 ? ' · ' + this.trim1(days) + (days === 1 ? ' day' : ' days') : ''),
-        sub: parts.join(' · ') || 'No detail',
+        title: typeLabel + (days > 0 ? ' · ' + this.tr(days === 1 ? '{n} day' : '{n} days', { n: this.trim1(days) }) : ''),
+        sub: parts.join(' · ') || this.tr('No detail'),
         pillCls: approved ? 'ok' : rejected ? 'cr' : 'wt',
-        pillTxt: approved ? 'Approved' : rejected ? 'Rejected' : (step ? 'With ' + this.roleLabel(step) : 'Pending')
+        pillTxt: approved ? this.tr('Approved') : rejected ? this.tr('Rejected') : (step ? this.tr('With {r}', { r: this.tr(this.roleLabel(step)) }) : this.tr('Pending'))
       };
     });
   }
@@ -1070,10 +1115,10 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     }).length;
     this.approvalCount = waitingMe + mineOpen;
     this.approvalSub = waitingMe > 0
-      ? waitingMe + (waitingMe === 1 ? ' form waiting on you' : ' forms waiting on you')
+      ? this.tr(waitingMe === 1 ? '{n} form waiting on you' : '{n} forms waiting on you', { n: waitingMe })
       : mineOpen > 0
-        ? mineOpen + (mineOpen === 1 ? ' of your requests in progress' : ' of your requests in progress')
-        : 'Nothing waiting';
+        ? this.tr('{n} of your requests in progress', { n: mineOpen })
+        : this.tr('Nothing waiting');
     this.popBadges();
   }
 
@@ -1081,8 +1126,8 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const pr = (n?.priority ?? '').toString().trim().toUpperCase();
     const high = pr.startsWith('H') || pr === 'URGENT';
     return {
-      title: (n?.title ?? '').toString().trim() || 'Notice',
-      sub: [n?.startDate ? 'Posted ' + this.fmtIsoDay(n.startDate) : '', (n?.createdBy ?? '').toString().trim()]
+      title: (n?.title ?? '').toString().trim() || this.tr('Notice'),
+      sub: [n?.startDate ? this.tr('Posted {d}', { d: this.fmtIsoDay(n.startDate) }) : '', (n?.createdBy ?? '').toString().trim()]
         .filter((p: string) => p).join(' · '),
       unread: (n?.isRead ?? '') === 'N',
       icon: high ? 'priority_high' : 'campaign',
@@ -1105,7 +1150,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     return {
       id: this.num(n?.id),
       icon, color,
-      message: msg.trim() || (n?.title ?? '').toString().trim() || 'Notification',
+      message: msg.trim() || (n?.title ?? '').toString().trim() || this.tr('Notification'),
       time: this.relTime(n?.createdAt),
       unread: !(n?.isRead === true || n?.isRead === 'Y'),
       link: (n?.link ?? '').toString().trim(),
@@ -1116,12 +1161,12 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
 
   private blankKpis(): KpiTile[] {
     const b = (label: string, color: string, icon: string, unit: string, dec: number): KpiTile =>
-      ({ label, color, icon, unit, dec, value: 0, pillCls: 'nu', pillTxt: '—', barPct: 0, foot: 'Loading…' });
+      ({ label: this.tr(label), color, icon, unit, dec, value: 0, pillCls: 'nu', pillTxt: '—', barPct: 0, foot: this.tr('Loading…') });
     return [
-      b('Logged today', A.emerald, 'schedule', ' h', 2),
-      b('This week', A.sky, 'trending_up', ' h total', 2),
-      b('Open work', A.indigo, 'list_alt', ' tasks', 0),
-      b('Month achieved', A.violet, 'military_tech', '% of target', 1)
+      b('Logged today', A.emerald, 'schedule', ' ' + this.tr('h'), 2),
+      b('This week', A.sky, 'trending_up', ' ' + this.tr('h total'), 2),
+      b('Open work', A.indigo, 'list_alt', ' ' + this.tr('tasks'), 0),
+      b('Month achieved', A.violet, 'military_tech', this.tr('% of target'), 1)
     ];
   }
 
@@ -1177,8 +1222,11 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   private hmLong(min: number): string {
     const m = Math.max(Math.round(min), 0);
     const h = Math.floor(m / 60);
-    return h > 0 ? h + ' h ' + String(m % 60).padStart(2, '0') + ' m' : (m % 60) + ' m';
+    return h > 0 ? this.tr('{h} h {m} m', { h, m: String(m % 60).padStart(2, '0') }) : this.tr('{m} m', { m: m % 60 });
   }
+
+  /** '8.5' -> '8.5 h' (Arabic: '8.5 س') */
+  private hrs(v: string): string { return this.tr('{v} h', { v }); }
 
   /** 'HH:MI' TEXT -> minutes since midnight (never subtract HHMM numerically) */
   private parseHm(txt: string | null | undefined): number | null {
@@ -1192,7 +1240,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   private to12hParts(min: number): { hm: string; ap: string } {
     const h24 = Math.floor(min / 60) % 24;
     const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-    return { hm: String(h12).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'), ap: h24 >= 12 ? 'PM' : 'AM' };
+    return { hm: String(h12).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0'), ap: this.tr(h24 >= 12 ? 'PM' : 'AM') };
   }
 
   private to12h(min: number): string {
@@ -1217,11 +1265,11 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
 
   private greeting(): string {
     const h = new Date().getHours();
-    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    return this.tr(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
   }
 
   private todayLine(): string {
-    return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return new Date().toLocaleDateString(this.i18n.locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   /** Approver role codes: short ones are acronyms (HOD, IT, HR) and stay upper;
@@ -1240,7 +1288,7 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const p = (iso ?? '').split('-');
     if (p.length < 3) { return (iso ?? '').trim() || '—'; }
     return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]))
-      .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+      .toLocaleDateString(this.i18n.locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   }
 
   /** 'YYYY-MM-DD' -> '22 Sep' */
@@ -1248,13 +1296,13 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const p = (iso ?? '').split('-');
     if (p.length < 3) { return (iso ?? '').trim() || '—'; }
     return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]))
-      .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+      .toLocaleDateString(this.i18n.locale(), { day: 'numeric', month: 'short', timeZone: 'UTC' });
   }
 
   /** a DateTime from .NET (ISO string) -> '22 Sep' */
   private fmtIsoDay(v: unknown): string {
     const t = this.ts(v);
-    return t ? new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+    return t ? new Date(t).toLocaleDateString(this.i18n.locale(), { day: 'numeric', month: 'short' }) : '';
   }
 
   private ts(v: unknown): number {
@@ -1265,8 +1313,8 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
   /** 'YYYY-MM' -> 'September' */
   private monthOnly(key: string | null | undefined): string {
     const p = (key ?? '').split('-');
-    if (p.length < 2) { return new Date().toLocaleDateString('en-GB', { month: 'long' }); }
-    return new Date(Date.UTC(+p[0], +p[1] - 1, 1)).toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' });
+    if (p.length < 2) { return new Date().toLocaleDateString(this.i18n.locale(), { month: 'long' }); }
+    return new Date(Date.UTC(+p[0], +p[1] - 1, 1)).toLocaleDateString(this.i18n.locale(), { month: 'long', timeZone: 'UTC' });
   }
 
   private daysSince(iso: string | null | undefined): number | null {
@@ -1281,13 +1329,13 @@ export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnD
     const t = this.ts(v);
     if (!t) { return ''; }
     const mins = Math.max(Math.round((Date.now() - t) / 60000), 0);
-    if (mins < 1) { return 'Just now'; }
-    if (mins < 60) { return mins + (mins === 1 ? ' minute ago' : ' minutes ago'); }
+    if (mins < 1) { return this.tr('Just now'); }
+    if (mins < 60) { return this.tr(mins === 1 ? '{n} minute ago' : '{n} minutes ago', { n: mins }); }
     const h = Math.round(mins / 60);
-    if (h < 24) { return h + (h === 1 ? ' hour ago' : ' hours ago'); }
+    if (h < 24) { return this.tr(h === 1 ? '{n} hour ago' : '{n} hours ago', { n: h }); }
     const d = Math.round(h / 24);
-    if (d === 1) { return 'Yesterday'; }
-    if (d < 7) { return d + ' days ago'; }
-    return new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    if (d === 1) { return this.tr('Yesterday'); }
+    if (d < 7) { return this.tr('{n} days ago', { n: d }); }
+    return new Date(t).toLocaleDateString(this.i18n.locale(), { day: 'numeric', month: 'short' });
   }
 }

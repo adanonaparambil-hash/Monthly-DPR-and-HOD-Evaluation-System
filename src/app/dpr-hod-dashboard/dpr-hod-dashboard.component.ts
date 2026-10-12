@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Api } from '../services/api';
 import { AiReportComponent } from '../components/ai-report/ai-report.component';
+import { NewJoinersCardComponent } from '../components/new-joiners-card/new-joiners-card.component';
 import { bindTooltip, countUpAll, escHtml, fmtNum, setupReveal } from '../utils/dash-fx';
 import {
   DprHodAttendanceRow, DprHodDept, DprHodException, DprHodFormQueueItem,
@@ -49,7 +50,7 @@ const MEM_C = 94;        // member ring, r = 15
 @Component({
   selector: 'app-dpr-hod-dashboard',
   standalone: true,
-  imports: [CommonModule, AiReportComponent],
+  imports: [CommonModule, AiReportComponent, NewJoinersCardComponent],
   templateUrl: './dpr-hod-dashboard.component.html',
   styleUrls: ['../styles/dpr-dash.css', './dpr-hod-dashboard.component.css']
 })
@@ -935,7 +936,7 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.hmRows = order.map(k => {
       const row = byEmp.get(k)!;
       const de = this.dailyExpFor(k);
-      const name = this.shortName(row.name) || k;
+      const name = this.fullName(row.name) || k;
       return {
         name,
         cells: dates.map(d => {
@@ -1079,11 +1080,10 @@ export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestro
   private hmLong(min: number): string { const m = Math.max(Math.round(min), 0); const h = Math.floor(m / 60); return h > 0 ? h + ' h ' + String(m % 60).padStart(2, '0') + ' m' : (m % 60) + ' m'; }
   private initials(name: unknown): string { return (name ?? '').toString().trim().split(/\s+/).filter(Boolean).map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase() || '—'; }
   private firstName(name: unknown): string { const w = (name ?? '').toString().trim().split(/\s+/)[0] || ''; return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }
-  /** 'VINOD PACHUPILLAI VIJAYAN PILLAI' → 'V. Pachupillai' */
-  private shortName(name: string): string {
-    const w = name.trim().split(/\s+/).filter(Boolean);
-    if (w.length < 2) { return w[0] ? w[0].charAt(0) + w[0].slice(1).toLowerCase() : ''; }
-    return w[0].charAt(0).toUpperCase() + '. ' + w[1].charAt(0).toUpperCase() + w[1].slice(1).toLowerCase();
+  /** 'VINOD PACHUPILLAI VIJAYAN PILLAI' → 'Vinod Pachupillai Vijayan Pillai' (the heatmap shows the full name) */
+  private fullName(name: string): string {
+    return name.trim().split(/\s+/).filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
   }
   private formColor(type: string): string {
     const u = type.toUpperCase();

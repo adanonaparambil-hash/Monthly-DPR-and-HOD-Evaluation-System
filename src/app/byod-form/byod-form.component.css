@@ -20,7 +20,7 @@
 }
 .byod-hero-bg {
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, #1B2A38 0%, #138271 65%, #1aab96 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 .byod-hero-bg::after {
   content: '';
@@ -99,7 +99,7 @@
   content: '';
   display: block; width: 4px; height: 20px;
   border-radius: 4px;
-  background: linear-gradient(180deg, #1B2A38, #138271);
+  background: linear-gradient(180deg, #1B2A38, #10b981);
   flex-shrink: 0;
 }
 .byod-section-label i {
@@ -196,7 +196,7 @@
   box-shadow: 0 4px 12px rgba(27,42,56,.4);
 }
 .byod-ci-teal {
-  background: linear-gradient(135deg, #138271 0%, #1aab96 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   box-shadow: 0 4px 12px rgba(19,130,113,.4);
 }
 .byod-ci-purple {
@@ -374,7 +374,7 @@
 .byod-amount-left { display: flex; align-items: center; gap: 14px; }
 .byod-amount-icon {
   width: 48px; height: 48px; border-radius: 12px;
-  background: linear-gradient(135deg,#138271,#1aab96);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 12px rgba(19,130,113,.3);
 }
@@ -392,7 +392,7 @@
 .byod-amount-note  { display: block; font-size: 11px; color: #64748b; margin-top: 2px; }
 .byod-amount-badge {
   display: flex; align-items: center; gap: 6px;
-  background: linear-gradient(135deg,#138271,#1aab96); color: #fff;
+  background: linear-gradient(135deg,#1B2A38,#10b981); color: #fff;
   padding: 7px 14px; border-radius: 20px;
   font-size: 12px; font-weight: 700;
   box-shadow: 0 3px 10px rgba(19,130,113,.3);
@@ -433,7 +433,7 @@
   font-size: 20px; color: #fff; margin-bottom: 4px;
 }
 .byod-sig-emp  { background: linear-gradient(135deg,#1B2A38,#2C3E50); box-shadow: 0 4px 12px rgba(27,42,56,.3); }
-.byod-sig-hod  { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 4px 12px rgba(19,130,113,.3); }
+.byod-sig-hod  { background: linear-gradient(135deg,#1B2A38,#10b981); box-shadow: 0 4px 12px rgba(19,130,113,.3); }
 .byod-sig-ceo  { background: linear-gradient(135deg,#d97706,#f59e0b); box-shadow: 0 4px 12px rgba(217,119,6,.3); }
 .byod-sig-title { font-size: 13px; font-weight: 700; color: #0f172a; }
 .byod-sig-hint  { font-size: 10.5px; color: #94a3b8; }
@@ -473,7 +473,7 @@
   background: #fff; transition: all .25s cubic-bezier(.34,1.56,.64,1);
 }
 .byod-check-native:checked + .byod-check-box {
-  background: linear-gradient(135deg,#138271,#1aab96);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   border-color: #138271; box-shadow: 0 3px 8px rgba(19,130,113,.3);
   transform: scale(1.1);
 }
@@ -634,7 +634,7 @@
 }
 .byod-hw-item:hover .byod-hw-icon { transform: scale(1.1) rotate(-5deg); }
 .byod-hw-navy   { background: linear-gradient(135deg,#1B2A38,#2C3E50); box-shadow: 0 3px 10px rgba(27,42,56,.3); }
-.byod-hw-teal   { background: linear-gradient(135deg,#138271,#1aab96); box-shadow: 0 3px 10px rgba(19,130,113,.3); }
+.byod-hw-teal   { background: linear-gradient(135deg,#1B2A38,#10b981); box-shadow: 0 3px 10px rgba(19,130,113,.3); }
 .byod-hw-purple { background: linear-gradient(135deg,#7c3aed,#a855f7); box-shadow: 0 3px 10px rgba(124,58,237,.3); }
 .byod-hw-green  { background: linear-gradient(135deg,#059669,#10b981); box-shadow: 0 3px 10px rgba(5,150,105,.3); }
 .byod-hw-amber  { background: linear-gradient(135deg,#d97706,#f59e0b); box-shadow: 0 3px 10px rgba(217,119,6,.3); }
@@ -737,7 +737,7 @@
 .byod-redirect-hint i { margin-right: 4px; }
 .byod-success-ring {
   width: 72px; height: 72px; border-radius: 50%;
-  background: linear-gradient(135deg,#138271,#1aab96);
+  background: linear-gradient(135deg,#1B2A38,#10b981);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(19,130,113,.4);
   animation: byodPopIn .6s .1s cubic-bezier(.34,1.56,.64,1) both;
@@ -1347,26 +1347,26 @@
 }
 
 /* Dark theme */
-.dark-theme .history-toggle-btn {
+:host-context(.dark-theme) .history-toggle-btn {
   background: rgba(29, 78, 216, 0.15);
   border-color: rgba(59, 130, 246, 0.4);
   color: #60a5fa;
 }
-.dark-theme .history-toggle-btn:hover {
+:host-context(.dark-theme) .history-toggle-btn:hover {
   background: #1d4ed8;
   color: #fff;
 }
-.dark-theme .step-history-list {
+:host-context(.dark-theme) .step-history-list {
   background: var(--background-secondary);
   border-color: var(--border-color);
 }
-.dark-theme .history-item {
+:host-context(.dark-theme) .history-item {
   background: var(--background-primary);
   border-color: var(--border-color);
 }
-.dark-theme .history-remarks { color: var(--text-primary); }
-.dark-theme .history-approver,
-.dark-theme .history-date { color: var(--text-secondary); }
+:host-context(.dark-theme) .history-remarks { color: var(--text-primary); }
+:host-context(.dark-theme) .history-approver,
+:host-context(.dark-theme) .history-date { color: var(--text-secondary); }
 
 /* ═══ Mobile responsiveness (2026-07) ═══ */
 @media (max-width: 1024px) {
@@ -1578,3 +1578,109 @@
   background: #172033;
   border-color: #475569;
 }
+
+
+/* ═══ Dark mode — boxes that kept a light background (or dark text) in dark mode ═══
+   Found by a contrast check of the BYOD form with body.dark-theme.
+   :host-context(.dark-theme) is required: the class sits on <body>, outside this component. */
+
+:host-context(.dark-theme) .byod-request-text {
+  background: #1f2a37 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+}
+:host-context(.dark-theme) .byod-request-text strong { color: #6ee7b7 !important; }
+
+:host-context(.dark-theme) .byod-check-row {
+  background: #1f2a37 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+:host-context(.dark-theme) .byod-check-text { color: #e2e8f0 !important; }
+:host-context(.dark-theme) .byod-check-text strong { color: #6ee7b7 !important; }
+
+:host-context(.dark-theme) .byod-tc-item.byod-tc-warn {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+:host-context(.dark-theme) .byod-tc-item.byod-tc-warn .byod-tc-label { color: #fbbf24 !important; }
+:host-context(.dark-theme) .byod-tc-item.byod-tc-warn .byod-tc-body,
+:host-context(.dark-theme) .byod-tc-item.byod-tc-warn .byod-tc-body * { color: #e2e8f0; }
+
+:host-context(.dark-theme) .byod-tc-item.byod-tc-info {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.28) !important;
+}
+:host-context(.dark-theme) .byod-tc-item.byod-tc-info .byod-tc-label { color: #6ee7b7 !important; }
+:host-context(.dark-theme) .byod-tc-item.byod-tc-info .byod-tc-body,
+:host-context(.dark-theme) .byod-tc-item.byod-tc-info .byod-tc-body * { color: #e2e8f0; }
+
+:host-context(.dark-theme) .byod-tc-item.byod-tc-danger {
+  background: rgba(249, 115, 22, 0.1) !important;
+  border-color: rgba(249, 115, 22, 0.3) !important;
+}
+:host-context(.dark-theme) .byod-tc-item.byod-tc-danger .byod-tc-label { color: #fdba74 !important; }
+:host-context(.dark-theme) .byod-tc-item.byod-tc-critical {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+:host-context(.dark-theme) .byod-tc-item.byod-tc-critical .byod-tc-label { color: #fca5a5 !important; }
+:host-context(.dark-theme) .byod-tc-item.byod-tc-danger .byod-tc-body,
+:host-context(.dark-theme) .byod-tc-item.byod-tc-danger .byod-tc-body *,
+:host-context(.dark-theme) .byod-tc-item.byod-tc-critical .byod-tc-body,
+:host-context(.dark-theme) .byod-tc-item.byod-tc-critical .byod-tc-body * { color: #e2e8f0; }
+
+
+/* ═══ Dark mode, pass 2 — bright surfaces (banners, alerts, choices, badges) ═══ */
+:host-context(.dark-theme) .byod-amount-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.06)) !important;
+  border-color: rgba(16, 185, 129, 0.32) !important;
+}
+:host-context(.dark-theme) .byod-amount-banner * { color: #d1fae5; }
+:host-context(.dark-theme) .byod-policy-intro-card {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.14), rgba(20, 184, 166, 0.05)) !important;
+  border-color: rgba(45, 212, 191, 0.3) !important;
+}
+:host-context(.dark-theme) .byod-policy-intro-card,
+:host-context(.dark-theme) .byod-policy-intro-card span,
+:host-context(.dark-theme) .byod-policy-intro-card p { color: #ccfbf1 !important; }
+:host-context(.dark-theme) .byod-policy-intro-card strong { color: #5eead4 !important; }
+:host-context(.dark-theme) .byod-alert.byod-alert-orange {
+  background: rgba(249, 115, 22, 0.12) !important;
+  border-color: rgba(249, 115, 22, 0.32) !important;
+  color: #fed7aa !important;
+}
+:host-context(.dark-theme) .byod-alert.byod-alert-orange strong { color: #fdba74 !important; }
+:host-context(.dark-theme) .byod-alert.byod-alert-green {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.32) !important;
+  color: #a7f3d0 !important;
+}
+:host-context(.dark-theme) .byod-admin-confirm {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+:host-context(.dark-theme) .byod-admin-confirm,
+:host-context(.dark-theme) .byod-admin-confirm * { color: #d1fae5; }
+:host-context(.dark-theme) .byod-admin-confirm strong { color: #6ee7b7 !important; }
+:host-context(.dark-theme) .byod-radio {
+  background: #1f2a37 !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+:host-context(.dark-theme) .byod-radio:has(input:checked) { border-color: rgba(52, 211, 153, 0.55) !important; background: rgba(16, 185, 129, 0.12) !important; }
+:host-context(.dark-theme) .byod-policy-badge {
+  background: rgba(139, 92, 246, 0.12) !important;
+  border-color: rgba(139, 92, 246, 0.32) !important;
+  color: #c4b5fd !important;
+}
+:host-context(.dark-theme) .byod-official-badge {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.32) !important;
+  color: #fcd34d !important;
+}
+:host-context(.dark-theme) .byod-binding-badge {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.32) !important;
+  color: #fca5a5 !important;
+}
+:host-context(.dark-theme) .byod-tc-icon { background: rgba(245, 158, 11, 0.14) !important; }

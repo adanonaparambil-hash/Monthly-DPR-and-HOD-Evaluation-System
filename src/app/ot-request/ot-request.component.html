@@ -1,0 +1,279 @@
+<div class="ox">
+  <main>
+    <!-- ═══ hero ═══ -->
+    <section class="hero">
+      <div class="deco"></div>
+      <div class="hero-row">
+        <div>
+          <h1>Log your overtime, track every approval</h1>
+          <p>Holiday allowance for Saturdays and special working days.</p>
+        </div>
+        <div class="hero-actions">
+          <div class="monthnav" role="group" aria-label="Month">
+            <button type="button" (click)="shiftMonth(-1)" aria-label="Previous month"><i class="fas fa-chevron-left"></i></button>
+            <span>{{ monthLabel }}<i class="fas fa-lock" *ngIf="!isOpen" title="Closed for new requests"></i></span>
+            <button type="button" (click)="shiftMonth(1)" [disabled]="atCurrent" aria-label="Next month"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <button type="button" class="btn glass" (click)="policyOpen = true"><i class="fas fa-circle-info"></i> Guidelines</button>
+          <button type="button" class="btn white" (click)="openNew()" [disabled]="!isOpen" [title]="isOpen ? '' : monthLabel + ' is closed'"><i class="fas fa-plus"></i> Request OT</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ KPIs ═══ -->
+    <section class="kpis" aria-label="Summary">
+      <div class="kpi a"><div class="ico"><i class="fas fa-file-lines"></i></div>
+        <div><small>OT requests</small><div class="v">{{ kpi.count }}</div><div class="n">{{ kpi.count ? kpi.count + (kpi.count > 1 ? ' days' : ' day') + ' with OT' : 'No OT this month' }}</div></div></div>
+      <div class="kpi d"><div class="ico"><i class="far fa-clock"></i></div>
+        <div><small>Total OT hours</small><div class="v">{{ kpi.hours }}</div><div class="n">Worked / logged</div></div></div>
+      <div class="kpi b"><div class="ring"><svg viewBox="0 0 58 58"><circle class="bg" cx="29" cy="29" r="25"/><circle class="fg" cx="29" cy="29" r="25" stroke-dasharray="157.1" [attr.stroke-dashoffset]="kpi.ring"/></svg><b>{{ kpi.pct }}%</b></div>
+        <div><small>HOD approved</small><div class="v">{{ kpi.approved }}</div><div class="n">{{ kpi.count ? kpi.pct + '% of requests' : '—' }}</div></div></div>
+      <div class="kpi e"><div class="ico"><i class="fas fa-hourglass-half"></i></div>
+        <div><small>Awaiting HOD</small><div class="v">{{ kpi.pending }}</div><div class="n">Not yet approved</div></div></div>
+    </section>
+
+    <div class="cols">
+    <!-- ═══ requests ═══ -->
+    <section class="panel reqs">
+      <div class="ph" style="margin-bottom:12px">
+        <div><h2>Requests · {{ monthLabel }}</h2><div class="sub">{{ list.length }} of {{ monthReqs.length }} shown</div></div>
+        <button type="button" class="btn sm" (click)="exportCsv()" [disabled]="!list.length"><i class="fas fa-download"></i> Export CSV</button>
+      </div>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Approval filter">
+          <button type="button" [class.on]="filter === 'all'" (click)="filter = 'all'">All <span class="c">{{ counts.all }}</span></button>
+          <button type="button" [class.on]="filter === 'yes'" (click)="filter = 'yes'">Approved <span class="c">{{ counts.yes }}</span></button>
+          <button type="button" [class.on]="filter === 'no'" (click)="filter = 'no'">Pending <span class="c">{{ counts.no }}</span></button>
+        </div>
+        <label class="field-s"><i class="fas fa-magnifying-glass"></i><input type="search" [(ngModel)]="q" placeholder="Search task or brief" aria-label="Search task or brief"></label>
+        <div class="grow"></div>
+        <div class="seg" role="group" aria-label="View">
+          <button type="button" [class.on]="view === 'cards'" (click)="setView('cards')"><i class="fas fa-grip"></i> Cards</button>
+          <button type="button" [class.on]="view === 'table'" (click)="setView('table')"><i class="fas fa-list"></i> Table</button>
+        </div>
+      </div>
+
+      <!-- cards -->
+      <div class="list" *ngIf="list.length && view === 'cards'">
+        <article class="req" *ngFor="let r of list; let i = index" [style.--i]="i" tabindex="0" role="button" (click)="openDetail(r)" (keydown.enter)="openDetail(r)"
+                 [attr.aria-label]="'Open request for ' + long(r.date)">
+          <div class="dbadge"><b>{{ dd(r.date) }}</b><span>{{ dow(r.date) }}</span><small>{{ monYr(r.date) }}</small></div>
+          <div class="rmain">
+            <div class="rtop">
+              <div class="chips">
+                <span class="chip" [ngClass]="stageClass(r)">{{ stageLabel(r) }}</span>
+                <span class="chip" [ngClass]="allowClass(r.punches)">{{ allowLabel(r.punches) }}</span>
+                <span class="chip info" *ngIf="r.special">Special day</span>
+              </div>
+              <div class="hrs"><b [class.flag]="over(r)">{{ hhmm(r.worked) }}</b><small>Worked hrs</small></div>
+            </div>
+            <p class="rtask" *ngIf="r.task"><i class="fas fa-list-check"></i>{{ r.task }}</p>
+            <p class="rbrief">{{ r.brief }}</p>
+            <ng-container *ngTemplateOutlet="punchBar; context: { $implicit: r.punches }"></ng-container>
+            <div class="rfoot">
+              <div class="hod"><span class="av sm" [style.--h]="hueOf(r.hodId)">{{ ini(r.hodName) }}</span><div>{{ r.hodName }}<small>Head of department</small></div></div>
+              <div class="steps" aria-label="Approval progress">
+                <ng-container *ngFor="let s of steps(r); let k = index">
+                  <span class="ln" *ngIf="k" [class.done]="s.cls === 'done' || s.cls === 'cur'"></span>
+                  <span class="s" [ngClass]="s.cls"><i>{{ s.cls === 'done' ? '✓' : s.cls === 'bad' ? '✕' : '' }}</i><span>{{ s.short }}</span></span>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- table -->
+      <div class="tablewrap" *ngIf="list.length && view === 'table'">
+        <table>
+          <thead><tr><th>Date</th><th>Punches</th><th>Task</th><th>Status</th><th>Allowance</th><th>Brief</th><th>Worked hr</th><th>HOD</th><th>HOD remark</th><th>Operations remark</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of list" tabindex="0" (click)="openDetail(r)" (keydown.enter)="openDetail(r)">
+              <td style="white-space:nowrap"><b>{{ dd(r.date) }} {{ monYr(r.date) }}</b><br><span class="fine">{{ dayName(r.date) }}</span></td>
+              <td><div class="punch" *ngFor="let p of r.punches; let k = index" [class.out]="k % 2"><i></i>{{ p }}</div></td>
+              <td>{{ r.task || '—' }}</td>
+              <td><span class="chip" [ngClass]="stageClass(r)">{{ stageLabel(r) }}</span></td>
+              <td><span class="chip" [ngClass]="allowClass(r.punches)">{{ allowOf(r.punches) === 'none' ? 'Not eligible' : (allowOf(r.punches) === 'full' ? 'Full day' : 'Half day') }}</span></td>
+              <td style="max-width:360px">{{ r.brief }}</td>
+              <td><b>{{ hhmm(r.worked) }}</b></td>
+              <td>{{ r.hodName }}</td>
+              <td>{{ r.hodRemark || '—' }}</td>
+              <td>{{ r.opsRemark || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- empty -->
+      <div class="empty" *ngIf="!list.length">
+        <div class="ill"><i class="fas fa-stopwatch"></i></div>
+        <b>{{ monthReqs.length ? 'Nothing matches your filters' : 'No OT requests this month' }}</b>
+        <div>{{ monthReqs.length ? 'Try clearing the search or switching the filter.' : 'Worked on a Saturday or a special working day? Log it to be considered for the allowance.' }}</div>
+        <button type="button" class="btn primary" *ngIf="!monthReqs.length && isOpen" (click)="openNew()"><i class="fas fa-plus"></i> Request OT</button>
+      </div>
+    </section>
+    <!-- ═══ calendar + allowance ═══ -->
+    <aside class="side">
+      <div class="panel">
+        <div class="ph"><div><h2>Month at a glance</h2><div class="sub">Tap a dashed day to request OT.</div></div>
+          <div class="legend"><span><i style="background:#14b8a6"></i>Approved</span><span><i style="background:#f5b84a"></i>Pending</span><span><i style="background:#f87171"></i>Rejected</span><span><i class="can"></i>Can request</span></div></div>
+        <div class="cal">
+          <div class="dn" *ngFor="let d of dows; let i = index" [class.we]="weekend.includes(i)">{{ d }}</div>
+          <ng-container *ngFor="let c of cal">
+            <div class="day pad" *ngIf="c.pad"></div>
+            <button type="button" class="day" *ngIf="!c.pad" [ngClass]="dayCls(c)" [class.we]="c.we" [class.today]="c.today" [class.sel]="detail?.date === c.iso"
+                    (click)="clickDay(c)" [attr.aria-label]="long(c.iso) + (c.req ? ', OT ' + hhmm(c.req.worked) : '')">
+              <span class="num">{{ c.d }}</span>
+              <span class="h" *ngIf="c.req">{{ hhmm(c.req.worked) }}</span>
+              <span class="plus" *ngIf="!c.req && c.eligible && isOpen"><i class="fas fa-plus"></i></span>
+            </button>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="panel allow">
+        <div class="ph" style="margin:0"><div><h2>Estimated allowance</h2><div class="sub">Based on your punches and the policy.</div></div></div>
+        <div class="big">
+          <div class="box f"><b>{{ allow.full }}</b><span>Full-day</span></div>
+          <div class="box h"><b>{{ allow.half }}</b><span>Half-day</span></div>
+          <div class="box"><b>{{ allow.total }}</b><span>Salary days</span></div>
+        </div>
+        <div>
+          <div class="hint"><span>Approved by HOD</span><b>{{ allow.appr }} of {{ allow.total }} days</b></div>
+          <div class="pbar"><i [style.width.%]="allow.pct"></i></div>
+        </div>
+        <ul class="checks">
+          <li><i class="fas fa-check"></i>Paid with the {{ payrollLabel }} salary.</li>
+          <li><i class="fas fa-check"></i>Half-day: min. 4 working hours with at least 2 valid punches.</li>
+          <li><i class="fas fa-check"></i>Full-day: four valid punches including break in and out.</li>
+          <li><i class="fas fa-check"></i>Proper punching and a DPR entry are mandatory.</li>
+        </ul>
+        <div class="fine">Indicative only. The final allowance is decided after HOD and Operations review.</div>
+      </div>
+    </aside>
+
+    </div>
+  </main>
+</div>
+
+<button type="button" class="fab" *ngIf="isOpen" (click)="openNew()" aria-label="Request OT"><i class="fas fa-plus"></i></button>
+
+<!-- ═══ punch bar ═══ -->
+<ng-template #punchBar let-p>
+  <div class="tl" aria-label="Punch timeline">
+    <i class="gridl" *ngFor="let g of grid" [style.left.%]="g"></i>
+    <i class="seg-b" *ngFor="let s of barOf(p).segs" [style.left.%]="s.l" [style.width.%]="s.w" [title]="s.t"></i>
+    <i class="pt" *ngFor="let s of barOf(p).pts" [style.left.%]="s.l" [title]="s.t"></i>
+  </div>
+  <div class="ticks"><span *ngFor="let t of ticks">{{ t }}</span></div>
+</ng-template>
+
+<!-- ═══ detail sheet ═══ -->
+<ng-container *ngIf="detail as r">
+  <div class="ov" (click)="closeDetail()"></div>
+  <aside class="sheet ox" role="dialog" aria-modal="true" aria-labelledby="otDT">
+    <div class="sh"><div><h3 id="otDT">{{ long(r.date) }}</h3><small>{{ me.name }} · {{ me.id }}{{ r.special ? ' · ' + r.special : '' }}</small></div>
+      <button type="button" class="x" (click)="closeDetail()" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+    <div class="sb">
+      <div class="chips" style="margin-bottom:16px">
+        <span class="chip" [ngClass]="stageClass(r)">{{ stageLabel(r) }}</span>
+        <span class="chip" [ngClass]="allowClass(r.punches)">{{ allowLabel(r.punches) }}</span>
+      </div>
+      <div class="box2">
+        <div class="ph" style="margin-bottom:10px"><div><b>Punch timeline</b><div class="fine">{{ r.punches.length }} punches · {{ work(r.punches) }} between punches</div></div>
+          <div class="hrs"><b [class.flag]="over(r)">{{ hhmm(r.worked) }}</b><small>Worked hrs</small></div></div>
+        <ng-container *ngTemplateOutlet="punchBar; context: { $implicit: r.punches }"></ng-container>
+        <div class="plist">
+          <div class="punch" *ngFor="let p of r.punches; let k = index" [class.out]="k % 2"><i></i><b>{{ p }}</b><span class="fine">{{ k % 2 ? 'Out' : 'In' }} · {{ r.site }}</span></div>
+        </div>
+      </div>
+      <h4 class="sec">Approval progress</h4>
+      <div class="vsteps">
+        <div class="vs" *ngFor="let s of vsteps(r); let k = index" [ngClass]="s.cls"><i>{{ s.cls === 'done' ? '✓' : s.cls === 'bad' ? '✕' : k + 1 }}</i><div><b>{{ s.label }}</b><span>{{ s.sub }}</span></div></div>
+      </div>
+      <dl class="kv">
+        <dt>Task</dt><dd>{{ r.task || '—' }}</dd>
+        <dt>DPR</dt><dd><ng-container *ngIf="r.tasks.length; else noDpr"><div *ngFor="let t of r.tasks">{{ t.name }} · {{ hm(t.mins) }}</div></ng-container><ng-template #noDpr>—</ng-template></dd>
+        <dt>HOD</dt><dd>{{ r.hodName }}</dd>
+        <dt>HOD remark</dt><dd>{{ r.hodRemark || '—' }}</dd>
+        <dt>Operations</dt><dd>{{ r.opsRemark || '—' }}</dd>
+        <dt>Brief</dt><dd>{{ r.brief }}</dd>
+      </dl>
+    </div>
+    <div class="sf" *ngIf="canCancel(r) || canAgain(r)">
+      <button type="button" class="btn danger" *ngIf="canCancel(r)" (click)="cancel(r)"><i class="fas fa-xmark"></i> Cancel request</button>
+      <button type="button" class="btn primary" *ngIf="canAgain(r)" (click)="requestAgain(r)"><i class="fas fa-rotate-right"></i> Request again</button>
+    </div>
+  </aside>
+</ng-container>
+
+<!-- ═══ new request sheet ═══ -->
+<ng-container *ngIf="newOpen">
+  <div class="ov" (click)="closeNew()"></div>
+  <form class="sheet ox" role="dialog" aria-modal="true" aria-labelledby="otNT" (ngSubmit)="submit()" novalidate>
+    <div class="sh"><div><h3 id="otNT">Request OT</h3><small>Your HOD will verify and approve it.</small></div>
+      <button type="button" class="x" (click)="closeNew()" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+    <div class="sb">
+      <div class="callout"><i class="fas fa-circle-info"></i><span>Proper punching and a DPR entry are mandatory for the date.</span></div>
+
+      <div class="fld"><label for="otDate">OT date</label>
+        <input class="inp" type="date" id="otDate" name="date" [(ngModel)]="form.date" (ngModelChange)="form.hour = ''; onDate()" [min]="minDate" [max]="maxDate">
+        <div class="err">{{ errors['date'] }}</div></div>
+
+      <div class="detect">
+        <ng-container *ngIf="!form.date"><div class="t">Detected punches</div><div class="fine">Pick a date to see your punches and the allowance you may qualify for.</div></ng-container>
+        <ng-container *ngIf="form.date && (!picked || !picked.punches.length)">
+          <div class="t">Detected punches <span class="chip warn">None found</span></div>
+          <div class="fine">No punches were found for {{ long(form.date) }}. Without proper punching the allowance cannot be granted.</div>
+        </ng-container>
+        <ng-container *ngIf="picked && picked.punches.length">
+          <div class="t">Detected punches <span class="chip" [ngClass]="allowClass(picked.punches)">{{ allowLabel(picked.punches) }}</span></div>
+          <ng-container *ngTemplateOutlet="punchBar; context: { $implicit: picked.punches }"></ng-container>
+          <div class="fine" style="margin-top:8px">{{ picked.punches.length }} punches · {{ work(picked.punches) }} between punches{{ pickedSpecial ? ' · ' + pickedSpecial : '' }}</div>
+          <ul class="checks mini"><li *ngFor="let c of checksOf(picked)" [class.yes]="c.ok" [class.no]="!c.ok"><i class="fas" [ngClass]="c.ok ? 'fa-circle-check' : 'fa-circle-xmark'"></i>{{ c.text }}</li></ul>
+        </ng-container>
+      </div>
+
+      <div class="row2">
+        <div class="fld"><label for="otHour">Worked hours (HH:MM)</label>
+          <input class="inp" type="time" id="otHour" name="hour" [(ngModel)]="form.hour" (ngModelChange)="submitted && validate()"><div class="err">{{ errors['hour'] }}</div></div>
+        <div class="fld"><label for="otHod">HOD</label>
+          <select class="inp" id="otHod" name="hod" [(ngModel)]="form.hodId" (ngModelChange)="submitted && validate()">
+            <option value="" disabled>Select your HOD</option>
+            <option *ngFor="let h of hods" [value]="h.id">{{ h.name }}</option>
+          </select><div class="err">{{ errors['hod'] }}</div></div>
+      </div>
+      <div class="fld"><label for="otTask">Task</label>
+        <input class="inp" type="text" id="otTask" name="task" maxlength="80" [(ngModel)]="form.task" placeholder="e.g. Exit form module"></div>
+      <div class="fld"><label for="otBrief">Brief of work done</label>
+        <textarea class="inp" id="otBrief" name="brief" [maxlength]="briefMax" [(ngModel)]="form.brief" (ngModelChange)="submitted && validate()" placeholder="Describe what you completed during the overtime…"></textarea>
+        <div class="hint"><span class="err">{{ errors['brief'] }}</span><span>{{ form.brief.length }} / {{ briefMax }}</span></div></div>
+      <label class="agree"><input type="checkbox" name="agree" [(ngModel)]="form.agree" (ngModelChange)="submitted && validate()">
+        <span>I confirm the hours are accurate and I have read the <a href="javascript:void(0)" (click)="policyOpen = true">OT guidelines</a>.</span></label>
+      <div class="err">{{ errors['agree'] }}</div>
+    </div>
+    <div class="sf"><button type="button" class="btn" (click)="closeNew()">Cancel</button><button type="submit" class="btn primary"><i class="fas fa-paper-plane"></i> Submit request</button></div>
+  </form>
+</ng-container>
+
+<!-- ═══ guidelines ═══ -->
+<ng-container *ngIf="policyOpen">
+  <div class="ov" (click)="policyOpen = false"></div>
+  <div class="modal ox" role="dialog" aria-modal="true" aria-labelledby="otGT">
+    <div class="sh"><div><h3 id="otGT">Holiday Allowance Policy</h3><small>What you need to qualify and how it is paid</small></div>
+      <button type="button" class="x" (click)="policyOpen = false" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+    <div class="sb"><div class="pol">
+      <div class="pcard" *ngFor="let p of policy; let i = index">
+        <div class="pi"><i class="fas" [ngClass]="p.icon"></i></div>
+        <div><h4>{{ i + 1 }}. {{ p.title }}</h4><ul><li *ngFor="let t of p.points">{{ t }}</li></ul>
+          <div class="tiles" *ngIf="i === 2">
+            <div class="tile h"><b>Half-day allowance</b>Minimum 4 working hours with at least two valid punches.</div>
+            <div class="tile f"><b>Full-day allowance</b>Complete attendance record with four valid punches, including break in and out times, logged during the day.</div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><b>Note:</b> the project execution team and other site-based staff at supporting facilities are not required to log overtime here. Their yearly rewards are calculated from punching records and other productivity parameters.</div>
+    </div></div>
+    <div class="sf"><button type="button" class="btn primary" (click)="policyOpen = false">Got it</button></div>
+  </div>
+</ng-container>

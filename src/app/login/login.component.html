@@ -1,313 +1,203 @@
-<div class="login-container" #loginContainer>
-  <!-- Background Overlay for Parallax -->
-  <div class="background-overlay">
-    <div class="background-image" [style.background-image]="'url(' + backgroundImageUrl + ')'"></div>
-    <div class="dark-overlay"></div>
+<div class="lg" #loginContainer>
+  <!-- Background: head-office photo + legibility gradients.
+       .background-overlay keeps the subtle mouse parallax from login.component.ts. -->
+  <div class="background-overlay lg-bg" aria-hidden="true">
+    <!-- finished artwork: sharp building, blurred sky and foliage, green vignette — all in the image -->
+    <div class="lg-photo" [style.background-image]="'url(' + backgroundImageUrl + ')'"></div>
   </div>
 
-  <!-- Floating Circles - GPU Optimized -->
-  <div class="floating-circle floating-circle-1"></div>
-  <div class="floating-circle floating-circle-2"></div>
-  <div class="floating-circle floating-circle-3"></div>
+  <!-- Brand, top left -->
+  <header class="lg-brand" [@fadeIn]>
+    <img src="assets/images/logo.png" alt="Al Adrak" class="lg-brand-logo">
+  </header>
 
-  <!-- Cursor Spotlight -->
-  <div class="cursor-spotlight"></div>
+  <!-- Hero line, bottom left -->
+  <section class="lg-hero" [@fadeIn]>
+    <span class="lg-bar"></span>
+    <h1 class="lg-title">Your workday.<br>Connected.</h1>
+    <p class="lg-lede">One place for your people, projects and progress.</p>
+  </section>
 
-  <!-- Header with Logo -->
-  <div class="app-header" [@fadeIn]>
-    <div class="logo-container">
-      <!-- <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div> -->
-      <!-- <h1 class="app-title">Al Adrak Portal</h1> -->
-    </div>
-    <!-- <p class="app-tagline">Streamline your time management</p> -->
-  </div>
+  <!-- ── Sign-in card ─────────────────────────────────────────────────── -->
+  <main class="lg-card" *ngIf="currentView === 'login'" [@fadeIn]>
+    <img src="assets/images/AdrakLivePortal.webp" alt="AdrakLive Portal" class="lg-card-logo">
+    <h2 class="lg-card-title">Welcome back</h2>
+    <p class="lg-card-sub">Sign in to your employee account</p>
 
-  <!-- Login Card -->
-  <div class="auth-card" *ngIf="currentView === 'login'" [@fadeIn]>
-    <div class="auth-header">
-      <div class="auth-logo">
-        <img src="assets/images/Logo_LoginScreen.png" alt="Company Logo" class="login-logo-image">
-      </div>
-      <p class="auth-subtitle">{{ getStepDescription() }}</p>
+    <div class="lg-alert" *ngIf="loginErrorMessage" role="alert">
+      <i class="fas fa-circle-info"></i><span>{{ loginErrorMessage }}</span>
     </div>
 
-    <form class="auth-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
-      <!-- Employee ID Field -->
-      <div class="input-group">
-        <label class="input-label">Employee ID</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 14c-4.41 0-8 2.69-8 6v2h16v-2c0-3.31-3.59-6-8-6z" stroke="currentColor" stroke-width="2"/>
+    <form class="lg-form" (ngSubmit)="onLogin()" #loginForm="ngForm" novalidate>
+      <!-- Employee ID -->
+      <div class="lg-field">
+        <label class="lg-label" for="lg-user">Employee ID</label>
+        <div class="lg-input" [class.invalid]="usernameField.invalid && usernameField.touched">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="Employee ID"
-            [(ngModel)]="username"
-            name="username"
-            required
-            #usernameField="ngModel"
-            [class.invalid]="usernameField.invalid && usernameField.touched"
-          >
+          <input id="lg-user" type="text" placeholder="Enter your employee ID" autocomplete="username"
+                 [(ngModel)]="username" name="username" required #usernameField="ngModel">
         </div>
-        <div *ngIf="usernameField.invalid && usernameField.touched" class="error-message">
-          Please enter a valid Employee ID.
-        </div>
+        <div *ngIf="usernameField.invalid && usernameField.touched" class="lg-err">Please enter your Employee ID.</div>
       </div>
 
-      <!-- Password Field -->
-      <div class="input-group">
-        <label class="input-label">Password</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-            <circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+      <!-- Password -->
+      <div class="lg-field">
+        <label class="lg-label" for="lg-pass">Password</label>
+        <div class="lg-input" [class.invalid]="passwordField.invalid && passwordField.touched">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="12" cy="15.5" r="1.3" fill="currentColor"/>
           </svg>
-          <input 
-            [type]="showPassword() ? 'text' : 'password'" 
-            class="form-input" 
-            placeholder="Enter your password"
-            [(ngModel)]="password"
-            name="password"
-            required
-            #passwordField="ngModel"
-            [class.invalid]="passwordField.invalid && passwordField.touched"
-          >
-          <button 
-            type="button" 
-            class="password-toggle"
-            (click)="togglePasswordVisibility()"
-            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+          <input id="lg-pass" [type]="showPassword() ? 'text' : 'password'" placeholder="Enter your password" autocomplete="current-password"
+                 [(ngModel)]="password" name="password" required #passwordField="ngModel">
+          <button type="button" class="lg-eye" (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
             <i class="fas" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
           </button>
         </div>
-        <div *ngIf="passwordField.invalid && passwordField.touched" class="error-message">
-          Password must be at least 6 characters long and contain at least one number.
-        </div>
+        <div *ngIf="passwordField.invalid && passwordField.touched" class="lg-err">Please enter your password.</div>
       </div>
 
-      <!-- Form Options -->
-      <div class="form-options">
-        <label class="remember-me">
-          <input type="checkbox" class="checkbox">
-          <span class="checkbox-label">Remember Me</span>
+      <div class="lg-row">
+        <label class="lg-check">
+          <input type="checkbox">
+          <span class="lg-box" aria-hidden="true"></span>
+          <span>Remember me</span>
         </label>
-        <button type="button" class="forgot-password-link" (click)="toggleForgotPassword()">
-          Forgot password?
-        </button>
+        <button type="button" class="lg-link" (click)="toggleForgotPassword()">Forgot password?</button>
       </div>
 
-      <!-- Login Button -->
-      <button 
-        type="submit" 
-        class="primary-button"
-        [disabled]="!loginForm.valid || isLoggingIn()"
-        [class.loading]="isLoggingIn()"
-      >
+      <button type="submit" class="lg-btn" [disabled]="!loginForm.valid || isLoggingIn()" [class.loading]="isLoggingIn()">
         <i class="fas fa-spinner fa-spin" *ngIf="isLoggingIn()"></i>
-        <span>{{ isLoggingIn() ? 'Signing In...' : 'Sign In' }}</span>
+        <span>{{ isLoggingIn() ? 'Signing in…' : 'Sign in' }}</span>
+        <svg *ngIf="!isLoggingIn()" class="lg-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
-
-      <!-- Signup Link -->
-      <div class="auth-switch">
-        <p>Don't have an account? 
-          <button type="button" class="switch-link" (click)="toggleSignup()">
-            Sign up here
-          </button>
-        </p>
-      </div>
     </form>
-  </div>
 
-  <!-- Multi-Step Form (Forgot Password & Signup) -->
-  <div class="auth-card" *ngIf="currentView !== 'login'" [@fadeIn]>
-    <div class="auth-header">
-      <h2 class="auth-title">{{ getStepTitle() }}</h2>
-      <p class="auth-subtitle">{{ getStepDescription() }}</p>
+    <div class="lg-sep"></div>
+    <div class="lg-foot">
+      <span class="lg-secure"><i class="fas fa-lock"></i>Secure employee access</span>
     </div>
+  </main>
 
-    <!-- Step Progress Indicator -->
-    <div class="step-progress">
-      <div class="step" [class.active]="currentStep === 'email'" [class.completed]="currentStep !== 'email'">
-        <div class="step-circle">
-          <i class="fas fa-envelope" *ngIf="currentStep === 'email'"></i>
-          <i class="fas fa-check" *ngIf="currentStep !== 'email'"></i>
-        </div>
-        <span>Email</span>
-      </div>
-      <div class="step-line" [class.completed]="currentStep === 'password'"></div>
-      <div class="step" [class.active]="currentStep === 'otp'" [class.completed]="currentStep === 'password'">
-        <div class="step-circle">
-          <i class="fas fa-key" *ngIf="currentStep === 'otp'"></i>
-          <i class="fas fa-check" *ngIf="currentStep === 'password'"></i>
-          <span *ngIf="currentStep === 'email'">2</span>
-        </div>
-        <span>Verify</span>
-      </div>
-      <div class="step-line" [class.completed]="currentStep === 'password'"></div>
-      <div class="step" [class.active]="currentStep === 'password'">
-        <div class="step-circle">
-          <i class="fas fa-lock" *ngIf="currentStep === 'password'"></i>
-          <span *ngIf="currentStep !== 'password'">3</span>
-        </div>
-        <span>Password</span>
-      </div>
-    </div>
+  <!-- ── Forgot password / sign-up (3 steps) ─────────────────────────── -->
+  <main class="lg-card" *ngIf="currentView !== 'login'" [@fadeIn]>
+    <img src="assets/images/AdrakLivePortal.webp" alt="AdrakLive Portal" class="lg-card-logo sm">
+    <h2 class="lg-card-title">{{ getStepTitle() }}</h2>
+    <p class="lg-card-sub">{{ getStepDescription() }}</p>
+
+    <ol class="lg-steps" aria-label="Progress">
+      <li [class.active]="currentStep === 'email'" [class.done]="currentStep !== 'email'">
+        <span class="dot"><i class="fas" [ngClass]="currentStep === 'email' ? 'fa-envelope' : 'fa-check'"></i></span>Email
+      </li>
+      <li class="line" [class.done]="currentStep !== 'email'"></li>
+      <li [class.active]="currentStep === 'otp'" [class.done]="currentStep === 'password'">
+        <span class="dot"><i class="fas" *ngIf="currentStep !== 'email'" [ngClass]="currentStep === 'otp' ? 'fa-key' : 'fa-check'"></i><ng-container *ngIf="currentStep === 'email'">2</ng-container></span>Verify
+      </li>
+      <li class="line" [class.done]="currentStep === 'password'"></li>
+      <li [class.active]="currentStep === 'password'">
+        <span class="dot"><i class="fas fa-lock" *ngIf="currentStep === 'password'"></i><ng-container *ngIf="currentStep !== 'password'">3</ng-container></span>Password
+      </li>
+    </ol>
 
     <!-- Step 1: Email -->
-    <form class="auth-form" *ngIf="currentStep === 'email'" (ngSubmit)="onSubmitEmail()">
-      <div class="input-group">
-        <label class="input-label">Email Address</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/>
-            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/>
+    <form class="lg-form" *ngIf="currentStep === 'email'" (ngSubmit)="onSubmitEmail()">
+      <div class="lg-field">
+        <label class="lg-label" for="lg-email">Email address</label>
+        <div class="lg-input">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <input
-            type="email"
-            class="form-input"
-            [(ngModel)]="email"
-            name="email"
-            required
-            placeholder="Enter your email address"
-          />
+          <input id="lg-email" type="email" [(ngModel)]="email" name="email" required placeholder="Enter your email address" autocomplete="email">
         </div>
       </div>
-
-      <button type="submit" class="primary-button" [disabled]="isProcessing">
+      <button type="submit" class="lg-btn" [disabled]="isProcessing">
         <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
-        <span>{{ isProcessing ? 'Sending...' : 'Send OTP' }}</span>
+        <span>{{ isProcessing ? 'Sending…' : 'Send OTP' }}</span>
       </button>
     </form>
 
-    <!-- Step 2: OTP Verification -->
-    <form class="auth-form" *ngIf="currentStep === 'otp'" (ngSubmit)="onVerifyOtp()">
-      <div class="input-group">
-        <label class="input-label">Enter 6-Digit OTP</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-            <circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+    <!-- Step 2: OTP -->
+    <form class="lg-form" *ngIf="currentStep === 'otp'" (ngSubmit)="onVerifyOtp()">
+      <div class="lg-field">
+        <label class="lg-label" for="lg-otp">6-digit code</label>
+        <div class="lg-input">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="8" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M11.5 12H21M18 12v3M21 12v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
-          <input
-            type="text"
-            class="form-input otp-input"
-            [(ngModel)]="otp"
-            name="otp"
-            required
-            maxlength="6"
-            placeholder="000000"
-          />
+          <input id="lg-otp" type="text" class="otp" [(ngModel)]="otp" name="otp" required maxlength="6" placeholder="000000" inputmode="numeric" autocomplete="one-time-code">
         </div>
-        <div class="otp-info">
-          <p *ngIf="otpTimer > 0">Resend OTP in {{ (otpTimer/60) | number:'2.0-0' }}:{{ (otpTimer%60) | number:'2.0-0' }}</p>
-          <button type="button" class="resend-otp" [disabled]="isProcessing || otpTimer > 0" (click)="onResendOtp()">
-            Resend OTP
-          </button>
+        <div class="lg-otp-info">
+          <span *ngIf="otpTimer > 0">Resend in {{ (otpTimer/60) | number:'2.0-0' }}:{{ (otpTimer%60) | number:'2.0-0' }}</span>
+          <button type="button" class="lg-link" [disabled]="isProcessing || otpTimer > 0" (click)="onResendOtp()">Resend OTP</button>
         </div>
       </div>
-
-      <button type="submit" class="primary-button" [disabled]="isProcessing">
+      <button type="submit" class="lg-btn" [disabled]="isProcessing">
         <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
-        <span>{{ isProcessing ? 'Verifying...' : 'Verify OTP' }}</span>
+        <span>{{ isProcessing ? 'Verifying…' : 'Verify OTP' }}</span>
       </button>
     </form>
 
-    <!-- Step 3: Password Setup -->
-    <form class="auth-form" *ngIf="currentStep === 'password'" (ngSubmit)="onSetPassword()">
-      <!-- Unified minimal fields for both forgot-password and signup -->
-      <div class="input-group">
-        <label class="input-label">Email ID</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2"/>
-            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"/>
-            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+    <!-- Step 3: Password -->
+    <form class="lg-form" *ngIf="currentStep === 'password'" (ngSubmit)="onSetPassword()">
+      <div class="lg-field">
+        <label class="lg-label" for="lg-emp">Employee ID</label>
+        <div class="lg-input disabled">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="9" cy="11" r="2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M6 16c.6-1.5 1.7-2.2 3-2.2s2.4.7 3 2.2M15 10h3M15 13h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
-          <input
-            type="text"
-            class="form-input"
-            [(ngModel)]="employeeId"
-            name="employeeId"
-            required
-            placeholder="Employee ID" disabled="True"
-          />
+          <input id="lg-emp" type="text" [(ngModel)]="employeeId" name="employeeId" required placeholder="Employee ID" disabled="True">
         </div>
       </div>
-
-      <!-- Password fields -->
-      <div class="input-group">
-        <label class="input-label">{{ currentView === 'signup' ? 'Create Password' : 'New Password' }}</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-            <circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+      <div class="lg-field">
+        <label class="lg-label" for="lg-new">{{ currentView === 'signup' ? 'Create password' : 'New password' }}</label>
+        <div class="lg-input">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
-          <input
-            type="password"
-            class="form-input"
-            [(ngModel)]="newPassword"
-            name="newPassword"
-            required
-            placeholder="Enter password"
-          />
+          <input id="lg-new" type="password" [(ngModel)]="newPassword" name="newPassword" required placeholder="Enter password" autocomplete="new-password">
         </div>
       </div>
-
-      <div class="input-group">
-        <label class="input-label">Confirm Password</label>
-        <div class="input-container">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-            <circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+      <div class="lg-field">
+        <label class="lg-label" for="lg-confirm">Confirm password</label>
+        <div class="lg-input">
+          <svg class="lg-ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7M9.5 15.5l1.7 1.7 3.3-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <input
-            type="password"
-            class="form-input"
-            [(ngModel)]="confirmPassword"
-            name="confirmPassword"
-            required
-            placeholder="Confirm password"
-          />
+          <input id="lg-confirm" type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required placeholder="Confirm password" autocomplete="new-password">
         </div>
       </div>
-
-      <button type="submit" class="primary-button" [disabled]="isProcessing">
+      <button type="submit" class="lg-btn" [disabled]="isProcessing">
         <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
-        <span>{{ isProcessing ? 'Processing...' : 'Submit' }}</span>
+        <span>{{ isProcessing ? 'Processing…' : 'Submit' }}</span>
       </button>
     </form>
 
-    <!-- Messages -->
-    <div *ngIf="errorMessage" class="error-message">
-      {{ errorMessage }}
-    </div>
-    <div *ngIf="successMessage" class="success-message">
-      {{ successMessage }}
-    </div>
+    <div *ngIf="errorMessage" class="lg-alert" role="alert"><i class="fas fa-circle-exclamation"></i><span>{{ errorMessage }}</span></div>
+    <div *ngIf="successMessage" class="lg-alert ok" role="status"><i class="fas fa-circle-check"></i><span>{{ successMessage }}</span></div>
 
-    <!-- Back to Login -->
-    <div class="auth-switch">
-      <button type="button" class="switch-link" (click)="backToLogin()">
-        <i class="fas fa-arrow-left"></i> Back to Login
-      </button>
-    </div>
-  </div>
-
+    <div class="lg-sep"></div>
+    <button type="button" class="lg-back" (click)="backToLogin()"><i class="fas fa-arrow-left"></i>Back to sign in</button>
+  </main>
 
   <!-- Footer -->
-  <!-- <div class="app-footer" [@fadeIn]>
-    <p>&copy; 2025 Al Adrak Timesheet. All rights reserved.</p>
-  </div> -->
+  <footer class="lg-footer">
+    <span>&copy; {{ currentYear }} Al Adrak. All rights reserved.</span>
+    <span>Need help?
+      <a *ngIf="itSupportUrl; else noSupportLink" class="lg-help" [href]="itSupportUrl" [title]="'Email ' + itSupportEmail">Contact IT support</a>
+      <ng-template #noSupportLink><span class="lg-help">Contact IT support</span></ng-template>
+    </span>
+  </footer>
 </div>

@@ -4884,3 +4884,30 @@ textarea.editable-description[readonly] {
     padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* ═══ Approve button in the header (only when [approveAction] is set — DPR Approval) ═══ */
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.modal-approve-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1B2A38, #10b981);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+  transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.modal-approve-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.38); }
+.modal-approve-btn:disabled { opacity: 0.75; cursor: progress; }
+.modal-approve-btn:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
+.modal-approve-btn i, .modal-approve-btn span { color: #fff; -webkit-text-fill-color: #fff; }
+@media (max-width: 600px) {
+  .modal-approve-btn { height: 36px; padding: 0 12px; font-size: 13px; }
+}

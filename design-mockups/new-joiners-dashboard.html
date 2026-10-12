@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New Joiners Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap" rel="stylesheet">
+<style>
+/* Tokens copied from src/app/styles/dpr-dash.css ("Luminous Emerald") so the
+   mockup looks exactly like the real Employee dashboard. */
+:root{
+  --bg:#f8fafc; --card:#ffffff; --card2:#f8fafc; --raise:#f1f5f9;
+  --line:#e2e8f0; --line2:#edf2f7; --line3:#cbd5e1;
+  --ink:#0f172a; --ink2:#334155; --ink3:#64748b; --ink4:#94a3b8;
+  --brand:#006d4e; --brand-l:#059669;
+  --a1:#059669; --a2:#4f46e5; --a3:#d97706; --a4:#e11d48; --a5:#0284c7; --a6:#7c3aed;
+  --ok:#065f46; --okbg:#ecfdf5; --okbd:#a7f3d0;
+  --wt:#92400e; --wtbg:#fffbeb; --wtbd:#fde68a;
+  --nu:#334155; --nubg:#f1f5f9; --nubd:#e2e8f0;
+  --e1:0 1px 3px 0 rgba(15,23,42,.03),0 1px 2px -1px rgba(15,23,42,.02);
+  --e2:0 4px 6px -1px rgba(15,23,42,.05),0 2px 4px -2px rgba(15,23,42,.03);
+  --e3:0 10px 15px -3px rgba(15,23,42,.07),0 4px 6px -4px rgba(15,23,42,.03);
+  --scrim:rgba(15,23,42,.45);
+  --fh:Geist,Inter,"Segoe UI",system-ui,sans-serif;
+  --fb:Inter,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f172a; --card:#1e293b; --card2:#172033; --raise:#263447;
+  --line:#334155; --line2:#2b3a50; --line3:#475569;
+  --ink:#e2e8f0; --ink2:#cbd5e1; --ink3:#94a3b8; --ink4:#64748b;
+  --brand:#10b981; --brand-l:#34d399; --a2:#6366f1;
+  --ok:#6ee7b7; --okbg:rgba(16,185,129,.12); --okbd:rgba(16,185,129,.34);
+  --wt:#fcd34d; --wtbg:rgba(217,119,6,.14); --wtbd:rgba(217,119,6,.36);
+  --nu:#cbd5e1; --nubg:rgba(148,163,184,.12); --nubd:#334155;
+  --e1:0 1px 3px rgba(0,0,0,.35); --e2:0 4px 10px rgba(0,0,0,.4); --e3:0 12px 24px rgba(0,0,0,.48);
+  --scrim:rgba(2,6,23,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f172a; --card:#1e293b; --card2:#172033; --raise:#263447;
+  --line:#334155; --line2:#2b3a50; --line3:#475569;
+  --ink:#e2e8f0; --ink2:#cbd5e1; --ink3:#94a3b8; --ink4:#64748b;
+  --brand:#10b981; --brand-l:#34d399; --a2:#6366f1;
+  --ok:#6ee7b7; --okbg:rgba(16,185,129,.12); --okbd:rgba(16,185,129,.34);
+  --wt:#fcd34d; --wtbg:rgba(217,119,6,.14); --wtbd:rgba(217,119,6,.36);
+  --nu:#cbd5e1; --nubg:rgba(148,163,184,.12); --nubd:#334155;
+  --e1:0 1px 3px rgba(0,0,0,.35); --e2:0 4px 10px rgba(0,0,0,.4); --e3:0 12px 24px rgba(0,0,0,.48);
+  --scrim:rgba(2,6,23,.7); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 14px/22px var(--fb);-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;overflow-x:hidden}
+h1,h2,h3{margin:0;font-family:var(--fh);font-weight:600}
+p{margin:0}
+button{font:inherit;color:inherit}
+.material-symbols-outlined{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;flex-shrink:0;
+  font-weight:400;font-style:normal;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;
+  -webkit-font-feature-settings:'liga';font-feature-settings:'liga'}
+
+/* ── preview ribbon (not part of the real page) ─────────────────────────── */
+.ribbon{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 20px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+.ribbon b{font-family:var(--fh);color:var(--ink)}
+.ribbon .tag{font:600 10.5px var(--fh);letter-spacing:.06em;text-transform:uppercase;color:var(--a6);
+  background:color-mix(in srgb,var(--a6) 12%,transparent);padding:3px 8px;border-radius:999px}
+.ribbon .sp{flex:1}
+.tbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);
+  border-radius:8px;padding:5px 10px;cursor:pointer;font:600 12px var(--fh);color:var(--ink2)}
+.tbtn:hover{border-color:var(--line3)}
+.tbtn[aria-pressed="true"]{background:var(--okbg);border-color:var(--okbd);color:var(--ok)}
+.tbtn .material-symbols-outlined{font-size:16px}
+
+/* ── page (mirrors .dpage) ──────────────────────────────────────────────── */
+.stage{transition:max-width .35s ease;margin:0 auto;max-width:1440px}
+.stage.phone{max-width:390px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.dpage{position:relative;padding:20px;display:flex;flex-direction:column;gap:20px;min-height:100vh;
+  background:
+    radial-gradient(900px 420px at 88% -8%,color-mix(in srgb,var(--a1) 11%,transparent),transparent 60%),
+    radial-gradient(720px 380px at -8% 32%,color-mix(in srgb,var(--a5) 9%,transparent),transparent 60%),
+    var(--bg)}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(12,minmax(0,1fr))}
+.s3{grid-column:span 3}.s12{grid-column:span 12}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--e1);min-width:0}
+.ch{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ch h2{font-size:16px;line-height:24px;letter-spacing:-.01em}
+.cic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+  background:color-mix(in srgb,var(--kc,var(--brand)) 13%,transparent);color:var(--kc,var(--brand))}
+.cic .material-symbols-outlined{font-size:18px}
+.lbl{font:600 11px var(--fh);letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.lk{border:0;background:none;padding:0;cursor:pointer;font:600 12px var(--fh);color:var(--brand);
+  display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.lk .material-symbols-outlined{font-size:15px}
+.lk:hover{text-decoration:underline}
+.pill{display:inline-flex;align-items:center;gap:4px;font:600 11px var(--fh);padding:2px 8px;border-radius:999px;
+  border:1px solid var(--nubd);background:var(--nubg);color:var(--nu);white-space:nowrap}
+.pill.ok{border-color:var(--okbd);background:var(--okbg);color:var(--ok)}
+.pill.wt{border-color:var(--wtbd);background:var(--wtbg);color:var(--wt)}
+.pill .material-symbols-outlined{font-size:13px}
+
+/* existing hero (simplified copy, for context only) */
+.hero{position:relative;overflow:hidden;border-radius:14px;padding:22px 24px;color:#fff;
+  background:linear-gradient(120deg,#006d4e,#047857 45%,#0369a1);box-shadow:var(--e3);
+  display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.hero .eyeb{font:600 11px var(--fh);letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.hero h1{font-size:26px;line-height:34px;margin:4px 0 6px}
+.hero .hmeta{font-size:12.5px;opacity:.9;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hero .hmeta .material-symbols-outlined{font-size:15px;vertical-align:-3px;margin-right:3px}
+.hero .ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(#a7f3d0 0 68%,rgba(255,255,255,.18) 0);position:relative}
+.hero .ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:#05664b}
+.hero .ring b{position:relative;z-index:1;font:700 18px var(--fh)}
+.qa{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.qbtn{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:var(--card);
+  border:1px solid var(--line);box-shadow:var(--e1);min-width:0}
+.qbtn .qic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--kc) 13%,transparent);color:var(--kc)}
+.qbtn b{display:block;font:600 13px var(--fh)}
+.qbtn span.s{display:block;font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.context{opacity:.55;filter:saturate(.75);pointer-events:none}
+.after-note{display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px;color:var(--ink3)}
+.after-note::before,.after-note::after{content:"";flex:1;border-top:1px dashed var(--line3)}
+.ghost{height:120px;border-radius:10px;background:repeating-linear-gradient(135deg,var(--card) 0 12px,var(--card2) 12px 24px);
+  border:1px solid var(--line)}
+
+/* ═══════════════ NEW: New joiners card ═══════════════ */
+.nj{position:relative;overflow:hidden;padding:0;
+  outline:2px dashed color-mix(in srgb,var(--a6) 55%,transparent);outline-offset:4px}
+.nj .newflag{position:absolute;top:-1px;right:18px;z-index:2;font:700 10px var(--fh);letter-spacing:.08em;
+  color:#fff;background:var(--a6);padding:3px 9px;border-radius:0 0 7px 7px}
+.nj-head{padding:16px 16px 12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--a1) 9%,transparent),transparent 55%)}
+.nj-title{flex:1;min-width:220px}
+.nj-title .ch h2{flex:none}
+.nj-title p{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.nj-title p b{color:var(--ink2);font-weight:600}
+.nj-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;padding:3px;border-radius:9px;background:var(--raise);border:1px solid var(--line);gap:2px}
+.seg button{border:0;background:none;cursor:pointer;padding:5px 10px;border-radius:7px;font:600 12px var(--fh);
+  color:var(--ink3);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.seg button .n{font:600 10.5px var(--fh);padding:0 6px;border-radius:999px;background:var(--line);color:var(--ink2)}
+.seg button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:var(--e2)}
+.seg button[aria-selected="true"] .n{background:var(--okbg);color:var(--ok)}
+.arr{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--card);cursor:pointer;
+  display:grid;place-items:center;color:var(--ink2)}
+.arr:hover:not(:disabled){border-color:var(--line3);color:var(--ink)}
+.arr:disabled{opacity:.4;cursor:default}
+
+.rail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 16px 18px;scrollbar-width:thin;
+  scroll-padding:0 16px}
+.rail::-webkit-scrollbar{height:6px}.rail::-webkit-scrollbar-thumb{background:var(--line3);border-radius:9px}
+.pcard{scroll-snap-align:start;flex:0 0 188px;position:relative;border:1px solid var(--line);border-radius:12px;
+  background:var(--card);padding:16px 12px 12px;text-align:center;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s,border-color .22s;
+  animation:rise .5s cubic-bezier(.22,1,.36,1) backwards;animation-delay:var(--d,0ms)}
+.pcard:hover,.pcard:focus-visible{transform:translateY(-3px);box-shadow:var(--e3);border-color:var(--line3);outline:none}
+.pcard.mine{border-color:color-mix(in srgb,var(--a1) 45%,var(--line))}
+.pcard .team{position:absolute;top:8px;left:8px;font:600 10px var(--fh);color:var(--ok);background:var(--okbg);
+  border:1px solid var(--okbd);padding:1px 6px;border-radius:999px;display:flex;align-items:center;gap:3px}
+.pcard .team .material-symbols-outlined{font-size:12px}
+.pcard .days{position:absolute;top:8px;right:8px;font:600 10px var(--fh);color:var(--ink3)}
+.av{--sz:76px;display:block;width:var(--sz);height:var(--sz);border-radius:50%;position:relative;flex-shrink:0;padding:3px;
+  background:conic-gradient(from 210deg,var(--a1),var(--a5),var(--a6),var(--a1))}
+.av .in{width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;border:2px solid var(--card);
+  display:grid;place-items:center;font:600 calc(var(--sz) * .32) var(--fh);color:#fff;background:var(--avbg,#64748b)}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.av .wave{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--card);
+  display:grid;place-items:center;font-size:13px;box-shadow:var(--e2)}
+.pcard .nm{font:600 13.5px/18px var(--fh);color:var(--ink);margin-top:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
+.pcard .ds{font-size:12px;line-height:16px;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;min-height:32px}
+.pcard .meta{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+.pcard .meta .pill{max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.pcard .jd{margin-top:auto;padding-top:8px;border-top:1px dashed var(--line);width:100%;font-size:11.5px;color:var(--ink3);
+  display:flex;align-items:center;justify-content:center;gap:4px}
+.pcard .jd .material-symbols-outlined{font-size:14px;color:var(--a1)}
+.more-card{flex:0 0 150px;scroll-snap-align:start;border:1px dashed var(--line3);border-radius:12px;background:var(--card2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--ink2);
+  font:600 13px var(--fh)}
+.more-card:hover{border-color:var(--brand);color:var(--brand)}
+.stack{display:flex}
+.stack .av{--sz:34px;padding:2px;margin-left:-10px}
+.stack .av:first-child{margin-left:0}
+
+/* workforce tab — trades summary instead of 173 cards */
+.wf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:18px;padding:4px 16px 18px}
+.wf-sum{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--card2);display:flex;flex-direction:column;gap:10px}
+.wf-sum .big{font:700 34px/1 var(--fh);color:var(--ink)}
+.wf-sum .big small{font:500 13px var(--fb);color:var(--ink3);margin-left:6px}
+.wf-sum .note{font-size:12px;color:var(--ink3)}
+.locs{display:flex;gap:6px;flex-wrap:wrap}
+.trades{display:flex;flex-direction:column;gap:8px}
+.tr{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) 34px;gap:10px;align-items:center;font-size:12.5px}
+.tr .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.tr .b{height:8px;border-radius:9px;background:var(--raise);overflow:hidden}
+.tr .b i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--a1),var(--a5));
+  animation:growW .8s cubic-bezier(.22,1,.36,1) backwards}
+.tr .v{font:600 12.5px var(--fh);text-align:right}
+
+.empty{padding:26px 16px 30px;text-align:center;color:var(--ink3);font-size:13px}
+.empty .material-symbols-outlined{font-size:30px;display:block;margin:0 auto 6px;color:var(--ink4)}
+
+/* ── profile modal + view-all drawer ───────────────────────────────────── */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:60;display:none;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(3px)}
+.scrim.open{display:flex;animation:fade .2s ease}
+.modal{width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border-radius:16px;
+  box-shadow:0 24px 60px rgba(0,0,0,.3);animation:pop .3s cubic-bezier(.22,1,.36,1)}
+.mhead{position:relative;padding:26px 20px 18px;text-align:center;
+  background:radial-gradient(420px 180px at 50% -40%,color-mix(in srgb,var(--a1) 30%,transparent),transparent),var(--card)}
+.mhead .x{position:absolute;top:10px;right:10px}
+.mhead .av{--sz:112px;margin:0 auto 12px}
+.mhead h3{font-size:19px;line-height:26px}
+.mhead .ds{color:var(--ink2);font-size:13px;margin-top:2px}
+.mhead .welcome{margin-top:10px;display:inline-flex;align-items:center;gap:6px;font:600 12px var(--fh);color:var(--ok);
+  background:var(--okbg);border:1px solid var(--okbd);padding:4px 10px;border-radius:999px}
+.mbody{padding:6px 20px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld{border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}
+.fld.w{grid-column:span 2}
+.fld .lbl{display:flex;align-items:center;gap:4px}
+.fld .lbl .material-symbols-outlined{font-size:14px}
+.fld .val{font:600 13px var(--fh);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  display:flex;align-items:center;gap:6px}
+.fld .val.mutedv{color:var(--ink4);font-weight:500}
+.cp{border:0;background:none;cursor:pointer;color:var(--ink3);padding:0;display:grid;place-items:center}
+.cp:hover{color:var(--brand)}
+.cp .material-symbols-outlined{font-size:15px}
+
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,100%);background:var(--bg);z-index:61;
+  transform:translateX(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;
+  box-shadow:-20px 0 50px rgba(0,0,0,.2)}
+.drawer.open{transform:none}
+.dhead{padding:16px 18px;border-bottom:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;gap:12px}
+.dhead .row1{display:flex;align-items:center;gap:10px}
+.dhead .row1 h2{flex:1;font-size:17px}
+.search{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:var(--card2)}
+.search:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 15%,transparent)}
+.search input{flex:1;border:0;background:none;outline:none;padding:9px 0;font:inherit;color:var(--ink);min-width:0}
+.search .material-symbols-outlined{color:var(--ink3);font-size:18px}
+.dgrid{flex:1;overflow:auto;padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;align-content:start}
+.dgrid .pcard{flex:none}
+
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes growW{from{width:0}}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(10px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── responsive (same breakpoints as the real dashboards) ─────────────── */
+@media (max-width:1024px){.qa{grid-template-columns:repeat(2,minmax(0,1fr))}.s3{grid-column:span 6}}
+@media (max-width:768px){.wf{grid-template-columns:1fr}}
+@media (max-width:600px){
+  .scrim{padding:0;align-items:flex-end}
+  .modal{width:100%;border-radius:16px 16px 0 0;max-height:92vh}
+}
+@media (max-width:480px){
+  .dpage{padding:12px;gap:14px}
+  .qa{grid-template-columns:1fr}
+  .s3{grid-column:span 12}
+  .hero{padding:18px}.hero h1{font-size:21px;line-height:28px}.hero .ring{display:none}
+  .nj-tools{width:100%}.nj-tools .seg{flex:1;overflow-x:auto}
+  .arr{display:none}
+  .pcard{flex-basis:160px}
+  .tr{grid-template-columns:minmax(0,120px) minmax(0,1fr) 30px}
+  .dgrid{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}
+  .mbody{grid-template-columns:1fr}.fld.w{grid-column:auto}
+}
+/* the "Phone width" toggle narrows the stage; reuse the same phone rules */
+.stage.phone .dpage{padding:12px;gap:14px}
+.stage.phone .qa{grid-template-columns:1fr}
+.stage.phone .s3{grid-column:span 12}
+.stage.phone .hero{padding:18px}.stage.phone .hero h1{font-size:21px;line-height:28px}.stage.phone .hero .ring{display:none}
+.stage.phone .nj-tools{width:100%}.stage.phone .nj-tools .seg{flex:1;overflow-x:auto}
+.stage.phone .arr{display:none}
+.stage.phone .pcard{flex-basis:160px}
+.stage.phone .wf{grid-template-columns:1fr}
+.stage.phone .tr{grid-template-columns:minmax(0,120px) minmax(0,1fr) 30px}
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  <span class="tag">Design preview</span>
+  <span><b>New joiners card</b> on the Employee dashboard. Dimmed parts already exist; the dashed card is the new one.</span>
+  <span class="sp"></span>
+  <button class="tbtn" id="phoneBtn" aria-pressed="false"><span class="material-symbols-outlined">smartphone</span>Phone width</button>
+  <button class="tbtn" id="emptyBtn" aria-pressed="false"><span class="material-symbols-outlined">inbox</span>Empty month</button>
+  <button class="tbtn" id="themeBtn"><span class="material-symbols-outlined">dark_mode</span>Theme</button>
+</div>
+
+<div class="stage" id="stage">
+<main class="dpage">
+
+  <!-- existing: hero -->
+  <section class="hero context">
+    <div>
+      <div class="eyeb">My DPR · live work session</div>
+      <h1>Good morning, Aadil</h1>
+      <div class="hmeta"><span><span class="material-symbols-outlined">calendar_today</span>Wednesday, 7 October 2026</span>·<span>Oman</span>·<span>Projects</span></div>
+    </div>
+    <div class="ring"><b>68%</b></div>
+  </section>
+
+  <!-- existing: quick actions -->
+  <section class="qa context">
+    <div class="qbtn" style="--kc:var(--a4)"><span class="qic"><span class="material-symbols-outlined">notifications_active</span></span><span><b>Notifications</b><span class="s">3 unread</span></span></div>
+    <div class="qbtn" style="--kc:var(--a3)"><span class="qic"><span class="material-symbols-outlined">campaign</span></span><span><b>Announcements</b><span class="s">1 new</span></span></div>
+    <div class="qbtn" style="--kc:var(--a5)"><span class="qic"><span class="material-symbols-outlined">verified</span></span><span><b>My approvals</b><span class="s">2 pending</span></span></div>
+    <div class="qbtn" style="--kc:var(--a6)"><span class="qic"><span class="material-symbols-outlined">auto_awesome</span></span><span><b>AI DPR report</b><span class="s">Generate my month summary</span></span></div>
+  </section>
+
+  <!-- ═══════════════ NEW: NEW JOINERS ═══════════════ -->
+  <section class="grid">
+    <div class="card nj s12" id="nj">
+      <span class="newflag">NEW</span>
+      <div class="nj-head">
+        <div class="nj-title">
+          <div class="ch">
+            <span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">waving_hand</span></span>
+            <h2>Welcome our new colleagues</h2>
+            <span class="pill ok" id="monthPill"><span class="material-symbols-outlined">event</span>September 2026</span>
+          </div>
+          <p id="njSub"></p>
+        </div>
+        <div class="nj-tools">
+          <div class="seg" role="tablist" id="seg"></div>
+          <button class="arr" id="prev" aria-label="Scroll left"><span class="material-symbols-outlined">chevron_left</span></button>
+          <button class="arr" id="next" aria-label="Scroll right"><span class="material-symbols-outlined">chevron_right</span></button>
+          <button class="lk" id="viewAll">View all <span class="material-symbols-outlined">arrow_forward</span></button>
+        </div>
+      </div>
+      <div id="njBody"></div>
+    </div>
+  </section>
+
+  <div class="after-note">existing dashboard continues (KPIs, month target, today, calendar…)</div>
+  <section class="grid context">
+    <div class="ghost s3"></div><div class="ghost s3"></div><div class="ghost s3"></div><div class="ghost s3"></div>
+  </section>
+</main>
+</div>
+
+<!-- profile popup -->
+<div class="scrim" id="pScrim" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pName" id="pModal"></div>
+</div>
+
+<!-- view-all drawer -->
+<div class="scrim" id="dScrim" aria-hidden="true"></div>
+<aside class="drawer" id="drawer" aria-label="All new joiners">
+  <div class="dhead">
+    <div class="row1">
+      <span class="cic" style="--kc:var(--a1)"><span class="material-symbols-outlined">group_add</span></span>
+      <h2>New joiners · September 2026</h2>
+      <button class="arr" id="dClose" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <label class="search"><span class="material-symbols-outlined">search</span>
+      <input id="dSearch" placeholder="Search name, ID, designation, department…" autocomplete="off"></label>
+    <div class="seg" id="dSeg" role="tablist"></div>
+  </div>
+  <div class="dgrid" id="dGrid"></div>
+</aside>
+
+<script>
+/* ── sample data (fictitious people; shapes match the planned API) ───────
+   Real September 2026 numbers from TM_DPR_EMPLOYEE_DETAILS:
+   221 joined → 48 staff + 173 Labour, 4 of 221 have a profile photo. */
+const TODAY = new Date(2026, 9, 7);
+const MY_DEPT = 'PROJECTS';
+const LOC = { OM:'Oman', UAE:'UAE', KSA:'Saudi Arabia', IND:'India' };
+const PALETTE = ['#059669','#0284c7','#7c3aed','#d97706','#e11d48','#4f46e5','#0d9488','#c2410c'];
+
+const FIRST = ['Rahul','Fatma','Joseph','Ahmed','Priya','Mohammed','Anitha','Salim','Kevin','Maryam','Arjun','Said',
+  'Noor','Vishnu','Grace','Hamed','Deepak','Aisha','Ravi','Khalid','Sneha','Imran','Jomon','Laila','Suresh','Yousuf',
+  'Meera','Tariq','Anand','Huda','Biju','Omar','Rekha','Faisal','Nikhil','Zainab','Sajeev','Hassan','Divya','Ali',
+  'Ramesh','Shaima','Abdul','Neha','Majid','Lijo','Asma','Rohan'];
+const LAST = ['Menon','Al Balushi','Thomas','Al Hinai','Nair','Al Rawahi','George','Al Kindi','D\'Souza','Al Lawati',
+  'Pillai','Al Harthy','Varghese','Al Amri','Kumar','Al Saadi','Joseph','Al Mahrouqi','Krishnan','Al Shukaili'];
+const STAFF_ROLES = [
+  ['PROJECTS','Site Engineer'],['PROJECTS','Project Engineer - Civil'],['PROJECTS','Foreman - Civil'],
+  ['PROJECTS','MEP Engineer'],['PROJECTS','Document Controller'],['PROJECTS','Safety Officer'],
+  ['PROJECTS','Senior Site Engineer'],['PMV','Mechanic - Heavy Equipment'],['PMV','Workshop Supervisor'],
+  ['GENERAL','Office Assistant'],['FMT','Facility Technician'],['MEDICAL','Staff Nurse'],
+  ['QS POST TENDER','Quantity Surveyor'],['PLANNING','Planning Engineer'],['ADMINISTRATION','HR Executive'],
+  ['ADMINISTRATION','PRO Officer'],['FINANCE','Accountant'],['STORES','Storekeeper']];
+// department mix ≈ real September split (PROJECTS 21, PMV 7, GENERAL 4, FMT 3, MEDICAL 3, …)
+const MIX = [0,1,2,3,4,5,6,0,1,2,3,0,1,2,4,5,6,0,1,2,3, 7,8,7,8,7,8,7, 9,9,9,9, 10,10,10, 11,11,11, 12,12, 13, 14,15,14, 16,16, 17,17];
+
+function photo(seed){ // stands in for a real uploaded photo (only a few joiners have one)
+  const h = (seed * 47) % 360, skin = ['#c68e6a','#a8714f','#8d5a3b','#e0b08f'][seed % 4];
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${h} 45% 78%)'/><stop offset='1' stop-color='hsl(${(h+40)%360} 40% 62%)'/></linearGradient></defs><rect width='100' height='100' fill='url(#g)'/><path d='M14 104c2-22 17-33 36-33s34 11 36 33z' fill='hsl(${(h+180)%360} 30% 32%)'/><rect x='42' y='56' width='16' height='16' rx='6' fill='${skin}'/><ellipse cx='50' cy='42' rx='17' ry='20' fill='${skin}'/><path d='M32 40c0-14 8-22 18-22s19 7 18 22c-3-7-9-10-18-10s-15 3-18 10z' fill='#2b2018'/></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+const staff = MIX.map((r, i) => {
+  const [dept, desig] = STAFF_ROLES[r];
+  const day = 30 - Math.floor(i * 29 / MIX.length);
+  const loc = i % 11 === 4 ? 'UAE' : i % 17 === 9 ? 'KSA' : i % 23 === 7 ? 'IND' : 'OM';
+  const name = FIRST[i % FIRST.length] + ' ' + LAST[(i * 7) % LAST.length];
+  return {
+    empId: (loc === 'OM' ? 'ADK' : loc) + (52000 + i * 37),
+    employeeName: name, designation: desig, department: dept, comLoc: loc,
+    dateOfJoined: new Date(2026, 8, day),
+    email: name.toLowerCase().replace(/[^a-z ]/g,'').replace(/ +/g, '.') + '@aladrak.com',
+    contactNumber: i % 3 === 0 ? '' : '+968 9' + String(1000000 + i * 7919).slice(0, 7),
+    photo: [1, 5, 9, 14].includes(i) ? photo(i + 3) : null
+  };
+}).sort((a, b) => b.dateOfJoined - a.dateOfJoined);
+
+const TRADES = [['Mason - Blockwork & Plastering',52],['Steel Fitter',37],['Shuttering Carpenter',22],['Electrician',16],
+  ['Helper - MEP',13],['Heavy Driver',7],['Plumber',6],['Mason - Tile Fixing',6],['Other trades',14]];
+const WF_LOC = [['OM',168],['UAE',5]];
+const WF_TOTAL = 173;
+
+/* ── helpers ─────────────────────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtD = d => d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear();
+const daysIn = d => Math.round((TODAY - d) / 86400000);
+const initials = n => n.split(/\s+/).filter(Boolean).filter(w => !/^al$/i.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const colorOf = id => PALETTE[[...id].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETTE.length];
+const titleCase = s => s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()).replace(/\b(Qs|Pmv|Fmt|Mep|Hr|Pro)\b/g, m => m.toUpperCase());
+const avatar = (e, extra = '') => `<span class="av" ${extra}><span class="in" style="--avbg:${colorOf(e.empId)}">${
+  e.photo ? `<img src="${e.photo}" alt="">` : esc(initials(e.employeeName))}</span></span>`;
+
+/* ── card rendering ──────────────────────────────────────────────────── */
+let tab = 'all';
+const tabs = () => [
+  { key:'all',  label:'All staff',      n: staff.length },
+  { key:'mine', label:'My department',  n: staff.filter(e => e.department === MY_DEPT).length },
+  { key:'wf',   label:'Workforce',      n: WF_TOTAL }];
+const listFor = t => t === 'mine' ? staff.filter(e => e.department === MY_DEPT)
+  : [...staff].sort((a, b) => (b.department === MY_DEPT) - (a.department === MY_DEPT) || b.dateOfJoined - a.dateOfJoined);
+
+function pcard(e, i){
+  const mine = e.department === MY_DEPT, d = daysIn(e.dateOfJoined);
+  return `<article class="pcard${mine ? ' mine' : ''}" tabindex="0" data-id="${esc(e.empId)}" style="--d:${Math.min(i, 8) * 45}ms"
+      aria-label="${esc(e.employeeName)}, ${esc(e.designation)}">
+    ${mine ? '<span class="team"><span class="material-symbols-outlined">groups</span>Your team</span>' : ''}
+    <span class="days">${d === 0 ? 'Today' : 'Day ' + d}</span>
+    ${avatar(e)}
+    <div class="nm">${esc(e.employeeName)}</div>
+    <div class="ds">${esc(e.designation)}</div>
+    <div class="meta"><span class="pill">${esc(titleCase(e.department))}</span><span class="pill">${esc(LOC[e.comLoc] || e.comLoc)}</span></div>
+    <div class="jd"><span class="material-symbols-outlined">login</span>Joined ${fmtD(e.dateOfJoined)}</div>
+  </article>`;
+}
+
+function renderSeg(el, active, onPick){
+  el.innerHTML = tabs().map(t => `<button role="tab" aria-selected="${t.key === active}" data-k="${t.key}">${t.label}<span class="n">${t.n}</span></button>`).join('');
+  el.onclick = ev => { const b = ev.target.closest('button'); if (b) onPick(b.dataset.k); };
+}
+
+function render(){
+  const empty = $('#emptyBtn').getAttribute('aria-pressed') === 'true';
+  const body = $('#njBody');
+  $('#njSub').innerHTML = empty ? 'No one joined last month.'
+    : `<b>${staff.length} staff</b> and <b>${WF_TOTAL} workforce</b> joined Adrak last month. Say hello when you see them on site.`;
+  renderSeg($('#seg'), tab, k => { tab = k; render(); });
+  $('#seg').style.display = empty ? 'none' : '';
+  ['#prev','#next','#viewAll'].forEach(s => $(s).style.display = empty || tab === 'wf' ? 'none' : '');
+  if (empty){
+    body.innerHTML = `<div class="empty"><span class="material-symbols-outlined">person_search</span>
+      No new joiners in September 2026.<br><small>In the real page this card is hidden when the list is empty.</small></div>`;
+    return;
+  }
+  if (tab === 'wf'){
+    const max = Math.max(...TRADES.map(t => t[1]));
+    body.innerHTML = `<div class="wf">
+      <div class="wf-sum">
+        <span class="lbl">Workforce joined in September</span>
+        <div class="big">${WF_TOTAL}<small>people · Labour</small></div>
+        <div class="locs">${WF_LOC.map(([c, n]) => `<span class="pill">${LOC[c]} <b>${n}</b></span>`).join('')}</div>
+        <p class="note">Shown as a trade summary. 173 profile cards would bury the staff cards.</p>
+        <button class="lk" style="align-self:flex-start" onclick="openDrawer('wf')">Open the full list <span class="material-symbols-outlined">arrow_forward</span></button>
+      </div>
+      <div class="trades">${TRADES.map(([t, n], i) => `<div class="tr"><span class="t" title="${esc(t)}">${esc(t)}</span>
+        <span class="b"><i style="width:${n / max * 100}%;animation-delay:${i * 50}ms"></i></span><span class="v">${n}</span></div>`).join('')}</div>
+    </div>`;
+    return;
+  }
+  const list = listFor(tab), shown = list.slice(0, 12), rest = list.length - shown.length;
+  body.innerHTML = `<div class="rail" id="rail">${shown.map(pcard).join('')}${rest > 0 ? `
+    <div class="more-card" onclick="openDrawer('${tab}')" role="button" tabindex="0">
+      <div class="stack">${list.slice(12, 15).map(e => avatar(e)).join('')}</div>+${rest} more<span class="lk">View all</span></div>` : ''}</div>`;
+  const rail = $('#rail'), upd = () => {
+    $('#prev').disabled = rail.scrollLeft < 4;
+    $('#next').disabled = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
+  };
+  rail.addEventListener('scroll', upd, { passive:true }); upd();
+}
+$('#prev').onclick = () => $('#rail').scrollBy({ left:-420, behavior:'smooth' });
+$('#next').onclick = () => $('#rail').scrollBy({ left: 420, behavior:'smooth' });
+$('#viewAll').onclick = () => openDrawer(tab);
+
+/* ── profile popup ───────────────────────────────────────────────────── */
+let lastFocus = null;
+function openProfile(id){
+  const e = staff.find(x => x.empId === id); if (!e) return;
+  lastFocus = document.activeElement;
+  const fld = (icon, label, val, copy, wide) => `<div class="fld${wide ? ' w' : ''}"><span class="lbl"><span class="material-symbols-outlined">${icon}</span>${label}</span>
+    <div class="val${val ? '' : ' mutedv'}">${val ? esc(val) : 'Not provided'}${val && copy ? `<button class="cp" data-copy="${esc(val)}" aria-label="Copy ${label}"><span class="material-symbols-outlined">content_copy</span></button>` : ''}</div></div>`;
+  $('#pModal').innerHTML = `<div class="mhead">
+      <button class="arr x" id="pClose" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      ${avatar(e)}
+      <h3 id="pName">${esc(e.employeeName)}</h3>
+      <div class="ds">${esc(e.designation)}</div>
+      <span class="welcome"><span class="material-symbols-outlined" style="font-size:15px">celebration</span>Day ${daysIn(e.dateOfJoined)} at Adrak</span>
+    </div>
+    <div class="mbody">
+      ${fld('badge','Employee ID', e.empId, true)}
+      ${fld('event','Joined', fmtD(e.dateOfJoined))}
+      ${fld('apartment','Department', titleCase(e.department))}
+      ${fld('location_on','Location', LOC[e.comLoc] || e.comLoc)}
+      ${fld('mail','Email', e.email, true, true)}
+      ${fld('call','Phone', e.contactNumber, true, true)}
+    </div>`;
+  $('#pScrim').classList.add('open'); $('#pScrim').setAttribute('aria-hidden','false');
+  $('#pClose').focus();
+}
+function closeProfile(){ $('#pScrim').classList.remove('open'); $('#pScrim').setAttribute('aria-hidden','true'); lastFocus?.focus?.(); }
+$('#pScrim').onclick = ev => {
+  if (ev.target.id === 'pScrim' || ev.target.closest('#pClose')) return closeProfile();
+  const c = ev.target.closest('.cp');
+  if (c){ navigator.clipboard?.writeText(c.dataset.copy).catch(() => {}); c.firstElementChild.textContent = 'check';
+    setTimeout(() => c.firstElementChild.textContent = 'content_copy', 1200); }
+};
+
+/* ── view-all drawer ─────────────────────────────────────────────────── */
+let dTab = 'all';
+function openDrawer(t){
+  dTab = t === 'wf' ? 'all' : t; $('#dSearch').value = '';
+  $('#drawer').classList.add('open'); $('#dScrim').classList.add('open'); document.body.style.overflow = 'hidden';
+  renderDrawer(); setTimeout(() => $('#dSearch').focus(), 250);
+}
+function closeDrawer(){ $('#drawer').classList.remove('open'); $('#dScrim').classList.remove('open'); document.body.style.overflow = ''; }
+function renderDrawer(){
+  renderSeg($('#dSeg'), dTab, k => { dTab = k; renderDrawer(); });
+  const q = $('#dSearch').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (dTab === 'wf'){ $('#dGrid').innerHTML = `<div class="empty" style="grid-column:1/-1"><span class="material-symbols-outlined">engineering</span>
+    The full workforce list (173) uses the same cards, loaded in pages of 60 as you scroll.</div>`; return; }
+  const list = listFor(dTab).filter(e => q.every(w => [e.employeeName, e.empId, e.designation, e.department].join(' ').toLowerCase().includes(w)));
+  $('#dGrid').innerHTML = list.length ? list.map(pcard).join('')
+    : `<div class="empty" style="grid-column:1/-1"><span class="material-symbols-outlined">search_off</span>No one matches “${esc($('#dSearch').value)}”.</div>`;
+}
+$('#dSearch').oninput = renderDrawer;
+$('#dClose').onclick = closeDrawer; $('#dScrim').onclick = closeDrawer;
+
+/* cards open the profile — on the dashboard rail and inside the drawer */
+document.addEventListener('click', ev => { const c = ev.target.closest('.pcard'); if (c) openProfile(c.dataset.id); });
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape'){ if ($('#pScrim').classList.contains('open')) closeProfile(); else closeDrawer(); }
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.classList?.contains('pcard')){ ev.preventDefault(); openProfile(ev.target.dataset.id); }
+});
+
+/* ── preview toggles ─────────────────────────────────────────────────── */
+const toggle = (btn, fn) => btn.onclick = () => { const on = btn.getAttribute('aria-pressed') !== 'true'; btn.setAttribute('aria-pressed', on); fn(on); };
+toggle($('#phoneBtn'), on => { $('#stage').classList.toggle('phone', on); render(); });
+toggle($('#emptyBtn'), () => render());
+$('#themeBtn').onclick = () => {
+  const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+};
+render();
+</script>
+</body>
+</html>

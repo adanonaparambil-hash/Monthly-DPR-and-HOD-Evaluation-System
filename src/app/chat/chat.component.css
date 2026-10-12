@@ -1418,7 +1418,7 @@
 .chat-list::-webkit-scrollbar-thumb:hover,
 .messages-container::-webkit-scrollbar-thumb:hover,
 .message-textarea::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #138271, #1ABC9C);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
 }
 
 /* ═══ Mobile responsiveness (2026-07) ═══ */

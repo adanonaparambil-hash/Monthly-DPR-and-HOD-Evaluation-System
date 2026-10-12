@@ -53,7 +53,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 24px 32px;
-  background: linear-gradient(135deg, #145d56 0%, #1a7a70 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -102,7 +102,7 @@
 
 .btn-add-new-field i {
   font-size: 16px;
-  background: linear-gradient(135deg, #145d56, #1a7a70) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   color: transparent !important;
@@ -110,7 +110,7 @@
 }
 
 .btn-add-new-field span {
-  background: linear-gradient(135deg, #145d56, #1a7a70) !important;
+  background: linear-gradient(135deg, #1B2A38, #10b981) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   color: transparent !important;
@@ -532,7 +532,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px 32px;
-  background: linear-gradient(135deg, #145d56 0%, #1a7a70 100%);
+  background: linear-gradient(135deg, #1B2A38, #10b981);
   border-bottom: 1px solid #e5e7eb;
 }
 
