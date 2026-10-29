@@ -74,7 +74,7 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
   isPastReportsMenuOpen = false;
   /** Leave module menu items (Leave Approvals, Leave Application Report, Leave Application).
    *  Set false to hide all three again — the pages and routes stay either way. */
-  readonly showLeaveMenus = false;
+  readonly showLeaveMenus = true;
   /** Staff OT Request (Form Services) and Staff OT Approvals (Approvals) — hidden for now. Pages and routes stay; set true to show both. */
   readonly showOtMenus = false;
   /** Arabic pilot: the EN / ع switch in the header. Set false to hide it (the app then stays English). */
