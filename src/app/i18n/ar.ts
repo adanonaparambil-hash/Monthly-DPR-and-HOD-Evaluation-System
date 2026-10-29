@@ -63,7 +63,7 @@ export const AR: Record<string, string> = {
   'Menu Management': 'إدارة القوائم',
   'PMC Module': 'وحدة PMC',
   'Project Billing': 'فوترة المشاريع',
-  'QAQC': 'ضبط الجودة QAQC',
+  'QA/QC': 'ضبط الجودة QA/QC',
   'Supplier Overdue Aging': 'أعمار مستحقات الموردين المتأخرة',
   'Supplier Payment Forecast': 'توقعات مدفوعات الموردين',
   'Variation Tracker': 'متابعة التغييرات',

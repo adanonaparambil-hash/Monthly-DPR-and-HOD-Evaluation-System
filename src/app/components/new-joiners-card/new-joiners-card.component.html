@@ -40,7 +40,7 @@
       <div class="nj-txt">
         <h2 id="nj-title">Welcome our new colleagues</h2>
         <p class="nj-sub">
-          <b>{{ joiners.length }}</b> joined in {{ monthLabel }}
+          <b>{{ joiners.length }}</b> joined {{ isRolling ? 'in the last 30 days' : 'in ' + monthLabel }}
           @if (mineCount > 0) { <span class="nj-dot">·</span><button type="button" class="nj-mine" (click)="openDrawer('mine')"><span class="material-symbols-outlined">groups</span>{{ mineCount }} in your team</button> }
         </p>
       </div>

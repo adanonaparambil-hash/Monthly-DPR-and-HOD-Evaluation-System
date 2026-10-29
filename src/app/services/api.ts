@@ -10,6 +10,12 @@ import { TaskSaveDto, DeleteTaskRequest, TaskTimerActionDto, TaskCommentDto, Tog
 import { LpoDashboardRequest ,GrnDashboardRequest ,ProjectDashboardRequest ,TopSupplierRequest ,FacilitiesDashboardRequest,SupplierTransactionRequest } from '../models/axpertDashBoard.model';
 import { WirListRequest } from '../models/wir.model';
 import { MirListRequest } from '../models/mir.model';
+import { QaqcDrillRequest, QaqcWeeklyRequest } from '../models/qaqcWeekly.model';
+import { QtbtListRequest } from '../models/qtbt.model';
+import { NcrListRequest } from '../models/ncr.model';
+import { NcrRespListRequest } from '../models/ncr-resp.model';
+import { NcrClosureListRequest } from '../models/ncr-closure.model';
+import { SorListRequest } from '../models/sor.model';
 import { SupplierReportRequest } from '../models/financeReport.model';
 
 
@@ -859,6 +865,102 @@ export class Api {
     // and would be read as URL path segments if it were not a query param.
     const params = new HttpParams().set('docid', docid);
     return this.http.get(`${this.apiUrl}/QAQC/GetMirPdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── QTBT Reports (QA/QC training evidence) ──────────────────────────────────
+  // Same QAQC controller as MIR; its own two endpoints.
+
+  getQtbtList(request: QtbtListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetQtbtList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getQtbtPdf(docid: string): Observable<Blob> {
+    // A QTBT number contains '/' (ATC/P. 411 VTA/QAQC/QTBT/0017), so it goes as a
+    // query param rather than a URL path segment.
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/QAQC/GetQtbtPdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── NCR Issued (Non Conformance Report) ─────────────────────────────────────
+  // Same QAQC controller as MIR / QTBT; its own two endpoints.
+
+  getNcrList(request: NcrListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetNcrList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getNcrPdf(docid: string): Observable<Blob> {
+    // An NCR number contains '/' (ATC/P. 409 AMD/QAQC/NCR/0001), so it goes as a
+    // query param rather than a URL path segment.
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/QAQC/GetNcrPdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── NCR Disposition and Acceptance ──────────────────────────────────────────
+  // Same QAQC controller as MIR / QTBT / NCR Issued; its own two endpoints.
+
+  getNcrRespList(request: NcrRespListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetNcrRespList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getNcrRespPdf(docid: string): Observable<Blob> {
+    // A response number contains '/' (e.g. ATC/P. 409 AMD/QAQC/NCRR/0001), so it goes as a
+    // query param rather than a URL path segment.
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/QAQC/GetNcrRespPdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── NCR Request and Closure ─────────────────────────────────────────────────
+  // Same QAQC controller as MIR / QTBT / NCR; its own two endpoints.
+
+  getNcrClosureList(request: NcrClosureListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetNcrClosureList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getNcrClosurePdf(docid: string): Observable<Blob> {
+    // A request number contains '/', so it goes as a query param rather than a URL path segment.
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/QAQC/GetNcrClosurePdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ── Site Observation / Audit Reports (SOR / QSAR) ───────────────────────────
+  // Same QAQC controller as MIR / QTBT / NCR; its own two endpoints.
+
+  getSorList(request: SorListRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetSorList`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  getSorPdf(docid: string): Observable<Blob> {
+    // A report number contains '/' (ATC/P. 411 VTA/QAQC/SOR/0019), so it goes as a query param
+    // rather than a URL path segment. Reports with many photos make a large PDF - allow for it.
+    const params = new HttpParams().set('docid', docid);
+    return this.http.get(`${this.apiUrl}/QAQC/GetSorPdf`, { params, responseType: 'blob' })
+      .pipe(catchError(this.handleError));
+  }
+
+
+  // ── Weekly QA/QC dashboard ─────────────────────────────────────────────────
+  // One call: per-project counts + the week used + the WIR / MIR status counts.
+  // Answered by the QAQC controller (PKG_QAQC.SP_GET_QAQC_WEEKLY).
+
+  getQaqcWeekly(request: QaqcWeeklyRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetQaqcWeekly`, request)
+      .pipe(catchError(this.handleError));
+  }
+
+  // The records behind one count of the dashboard (SP_GET_QAQC_DRILL). Each record carries the document number the report
+  // PDF calls above (getSorPdf / getNcrPdf / getQtbtPdf / getWirPdf / getMirPdf) take.
+  getQaqcDrill(request: QaqcDrillRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/QAQC/GetQaqcDrill`, request)
       .pipe(catchError(this.handleError));
   }
 

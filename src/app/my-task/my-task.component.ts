@@ -32,6 +32,13 @@ interface Task {
   isFavorite?: boolean;
 }
 
+// Columns of the task table that can be sorted / filtered (the key doubles as the cell's CSS class)
+type TaskColKey = 'category' | 'title' | 'start-date' | 'assignee' | 'logged' | 'total' | 'progress' | 'status';
+interface TaskTableCol { key: TaskColKey; label: string; kind: 'list' | 'text' | 'date'; }
+const TASK_STATUS_ORDER = ['AUTO CLOSED', 'RUNNING', 'PAUSED', 'RE OPEN', 'NOT STARTED', 'COMPLETED', 'CLOSED'];
+const PROGRESS_BANDS = ['0%', '1 – 25%', '26 – 50%', '51 – 75%', '76 – 99%', '100%'];
+const HOURS_BANDS = ['No time yet', 'Under 1 h', '1 – 4 h', '4 – 8 h', '8 h and more'];
+
 interface NewTask {
   name: string;
   description: string;
@@ -127,7 +134,7 @@ interface TaskCategoryResponse {
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe, ToasterComponent, TaskDetailsModalComponent],
   templateUrl: './my-task.component.html',
-  styleUrls: ['./my-task.component.css', './task-modal-new.css', './task-details-modal.css', './task-modal-glassmorphism.css']
+  styleUrls: ['./my-task.component.css', './task-modal-new.css', './task-details-modal.css', './task-modal-glassmorphism.css', './my-task-modern.css']
 })
 export class MyTaskComponent implements OnInit, OnDestroy {
   isDarkMode = false;
@@ -1484,6 +1491,9 @@ export class MyTaskComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
+    // the values (e.g. assigned by vs assigned to) differ per tab, so column filters start fresh; the sort stays
+    this.clearColFilters();
+    this.closeColFilter();
   }
 
   // Update the count of scheduled tasks (future dates with NOT STARTED status)
@@ -1520,6 +1530,11 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   getFilteredTasks(): Task[] {
+    return this.applyTableView(this.getTabTasks());
+  }
+
+  // Tasks of the active tab after the search box — the base the column filters work on
+  getTabTasks(): Task[] {
     // First filter by active tab
     let tasksToFilter: Task[] = [];
     const today = new Date();
@@ -1567,11 +1582,321 @@ export class MyTaskComponent implements OnInit, OnDestroy {
         task.category.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
     }
-    
-    // Sort tasks: AUTO CLOSED first, then RUNNING, then others
-    this.sortTasksByPriority(tasksToFilter);
-    
+
     return tasksToFilter;
+  }
+
+  // ── Table sort & column filters ─────────────────────────────────────────
+  // Front-end only: works on the tasks already loaded for the tab, nothing is sent to the API.
+
+  readonly tableCols: TaskTableCol[] = [
+    { key: 'category',   label: 'TASK CATEGORY', kind: 'list' },
+    { key: 'title',      label: 'TASK TITLE',    kind: 'text' },
+    { key: 'start-date', label: 'START DATE',    kind: 'date' },
+    { key: 'assignee',   label: 'ASSIGNED BY',   kind: 'list' },
+    { key: 'logged',     label: 'LOG TIME',      kind: 'list' },
+    { key: 'total',      label: 'TOTAL HOURS',   kind: 'list' },
+    { key: 'progress',   label: 'PROGRESS',      kind: 'list' },
+    { key: 'status',     label: 'STATUS',        kind: 'list' }
+  ];
+  sortCol: TaskColKey | null = null;
+  sortDir: 'asc' | 'desc' = 'asc';
+  colFilters: Partial<Record<TaskColKey, string[]>> = {};   // a missing key = everything ticked
+  titleFilter = '';
+  dateFrom = '';
+  dateTo = '';
+  openFilterCol: TaskColKey | null = null;
+  filterPopPos = { top: 0, left: 0, above: false, maxHeight: 440 };
+  filterOptionSearch = '';
+
+  // Column filters, then the usual order (AUTO CLOSED, RUNNING, …), then the chosen column sort on top of it
+  applyTableView(base: Task[]): Task[] {
+    const rows = this.applyColFilters(base);
+    this.sortTasksByPriority(rows);
+    if (this.sortCol) this.sortByColumn(rows, this.sortCol);
+    return rows;
+  }
+
+  headerLabel(col: TaskTableCol): string {
+    if (col.key === 'assignee') return this.activeTab === 'ASSIGNED TO OTHERS' ? 'ASSIGNED TO' : 'ASSIGNED BY';
+    return col.label;
+  }
+
+  colLabel(key: TaskColKey): string {
+    switch (key) {
+      case 'category':   return 'Category';
+      case 'title':      return 'Title';
+      case 'start-date': return 'Start date';
+      case 'assignee':   return this.activeTab === 'ASSIGNED TO OTHERS' ? 'Assigned to' : 'Assigned by';
+      case 'logged':     return 'Log time';
+      case 'total':      return 'Total hours';
+      case 'progress':   return 'Progress';
+      default:           return 'Status';
+    }
+  }
+
+  colKind(key: TaskColKey): TaskTableCol['kind'] {
+    return this.tableCols.find(c => c.key === key)?.kind || 'list';
+  }
+
+  sortWords(key: TaskColKey): { asc: string; desc: string; ascIcon: string; descIcon: string } {
+    switch (key) {
+      case 'start-date': return { asc: 'Oldest first', desc: 'Newest first', ascIcon: 'fa-arrow-up-1-9', descIcon: 'fa-arrow-down-9-1' };
+      case 'logged':
+      case 'total':
+      case 'progress':   return { asc: 'Low to high', desc: 'High to low', ascIcon: 'fa-arrow-up-1-9', descIcon: 'fa-arrow-down-9-1' };
+      case 'status':     return { asc: 'Status order', desc: 'Reverse order', ascIcon: 'fa-arrow-up-short-wide', descIcon: 'fa-arrow-down-wide-short' };
+      default:           return { asc: 'A to Z', desc: 'Z to A', ascIcon: 'fa-arrow-up-a-z', descIcon: 'fa-arrow-down-z-a' };
+    }
+  }
+
+  // Header click: ascending → descending → back to the normal order
+  toggleSort(key: TaskColKey): void {
+    if (this.sortCol !== key) { this.sortCol = key; this.sortDir = 'asc'; }
+    else if (this.sortDir === 'asc') this.sortDir = 'desc';
+    else this.sortCol = null;
+  }
+
+  setSort(key: TaskColKey, dir: 'asc' | 'desc'): void {
+    if (this.sortCol === key && this.sortDir === dir) { this.sortCol = null; return; }   // clicking the chosen one again turns it off
+    this.sortCol = key;
+    this.sortDir = dir;
+  }
+
+  sortIcon(key: TaskColKey): string {
+    if (this.sortCol !== key) return 'fa-sort';
+    // full arrows: fa-sort-up/-down are half glyphs that sit off-centre in the button
+    return this.sortDir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down';
+  }
+
+  isColFiltered(key: TaskColKey): boolean {
+    if (key === 'title') return !!this.titleFilter.trim();
+    if (key === 'start-date') return !!(this.dateFrom || this.dateTo);
+    return !!this.colFilters[key];
+  }
+
+  get hasColFilters(): boolean {
+    return this.tableCols.some(c => this.isColFiltered(c.key));
+  }
+
+  // The value(s) a task shows in a list column — a task assigned to several people has several
+  private colValues(t: Task, key: TaskColKey): string[] {
+    switch (key) {
+      case 'category': return [t.category || 'General'];
+      case 'assignee': return t.assignees && t.assignees.length ? t.assignees.map(a => a.name || 'Unassigned') : [t.assignee || 'Unassigned'];
+      case 'status':   return [t.status];
+      case 'progress': return [this.progressBand(t.progress)];
+      case 'logged':   return [this.hoursBand(t.loggedHours)];
+      case 'total':    return [this.hoursBand(t.totalHours)];
+      default:         return [];
+    }
+  }
+
+  private progressBand(p: number): string {
+    const v = Math.round(p || 0);
+    if (v <= 0) return PROGRESS_BANDS[0];
+    if (v >= 100) return PROGRESS_BANDS[5];
+    return PROGRESS_BANDS[Math.min(4, Math.ceil(v / 25))];
+  }
+
+  private hoursBand(hhmm: string): string {
+    const m = this.hmToMinutes(hhmm);
+    if (m <= 0) return HOURS_BANDS[0];
+    if (m < 60) return HOURS_BANDS[1];
+    if (m < 240) return HOURS_BANDS[2];
+    if (m < 480) return HOURS_BANDS[3];
+    return HOURS_BANDS[4];
+  }
+
+  private hmToMinutes(hhmm: string): number {
+    const m = /^(\d+):(\d{1,2})/.exec(hhmm || '');
+    return m ? Number(m[1]) * 60 + Number(m[2]) : 0;
+  }
+
+  // Every value of a column in the tab, in a sensible order (bands and statuses in their own order, the rest A–Z)
+  private distinctColValues(base: Task[], key: TaskColKey): string[] {
+    const set = new Set<string>();
+    base.forEach(t => this.colValues(t, key).forEach(v => set.add(v)));
+    const values = [...set];
+    const order = key === 'progress' ? PROGRESS_BANDS
+      : (key === 'logged' || key === 'total') ? HOURS_BANDS
+      : key === 'status' ? TASK_STATUS_ORDER : null;
+    if (order) {
+      const rank = (v: string) => { const i = order.indexOf(v); return i < 0 ? 99 : i; };
+      return values.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+    }
+    return values.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }
+
+  // Options for a list filter; the count is how many tasks have that value once the OTHER filters are applied
+  filterOptions(base: Task[], key: TaskColKey): { value: string; count: number }[] {
+    const counts = new Map<string, number>();
+    this.applyColFilters(base, key).forEach(t => this.colValues(t, key).forEach(v => counts.set(v, (counts.get(v) || 0) + 1)));
+    const q = this.filterOptionSearch.trim().toLowerCase();
+    return this.distinctColValues(base, key)
+      .filter(v => !q || v.toLowerCase().includes(q))
+      .map(v => ({ value: v, count: counts.get(v) || 0 }));
+  }
+
+  distinctCount(base: Task[], key: TaskColKey): number {
+    return this.distinctColValues(base, key).length;
+  }
+
+  private applyColFilters(list: Task[], except?: TaskColKey): Task[] {
+    const title = this.titleFilter.trim().toLowerCase();
+    const listKeys = (Object.keys(this.colFilters) as TaskColKey[]).filter(k => k !== except);
+    return list.filter(t => {
+      if (except !== 'title' && title && !`${t.title} ${t.description}`.toLowerCase().includes(title)) return false;
+      if (except !== 'start-date' && (this.dateFrom || this.dateTo)) {
+        const d = (t.startDate || '').slice(0, 10);
+        if (!d || (this.dateFrom && d < this.dateFrom) || (this.dateTo && d > this.dateTo)) return false;
+      }
+      for (const key of listKeys) {
+        const picked = this.colFilters[key]!;
+        if (!this.colValues(t, key).some(v => picked.includes(v))) return false;
+      }
+      return true;
+    });
+  }
+
+  private sortValue(t: Task, key: TaskColKey): string | number {
+    switch (key) {
+      case 'category':   return t.category || '';
+      case 'title':      return t.title || '';
+      case 'start-date': return t.startDate || '';
+      case 'assignee':   return this.colValues(t, 'assignee').join(', ');
+      case 'logged':     return this.hmToMinutes(t.loggedHours);
+      case 'total':      return this.hmToMinutes(t.totalHours);
+      case 'progress':   return t.progress || 0;
+      default: {
+        const i = TASK_STATUS_ORDER.indexOf(t.status);
+        return i < 0 ? 99 : i;
+      }
+    }
+  }
+
+  // Stable, so rows that tie keep the usual order; blanks (no date, no title) go last either way
+  private sortByColumn(rows: Task[], key: TaskColKey): void {
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      const x = this.sortValue(a, key);
+      const y = this.sortValue(b, key);
+      if (x === '' || y === '') return x === y ? 0 : x === '' ? 1 : -1;
+      if (typeof x === 'number' && typeof y === 'number') return dir * (x - y);
+      return dir * String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' });
+    });
+  }
+
+  isOptionChecked(key: TaskColKey, value: string): boolean {
+    const picked = this.colFilters[key];
+    return !picked || picked.includes(value);
+  }
+
+  toggleOption(base: Task[], key: TaskColKey, value: string): void {
+    const all = this.distinctColValues(base, key);
+    const picked = this.colFilters[key] ? [...this.colFilters[key]!] : [...all];
+    const next = picked.includes(value) ? picked.filter(v => v !== value) : [...picked, value];
+    this.setListFilter(key, next, all);
+  }
+
+  onlyOption(key: TaskColKey, value: string): void {
+    this.colFilters = { ...this.colFilters, [key]: [value] };
+  }
+
+  toggleAllOptions(key: TaskColKey): void {
+    const next = { ...this.colFilters };
+    if (next[key]) delete next[key]; else next[key] = [];
+    this.colFilters = next;
+  }
+
+  private setListFilter(key: TaskColKey, picked: string[], all: string[]): void {
+    const next = { ...this.colFilters };
+    if (all.every(v => picked.includes(v))) delete next[key]; else next[key] = picked;
+    this.colFilters = next;
+  }
+
+  setDatePreset(preset: 'today' | 'week' | 'month'): void {
+    const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const today = new Date();
+    if (preset === 'today') { this.dateFrom = this.dateTo = ymd(today); return; }
+    const from = preset === 'week'
+      ? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)
+      : new Date(today.getFullYear(), today.getMonth(), 1);
+    this.dateFrom = ymd(from);
+    this.dateTo = ymd(today);
+  }
+
+  clearColFilter(key: TaskColKey): void {
+    if (key === 'title') { this.titleFilter = ''; return; }
+    if (key === 'start-date') { this.dateFrom = this.dateTo = ''; return; }
+    const next = { ...this.colFilters };
+    delete next[key];
+    this.colFilters = next;
+  }
+
+  clearColFilters(): void {
+    this.colFilters = {};
+    this.titleFilter = '';
+    this.dateFrom = this.dateTo = '';
+  }
+
+  clearTableView(): void {
+    this.clearColFilters();
+    this.sortCol = null;
+  }
+
+  // Chips above the table for each active filter
+  filterChips(): { key: TaskColKey; text: string }[] {
+    const fmt = (d: string) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '…';
+    return this.tableCols.filter(c => this.isColFiltered(c.key)).map(c => {
+      let text: string;
+      if (c.key === 'title') text = `“${this.titleFilter.trim()}”`;
+      else if (c.key === 'start-date') text = this.dateFrom && this.dateFrom === this.dateTo ? fmt(this.dateFrom) : `${fmt(this.dateFrom)} – ${fmt(this.dateTo)}`;
+      else {
+        const picked = this.colFilters[c.key]!;
+        text = picked.length === 0 ? 'none' : picked.length <= 2 ? picked.join(', ') : `${picked.length} selected`;
+      }
+      return { key: c.key, text: `${this.colLabel(c.key)}: ${text}` };
+    });
+  }
+
+  // The filter box is fixed to the window (the table clips overflow), placed under the funnel — or above it near the bottom
+  openColFilter(key: TaskColKey, ev: MouseEvent): void {
+    ev.stopPropagation();
+    if (this.openFilterCol === key) { this.closeColFilter(); return; }
+    const r = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+    const width = 312;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const spaceBelow = vh - r.bottom - 14;
+    const spaceAbove = r.top - 14;
+    const above = spaceBelow < 300 && spaceAbove > spaceBelow;
+    this.filterPopPos = {
+      left: Math.max(8, Math.min(r.right - width, vw - width - 8)),
+      top: above ? r.top - 6 : r.bottom + 6,
+      above,
+      maxHeight: Math.max(220, Math.min(440, above ? spaceAbove : spaceBelow))
+    };
+    this.filterOptionSearch = '';
+    if (!this.openFilterCol) document.addEventListener('scroll', this.closeFilterOnScroll, true);
+    this.openFilterCol = key;
+  }
+
+  closeColFilter(): void {
+    if (!this.openFilterCol) return;
+    this.openFilterCol = null;
+    document.removeEventListener('scroll', this.closeFilterOnScroll, true);
+  }
+
+  // The page scrolling would leave the box behind its column; scrolling inside the box itself is fine
+  private closeFilterOnScroll = (e: Event): void => {
+    if (e.target instanceof Element && e.target.closest('.col-filter-pop')) return;
+    this.closeColFilter();
+  };
+
+  @HostListener('document:keydown.escape')
+  onEscapeCloseColFilter(): void {
+    this.closeColFilter();
   }
 
   getCategoryClass(category: string): string {
@@ -4891,6 +5216,7 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.closeColFilter();
     // Clean up break timer interval
     if (this.breakTimerInterval) {
       clearInterval(this.breakTimerInterval);
@@ -4902,7 +5228,12 @@ export class MyTaskComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     const target = event.target as HTMLElement;
-    
+
+    // Column filter box: any click outside it (or its funnel button) closes it
+    if (this.openFilterCol && !target.closest('.col-filter-pop, .hc-filter')) {
+      this.closeColFilter();
+    }
+
     // Check if click is outside assignee dropdown
     if (this.isAssigneeDropdownVisible) {
       const assigneeWrapper = target.closest('.multi-select-wrapper');

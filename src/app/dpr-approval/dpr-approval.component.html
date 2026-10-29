@@ -253,6 +253,7 @@
                   <th class="description-col">Daily Remarks</th>
                   <th class="project-col">Project</th>
                   <th class="hours-col">Log Time</th>
+                  <th class="edit-col" title="Open the day log history and edit the log time">Edit Time</th>
                   <th class="status-col">Status</th>
                 </tr>
               </thead>
@@ -262,12 +263,12 @@
                 @for (log of displayedLogs; track trackByLogId($index, log); let i = $index) {
                   <tr class="table-row" [class.selected]="log.isSelected" (click)="onRowClick(log, $event)" style="cursor: pointer;">
                     <!-- Serial Number -->
-                    <td class="sl-no-cell">
+                    <td class="sl-no-cell" data-label="No.">
                       <span class="sl-no-text">{{ getSerialNumber(i) }}</span>
                     </td>
 
                     <!-- Checkbox -->
-                    <td class="checkbox-col">
+                    <td class="checkbox-col" data-label="Select">
                       <input 
                         class="table-checkbox" 
                         type="checkbox"
@@ -277,12 +278,12 @@
                     </td>
 
                     <!-- Date -->
-                    <td class="date-cell">
+                    <td class="date-cell" data-label="Date">
                       <span class="date-text">{{ log.date }}</span>
                     </td>
 
                     <!-- Category -->
-                    <td class="category-cell">
+                    <td class="category-cell" data-label="Category">
                       <span 
                         class="category-badge"
                         [class]="getCategoryBadgeClass(log.categoryType)"
@@ -292,19 +293,19 @@
                     </td>
 
                     <!-- Task Title -->
-                    <td class="title-cell">
+                    <td class="title-cell" data-label="Task title">
                       <span class="task-title" [title]="log.taskTitle">{{ log.taskTitle }}</span>
                     </td>
 
                     <!-- Task Description -->
-                    <td class="description-cell">
+                    <td class="description-cell" data-label="Daily remarks">
                       <span class="task-description" [title]="log.taskDescription">
                         {{ log.taskDescription }}
                       </span>
                     </td>
 
                     <!-- Project -->
-                    <td class="project-cell">
+                    <td class="project-cell" data-label="Project">
                       <span 
                         class="project-badge"
                         [class]="getProjectBadgeClass(log.projectType)"
@@ -314,17 +315,20 @@
                     </td>
 
                     <!-- Hours -->
-                    <td class="hours-cell">
-                      <div class="hours-cell-wrapper">
-                        <span class="hours-text">{{ log.hours }}</span>
-                        <button class="more-btn" (click)="openDayLogHistoryModal(log, $event)" title="View Day Log History">
-                          <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                      </div>
+                    <td class="hours-cell" data-label="Log time">
+                      <span class="hours-text">{{ log.hours }}</span>
+                    </td>
+
+                    <!-- Edit Time: opens the day log history, where each entry can be edited -->
+                    <td class="edit-cell" data-label="Edit time">
+                      <button class="more-btn view-btn" type="button" (click)="openDayLogHistoryModal(log, $event)"
+                              title="View day log history &amp; edit log time" aria-label="View day log history and edit log time">
+                        <i class="fas fa-eye"></i>
+                      </button>
                     </td>
 
                     <!-- Status -->
-                    <td class="status-cell">
+                    <td class="status-cell" data-label="Status">
                       <span class="status-badge pending">Pending</span>
                     </td>
                   </tr>
@@ -525,28 +529,28 @@
               <tbody>
                 @for (log of dayLogHistory; track log.timeLogId) {
                   <tr class="day-log-row">
-                    <td class="td-log-id"><span class="log-id-badge">#{{ log.timeLogId }}</span></td>
-                    <td class="td-user">
+                    <td class="td-log-id" data-label="Log ID"><span class="log-id-badge">#{{ log.timeLogId }}</span></td>
+                    <td class="td-user" data-label="User">
                       <div class="user-cell">
                         <span class="user-name">{{ log.userName }}</span>
                         <span class="user-id">{{ log.userId }}</span>
                       </div>
                     </td>
-                    <td class="td-log-date"><span class="log-date">{{ formatLogDateOnly(log.logDate) }}</span></td>
-                    <td class="td-start-time"><span class="time-text">{{ formatTimeOnly(log.startTime) }}</span></td>
-                    <td class="td-end-time"><span class="time-text">{{ formatTimeOnly(log.endTime) }}</span></td>
-                    <td class="td-duration">
+                    <td class="td-log-date" data-label="Log date"><span class="log-date">{{ formatLogDateOnly(log.logDate) }}</span></td>
+                    <td class="td-start-time" data-label="Start"><span class="time-text">{{ formatTimeOnly(log.startTime) }}</span></td>
+                    <td class="td-end-time" data-label="End"><span class="time-text">{{ formatTimeOnly(log.endTime) }}</span></td>
+                    <td class="td-duration" data-label="Log time">
                       <span class="duration-badge">
                         <i class="fas fa-clock"></i>
                         {{ log.duration }}
                       </span>
                     </td>
-                    <td class="td-status">
+                    <td class="td-status" data-label="Status">
                       <span class="status-badge" [ngClass]="getDayLogStatusClass(log.status)">
                         {{ log.status || 'N/A' }}
                       </span>
                     </td>
-                    <td class="td-actions">
+                    <td class="td-actions" data-label="Edit">
                       <button class="btn-icon-edit" (click)="editDayLog(log); $event.stopPropagation()" title="Edit Log Time">
                         <i class="fas fa-pencil-alt"></i>
                       </button>

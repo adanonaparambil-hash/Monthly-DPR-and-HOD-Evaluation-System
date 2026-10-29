@@ -2506,6 +2506,10 @@ export class EmergencyExitFormComponent implements OnInit {
    * Auto-fill phone and email fields for planned and resignation forms
    */
   autoFillPhoneAndEmail(): void {
+    // Only a brand-new form is pre-filled. An existing request (opened to view, approve or fix) shows exactly what is
+    // stored for that employee — blank stays blank. Otherwise "no session selection" counted as "the signed-in user's
+    // form" and the logged-in person's own email / phone appeared on somebody else's request.
+    if (!this.isNewForm) { return; }
     if (this.formType === 'P' || this.formType === 'R') {
       // Get current values from form or session
       const currentPhone = this.exitForm.get('telephoneMobile')?.value || 

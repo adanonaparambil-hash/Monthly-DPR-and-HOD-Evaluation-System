@@ -23,7 +23,7 @@ export interface NewJoiner {
 type Tab = 'all' | 'mine';
 
 /**
- * "Welcome our new colleagues" — staff who joined last month (workers and labour are
+ * "Welcome our new colleagues" — staff who joined in the last 30 days (workers and labour are
  * left out by the procedure), shown on the employee dashboard as one compact strip:
  * an overlapping row of faces + "Meet them". The full profile cards live in the
  * panel that opens on click; a face opens that person's profile directly.
@@ -160,7 +160,10 @@ export class NewJoinersCardComponent implements OnInit, AfterViewInit, OnDestroy
   private unlockScroll(): void { document.body.style.overflow = ''; }
 
   // ── labels ────────────────────────────────────────────────────────────────
+  /** The procedure's default window: everyone who joined in the last 30 days, up to today. */
+  get isRolling(): boolean { return this.month === 'LAST30'; }
   get monthLabel(): string {
+    if (this.isRolling) { return 'Last 30 days'; }
     const m = /^(\d{4})-(\d{2})$/.exec(this.month);
     return m ? NewJoinersCardComponent.MONTH[+m[2] - 1] + ' ' + m[1] : 'Last month';
   }

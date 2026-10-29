@@ -55,6 +55,9 @@ export class WirReportComponent implements OnInit, OnDestroy {
     { key: 'qaqcStatus',  label: 'QAQC',          width: 110, type: 'list' },
   ];
 
+  /** Columns drawn in the table. QAQC is hidden from the grid only — search, filters and export still use allColumns. */
+  readonly tableColumns: WirColumn[] = this.allColumns.filter(c => c.key !== 'qaqcStatus');
+
   colFilters: { [col: string]: ColFilter } = {};
 
   // ── Data ───────────────────────────────────────────────────────────────────

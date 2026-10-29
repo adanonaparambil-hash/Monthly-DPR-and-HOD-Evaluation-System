@@ -1496,3 +1496,107 @@
 /* The DEPARTMENT select sits on the teal header — keep it light-on-teal but
    make its native dropdown list follow the dark theme */
 .logged-hours-container.dark-mode .filter-select-header { color-scheme: light; }
+
+/* ═══ Mobile responsiveness — logged-hours table as cards ═══════════════════════════════════
+   Appended to the LAST stylesheet of my-logged-hours on purpose (see the project note: later files force
+   desktop values). On a phone the 1,600px-wide grid only showed "Logged by"; each record becomes a card,
+   one line per column with its label (data-label = the column's own label, so custom fields work too).
+   The inline [style.grid-template-columns] binding is why the overrides carry !important. */
+@media (max-width: 768px) {
+  .table-wrapper .data-table { min-width: 0 !important; width: 100% !important; overflow-x: visible !important; }
+  .table-wrapper .table-header { display: none !important; }
+  .table-wrapper .table-body,
+  .table-wrapper .day-group,
+  .table-wrapper .day-records { min-width: 0 !important; width: 100% !important; }
+
+  .table-wrapper .record-row {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    grid-template-columns: none !important;
+    min-width: 0 !important;
+    width: auto !important;
+    margin: 8px 0;
+    padding: 12px 14px !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  .table-wrapper .record-col {
+    display: flex !important;
+    flex-direction: row !important;   /* older phone rules stacked some columns (description) */
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+    text-align: right;
+    white-space: normal !important;
+  }
+  .table-wrapper .record-col::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 45%;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    text-align: left;
+    white-space: nowrap;
+  }
+  /* the task title leads the card, full width, label above it */
+  .table-wrapper .record-col.title { flex-direction: column !important; align-items: flex-start; gap: 2px; text-align: left; order: -1; }
+  .table-wrapper .record-col.title .task-title,
+  .table-wrapper .record-col.title .task-description,
+  .table-wrapper .record-col .column-value {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .table-wrapper .record-col .progress-container { flex: 1; max-width: 60%; }
+  .table-wrapper .record-col:not(.title) .column-value { text-align: right; }
+  .table-wrapper .day-header { padding-left: 2px; }
+}
+@media (max-width: 768px) {
+  :host-context(.dark-theme) .table-wrapper .record-row { background: #1e293b; border-color: #334155; }
+  :host-context(.dark-theme) .table-wrapper .record-col::before { color: #94a3b8; }
+}
+
+/* ═══ Mobile responsiveness — Day Log History window: entries as cards ════════════════════════
+   The 8-column table was ~690px wide inside a ~330px window, so End time, Log time, Status and the edit
+   pencil were off-screen. Each entry becomes a small card, one line per column with its label
+   (data-label on each <td>). The same block lives in dpr-approval and my-logged-hours (same window). */
+@media (max-width: 768px) {
+  .day-log-table-container { overflow-x: visible !important; }
+  .day-log-table-container .day-log-table { display: block; min-width: 0 !important; width: 100% !important; }
+  .day-log-table-container .day-log-table thead { display: none; }
+  .day-log-table-container .day-log-table tbody { display: block; }
+  .day-log-table-container .day-log-table tr.day-log-row {
+    display: flex; flex-direction: column; gap: 6px;
+    margin: 0 0 10px; padding: 12px 14px;
+    border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;
+  }
+  .day-log-table-container .day-log-table tr.day-log-row td {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: auto !important; min-width: 0 !important; padding: 0 !important; border: 0 !important;
+    text-align: right; white-space: normal !important;
+  }
+  .day-log-table-container .day-log-table tr.day-log-row td::before {
+    content: attr(data-label); flex-shrink: 0;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #64748b; white-space: nowrap;
+  }
+  .day-log-table-container .day-log-table .user-cell { align-items: flex-end; text-align: right; }
+}
+@media (max-width: 768px) {
+  :host-context(.dark-theme) .day-log-table-container .day-log-table tr.day-log-row { background: #1e293b; border-color: #334155; }
+  :host-context(.dark-theme) .day-log-table-container .day-log-table tr.day-log-row td::before { color: #94a3b8; }
+}

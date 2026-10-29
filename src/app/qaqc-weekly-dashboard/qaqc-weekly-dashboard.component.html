@@ -1,0 +1,383 @@
+<div class="qw dpage" [class.sk]="!loaded">
+  <svg width="0" height="0" class="defs" aria-hidden="true"><defs>
+    <linearGradient id="qw-hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bef264"/><stop offset=".55" stop-color="#6ee7b7"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+  </defs></svg>
+
+  <!-- ═══════════════ HEADER: colour band with the live closure ring and every control ═══════════════ -->
+  <header class="qh an">
+    <div class="qh-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span><i class="dots"></i></div>
+
+    <div class="qh-in">
+      <div class="qh-l">
+        <span class="live" *ngIf="updatedText"><i></i>Live · updated {{ updatedText }}</span>
+        <h1>QA/QC Dashboard</h1>
+        <p class="hsum" *ngIf="headline">{{ headline }}</p>
+        <p class="hsum" *ngIf="!headline && !loadError">Loading live data…</p>
+
+      </div>
+
+      <div class="qh-r">
+        <div class="hring" [attr.data-tip]="'Observations and NCRs closed, as a share of all of them'">
+          <svg viewBox="0 0 120 120" width="132" height="132" aria-hidden="true">
+            <circle class="rt" cx="60" cy="60" r="52"/>
+            <circle class="rv" cx="60" cy="60" r="52" stroke="url(#qw-hg)" [attr.stroke-dasharray]="heroC" [attr.stroke-dashoffset]="off(heroC, kClosure)"/>
+          </svg>
+          <div class="mid"><b [attr.data-cu]="kClosure">{{ kClosure }}</b><i>%</i><span>closed</span></div>
+        </div>
+        <ul class="hlg">
+          <li><i style="--c:#fcd34d"></i>Observations<button type="button" class="cnt" [class.z]="!kObsClosed" (click)="openAll($event, 'OBS', 'CLOSED', kObsClosed)" title="List the closed observations"><b>{{ kObsClosed | number }}<small>/{{ kObsTotal | number }}</small></b></button></li>
+          <li><i style="--c:#fda4af"></i>NCRs<button type="button" class="cnt" [class.z]="!kNcrClosed" (click)="openAll($event, 'NCR', 'CLOSED', kNcrClosed)" title="List the closed NCRs"><b>{{ kNcrClosed | number }}<small>/{{ kNcrCum | number }}</small></b></button></li>
+          <li><i style="--c:#c4b5fd"></i>Trainings held<button type="button" class="cnt" [class.z]="!kTrn" (click)="openAll($event, 'TRN', 'TOTAL', kTrn)" title="List the trainings"><b>{{ kTrn | number }}</b></button></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- what the short names mean, for anyone new to the forms; Refresh stays up here -->
+    <div class="ctl fl">
+      <ul class="forms" aria-label="Form names">
+        <li *ngFor="let f of formNames"><b>{{ f.code }}</b><span>{{ f.name }}</span></li>
+      </ul>
+      <button type="button" class="btn pri" (click)="refresh()" [disabled]="loading" aria-label="Refresh" title="Refresh">
+        <span class="material-symbols-outlined" [class.spin]="loading">refresh</span><span class="rt">Refresh</span></button>
+    </div>
+  </header>
+
+  <div class="alert an" *ngIf="loadError" role="alert">
+    <span class="material-symbols-outlined">info</span><span>{{ loadError }}</span>
+    <button type="button" class="btn" (click)="retry()">Retry</button>
+  </div>
+
+  <!-- ═══════════════ KPI TILES — click one to rank the projects by it ═══════════════ -->
+  <section class="kgrid">
+    <!-- tap a tile (or any number on it) for the records behind it; the small arrows button ranks the project list by that tile -->
+    <div class="kt an" style="--tc:var(--a3);--d:80ms" [class.on]="lens === 'obs'" role="button" tabindex="0"
+         (click)="openAll($event, 'OBS', 'OPEN', kObsOpen)" (keydown.enter)="openAll($event, 'OBS', 'OPEN', kObsOpen)" title="List the open observations">
+      <span class="kt-bg material-symbols-outlined">visibility</span>
+      <span class="lbl">Observations open</span>
+      <span class="kt-v"><b [attr.data-cu]="kObsOpen">{{ kObsOpen | number }}</b>
+        <button type="button" class="kt-sm" (click)="openAll($event, 'OBS', 'TOTAL', kObsTotal)" title="List all observations">of {{ kObsTotal | number }}</button></span>
+      <span class="kt-bar"><i [style.width.%]="kObsPct"></i></span>
+      <span class="kt-n"><button type="button" class="kt-sm" (click)="openAll($event, 'OBS', 'CLOSED', kObsClosed)" title="List the closed observations">{{ kObsClosed | number }} closed</button> · {{ kObsPct }}%</span>
+      <button type="button" class="kt-rank" [class.on]="lens === 'obs'" (click)="$event.stopPropagation(); setLens('obs')" title="Rank the projects by this number" aria-label="Rank the projects by open observations"><span class="material-symbols-outlined">swap_vert</span></button>
+    </div>
+
+    <div class="kt an" style="--tc:var(--a4);--d:140ms" [class.on]="lens === 'ncr'" role="button" tabindex="0"
+         (click)="openAll($event, 'NCR', 'OPEN', kNcrOpen)" (keydown.enter)="openAll($event, 'NCR', 'OPEN', kNcrOpen)" title="List the open NCRs">
+      <span class="kt-bg material-symbols-outlined">report_problem</span>
+      <span class="lbl">NCRs open</span>
+      <span class="kt-v"><b [attr.data-cu]="kNcrOpen">{{ kNcrOpen | number }}</b>
+        <button type="button" class="kt-sm" (click)="openAll($event, 'NCR', 'TOTAL', kNcrCum)" title="List all NCRs">of {{ kNcrCum | number }}</button></span>
+      <span class="kt-bar"><i [style.width.%]="kNcrPct"></i></span>
+      <span class="kt-n"><button type="button" class="kt-sm" (click)="openAll($event, 'NCR', 'CLOSED', kNcrClosed)" title="List the closed NCRs">{{ kNcrClosed | number }} closed</button> · {{ kNcrPct }}%</span>
+      <button type="button" class="kt-rank" [class.on]="lens === 'ncr'" (click)="$event.stopPropagation(); setLens('ncr')" title="Rank the projects by this number" aria-label="Rank the projects by open NCRs"><span class="material-symbols-outlined">swap_vert</span></button>
+    </div>
+
+    <div class="kt an" style="--tc:var(--a1);--d:200ms" [class.on]="lens === 'week'" role="button" tabindex="0"
+         (click)="openClosedWeek($event)" (keydown.enter)="openClosedWeek($event)" title="List what was closed this week">
+      <span class="kt-bg material-symbols-outlined">task_alt</span>
+      <span class="lbl">Closed this week</span>
+      <span class="kt-v"><b [attr.data-cu]="kClosedWeek">{{ kClosedWeek | number }}</b>
+        <span class="dl" *ngIf="closedDelta !== null" [class.up]="closedDelta > 0" [class.dn]="closedDelta < 0">
+          <span class="material-symbols-outlined">{{ closedDelta > 0 ? 'arrow_upward' : closedDelta < 0 ? 'arrow_downward' : 'remove' }}</span>{{ closedDelta < 0 ? -closedDelta : closedDelta }}</span></span>
+      <span class="kt-n"><button type="button" class="kt-sm" (click)="openAll($event, 'OBS', 'WEEK', kObsWeek)" title="List the observations closed this week"><b>{{ kObsWeek }}</b> observations</button> · <button type="button" class="kt-sm" (click)="openAll($event, 'NCR', 'WEEK', kNcrWeek)" title="List the NCRs closed this week"><b>{{ kNcrWeek }}</b> NCRs</button></span>
+      <span class="kt-n sm">{{ closedDelta === null ? 'vs last week …' : 'vs last week' }}</span>
+      <button type="button" class="kt-rank" [class.on]="lens === 'week'" (click)="$event.stopPropagation(); setLens('week')" title="Rank the projects by this number" aria-label="Rank the projects by what they closed this week"><span class="material-symbols-outlined">swap_vert</span></button>
+    </div>
+
+    <div class="kt an" style="--tc:var(--a6);--d:260ms" [class.on]="lens === 'trn'" role="button" tabindex="0"
+         (click)="openAll($event, 'TRN', 'TOTAL', kTrn)" (keydown.enter)="openAll($event, 'TRN', 'TOTAL', kTrn)" title="List the trainings">
+      <span class="kt-bg material-symbols-outlined">school</span>
+      <span class="lbl">Trainings held</span>
+      <span class="kt-v"><b [attr.data-cu]="kTrn">{{ kTrn | number }}</b></span>
+      <span class="kt-n">QTBT training reports</span>
+      <span class="kt-n sm"><button type="button" class="kt-sm" (click)="openAll($event, 'TRN', 'WEEK', kTrnWeek)" title="List the trainings held this week">{{ kTrnWeek }} this week</button> · across {{ rowsWithTrainings }} project{{ rowsWithTrainings === 1 ? '' : 's' }}</span>
+      <button type="button" class="kt-rank" [class.on]="lens === 'trn'" (click)="$event.stopPropagation(); setLens('trn')" title="Rank the projects by this number" aria-label="Rank the projects by trainings held"><span class="material-symbols-outlined">swap_vert</span></button>
+    </div>
+
+    <div class="kt an" style="--tc:var(--a5);--d:320ms" role="button" tabindex="0" (click)="goIr()" (keydown.enter)="goIr()" title="Go to the inspection requests">
+      <span class="kt-bg material-symbols-outlined">fact_check</span>
+      <span class="lbl">Inspection requests</span>
+      <span class="kt-v"><b [attr.data-cu]="kWir + kMir">{{ kWir + kMir | number }}</b></span>
+      <span class="kt-n">WIR <button type="button" class="kt-sm" (click)="openIr($event, 'WIR', kWir)" title="List the work inspection requests"><b>{{ kWir | number }}</b></button> · MIR <button type="button" class="kt-sm" (click)="openIr($event, 'MIR', kMir)" title="List the material inspection requests"><b>{{ kMir | number }}</b></button></span>
+      <span class="kt-n sm">{{ kIrOpen | number }} pending, no comment · tap to view</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PROJECTS + RAIL ═══════════════ -->
+  <section class="main">
+    <article class="card board an" style="--d:120ms">
+      <div class="bh has-bar">
+        <!-- project choice, week and dates — they drive the whole dashboard -->
+        <div class="ctl pbar">
+          <div class="picker" *ngIf="allProjects.length">
+            <button type="button" class="btn pk" (click)="togglePicker($event)" [class.open]="pickerOpen" aria-haspopup="listbox" [attr.aria-expanded]="pickerOpen">
+              <span class="material-symbols-outlined">apartment</span>{{ pickerText }}
+              <span class="material-symbols-outlined chev">expand_more</span></button>
+            <div class="pk-menu" *ngIf="pickerOpen" role="listbox" aria-multiselectable="true">
+              <button type="button" class="pk-i all" [class.on]="selected.size === 0" (click)="clearProjects()">
+                <span class="ck"><span class="material-symbols-outlined">check</span></span>All projects<small>{{ allProjects.length }}</small></button>
+              <button type="button" class="pk-i" *ngFor="let p of allProjects; trackBy: trackCode" role="option"
+                      [class.on]="selected.has(p.code)" [attr.aria-selected]="selected.has(p.code)" (click)="toggleProject(p.code)">
+                <span class="ck"><span class="material-symbols-outlined">check</span></span>
+                <span class="pn1"><b>{{ p.label }}</b><small>{{ p.name }}</small></span></button>
+            </div>
+          </div>
+
+          <div class="wk">
+            <button type="button" class="wbtn" (click)="step(-1)" [disabled]="!period || loading" aria-label="Previous week">
+              <span class="material-symbols-outlined">chevron_left</span></button>
+            <div class="wpill" [attr.data-tip]="weekTip">
+              <b>{{ weekTitle }}</b><span>{{ weekSub }}</span>
+            </div>
+            <button type="button" class="wbtn" (click)="step(1)" [disabled]="!canNext || loading" aria-label="Next week">
+              <span class="material-symbols-outlined">chevron_right</span></button>
+          </div>
+
+          <div class="dates">
+            <label class="dfield"><span class="lbl">After</span>
+              <input type="date" [value]="fromIso" (change)="onFrom($event)" [disabled]="!period || loading"></label>
+            <label class="dfield"><span class="lbl">Through</span>
+              <input type="date" [value]="toIso" (change)="onTo($event)" [disabled]="!period || loading"></label>
+          </div>
+
+          <button type="button" class="btn" (click)="thisWeek()" [disabled]="isDefaultWeek || loading">
+            <span class="material-symbols-outlined">today</span>This week</button>
+        </div>
+        <p class="muted bh-note">{{ scopeText }} · tap a card for the full picture</p>
+        <div class="bh-r">
+          <span class="focus" *ngIf="lens"><span class="material-symbols-outlined">filter_alt</span>Ranked by {{ lensText }}
+            <button type="button" (click)="setLens(lens)" aria-label="Clear focus"><span class="material-symbols-outlined">close</span></button></span>
+          <div class="seg" role="tablist" aria-label="Sort projects">
+            <button type="button" role="tab" class="segb" *ngFor="let s of sorts" [class.on]="sortKey === s.key && !lens"
+                    [attr.aria-selected]="sortKey === s.key && !lens" (click)="setSort(s.key)">{{ s.label }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pg" role="list" aria-label="Projects" [attr.data-lens]="lens">
+        <article class="pc an" role="listitem" *ngFor="let r of rows; trackBy: trackRow; let i = index" [attr.data-code]="r.code"
+                 [ngClass]="'l-' + r.level" [style.--d]="(140 + i * 45) + 'ms'" tabindex="0"
+                 (click)="openProject(r)" (keydown.enter)="$event.target === $event.currentTarget && openProject(r)"
+                 [attr.aria-label]="r.label + ', ' + riskText(r) + ', ' + r.closure + '% closed. Open the full picture'">
+          <span class="pc-glow" aria-hidden="true"></span>
+
+          <div class="pc-h">
+            <span class="code">{{ r.label }}</span>
+            <span class="rk"><i></i>{{ riskText(r) }}</span>
+            <button type="button" class="pc-go" (click)="openProject(r); $event.stopPropagation()" [attr.aria-label]="'Open ' + r.label" title="Open the full picture">
+              <span class="material-symbols-outlined">open_in_new</span></button>
+          </div>
+          <h3 class="pc-n" [title]="r.name">{{ r.name }}</h3>
+
+          <!-- observations: closure ring + bar -->
+          <div class="pc-o p-obs" style="--s:0">
+            <div class="pc-ring" [attr.data-tip]="r.tip">
+              <span class="rw">
+                <svg viewBox="0 0 64 64" aria-hidden="true"><circle class="pr-t" cx="32" cy="32" r="26"/>
+                  <circle class="pr-v" cx="32" cy="32" r="26" [attr.stroke-dasharray]="rC" [attr.stroke-dashoffset]="off(rC, r.closure)"/></svg>
+                <span class="rp"><b>{{ r.closure }}%</b><small>closed</small></span>
+              </span>
+              <em>Resolution</em>
+            </div>
+            <div class="pc-ob">
+              <div class="pc-ot"><span class="mt">Observations</span>
+                <button type="button" class="cn" [class.z]="!r.obs.open" (click)="openRow($event, 'OBS', 'OPEN', r.obs.open, r)" title="List the open observations"><b [attr.data-cu]="r.obs.open">{{ r.obs.open }}</b> open</button></div>
+              <div class="mb" [class.zero]="!r.obs.total"><i class="a" [style.width.%]="r.obs.cW"></i><i class="b" [style.width.%]="r.obs.oW"></i></div>
+              <div class="pc-of">
+                <button type="button" class="cl" [class.z]="!r.obs.closed" (click)="openRow($event, 'OBS', 'CLOSED', r.obs.closed, r)" title="List the closed observations">{{ r.obs.closed }} closed</button>
+                <button type="button" class="cl" [class.z]="!r.obs.total" (click)="openRow($event, 'OBS', 'TOTAL', r.obs.total, r)" title="List all observations">{{ r.obs.total }} total</button>
+              </div>
+              <button type="button" class="wb" [class.on]="r.obs.week > 0" (click)="openRow($event, 'OBS', 'WEEK', r.obs.week, r)" title="List the observations closed this week">+{{ r.obs.week }} this week</button>
+
+            </div>
+          </div>
+
+          <!-- NCRs and trainings -->
+          <div class="pc-m">
+            <div class="mc2 p-ncr" [class.hot]="r.ncr.open > 0" [class.calm]="!r.ncr.open" style="--s:1" [style.--w]="r.ncr.pct"
+                 [attr.data-tip]="'<b>NCRs closed</b><br>' + r.ncr.closed + ' of ' + r.ncr.total + ' (' + r.ncr.pct + '%) — the colour level'">
+              <span class="lq" aria-hidden="true"></span>
+              <span class="mt">Active NCRs</span>
+              <div class="mc2-v">
+                <button type="button" class="big" [class.z]="!r.ncr.open" (click)="openRow($event, 'NCR', 'OPEN', r.ncr.open, r)" title="List the open NCRs">
+                  <b [attr.data-cu]="r.ncr.open">{{ r.ncr.open }}</b><span>{{ r.ncr.open >= 5 ? 'critical' : 'open' }}</span></button>
+                <button type="button" class="chip" [class.z]="!r.ncr.closed" (click)="openRow($event, 'NCR', 'CLOSED', r.ncr.closed, r)" title="List the closed NCRs">{{ r.ncr.closed }} closed</button>
+              </div>
+              <div class="mc2-f">
+                <button type="button" class="wb" [class.on]="r.ncr.week > 0" (click)="openRow($event, 'NCR', 'WEEK', r.ncr.week, r)" title="List the NCRs closed this week">+{{ r.ncr.week }} this wk</button>
+                <button type="button" class="cl" [class.z]="!r.ncr.total" (click)="openRow($event, 'NCR', 'TOTAL', r.ncr.total, r)" title="List all NCRs">{{ r.ncr.total }} total</button>
+              </div>
+            </div>
+            <div class="mc2 p-trn" [class.none]="!r.trn" style="--s:2" [style.--w]="r.trnW"
+                 [attr.data-tip]="'<b>Trainings held: ' + r.trn + '</b><br>colour level = compared with the busiest project shown'">
+              <span class="lq" aria-hidden="true"></span>
+              <span class="mt">Trainings</span>
+              <div class="mc2-v">
+                <button type="button" class="big" [class.z]="!r.trn" (click)="openRow($event, 'TRN', 'TOTAL', r.trn, r)" title="List the trainings">
+                  <b [attr.data-cu]="r.trn">{{ r.trn }}</b><span>held</span></button>
+                <button type="button" class="chip" [class.z]="!r.trnWeek" (click)="openRow($event, 'TRN', 'WEEK', r.trnWeek, r)" title="List the trainings held this week">+{{ r.trnWeek }} this wk</button>
+              </div>
+              <div class="mc2-f"><span class="need" *ngIf="!r.trn">Needs a plan</span><span class="ok" *ngIf="r.trn">{{ r.trnWeek ? 'Active this week' : 'Quiet this week' }}</span></div>
+            </div>
+          </div>
+
+          <div class="pc-f" style="--s:3">
+            <span class="nt"><i></i>{{ note(r) }}</span>
+            <button type="button" class="gh" (click)="openProject(r, 1); $event.stopPropagation()" title="Open this project's NCRs">NCRs</button>
+            <button type="button" class="pri" (click)="openProject(r); $event.stopPropagation()">Full picture<span class="material-symbols-outlined">chevron_right</span></button>
+          </div>
+        </article>
+      </div>
+      <p class="empty" *ngIf="loaded && !rows.length">Nothing to show for this selection.</p>
+
+      <!-- every project on screen added up -->
+      <div class="psum" *ngIf="rows.length">
+        <span class="ps-l"><span class="material-symbols-outlined">functions</span>All {{ rows.length }} project{{ rows.length === 1 ? '' : 's' }}</span>
+        <span class="ps o"><span class="mt">Observations</span>
+          <button type="button" class="cn" [class.z]="!totals.obsOpen" (click)="openAll($event, 'OBS', 'OPEN', totals.obsOpen)" title="List the open observations"><b>{{ totals.obsOpen | number }}</b> open</button>
+          <button type="button" class="cl" [class.z]="!totals.obsClosed" (click)="openAll($event, 'OBS', 'CLOSED', totals.obsClosed)" title="List the closed observations">{{ totals.obsClosed | number }} closed</button>
+          <button type="button" class="cl" (click)="openAll($event, 'OBS', 'TOTAL', totals.obsTotal)" title="List all observations">{{ totals.obsTotal | number }} total</button>
+          <button type="button" class="wb" [class.on]="totals.obsWeek > 0" (click)="openAll($event, 'OBS', 'WEEK', totals.obsWeek)" title="List the observations closed this week">+{{ totals.obsWeek }} this week</button></span>
+        <span class="ps n"><span class="mt">NCRs</span>
+          <button type="button" class="cn" [class.z]="!totals.ncrOpen" (click)="openAll($event, 'NCR', 'OPEN', totals.ncrOpen)" title="List the open NCRs"><b>{{ totals.ncrOpen | number }}</b> open</button>
+          <button type="button" class="cl" [class.z]="!totals.ncrClosed" (click)="openAll($event, 'NCR', 'CLOSED', totals.ncrClosed)" title="List the closed NCRs">{{ totals.ncrClosed | number }} closed</button>
+          <button type="button" class="cl" (click)="openAll($event, 'NCR', 'TOTAL', totals.ncrCum)" title="List all NCRs">{{ totals.ncrCum | number }} total</button>
+          <button type="button" class="wb" [class.on]="totals.ncrWeek > 0" (click)="openAll($event, 'NCR', 'WEEK', totals.ncrWeek)" title="List the NCRs closed this week">+{{ totals.ncrWeek }} this week</button></span>
+        <span class="ps t"><span class="mt">Trainings</span>
+          <button type="button" class="cn" [class.z]="!totals.trn" (click)="openAll($event, 'TRN', 'TOTAL', totals.trn)" title="List the trainings"><b>{{ totals.trn | number }}</b> held</button>
+          <button type="button" class="wb t" [class.on]="totals.trnWeek > 0" (click)="openAll($event, 'TRN', 'WEEK', totals.trnWeek)" title="List the trainings held this week">+{{ totals.trnWeek }} this week</button></span>
+      </div>
+
+      <div class="foot" *ngIf="loaded">
+        <span><b>Closed this week</b> = closed after the first date and on or before the last date.</span>
+        <span>Open = total − closed (partially closed counts as open).</span>
+        <span *ngIf="hiddenCount > 0">{{ hiddenCount }} project{{ hiddenCount === 1 ? '' : 's' }} with no items hidden.</span>
+      </div>
+    </article>
+
+    <aside class="rail">
+      <article class="card rs an" style="--d:160ms">
+        <div class="rh">
+          <span class="ric" style="--c:var(--a4)"><span class="material-symbols-outlined">crisis_alert</span></span>
+          <h2>Needs attention</h2>
+          <span class="pill" [ngClass]="attention.length ? 'cr' : 'ok'" *ngIf="loaded">{{ attention.length ? attention.length + ' project' + (attention.length === 1 ? '' : 's') : 'all on track' }}</span>
+        </div>
+
+        <button type="button" class="at an" *ngFor="let a of attention; trackBy: trackAtt; let i = index" [ngClass]="'l-' + a.level"
+                [style.--d]="(190 + i * 55) + 'ms'" (click)="focusProject(a.code)">
+          <span class="at-h">
+            <span class="lv"><i></i>{{ a.levelText }}</span>
+            <b>{{ a.label }}</b>
+            <span class="at-v"><b [attr.data-cu]="a.openItems">{{ a.openItems }}</b> open</span>
+          </span>
+          <span class="at-t"><span class="tg" *ngFor="let t of a.tags" [ngClass]="'g-' + t.kind">{{ t.text }}</span></span>
+        </button>
+
+        <div class="allok" *ngIf="loaded && !attention.length">
+          <span class="material-symbols-outlined">verified</span>
+          <div><b>Nothing needs attention</b><span>No open NCRs, no heavy backlog, no quiet week.</span></div>
+        </div>
+        <p class="muted pad" *ngIf="!loaded && !loadError">Loading…</p>
+      </article>
+
+      <article class="card rs an" style="--d:210ms">
+        <div class="rh">
+          <span class="ric" style="--c:var(--a5)"><span class="material-symbols-outlined">compare_arrows</span></span>
+          <h2>This week vs last</h2>
+        </div>
+        <p class="muted sub2">{{ prevText }}</p>
+        <div class="cm" *ngFor="let c of cmps; trackBy: trackCmp" [style.--cc]="c.color">
+          <div class="cm-h">
+            <span class="material-symbols-outlined">{{ c.icon }}</span><b>{{ c.title }}</b>
+            <span class="trend" [ngClass]="'t-' + c.trend">{{ c.deltaText }}</span>
+          </div>
+          <div class="cm-r"><span>This week</span><span class="cb"><i [style.width.%]="c.wNow"></i></span><button type="button" class="cmn" [class.z]="!c.now" (click)="openCmp($event, c, false)" title="List these records"><b [attr.data-cu]="c.now">{{ c.now }}</b></button></div>
+          <div class="cm-r prv"><span>Last week</span><span class="cb"><i [style.width.%]="c.wPrev"></i></span><button type="button" class="cmn" [class.z]="!c.prev" (click)="openCmp($event, c, true)" title="List these records"><b>{{ c.prev === null ? '—' : c.prev }}</b></button></div>
+        </div>
+      </article>
+    </aside>
+  </section>
+
+  <!-- ═══════════════ INSPECTION REQUESTS: one table, two ways to group it ═══════════════ -->
+  <section class="card mx an" id="qw-ir" style="--d:140ms">
+    <div class="bh">
+      <div>
+        <h2>Inspection requests</h2>
+        <p class="muted">{{ irView === 'dept' ? 'Work (WIR) and material (MIR) requests by department' : 'Work (WIR) requests by discipline — MIR has no discipline' }} · standing counts, not limited to the week. Pending = no Code yet; it splits into Commented and Open.</p>
+      </div>
+      <div class="bh-r">
+        <div class="seg" role="tablist" aria-label="Document type" *ngIf="irView === 'dept'">
+          <button type="button" role="tab" class="segb" *ngFor="let f of ['ALL','WIR','MIR']" [class.on]="irFilter === f"
+                  [attr.aria-selected]="irFilter === f" (click)="setIrFilter($any(f))">{{ f === 'ALL' ? 'All' : f }}</button>
+        </div>
+        <div class="seg big" role="tablist" aria-label="Group by">
+          <button type="button" role="tab" class="segb" [class.on]="irView === 'dept'" [attr.aria-selected]="irView === 'dept'" (click)="setIrView('dept')">
+            <span class="material-symbols-outlined">account_tree</span>By department</button>
+          <button type="button" role="tab" class="segb" [class.on]="irView === 'disc'" [attr.aria-selected]="irView === 'disc'" (click)="setIrView('disc')">
+            <span class="material-symbols-outlined">category</span>By discipline</button>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="irView === 'dept'">
+      <ng-container *ngTemplateOutlet="irTpl; context: { cards: deptCards, legend: deptLegend }"></ng-container>
+      <p class="empty" *ngIf="loaded && !deptCards.length">No inspection requests for this selection.</p>
+    </ng-container>
+    <ng-container *ngIf="irView === 'disc'">
+      <ng-container *ngTemplateOutlet="irTpl; context: { cards: discCards, legend: discLegend }"></ng-container>
+      <p class="empty" *ngIf="loaded && !discCards.length">No work inspection requests for this selection.</p>
+    </ng-container>
+  </section>
+
+  <!-- one table layout for both groupings: a column per department / discipline, a row per status -->
+  <!-- one card per department / discipline: a ring of every status, the approval share and each status as a row -->
+  <ng-template #irTpl let-cards="cards" let-legend="legend">
+    <div class="irl" *ngIf="cards.length" aria-label="Colour key">
+      <span class="irl-i" *ngFor="let l of legend; trackBy: trackIrLeg" [style.--rc]="l.color" [attr.data-tip]="'<b>' + l.code + '</b><br>' + l.text">
+        <i></i><b>{{ l.code }}</b><em>{{ l.v | number }}</em></span>
+    </div>
+    <div class="irg" *ngIf="cards.length">
+      <article class="irc" *ngFor="let c of cards; let i = index; trackBy: trackIrCard" [class.mir]="c.docType === 'MIR'" [style.--d]="(i * 45) + 'ms'">
+        <span class="irc-glow" aria-hidden="true"></span>
+        <header class="irc-h">
+          <span class="dt">{{ c.docType }}</span>
+          <h3 [title]="c.name">{{ c.name }}</h3>
+        </header>
+
+        <div class="irc-b">
+          <button type="button" class="irc-d" [class.go]="!!c.totCell.d" [class.hot]="!!irHotSeg(c)" (click)="openCell(c.totCell)"
+                  [attr.aria-label]="'List all ' + c.total + ' ' + c.docType + ' requests of ' + c.name" title="List all these requests">
+            <svg viewBox="0 0 56 56" aria-hidden="true"><circle class="rg-t" cx="28" cy="28" r="23"/>
+              <circle *ngFor="let g of c.segs" class="rg-s" cx="28" cy="28" r="23" [style.stroke]="g.color" [class.on]="isIrHot(c, g)"
+                      [attr.stroke-dasharray]="g.dash" [attr.stroke-dashoffset]="g.off"
+                      (mouseenter)="irEnter(c, g)" (mouseleave)="irLeave()" (click)="openCell(g); $event.stopPropagation()"/></svg>
+            <!-- the centre shows the status under the pointer, otherwise the total -->
+            <span class="mid" *ngIf="irHotSeg(c) as h; else irTot"><b [style.color]="h.color">{{ h.v | number }}</b><small>{{ h.code }}</small></span>
+            <ng-template #irTot><span class="mid"><b [attr.data-cu]="c.total">{{ c.total | number }}</b><small>total</small></span></ng-template>
+          </button>
+          <div class="irc-k">
+            <span class="ok"><b>{{ c.okPct }}%</b>approved</span>
+            <span class="pd"><b>{{ c.pending | number }}</b>pending</span>
+          </div>
+        </div>
+
+        <!-- one tile per status: it fills with its colour up to its share; hover lights its ring slice -->
+        <div class="irc-t" [class.hot]="!!irHotSeg(c)">
+          <button type="button" class="st" *ngFor="let g of c.segs; let j = index" [style.--rc]="g.color" [style.--j]="j" [style.--w]="g.w"
+                  [class.go]="!!g.d" [class.z]="!g.v" [class.on]="isIrHot(c, g)" [attr.data-tip]="g.tip"
+                  (mouseenter)="irEnter(c, g)" (mouseleave)="irLeave()" (focus)="irEnter(c, g)" (blur)="irLeave()" (click)="openCell(g)"
+                  [attr.aria-label]="g.code + ': ' + g.v + ' (' + g.w + '%)'">
+            <span class="lq" aria-hidden="true"></span>
+            <span class="sl"><i></i>{{ g.code }}</span>
+            <span class="sv"><b [attr.data-cu]="g.v">{{ g.v | number }}</b><small>{{ g.w }}%</small></span>
+          </button>
+        </div>
+      </article>
+    </div>
+  </ng-template>
+
+  <!-- the records behind a count, with the report of each -->
+  <app-qaqc-drill *ngIf="drill" [spec]="drill" (closed)="closeDrill()"></app-qaqc-drill>
+
+  <div class="tip" #tip></div>
+</div>

@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly QA/QC Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #eef3f6; --surface: #ffffff; --surface-2: #f5f8fa; --ink: #0d1b2a; --ink-2: #5a6b7d; --line: #e2e9ef;
+    --brand: #138271; --brand-2: #0b5d51; --brand-soft: #e1f5f1;
+    --civil: #6366f1; --civil-soft: #eef0ff; --ele: #f59e0b; --ele-soft: #fff4dc;
+    --shadow: 0 1px 2px rgba(13,27,42,.05), 0 10px 30px rgba(13,27,42,.07);
+    --radius: 18px;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a131b; --surface: #101c26; --surface-2: #14232f; --ink: #e9f1f7; --ink-2: #9db0c2; --line: #1e3141;
+    --brand: #2bb59f; --brand-2: #1f9a86; --brand-soft: #11332e; --civil-soft: #1b1f45; --ele-soft: #3a2a0c;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a131b; --surface: #101c26; --surface-2: #14232f; --ink: #e9f1f7; --ink-2: #9db0c2; --line: #1e3141;
+      --brand: #2bb59f; --brand-2: #1f9a86; --brand-soft: #11332e; --civil-soft: #1b1f45; --ele-soft: #3a2a0c;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.45 Inter, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 22px 20px 60px; }
+  svg.i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.125em; }
+
+  /* ── hero ───────────────────────────────────────────── */
+  .hero { position: relative; overflow: hidden; border-radius: 24px; padding: 26px 30px; color: #fff; box-shadow: var(--shadow);
+          background: radial-gradient(900px 300px at 100% -20%, rgba(255,255,255,.22), transparent 60%), linear-gradient(115deg, #08463d 0%, #138271 48%, #1aa6a0 100%);
+          display: flex; flex-wrap: wrap; gap: 18px 28px; justify-content: space-between; align-items: center; }
+  .hero::before { content: ""; position: absolute; left: -70px; bottom: -110px; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,.07); }
+  .hero > * { position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.17); padding: 5px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 600; margin-bottom: 12px; }
+  .hero h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; font-weight: 750; }
+  .hero .sub { margin-top: 6px; opacity: .92; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .chip { background: rgba(255,255,255,.18); border-radius: 999px; padding: 3px 11px; font-size: 12.5px; font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .field { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); border-radius: 13px; padding: 8px 12px; }
+  .field label { font-size: 11px; opacity: .85; text-transform: uppercase; letter-spacing: .07em; }
+  .field input, .field select { background: transparent; border: 0; color: #fff; font: inherit; font-weight: 600; outline: none; color-scheme: dark; }
+  .field select option { color: #0d1b2a; }
+  .btn { border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.15); color: #fff; padding: 9px 15px; border-radius: 13px; font: inherit; font-weight: 650; cursor: pointer; display: inline-flex; gap: 7px; align-items: center; transition: transform .12s, background .15s; }
+  .btn:hover { background: rgba(255,255,255,.27); transform: translateY(-1px); }
+  .btn.solid { background: #fff; color: var(--brand-2); border-color: #fff; }
+
+  /* ── highlights ─────────────────────────────────────── */
+  .hl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 6px; }
+  .hl div { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 14px; padding: 11px 14px; font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow); }
+  .hl b { color: var(--ink); display: block; font-size: 14.5px; margin-bottom: 1px; }
+
+  /* ── kpis ───────────────────────────────────────────── */
+  .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 14px 0 6px; }
+  .kpi { position: relative; overflow: hidden; border-radius: var(--radius); padding: 16px 16px 12px; color: #fff; box-shadow: var(--shadow); background: var(--g); min-height: 142px; }
+  .kpi::after { content: ""; position: absolute; right: -26px; top: -26px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .kpi .ico { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,.22); display: grid; place-items: center; font-size: 18px; }
+  .kpi .lbl { font-size: 12.5px; opacity: .92; margin-top: 10px; font-weight: 550; }
+  .kpi .val { font-size: 31px; font-weight: 780; letter-spacing: -.02em; line-height: 1.1; }
+  .kpi .meta { font-size: 11.5px; opacity: .92; margin-top: 3px; font-weight: 600; }
+  .kpi canvas { position: absolute; right: 8px; bottom: 6px; width: 84px !important; height: 36px !important; opacity: .95; }
+
+  /* ── structure ──────────────────────────────────────── */
+  .sec { display: flex; align-items: center; gap: 12px; margin: 34px 2px 14px; }
+  .sec .bub { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-size: 19px; background: var(--g); box-shadow: var(--shadow); }
+  .sec h2 { margin: 0; font-size: 19px; letter-spacing: -.01em; }
+  .sec p { margin: 0; color: var(--ink-2); font-size: 12.5px; }
+  .sec .rule { flex: 1; height: 1px; background: var(--line); }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; min-width: 0; position: relative; }
+  .card.accent::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; border-radius: 18px 18px 0 0; background: var(--g); }
+  .card h3 { margin: 0; font-size: 15.5px; font-weight: 680; }
+  .hint { color: var(--ink-2); font-size: 12.5px; margin-top: 2px; }
+  .ch { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s3 { grid-column: span 3; }
+  .box { position: relative; height: 290px; } .box.tall { height: 360px; } .box.short { height: 210px; } .box.mid { height: 320px; }
+
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--ink-2); padding: 5px 12px; border-radius: 8px; font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; }
+  .seg button.on { background: var(--brand); color: #fff; }
+  select.plain { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-radius: 11px; padding: 8px 12px; font: inherit; font-weight: 600; }
+
+  /* ── tables / lists ─────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: right; color: var(--ink-2); font-weight: 650; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--surface-2); }
+  tfoot td { font-weight: 750; border-bottom: 0; background: var(--surface-2); }
+  .table-wrap { overflow-x: auto; } .hidden { display: none !important; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+  .tag { padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .t-ok { background: #d9f7e6; color: #0f7a3d; } .t-warn { background: #fdecc8; color: #a15c07; } .t-bad { background: #fddcdc; color: #b42318; } .t-zero { background: var(--surface-2); color: var(--ink-2); }
+  :root[data-theme="dark"] .t-ok { background: #12351f; color: #6ee7a0; } :root[data-theme="dark"] .t-warn { background: #3a2a0c; color: #fcd34d; } :root[data-theme="dark"] .t-bad { background: #3b1717; color: #fca5a5; }
+  .bar { height: 7px; border-radius: 7px; background: var(--line); overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 7px; }
+  .rank { display: grid; gap: 9px; margin-top: 4px; }
+  .rank .r { display: grid; grid-template-columns: 22px 1fr 74px 40px; gap: 10px; align-items: center; font-size: 13px; }
+  .rank .no { width: 22px; height: 22px; border-radius: 8px; display: grid; place-items: center; font-size: 11.5px; font-weight: 750; color: #fff; }
+  .rank .p { text-align: right; font-weight: 750; font-variant-numeric: tabular-nums; }
+
+  /* ── discipline cards ───────────────────────────────── */
+  .dc { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
+  .dc .legend { display: grid; gap: 3px; }
+  .lg { display: grid; grid-template-columns: 11px 1fr auto auto; gap: 9px; align-items: center; font-size: 12.3px; padding: 3px 0; }
+  .lg .sw { width: 10px; height: 10px; border-radius: 3px; } .lg .n { font-weight: 750; font-variant-numeric: tabular-nums; } .lg .p { width: 38px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 750; padding: 3px 11px; border-radius: 999px; color: #fff; background: var(--c); letter-spacing: .03em; }
+  .legend-top { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+  .legend-top span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-top i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  /* ── heat table ─────────────────────────────────────── */
+  .heat td, .heat th { text-align: center; } .heat td:first-child, .heat th:first-child { text-align: left; }
+  .heat td.v { font-weight: 750; border-left: 1px solid var(--surface); }
+  .grp th { border-bottom: 0; font-size: 12px; } .grp .civ { color: var(--civil); } .grp .el { color: #c77700; }
+
+  .note { margin-top: 28px; padding: 13px 16px; border-radius: 13px; background: var(--surface); border: 1px dashed var(--line); color: var(--ink-2); font-size: 12.5px; }
+
+  @media (max-width: 1180px) {
+    .kpis { grid-template-columns: repeat(3, 1fr); } .hl { grid-template-columns: repeat(2, 1fr); }
+    .s8, .s7, .s6, .s5, .s4, .s3 { grid-column: span 12; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 12px 12px 40px; } .hero { padding: 18px; border-radius: 18px; } .hero h1 { font-size: 23px; }
+    .kpis { grid-template-columns: 1fr 1fr; gap: 10px; } .hl { grid-template-columns: 1fr; }
+    .field { width: 100%; } .field input, .field select { flex: 1; } .dc { grid-template-columns: 1fr; }
+  }
+  @media print {
+    body { background: #fff; } .controls, .seg { display: none !important; }
+    .hero, .kpi, .sec .bub, .card.accent::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card, .kpi { box-shadow: none; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow"><svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> ATC · Quality Assurance / Quality Control</div>
+      <h1>Weekly Report QA/QC</h1>
+      <div class="sub"><span class="chip" id="periodLabel">24 Sep 2026 → 01 Oct 2026</span><span id="projLabel">All projects</span></div>
+    </div>
+    <div class="controls">
+      <div class="field"><label>From</label><input type="date" id="dFrom" value="2026-09-24"></div>
+      <div class="field"><label>To</label><input type="date" id="dTo" value="2026-10-01"></div>
+      <div class="field"><label>Project</label><select id="projSel"></select></div>
+      <button class="btn" id="thisWeek">This week</button>
+      <button class="btn" id="themeBtn" title="Light / dark">◐</button>
+      <button class="btn solid" onclick="window.print()">⬇ Export PDF</button>
+    </div>
+  </header>
+
+  <section class="hl" id="hl"></section>
+  <section class="kpis" id="kpis"></section>
+
+  <!-- ═════ site observations ═════ -->
+  <div class="sec" style="--g:linear-gradient(135deg,#0ea5e9,#6366f1)"><div class="bub" id="i1"></div><div><h2>Site observations / SI</h2><p>Observations raised on site and how many are closed</p></div><div class="rule"></div></div>
+  <div class="grid">
+    <div class="card accent s7" style="--g:linear-gradient(90deg,#0ea5e9,#6366f1)">
+      <div class="ch"><div><h3>Observations by project</h3><div class="hint">Closed vs still open</div></div>
+        <div class="seg" data-target="obs"><button class="on" data-v="chart">Chart</button><button data-v="table">Table</button></div></div>
+      <div data-view="obs-chart"><div class="box tall"><canvas id="cObs"></canvas></div></div>
+      <div data-view="obs-table" class="table-wrap hidden"><table id="tObs"></table></div>
+    </div>
+    <div class="card accent s5" style="--g:linear-gradient(90deg,#10b981,#14b8a6)">
+      <div class="ch"><div><h3>Closure rate</h3><div class="hint">Closed ÷ all observations</div></div></div>
+      <div class="box short"><canvas id="cGauge"></canvas></div>
+      <div class="rank" id="rank"></div>
+    </div>
+  </div>
+
+  <!-- ═════ NCR + trainings ═════ -->
+  <div class="sec" style="--g:linear-gradient(135deg,#f43f5e,#ec4899)"><div class="bub" id="i2"></div><div><h2>Non-conformance reports &amp; trainings</h2><p>NCR position per project and the QTBT / toolbox trainings conducted</p></div><div class="rule"></div></div>
+  <div class="grid">
+    <div class="card accent s7" style="--g:linear-gradient(90deg,#f43f5e,#ec4899)">
+      <div class="ch"><div><h3>NCR position</h3><div class="hint">Cumulative · closed last week · total closed · open</div></div>
+        <div class="seg" data-target="ncr"><button class="on" data-v="chart">Chart</button><button data-v="table">Table</button></div></div>
+      <div data-view="ncr-chart"><div class="box"><canvas id="cNcr"></canvas></div></div>
+      <div data-view="ncr-table" class="table-wrap hidden"><table id="tNcr"></table></div>
+    </div>
+    <div class="card accent s5" style="--g:linear-gradient(90deg,#8b5cf6,#6366f1)">
+      <div class="ch"><div><h3>Trainings conducted</h3><div class="hint">QTBT per project</div></div>
+        <div class="seg" data-target="trn"><button class="on" data-v="chart">Chart</button><button data-v="table">Table</button></div></div>
+      <div data-view="trn-chart"><div class="box"><canvas id="cTrn"></canvas></div></div>
+      <div data-view="trn-table" class="table-wrap hidden"><table id="tTrn"></table></div>
+    </div>
+  </div>
+
+  <!-- ═════ WIR / MIR : civil & electrical together ═════ -->
+  <div class="sec" style="--g:linear-gradient(135deg,#6366f1,#f59e0b)"><div class="bub" id="i3"></div><div><h2>Inspection requests — WIR &amp; MIR</h2><p>Civil and Electrical side by side · no clicking needed</p></div><div class="rule"></div>
+    <select class="plain" id="plotSel"></select></div>
+  <div class="grid" id="dcards"></div>
+
+  <div class="grid" style="margin-top:16px">
+    <div class="card accent s6" style="--g:linear-gradient(90deg,#6366f1,#f59e0b)">
+      <div class="ch"><div><h3>WIR — Civil vs Electrical</h3><div class="hint">Requests by outcome</div></div><div class="legend-top"><span><i style="background:var(--civil)"></i>Civil</span><span><i style="background:var(--ele)"></i>Electrical</span></div></div>
+      <div class="box"><canvas id="cWirCmp"></canvas></div>
+    </div>
+    <div class="card accent s6" style="--g:linear-gradient(90deg,#6366f1,#f59e0b)">
+      <div class="ch"><div><h3>MIR — Civil vs Electrical</h3><div class="hint">Requests by outcome</div></div><div class="legend-top"><span><i style="background:var(--civil)"></i>Civil</span><span><i style="background:var(--ele)"></i>Electrical</span></div></div>
+      <div class="box"><canvas id="cMirCmp"></canvas></div>
+    </div>
+    <div class="card s12">
+      <div class="ch"><div><h3>Status matrix</h3><div class="hint">Darker cell = more requests · all four registers in one view</div></div></div>
+      <div class="table-wrap"><table class="heat" id="heat"></table></div>
+    </div>
+  </div>
+
+  <!-- ═════ rejections ═════ -->
+  <div class="sec" style="--g:linear-gradient(135deg,#ef4444,#f97316)"><div class="bub" id="i4"></div><div><h2>Rejection reasons</h2><p>Why requests were rejected — Civil and Electrical compared</p></div><div class="rule"></div></div>
+  <div class="grid">
+    <div class="card accent s6" style="--g:linear-gradient(90deg,#ef4444,#f97316)">
+      <div class="ch"><div><h3>WIR rejections</h3><div class="hint">Total number by reason</div></div><div class="legend-top"><span><i style="background:var(--civil)"></i>Civil</span><span><i style="background:var(--ele)"></i>Electrical</span></div></div>
+      <div class="box tall"><canvas id="cWirRej"></canvas></div>
+    </div>
+    <div class="card accent s6" style="--g:linear-gradient(90deg,#ef4444,#f97316)">
+      <div class="ch"><div><h3>MIR rejections</h3><div class="hint">Total number by reason</div></div><div class="legend-top"><span><i style="background:var(--civil)"></i>Civil</span><span><i style="background:var(--ele)"></i>Electrical</span></div></div>
+      <div class="box tall"><canvas id="cMirRej"></canvas></div>
+    </div>
+  </div>
+
+  <div class="note">Sample dashboard. Observation, NCR and training figures are copied from the weekly sheet (24/09/2026 – 01/10/2026); the WIR / MIR / rejection figures were blank in the sheet, so they are generated sample values only to show the design. All data sits in the <code>PROJECTS</code> / <code>QUALITY</code> objects in the script, ready to be bound to the API later.</div>
+</div>
+
+<script>
+/* ═══════════ DATA (replace with API later) ═══════════ */
+const PROJECTS = [
+  { code: 'P409', name: 'AMD', obs: 57, curClosed: 11, closedLast: 0, open: 46, ncrCum: 1, ncrLast: 0, ncrClosed: 0, ncrOpen: 1, trainings: 42, color: '#0ea5e9' },
+  { code: 'P411', name: 'VTA', obs: 13, curClosed: 0,  closedLast: 0, open: 13, ncrCum: 0, ncrLast: 0, ncrClosed: 0, ncrOpen: 0, trainings: 15, color: '#6366f1' },
+  { code: 'P399', name: 'DBK', obs: 82, curClosed: 5,  closedLast: 0, open: 77, ncrCum: 2, ncrLast: 0, ncrClosed: 0, ncrOpen: 2, trainings: 88, color: '#ec4899' },
+  { code: 'P404', name: 'YRS', obs: 32, curClosed: 14, closedLast: 0, open: 17, ncrCum: 2, ncrLast: 0, ncrClosed: 0, ncrOpen: 2, trainings: 22, color: '#f59e0b' },
+  { code: 'P408', name: 'KVF', obs: 17, curClosed: 12, closedLast: 0, open: 5,  ncrCum: 0, ncrLast: 0, ncrClosed: 0, ncrOpen: 0, trainings: 17, color: '#10b981' },
+  { code: 'P403', name: 'ZRB', obs: 27, curClosed: 25, closedLast: 0, open: 2,  ncrCum: 0, ncrLast: 0, ncrClosed: 0, ncrOpen: 0, trainings: 50, color: '#14b8a6' },
+  { code: 'NH6',  name: '',    obs: 0,  curClosed: 0,  closedLast: 0, open: 0,  ncrCum: 0, ncrLast: 0, ncrClosed: 0, ncrOpen: 0, trainings: 0,  color: '#94a3b8' },
+];
+const label = p => p.name ? `${p.code} - ${p.name}` : p.code;
+const STATUS = [
+  { t: 'Code 1 – Approved. Work can proceed', s: 'Code 1 · Approved', c: '#10b981' },
+  { t: 'Code 2 – Approved with comments', s: 'Code 2 · With comments', c: '#84cc16' },
+  { t: 'Code 3 – Approved, revise & resubmit', s: 'Code 3 · Revise & resubmit', c: '#0ea5e9' },
+  { t: 'Code R – Not approved', s: 'Code R · Not approved', c: '#ef4444' },
+  { t: 'Commented – awaiting project team compliance', s: 'Commented · awaiting', c: '#f59e0b' },
+  { t: 'Open', s: 'Open', c: '#94a3b8' },
+];
+const WIR_REASONS = ['Duplicated WIRs', 'Work is not ready for inspection', 'Missing documents', 'Work proceeded without inspection', 'Commented – awaiting compliance', 'Using unapproved materials', 'Other reasons', 'NA'];
+const MIR_REASONS = ['Missing documents', 'MAS consultant / client comment not complied', 'Material identification missing', 'Damaged / expired material', 'Non-compliance with approved MAS', 'Other reasons', 'NA'];
+
+function seeded(seed) { let s = seed; return () => (s = (s * 9301 + 49297) % 233280) / 233280; }
+const PLOTS = ['All plots', ...PROJECTS.slice(0, 6).map(label), 'Plot 100'];
+const QUALITY = {};
+(function build() {
+  const add = (a, b) => { const o = {}; for (const k in a) o[k] = a[k].map((v, i) => v + b[k][i]); return o; };
+  const mk = (seed, scale) => {
+    const r = seeded(seed), q = {};
+    for (const d of ['civil', 'ele']) {
+      const f = d === 'civil' ? 1 : 0.55;
+      q[d] = { wir: STATUS.map((s, i) => Math.round(r() * [40, 22, 9, 4, 7, 12][i] * scale * f)),
+               mir: STATUS.map((s, i) => Math.round(r() * [34, 18, 7, 3, 6, 10][i] * scale * f)),
+               wirRej: WIR_REASONS.map((x, i) => Math.round(r() * [6, 9, 7, 3, 4, 3, 5, 2][i] * scale * f)),
+               mirRej: MIR_REASONS.map((x, i) => Math.round(r() * [8, 5, 4, 3, 4, 5, 2][i] * scale * f)) };
+    }
+    return q;
+  };
+  const scales = [1.2, 0.5, 1.6, 0.8, 0.5, 0.7];
+  PROJECTS.slice(0, 6).forEach((p, i) => { QUALITY[label(p)] = mk(100 + i * 17, scales[i]); });
+  QUALITY['Plot 100'] = mk(777, 0.9);
+  const all = {};
+  for (const d of ['civil', 'ele']) { let acc = null; Object.values(QUALITY).forEach(q => { acc = acc ? add(acc, q[d]) : JSON.parse(JSON.stringify(q[d])); }); all[d] = acc; }
+  QUALITY['All plots'] = all;
+})();
+
+/* ═══════════ helpers ═══════════ */
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const charts = {}, state = { project: 'all', plot: 'All plots' };
+const sumOf = (a, k) => a.reduce((x, p) => x + p[k], 0), tot = a => a.reduce((x, y) => x + y, 0);
+const pct = (a, b) => (b ? Math.round(a / b * 100) : 0);
+const rows = () => state.project === 'all' ? PROJECTS : PROJECTS.filter(p => p.code === state.project);
+const ICON = {
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>',
+  alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  check: '<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14l-3-3"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/>',
+  cap: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
+  clip: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+};
+const svg = k => `<svg class="i" viewBox="0 0 24 24">${ICON[k]}</svg>`;
+
+function setupDefaults() {
+  Chart.defaults.font.family = 'Inter, "Segoe UI", system-ui, sans-serif';
+  Chart.defaults.color = css('--ink-2'); Chart.defaults.borderColor = css('--line');
+  Chart.defaults.plugins.legend.labels.usePointStyle = true; Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.tooltip.backgroundColor = '#0d1b2a'; Chart.defaults.plugins.tooltip.padding = 10; Chart.defaults.plugins.tooltip.cornerRadius = 10;
+}
+const valueLabels = { id: 'valueLabels', afterDatasetsDraw(chart, _a, o) {
+  if (!o || o.display === false) return;
+  const { ctx } = chart; ctx.save(); ctx.font = '650 11.5px Inter, Segoe UI, sans-serif'; ctx.textBaseline = 'middle';
+  chart.data.datasets.forEach((ds, di) => { const meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+    meta.data.forEach((el, i) => { const v = ds.data[i]; if (!v) return; const h = chart.options.indexAxis === 'y';
+      if (o.mode === 'inside') { const w = h ? Math.abs(el.x - el.base) : Math.abs(el.base - el.y); if (w < 22) return; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; h ? ctx.fillText(v, (el.x + el.base) / 2, el.y) : ctx.fillText(v, el.x, (el.y + el.base) / 2); }
+      else { ctx.fillStyle = css('--ink'); ctx.textAlign = h ? 'left' : 'center'; h ? ctx.fillText(v, el.x + 6, el.y) : ctx.fillText(v, el.x, el.y - 9); } }); });
+  ctx.restore(); } };
+function mk(id, cfg) { if (charts[id]) charts[id].destroy(); charts[id] = new Chart(document.getElementById(id), cfg); }
+const grad = (ctx, c1, c2, h = 300) => { const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, c1); g.addColorStop(1, c2); return g; };
+
+/* ═══════════ highlights + KPIs ═══════════ */
+function renderTopCards() {
+  const r = rows(), obs = sumOf(r, 'obs'), open = sumOf(r, 'open'), closed = sumOf(r, 'curClosed');
+  const q = QUALITY[state.plot], reqs = tot(q.civil.wir) + tot(q.civil.mir) + tot(q.ele.wir) + tot(q.ele.mir);
+  const worst = [...PROJECTS].sort((a, b) => b.open - a.open)[0], best = [...PROJECTS].filter(p => p.obs).sort((a, b) => pct(b.curClosed, b.obs) - pct(a.curClosed, a.obs))[0], top = [...PROJECTS].sort((a, b) => b.trainings - a.trainings)[0];
+  $('#hl').innerHTML = [
+    ['#ef4444', `${label(worst)} needs attention`, `${worst.open} observations still open`],
+    ['#10b981', `${label(best)} leads on closure`, `${pct(best.curClosed, best.obs)}% of observations closed`],
+    ['#f43f5e', `${sumOf(PROJECTS, 'ncrOpen')} NCRs open`, `${PROJECTS.filter(p => p.ncrOpen).map(p => p.code).join(', ')}`],
+    ['#8b5cf6', `${label(top)} trained most`, `${top.trainings} trainings conducted`],
+  ].map(([c, a, b]) => `<div style="--c:${c}"><b>${a}</b>${b}</div>`).join('');
+
+  const spark = (seed, end) => { const x = seeded(seed); const a = Array.from({ length: 6 }, () => Math.max(1, Math.round(end * (0.55 + x() * 0.45)))); a.push(end); return a; };
+  const K = [
+    ['linear-gradient(135deg,#0ea5e9,#6366f1)', 'eye', 'Observations raised', obs, '+9 vs last week', spark(1, obs)],
+    ['linear-gradient(135deg,#f59e0b,#f97316)', 'alert', 'Observations open', open, pct(open, obs) + '% of all', spark(2, open)],
+    ['linear-gradient(135deg,#10b981,#14b8a6)', 'check', 'Closure rate', pct(closed, obs) + '%', closed + ' closed', spark(3, pct(closed, obs))],
+    ['linear-gradient(135deg,#f43f5e,#ec4899)', 'shield', 'NCRs open', sumOf(r, 'ncrOpen'), sumOf(r, 'ncrCum') + ' cumulative', spark(4, Math.max(1, sumOf(r, 'ncrOpen')))],
+    ['linear-gradient(135deg,#8b5cf6,#6366f1)', 'cap', 'Trainings conducted', sumOf(r, 'trainings'), 'QTBT / toolbox', spark(5, sumOf(r, 'trainings'))],
+    ['linear-gradient(135deg,#0d9488,#0891b2)', 'clip', 'WIR + MIR requests', reqs, state.plot, spark(6, reqs)],
+  ];
+  $('#kpis').innerHTML = K.map((k, i) => `<div class="kpi" style="--g:${k[0]}"><div class="ico">${svg(k[1])}</div><div class="lbl">${k[2]}</div><div class="val">${k[3]}</div><div class="meta">${k[4]}</div><canvas id="sp${i}"></canvas></div>`).join('');
+  K.forEach((k, i) => mk('sp' + i, { type: 'line', data: { labels: k[5].map((_, j) => j), datasets: [{ data: k[5], borderColor: 'rgba(255,255,255,.95)', borderWidth: 2, pointRadius: 0, tension: .4, fill: true, backgroundColor: 'rgba(255,255,255,.18)' }] },
+    options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, layout: { padding: 2 } } }));
+  $$('.kpi canvas').forEach(c => { c.width = 84; c.height = 36; });
+  K.forEach((k, i) => charts['sp' + i] && charts['sp' + i].resize(84, 36));
+  $('#projLabel').textContent = state.project === 'all' ? 'All projects' : label(PROJECTS.find(p => p.code === state.project));
+}
+
+/* ═══════════ observations ═══════════ */
+function renderObs() {
+  const r = rows().filter(p => p.obs > 0 || state.project !== 'all'), all = rows();
+  mk('cObs', { type: 'bar', plugins: [valueLabels],
+    data: { labels: r.map(label), datasets: [
+      { label: 'Closed', data: r.map(p => p.curClosed), backgroundColor: '#10b981', borderRadius: 8, borderSkipped: false },
+      { label: 'Open', data: r.map(p => p.open), backgroundColor: '#f59e0b', borderRadius: 8, borderSkipped: false } ] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 700 },
+      scales: { x: { stacked: true, grid: { color: css('--line') }, ticks: { precision: 0 } }, y: { stacked: true, grid: { display: false }, ticks: { font: { weight: 650 } } } },
+      plugins: { legend: { position: 'bottom' }, valueLabels: { mode: 'inside' } } } });
+  const T = k => sumOf(all, k);
+  $('#tObs').innerHTML = `<thead><tr><th>Project</th><th>Observations</th><th>Current closed</th><th>Closed last wk</th><th>Open</th><th>Closure</th></tr></thead><tbody>` +
+    all.map(p => `<tr><td><i class="dot" style="background:${p.color}"></i><b>${label(p)}</b></td><td>${p.obs}</td><td>${p.curClosed}</td><td>${p.closedLast}</td><td><span class="tag ${p.open ? 't-warn' : 't-zero'}">${p.open}</span></td><td>${pct(p.curClosed, p.obs)}%</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td><td>${T('obs')}</td><td>${T('curClosed')}</td><td>${T('closedLast')}</td><td>${T('open')}</td><td>${pct(T('curClosed'), T('obs'))}%</td></tr></tfoot>`;
+  const rate = pct(T('curClosed'), T('obs'));
+  mk('cGauge', { type: 'doughnut', data: { labels: ['Closed', 'Remaining'], datasets: [{ data: [rate, 100 - rate], backgroundColor: ['#10b981', css('--line')], borderWidth: 0, cutout: '78%', circumference: 180, rotation: 270 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+    plugins: [{ id: 'ctr', afterDraw(c) { const { ctx, chartArea: a } = c, x = (a.left + a.right) / 2; ctx.save(); ctx.textAlign = 'center';
+      ctx.fillStyle = css('--ink'); ctx.font = '780 36px Inter, Segoe UI, sans-serif'; ctx.fillText(rate + '%', x, a.bottom - 30);
+      ctx.fillStyle = css('--ink-2'); ctx.font = '500 12px Inter, Segoe UI, sans-serif'; ctx.fillText('closed overall', x, a.bottom - 10); ctx.restore(); } }] });
+  $('#rank').innerHTML = [...all].filter(p => p.obs).sort((a, b) => pct(b.curClosed, b.obs) - pct(a.curClosed, a.obs)).map((p, i) => {
+    const c = pct(p.curClosed, p.obs), col = c >= 70 ? '#10b981' : c >= 30 ? '#f59e0b' : '#ef4444';
+    return `<div class="r"><span class="no" style="background:${p.color}">${i + 1}</span><span><b>${label(p)}</b></span><div class="bar"><i style="width:${c}%;background:${col}"></i></div><span class="p" style="color:${col}">${c}%</span></div>`;
+  }).join('');
+}
+
+/* ═══════════ NCR + trainings ═══════════ */
+function renderNcr() {
+  const r = rows(), S = [['Cumulative', 'ncrCum', ['#60a5fa', '#2563eb']], ['Closed last week', 'ncrLast', ['#5eead4', '#0d9488']], ['Total closed', 'ncrClosed', ['#86efac', '#16a34a']], ['Open', 'ncrOpen', ['#fb7185', '#e11d48']]];
+  mk('cNcr', { type: 'bar', plugins: [valueLabels],
+    data: { labels: r.map(label), datasets: S.map(([l, k, c]) => ({ label: l, data: r.map(p => p[k]), backgroundColor: x => grad(x.chart.ctx, c[0], c[1], 260), borderRadius: 8, borderSkipped: false, maxBarThickness: 26 })) },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 700 },
+      scales: { y: { beginAtZero: true, grace: '25%', ticks: { precision: 0, stepSize: 1 }, grid: { color: css('--line') } }, x: { grid: { display: false }, ticks: { font: { weight: 650 } } } },
+      plugins: { legend: { position: 'bottom' }, valueLabels: { mode: 'outside' } } } });
+  $('#tNcr').innerHTML = `<thead><tr><th>Project</th><th>Cumulative</th><th>Closed last wk</th><th>Total closed</th><th>Open</th></tr></thead><tbody>` +
+    r.map(p => `<tr><td><i class="dot" style="background:${p.color}"></i><b>${label(p)}</b></td><td>${p.ncrCum}</td><td>${p.ncrLast}</td><td>${p.ncrClosed}</td><td><span class="tag ${p.ncrOpen ? 't-bad' : 't-zero'}">${p.ncrOpen}</span></td></tr>`).join('') + `</tbody>`;
+}
+function renderTrn() {
+  const r = [...rows()].sort((a, b) => b.trainings - a.trainings);
+  mk('cTrn', { type: 'bar', plugins: [valueLabels],
+    data: { labels: r.map(label), datasets: [{ data: r.map(p => p.trainings), backgroundColor: r.map(p => p.color), borderRadius: 9, borderSkipped: false, maxBarThickness: 24 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 700 }, layout: { padding: { right: 30 } },
+      scales: { x: { grid: { color: css('--line') }, ticks: { precision: 0 } }, y: { grid: { display: false }, ticks: { font: { weight: 650 } } } },
+      plugins: { legend: { display: false }, valueLabels: { mode: 'outside' } } } });
+  $('#tTrn').innerHTML = `<thead><tr><th>Project</th><th>Trainings (QTBT)</th></tr></thead><tbody>` + r.map(p => `<tr><td><i class="dot" style="background:${p.color}"></i><b>${label(p)}</b></td><td>${p.trainings}</td></tr>`).join('') + `</tbody><tfoot><tr><td>Total</td><td>${sumOf(r, 'trainings')}</td></tr></tfoot>`;
+}
+
+/* ═══════════ civil + electrical, all visible ═══════════ */
+function dcard(id, kind, disc, values) {
+  const total = tot(values), civ = disc === 'civil', col = civ ? '#6366f1' : '#f59e0b';
+  return `<div class="card accent s3" style="--g:linear-gradient(90deg,${civ ? '#6366f1,#8b5cf6' : '#f59e0b,#f97316'})">
+    <div class="ch" style="margin-bottom:4px"><h3>${kind}</h3><span class="badge" style="--c:${col}">${civ ? 'CIVIL' : 'ELECTRICAL'}</span></div>
+    <div class="box short" style="height:170px"><canvas id="${id}"></canvas></div>
+    <div class="legend">${STATUS.map((s, i) => `<div class="lg"><span class="sw" style="background:${s.c}"></span><span title="${s.t}">${s.s}</span><span class="n">${values[i]}</span><span class="p">${pct(values[i], total)}%</span></div>`).join('')}
+    <div class="lg" style="border-top:1px dashed var(--line);margin-top:4px;padding-top:6px;font-weight:750"><span></span><span>Total</span><span class="n">${total}</span><span class="p"></span></div></div></div>`;
+}
+function donut(id, values) {
+  const total = tot(values);
+  mk(id, { type: 'doughnut', data: { labels: STATUS.map(s => s.s), datasets: [{ data: values, backgroundColor: STATUS.map(s => s.c), borderColor: css('--surface'), borderWidth: 3, hoverOffset: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '68%', animation: { duration: 700 }, plugins: { legend: { display: false } } },
+    plugins: [{ id: 'c', afterDraw(c) { const { ctx, chartArea: a } = c, x = (a.left + a.right) / 2, y = (a.top + a.bottom) / 2; ctx.save(); ctx.textAlign = 'center';
+      ctx.fillStyle = css('--ink'); ctx.font = '780 24px Inter, Segoe UI, sans-serif'; ctx.fillText(total, x, y + 4); ctx.fillStyle = css('--ink-2'); ctx.font = '500 11px Inter, Segoe UI, sans-serif'; ctx.fillText('requests', x, y + 19); ctx.restore(); } }] });
+}
+function cmp(id, key) {
+  const q = QUALITY[state.plot];
+  mk(id, { type: 'bar', plugins: [valueLabels],
+    data: { labels: STATUS.map(s => s.s), datasets: [
+      { label: 'Civil', data: q.civil[key], backgroundColor: x => grad(x.chart.ctx, '#a5b4fc', '#6366f1', 260), borderRadius: 8, borderSkipped: false, maxBarThickness: 22 },
+      { label: 'Electrical', data: q.ele[key], backgroundColor: x => grad(x.chart.ctx, '#fcd34d', '#f59e0b', 260), borderRadius: 8, borderSkipped: false, maxBarThickness: 22 } ] },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 700 },
+      scales: { y: { beginAtZero: true, grace: '15%', grid: { color: css('--line') }, ticks: { precision: 0 } }, x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l.split(' · ')[0]; } } } },
+      plugins: { legend: { display: false }, valueLabels: { mode: 'outside' } } } });
+}
+function heat() {
+  const q = QUALITY[state.plot], cols = [['WIR', 'Civil', q.civil.wir], ['WIR', 'Electrical', q.ele.wir], ['MIR', 'Civil', q.civil.mir], ['MIR', 'Electrical', q.ele.mir]];
+  const mx = Math.max(1, ...cols.flatMap(c => c[2]));
+  const cell = (v, civ) => { const a = Math.min(.9, .08 + v / mx * .8), rgb = civ ? '99,102,241' : '245,158,11'; return `<td class="v" style="background:rgba(${rgb},${a});color:${a > .5 ? '#fff' : 'var(--ink)'}">${v}</td>`; };
+  $('#heat').innerHTML = `<thead class="grp"><tr><th></th><th colspan="2">WIR</th><th colspan="2">MIR</th></tr><tr><th>Status</th><th class="civ">Civil</th><th class="el">Electrical</th><th class="civ">Civil</th><th class="el">Electrical</th></tr></thead><tbody>` +
+    STATUS.map((s, i) => `<tr><td><i class="dot" style="background:${s.c}"></i>${s.t}</td>${cols.map((c, j) => cell(c[2][i], j % 2 === 0)).join('')}</tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td>${cols.map(c => `<td style="text-align:center">${tot(c[2])}</td>`).join('')}</tr><tr><td>Not approved (Code R) rate</td>${cols.map(c => `<td style="text-align:center">${pct(c[2][3], tot(c[2]))}%</td>`).join('')}</tr></tfoot>`;
+}
+function hbar2(id, labels, civil, ele) {
+  const idx = labels.map((_, i) => i).sort((a, b) => (civil[b] + ele[b]) - (civil[a] + ele[a]));
+  mk(id, { type: 'bar', plugins: [valueLabels],
+    data: { labels: idx.map(i => labels[i]), datasets: [
+      { label: 'Civil', data: idx.map(i => civil[i]), backgroundColor: '#6366f1', borderRadius: 7, borderSkipped: false, maxBarThickness: 14 },
+      { label: 'Electrical', data: idx.map(i => ele[i]), backgroundColor: '#f59e0b', borderRadius: 7, borderSkipped: false, maxBarThickness: 14 } ] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 700 }, layout: { padding: { right: 26 } },
+      scales: { x: { grid: { color: css('--line') }, ticks: { precision: 0 } }, y: { grid: { display: false }, ticks: { font: { size: 11.5 }, callback(v) { const l = this.getLabelForValue(v); return l.length > 36 ? l.slice(0, 35) + '…' : l; } } } },
+      plugins: { legend: { display: false }, valueLabels: { mode: 'outside' } } } });
+}
+function renderQuality() {
+  const q = QUALITY[state.plot];
+  $('#dcards').innerHTML = dcard('dW1', 'WIR', 'civil', q.civil.wir) + dcard('dW2', 'WIR', 'ele', q.ele.wir) + dcard('dM1', 'MIR', 'civil', q.civil.mir) + dcard('dM2', 'MIR', 'ele', q.ele.mir);
+  donut('dW1', q.civil.wir); donut('dW2', q.ele.wir); donut('dM1', q.civil.mir); donut('dM2', q.ele.mir);
+  cmp('cWirCmp', 'wir'); cmp('cMirCmp', 'mir'); heat();
+  hbar2('cWirRej', WIR_REASONS, q.civil.wirRej, q.ele.wirRej); hbar2('cMirRej', MIR_REASONS, q.civil.mirRej, q.ele.mirRej);
+}
+
+/* ═══════════ wiring ═══════════ */
+function renderTop() { renderTopCards(); renderObs(); renderNcr(); renderTrn(); }
+function renderAll() { setupDefaults(); renderTop(); renderQuality(); }
+$('#i1').innerHTML = svg('eye'); $('#i2').innerHTML = svg('shield'); $('#i3').innerHTML = svg('clip'); $('#i4').innerHTML = svg('alert');
+$('#projSel').innerHTML = `<option value="all">All projects</option>` + PROJECTS.map(p => `<option value="${p.code}">${label(p)}</option>`).join('');
+$('#projSel').onchange = e => { state.project = e.target.value; renderTop(); };
+$('#plotSel').innerHTML = PLOTS.map(p => `<option>${p}</option>`).join('');
+$('#plotSel').onchange = e => { state.plot = e.target.value; renderQuality(); renderTopCards(); };
+$$('.seg[data-target]').forEach(seg => $$('button', seg).forEach(b => b.onclick = () => {
+  $$('button', seg).forEach(x => x.classList.toggle('on', x === b)); const t = seg.dataset.target;
+  $(`[data-view="${t}-chart"]`).classList.toggle('hidden', b.dataset.v !== 'chart'); $(`[data-view="${t}-table"]`).classList.toggle('hidden', b.dataset.v !== 'table');
+  if (b.dataset.v === 'chart') Object.values(charts).forEach(c => c.resize()); }));
+const fmt = v => new Date(v + 'T00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const period = () => { $('#periodLabel').textContent = `${fmt($('#dFrom').value)} → ${fmt($('#dTo').value)}`; };
+$('#dFrom').onchange = $('#dTo').onchange = period;
+$('#thisWeek').onclick = () => { const t = new Date(), f = new Date(t); f.setDate(t.getDate() - 7); const iso = d => d.toISOString().slice(0, 10); $('#dFrom').value = iso(f); $('#dTo').value = iso(t); period(); };
+$('#themeBtn').onclick = () => { const r = document.documentElement, dark = (r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark'; r.dataset.theme = dark ? 'light' : 'dark'; renderAll(); };
+if (typeof Chart === 'undefined') document.querySelector('.wrap').insertAdjacentHTML('afterbegin', '<div class="note">Charts need an internet connection to load the Chart.js library from cdnjs.</div>'); else renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,1365 @@
+/* ════════════════════════════════════════════════════════════════════════
+   MY TASKS — modern layer (desktop and tablet, ≥769px).
+   Loaded LAST in styleUrls. Design only: aligns the table, balances the top
+   row, softens the chips and adds motion. Nothing here changes a value, a
+   button or a click. Phones (≤768px) keep the card layout of the mobile pass,
+   so every layout rule sits inside the min-width query.
+   Prefix .task-board-container: the older files repeat the same selectors
+   (my-task.component.css AND task-details-modal.css), so the extra class is
+   what makes these win without !important.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@keyframes mtRowIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes mtCardIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes mtPulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .55); } 100% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); } }
+@keyframes mtGrow { from { width: 0; } }
+@keyframes mtSheen { 0% { transform: translateX(-140%) skewX(-18deg); } 35%, 100% { transform: translateX(340%) skewX(-18deg); } }
+@keyframes mtRunBar { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* the mini progress bar only exists on the desktop table */
+.progress-mini { display: none; }
+
+@media (min-width: 769px) {
+
+  /* ══ TOP ROW: timer card + three panels, balanced widths, same height, rising in one by one ══ */
+  .task-board-container .top-section {
+    /* the timer card gets most of the row; chart, break tracker and stats are compact */
+    grid-template-columns: minmax(0, 2.75fr) minmax(0, .82fr) minmax(0, .62fr) minmax(0, .66fr);
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .task-board-container .top-section > .active-task-card,
+  .task-board-container .top-right-panels > * {
+    border-radius: 20px;
+    animation: mtCardIn .6s cubic-bezier(.22, 1, .36, 1) backwards;
+  }
+  /* older rules pinned these two at 195px / 215px; they now fill their grid columns */
+  .task-board-container .top-right-panels .break-tracker-section,
+  .task-board-container .top-right-panels .break-tracker-section .break-tracker-card,
+  .task-board-container .top-right-panels .right-section { width: 100%; max-width: none; }
+  .task-board-container .top-right-panels > :nth-child(1) { animation-delay: .08s; }
+  .task-board-container .top-right-panels > :nth-child(2) { animation-delay: .16s; }
+  .task-board-container .top-right-panels > :nth-child(3) { animation-delay: .24s; }
+  .task-board-container .top-section > .active-task-card { box-shadow: 0 22px 40px -26px rgba(16, 185, 129, .75); }
+
+  /* ── inside the timer card: two columns ─────────────────────────────────────────
+     left  = status, category, title, completion bar, dates
+     right = the timer on a glass panel, Pause / Stop centred under it
+     (.task-status becomes layout-transparent so its two children join the grid) */
+  .task-board-container .active-task-card > div:has(> .task-status) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr;
+    column-gap: 22px;
+    row-gap: 10px;
+    height: 100%;
+  }
+  .task-board-container .active-task-card .task-status { display: contents; }
+  .task-board-container .active-task-card .status-indicator { grid-column: 1; grid-row: 1; justify-self: start; align-self: start; }
+  .task-board-container .active-task-card .task-info {
+    grid-column: 1; grid-row: 2;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    min-width: 0;
+  }
+  .task-board-container .active-task-card .task-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .task-board-container .active-task-card .task-title { margin: 0; line-height: 1.3; }
+  .task-board-container .active-task-card .task-title:empty::before { content: "Untitled task"; opacity: .6; font-style: italic; font-weight: 500; }
+  .task-board-container .active-task-card .timer-control-section {
+    grid-column: 2; grid-row: 1 / span 2;
+    align-self: center;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-areas: "bars timer wave" "ctrl ctrl ctrl";
+    justify-items: center;
+    align-items: center;
+    gap: 14px 14px;
+    width: auto;
+    margin: 0;
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .16);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .task-board-container .active-task-card .timer-bars { grid-area: bars; }
+  .task-board-container .active-task-card .timer-box { grid-area: timer; }
+  .task-board-container .active-task-card .timer-wave { grid-area: wave; }
+  .task-board-container .active-task-card .modern-controls { grid-area: ctrl; justify-content: center; gap: 12px; }
+  .task-board-container .top-right-panels .logged-hours-card,
+  .task-board-container .top-right-panels .break-tracker-card {
+    transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), box-shadow .3s;
+  }
+  .task-board-container .top-right-panels .logged-hours-card:hover,
+  .task-board-container .top-right-panels .break-tracker-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 30px -22px rgba(15, 23, 42, .45);
+  }
+  .task-board-container .right-section .stat-card {
+    border-radius: 16px;
+    transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), box-shadow .3s, border-color .3s;
+  }
+  .task-board-container .right-section .stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #6ee7b7;
+    box-shadow: 0 14px 24px -18px rgba(16, 185, 129, .7);
+  }
+  /* New Task: a gradient button with a light passing across now and then */
+  .task-board-container .new-task-btn {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background: linear-gradient(120deg, #059669, #10b981 55%, #0ea5e9);
+    background-size: 180% 100%;
+    box-shadow: 0 12px 22px -14px rgba(5, 150, 105, .9);
+    transition: background-position .45s, transform .2s, box-shadow .2s;
+  }
+  .task-board-container .new-task-btn:hover { background-position: 100% 0; transform: translateY(-2px); }
+  .task-board-container .new-task-btn::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; left: 0; width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent);
+    transform: translateX(-140%) skewX(-18deg);
+    animation: mtSheen 5s ease-in-out 2s infinite;
+    pointer-events: none;
+  }
+
+  /* ══ TABLE CARD: tabs + table in one rounded panel ══ */
+  .task-board-container .task-section {
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 18px 40px -32px rgba(15, 23, 42, .45);
+    overflow: hidden;
+    animation: mtCardIn .6s cubic-bezier(.22, 1, .36, 1) .2s backwards;
+  }
+  .task-board-container .task-tabs { padding: 10px 18px; align-items: center; }
+  .task-board-container .tabs-container { gap: 6px; }
+  .task-board-container .tabs-container .tab-btn {
+    border-radius: 12px;
+    padding: 10px 16px;
+    transition: background-color .2s, color .2s, box-shadow .2s;
+  }
+  .task-board-container .tabs-container .tab-btn:hover { background: #f0fdf4; }
+  .task-board-container .tabs-container .tab-btn.active {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    box-shadow: inset 0 0 0 1px #a7f3d0;
+  }
+  .task-board-container .search-box { border-radius: 12px; transition: box-shadow .2s, border-color .2s; }
+  .task-board-container .search-box:focus-within { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
+
+  /* one column plan for header and rows — numbers and pills centred under their headings */
+  .task-board-container .task-table .table-header,
+  .task-board-container .task-table .table-row {
+    /* flexible: text columns wrap instead of pushing Status / Action off the side of a laptop screen;
+       only the parts that cannot shrink (buttons, pills, the bar) keep a minimum */
+    grid-template-columns:
+      minmax(140px, 1.25fr)    /* category (fits its longest word, DEVELOPMENT, plus the cell padding) */
+      minmax(0, 2.3fr)         /* title */
+      minmax(0, .85fr)         /* start date */
+      minmax(0, 1.35fr)        /* assigned by / to */
+      minmax(52px, .6fr)       /* log time */
+      minmax(60px, .7fr)       /* total hours */
+      minmax(88px, .95fr)      /* progress */
+      minmax(96px, .85fr)      /* status */
+      minmax(120px, .9fr);     /* action */
+    column-gap: 0;               /* the space between columns is now padding inside each cell, with a line between */
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .task-board-container .task-table .table-header {
+    align-items: stretch;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-radius: 0;
+    background: linear-gradient(120deg, #13303a, #0f766e 60%, #10b981);
+  }
+  .task-board-container .task-table .header-cell {
+    display: flex;
+    align-items: center;
+    padding: 15px clamp(10px, .9vw, 14px);
+    letter-spacing: .07em;
+    border-right: 1px solid rgba(255, 255, 255, .16);
+  }
+  .task-board-container .task-table .header-cell:last-child { border-right: 0; }
+  .task-board-container .task-table .header-cell:is(.logged, .total, .progress, .status, .action) { justify-content: center; text-align: center; }
+
+  .task-board-container .task-table .table-row {
+    align-items: stretch;           /* cells fill the row height so the column lines run top to bottom */
+    min-height: 68px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: 1px solid #eef2f6;
+    animation: mtRowIn .45s cubic-bezier(.22, 1, .36, 1) backwards;
+    animation-delay: calc(.25s + min(var(--i, 0), 12) * 45ms);
+    transition: background-color .2s, box-shadow .2s, transform .2s;
+  }
+  .task-board-container .task-table .table-row:nth-child(even) { background: #fafcfd; }
+  .task-board-container .task-table .table-row:hover {
+    background: linear-gradient(90deg, #ecfdf5, #f8fffb 70%) !important;   /* the old hover is !important too */
+    transform: none;
+    box-shadow: inset 0 0 0 1px #d1fae5;
+  }
+  /* the task that is running now */
+  .task-board-container .task-table .table-row.is-running { background: linear-gradient(90deg, #ecfdf5, #ffffff 60%); }
+  .task-board-container .task-table .table-row.is-running::before { opacity: 1; animation: mtRunBar 1.8s ease-in-out infinite; }
+
+  /* every cell centres its content vertically (it was "start": values, pills and buttons sat at different heights) */
+  .task-board-container .task-table .cell {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 12px clamp(10px, .9vw, 14px);
+    border-right: 1px solid #edf1f6;
+    overflow-wrap: break-word;   /* breaks inside a word only when it cannot fit */
+  }
+  .task-board-container .task-table .cell:last-child { border-right: 0; }
+  .task-board-container .task-table { overflow-x: auto; }
+  /* an older laptop rule also puts min-width:1240px on the body, which stretched the rows past the header */
+  .task-board-container .task-table .table-body { min-width: 0; width: 100%; }
+  .task-board-container .task-table .cell:is(.logged, .total, .progress, .status, .action) { justify-content: center; text-align: center; }
+  .task-board-container .task-table .cell:is(.logged, .total) { font-weight: 700; font-variant-numeric: tabular-nums; color: #0f172a; }
+  .task-board-container .task-table .cell.start-date { color: #475569; font-variant-numeric: tabular-nums; }
+
+  /* category: a soft chip instead of the raised white button */
+  .task-board-container .task-table .category-badge {
+    display: inline-block;
+    max-width: 100%;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid #c7e9dc;
+    background: linear-gradient(135deg, #f0fdf8, #e6f7f1);
+    box-shadow: none;
+    color: #0f766e;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  /* title + one line of description; an empty title says so instead of leaving a gap */
+  .task-board-container .task-title-cell h4 { margin: 0; font-size: 14px; line-height: 1.35; color: #1e3a8a; }
+  .task-board-container .task-title-cell h4:empty::before { content: "Untitled task"; color: #94a3b8; font-style: italic; font-weight: 500; }
+  .task-board-container .task-title-cell p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: #64748b;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .task-board-container .assignee-info { gap: 10px; }
+  .task-board-container .assignee-info .assignee-avatar {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 3px #d1fae5;
+    transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .task-board-container .table-row:hover .assignee-avatar { transform: scale(1.08); }
+
+  /* progress: a small bar that fills as the row appears, with the % beside it */
+  .task-board-container .task-table .cell.progress { gap: 8px; }
+  .task-board-container .progress-mini {
+    display: block;
+    flex: 0 1 72px;
+    height: 6px;
+    border-radius: 6px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .task-board-container .progress-mini i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    animation: mtGrow 1.1s cubic-bezier(.25, .9, .3, 1) backwards;
+    animation-delay: calc(.45s + min(var(--i, 0), 12) * 45ms);
+  }
+  .task-board-container .progress-text-only { min-width: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* status: a pill with a dot; the running one pulses */
+  .task-board-container .task-table .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    letter-spacing: .05em;
+  }
+  .task-board-container .task-table .status-badge::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .task-board-container .task-table .table-row.is-running .status-badge::before { animation: mtPulse 1.6s ease-out infinite; }
+
+  /* actions: same-size round buttons that lift on hover */
+  .task-board-container .task-table .action-buttons { display: inline-flex; gap: 8px; justify-content: center; }
+  .task-board-container .task-table .action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, filter .2s;
+  }
+  .task-board-container .task-table .action-btn:not(:disabled):hover {
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 8px 16px -8px rgba(15, 23, 42, .45);
+  }
+  .task-board-container .task-table .action-btn:disabled { opacity: .45; }
+
+  /* ══ dark theme ══ */
+  .task-board-container.dark-mode .task-section { border-color: #334155; }
+  .task-board-container.dark-mode .task-table .cell { border-right-color: #2b3a50; }
+  .task-board-container.dark-mode .task-table .table-row:nth-child(even) { background: #172033; }
+  .task-board-container.dark-mode .task-table .table-row:hover { background: linear-gradient(90deg, rgba(16, 185, 129, .14), transparent 70%) !important; box-shadow: inset 0 0 0 1px rgba(16, 185, 129, .25); }
+  .task-board-container.dark-mode .task-table .table-row.is-running { background: linear-gradient(90deg, rgba(16, 185, 129, .16), transparent 60%); }
+  .task-board-container.dark-mode .task-table .cell:is(.logged, .total) { color: #e2e8f0; }
+  .task-board-container.dark-mode .task-table .cell.start-date { color: #94a3b8; }
+  .task-board-container.dark-mode .task-title-cell h4 { color: #93c5fd; }
+  .task-board-container.dark-mode .task-table .category-badge { background: rgba(16, 185, 129, .12); border-color: rgba(16, 185, 129, .3); color: #6ee7b7; }
+  .task-board-container.dark-mode .progress-mini { background: #334155; }
+  .task-board-container.dark-mode .tabs-container .tab-btn:hover { background: rgba(16, 185, 129, .1); }
+  .task-board-container.dark-mode .tabs-container .tab-btn.active { background: rgba(16, 185, 129, .16); box-shadow: inset 0 0 0 1px rgba(16, 185, 129, .35); }
+  .task-board-container.dark-mode .assignee-info .assignee-avatar { box-shadow: 0 0 0 2px #1e293b, 0 0 0 3px rgba(16, 185, 129, .35); }
+}
+
+/* a laptop (769–1500px): four cards in one row would be squeezed (the break tracker went to 148px and its
+   Travel value spilled out), so two rows — timer card + stats on top, chart + break tracker below */
+@media (min-width: 769px) and (max-width: 1500px) {
+  .task-board-container .top-section { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, .9fr); }
+  .task-board-container .top-section > .active-task-card { grid-column: 1 / span 2; grid-row: 1; }
+  .task-board-container .top-right-panels .right-section { grid-column: 3; grid-row: 1; }
+  .task-board-container .top-right-panels .logged-hours-card { grid-column: 1 / span 2; grid-row: 2; }
+  .task-board-container .top-right-panels .break-tracker-section { grid-column: 3; grid-row: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-board-container .top-section > .active-task-card,
+  .task-board-container .top-right-panels > *,
+  .task-board-container .task-section,
+  .task-board-container .task-table .table-row,
+  .task-board-container .progress-mini i,
+  .task-board-container .new-task-btn::after,
+  .task-board-container .task-table .table-row.is-running::before,
+  .task-board-container .task-table .table-row.is-running .status-badge::before { animation: none; }
+}
+
+/* ══ Task completion as a "scrubber" (all widths) ══════════════════════════════════════════
+   label with a flag on the left, "40% completed" on the right; a rounded track with milestone dots at
+   25 / 50 / 75 / 100 % that light up once reached and a knob at the current point; then the started /
+   assigned-by line with the labels light and the values bold. Technical mono type for the labels.
+   The global stylesheet forces Roboto with !important through a 15-deep :not() chain, so the mono
+   font needs :not(#_) (ID weight) and !important to show. */
+@keyframes mtKnob { 0% { box-shadow: 0 0 0 0 rgba(110, 231, 183, .7), 0 2px 6px rgba(0, 0, 0, .3); } 100% { box-shadow: 0 0 0 9px rgba(110, 231, 183, 0), 0 2px 6px rgba(0, 0, 0, .3); } }
+@keyframes mtFlow { to { background-position: 28px 0, 0 0; } }
+
+.task-board-container .active-task-card .modern-progress-section { display: flex; flex-direction: column; gap: 9px; }
+.task-board-container .active-task-card .progress-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; }
+.task-board-container .active-task-card .progress-label {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .78);
+}
+.task-board-container .active-task-card .progress-label i { font-size: 11px; color: #6ee7b7; }
+.task-board-container .active-task-card .progress-value {
+  font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6ee7b7;
+  background: none; -webkit-text-fill-color: currentColor; text-shadow: none;
+}
+.task-board-container .active-task-card .progress-value small { font-size: inherit; font-weight: inherit; }
+.task-board-container .active-task-card :is(.progress-label, .progress-value, .progress-value small, .task-detail-item span, .task-detail-item b):not(#_) {
+  font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, ui-monospace, monospace !important;
+}
+
+.task-board-container .active-task-card .animated-progress-bar { position: relative; height: auto; }
+.task-board-container .active-task-card .progress-particles { display: none; }
+.task-board-container .active-task-card .progress-track {
+  position: relative; overflow: visible; height: 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .25);
+}
+.task-board-container .active-task-card .progress-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; overflow: hidden;
+  background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .22) 0 6px, transparent 6px 12px), linear-gradient(90deg, #10b981, #6ee7b7);
+  background-size: 17px 17px, 100% 100%;
+  animation: mtFlow 1.4s linear infinite;
+}
+.task-board-container .active-task-card .ms-tick {
+  position: absolute; top: 50%; z-index: 1;
+  width: 9px; height: 9px; margin-left: -4.5px; transform: translateY(-50%);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .32);
+  transition: background-color .4s, box-shadow .4s;
+}
+.task-board-container .active-task-card .ms-tick:nth-of-type(4) { margin-left: -9px; }   /* the 100 % dot sits inside the end */
+.task-board-container .active-task-card .ms-tick.on { background: #ecfdf5; box-shadow: 0 0 0 2px rgba(16, 185, 129, .6); }
+.task-board-container .active-task-card .ms-knob {
+  position: absolute; top: 50%; z-index: 2;
+  width: 16px; height: 16px; transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, #d1fae5);
+  border: 3px solid #10b981;
+  animation: mtKnob 1.8s ease-out infinite;
+  transition: left .6s cubic-bezier(.22, 1, .36, 1);
+}
+.task-board-container .active-task-card .task-meta { margin-top: 2px; }
+.task-board-container .active-task-card .task-details { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px 22px; }
+.task-board-container .active-task-card .task-detail-item { display: inline-flex; align-items: center; gap: 7px; margin: 0; color: rgba(255, 255, 255, .7); font-size: 12px; }
+.task-board-container .active-task-card .task-detail-item i { font-size: 13px; color: rgba(255, 255, 255, .6); }
+.task-board-container .active-task-card .task-detail-item b { color: #ffffff; font-weight: 700; }
+
+/* ══ RUNNING badge: a light that runs around its edge + a bouncing three-bar equalizer (all widths) ══ */
+@property --mt-ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes mtSpin { to { --mt-ang: 360deg; } }
+@keyframes mtEq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+@keyframes mtTextFlow { to { background-position: -200% 0; } }
+
+.task-board-container .task-status > .status-indicator.st-running {
+  position: relative;
+  isolation: isolate;
+  background: rgba(6, 78, 59, .55);
+  border: 1px solid rgba(110, 231, 183, .35);
+  box-shadow: 0 0 18px -4px rgba(52, 211, 153, .65), inset 0 0 12px rgba(16, 185, 129, .25);
+  animation: none;
+}
+/* the moving light along the border */
+.task-board-container .task-status > .status-indicator.st-running::before {
+  content: "";
+  position: absolute; inset: -1px; left: -1px; width: auto; z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--mt-ang), transparent 0 55%, rgba(110, 231, 183, .2) 65%, #6ee7b7 82%, #ffffff 90%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transform: none;
+  animation: mtSpin 2.2s linear infinite;
+}
+/* the dot becomes the middle bar of an equalizer; ::before / ::after are its side bars */
+.task-board-container .task-status > .status-indicator.st-running .status-dot {
+  flex: 0 0 3px; width: 3px; height: 13px; margin: 0 6px;
+  border-radius: 2px;
+  background: #6ee7b7;
+  box-shadow: none;
+  transform-origin: 50% 100%;
+  animation: mtEq .9s ease-in-out infinite;
+}
+.task-board-container .task-status > .status-indicator.st-running .status-dot::before,
+.task-board-container .task-status > .status-indicator.st-running .status-dot::after {
+  content: "";
+  position: absolute; top: auto; bottom: 0; right: auto;
+  width: 3px; height: 13px;
+  border: 0; border-radius: 2px;
+  background: #6ee7b7;
+  transform-origin: 50% 100%;
+  animation: mtEq .9s ease-in-out infinite;
+}
+.task-board-container .task-status > .status-indicator.st-running .status-dot::before { left: -5px; animation-delay: -.3s; }
+.task-board-container .task-status > .status-indicator.st-running .status-dot::after { left: 5px; animation-delay: -.6s; }
+/* the word shimmers as light passes through it */
+.task-board-container .task-status > .status-indicator.st-running .status-text {
+  background: linear-gradient(90deg, #a7f3d0 0%, #a7f3d0 40%, #ffffff 50%, #a7f3d0 60%, #a7f3d0 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: mtTextFlow 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-board-container .task-status > .status-indicator.st-running::before,
+  .task-board-container .task-status > .status-indicator.st-running .status-dot,
+  .task-board-container .task-status > .status-indicator.st-running .status-dot::before,
+  .task-board-container .task-status > .status-indicator.st-running .status-dot::after,
+  .task-board-container .task-status > .status-indicator.st-running .status-text,
+  .task-board-container .active-task-card .progress-fill,
+  .task-board-container .active-task-card .ms-knob { animation: none; }
+}
+
+/* ══ Table sort & column filters (front-end only) ═══════════════════════════════════════════
+   Each heading = a sort button (label + arrows: off → A-Z → Z-A → off) and a funnel that opens the
+   filter box. The box is position:fixed (the table scrolls sideways and has rounded clipping) and on
+   phones it becomes a sheet at the bottom of the screen. A bar above the table lists what is active. */
+@keyframes cfpIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes cfpInUp { from { opacity: 0; transform: translateY(calc(-100% + 6px)) scale(.98); } to { opacity: 1; transform: translateY(-100%); } }
+@keyframes cfpSheet { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tvbIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* heading: sort button + funnel */
+.task-board-container .task-table .header-cell { gap: 4px; }
+.task-board-container .task-table .header-cell .hc-sort {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.task-board-container .task-table .header-cell:is(.logged, .total, .progress, .status) .hc-sort { flex: 0 1 auto; justify-content: center; text-align: center; }
+.task-board-container .task-table .header-cell .hc-sort,
+.task-board-container .task-table .header-cell .hc-label { min-width: auto; overflow-wrap: normal; }   /* wraps between words, never inside one */
+/* sort arrow over the funnel in a slim column, so the narrow number columns keep room for their label */
+.task-board-container .task-table .header-cell .hc-tools {
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.task-board-container .task-table .header-cell .hc-sort-ico {
+  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .4;
+  transition: opacity .2s, transform .25s cubic-bezier(.34, 1.56, .64, 1), color .2s;
+}
+.task-board-container .task-table .header-cell:has(.hc-sort:hover) .hc-sort-ico,
+.task-board-container .task-table .header-cell .hc-sort-ico:hover { opacity: .9; }
+.task-board-container .task-table .header-cell.is-sorted .hc-sort-ico { opacity: 1; color: #a7f3d0; transform: scale(1.2); }
+.task-board-container .task-table .header-cell.is-sorted { background: rgba(255, 255, 255, .1); }
+.task-board-container .task-table .header-cell .hc-sort:focus-visible,
+.task-board-container .task-table .header-cell .hc-filter:focus-visible { outline: 2px solid #a7f3d0; outline-offset: 2px; border-radius: 6px; }
+
+.task-board-container .task-table .header-cell .hc-filter {
+  position: relative;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font-size: 10px;
+  opacity: .5;
+  cursor: pointer;
+  transition: opacity .2s, background-color .2s, color .2s, transform .2s;
+}
+.task-board-container .task-table .header-cell .hc-filter:hover,
+.task-board-container .task-table .header-cell .hc-filter.open { opacity: 1; background: rgba(255, 255, 255, .18); }
+.task-board-container .task-table .header-cell .hc-filter:active { transform: scale(.9); }
+/* a filtered column: solid funnel with a dot */
+.task-board-container .task-table .header-cell.is-filtered .hc-filter { opacity: 1; background: #ffffff; color: #0f766e; }
+.task-board-container .task-table .header-cell.is-filtered .hc-filter::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px #0f766e;
+}
+.task-board-container .task-table .header-cell.is-filtered { background: rgba(255, 255, 255, .1); }
+/* number columns get a little more minimum width for label + arrow + funnel (taken from the title column) */
+@media (min-width: 769px) {
+  .task-board-container .task-table .table-header,
+  .task-board-container .task-table .table-row {
+    grid-template-columns:
+      minmax(140px, 1.25fr)    /* category */
+      minmax(0, 2.05fr)        /* title */
+      minmax(84px, .85fr)      /* start date */
+      minmax(124px, 1.5fr)     /* assigned by / to */
+      minmax(74px, .6fr)       /* log time */
+      minmax(86px, .7fr)       /* total hours */
+      minmax(108px, .95fr)     /* progress */
+      minmax(106px, .9fr)      /* status */
+      minmax(140px, .9fr);     /* action: three 34px buttons + gaps + padding (it spilled out at 120px) */
+  }
+}
+.task-board-container .task-table .cell.progress .progress-text-only { white-space: nowrap; }
+/* laptops: a little less padding in each cell so names and pills are not squeezed */
+@media (min-width: 769px) and (max-width: 1500px) {
+  .task-board-container .task-table :is(.cell, .header-cell) { padding-left: 9px; padding-right: 9px; }
+  /* two-word statuses (AUTO CLOSED, NOT STARTED, RE OPEN) may take two lines: keep the icon beside the words */
+  .task-board-container .task-table .cell.status .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    max-width: 100%;
+    padding: 4px 9px;
+    border-radius: 10px;
+    line-height: 1.2;
+    letter-spacing: .03em;
+    text-align: center;
+    white-space: normal;
+  }
+  .task-board-container .task-table .cell.status .status-badge > i { margin-right: 0 !important; }
+  /* a slightly smaller avatar and name so a one-word name such as PREVIEW or MOHAMMED fits beside it */
+  .task-board-container .task-table .assignee-info { gap: 8px; }
+  .task-board-container .task-table .assignee-info .assignee-avatar { flex: 0 0 28px; width: 28px; height: 28px; }
+  .task-board-container .task-table .assignee-info span { font-size: 13px; }
+}
+
+/* the bar of active sort / filters above the table */
+.task-board-container .table-view-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(90deg, #f0fdf4, #ffffff 70%);
+  animation: tvbIn .3s ease-out;
+}
+.task-board-container .table-view-bar .tvb-count { margin-right: 4px; font-size: 12.5px; color: #475569; }
+.task-board-container .table-view-bar .tvb-count b { color: #0f766e; font-size: 14px; }
+.task-board-container .table-view-bar .tvb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 5px 8px 5px 11px;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  animation: tvbIn .3s ease-out backwards;
+  transition: background-color .2s, border-color .2s;
+}
+.task-board-container .table-view-bar .tvb-chip.is-sort { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+.task-board-container .table-view-bar .tvb-chip > i:first-child { font-size: 10.5px; opacity: .75; }
+.task-board-container .table-view-bar .tvb-chip .tvb-x {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 9px;
+  background: rgba(15, 118, 110, .12);
+  transition: background-color .2s, color .2s;
+}
+.task-board-container .table-view-bar .tvb-chip:hover { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+.task-board-container .table-view-bar .tvb-chip:hover .tvb-x { background: #ef4444; color: #fff; }
+.task-board-container .table-view-bar .tvb-clear {
+  margin-left: auto;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.task-board-container .table-view-bar .tvb-clear:hover { background: #fef2f2; }
+
+/* nothing left after filtering */
+.task-board-container .task-table .table-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 34px 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+.task-board-container .task-table .table-empty > i { font-size: 20px; color: #94a3b8; }
+.task-board-container .task-table .table-empty button {
+  padding: 6px 14px;
+  border: 1px solid #10b981;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+/* the filter box */
+.task-board-container .col-filter-pop {
+  position: fixed;
+  z-index: 1250;   /* above the floating assistant button (1200), below the app drawer (3000) */
+  width: 312px;
+  max-height: min(440px, calc(100vh - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px -12px rgba(15, 23, 42, .35), 0 2px 6px rgba(15, 23, 42, .08);
+  color: #0f172a;
+  font-size: 13px;
+  text-align: left;
+  animation: cfpIn .22s cubic-bezier(.22, 1, .36, 1);
+}
+.task-board-container .col-filter-pop.above { transform: translateY(-100%); animation-name: cfpInUp; }
+.task-board-container .col-filter-pop > :not(.cfp-list) { flex-shrink: 0; }   /* only the value list shrinks when space is short */
+.task-board-container .col-filter-pop .cfp-head { display: flex; align-items: center; justify-content: space-between; }
+.task-board-container .col-filter-pop .cfp-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f766e;
+}
+.task-board-container .col-filter-pop .cfp-title i { font-size: 12px; }
+.task-board-container .col-filter-pop .cfp-x {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+.task-board-container .col-filter-pop .cfp-x:hover { background: #f1f5f9; color: #0f172a; }
+
+.task-board-container .col-filter-pop .cfp-sort { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.task-board-container .col-filter-pop .cfp-sort button,
+.task-board-container .col-filter-pop .cfp-presets button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+.task-board-container .col-filter-pop .cfp-sort button:hover,
+.task-board-container .col-filter-pop .cfp-presets button:hover { border-color: #6ee7b7; background: #f0fdf4; }
+.task-board-container .col-filter-pop .cfp-sort button.on { border-color: #10b981; background: linear-gradient(135deg, #10b981, #0f766e); color: #ffffff; }
+
+.task-board-container .col-filter-pop .cfp-presets { display: flex; gap: 6px; }
+.task-board-container .col-filter-pop .cfp-presets button { flex: 1 1 0; padding: 6px 4px; font-size: 11.5px; }
+.task-board-container .col-filter-pop .cfp-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.task-board-container .col-filter-pop .cfp-field { display: flex; flex-direction: column; gap: 5px; margin: 0; min-width: 0; }
+.task-board-container .col-filter-pop .cfp-field > span { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
+.task-board-container .col-filter-pop :is(.cfp-field, .cfp-search) input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.task-board-container .col-filter-pop :is(.cfp-field, .cfp-search) input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
+.task-board-container .col-filter-pop .cfp-search { position: relative; }
+.task-board-container .col-filter-pop .cfp-search i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #94a3b8; }
+.task-board-container .col-filter-pop .cfp-search input { padding-left: 32px; }
+
+.task-board-container .col-filter-pop .cfp-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 230px;
+  overflow-y: auto;
+  margin: -2px -4px;
+  padding: 2px 4px;
+  scrollbar-width: thin;
+}
+.task-board-container .col-filter-pop .cfp-opt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+.task-board-container .col-filter-pop .cfp-opt:hover { background: #f0fdf4; }
+.task-board-container .col-filter-pop .cfp-opt input { flex: 0 0 auto; width: 16px; height: 16px; margin: 0; accent-color: #10b981; cursor: pointer; }
+/* long category names take up to two lines instead of being cut off */
+.task-board-container .col-filter-pop .cfp-opt .cfp-v {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: #1e293b;
+}
+.task-board-container .col-filter-pop .cfp-opt.zero .cfp-v { color: #94a3b8; }
+.task-board-container .col-filter-pop .cfp-opt .cfp-n {
+  flex: 0 0 auto;
+  min-width: 24px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.task-board-container .col-filter-pop .cfp-opt .cfp-only {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: #d1fae5;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.task-board-container .col-filter-pop .cfp-opt:is(:hover, :focus-within) .cfp-only { opacity: 1; }
+.task-board-container .col-filter-pop .cfp-all { border-bottom: 1px solid #eef2f6; border-radius: 8px 8px 0 0; font-weight: 700; }
+.task-board-container .col-filter-pop .cfp-none { padding: 14px 8px; text-align: center; color: #94a3b8; font-size: 12.5px; }
+
+.task-board-container .col-filter-pop .cfp-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #eef2f6;
+}
+.task-board-container .col-filter-pop .cfp-count { flex: 1 1 auto; text-align: center; font-size: 11.5px; color: #64748b; font-variant-numeric: tabular-nums; }
+.task-board-container .col-filter-pop .cfp-foot button {
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.task-board-container .col-filter-pop .cfp-clear { border: 1px solid #e2e8f0; background: #ffffff; color: #dc2626; }
+.task-board-container .col-filter-pop .cfp-clear:disabled { color: #cbd5e1; cursor: default; }
+.task-board-container .col-filter-pop .cfp-done { border: 0; background: linear-gradient(135deg, #10b981, #0f766e); color: #ffffff; box-shadow: 0 4px 12px -4px rgba(16, 185, 129, .6); }
+
+/* dark mode */
+.task-board-container.dark-mode .table-view-bar { border-bottom-color: #334155; background: linear-gradient(90deg, rgba(16, 185, 129, .12), transparent 70%); }
+.task-board-container.dark-mode .table-view-bar .tvb-count { color: #94a3b8; }
+.task-board-container.dark-mode .table-view-bar .tvb-count b { color: #6ee7b7; }
+.task-board-container.dark-mode .table-view-bar .tvb-chip { border-color: rgba(110, 231, 183, .35); background: rgba(16, 185, 129, .14); color: #a7f3d0; }
+.task-board-container.dark-mode .table-view-bar .tvb-chip.is-sort { border-color: rgba(147, 197, 253, .35); background: rgba(59, 130, 246, .14); color: #bfdbfe; }
+.task-board-container.dark-mode .task-table .table-empty { color: #94a3b8; }
+.task-board-container.dark-mode .col-filter-pop { border-color: #334155; background: #1e293b; color: #e2e8f0; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .7); }
+.task-board-container.dark-mode .col-filter-pop .cfp-title { color: #6ee7b7; }
+.task-board-container.dark-mode .col-filter-pop .cfp-x:hover { background: #334155; color: #fff; }
+.task-board-container.dark-mode .col-filter-pop :is(.cfp-sort, .cfp-presets) button { border-color: #334155; background: #0f172a; color: #cbd5e1; }
+.task-board-container.dark-mode .col-filter-pop .cfp-sort button.on { border-color: #10b981; background: linear-gradient(135deg, #10b981, #0f766e); color: #fff; }
+.task-board-container.dark-mode .col-filter-pop :is(.cfp-field, .cfp-search) input { border-color: #475569; background: #0f172a; color: #e2e8f0; color-scheme: dark; }
+.task-board-container.dark-mode .col-filter-pop .cfp-opt:hover { background: rgba(16, 185, 129, .12); }
+.task-board-container.dark-mode .col-filter-pop .cfp-opt .cfp-v { color: #e2e8f0; }
+.task-board-container.dark-mode .col-filter-pop .cfp-opt.zero .cfp-v { color: #64748b; }
+.task-board-container.dark-mode .col-filter-pop .cfp-opt .cfp-n { background: #334155; color: #cbd5e1; }
+.task-board-container.dark-mode .col-filter-pop :is(.cfp-all, .cfp-foot) { border-color: #334155; }
+.task-board-container.dark-mode .col-filter-pop .cfp-clear { border-color: #334155; background: transparent; }
+
+/* phones: the heading row is hidden there (rows are cards), so it comes back as a strip of sort/filter
+   chips you can swipe sideways, and the filter box is a sheet at the bottom of the screen */
+@media (max-width: 768px) {
+  .task-board-container .task-table .table-header {
+    display: flex !important;
+    gap: 6px;
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 8px 10px !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    position: static;
+  }
+  .task-board-container .task-table .table-header::-webkit-scrollbar { display: none; }
+  .task-board-container .task-table .table-header .header-cell {
+    flex: 0 0 auto;
+    display: inline-flex !important;
+    align-items: center;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 4px 4px 4px 11px !important;
+    border: 1px solid #d1fae5 !important;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  .task-board-container .task-table .table-header .header-cell.action { display: none !important; }
+  .task-board-container .task-table .table-header .header-cell .hc-sort { white-space: nowrap; }
+  .task-board-container .task-table .table-header .header-cell .hc-tools { flex-direction: row; gap: 6px; }
+  .task-board-container .task-table .table-header .header-cell .hc-filter { flex-basis: 26px; width: 26px; height: 26px; border-radius: 50%; background: #ecfdf5; opacity: 1; }
+  .task-board-container .task-table .table-header .header-cell.is-sorted { border-color: #10b981 !important; background: #ecfdf5; }
+  .task-board-container .task-table .table-header .header-cell.is-sorted .hc-sort-ico { color: #047857; }
+  .task-board-container .task-table .table-header .header-cell.is-filtered { border-color: #10b981 !important; background: #ecfdf5; }
+  .task-board-container .task-table .table-header .header-cell.is-filtered .hc-filter { background: #10b981; color: #fff; }
+  .task-board-container .task-table .table-header .header-cell.is-filtered .hc-filter::after { box-shadow: 0 0 0 2px #ffffff; }
+
+  .task-board-container .col-filter-pop,
+  .task-board-container .col-filter-pop.above {
+    top: auto !important;
+    left: 8px !important;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    max-height: 78vh !important;   /* beats the inline max-height used on desktop */
+    transform: none;
+    border-radius: 18px;
+    animation: cfpSheet .28s cubic-bezier(.22, 1, .36, 1);
+  }
+  .task-board-container .col-filter-pop .cfp-list { max-height: 42vh; }
+  .task-board-container .col-filter-pop .cfp-opt { padding: 10px 8px; }
+  .task-board-container .col-filter-pop .cfp-opt .cfp-only { opacity: 1; }
+  .task-board-container .col-filter-pop :is(.cfp-field, .cfp-search) input { font-size: 16px; }   /* no iOS zoom */
+  .task-board-container .table-view-bar { padding: 10px 12px; }
+  /* the three task tabs share the row and wrap their words (an older !important nowrap made them run into each other) */
+  .task-board-container .task-tabs .tabs-container .tab-btn { white-space: normal !important; }
+  .task-board-container .table-view-bar .tvb-clear { margin-left: 0; }
+
+  .task-board-container.dark-mode .task-table .table-header { background: #0f172a; border-bottom-color: #334155; }
+  .task-board-container.dark-mode .task-table .table-header .header-cell { border-color: #334155 !important; background: #1e293b; color: #a7f3d0; }
+  .task-board-container.dark-mode .task-table .table-header .header-cell .hc-filter { background: rgba(16, 185, 129, .16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-board-container :is(.col-filter-pop, .table-view-bar, .tvb-chip) { animation: none !important; }
+}
+
+/* ══ Headings on ONE line (desktop) ══════════════════════════════════════════════════════════
+   label + a matching pair of small buttons (sort arrow, funnel) straight after it, the pair centred
+   on the label's line. Each column has a minimum that fits its heading on one line (measured:
+   label + 8px + 42px buttons + cell padding); on screens too narrow for that the table scrolls
+   sideways instead of breaking the headings. */
+@media (min-width: 769px) {
+  .task-board-container .task-table .table-header,
+  .task-board-container .task-table .table-row {
+    grid-template-columns:
+      minmax(174px, 1.2fr)     /* TASK CATEGORY */
+      minmax(220px, 2.3fr)     /* TASK TITLE */
+      minmax(150px, .9fr)      /* START DATE */
+      minmax(160px, 1.3fr)     /* ASSIGNED BY / TO */
+      minmax(134px, .75fr)     /* LOG TIME */
+      minmax(160px, .85fr)     /* TOTAL HOURS */
+      minmax(142px, .95fr)     /* PROGRESS */
+      minmax(126px, .85fr)     /* STATUS */
+      minmax(140px, .85fr);    /* ACTION */
+  }
+  .task-board-container .task-table :is(.table-header, .table-body, .table-row) { min-width: 1406px !important; }
+
+  .task-board-container .task-table .table-header { min-height: 50px; }
+  .task-board-container .task-table .header-cell {
+    gap: 8px;
+    justify-content: flex-start;
+    white-space: nowrap;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .task-board-container .task-table .header-cell:is(.logged, .total, .progress, .status, .action) { justify-content: center; }
+  .task-board-container .task-table .header-cell .hc-sort { flex: 0 1 auto; justify-content: flex-start; white-space: nowrap; }
+  .task-board-container .task-table .header-cell .hc-label { white-space: nowrap; line-height: 1.2; }
+
+  /* the button pair: same size, same shape, side by side */
+  .task-board-container .task-table .header-cell .hc-tools {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+  }
+  .task-board-container .task-table .header-cell .hc-sort-ico,
+  .task-board-container .task-table .header-cell .hc-filter {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 6px;
+    font-size: 10px;
+    line-height: 1;
+    opacity: .55;
+    transform: none;
+    transition: opacity .2s, background-color .2s, color .2s;
+  }
+  .task-board-container .task-table .header-cell .hc-sort-ico:hover,
+  .task-board-container .task-table .header-cell:has(.hc-sort:hover) .hc-sort-ico,
+  .task-board-container .task-table .header-cell .hc-filter:hover,
+  .task-board-container .task-table .header-cell .hc-filter.open { opacity: 1; background: rgba(255, 255, 255, .18); }
+  .task-board-container .task-table .header-cell.is-sorted .hc-sort-ico { opacity: 1; transform: none; background: rgba(255, 255, 255, .22); color: #a7f3d0; }
+  .task-board-container .task-table .header-cell.is-filtered .hc-filter { opacity: 1; background: #ffffff; color: #0f766e; }
+  /* the ⇅ glyph's ink sits a pixel above centre; level it with the funnel */
+  .task-board-container .task-table .header-cell .hc-sort-ico.fa-sort::before { position: relative; top: 1px; }
+}
+
+/* laptops: smaller padding and buttons, so the one-line minimums are as small as they can be */
+@media (min-width: 769px) and (max-width: 1500px) {
+  .task-board-container .task-table .table-header,
+  .task-board-container .task-table .table-row {
+    grid-template-columns:
+      minmax(158px, 1.2fr)
+      minmax(200px, 2.3fr)
+      minmax(134px, .9fr)
+      minmax(144px, 1.3fr)
+      minmax(118px, .75fr)
+      minmax(144px, .85fr)
+      minmax(126px, .95fr)
+      minmax(110px, .85fr)
+      minmax(140px, .85fr);
+  }
+  .task-board-container .task-table :is(.table-header, .table-body, .table-row) { min-width: 1274px !important; }
+  .task-board-container .task-table .header-cell { gap: 6px; }
+  .task-board-container .task-table .header-cell .hc-sort-ico,
+  .task-board-container .task-table .header-cell .hc-filter { flex-basis: 18px; width: 18px; height: 18px; }
+}
+
+/* ══ Timer as a round dial (all widths) ═══════════════════════════════════════════════════════
+   Same colours as before (amber digits, the card's greens and white) — only the shape changes:
+   an outer track, minute ticks with longer marks every 30°, a light that runs round the edge while
+   the task is RUNNING (a second, shorter amber arc runs the other way), a dark inner face, and a
+   stopwatch over the time. Paused / not started: the lights stop and dim. */
+@keyframes tdSpin { to { transform: rotate(360deg); } }
+@keyframes tdSpinBack { to { transform: rotate(-360deg); } }
+@keyframes tdBreath { 0%, 100% { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 0 22px -6px rgba(16, 185, 129, .55); } 50% { box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 0 34px -4px rgba(16, 185, 129, .85); } }
+@keyframes tdTick { 0%, 86%, 100% { transform: rotate(0); } 90% { transform: rotate(-14deg); } 95% { transform: rotate(8deg); } }
+
+.task-board-container .active-task-card .timer-box {
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 auto;
+  width: 150px;
+  height: 150px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, .06), rgba(0, 0, 0, .18) 70%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 0 22px -6px rgba(16, 185, 129, .55);
+  overflow: visible;
+}
+.task-board-container .active-task-card .timer-box.is-live { animation: tdBreath 2.8s ease-in-out infinite; }
+.task-board-container .active-task-card .timer-box > .timer-glow-bg { display: none; }
+.task-board-container .active-task-card .timer-box > span[class^="td-"] {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* outer track, with a few sparkles circling just outside it while the task runs */
+@keyframes tdTwinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+.task-board-container .active-task-card .td-track { inset: 0; z-index: -1; box-shadow: inset 0 0 0 4.5px rgba(255, 255, 255, .1); }
+.task-board-container .active-task-card .td-track::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 1.5%, #fff 0 1.4px, transparent 2.2px),
+    radial-gradient(circle at 92% 27%, #a7f3d0 0 1.2px, transparent 2px),
+    radial-gradient(circle at 88% 82%, #fde68a 0 1.2px, transparent 2px),
+    radial-gradient(circle at 40% 98.5%, #fff 0 1px, transparent 1.8px),
+    radial-gradient(circle at 5% 64%, #a7f3d0 0 1.3px, transparent 2.1px),
+    radial-gradient(circle at 16% 13%, #fde68a 0 1px, transparent 1.8px);
+  opacity: 0;
+  transition: opacity .4s;
+}
+.task-board-container .active-task-card .timer-box.is-live .td-track::before { opacity: 1; animation: tdSpin 14s linear infinite, tdTwinkle 1.8s ease-in-out infinite; }
+/* minute ticks + longer five-minute marks */
+.task-board-container .active-task-card .td-ticks {
+  inset: 8px;
+  z-index: -1;
+  background:
+    repeating-conic-gradient(from -.6deg, rgba(255, 255, 255, .85) 0 1.2deg, transparent 1.2deg 30deg),
+    repeating-conic-gradient(from -.4deg, rgba(255, 255, 255, .32) 0 .8deg, transparent .8deg 6deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+}
+/* the light running round the edge, with a bright head */
+.task-board-container .active-task-card .td-run {
+  inset: 0;
+  z-index: 0;
+  background: conic-gradient(from 0deg, transparent 0 45%, rgba(110, 231, 183, .15) 60%, rgba(167, 243, 208, .8) 88%, #ffffff 99.5%, transparent 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px));
+  filter: drop-shadow(0 0 4px rgba(110, 231, 183, .8));
+  opacity: .35;
+  transition: opacity .4s;
+}
+.task-board-container .active-task-card .td-run::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px 2px rgba(110, 231, 183, .9), 0 0 14px 4px rgba(16, 185, 129, .55);
+}
+/* the second, shorter arc in the digits' amber, running the other way just inside the first */
+.task-board-container .active-task-card .td-run-2 {
+  inset: 18px;
+  background: conic-gradient(from 0deg, transparent 0 80%, rgba(251, 191, 36, .1) 86%, rgba(251, 191, 36, .75) 99%, transparent 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+}
+.task-board-container .active-task-card .td-run-2::after { width: 4px; height: 4px; margin-left: -2px; top: 0; background: #fde68a; box-shadow: 0 0 6px 2px rgba(251, 191, 36, .7); }
+.task-board-container .active-task-card .timer-box.is-live .td-run { opacity: 1; animation: tdSpin 2.8s linear infinite; }
+.task-board-container .active-task-card .timer-box.is-live .td-run-2 { opacity: .9; animation: tdSpinBack 4.6s linear infinite; }
+/* dark inner face with a slowly turning dashed ring */
+.task-board-container .active-task-card .td-core {
+  inset: 20px;
+  z-index: -1;
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, .07), rgba(0, 0, 0, .28));
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .07);
+}
+.task-board-container .active-task-card .td-core::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, .16);
+}
+.task-board-container .active-task-card .timer-box.is-live .td-core::before { animation: tdSpin 30s linear infinite; }
+
+/* stopwatch over the time, time, label */
+.task-board-container .active-task-card .td-icon {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  color: #6ee7b7;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, .7));
+  transform-origin: 50% 60%;
+}
+.task-board-container .active-task-card .timer-box.is-live .td-icon { animation: tdTick 1s ease-in-out infinite; }
+.task-board-container .active-task-card .timer-box .timer-digits {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.task-board-container .active-task-card .timer-box .timer-digits .digit-group { display: inline-flex; gap: 0; }
+.task-board-container .active-task-card .timer-box .timer-digits :is(.digit, .separator) {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgba(251, 191, 36, .35);
+}
+.task-board-container .active-task-card .timer-box .timer-digits .separator { opacity: .7; padding: 0 1px; }
+.task-board-container .active-task-card .timer-box :is(.digit, .separator, .timer-label-modern):not(#_) {
+  font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, ui-monospace, monospace !important;
+}
+.task-board-container .active-task-card .timer-box .timer-label-modern {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 8.5px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: rgba(255, 255, 255, .7);
+}
+
+/* desktop: Pause / Stop sit in a column beside the dial, so the card keeps its height */
+@media (min-width: 769px) {
+  .task-board-container .active-task-card .timer-control-section {
+    /* left column: sound bars over the ripple; middle: the dial; right: Pause / Stop */
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "bars timer ctrl" "wave timer ctrl";
+    gap: 8px 14px;
+    padding: 12px 16px;
+  }
+  .task-board-container .active-task-card .modern-controls { flex-direction: column; gap: 10px; }
+  .task-board-container .active-task-card .timer-bars { align-self: end; }
+  .task-board-container .active-task-card .timer-wave { align-self: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-board-container .active-task-card .timer-box,
+  .task-board-container .active-task-card .timer-box .td-run,
+  .task-board-container .active-task-card .timer-box .td-core::before,
+  .task-board-container .active-task-card .timer-box .td-track::before,
+  .task-board-container .active-task-card .timer-box .td-icon { animation: none !important; }
+}
+
+/* ══ Timer, round 2: a mirrored sound wave on the left; around the dial a turning dotted orbit,
+   pulses spreading from its edge, and the minute ticks lighting up one by one with the real seconds
+   (all widths; same colours) ══════════════════════════════════════════════════════════════════ */
+@property --td-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes tdEq { 0%, 100% { transform: scaleY(.28); } 50% { transform: scaleY(1); } }
+@keyframes tdPulse { 0% { transform: scale(1); opacity: .75; } 100% { transform: scale(1.13); opacity: 0; } }
+
+/* sound wave: 11 bars, mirrored around a faint centre line, each with its own height and timing */
+.task-board-container .active-task-card .timer-eq {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 70px;
+  padding: 0 2px;
+}
+.task-board-container .active-task-card .timer-eq::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .28), transparent);
+}
+.task-board-container .active-task-card .timer-eq i {
+  display: block;
+  flex: 0 0 3px;
+  width: 3px;
+  height: calc(var(--h) * 1%);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #6ee7b7, #fbbf24 50%, #6ee7b7);
+  box-shadow: 0 0 6px rgba(251, 191, 36, .45);
+  transform: scaleY(.2);
+  opacity: .55;
+  transition: transform .5s ease, opacity .5s;
+}
+.task-board-container .active-task-card .timer-eq.is-live i {
+  opacity: 1;
+  animation: tdEq 1.05s ease-in-out infinite;
+  animation-delay: calc(var(--k) * -.17s);
+}
+.task-board-container .active-task-card .timer-eq.is-live i:nth-child(3n) { animation-duration: .8s; }
+.task-board-container .active-task-card .timer-eq.is-live i:nth-child(3n + 1) { animation-duration: 1.3s; }
+
+/* dotted orbit just outside the dial, turning slowly the other way, with four brighter beads */
+.task-board-container .active-task-card .td-orbit {
+  inset: -10px;
+  z-index: -2;
+  background: repeating-conic-gradient(rgba(255, 255, 255, .45) 0 1.4deg, transparent 1.4deg 9deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  opacity: .5;
+  transition: opacity .4s;
+}
+.task-board-container .active-task-card .td-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 1%, #a7f3d0 0 2px, transparent 2.6px),
+    radial-gradient(circle at 99% 50%, #fde68a 0 2px, transparent 2.6px),
+    radial-gradient(circle at 50% 99%, #a7f3d0 0 2px, transparent 2.6px),
+    radial-gradient(circle at 1% 50%, #fde68a 0 2px, transparent 2.6px);
+}
+.task-board-container .active-task-card .timer-box.is-live .td-orbit { opacity: 1; animation: tdSpinBack 40s linear infinite; }
+
+/* pulses spreading out from the dial's edge */
+.task-board-container .active-task-card .td-pulse {
+  inset: 0;
+  z-index: -2;
+  border: 1.5px solid rgba(110, 231, 183, .7);
+  opacity: 0;
+}
+.task-board-container .active-task-card .timer-box.is-live .td-pulse { animation: tdPulse 2.6s cubic-bezier(.22, 1, .36, 1) infinite; }
+.task-board-container .active-task-card .timer-box.is-live .td-pulse-2 { animation-delay: 1.3s; }
+
+/* the minute ticks light up green up to the current second (resets at :00) */
+.task-board-container .active-task-card .td-sec {
+  inset: 8px;
+  z-index: -1;
+  --td-a: calc(var(--td-s, 0) * 6deg);
+  background:
+    repeating-conic-gradient(from -.6deg, #a7f3d0 0 1.2deg, transparent 1.2deg 30deg),
+    repeating-conic-gradient(from -.5deg, #6ee7b7 0 1deg, transparent 1deg 6deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px)), conic-gradient(#000 var(--td-a), transparent 0);
+  -webkit-mask-composite: source-in;
+  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px)), conic-gradient(#000 var(--td-a), transparent 0);
+  mask-composite: intersect;
+  filter: drop-shadow(0 0 3px rgba(110, 231, 183, .9));
+  transition: --td-a .95s linear;
+}
+.task-board-container .active-task-card .timer-box.td-s0 .td-sec { transition: none; }
+
+/* desktop: wave | dial | Pause + Stop, one row, the card keeps its height */
+@media (min-width: 769px) {
+  .task-board-container .active-task-card .timer-control-section {
+    grid-template-rows: auto;
+    grid-template-areas: "eq timer ctrl";
+    gap: 14px;
+  }
+  .task-board-container .active-task-card .timer-eq { grid-area: eq; align-self: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-board-container .active-task-card .timer-eq i,
+  .task-board-container .active-task-card .td-orbit,
+  .task-board-container .active-task-card .td-pulse { animation: none !important; }
+  .task-board-container .active-task-card .td-sec { transition: none; }
+}
+
+/* ══ Table polish (desktop): a thin scrollbar, names that wrap cleanly ══════════════════════════
+   - the sideways scrollbar is a 6px line instead of the 10px green bar of an older rule
+   - names wrap between words only (they are also shown in Title Case in the template) */
+@media (min-width: 769px) {
+  .task-board-container .task-table { scrollbar-width: auto; }
+  .task-board-container .task-table::-webkit-scrollbar { height: 6px; }
+  .task-board-container .task-table::-webkit-scrollbar-track { margin: 0 2px; border-radius: 0; background: #eef2f6; }
+  .task-board-container .task-table::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(15, 118, 110, .45); }
+  .task-board-container .task-table::-webkit-scrollbar-thumb:hover { background: #0f766e; }
+  .task-board-container.dark-mode .task-table::-webkit-scrollbar-track { background: #1e293b; }
+  .task-board-container.dark-mode .task-table::-webkit-scrollbar-thumb { background: rgba(110, 231, 183, .4); }
+
+  /* names: break between words, never inside one; two lines at most */
+  .task-board-container .task-table .assignee-info span,
+  .task-board-container .task-table .assignee-multi-name {
+    overflow-wrap: normal;
+    word-break: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    line-height: 1.3;
+  }
+}

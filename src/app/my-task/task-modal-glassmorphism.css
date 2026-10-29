@@ -4690,3 +4690,98 @@ input[type="date"].metadata-input::-webkit-calendar-picker-indicator {
 :host-context(.dark-theme) .add-field-modal-footer .selected-count {
   color: #9ca3af;
 }
+
+/* ═══ Mobile responsiveness — Select Task window ═══════════════════════════════════════════
+   Appended to the LAST stylesheet of this component on purpose: task-details-modal.css loads after
+   my-task.component.css and re-forces `.task-item { height: 50px }`, so the phone rules in
+   my-task.component.css lost and the Assign / Add buttons spilled over the next row.
+   Scoped to .select-task-modal so other lists using .task-item are untouched. */
+@media (max-width: 768px) {
+  .modal-overlay .select-task-modal {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: 92dvh;
+    border-radius: 20px;
+  }
+  .select-task-modal .select-modal-header {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 16px 10px;
+  }
+  .select-task-modal .select-modal-header > div:first-child { flex: 1 1 auto; min-width: 0; }
+  .select-task-modal .header-actions { flex: 0 0 auto; width: auto; margin-left: auto; gap: 6px; }   /* an older rule stretched it to 100% */
+  .select-task-modal .manage-tasks-btn span { display: none; }   /* icon only on a phone */
+
+  /* the three tabs share the width instead of scrolling off the screen */
+  .select-task-modal .select-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+    padding: 0 8px;
+  }
+  .select-task-modal .select-tab-btn {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 10px 4px;
+    font-size: 10px;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .select-task-modal .task-list-container { padding: 12px; }
+
+  /* a row: star + full title (wraps) on top, the two buttons share a line underneath */
+  .select-task-modal .task-item {
+    height: auto;
+    min-height: 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    row-gap: 10px;
+    padding: 12px;
+  }
+  .select-task-modal .task-item-content { flex: 1 1 calc(100% - 40px); min-width: 0; }
+  .select-task-modal .task-item-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.35;
+  }
+  .select-task-modal .task-item-actions {
+    flex: 1 1 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .select-task-modal .assign-btn,
+  .select-task-modal .add-start-btn {
+    width: 100%;
+    min-height: 40px;
+    justify-content: center;
+  }
+  .select-task-modal .select-search-input { font-size: 16px; }   /* stops iOS zooming into the field */
+}
+
+/* ═══ Mobile responsiveness — My Tasks page tab strip ═══
+   "My tasks / Assigned to others / Scheduled tasks" scrolled sideways and the third tab was cut off;
+   on a phone the three share the width and their labels wrap. */
+@media (max-width: 768px) {
+  .task-tabs .tabs-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+    gap: 4px;
+  }
+  .task-tabs .tabs-container .tab-btn {
+    min-width: 0;
+    padding: 8px 4px;
+    font-size: 11px;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+  }
+}

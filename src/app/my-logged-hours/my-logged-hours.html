@@ -243,7 +243,7 @@
               @for (record of dayGroup.records; track record.id) {
                 <div class="record-row" [style.grid-template-columns]="getGridTemplateColumnsWithCustomFields()" (click)="openTaskModal(record)" style="cursor: pointer;">
                   @for (column of getAllVisibleColumns(); track column.key) {
-                    <div class="record-col" [class]="column.key">
+                    <div class="record-col" [class]="column.key" [attr.data-label]="column.label">
                       @switch (column.key) {
                         @case ('title') {
                           <div class="title-column-content">
@@ -1191,36 +1191,36 @@
               <tbody>
                 @for (log of dayLogHistory; track log.timeLogId) {
                   <tr class="day-log-row">
-                    <td class="td-log-id">
+                    <td class="td-log-id" data-label="Log ID">
                       <span class="log-id-badge">#{{ log.timeLogId }}</span>
                     </td>
-                    <td class="td-user">
+                    <td class="td-user" data-label="User">
                       <div class="user-cell">
                         <span class="user-name">{{ log.userName }}</span>
                         <span class="user-id">{{ log.userId }}</span>
                       </div>
                     </td>
-                    <td class="td-log-date">
+                    <td class="td-log-date" data-label="Log date">
                       <span class="log-date">{{ formatLogDateOnly(log.logDate) }}</span>
                     </td>
-                    <td class="td-start-time">
+                    <td class="td-start-time" data-label="Start">
                       <span class="time-text">{{ formatTimeOnly(log.startTime) }}</span>
                     </td>
-                    <td class="td-end-time">
+                    <td class="td-end-time" data-label="End">
                       <span class="time-text">{{ formatTimeOnly(log.endTime) }}</span>
                     </td>
-                    <td class="td-duration">
+                    <td class="td-duration" data-label="Log time">
                       <span class="duration-badge">
                         <i class="fas fa-clock"></i>
                         {{ log.duration }}
                       </span>
                     </td>
-                    <td class="td-status">
+                    <td class="td-status" data-label="Status">
                       <span class="status-badge" [ngClass]="getStatusClass(log.status)">
                         {{ log.status || 'N/A' }}
                       </span>
                     </td>
-                    <td class="td-actions">
+                    <td class="td-actions" data-label="Edit">
                       @if (log.status && log.status.toUpperCase() === 'AUTO CLOSED') {
                         <button class="btn-icon-edit" (click)="editDayLog(log)" title="Edit Log Time">
                           <i class="fas fa-pencil-alt"></i>

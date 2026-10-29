@@ -1,0 +1,803 @@
+/* ════════════════════════════════════════════════════════════════════════
+   WEEKLY QA/QC DASHBOARD — page-specific rules only.
+   Tokens, dark theme, .card, .btn, .pill, tooltip and the base motion come from
+   ../styles/dpr-dash.css (shared with the DPR dashboards). Everything here is
+   prefixed .qw so it can't leak; :host-context(.dark-theme) tokens of the shared
+   file already flip --card, --ink*, --line* … for dark mode.
+
+   Layout: colour header (live ring + controls) → 5 gradient KPI tiles that overlap it
+   → project list (rows open into detail rings) + side rail → one tabbed inspection table.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* the shared file pins every element to --ff (inherited); the whole page uses the heading face */
+.qw{--ff:var(--fh)}
+
+@keyframes qwShift{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+@keyframes qwRing{from{stroke-dashoffset:var(--c0,163.36)}}
+@keyframes qwPop{0%{transform:scale(.8);opacity:.2}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes qwBeat{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--a4) 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
+@keyframes qwSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes qwLive{0%{box-shadow:0 0 0 0 rgba(110,231,183,.7)}100%{box-shadow:0 0 0 9px rgba(110,231,183,0)}}
+
+/* ── first paint: numbers wait for the data instead of flashing zeros ─────── */
+.qw.sk .kt-v,.qw.sk .mn b,.qw.sk .mc b,.qw.sk .hring .mid b{opacity:.25;filter:blur(4px)}
+.qw .kt-v,.qw .mn b,.qw .mc b,.qw .hring .mid b{transition:opacity .35s,filter .35s}
+
+/* ══ header band ═════════════════════════════════════════════════════════ */
+.qw .qh{position:relative;border-radius:26px;color:#fff;padding:26px 30px 86px;
+  background:linear-gradient(115deg,#053d33 0%,#047857 36%,#0e7490 68%,#4f46e5 100%);background-size:170% 170%;
+  animation:qwShift 16s ease-in-out infinite alternate;box-shadow:0 26px 50px -24px rgba(4,120,87,.6)}
+.qw .qh-bg{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.qw .qh-bg span{position:absolute;border-radius:50%;filter:blur(46px);opacity:.5;animation:drift 13s ease-in-out infinite}
+.qw .qh-bg .b1{width:360px;height:360px;right:-70px;top:-150px;background:#34d399}
+.qw .qh-bg .b2{width:300px;height:300px;left:34%;bottom:-190px;background:#38bdf8;animation-delay:-5s}
+.qw .qh-bg .b3{width:240px;height:240px;left:-70px;top:10px;background:#a78bfa;animation-delay:-9s}
+.qw .qh-bg .dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.2) 1px,transparent 1.2px);background-size:22px 22px;
+  -webkit-mask-image:linear-gradient(100deg,transparent 30%,#000 100%);mask-image:linear-gradient(100deg,transparent 30%,#000 100%)}
+.qw .qh-in{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:22px 32px;flex-wrap:wrap}
+.qw .qh-l{min-width:0;flex:1 1 560px}
+.qw .qh h1{font:700 32px/38px var(--fh);letter-spacing:-.03em;color:#fff;-webkit-text-fill-color:#fff}
+.qw .hsum{margin:4px 0 0;font:500 15px/23px var(--fh);color:rgba(255,255,255,.88);max-width:720px;animation:rise .7s cubic-bezier(.22,1,.36,1) .12s backwards}
+.qw .live{display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;padding:3px 12px 3px 9px;border-radius:999px;font:600 11px var(--fh);
+  letter-spacing:.05em;text-transform:uppercase;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.26);backdrop-filter:blur(6px)}
+.qw .live i{width:8px;height:8px;border-radius:50%;background:#6ee7b7;animation:qwLive 1.8s ease-out infinite}
+
+/* controls — frosted glass on the colour */
+.qw .ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.qw .wk{display:flex;align-items:center;gap:6px}
+.qw .wbtn,.qw .qh .btn{height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);color:#fff;cursor:pointer;
+  backdrop-filter:blur(6px);transition:transform .15s cubic-bezier(.34,1.56,.64,1),background-color .2s,border-color .2s,box-shadow .2s}
+.qw .wbtn{width:38px;display:grid;place-items:center}
+.qw .wbtn .material-symbols-outlined{font-size:21px}
+.qw .wbtn:hover:not(:disabled),.qw .qh .btn:hover:not(:disabled){transform:translateY(-1px);background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.5)}
+.qw .wbtn:disabled,.qw .qh .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.qw .qh .btn{display:inline-flex;align-items:center;gap:7px;padding:0 14px;font:600 13px var(--fh)}
+.qw .qh .btn .material-symbols-outlined{font-size:18px}
+.qw .qh .btn.pri{background:#fff;color:#065f46;border-color:#fff;box-shadow:0 8px 20px -8px rgba(0,0,0,.45)}
+.qw .qh .btn.pri:hover:not(:disabled){background:#ecfdf5}
+.qw .wpill{padding:3px 15px;border-radius:11px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);min-width:0;cursor:help;text-align:center;
+  backdrop-filter:blur(6px)}
+.qw .wpill b{display:block;font:600 14px/19px var(--fh);white-space:nowrap}
+.qw .wpill span{display:block;font-size:10.5px;line-height:14px;color:rgba(255,255,255,.75);white-space:nowrap}
+.qw .dates{display:flex;align-items:flex-end;gap:8px}
+.qw .dfield{display:flex;flex-direction:column;gap:2px}
+.qw .dfield .lbl{font-size:10px;color:rgba(255,255,255,.72)}
+.qw .dfield input{height:38px;padding:0 9px;border-radius:11px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);color:#fff;color-scheme:dark;
+  font:500 12.5px var(--fh);width:136px;backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .2s}
+.qw .dfield input:hover:not(:disabled){border-color:rgba(255,255,255,.55)}
+.qw .dfield input:focus-visible{outline:none;border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.28)}
+.qw .dfield input:disabled{opacity:.5}
+.qw .wbtn:focus-visible,.qw .qh .btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* project picker */
+.qw .picker{position:relative}
+.qw .pk .chev{font-size:18px;margin-left:2px;transition:transform .2s}
+.qw .pk.open .chev{transform:rotate(180deg)}
+.qw .pk-menu{position:absolute;left:0;top:calc(100% + 8px);z-index:40;width:min(310px,86vw);max-height:340px;overflow:auto;padding:6px;color:var(--ink);
+  border-radius:16px;background:var(--card);border:1px solid var(--line);box-shadow:0 22px 50px -12px rgba(15,23,42,.35);
+  animation:pop .22s cubic-bezier(.34,1.56,.64,1) backwards;transform-origin:top left}
+.qw .pk-i{display:flex;align-items:center;gap:10px;width:100%;padding:7px 9px;border:0;border-radius:10px;background:transparent;color:var(--ink);
+  text-align:left;cursor:pointer;font:600 13px var(--fh);transition:background-color .15s}
+.qw .pk-i:hover{background:var(--card2)}
+.qw .pk-i.all{border-bottom:1px solid var(--line2);border-radius:10px 10px 0 0;margin-bottom:4px}
+.qw .pk-i small{font:500 11px var(--fh);color:var(--ink3);margin-left:auto}
+.qw .pk-i .pn1{min-width:0;display:flex;flex-direction:column}
+.qw .pk-i .pn1 b{font:600 13px/17px var(--fh)}
+.qw .pk-i .pn1 small{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qw .ck{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--line3);display:grid;place-items:center;flex-shrink:0;color:transparent;
+  transition:background-color .15s,border-color .15s,color .15s}
+.qw .ck .material-symbols-outlined{font-size:14px}
+.qw .pk-i.on .ck{background:var(--brand);border-color:var(--brand);color:#fff}
+.qw .pk-i:focus-visible,.qw .segb:focus-visible,.qw .sr:focus-visible,.qw .kt:focus-visible,.qw .at:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* the live closure ring */
+.qw .qh-r{position:relative;display:flex;align-items:center;gap:20px;padding:16px 22px 16px 16px;border-radius:22px;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.qw .hring{position:relative;width:132px;height:132px;flex-shrink:0;cursor:help}
+.qw .hring svg{transform:rotate(-90deg);filter:drop-shadow(0 0 10px rgba(190,242,100,.45))}
+.qw .hring .rt{fill:none;stroke:rgba(255,255,255,.2);stroke-width:10}
+.qw .hring .rv{fill:none;stroke-width:10;stroke-linecap:round;--c0:326.73;animation:qwRing 1.6s cubic-bezier(.25,.9,.3,1) .35s backwards}
+.qw .hring .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;align-content:center;padding-top:6px}
+.qw .hring .mid b{font:700 34px/1 var(--fh);letter-spacing:-.04em}
+.qw .hring .mid i{font:600 15px var(--fh);font-style:normal;margin:4px 0 0 1px;opacity:.85}
+.qw .hring .mid span{flex-basis:100%;text-align:center;font:600 10px var(--fh);letter-spacing:.1em;text-transform:uppercase;opacity:.8;margin-top:2px}
+.qw .hlg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;min-width:150px}
+.qw .hlg li{display:flex;align-items:center;gap:9px;font:500 12.5px var(--fh);color:rgba(255,255,255,.9)}
+.qw .hlg i{width:10px;height:10px;border-radius:3px;background:var(--c);flex-shrink:0;box-shadow:0 0 10px var(--c)}
+.qw .hlg b{margin-left:auto;font:700 14px var(--fh)}
+.qw .hlg small{font:500 11px var(--fh);opacity:.75}
+
+.qw .alert{display:flex;align-items:center;gap:10px;margin:0;padding:10px 14px;border-radius:14px;background:var(--crbg);
+  border:1px solid var(--crbd);color:var(--cr);font:600 13px var(--fh)}
+.qw .alert span:nth-child(2){flex:1}
+
+/* ══ KPI tiles ═══════════════════════════════════════════════════════════ */
+.qw .kgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:-84px;padding:0 22px;position:relative;z-index:2}
+.qw .kt{--tc:var(--a3);position:relative;display:flex;flex-direction:column;gap:3px;text-align:left;border:0;cursor:pointer;color:#fff;
+  padding:16px 16px 14px;border-radius:20px;overflow:hidden;min-width:0;
+  background:linear-gradient(140deg,color-mix(in srgb,var(--tc) 86%,#fff) 0%,var(--tc) 46%,color-mix(in srgb,var(--tc) 66%,#1e1b4b) 100%);
+  box-shadow:0 16px 30px -16px color-mix(in srgb,var(--tc) 85%,#000),inset 0 1px 0 rgba(255,255,255,.4);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
+.qw .kt::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 28%,rgba(255,255,255,.3) 50%,transparent 72%);
+  transform:translateX(-130%)}
+.qw .kt:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 26px 40px -18px color-mix(in srgb,var(--tc) 90%,#000),inset 0 1px 0 rgba(255,255,255,.45)}
+.qw .kt:hover::after{transform:translateX(130%);transition:transform .9s ease}
+.qw .kt:active{transform:translateY(-2px) scale(.99)}
+.qw .kt.on{box-shadow:0 0 0 3px var(--bg,#fff),0 0 0 6px var(--tc),0 22px 40px -16px color-mix(in srgb,var(--tc) 90%,#000);transform:translateY(-4px)}
+.qw .kt-bg{position:absolute;right:-6px;top:-8px;font-size:84px !important;line-height:1;opacity:.17;pointer-events:none;transform:rotate(-10deg);
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.qw .kt:hover .kt-bg{transform:rotate(0) scale(1.12)}
+.qw .kt .lbl{color:rgba(255,255,255,.88);font-size:11px;position:relative}
+.qw .kt-v{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;position:relative;margin-top:2px}
+.qw .kt-v b{font:700 38px/42px var(--fh);letter-spacing:-.04em;text-shadow:0 2px 14px rgba(0,0,0,.18)}
+.qw .kt-v small{font:500 13px var(--fh);opacity:.82}
+.qw .kt .dl{display:inline-flex;align-items:center;gap:1px;padding:1px 8px 1px 5px;border-radius:999px;font:700 11px var(--fh);background:rgba(255,255,255,.22);
+  animation:pop .6s cubic-bezier(.34,1.56,.64,1) .6s backwards}
+.qw .kt .dl .material-symbols-outlined{font-size:14px}
+.qw .kt .dl.up{background:rgba(255,255,255,.9);color:#047857}
+.qw .kt .dl.dn{background:rgba(0,0,0,.28)}
+.qw .kt-bar{height:7px;border-radius:7px;background:rgba(0,0,0,.2);overflow:hidden;margin:5px 0 4px;position:relative}
+.qw .kt-bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#fff,rgba(255,255,255,.7));animation:growW 1.3s cubic-bezier(.25,.9,.3,1) .35s backwards}
+.qw .kt-n{font:500 12px/16px var(--fh);color:rgba(255,255,255,.88);position:relative}
+.qw .kt-n b{font:700 12px var(--fh);color:#fff}
+.qw .kt-n.sm{font-size:11px;opacity:.78}
+
+/* ══ projects + rail ═════════════════════════════════════════════════════ */
+.qw .main{display:grid;gap:20px;align-items:start;grid-template-columns:minmax(0,1fr) 346px}
+.qw .board,.qw .mx{padding:20px 22px 16px}
+.qw .bh{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;margin-bottom:16px}
+.qw .bh h2{font:700 19px/25px var(--fh);letter-spacing:-.02em}
+.qw .bh .muted{margin-top:1px;max-width:600px}
+.qw .bh-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qw .focus{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:999px;font:600 12px var(--fh);color:var(--brand);
+  background:color-mix(in srgb,var(--brand) 11%,transparent);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);animation:qwSlide .3s ease}
+.qw .focus .material-symbols-outlined{font-size:16px}
+.qw .focus button{display:grid;place-items:center;width:20px;height:20px;border:0;border-radius:50%;background:color-mix(in srgb,var(--brand) 18%,transparent);
+  color:var(--brand);cursor:pointer;padding:0}
+.qw .focus button .material-symbols-outlined{font-size:14px}
+.qw .focus button:hover{background:var(--brand);color:#fff}
+
+.qw .seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--raise);border:1px solid var(--line2)}
+.qw .segb{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--ink3);cursor:pointer;padding:6px 13px;border-radius:9px;
+  font:600 12px var(--fh);white-space:nowrap;transition:background-color .2s,color .2s,box-shadow .2s,transform .15s}
+.qw .segb .material-symbols-outlined{font-size:17px}
+.qw .segb:hover{color:var(--ink)}
+.qw .segb.on{background:var(--card);color:var(--brand);box-shadow:var(--e2)}
+.qw .seg.big .segb{padding:7px 16px}
+.qw .seg.big .segb.on{background:linear-gradient(135deg,var(--brand-l),var(--brand));color:#fff;box-shadow:0 8px 18px -8px color-mix(in srgb,var(--brand) 70%,transparent)}
+
+.qw .mb{display:flex;height:9px;border-radius:9px;background:var(--line);overflow:hidden}
+.qw .mb i{display:block;height:100%;animation:growW 1.3s cubic-bezier(.25,.9,.3,1) .3s backwards}
+.qw .mb .a{background:linear-gradient(90deg,#10b981,#6ee7b7)}
+.qw .mb .b{background:linear-gradient(90deg,var(--mc),color-mix(in srgb,var(--mc) 62%,#fff))}
+.qw .mb.zero{opacity:.45}
+.qw .wb{align-self:flex-start;font:600 10.5px/16px var(--fh);color:var(--ink4);padding:0 8px;border-radius:999px;background:var(--nubg);transition:transform .3s}
+.qw .wb.on{color:#047857;background:var(--okbg);animation:pop .6s cubic-bezier(.34,1.56,.64,1) .5s backwards}
+.qw .wb.t.on{color:var(--a6);background:color-mix(in srgb,var(--a6) 14%,transparent)}
+
+/* status */
+.qw .lv{--lc:var(--a1);display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:700 10px var(--fh);letter-spacing:.06em;
+  text-transform:uppercase;color:#fff;white-space:nowrap;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--lc) 80%,#fff),var(--lc));box-shadow:0 6px 14px -8px var(--lc)}
+.qw .at.l-md .lv{--lc:var(--a2)}
+.qw .at.l-hi .lv{--lc:var(--a4)}
+.qw .lv i{width:7px;height:7px;border-radius:50%;background:#fff;display:block}
+.qw .at.l-hi .lv i{animation:qwBeat 1.6s ease-out infinite}
+.qw .cl{font:500 11px var(--fh);color:var(--ink3)}
+.qw .cl b{font:700 12px var(--fh);color:var(--ink2)}
+
+.qw .empty{padding:28px;text-align:center;color:var(--ink3);font-size:13px}
+.qw .foot{margin-top:12px}
+
+.qw .tg{padding:1px 9px;border-radius:999px;font:600 10.5px/17px var(--fh);border:1px solid transparent;white-space:nowrap}
+.qw .tg.g-cr{background:var(--crbg);color:var(--cr);border-color:var(--crbd)}
+.qw .tg.g-wt{background:var(--wtbg);color:var(--wt);border-color:var(--wtbd)}
+.qw .tg.g-nu{background:var(--nubg);color:var(--nu);border-color:var(--nubd)}
+.qw .tg.g-ok{background:var(--okbg);color:var(--ok);border-color:var(--okbd)}
+
+/* ── rail ──────────────────────────────────────────────────────────────── */
+.qw .rail{display:flex;flex-direction:column;gap:20px}
+.qw .rs{padding:18px 18px 16px}
+.qw .rh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.qw .rh h2{font:700 16px/22px var(--fh);letter-spacing:-.015em;flex:1}
+.qw .ric{--c:var(--a4);width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;flex-shrink:0;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c));box-shadow:0 8px 16px -8px var(--c)}
+.qw .ric .material-symbols-outlined{font-size:19px}
+.qw .sub2{margin:-6px 0 10px;font-size:11.5px}
+
+.qw .at{--lc:var(--a2);display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:11px 13px;margin-bottom:9px;border-radius:14px;
+  background:var(--card2);border:1px solid var(--line2);border-left:4px solid var(--lc);
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s,background-color .2s}
+.qw .at.l-hi{--lc:var(--a4)}
+.qw .at:hover{transform:translateX(4px);box-shadow:var(--e2);background:color-mix(in srgb,var(--lc) 6%,var(--card2))}
+.qw .at-h{display:flex;align-items:center;gap:9px}
+.qw .at-h > b{font:700 14px var(--fh);flex:1;min-width:0}
+.qw .at-v{font:500 11px var(--fh);color:var(--ink3);white-space:nowrap}
+.qw .at-v b{font:700 19px var(--fh);letter-spacing:-.02em;color:var(--lc);margin-right:2px}
+.qw .at-t{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.qw .allok{display:flex;gap:12px;align-items:center;padding:14px;border-radius:14px;background:var(--okbg);border:1px solid var(--okbd);color:var(--ok)}
+.qw .allok .material-symbols-outlined{font-size:30px;animation:pop .6s cubic-bezier(.34,1.56,.64,1) backwards}
+.qw .allok b{display:block;font:700 14px var(--fh)}
+.qw .allok span:not(.material-symbols-outlined){display:block;font-size:12px;color:var(--ink2)}
+
+.qw .cm{--cc:var(--a1);padding:2px 0 10px}
+.qw .cm + .cm{padding-top:10px;border-top:1px dashed var(--line2)}
+.qw .cm-h{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.qw .cm-h .material-symbols-outlined{font-size:17px;color:var(--cc)}
+.qw .cm-h b{font:600 12.5px var(--fh);flex:1;min-width:0}
+.qw .trend{padding:1px 9px;border-radius:999px;font:700 11px var(--fh);white-space:nowrap;animation:pop .6s cubic-bezier(.34,1.56,.64,1) .5s backwards}
+.qw .trend.t-up{background:var(--okbg);color:var(--ok)}
+.qw .trend.t-down{background:var(--crbg);color:var(--cr)}
+.qw .trend.t-flat,.qw .trend.t-na{background:var(--nubg);color:var(--nu)}
+.qw .cm-r{display:grid;grid-template-columns:62px minmax(0,1fr) 30px;gap:10px;align-items:center;padding:2px 0;font-size:11.5px;color:var(--ink3)}
+.qw .cm-r b{font:700 14px var(--fh);color:var(--ink);text-align:right}
+.qw .cm-r .cb{height:9px;border-radius:9px;background:var(--line);overflow:hidden}
+.qw .cm-r .cb i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--cc),color-mix(in srgb,var(--cc) 60%,#fff));
+  animation:growW 1.2s cubic-bezier(.25,.9,.3,1) .3s backwards}
+.qw .cm-r.prv .cb i{background:var(--line3)}
+.qw .cm-r.prv b{color:var(--ink3)}
+
+/* ═══ Mobile responsiveness (append-only — project convention) ═══ */
+@media (max-width:1280px){
+  .qw .main{grid-template-columns:minmax(0,1fr)}
+  .qw .rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:1024px){
+  .qw .kgrid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:-70px}
+  .qw .qh-r{width:100%}
+}
+@media (max-width:768px){
+  .qw .qh{padding:20px 18px 78px;border-radius:22px}
+  .qw .qh h1{font-size:26px;line-height:32px}
+  .qw .hsum{font-size:14px}
+  .qw .ctl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .qw .wk{grid-column:1 / -1;justify-content:space-between}
+  .qw .wpill{flex:1}
+  .qw .dates{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .qw .dfield input{width:100%;min-width:0;font-size:16px}
+  .qw .picker{grid-column:1 / -1}
+  .qw .picker .btn{width:100%;justify-content:flex-start}
+  .qw .pk-menu{left:0;right:0;width:auto}
+  .qw .ctl .btn{justify-content:center}
+  .qw .qh-r{gap:14px;padding:14px}
+  .qw .hlg{min-width:0;flex:1}
+  .qw .kgrid{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 10px;gap:10px;margin-top:-64px}
+  .qw .kgrid .kt:nth-child(5){grid-column:1 / -1}
+  .qw .kt{padding:14px 14px 12px}
+  .qw .kt-v b{font-size:32px;line-height:36px}
+  .qw .board,.qw .mx{padding:16px 14px 12px}
+  .qw .seg{max-width:100%}
+  .qw .bh-r{width:100%}
+  .qw .bh-r .seg{flex:1}
+  .qw .segb{flex:1 1 0;justify-content:center;padding:6px 4px}
+  .qw .rail{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .qw .kt-v b{font-size:28px;line-height:32px}
+  .qw .rt{display:none}
+  .qw .hring{width:112px;height:112px}
+  .qw .hring svg{width:112px;height:112px}
+  .qw .hring .mid b{font-size:28px}
+  .qw .seg.big .segb .material-symbols-outlined{display:none}
+}
+
+/* motion off for people who ask for it */
+@media (prefers-reduced-motion:reduce){
+  .qw .qh,.qw .qh-bg span,.qw .live i,.qw .hring .rv,.qw .kt-bar i,.qw .kt .dl,.qw .mb i,.qw .wb.on,.qw .trend,.qw .hsum,.qw .dtl,.qw .rg .rv,
+  .qw .rg.ic .material-symbols-outlined,.qw .sw.l-hi .lv i,.qw .at.l-hi .lv i,.qw .allok .material-symbols-outlined,.qw .pk-menu,.qw .cm-r .cb i,.qw .mbar i,.qw .focus{animation:none}
+  .qw .kt,.qw .kt::after,.qw .kt-bg,.qw .dr,.qw .mc,.qw .at,.qw .sw::before{transition:none}
+}
+
+/* a colour accent along the top of the two big cards */
+.qw .board,.qw .mx{position:relative;overflow:hidden}
+.qw .board::before,.qw .mx::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;
+  background:linear-gradient(90deg,var(--a1),var(--a5) 45%,var(--a6) 75%,var(--a4))}
+.qw .rs{position:relative;overflow:hidden}
+.qw .rs::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--a4),var(--a3))}
+.qw .rs + .rs::before{background:linear-gradient(90deg,var(--a5),var(--a1))}
+.qw .mx + .mx{margin-top:20px}
+
+
+/* ── header controls: one row, every item the same height (44px) and centred ─────────── */
+.qw .ctl{align-items:center;gap:10px}
+.qw .wbtn,.qw .qh .btn{height:44px;border-radius:13px}
+.qw .wbtn{width:44px}
+.qw .qh .btn{padding:0 18px;white-space:nowrap}
+.qw .wpill{height:44px;display:flex;flex-direction:column;justify-content:center;padding:0 16px;border-radius:13px}
+.qw .dates{align-items:center;gap:10px}
+.qw .dfield{flex-direction:row;align-items:center;gap:8px;height:44px;padding:0 6px 0 14px;border-radius:13px;
+  border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:border-color .2s,box-shadow .2s}
+.qw .dfield:hover{border-color:rgba(255,255,255,.55)}
+.qw .dfield:focus-within{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.28)}
+.qw .dfield .lbl{margin:0;font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.78)}
+.qw .dfield input{height:36px;width:124px;padding:0 4px;border:0;border-radius:9px;background:transparent;box-shadow:none}
+.qw .dfield input:hover:not(:disabled),.qw .dfield input:focus-visible{border:0;box-shadow:none;outline:none}
+@media (max-width:768px){
+  .qw .dfield{min-width:0}
+  .qw .dfield input{flex:1;width:100%;min-width:0}
+  .qw .qh .btn{padding:0 12px}
+}
+
+/* the controls now sit in their own full-width row under the title and ring */
+.qw .qh > .ctl{position:relative;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+.qw .qh > .ctl .wk{margin-right:2px}
+
+/* fit the whole control row on one line at laptop widths */
+.qw .qh > .ctl{gap:8px}
+.qw .qh > .ctl .dates{gap:8px}
+.qw .dfield{padding:0 4px 0 12px;gap:6px}
+.qw .dfield input{width:112px}
+.qw .wpill{padding:0 13px}
+.qw .qh .btn{padding:0 14px}
+.qw .qh > .ctl > .btn:not(.pri){margin-left:auto}
+@media (max-width:768px){.qw .qh > .ctl > .btn:not(.pri){margin-left:0}.qw .dfield input{width:100%}}
+
+/* one more trim: Refresh becomes an icon button, side padding of the band a little smaller */
+.qw .qh{padding-left:26px;padding-right:26px}
+.qw .qh .btn{padding:0 12px}
+.qw .qh .btn.pri{width:44px;padding:0;justify-content:center}
+.qw .qh .btn.pri .rt{display:none}
+.qw .dfield input{width:106px}
+.qw .wpill{padding:0 11px}
+@media (max-width:768px){
+  .qw .qh .btn.pri{width:100%}
+  .qw .qh .btn.pri .rt{display:inline}
+  .qw .dfield input{width:100%}
+}
+
+/* phones: the date label goes above the date so the date is never clipped */
+@media (max-width:768px){
+  .qw .dfield{flex-direction:column;align-items:flex-start;gap:0;height:auto;padding:6px 10px 3px}
+  .qw .dfield input{height:30px;padding:0}
+}
+
+/* ── a shorter header (desktop): smaller ring panel, tighter spacing; tiles still overlap its bottom edge ── */
+@media (min-width:769px){
+  .qw .qh{padding:20px 26px 54px}
+  .qw .qh h1{font-size:26px;line-height:32px}
+  .qw .hsum{font-size:14px;line-height:21px}
+  .qw .live{margin-bottom:6px}
+  .qw .qh-r{padding:10px 18px 10px 12px;gap:16px;border-radius:18px}
+  .qw .hring{width:96px;height:96px}
+  .qw .hring svg{width:100%;height:100%}
+  .qw .hring .rt,.qw .hring .rv{stroke-width:9}
+  .qw .hring .mid b{font-size:25px}
+  .qw .hring .mid i{font-size:12px;margin-top:3px}
+  .qw .hring .mid span{font-size:8.5px;margin-top:1px}
+  .qw .hlg{gap:6px;min-width:140px}
+  .qw .hlg li{font-size:12px}
+  .qw .qh > .ctl{margin-top:14px;padding-top:12px}
+  .qw .kgrid{margin-top:-54px}
+}
+
+/* ══ click any count → the records behind it ═══════════════════════════════════════════════ */
+/* KPI tiles are a div now (they hold their own buttons); the numbers on them are buttons that look like text */
+.qw .kt{cursor:pointer;text-align:left}
+.qw .kt-sm{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;
+  text-decoration:underline dotted rgba(255,255,255,.55);text-underline-offset:3px;transition:color .15s,text-decoration-color .15s}
+.qw .kt-sm b{font:inherit;color:inherit}
+.qw .kt-sm:hover{color:#fff;text-decoration-style:solid;text-decoration-color:#fff}
+.qw .kt-v .kt-sm{font:500 13px var(--fh);opacity:.88}
+.qw .kt-n .kt-sm{font:500 12px/16px var(--fh)}
+.qw .kt-n .kt-sm b{font:700 12px var(--fh);color:#fff}
+.qw .kt-n.sm .kt-sm{font-size:11px}
+.qw .kt-rank{position:absolute;right:10px;bottom:10px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+  color:#fff;background:rgba(255,255,255,.2);transition:background-color .2s,transform .2s cubic-bezier(.34,1.56,.64,1),color .2s}
+.qw .kt-rank .material-symbols-outlined{font-size:18px}
+.qw .kt-rank:hover{background:rgba(255,255,255,.38);transform:scale(1.12)}
+.qw .kt-rank.on{background:#fff;color:var(--tc)}
+
+/* hero legend numbers */
+.qw .hlg .cnt{margin-left:auto;padding:2px 8px;border:0;border-radius:9px;background:none;color:inherit;cursor:pointer;font:inherit;transition:background-color .15s}
+.qw .hlg .cnt b{margin-left:0}
+.qw .hlg .cnt:hover:not(.z){background:rgba(255,255,255,.2)}
+.qw .hlg .cnt.z{cursor:default}
+
+/* numbers in the project rows and the Total row */
+.qw .cn,.qw .cl,.qw .cmn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.qw .cn b{transition:color .15s}
+.qw .cn:hover:not(.z) b,.qw .cmn:hover:not(.z) b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.qw .cl:hover:not(.z){color:var(--mc);text-decoration:underline;text-underline-offset:3px}
+.qw .cn.z,.qw .cl.z,.qw .cmn.z{cursor:default}
+.qw button.wb{border:0;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1),filter .15s}
+.qw button.wb.on:hover{transform:translateY(-1px) scale(1.04);filter:brightness(.96)}
+.qw button.wb:not(.on){cursor:default}
+
+
+/* ══ projects as cards: one card per project, every number still opens its records ══════════════════ */
+@keyframes pcIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes pcFlow{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes pcFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-14px,10px) scale(1.12)}}
+@keyframes pcShine{0%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(260%) skewX(-18deg)}}
+
+.qw .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(282px,1fr));gap:16px}
+.qw .pc{--lc:var(--a1);--lc2:#34d399;--mc:var(--a3);position:relative;isolation:isolate;display:flex;flex-direction:column;gap:12px;min-width:0;
+  padding:18px 16px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);box-shadow:var(--e1);cursor:pointer;overflow:hidden;
+  animation:pcIn .7s cubic-bezier(.22,1,.36,1) var(--d,0ms) backwards;
+  transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s,border-color .3s}
+/* below the fold the shared reveal holds the card back (.pre) until it scrolls into view, then it rises */
+.qw .pc.an.pre{opacity:0;animation:none}
+.qw .pc.l-md{--lc:var(--a2);--lc2:#a5b4fc}
+.qw .pc.l-hi{--lc:var(--a4);--lc2:var(--a3)}
+/* colour line on top; on a high-risk card it keeps flowing */
+.qw .pc::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--lc),var(--lc2),var(--lc));background-size:200% 100%}
+.qw .pc.l-hi::before{animation:pcFlow 3s linear infinite}
+/* a soft colour cloud behind the card + a light sweep on hover */
+.qw .pc-glow{position:absolute;z-index:-1;right:-60px;top:-70px;width:200px;height:200px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--lc) 16%,transparent),transparent 68%);animation:pcFloat 9s ease-in-out infinite}
+.qw .pc::after{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:0;width:40%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 35%,transparent),transparent);transform:translateX(-120%) skewX(-18deg)}
+.qw .pc:hover::after{animation:pcShine .9s ease}
+.qw .pc:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--lc) 40%,var(--line));
+  box-shadow:0 26px 44px -26px color-mix(in srgb,var(--lc) 65%,transparent)}
+.qw .pc:focus-visible{outline:2px solid var(--lc);outline-offset:3px}
+
+.qw .pc-h{display:flex;align-items:center;gap:8px;min-width:0}
+.qw .pc-h .code{padding:4px 10px;border-radius:9px;font:700 12px var(--fh);letter-spacing:.02em;white-space:nowrap;
+  background:var(--ink);color:var(--card);box-shadow:0 6px 14px -8px var(--ink)}
+.qw .pc-h .rk{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:700 10px var(--fh);letter-spacing:.07em;text-transform:uppercase;
+  white-space:nowrap;color:var(--lc);background:color-mix(in srgb,var(--lc) 11%,transparent);border:1px solid color-mix(in srgb,var(--lc) 28%,transparent)}
+.qw .pc-h .rk i{width:7px;height:7px;border-radius:50%;background:var(--lc);display:block}
+.qw .pc.l-hi .pc-h .rk i{animation:qwBeat 1.6s ease-out infinite}
+.qw .pc-go{margin-left:auto;width:32px;height:32px;flex-shrink:0;border:0;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--ink4);background:transparent;
+  transition:background-color .2s,color .2s,transform .3s cubic-bezier(.34,1.56,.64,1)}
+.qw .pc-go .material-symbols-outlined{font-size:18px}
+.qw .pc:hover .pc-go,.qw .pc-go:hover{color:var(--lc);background:color-mix(in srgb,var(--lc) 10%,transparent)}
+.qw .pc-go:hover{transform:rotate(-12deg) scale(1.12)}
+.qw .pc-n{margin:-4px 0 0;font:700 14.5px/20px var(--fh);letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-wrap:nowrap}
+
+/* observations panel */
+.qw .pc-o{display:flex;align-items:center;gap:14px;padding:12px;border-radius:16px;border:1px solid var(--line2);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--lc) 5%,var(--card2)),var(--card2));transition:opacity .35s}
+.qw .pc-ring{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;cursor:help;padding-right:14px;border-right:1px solid var(--line2)}
+.qw .pc-ring .rw{position:relative;width:68px;height:68px}
+.qw .pc-ring svg{width:68px;height:68px;transform:rotate(-90deg)}
+.qw .pc-ring .pr-t{fill:none;stroke:color-mix(in srgb,var(--lc) 14%,var(--line));stroke-width:6}
+.qw .pc-ring .pr-v{fill:none;stroke:var(--lc);stroke-width:6;stroke-linecap:round;animation:qwRing 1.4s cubic-bezier(.25,.9,.3,1) calc(var(--d,0ms) + 250ms) backwards;
+  filter:drop-shadow(0 2px 4px color-mix(in srgb,var(--lc) 45%,transparent))}
+.qw .pc-ring .rp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.qw .pc-ring .rp b{font:700 15px/17px var(--fh);letter-spacing:-.03em;color:var(--ink)}
+.qw .pc-ring .rp small{font:700 7.5px var(--fh);letter-spacing:.1em;text-transform:uppercase;color:var(--ink4)}
+.qw .pc-ring em{font:600 10.5px var(--fh);font-style:normal;color:var(--ink3)}
+.qw .pc-ob{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.qw .pc .mt{font:700 10.5px var(--fh);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.qw .pc-ot{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.qw .pc-ot .cn{font:700 13px var(--fh);color:var(--a3);white-space:nowrap}
+.qw .pc-ot .cn b{font:700 18px var(--fh);letter-spacing:-.02em}
+.qw .pc .mb{height:8px}
+.qw .pc-of{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.qw .pc-ob > .wb{margin-top:-2px}
+
+/* NCR + training mini cards */
+.qw .pc-m{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.qw .mc2{--k:var(--a4);position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;padding:10px 11px 9px;border-radius:14px;
+  background:color-mix(in srgb,var(--k) 6%,var(--card));border:1px solid color-mix(in srgb,var(--k) 20%,var(--line2));
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,opacity .35s}
+.qw .mc2.p-trn{--k:var(--a6)}
+.qw .mc2.p-ncr.hot{background:color-mix(in srgb,var(--k) 11%,var(--card));border-color:color-mix(in srgb,var(--k) 40%,transparent)}
+.qw .mc2:hover{transform:translateY(-2px);box-shadow:0 12px 20px -14px var(--k)}
+.qw .mc2 .mt{color:var(--k);font-size:10px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qw .mc2 .chip{border:0;cursor:pointer;padding:1px 7px;border-radius:7px;font:700 10px/16px var(--fh);white-space:nowrap;color:var(--k);
+  background:color-mix(in srgb,var(--k) 13%,transparent);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.qw .mc2 .chip:hover:not(.z){transform:scale(1.08)}
+.qw .mc2 .chip.z{cursor:default;opacity:.65}
+.qw .mc2 .big{display:flex;align-items:baseline;gap:5px;border:0;background:none;padding:0;cursor:pointer;color:var(--k);text-align:left;font:600 11px var(--fh)}
+.qw .mc2 .big b{font:700 24px/30px var(--fh);letter-spacing:-.03em;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.qw .mc2 .big span{color:color-mix(in srgb,var(--k) 75%,var(--ink3))}
+.qw .mc2 .big:hover:not(.z) b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.qw .mc2 .big.z{cursor:default}
+.qw .mc2-f{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:16px}
+.qw .mc2-f .wb{align-self:center}
+.qw .mc2-f .need{font:700 10px var(--fh);letter-spacing:.04em;color:var(--wt)}
+.qw .mc2-f .ok{font:600 10.5px var(--fh);color:var(--ink3)}
+.qw .mc2.none{--k:var(--ink3)}
+.qw .mc2.p-ncr.calm{--k:var(--a1)}
+
+/* footer */
+.qw .pc-f{display:flex;align-items:center;gap:8px;margin:0 -16px;padding:10px 16px 0;border-top:1px solid var(--line2)}
+.qw .pc-f .nt{flex:1;min-width:0;display:flex;align-items:center;gap:6px;font:600 11.5px var(--fh);color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qw .pc-f .nt i{width:7px;height:7px;flex-shrink:0;border-radius:50%;background:var(--lc)}
+.qw .pc.l-hi .pc-f .nt{color:var(--cr)}
+.qw .pc-f .gh,.qw .pc-f .pri{height:30px;border-radius:9px;font:700 11.5px var(--fh);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,background-color .2s,color .2s}
+.qw .pc-f .gh{padding:0 10px;border:1px solid var(--line);background:var(--card);color:var(--ink2)}
+.qw .pc-f .gh:hover{border-color:var(--a4);color:var(--a4)}
+.qw .pc-f .pri{padding:0 6px 0 12px;border:0;color:#fff;background:linear-gradient(135deg,#7c3aed,#4f46e5);box-shadow:0 8px 16px -10px #4f46e5}
+.qw .pc-f .pri .material-symbols-outlined{font-size:18px;transition:transform .25s}
+.qw .pc-f .pri:hover{transform:translateY(-1px)}
+.qw .pc-f .pri:hover .material-symbols-outlined{transform:translateX(3px)}
+
+/* click a KPI tile → the other parts of every card step back */
+.qw .pg[data-lens="obs"] .pc-m,.qw .pg[data-lens="ncr"] .pc-o,.qw .pg[data-lens="ncr"] .p-trn,
+.qw .pg[data-lens="trn"] .pc-o,.qw .pg[data-lens="trn"] .p-ncr{opacity:.3}
+.qw .pg[data-lens="week"] .wb:not(.on),.qw .pg[data-lens="week"] .pc-ring{opacity:.3}
+.qw .pg[data-lens="week"] .wb.on{transform:scale(1.1)}
+.qw.sk .pc [data-cu]{opacity:.25;filter:blur(4px)}
+.qw .pc [data-cu]{transition:opacity .35s,filter .35s}
+
+/* totals of every project on screen */
+.qw .psum{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin-top:16px;padding:12px 14px;border-radius:16px;
+  background:var(--raise);border:1px solid var(--line2)}
+.qw .ps-l{display:inline-flex;align-items:center;gap:6px;font:700 11px var(--fh);letter-spacing:.07em;text-transform:uppercase;color:var(--ink2)}
+.qw .ps-l .material-symbols-outlined{font-size:18px;color:var(--brand)}
+.qw .ps{--mc:var(--a3);display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 9px}
+.qw .ps.n{--mc:var(--a4)}
+.qw .ps.t{--mc:var(--a6)}
+.qw .ps .mt{font:700 10.5px var(--fh);letter-spacing:.08em;text-transform:uppercase;color:var(--mc)}
+.qw .ps .cn{font:600 12px var(--fh);color:var(--ink3)}
+.qw .ps .cn b{font:700 16px var(--fh);color:var(--mc)}
+
+@media (max-width:768px){
+  .qw .pg{grid-template-columns:minmax(0,1fr);gap:12px}
+  .qw .pc{padding:16px 14px 12px}
+  .qw .pc-f{margin:0 -14px;padding:10px 14px 0}
+  .qw .psum{flex-direction:column;align-items:flex-start}
+}
+@media (max-width:380px){
+  .qw .pc-f .gh{display:none}
+}
+
+/* ── project cards: every word stays inside its box at any card width ──────────────────────────────
+   (the clickable numbers inherit font:inherit from the shared .cn/.cl rule, so their sizes are set here) */
+.qw .pg{grid-template-columns:repeat(auto-fill,minmax(min(100%,318px),1fr))}
+.qw .pc-n{white-space:normal;text-wrap:pretty;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:40px}
+.qw .pc-o{gap:12px}
+.qw .pc-ring{padding-right:12px}
+.qw .pc-ot{flex-wrap:wrap;row-gap:2px}
+.qw .pc-ot .mt{white-space:nowrap}
+.qw .pc-ot .cn{margin-left:auto;font:700 12px var(--fh)}
+.qw .pc .cl{font:600 12px/18px var(--fh);color:var(--ink3);white-space:nowrap}
+.qw .pc .cl:hover:not(.z){color:var(--ink)}
+.qw .pc .wb{white-space:nowrap}
+.qw .pc-of{flex-wrap:wrap;row-gap:2px}
+.qw .mc2{gap:4px}
+.qw .mc2 .mt{white-space:normal;overflow:visible;line-height:14px}
+.qw .mc2-v{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 6px}
+.qw .mc2 .big{white-space:nowrap}
+.qw .mc2 .big b{font-size:24px;line-height:28px}
+.qw .mc2-f{flex-wrap:wrap;row-gap:3px}
+.qw .mc2-f .need,.qw .mc2-f .ok{white-space:nowrap}
+.qw .pc-f{flex-wrap:wrap;row-gap:8px}
+.qw .pc-f .nt{flex:1 1 110px;white-space:normal;line-height:15px;overflow:visible}
+.qw .pc-f .gh,.qw .pc-f .pri{flex-shrink:0}
+.qw .ps .cl{font:600 12px var(--fh);color:var(--ink3);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .qw .pc,.qw .pc::before,.qw .pc-glow,.qw .pc:hover::after,.qw .pc-ring .pr-v,.qw .pc.l-hi .pc-h .rk i{animation:none}
+  .qw .pc,.qw .mc2,.qw .pc-go,.qw .pc-f .pri,.qw .pc-f .gh{transition:none}
+  .qw .pc:hover,.qw .mc2:hover{transform:none}
+}
+
+/* ══ inspection requests as cards: a ring of every status, the approval share, one row per status ══════ */
+@keyframes irDraw{from{stroke-dasharray:0 150}}
+@keyframes irIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+
+/* colour key with the count over every card shown */
+.qw .irl{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.qw .irl-i{--rc:var(--a1);display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 10px;border-radius:999px;cursor:help;
+  background:color-mix(in srgb,var(--rc) 9%,var(--card));border:1px solid color-mix(in srgb,var(--rc) 26%,var(--line2));
+  font:600 12px var(--fh);color:var(--ink2);white-space:nowrap;animation:qwSlide .4s ease backwards}
+.qw .irl-i i{width:9px;height:9px;border-radius:50%;background:var(--rc);box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 18%,transparent)}
+.qw .irl-i b{font:700 12px var(--fh);color:var(--rc)}
+.qw .irl-i em{font:700 12px var(--fh);font-style:normal;color:var(--ink)}
+
+.qw .irg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,252px),1fr));gap:14px}
+.qw .irc{--ac:var(--a5);--ac2:#38bdf8;position:relative;isolation:isolate;display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px 14px 12px;
+  border-radius:20px;background:var(--card);border:1px solid var(--line);box-shadow:var(--e1);overflow:hidden;
+  animation:irIn .65s cubic-bezier(.22,1,.36,1) var(--d,0ms) backwards;
+  transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s,border-color .3s}
+.qw .irc.mir{--ac:var(--a6);--ac2:#c084fc}
+/* the section is below the fold: cards, rings and bars wait until the shared reveal shows it */
+.qw .mx.an.pre .irc,.qw .mx.an.pre .irc-d .rg-s,.qw .mx.an.pre .st,.qw .mx.an.pre .st .lq{animation:none}
+.qw .irc::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+.qw .irc-glow{position:absolute;z-index:-1;right:-70px;top:-80px;width:210px;height:210px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--ac) 15%,transparent),transparent 68%);animation:pcFloat 10s ease-in-out infinite}
+.qw .irc:hover{transform:translateY(-5px);border-color:color-mix(in srgb,var(--ac) 40%,var(--line));
+  box-shadow:0 24px 40px -26px color-mix(in srgb,var(--ac) 70%,transparent)}
+
+.qw .irc-h{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.qw .irc-h .dt{flex-shrink:0;margin-top:1px;padding:2px 9px;border-radius:8px;font:800 10.5px/16px var(--fh);letter-spacing:.06em;color:#fff;
+  background:linear-gradient(135deg,var(--ac2),var(--ac));box-shadow:0 6px 12px -6px var(--ac)}
+.qw .irc-h h3{margin:0;min-width:0;font:700 14px/19px var(--fh);letter-spacing:-.01em;color:var(--ink);text-wrap:pretty;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+
+/* ring + the two headline numbers */
+.qw .irc-b{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:16px;border:1px solid var(--line2);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 6%,var(--card2)),var(--card2))}
+.qw .irc-d{position:relative;flex-shrink:0;width:92px;height:92px;padding:0;border:0;background:none;border-radius:50%;cursor:default;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.qw .irc-d.go{cursor:pointer}
+.qw .irc-d.go:hover{transform:scale(1.07) rotate(-4deg)}
+.qw .irc-d:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+.qw .irc-d svg{width:92px;height:92px;transform:rotate(-90deg)}
+.qw .irc-d .rg-t{fill:none;stroke:var(--line);stroke-width:7}
+.qw .irc-d .rg-s{fill:none;stroke-width:7;animation:irDraw 1.3s cubic-bezier(.25,.9,.3,1) calc(var(--d,0ms) + 200ms) backwards}
+.qw .irc-d .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.qw .irc-d .mid b{font:700 19px/22px var(--fh);letter-spacing:-.03em;color:var(--ink)}
+.qw .irc-d .mid small{font:700 8.5px var(--fh);letter-spacing:.1em;text-transform:uppercase;color:var(--ink4)}
+.qw .irc-k{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.qw .irc-k span{display:flex;align-items:baseline;gap:6px;font:600 11px var(--fh);color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.qw .irc-k b{font:700 22px/24px var(--fh);letter-spacing:-.03em;text-transform:none}
+.qw .irc-k .ok b{color:var(--a1)}
+.qw .irc-k .pd b{color:var(--a3)}
+
+/* one tile per status: filled with its colour up to its share; it and its ring slice light up together */
+@keyframes stIn{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+@keyframes stFill{from{height:0}}
+@keyframes stWave{from{background-position-x:0}to{background-position-x:28px}}
+.qw .irc-t{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.qw .st{--rc:var(--a1);--w:0;position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:4px;min-width:0;
+  padding:9px 10px 10px;border-radius:14px;border:1px solid color-mix(in srgb,var(--rc) 26%,var(--line2));
+  background:color-mix(in srgb,var(--rc) 5%,var(--card));color:var(--ink);font:inherit;text-align:left;cursor:help;
+  animation:stIn .55s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0ms) + 250ms + var(--j,0) * 70ms) backwards;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,border-color .2s,opacity .2s}
+.qw .st.go{cursor:pointer}
+/* the colour level: rises to the share when the card appears, a soft wave on its top edge */
+.qw .st .lq{position:absolute;z-index:-1;left:0;right:0;bottom:0;height:calc(var(--w) * 1%);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 20%,transparent),color-mix(in srgb,var(--rc) 32%,transparent));
+  animation:stFill 1.5s cubic-bezier(.25,.9,.3,1) calc(var(--d,0ms) + 450ms + var(--j,0) * 70ms) backwards;transition:filter .25s}
+.qw .st .lq::before{content:"";position:absolute;left:0;right:0;top:-5px;height:6px;
+  background:radial-gradient(10px 5px at 7px 6px,color-mix(in srgb,var(--rc) 20%,transparent) 98%,transparent 100%) 0 0 / 14px 6px repeat-x;
+  animation:stWave 1.8s linear infinite}
+.qw .st .sl{display:flex;align-items:center;gap:6px;min-width:0;font:700 10px var(--fh);letter-spacing:.07em;text-transform:uppercase;color:var(--rc);white-space:nowrap}
+.qw .st .sl i{width:8px;height:8px;flex-shrink:0;border-radius:50%;background:var(--rc);box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 18%,transparent)}
+.qw .st .sv{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:2px 6px;min-width:0}
+.qw .st .sv b{font:700 20px/24px var(--fh);letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums}
+.qw .st .sv small{padding:0 6px;border-radius:7px;font:700 10.5px/17px var(--fh);color:var(--rc);background:color-mix(in srgb,var(--rc) 13%,var(--card))}
+.qw .st.z{opacity:.5}
+.qw .st.go:hover,.qw .st.go:focus-visible,.qw .st.on{transform:translateY(-3px) scale(1.03);border-color:var(--rc);outline:none;
+  box-shadow:0 14px 22px -14px var(--rc),inset 0 0 0 1px color-mix(in srgb,var(--rc) 40%,transparent)}
+.qw .st.on .lq,.qw .st.go:hover .lq{filter:saturate(1.4) brightness(1.04)}
+.qw .irc-t.hot .st:not(.on){opacity:.5}
+/* the ring answers the tiles: the pointed status grows, the rest step back */
+.qw .irc-d .rg-s{pointer-events:stroke;cursor:pointer;transition:opacity .2s,stroke-width .25s}
+.qw .irc-d.hot .rg-s{opacity:.22}
+.qw .irc-d.hot .rg-s.on{opacity:1;stroke-width:10}
+.qw .irc-d .mid small{max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media (max-width:768px){
+  .qw .irg{gap:12px}
+  .qw .irl{gap:6px}
+  .qw .irl-i{padding:4px 10px 4px 8px;font-size:11.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .qw .irc,.qw .irc-glow,.qw .irc-d .rg-s,.qw .st,.qw .st .lq,.qw .st .lq::before,.qw .irl-i{animation:none}
+  .qw .irc,.qw .irc-d,.qw .st{transition:none}
+  .qw .irc:hover,.qw .irc-d.go:hover,.qw .st.go:hover,.qw .st.on{transform:none}
+}
+
+/* ── the right column (Needs attention, This week vs last) rides along beside the project cards ──
+   --rail-top comes from pinRail(): 16px, or negative when the column is taller than the view (it then scrolls with
+   the page until its bottom shows, and stays). Below 1281px the column sits under the cards. */
+@media (min-width:1281px){
+  .qw .rail{position:sticky;top:var(--rail-top,16px)}
+}
+
+/* ══ project cards, more motion (same family as the inspection tiles) ═══════════════════════════════
+   the parts pop in one after another (--s), the NCR / training boxes fill with a colour level and a wave,
+   the open part of the observation bar has moving stripes, the ring's % pops in after the ring is drawn,
+   and a light sweeps across "Full picture" now and then. Everything waits for the card's own reveal. */
+@keyframes pcStripe{to{background-position:17px 0,0 0}}
+@keyframes pcBtn{0%{transform:translateX(-160%) skewX(-20deg)}30%,100%{transform:translateX(360%) skewX(-20deg)}}
+
+.qw .pc .pc-o,.qw .pc .mc2,.qw .pc .pc-f{animation:stIn .6s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0ms) + 220ms + var(--s,0) * 90ms) backwards}
+
+/* colour level inside the NCR (closed share) and training (vs the busiest project) boxes */
+.qw .mc2{isolation:isolate;overflow:hidden}
+.qw .mc2 .lq{position:absolute;z-index:-1;left:0;right:0;bottom:0;height:calc(var(--w,0) * 1%);pointer-events:none;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--k) 13%,transparent),color-mix(in srgb,var(--k) 24%,transparent));
+  animation:stFill 1.6s cubic-bezier(.25,.9,.3,1) calc(var(--d,0ms) + 520ms + var(--s,0) * 90ms) backwards;transition:filter .25s}
+.qw .mc2 .lq::before{content:"";position:absolute;left:0;right:0;top:-5px;height:6px;
+  background:radial-gradient(10px 5px at 7px 6px,color-mix(in srgb,var(--k) 13%,transparent) 98%,transparent 100%) 0 0 / 14px 6px repeat-x;
+  animation:stWave 1.8s linear infinite}
+.qw .mc2:hover .lq{filter:saturate(1.5) brightness(1.04)}
+.qw .mc2{cursor:help}
+
+/* observations: the panel lifts on hover, the open part of the bar has slow moving stripes */
+.qw .pc-o{transition:opacity .35s,transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
+.qw .pc-o:hover{transform:translateY(-2px);box-shadow:0 14px 24px -18px var(--lc)}
+.qw .pc .mb .b{background-image:repeating-linear-gradient(-45deg,rgba(255,255,255,.26) 0 5px,transparent 5px 10px),
+    linear-gradient(90deg,var(--mc),color-mix(in srgb,var(--mc) 62%,#fff));
+  background-size:14.14px 14.14px,100% 100%;
+  animation:growW 1.3s cubic-bezier(.25,.9,.3,1) calc(var(--d,0ms) + 380ms) backwards,pcStripe 1.2s linear infinite}
+.qw .pc .mb .a{animation:growW 1.3s cubic-bezier(.25,.9,.3,1) calc(var(--d,0ms) + 380ms) backwards}
+
+/* the ring: % pops in once the ring is drawn; on hover the ring tilts */
+.qw .pc-ring .rw{transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.qw .pc:hover .pc-ring .rw{transform:rotate(-10deg) scale(1.07)}
+.qw .pc-ring .rp b{animation:qwPop .6s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0ms) + 1100ms) backwards}
+
+/* a light sweep across "Full picture" every few seconds */
+.qw .pc-f .pri{position:relative;overflow:hidden;isolation:isolate}
+.qw .pc-f .pri::after{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:0;width:45%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-160%) skewX(-20deg);
+  animation:pcBtn 4.2s ease-in-out calc(var(--d,0ms) + 1500ms) infinite}
+
+/* below the fold: hold every part until the card is revealed */
+.qw .pc.an.pre .pc-o,.qw .pc.an.pre .mc2,.qw .pc.an.pre .pc-f,.qw .pc.an.pre .mc2 .lq,.qw .pc.an.pre .mb i,
+.qw .pc.an.pre .pc-ring .pr-v,.qw .pc.an.pre .pc-ring .rp b{animation:none}
+
+@media (prefers-reduced-motion:reduce){
+  .qw .pc .pc-o,.qw .pc .mc2,.qw .pc .pc-f,.qw .mc2 .lq,.qw .mc2 .lq::before,.qw .pc .mb .b,.qw .pc .mb .a,
+  .qw .pc-ring .rp b,.qw .pc-f .pri::after{animation:none}
+  .qw .pc-o,.qw .pc-ring .rw{transition:none}
+  .qw .pc-o:hover,.qw .pc:hover .pc-ring .rw{transform:none}
+}
+
+/* ══ Header strip: what WIR / MIR / SOR / QTBT / NCR stand for (Refresh stays at its end) ══════════ */
+.qw .qh > .ctl.fl{display:flex;align-items:center;flex-wrap:nowrap;gap:12px}
+.qw .forms{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin:0;padding:0;list-style:none}
+.qw .forms li{display:inline-flex;align-items:center;gap:8px;font:500 13px/18px var(--fh);color:rgba(255,255,255,.92);white-space:nowrap;
+  animation:rise .6s cubic-bezier(.22,1,.36,1) backwards}
+.qw .forms li:nth-child(2){animation-delay:.05s}
+.qw .forms li:nth-child(3){animation-delay:.1s}
+.qw .forms li:nth-child(4){animation-delay:.15s}
+.qw .forms li:nth-child(5){animation-delay:.2s}
+.qw .forms b{display:inline-grid;place-items:center;min-width:54px;height:24px;padding:0 8px;border-radius:7px;
+  background:rgba(255,255,255,.95);color:#065f46;font:700 11.5px/1 var(--fh);letter-spacing:.06em;box-shadow:0 4px 10px -6px rgba(0,0,0,.4)}
+
+/* ══ The week bar inside the Projects heading: same pieces, light surface of the card ══════════ */
+/* heading: the bar on its own row (project choice first); under it the one-line note and the sort buttons */
+.qw .bh.has-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"bar bar" "note sort";align-items:center;gap:12px 16px}
+.qw .bh.has-bar > .pbar{grid-area:bar}
+.qw .bh.has-bar > .bh-note{grid-area:note;min-width:0;margin:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qw .bh.has-bar > .bh-r{grid-area:sort;justify-self:end}
+/* the bar: one row when it fits, otherwise it wraps; the week pill and the dates stretch to fill the row */
+.qw .pbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0}
+.qw .pbar .wk{flex:1 1 auto;gap:6px}
+.qw .pbar .wk .wpill{flex:1;min-width:0}
+.qw .pbar .dates{flex:1 1 auto;display:flex;align-items:center;gap:8px}
+.qw .pbar .dates .dfield{flex:1;min-width:0}
+.qw .pbar .dates .dfield input{flex:1;min-width:0}
+.qw .pbar :is(.wbtn,.wpill,.dfield,.btn){height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.qw .pbar .wbtn{width:40px;color:var(--ink2)}
+.qw .pbar .wbtn:hover:not(:disabled){background:var(--raise);border-color:var(--line3);transform:translateY(-1px)}
+.qw .pbar .wbtn:focus-visible,.qw .pbar .btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.qw .pbar .wpill{padding:0 12px;background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 9%,var(--card)),var(--card))}
+.qw .pbar .wpill b{color:var(--ink);font-size:13.5px;line-height:18px}
+.qw .pbar .wpill span{color:var(--ink3);font-size:10.5px;line-height:13px}
+.qw .pbar .dfield{padding:0 4px 0 11px;gap:6px}
+.qw .pbar .dfield:hover{border-color:var(--line3)}
+.qw .pbar .dfield:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent)}
+.qw .pbar .dfield .lbl{color:var(--ink3);font-weight:700}
+.qw .pbar .dfield input{height:34px;width:112px;color:var(--ink);color-scheme:light}
+:host-context(.dark-theme) .qw .pbar .dfield input{color-scheme:dark}
+.qw .pbar .btn{display:inline-flex;align-items:center;gap:7px;padding:0 13px;font:600 13px var(--fh);white-space:nowrap;cursor:pointer;
+  transition:background-color .2s,border-color .2s,transform .2s}
+.qw .pbar .btn .material-symbols-outlined{font-size:18px;color:var(--brand)}
+.qw .pbar .btn:hover:not(:disabled){background:var(--raise);border-color:var(--line3);transform:translateY(-1px)}
+.qw .pbar .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.qw .pbar .pk.open{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 14%,transparent)}
+/* the project choice is first in the bar, so its list opens to the right */
+.qw .pbar .pk-menu{left:0;right:auto}
+
+@media (max-width:768px){
+  /* legend: one name per line in two columns; Refresh full width under it */
+  .qw .qh > .ctl.fl{flex-wrap:wrap}
+  .qw .forms{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
+  .qw .forms li{white-space:normal}
+  .qw .qh > .ctl.fl .btn.pri{width:100%}
+  /* the bar keeps the phone grid it had in the header */
+  .qw .pbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%}
+  .qw .pbar .wk,.qw .pbar .dates,.qw .pbar .picker{grid-column:1 / -1;grid-row:auto}
+  .qw .pbar > .btn{grid-column:1 / -1;grid-row:auto}
+  .qw .bh.has-bar{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "note" "sort"}
+  .qw .bh.has-bar > .bh-note{white-space:normal}
+  .qw .bh.has-bar > .bh-r{justify-self:stretch}
+  .qw .pbar .dates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .qw .pbar .dfield{height:auto;padding:5px 10px 3px}
+  .qw .pbar .dfield input{width:100%;height:30px}
+  .qw .pbar .pk-menu{left:0;right:0}
+  .qw .pbar .btn{justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){.qw .forms li{animation:none}}
+
+/* The Projects card now holds the project picker, whose list must be able to hang out of the card.
+   The colour strip along its top is painted as a background layer (it follows the rounded corners by
+   itself), so the card no longer needs overflow:hidden. */
+.qw .board{overflow:visible;
+  background-image:linear-gradient(90deg,var(--a1),var(--a5) 45%,var(--a6) 75%,var(--a4));
+  background-size:100% 4px;background-position:top left;background-repeat:no-repeat}
+.qw .board::before{display:none}
+.qw .pbar .pk-menu{z-index:60}

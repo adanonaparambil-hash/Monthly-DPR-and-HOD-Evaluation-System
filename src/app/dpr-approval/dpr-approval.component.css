@@ -2149,3 +2149,124 @@
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ===== Eye button in the Log Time cell (opens Day Log History, where the log time can be edited) ===== */
+.more-btn.view-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  opacity: 1;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  font-size: 14px;
+}
+.more-btn.view-btn:hover {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 6px 14px -6px rgba(16, 185, 129, 0.7);
+}
+.more-btn.view-btn:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
+:host-context(.dark-theme) .more-btn.view-btn { background: rgba(52, 211, 153, 0.14); color: #6ee7b7; border-color: rgba(52, 211, 153, 0.3); }
+:host-context(.dark-theme) .more-btn.view-btn:hover { background: #10b981; color: #fff; }
+
+/* ===== Edit Time column (its own heading above the eye button) ===== */
+.edit-col {
+  width: 92px;
+  text-align: center;
+}
+.edit-cell {
+  width: 92px;
+  text-align: center;
+}
+.edit-cell .more-btn { margin: 0 auto; }
+
+/* ═══ Mobile responsiveness — pending logs as cards ═════════════════════════════════════════
+   On a phone the 1,080px table showed only "Sl No / Date / Category" and you had to swipe to reach the
+   task, the remarks and the eye button. Each log becomes a card, one line per column with its label
+   (data-label on each <td>); the header shrinks to one "Select all" bar so bulk approval still works. */
+@media (max-width: 768px) {
+  .table-wrapper { overflow-x: visible !important; }
+  .table-wrapper .dpr-table { min-width: 0 !important; width: 100% !important; border-collapse: separate; border-spacing: 0; }
+  .table-wrapper .dpr-table,
+  .table-wrapper .dpr-table tbody { display: block; }
+
+  /* header → one "Select all" bar */
+  .table-wrapper .dpr-table thead { display: block; }
+  .table-wrapper .dpr-table thead tr { display: flex; align-items: center; }
+  .table-wrapper .dpr-table thead th { display: none; }
+  .table-wrapper .dpr-table thead th.checkbox-col {
+    display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0;
+    padding: 10px 14px; border-radius: 12px; text-align: left;
+  }
+  .table-wrapper .dpr-table thead th.checkbox-col::after {
+    content: "Select all"; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  }
+
+  /* each log → a card */
+  .table-wrapper .dpr-table tbody tr.table-row {
+    display: flex; flex-direction: column; gap: 7px;
+    margin: 10px 0; padding: 12px 14px;
+    border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  .table-wrapper .dpr-table tbody tr.table-row.selected { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, .25); }
+  .table-wrapper .dpr-table tbody td {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: auto !important; min-width: 0 !important; max-width: none !important;
+    padding: 0 !important; border: 0 !important; background: none !important;
+    text-align: right; white-space: normal !important;
+  }
+  .table-wrapper .dpr-table tbody td::before {
+    content: attr(data-label); flex-shrink: 0; max-width: 45%;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #64748b; text-align: left;
+    white-space: nowrap;
+  }
+  /* the task title leads the card, full width */
+  .table-wrapper .dpr-table tbody td.title-cell { order: -1; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+  .table-wrapper .dpr-table tbody td .task-title,
+  .table-wrapper .dpr-table tbody td .task-description {
+    white-space: normal !important; overflow: visible !important; text-overflow: clip !important;
+    -webkit-line-clamp: unset !important; display: block; max-width: 100% !important; overflow-wrap: anywhere;
+  }
+  .table-wrapper .dpr-table tbody td.title-cell .task-title { font-size: 14px; font-weight: 700; }
+  .table-wrapper .dpr-table .table-checkbox { width: 20px; height: 20px; }
+  .table-wrapper .dpr-table tbody td.edit-cell .more-btn { margin-left: auto; }
+}
+@media (max-width: 768px) {
+  :host-context(.dark-theme) .table-wrapper .dpr-table tbody tr.table-row { background: #1e293b; border-color: #334155; }
+  :host-context(.dark-theme) .table-wrapper .dpr-table tbody td::before { color: #94a3b8; }
+}
+
+/* ═══ Mobile responsiveness — Day Log History window: entries as cards ════════════════════════
+   The 8-column table was ~690px wide inside a ~330px window, so End time, Log time, Status and the edit
+   pencil were off-screen. Each entry becomes a small card, one line per column with its label
+   (data-label on each <td>). The same block lives in dpr-approval and my-logged-hours (same window). */
+@media (max-width: 768px) {
+  .day-log-table-container { overflow-x: visible !important; }
+  .day-log-table-container .day-log-table { display: block; min-width: 0 !important; width: 100% !important; }
+  .day-log-table-container .day-log-table thead { display: none; }
+  .day-log-table-container .day-log-table tbody { display: block; }
+  .day-log-table-container .day-log-table tr.day-log-row {
+    display: flex; flex-direction: column; gap: 6px;
+    margin: 0 0 10px; padding: 12px 14px;
+    border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;
+  }
+  .day-log-table-container .day-log-table tr.day-log-row td {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: auto !important; min-width: 0 !important; padding: 0 !important; border: 0 !important;
+    text-align: right; white-space: normal !important;
+  }
+  .day-log-table-container .day-log-table tr.day-log-row td::before {
+    content: attr(data-label); flex-shrink: 0;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #64748b; white-space: nowrap;
+  }
+  .day-log-table-container .day-log-table .user-cell { align-items: flex-end; text-align: right; }
+}
+@media (max-width: 768px) {
+  :host-context(.dark-theme) .day-log-table-container .day-log-table tr.day-log-row { background: #1e293b; border-color: #334155; }
+  :host-context(.dark-theme) .day-log-table-container .day-log-table tr.day-log-row td::before { color: #94a3b8; }
+}

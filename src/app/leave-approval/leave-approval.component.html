@@ -22,7 +22,7 @@
           </div>
         </div>
 
-        <div class="la-filters" *ngIf="showPendingFilters">
+        <div class="la-filters" [class.la-filters-ex]="typeFilter === 'Emergency'" *ngIf="showPendingFilters">
           <div class="la-f la-f-emp">
             <label class="la-f-label">Employee</label>
             <div class="filter-emp-wrap">
@@ -64,11 +64,21 @@
           </div>
           <div class="la-f">
             <label class="la-f-label">Form type</label>
-            <select class="la-ctl" [(ngModel)]="typeFilter">
+            <select class="la-ctl" [(ngModel)]="typeFilter" (ngModelChange)="exitTypeFilter = 'all'">
               <option value="all">All Types</option>
               <option value="Emergency">Exit Form</option>
               <option value="BYOD">BYOD</option>
               <option value="Rejoin">Rejoin</option>
+            </select>
+          </div>
+          <!-- Exit Form chosen: narrow it down by the kind of exit form -->
+          <div class="la-f" *ngIf="typeFilter === 'Emergency'">
+            <label class="la-f-label">Exit type</label>
+            <select class="la-ctl" [(ngModel)]="exitTypeFilter">
+              <option value="all">All exit types</option>
+              <option value="E">Emergency</option>
+              <option value="P">Planned Leave</option>
+              <option value="R">Resignation</option>
             </select>
           </div>
           <div class="la-f la-f-act">
@@ -132,13 +142,14 @@
                   <span class="la-type"
                     [class.t-exit]="request.leaveType === 'Emergency'"
                     [class.t-byod]="request.leaveType === 'BYOD'"
-                    [class.t-rejoin]="request.leaveType === 'Rejoin'">
+                    [class.t-rejoin]="request.leaveType === 'Rejoin'"
+                    [ngClass]="formTypeClass(request)">
                     <i class="fas"
                       [class.fa-right-from-bracket]="request.leaveType === 'Emergency'"
                       [class.fa-desktop]="request.leaveType === 'BYOD'"
                       [class.fa-user-check]="request.leaveType === 'Rejoin'"
                       [class.fa-file-lines]="request.leaveType !== 'Emergency' && request.leaveType !== 'BYOD' && request.leaveType !== 'Rejoin'"></i>
-                    <span>{{ getFormTypeText(request.leaveType) }}</span>
+                    <span>{{ formTypeText(request) }}</span>
                   </span>
                 </td>
                 <td class="la-c-date">

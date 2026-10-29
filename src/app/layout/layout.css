@@ -3003,6 +3003,8 @@ body.modal-open .header {
   transition: background 0.18s ease, box-shadow 0.18s ease;
 }
 .sidebar .snav .sn-leaf .sn-tx { padding-left: 4px; }
+/* child names show in full: a long one (e.g. "NCR Disposition and Acceptance") wraps to a second line instead of ending in "…" */
+.sidebar .snav .sn-leaf .sn-tx { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .sidebar .snav .sn-leaf:hover { background: var(--sn-hover); color: #fff; }
 .sidebar .snav .sn-leaf:hover::after { background: #fff; }
 .sidebar .snav .sn-leaf.active { background: var(--sn-active); color: #fff; font-weight: 600; }
@@ -3483,3 +3485,26 @@ body.modal-open .header {
 @media (max-width: 480px) {
   .layout-container.rtl .notification-dropdown { left: 8px; right: 8px; }
 }
+
+/* ═══ Group parents that open a page of their own (QAQC → dashboard) ═══
+   The arrow is a separate target there: it only expands/collapses, so give it room. */
+.sn-chev.hit{padding:8px;margin:-8px -8px -8px 0;cursor:pointer;border-radius:8px}
+.sn-chev.hit:hover{background:rgba(255,255,255,.14)}
+
+
+/* sidebar sub-group (e.g. NCR Report): a header row, its pages indented under a second guide line */
+.sidebar .snav .sn-subh .sn-chev { margin-left: auto; font-size: 10px; }
+.sidebar .snav .sn-sub.open > .sn-subh .sn-chev { transform: rotate(180deg); color: #fff; }
+.sidebar .snav .sn-subh { font-weight: 600; }
+.sidebar .snav .sn-tree2 { position: relative; margin: 0 0 4px 12px; padding: 1px 0 1px 14px; overflow: hidden; }
+.sidebar .snav .sn-tree2::before { content: ""; position: absolute; left: 0; top: 0; bottom: 18px; width: 1px; background: var(--sn-line); }
+.sidebar .snav .sn-leaf2 { min-height: 34px; font-size: 13px; }
+.sidebar .snav .sn-leaf2::before { left: -14px; width: 10px; }
+.sidebar .snav .sn-leaf2::after { left: 0; width: 5px; height: 5px; margin-top: -2.5px; }
+
+/* QAQC's arrow (it also opens a page) had padding + a negative margin that pushed it right of the other arrows.
+   Same bigger click area, now drawn by an overlay so the arrow itself sits exactly where the others do. */
+.sn-chev.hit { padding: 0; margin: 0; position: relative; border-radius: 8px; }
+.sn-chev.hit:hover { background: none; }
+.sn-chev.hit::after { content: ""; position: absolute; inset: -10px -9px; border-radius: 9px; transition: background-color 0.15s ease; }
+.sn-chev.hit:hover::after { background: rgba(255, 255, 255, 0.14); }

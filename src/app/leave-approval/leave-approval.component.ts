@@ -16,6 +16,8 @@ interface LeaveRequest {
   employeeId: string;
   department: string;
   leaveType: string;
+  /** exit forms only: E emergency / P planned leave / R resignation ('' for BYOD / rejoin) */
+  exitType?: string;
   requestDate: any;
   departureDate: any;
   returnDate?: any;
@@ -79,6 +81,8 @@ export class LeaveApprovalComponent implements OnInit {
   // Filters
   statusFilter: string = 'Pending';
   typeFilter: string = 'all';
+  /** second filter, shown when the form type is Exit Form: all | E | P | R */
+  exitTypeFilter: string = 'all';
   dateFilter: string = 'all';
   employeeNameFilter: string = '';
   fromDateFilter: string = '';
@@ -258,6 +262,7 @@ export class LeaveApprovalComponent implements OnInit {
       activeTab: this.activeTab,
       statusFilter: this.statusFilter,
       typeFilter: this.typeFilter,
+      exitTypeFilter: this.exitTypeFilter,
       employeeNameFilter: this.employeeNameFilter,
       empFilterSearch: this.empFilterSearch,
       fromDateFilter: this.fromDateFilter,
@@ -284,6 +289,7 @@ export class LeaveApprovalComponent implements OnInit {
       const s = JSON.parse(raw);
       this.statusFilter          = s.statusFilter ?? this.statusFilter;
       this.typeFilter            = s.typeFilter   ?? this.typeFilter;
+      this.exitTypeFilter        = s.exitTypeFilter ?? 'all';
       this.employeeNameFilter    = s.employeeNameFilter ?? '';
       this.empFilterSearch       = s.empFilterSearch    ?? '';
       this.fromDateFilter        = s.fromDateFilter     ?? '';
@@ -310,6 +316,7 @@ export class LeaveApprovalComponent implements OnInit {
   switchTab(tab: 'pending' | 'myRequests'): void {
     this.activeTab = tab;
     this.typeFilter = 'all';
+    this.exitTypeFilter = 'all';
     this.statusFilter = tab === 'pending' ? 'Pending' : 'all';
     this.employeeNameFilter = '';
     this.fromDateFilter = '';
@@ -348,6 +355,7 @@ export class LeaveApprovalComponent implements OnInit {
     this.toDateFilter = '';
     this.statusFilter = 'Pending';
     this.typeFilter = 'all';
+    this.exitTypeFilter = 'all';
     this._filteredPending = null;
     this.inboxPageNo = 1;
     this.loadPendingApprovals();
@@ -413,6 +421,8 @@ export class LeaveApprovalComponent implements OnInit {
     const requestParams: EmployeeApprovalInboxRequest = {
       approverId: this.currentUser.empId || this.currentUser.employeeId,
       formType:   typeParam   || undefined,
+      // the exit type (E / P / R) only applies when the form type is Exit Form
+      exitType:   (this.typeFilter === 'Emergency' && this.exitTypeFilter !== 'all') ? this.exitTypeFilter : undefined,
       status:     statusParam || undefined,
       employeeId,
       fromDate:   this.fromDateFilter ? new Date(this.fromDateFilter) : null,
@@ -434,6 +444,7 @@ export class LeaveApprovalComponent implements OnInit {
             employeeId: item.employeeId || '',
             department: item.department || '',
             leaveType: this.mapFormTypeToLabel(item.formType),
+            exitType: (item.exitType || '').toString().trim().toUpperCase(),
             requestDate: item.requestDate,
             departureDate: item.actionDate,
             daysRequested: 0,
@@ -1005,13 +1016,35 @@ export class LeaveApprovalComponent implements OnInit {
     const esc = (v: unknown) => { const s = (v ?? '').toString(); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const fmt = (d: any) => { const t = d ? new Date(d) : null; return t && !isNaN(t.getTime()) ? t.toISOString().slice(0, 16).replace('T', ' ') : ''; };
     const head = ['Employee', 'Employee ID', 'Department', 'Form Type', 'Submitted', 'Status', 'Actioned On'];
-    const body = rows.map(r => [r.employeeName, r.employeeId, r.department, this.getFormTypeText(r.leaveType), fmt(r.requestDate), r.status, fmt(r.approvedDate)].map(esc).join(','));
+    const body = rows.map(r => [r.employeeName, r.employeeId, r.department, this.formTypeText(r), fmt(r.requestDate), r.status, fmt(r.approvedDate)].map(esc).join(','));
     const blob = new Blob(['\ufeff' + [head.join(','), ...body].join('\r\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = name + '-' + new Date().toISOString().slice(0, 10) + '.csv';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /** Exit form type tag: E emergency / P planned leave / R resignation */
+  exitTypeLabel(code: any): string {
+    switch (String(code || '').toUpperCase()) {
+      case 'E': return 'Emergency';
+      case 'P': return 'Planned Leave';
+      case 'R': return 'Resignation';
+      default:  return '';
+    }
+  }
+
+  /** Form type pill text: for an exit form the kind of exit (Emergency / Planned Leave / Resignation),
+   *  otherwise the form type itself. Falls back to "Exit Form" when the exit type is not known. */
+  formTypeText(r: LeaveRequest): string {
+    if (r.leaveType === 'Emergency') { return this.exitTypeLabel(r.exitType) || this.getFormTypeText(r.leaveType); }
+    return this.getFormTypeText(r.leaveType);
+  }
+
+  /** colour variant of the exit pill: x-E / x-P / x-R ('' when the exit type is unknown) */
+  formTypeClass(r: LeaveRequest): string {
+    return r.leaveType === 'Emergency' && r.exitType ? 'x-' + r.exitType : '';
   }
 
   getFormTypeText(leaveType: any): string {
@@ -1124,7 +1157,7 @@ export class LeaveApprovalComponent implements OnInit {
       return;
     }
 
-    const formType = request.leaveType === 'Emergency' ? 'E' :
+    const formType = request.leaveType === 'Emergency' ? (request.exitType || 'E') :
       request.leaveType === 'Resignation' ? 'R' : 'P';
 
     this.router.navigate(['/exit-form'], {

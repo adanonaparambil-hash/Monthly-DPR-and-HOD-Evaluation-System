@@ -506,3 +506,20 @@
   .la-foot { justify-content: center; }
   .la-foot-info { margin-right: 0; }
 }
+
+/* ── Form type pill shows the exit type for exit forms (Pending Form Approvals) ── */
+.la-type.t-exit.x-E { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
+.la-type.t-exit.x-P { background: #ecfeff; border-color: #a5f3fc; color: #0e7490; }
+.la-type.t-exit.x-R { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+:host-context(.dark-theme) .la-type.t-exit.x-E { background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.3); color: #fda4af; }
+:host-context(.dark-theme) .la-type.t-exit.x-P { background: rgba(34, 211, 238, 0.12); border-color: rgba(34, 211, 238, 0.3); color: #67e8f9; }
+:host-context(.dark-theme) .la-type.t-exit.x-R { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.3); color: #fcd34d; }
+
+/* Exit Form chosen: seven filter fields + Search / Clear stay on ONE row on wide screens
+   (below 1281px the existing 3-column / 2-column layouts take over, as before) */
+@media (min-width: 1281px) {
+  .la-filters.la-filters-ex {
+    grid-template-columns: minmax(170px, 1.4fr) repeat(5, minmax(118px, 1fr)) auto;
+    gap: 16px 14px;
+  }
+}

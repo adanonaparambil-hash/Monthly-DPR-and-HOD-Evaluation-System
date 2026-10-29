@@ -1,0 +1,164 @@
+<div class="dr-back" (click)="onBackdrop($event)" role="presentation">
+  <section class="dr-win" role="dialog" aria-modal="true" [attr.aria-label]="spec.title" [style.--ac]="accent" [style.--hc]="spec.accent"
+           [class.proj]="tabs.length">
+
+    <!-- ── header ── -->
+    <header class="dr-h">
+      <span class="dr-ic"><span class="material-symbols-outlined">{{ spec.icon }}</span></span>
+      <div class="dr-t">
+        <h2>{{ spec.title }}</h2>
+        <p>{{ spec.subtitle }}</p>
+      </div>
+      <!-- project window: status + closure; single list: how many records -->
+      <div class="dr-lv" *ngIf="spec.insight as ins" [ngClass]="'l-' + ins.level">
+        <span class="lv"><i></i>{{ ins.levelText }}</span>
+        <span class="cl"><b>{{ ins.closure }}%</b> closed</span>
+      </div>
+      <div class="dr-n" *ngIf="!spec.insight && !loading && !error">
+        <b>{{ totalCount | number }}</b><span>{{ totalCount === 1 ? 'record' : 'records' }}</span>
+      </div>
+      <button type="button" class="dr-x" (click)="close()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+    </header>
+
+    <!-- ── project window: why + one card per record type ── -->
+    <ng-container *ngIf="tabs.length && !pdfOpen">
+      <div class="dr-why" *ngIf="spec.insight as ins">
+        <span class="lbl">Why {{ ins.levelText }}</span>
+        <span class="tg g-cr" *ngFor="let t of ins.tags">{{ t }}</span>
+        <span class="tg g-ok" *ngIf="!ins.tags.length">Nothing flagged</span>
+      </div>
+      <nav class="dr-tabs" role="tablist" aria-label="Record type">
+        <button type="button" role="tab" class="dr-tab" *ngFor="let t of tabs; trackBy: trackTab; let i = index"
+                [class.on]="i === tabIndex" [attr.aria-selected]="i === tabIndex" [style.--tc]="t.accent" (click)="setTab(i)">
+          <span class="ti"><span class="material-symbols-outlined">{{ t.icon }}</span></span>
+          <span class="tx2">
+            <span class="tl">{{ t.label }}</span>
+            <span class="tn"><b>{{ t.big === null ? '…' : (t.big | number) }}</b>{{ t.bigLabel }}</span>
+            <small>{{ t.sub }}</small>
+          </span>
+          <span class="tb" *ngIf="t.pct !== null"><i [style.width.%]="t.pct"></i></span>
+        </button>
+      </nav>
+    </ng-container>
+
+    <!-- ── the list ── -->
+    <ng-container *ngIf="!pdfOpen">
+      <div class="dr-tools">
+        <div class="dr-views" *ngIf="tab as t" role="tablist" aria-label="Filter">
+          <button type="button" role="tab" class="dr-chip" *ngFor="let v of t.views; trackBy: trackView"
+                  [class.on]="v.metric === metric" [attr.aria-selected]="v.metric === metric" [disabled]="v.count === 0"
+                  (click)="setView(v)">{{ v.label }}<b *ngIf="v.count !== null">{{ v.count | number }}</b></button>
+        </div>
+        <label class="dr-search">
+          <span class="material-symbols-outlined">search</span>
+          <input type="search" placeholder="Search number, subject, person…" [value]="search" (input)="onSearch($event)" [disabled]="loading || !!error">
+        </label>
+        <span class="dr-grow"></span>
+        <label class="dr-ps">Rows
+          <select (change)="setPageSize($event)" [disabled]="loading || !!error">
+            <option *ngFor="let n of pageSizes" [value]="n" [selected]="n === pageSizeChoice">{{ n === 0 ? 'Fit' : n }}</option>
+          </select>
+        </label>
+        <button type="button" class="dr-btn" (click)="exportCsv()" [disabled]="loading || !!error || !view.length" title="Download this list as a CSV file">
+          <span class="material-symbols-outlined">download</span><span class="bl">Export CSV</span></button>
+      </div>
+
+      <div class="dr-note" *ngIf="capped && !loading && !error">
+        <span class="material-symbols-outlined">info</span>
+        Showing the latest {{ loadedCount | number }} of {{ totalCount | number }} records. Pick a single project on the dashboard to see the rest, or export this list.
+      </div>
+
+      <div class="dr-body" #body>
+        <!-- loading -->
+        <div class="dr-state" *ngIf="loading">
+          <span class="material-symbols-outlined spin">progress_activity</span>
+          <b>Loading the records…</b>
+        </div>
+
+        <!-- error -->
+        <div class="dr-state err" *ngIf="!loading && error">
+          <span class="material-symbols-outlined">error</span>
+          <b>{{ error }}</b>
+          <button type="button" class="dr-btn" (click)="load()"><span class="material-symbols-outlined">refresh</span>Try again</button>
+        </div>
+
+        <!-- nothing -->
+        <div class="dr-state" *ngIf="!loading && !error && !view.length">
+          <span class="material-symbols-outlined">inbox</span>
+          <b>{{ search ? 'No record matches your search.' : 'No records for this count.' }}</b>
+        </div>
+
+        <!-- table -->
+        <div class="dr-tw" *ngIf="!loading && !error && view.length">
+          <table class="dr-table" [class.one]="oneProject">
+            <thead>
+              <tr>
+                <th class="c-idx">#</th>
+                <th *ngFor="let c of columns; trackBy: trackCol" [ngClass]="c.cls" (click)="sortBy(c.key)" [class.on]="sortKey === c.key"
+                    [attr.aria-sort]="sortKey === c.key ? (sortDir === 1 ? 'ascending' : 'descending') : 'none'">
+                  <span>{{ c.label }}</span>
+                  <i class="material-symbols-outlined">{{ sortKey === c.key ? (sortDir === 1 ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</i>
+                </th>
+                <th class="c-act">Report</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of paged; trackBy: trackRow; let i = index" [style.--i]="i" tabindex="0"
+                  (click)="openPdf(r)" (keydown.enter)="openPdf(r)" title="Open the report">
+                <td class="c-idx">{{ (page - 1) * pageSize + i + 1 }}</td>
+                <td *ngFor="let c of columns; trackBy: trackCol" [ngClass]="c.cls">
+                  <ng-container [ngSwitch]="c.key">
+                    <b *ngSwitchCase="'docId'" class="doc" [title]="r.docId">{{ r.docId }}</b>
+                    <span *ngSwitchCase="'projectCode'" class="two"><b>{{ projectLabel(r.projectCode) }}</b><small [title]="r.projectName">{{ r.projectName }}</small></span>
+                    <span *ngSwitchCase="'title'" class="two"><b [title]="r.title">{{ r.title || '—' }}</b><small [title]="subLabel + ': ' + cats(r)">{{ cats(r) || '—' }}</small></span>
+                    <span *ngSwitchCase="'status'" class="st" [ngClass]="statusClass(r.status)" [title]="r.status"><i></i><em>{{ r.status }}</em></span>
+                    <span *ngSwitchDefault class="tx" [title]="r[c.key]">{{ r[c.key] || '—' }}</span>
+                  </ng-container>
+                </td>
+                <td class="c-act">
+                  <button type="button" class="dr-eye" (click)="openPdf(r); $event.stopPropagation()" title="Open the report" aria-label="Open the report">
+                    <span class="material-symbols-outlined">visibility</span></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer class="dr-f" *ngIf="!loading && !error && view.length">
+        <span class="dr-range">Showing <b>{{ rangeText }}</b> of {{ view.length | number }}{{ search ? ' (filtered)' : '' }}</span>
+        <div class="dr-pager" *ngIf="pageCount > 1">
+          <button type="button" (click)="goPage(page - 1)" [disabled]="page === 1" aria-label="Previous page"><span class="material-symbols-outlined">chevron_left</span></button>
+          <ng-container *ngFor="let p of pageNumbers">
+            <span class="gap" *ngIf="p === 0">…</span>
+            <button type="button" *ngIf="p !== 0" [class.on]="p === page" (click)="goPage(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button>
+          </ng-container>
+          <button type="button" (click)="goPage(page + 1)" [disabled]="page === pageCount" aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>
+      </footer>
+    </ng-container>
+
+    <!-- ── one record's report ── -->
+    <ng-container *ngIf="pdfOpen">
+      <div class="dr-tools">
+        <button type="button" class="dr-btn" (click)="closePdf()"><span class="material-symbols-outlined">arrow_back</span>Back to the list</button>
+        <b class="dr-doc">{{ pdfDocId }}</b>
+        <span class="dr-grow"></span>
+        <button type="button" class="dr-btn" (click)="openPdfNewTab()" [disabled]="!pdfUrl"><span class="material-symbols-outlined">open_in_new</span><span class="bl">New tab</span></button>
+        <button type="button" class="dr-btn pri" (click)="downloadPdf()" [disabled]="!pdfUrl"><span class="material-symbols-outlined">download</span><span class="bl">Download PDF</span></button>
+      </div>
+      <div class="dr-body pdf">
+        <div class="dr-state" *ngIf="pdfLoading">
+          <span class="material-symbols-outlined spin">progress_activity</span>
+          <b>Preparing the report…</b>
+        </div>
+        <div class="dr-state err" *ngIf="!pdfLoading && pdfError">
+          <span class="material-symbols-outlined">error</span>
+          <b>{{ pdfError }}</b>
+        </div>
+        <iframe *ngIf="!pdfLoading && !pdfError && pdfUrl" [src]="pdfUrl" title="Report"></iframe>
+      </div>
+    </ng-container>
+
+  </section>
+</div>

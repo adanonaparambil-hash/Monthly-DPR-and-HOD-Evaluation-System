@@ -22,6 +22,12 @@ import { PurchaseDashboardGuard } from './guards/purchase-dashboard.guard';
 import { LogAnalyticsGuard } from './guards/log-analytics.guard';
 import { WirReportGuard } from './guards/wir-report.guard';
 import { MirReportGuard } from './guards/mir-report.guard';
+import { QtbtReportGuard } from './guards/qtbt-report.guard';
+import { NcrReportGuard } from './guards/ncr-report.guard';
+import { NcrRespondReportGuard } from './guards/ncr-respond-report.guard';
+import { NcrClosureReportGuard } from './guards/ncr-closure-report.guard';
+import { SorReportGuard } from './guards/sor-report.guard';
+import { QaqcWeeklyGuard } from './guards/qaqc-weekly.guard';
 import { CedDprAnalyticsGuard } from './guards/ced-dpr-analytics.guard';
 
 export const routes: Routes = [
@@ -90,6 +96,12 @@ export const routes: Routes = [
       { path: 'ot-approvals',        loadComponent: () => import('./ot-approvals/ot-approvals.component').then(m => m.OtApprovalsComponent) },
       { path: 'wir-reports',         loadComponent: () => import('./wir-report/wir-report.component').then(m => m.WirReportComponent), canActivate: [WirReportGuard] },
       { path: 'mir-reports',         loadComponent: () => import('./mir-report/mir-report.component').then(m => m.MirReportComponent), canActivate: [MirReportGuard] },
+      { path: 'qtbt-reports',        loadComponent: () => import('./qtbt-report/qtbt-report.component').then(m => m.QtbtReportComponent), canActivate: [QtbtReportGuard] },
+      { path: 'ncr-reports',         loadComponent: () => import('./ncr-report/ncr-report.component').then(m => m.NcrReportComponent), canActivate: [NcrReportGuard] },
+      { path: 'ncr-respond-reports', loadComponent: () => import('./ncr-respond-report/ncr-respond-report.component').then(m => m.NcrRespondReportComponent), canActivate: [NcrRespondReportGuard] },
+      { path: 'ncr-closure-reports', loadComponent: () => import('./ncr-closure-report/ncr-closure-report.component').then(m => m.NcrClosureReportComponent), canActivate: [NcrClosureReportGuard] },
+      { path: 'sor-reports',         loadComponent: () => import('./sor-report/sor-report.component').then(m => m.SorReportComponent), canActivate: [SorReportGuard] },
+      { path: 'qaqc-weekly',        loadComponent: () => import('./qaqc-weekly-dashboard/qaqc-weekly-dashboard.component').then(m => m.QaqcWeeklyDashboardComponent), canActivate: [QaqcWeeklyGuard] },
       {
         path: 'purchase-dashboard',
         loadComponent: () => import('./purchase-dashboard/purchase-dashboard.component').then(m => m.PurchaseDashboardComponent),

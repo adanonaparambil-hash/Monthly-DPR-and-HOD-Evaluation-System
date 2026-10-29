@@ -52,7 +52,7 @@ const MEM_C = 94;        // member ring, r = 15
   standalone: true,
   imports: [CommonModule, AiReportComponent, NewJoinersCardComponent],
   templateUrl: './dpr-hod-dashboard.component.html',
-  styleUrls: ['../styles/dpr-dash.css', './dpr-hod-dashboard.component.css']
+  styleUrls: ['../styles/dpr-dash.css', '../styles/dpr-dash-vivid.css', './dpr-hod-dashboard.component.css']
 })
 export class DprHodDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 

@@ -156,6 +156,38 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
     this.openMenuGroups[menuId] = !this.openMenuGroups[menuId];
   }
 
+  /**
+   * The in-app route stored on a group PARENT itself (QAQC → /qaqc-weekly), or null.
+   * External addresses and rows without a URL return null, so every other group keeps
+   * its old behaviour: a click only expands / collapses it.
+   */
+  groupRoute(menu: any): string | null {
+    const raw = (menu?.menuUrl ?? '').toString().trim();
+    if (!raw || this.isExternalMenu(menu) || /^https?:\/\//i.test(raw)) { return null; }
+    const mapped = this.LEGACY_MENU_ROUTES[raw.toLowerCase()] || raw;
+    return mapped.startsWith('/') ? mapped : `/${mapped}`;
+  }
+
+  hasGroupRoute(menu: any): boolean { return !!this.groupRoute(menu); }
+
+  /**
+   * Click on a group's name. With a route of its own the group opens that page and expands;
+   * clicking it again while already on that page collapses it. The arrow always just toggles.
+   */
+  onMenuGroupClick(menu: any, event: Event): void {
+    const route = this.groupRoute(menu);
+    if (!route) { this.toggleMenuGroup(menu.menuId, event); return; }
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.currentRoute.split('?')[0].split('#')[0] === route) {
+      this.openMenuGroups[menu.menuId] = !this.openMenuGroups[menu.menuId];
+      return;
+    }
+    this.openMenuGroups[menu.menuId] = true;
+    this.closeSidebarOnMobile();
+    this.router.navigate([route]);
+  }
+
   // ── Sidebar presentation (sections, tiles, icons) ─────────────────────────
   // The menu master only stores names and URLs, so the icon and tile colour
   // are chosen from the name. Unknown names get a neutral icon and a stable
@@ -196,6 +228,8 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
 
   /** A menu-master group is highlighted when the current page is one of its children. */
   isMenuGroupActive(menu: any): boolean {
+    const own = this.groupRoute(menu);
+    if (own && this.currentRoute.split('?')[0].split('#')[0] === own) { return true; }
     return (menu?.children || []).some((c: any) => !this.isExternalMenu(c) && !!c.menuUrl && this.currentRoute.includes(c.menuUrl));
   }
 
@@ -211,11 +245,47 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
     );
 
     return [...roots, ...orphans]
-      .map(root => ({
-        ...root,
-        children: menus.filter(c => c.parentId === root.menuId).sort(byOrder)
-      }))
+      .map(root => {
+        const children = menus.filter(c => c.parentId === root.menuId).sort(byOrder);
+        // children stays the flat list (route matching, breadcrumbs); navItems is what the sidebar draws
+        return { ...root, children, navItems: this.groupNavItems(children, root.menuId) };
+      })
       .sort(byOrder);
+  }
+
+  /**
+   * The sidebar shows the NCR forms (NCR Issued, NCR Disposition And Acceptance, NCR Request And Closure) under one
+   * collapsible "NCR Report" sub-menu. The menu master stays flat — only the drawing is grouped — so access rights,
+   * routes and breadcrumbs are untouched. Built once per menu load so the sidebar does not re-render on every change.
+   */
+  private groupNavItems(children: any[], parentId: number): { leaf?: any; group?: { id: string; name: string; items: any[] } }[] {
+    const isNcr = (c: any) => /^ncr\b/i.test((c?.menuName ?? '').toString().trim());
+    const ncr = children.filter(isNcr);
+    if (ncr.length < 2) { return children.map(c => ({ leaf: c })); }
+    const out: { leaf?: any; group?: { id: string; name: string; items: any[] } }[] = [];
+    let placed = false;
+    for (const c of children) {
+      if (!isNcr(c)) { out.push({ leaf: c }); continue; }
+      if (!placed) { out.push({ group: { id: 'ncr-' + parentId, name: 'NCR Report', items: ncr } }); placed = true; }
+    }
+    return out;
+  }
+
+  /** open state of the sidebar sub-groups; undefined = open only while one of its pages is the current page */
+  openSubGroups: { [id: string]: boolean } = {};
+
+  isSubActive(g: { items: any[] }): boolean {
+    return g.items.some((c: any) => !this.isExternalMenu(c) && !!c.menuUrl && this.currentRoute.includes(c.menuUrl));
+  }
+
+  isSubOpen(g: { id: string; items: any[] }): boolean {
+    return this.openSubGroups[g.id] ?? this.isSubActive(g);
+  }
+
+  toggleSubGroup(g: { id: string; items: any[] }, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.openSubGroups[g.id] = !this.isSubOpen(g);
   }
 
   /** Load user menus and set purchase dashboard visibility */
@@ -319,6 +389,7 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
     if (has('/employee-directory')) { return ['Services', 'People']; }
     if (has('/notice-management', '/hod-master', '/employee-master')) { return ['Admin', 'System Master']; }
     if (has('/profile')) { return ['Account']; }
+    if (has('/qaqc-weekly')) { return ['Workspace', 'QA/QC']; }
     // menu-master pages: the group they sit under in the sidebar
     for (const m of this.menuTree || []) {
       const hit = (m.children || []).some((c: any) => c.menuUrl && !this.isExternalMenu(c) && r.includes(c.menuUrl));
@@ -559,7 +630,13 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
       '/leave-report': 'Leave Application Report',
       '/employee-directory': 'Employee Directory',
       '/purchase-dashboard': 'Purchase Dashboard',
-      '/wir-reports': 'WIR Reports'
+      '/wir-reports': 'WIR Reports',
+      '/qtbt-reports': 'QTBT Reports',
+      '/ncr-reports': 'NCR Issued',
+      '/ncr-respond-reports': 'NCR Disposition and Acceptance',
+      '/ncr-closure-reports': 'NCR Request and Closure',
+      '/sor-reports': 'SOR Reports',
+      '/qaqc-weekly': 'QA/QC'
     };
 
     // Strip query params and fragments before lookup
@@ -816,9 +893,16 @@ export class layout implements OnInit, OnDestroy, AfterViewInit {
       .replace(/\bMpr\b/gi, 'MPR')
       .replace(/\bApr\b/gi, 'APR')
       // In TM_MENU_MASTER today: QAQC (124), PMC Module (41), WIR Report (125)
-      .replace(/\bQaqc\b/gi, 'QAQC')
+      .replace(/\bQaqc\b/gi, 'QA/QC')
+      .replace(/\bQa\/Qc\b/gi, 'QA/QC')   // the menu master may store it as "QA/QC", which the capitalising above turns into "Qa/Qc"
       .replace(/\bPmc\b/gi, 'PMC')
       .replace(/\bWir\b/gi, 'WIR')
+      .replace(/\bMir\b/gi, 'MIR')
+      .replace(/\bQtbt\b/gi, 'QTBT')
+      .replace(/\bNcr\b/gi, 'NCR')
+      .replace(/\bSor\b/gi, 'SOR')
+      // The master row is still named "Site Observation/Audit Reports"; the sidebar shows it like its siblings (WIR Report, MIR Report ...)
+      .replace(/^Site Observation\s*\/\s*Audit Reports?$/i, 'SOR Report')
       // Not in the master yet, but used elsewhere in the portal
       .replace(/\bByod\b/gi, 'BYOD')
       .replace(/\bHod\b/gi, 'HOD')

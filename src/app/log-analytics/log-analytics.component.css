@@ -1927,3 +1927,33 @@
   min-height: 44vh;
   padding: 40px 20px;
 }
+
+/* ═══ Mobile responsiveness — the analytics table on a phone ═════════════════════════════════
+   The table keeps its sideways scroll (column sort, filters, drag and resize live in the header, so it is
+   not turned into cards), but the first column — the employee — stays pinned on the left with a soft
+   shadow, and is narrower, so every row keeps its name while you swipe through the other columns.
+   The inline [style.width]/[style.min-width] bindings are why the first-column widths carry !important. */
+@media (max-width: 768px) {
+  .la-table thead th:first-child,
+  .la-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    width: 132px !important;
+    min-width: 132px !important;
+    box-shadow: 6px 0 10px -6px rgba(15, 23, 42, 0.22);
+  }
+  .la-table thead th:first-child { z-index: 4; background: #f8fafc; }
+  .la-table tbody td:first-child { background: #ffffff; }
+  .la-table tbody .td-row.row-alt td:first-child { background: #fafbfd; }
+  .la-table tbody .td-row:hover td:first-child { background: #f0f9ff; }
+  .la-table .emp-cell { gap: 7px; }
+  .la-table .emp-name { white-space: normal; line-height: 1.25; overflow-wrap: anywhere; font-size: 12px; }
+  .tbl-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+}
+@media (max-width: 768px) {
+  :host-context(.dark-theme) .la-table thead th:first-child { background: #172033; }
+  :host-context(.dark-theme) .la-table tbody td:first-child { background: #1e293b; }
+  :host-context(.dark-theme) .la-table tbody .td-row.row-alt td:first-child { background: #1a2537; }
+  :host-context(.dark-theme) .la-table tbody .td-row:hover td:first-child { background: #1c2b3f; }
+}

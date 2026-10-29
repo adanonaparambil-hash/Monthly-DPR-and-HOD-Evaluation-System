@@ -131,7 +131,8 @@ export interface MyApprovalRequest {
 
 export interface EmployeeApprovalInboxRequest {
   approverId?: string;
-  formType?: string;     // 'E' | 'B' | 'R' | null
+  formType?: string;     // 'E' | 'B' | 'R' | null   (the MODULE: exit form / BYOD / rejoin)
+  exitType?: string;     // 'E' | 'P' | 'R' | undefined (exit forms only: emergency / planned leave / resignation)
   fromDate?: Date | null;
   toDate?: Date | null;
   department?: string;

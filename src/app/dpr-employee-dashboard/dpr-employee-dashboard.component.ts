@@ -147,7 +147,7 @@ const RING2_C = 377;   // 2πr, r = 60
   // Arabic pilot: this page flips itself to RTL (the rest of the app is unaffected)
   host: { '[class.is-rtl]': 'i18n.isAr()', '[attr.dir]': 'i18n.dir()', '[attr.lang]': 'i18n.lang()' },
   templateUrl: './dpr-employee-dashboard.component.html',
-  styleUrls: ['../styles/dpr-dash.css', './dpr-employee-dashboard.component.css']
+  styleUrls: ['../styles/dpr-dash.css', '../styles/dpr-dash-vivid.css', './dpr-employee-dashboard.component.css']
 })
 export class DprEmployeeDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 

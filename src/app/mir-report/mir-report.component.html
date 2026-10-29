@@ -76,7 +76,7 @@
           <thead>
             <tr>
               <th class="sl-col"><div class="th-inner"><span class="th-label">SL</span></div></th>
-              @for (col of allColumns; track col.key) {
+              @for (col of tableColumns; track col.key) {
                 <th [style.width.px]="col.width" [style.min-width.px]="col.width">
                   <div class="th-inner">
                     <span class="th-label" (click)="sortBy(col.key, $event)">
@@ -102,7 +102,7 @@
             @for (row of pagedRows; track row.docid + '|' + row.revno; let i = $index) {
               <tr class="td-row" (click)="openPdf(row)" title="Click to view MIR report">
                 <td class="sl-col sl-cell">{{ rangeStart + i }}</td>
-                @for (col of allColumns; track col.key) {
+                @for (col of tableColumns; track col.key) {
                   <td [style.width.px]="col.width" [style.min-width.px]="col.width">
                     @switch (col.key) {
                       @case ('docid') {
@@ -130,7 +130,7 @@
               </tr>
             } @empty {
               <tr>
-                <td class="mir-empty" [attr.colspan]="allColumns.length + 1">
+                <td class="mir-empty" [attr.colspan]="tableColumns.length + 1">
                   <i class="fas fa-inbox"></i>
                   <div>No MIR records found</div>
                   @if (anyFilterActive) {

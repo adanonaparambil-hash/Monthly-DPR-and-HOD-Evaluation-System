@@ -1,0 +1,158 @@
+/* ════════════════════════════════════════════════════════════════════════
+   DPR DASHBOARDS — "vivid" layer: light colour and motion on top of dpr-dash.css.
+   Used by dpr-employee-dashboard and dpr-hod-dashboard only (the QA/QC weekly
+   dashboard and its records window also load dpr-dash.css and stay as they are).
+   Loaded AFTER dpr-dash.css and BEFORE each page's own CSS.
+
+   Design only: nothing here hides, moves or changes a number, and no box grows —
+   paddings and icon sizes stay those of dpr-dash.css (checked by measuring every
+   block with this file switched on and off). Colours are LIGHT pastel tints with
+   the normal dark text; motion is added on top.
+   Take this file out of the two styleUrls to get the calm look back.
+
+   Moving parts use the individual `translate` / `scale` properties where an element
+   also has a hover `transform`, so the two never fight.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@keyframes vvShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes vvRise{from{opacity:0;transform:translateY(20px) scale(.98);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+@keyframes vvFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes vvOrb{0%,100%{translate:0 0;scale:1}50%{translate:-14px 10px;scale:1.15}}
+@keyframes vvStripe{to{background-position:20px 0,0 0}}
+@keyframes vvSheen{0%{transform:translateX(-140%) skewX(-18deg)}30%,100%{transform:translateX(340%) skewX(-18deg)}}
+@keyframes vvPop{0%{scale:.6;opacity:0}60%{scale:1.08}100%{scale:1;opacity:1}}
+@keyframes vvSpark{from{background-position:0 0,0 0}to{background-position:0 -240px,0 -360px}}
+@keyframes vvGold{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 6px rgba(245,158,11,0)}}
+@keyframes vvWiggle{0%,100%{rotate:0deg}25%{rotate:-9deg}75%{rotate:7deg}}
+
+/* ── page: the colour clouds drift, sections rise in a little softer ──────── */
+.dpage{background-size:140% 140%,140% 140%,140% 140%,auto;animation:vvShift 26s ease-in-out infinite}
+.an{animation-name:vvRise;animation-duration:.75s}
+
+/* ══ HERO: a light pastel band that slowly changes colour, with rising sparkles ═══ */
+.hero{background:linear-gradient(120deg,#d1fae5 0%,#ccfbf1 22%,#e0f2fe 52%,#ede9fe 80%,#fce7f3 100%);background-size:240% 240%;
+  border-color:color-mix(in srgb,var(--a1) 22%,var(--line));
+  animation:vvRise .75s cubic-bezier(.22,1,.36,1) var(--d,0ms) backwards,vvShift 20s ease-in-out infinite}
+.hero.an.pre{animation:none;opacity:0}
+:host-context(.dark-theme) .hero{
+  background:linear-gradient(120deg,color-mix(in srgb,#10b981 22%,var(--card)) 0%,color-mix(in srgb,#14b8a6 16%,var(--card)) 25%,
+    color-mix(in srgb,#0ea5e9 18%,var(--card)) 55%,color-mix(in srgb,#8b5cf6 22%,var(--card)) 100%);background-size:240% 240%}
+/* tiny light dots drifting up through the band */
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(circle,rgba(255,255,255,.95) 0 1.4px,transparent 2px),radial-gradient(circle,rgba(255,255,255,.7) 0 1px,transparent 1.6px);
+  background-size:120px 120px,180px 180px;background-position:0 0,40px 60px;animation:vvSpark 26s linear infinite}
+:host-context(.dark-theme) .hero::after{opacity:.18}
+.hero .hchip{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),background-color .2s,box-shadow .2s}
+/* plain chips turn to glass; the red (.hot) and green (.g) ones keep their own colours */
+.hero .hchip:not(.hot):not(.g){background:rgba(255,255,255,.62);border-color:rgba(255,255,255,.9)}
+.hero .hchip:hover{transform:translateY(-2px);box-shadow:var(--e2)}
+.hero .hchip:not(.hot):not(.g):hover{background:#fff}
+:host-context(.dark-theme) .hero .hchip:not(.hot):not(.g){background:rgba(15,23,42,.35);border-color:rgba(255,255,255,.12)}
+.hero .eyeb{background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+:host-context(.dark-theme) .hero .eyeb{background:rgba(15,23,42,.4)}
+/* the ring sits on a soft glass panel that takes no room: its padding is taken back by a negative margin on every
+   side (a wider ring column would make the chips on the left wrap and the band taller) */
+.hero .hrr{padding:6px 12px;margin:-6px -12px;border-radius:20px;background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.75);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+:host-context(.dark-theme) .hero .hrr{background:rgba(15,23,42,.3);border-color:rgba(255,255,255,.1)}
+.hero .ring svg{filter:drop-shadow(0 4px 10px color-mix(in srgb,var(--a1) 30%,transparent))}
+.hero .dpill:not(.on){background:rgba(255,255,255,.62);border-color:rgba(255,255,255,.9)}   /* the selected pill keeps its colour */
+:host-context(.dark-theme) .hero .dpill:not(.on){background:rgba(15,23,42,.35);border-color:rgba(255,255,255,.12)}
+.hero .hquote{background:rgba(255,255,255,.55)}
+:host-context(.dark-theme) .hero .hquote{background:rgba(15,23,42,.35)}
+
+/* ══ QUICK ACTIONS: light tinted tiles, floating icons, the count as a corner badge ═══ */
+.qbtn{border-color:color-mix(in srgb,var(--kc) 22%,var(--line));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--kc) 10%,var(--card)),var(--card) 72%)}
+.qbtn:hover{transform:translateY(-5px);box-shadow:0 20px 32px -22px var(--kc);border-color:color-mix(in srgb,var(--kc) 50%,transparent)}
+.qic{animation:vvFloat 4.2s ease-in-out infinite;animation-delay:calc(var(--d,0ms) * 3)}
+.qbtn:hover .qic .material-symbols-outlined{animation:vvWiggle .5s ease}
+/* a count sits on the icon's corner like a notification badge, so the title keeps the full width;
+   the arrow of a link tile stays in its place as a round button */
+.qct:not(:has(.material-symbols-outlined)){position:absolute;left:38px;top:5px;z-index:2;min-width:22px;height:22px;padding:0 6px;
+  border-radius:999px;display:grid;place-items:center;font:700 11.5px var(--fh);color:#fff;background:var(--kc);
+  border:2px solid var(--card);box-shadow:0 4px 10px -4px var(--kc)}
+.qct:has(.material-symbols-outlined){width:32px;height:32px;border-radius:50%;justify-content:center;
+  background:color-mix(in srgb,var(--kc) 12%,transparent);transition:background-color .2s,color .2s,transform .3s cubic-bezier(.34,1.56,.64,1)}
+.qbtn:hover .qct:has(.material-symbols-outlined){background:var(--kc);color:#fff;transform:translateX(3px)}
+:host(.is-rtl) .qct:not(:has(.material-symbols-outlined)){left:auto;right:38px}   /* Arabic pilot: the icon is on the right */
+
+/* ══ KPI TILES: light colour wash, floating colour orb, light sweep now and then ═══ */
+.kpi{border-color:color-mix(in srgb,var(--kc) 26%,var(--line));
+  background:linear-gradient(140deg,color-mix(in srgb,var(--kc) 16%,var(--card)) 0%,color-mix(in srgb,var(--kc) 5%,var(--card)) 70%)}
+.kpi::before,.kpi:hover::before{left:auto;right:-40px;top:-44px;bottom:auto;width:130px;height:130px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--kc) 22%,transparent),transparent 70%);opacity:1;animation:vvOrb 8s ease-in-out infinite}
+.kpi::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-140%) skewX(-18deg);
+  animation:vvSheen 7s ease-in-out infinite;animation-delay:calc(1.5s + var(--d,0ms) * 4)}
+:host-context(.dark-theme) .kpi::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+.kpi:hover{transform:translateY(-5px);box-shadow:0 22px 34px -24px var(--kc);border-color:color-mix(in srgb,var(--kc) 50%,transparent)}
+.kpi .kh,.kpi .kv,.kpi .bar,.kpi .kf{position:relative;z-index:1}
+.kpi .kv{color:color-mix(in srgb,var(--kc) 82%,var(--ink));animation:vvPop .6s cubic-bezier(.34,1.56,.64,1) calc(.35s + var(--d,0ms)) backwards}
+.kpi .bar{background:color-mix(in srgb,var(--kc) 14%,var(--line))}
+.kpi .bar i{background:linear-gradient(90deg,var(--kc),color-mix(in srgb,var(--kc) 55%,#fff))}
+.kpi .kf .material-symbols-outlined{color:var(--kc)}
+
+/* ══ CARDS: a colour line runs across the top on hover, gradient icon badges (same size) ═══ */
+.card{position:relative}
+.card:not(.kpi)::before{content:"";position:absolute;left:18px;right:18px;top:-1px;height:3px;border-radius:0 0 4px 4px;pointer-events:none;
+  background:linear-gradient(90deg,var(--a1),var(--a5),var(--a6),var(--a4));transform:scaleX(.12);transform-origin:left;opacity:0;
+  transition:transform .55s cubic-bezier(.22,1,.36,1),opacity .3s}
+.card:not(.kpi):hover::before{transform:scaleX(1);opacity:1}
+.card:hover{transform:translateY(-3px);box-shadow:0 20px 36px -30px rgba(15,23,42,.45)}
+:host-context(.dark-theme) .card:hover{box-shadow:0 20px 36px -26px rgba(0,0,0,.85)}
+.cic{background:linear-gradient(135deg,color-mix(in srgb,var(--kc,var(--brand)) 26%,transparent),color-mix(in srgb,var(--kc,var(--brand)) 9%,transparent));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc,var(--brand)) 22%,transparent)}
+
+/* stat boxes: light wash, lift on hover */
+.st{background:linear-gradient(135deg,color-mix(in srgb,var(--kc) 13%,transparent),color-mix(in srgb,var(--kc) 4%,transparent));
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+.st:hover{transform:translateY(-3px);box-shadow:0 12px 20px -16px var(--kc)}
+.st .v{animation:vvPop .55s cubic-bezier(.34,1.56,.64,1) .45s backwards}
+
+/* rows: softer gradient icons, a little slide on hover */
+.rico,.av{background:linear-gradient(135deg,color-mix(in srgb,var(--kc,var(--a1)) 62%,#fff),var(--kc,var(--a1)));
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.row:hover .rico,.row:hover .av{transform:scale(1.08) rotate(-6deg)}
+.row.click{transition:background .2s,transform .2s}
+.row.click:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--brand) 7%,transparent),transparent 80%);transform:translateX(3px)}
+
+/* bars: gradients, and moving stripes where the work is still going
+   (.task / .dv / .team / .card prefixes: the pages' own CSS loads after this file with the same weight) */
+.bul .f{background:linear-gradient(90deg,var(--a1),#34d399)}
+.task .tprog i{background-image:repeating-linear-gradient(-45deg,rgba(255,255,255,.3) 0 5px,transparent 5px 10px),linear-gradient(90deg,var(--a1),var(--a5));
+  background-size:14.14px 14.14px,100% 100%;animation:growW 1.3s cubic-bezier(.25,.9,.3,1) .3s backwards,vvStripe 1.2s linear infinite}
+.dv .dvtr .sg{background:linear-gradient(90deg,var(--a1),#34d399)}
+.dv .dvtr .sg.over{background:linear-gradient(90deg,#fbbf24,var(--a3))}
+
+/* buttons: a gradient primary with a light passing across now and then */
+.btn.pri{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--brand-l),var(--brand) 50%,var(--a5));background-size:180% 100%;
+  transition:background-position .45s,transform .2s,box-shadow .2s}
+.btn.pri:hover{background-position:100% 0;transform:translateY(-2px);box-shadow:0 12px 22px -12px var(--brand)}
+.btn.pri::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-140%) skewX(-18deg);
+  animation:vvSheen 5s ease-in-out 2s infinite}
+
+/* the quote and AI cards get a little more of their own colour */
+.quote{background:linear-gradient(140deg,color-mix(in srgb,var(--a6) 13%,var(--card)),color-mix(in srgb,var(--a2) 5%,var(--card)) 70%)}
+.card.aipanel{background:linear-gradient(140deg,color-mix(in srgb,var(--a6) 13%,var(--card)),color-mix(in srgb,var(--a5) 6%,var(--card)) 72%)}
+
+/* ══ HOD: the three answers get a light colour wash and a floating orb ═══ */
+.dc{border-color:color-mix(in srgb,var(--dcc,var(--a1)) 26%,var(--line));
+  background:linear-gradient(140deg,color-mix(in srgb,var(--dcc,var(--a1)) 13%,var(--card)),color-mix(in srgb,var(--dcc,var(--a1)) 4%,var(--card)) 72%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,border-color .3s}
+.dc::after{content:"";position:absolute;right:-36px;bottom:-46px;width:130px;height:130px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--dcc,var(--a1)) 20%,transparent),transparent 70%);animation:vvOrb 9s ease-in-out infinite}
+.dc:hover{transform:translateY(-4px);box-shadow:0 20px 32px -24px var(--dcc,var(--a1));border-color:color-mix(in srgb,var(--dcc,var(--a1)) 50%,transparent)}
+.dc .a{animation:vvPop .6s cubic-bezier(.34,1.56,.64,1) calc(.35s + var(--d,0ms)) backwards}
+
+/* HOD: team cards, ranking medal */
+.team .mem{background:linear-gradient(135deg,color-mix(in srgb,var(--sc,var(--a1)) 8%,var(--card)),var(--card) 70%)}
+.team .mem:hover{box-shadow:0 16px 28px -22px var(--sc,var(--a1))}
+.rk.t1{animation:vvGold 2.2s ease-out infinite}
+
+/* motion off for people who ask for it (dpr-dash.css stops every child; this stops the page itself) */
+@media (prefers-reduced-motion:reduce){
+  .dpage,.hero{animation:none}
+}

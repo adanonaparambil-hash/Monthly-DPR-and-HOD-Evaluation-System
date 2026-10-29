@@ -55,22 +55,41 @@
            WIR Reports and Finance come from here (menu master), never hard-coded. -->
       <ng-container *ngIf="!isDPROnlyMode">
         <ng-container *ngFor="let menu of navWorkMenus">
-          <!-- Parent WITH children → expandable group (parent itself has no URL) -->
+          <!-- Parent WITH children → expandable group. A parent that stores an in-app URL (QAQC → /qaqc-weekly) ALSO opens that page when its name is clicked; the arrow only expands/collapses. -->
           <div class="sn-group" *ngIf="menu.children.length > 0" [class.open]="openMenuGroups[menu.menuId]">
-            <a class="sn-item" (click)="toggleMenuGroup(menu.menuId, $event)" [class.active]="isMenuGroupActive(menu)"
+            <a class="sn-item" (click)="onMenuGroupClick(menu, $event)" [class.active]="isMenuGroupActive(menu)"
                [title]="menu.menuName" href="javascript:void(0)" [attr.aria-expanded]="!!openMenuGroups[menu.menuId]">
               <span class="sn-ic" [style.--c]="navColor(menu.menuName)"><i class="fas" [ngClass]="menuIcon(menu)"></i></span>
               <span class="sn-tx">{{ formatMenuName(menu.menuName) | t }}</span>
-              <i class="fas fa-chevron-down sn-chev"></i>
+              <i class="fas fa-chevron-down sn-chev" [class.hit]="hasGroupRoute(menu)" (click)="toggleMenuGroup(menu.menuId, $event)"></i>
             </a>
             <div class="sn-tree" *ngIf="openMenuGroups[menu.menuId]" [@slideDown]>
-              <a *ngFor="let child of menu.children" class="sn-leaf"
-                 (click)="handleMenuClick(child, $event)" [title]="child.menuName"
-                 [class.active]="!isExternalMenu(child) && child.menuUrl && currentRoute.includes(child.menuUrl)"
-                 href="javascript:void(0)">
-                <span class="sn-tx">{{ formatMenuName(child.menuName) | t }}</span>
-                <i class="fas fa-arrow-up-right-from-square sn-ext" *ngIf="isExternalMenu(child)"></i>
-              </a>
+              <ng-container *ngFor="let it of menu.navItems">
+                <a *ngIf="it.leaf" class="sn-leaf"
+                   (click)="handleMenuClick(it.leaf, $event)" [title]="it.leaf.menuName"
+                   [class.active]="!isExternalMenu(it.leaf) && it.leaf.menuUrl && currentRoute.includes(it.leaf.menuUrl)"
+                   href="javascript:void(0)">
+                  <span class="sn-tx">{{ formatMenuName(it.leaf.menuName) | t }}</span>
+                  <i class="fas fa-arrow-up-right-from-square sn-ext" *ngIf="isExternalMenu(it.leaf)"></i>
+                </a>
+
+                <!-- sub-group (NCR Report): a header that opens and closes, its pages indented below -->
+                <div class="sn-sub" *ngIf="it.group" [class.open]="isSubOpen(it.group)">
+                  <a class="sn-leaf sn-subh" (click)="toggleSubGroup(it.group, $event)" [class.active]="isSubActive(it.group)"
+                     href="javascript:void(0)" [attr.aria-expanded]="isSubOpen(it.group)" [title]="it.group.name">
+                    <span class="sn-tx">{{ it.group.name | t }}</span>
+                    <i class="fas fa-chevron-down sn-chev sn-chev-s"></i>
+                  </a>
+                  <div class="sn-tree2" *ngIf="isSubOpen(it.group)" [@slideDown]>
+                    <a *ngFor="let child of it.group.items" class="sn-leaf sn-leaf2"
+                       (click)="handleMenuClick(child, $event)" [title]="child.menuName"
+                       [class.active]="!isExternalMenu(child) && child.menuUrl && currentRoute.includes(child.menuUrl)"
+                       href="javascript:void(0)">
+                      <span class="sn-tx">{{ formatMenuName(child.menuName) | t }}</span>
+                    </a>
+                  </div>
+                </div>
+              </ng-container>
             </div>
           </div>
           <!-- Root without children → plain link (menuUrl required; Purchase Dashboard has its own link) -->

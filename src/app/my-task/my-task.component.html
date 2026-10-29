@@ -51,17 +51,28 @@
 
           <!-- Ultra Modern Timer Control Section -->
           <div class="timer-control-section">
-            <!-- Animated Bars -->
-            <div class="timer-bars">
-              <span class="bar bar-1"></span>
-              <span class="bar bar-2"></span>
-              <span class="bar bar-3"></span>
-              <span class="bar bar-4"></span>
+            <!-- a mirrored sound wave that plays while the task runs -->
+            <div class="timer-eq" [class.is-live]="activeTask?.status === 'RUNNING'" aria-hidden="true">
+              @for (h of [34, 52, 70, 88, 100, 82, 64, 92, 72, 48, 30]; track $index) {
+                <i [style.--h]="h" [style.--k]="$index"></i>
+              }
             </div>
 
             <!-- Timer Display -->
-            <div class="timer-box">
+            <!-- a round dial: tick marks, a light that runs round the edge while the task runs, stopwatch on top -->
+            <div class="timer-box" [class.is-live]="activeTask?.status === 'RUNNING'"
+                 [style.--td-s]="getActiveTaskTimer().substring(6, 8)" [class.td-s0]="getActiveTaskTimer().substring(6, 8) === '00'">
+              <span class="td-orbit" aria-hidden="true"></span>
+              <span class="td-pulse" aria-hidden="true"></span>
+              <span class="td-pulse td-pulse-2" aria-hidden="true"></span>
+              <span class="td-track" aria-hidden="true"></span>
+              <span class="td-sec" aria-hidden="true"></span>
+              <span class="td-ticks" aria-hidden="true"></span>
+              <span class="td-run" aria-hidden="true"></span>
+              <span class="td-run td-run-2" aria-hidden="true"></span>
+              <span class="td-core" aria-hidden="true"></span>
               <div class="timer-glow-bg"></div>
+              <i class="fas fa-stopwatch td-icon" aria-hidden="true"></i>
               <div class="timer-digits">
                 <span class="digit-group">
                   <span class="digit">{{ getActiveTaskTimer().substring(0, 1) }}</span>
@@ -113,14 +124,6 @@
               </button>
             </div>
 
-            <!-- Animated Wave -->
-            <div class="timer-wave">
-              <svg viewBox="0 0 40 40" class="wave-svg">
-                <circle class="wave-circle wave-1" cx="20" cy="20" r="8" />
-                <circle class="wave-circle wave-2" cx="20" cy="20" r="8" />
-                <circle class="wave-circle wave-3" cx="20" cy="20" r="8" />
-              </svg>
-            </div>
           </div>
         </div>
 
@@ -135,8 +138,8 @@
           <!-- Modern Animated Progress Section -->
           <div class="modern-progress-section">
             <div class="progress-info">
-              <span class="progress-label">Task Completion</span>
-              <span class="progress-value">{{ activeTask?.progress || 0 }}%</span>
+              <span class="progress-label"><i class="fas fa-flag"></i>Task Completion</span>
+              <span class="progress-value">{{ activeTask?.progress || 0 }}% <small>completed</small></span>
             </div>
             <div class="animated-progress-bar">
               <div class="progress-track">
@@ -144,6 +147,11 @@
                   <div class="progress-shimmer"></div>
                   <div class="progress-glow"></div>
                 </div>
+                <!-- milestones at 25 / 50 / 75 / 100 %, lit once reached, and a knob at the current point -->
+                @for (m of [25, 50, 75, 100]; track m) {
+                  <span class="ms-tick" [class.on]="(activeTask?.progress || 0) >= m" [style.left.%]="m"></span>
+                }
+                <span class="ms-knob" [style.left.%]="activeTask?.progress || 0"></span>
               </div>
               <div class="progress-particles">
                 <span class="particle"></span>
@@ -159,11 +167,11 @@
             <div class="task-details">
               <div class="task-detail-item">
                 <i class="fas fa-calendar-alt"></i>
-                <span>Started: {{ activeTask?.startDate | date:'MMM dd, yyyy' }}</span>
+                <span>Started: <b>{{ activeTask?.startDate | date:'MMM dd, yyyy' }}</b></span>
               </div>
               <div class="task-detail-item">
-                <i class="fas fa-user"></i>
-                <span>Assigned by: {{ activeTask?.assignee || 'N/A' }}</span>
+                <i class="fas fa-user-circle"></i>
+                <span>Assigned by: <b>{{ activeTask?.assignee || 'N/A' }}</b></span>
               </div>
 
             </div>
@@ -453,6 +461,8 @@
 
   <!-- Task Tabs and Table -->
   <div class="task-section">
+    @let baseTasks = getTabTasks();
+    @let rows = applyTableView(baseTasks);
     <div class="task-tabs">
       <div class="tabs-container">
         <button class="tab-btn" [class.active]="activeTab === 'MY TASKS'" (click)="setActiveTab('MY TASKS')">
@@ -476,25 +486,49 @@
       </div>
     </div>
 
+    <!-- Active sort / filters (front-end only, over the tasks already loaded) -->
+    @if (hasColFilters || sortCol) {
+    <div class="table-view-bar">
+      <span class="tvb-count"><b>{{ rows.length }}</b> of {{ baseTasks.length }} tasks</span>
+      @if (sortCol) {
+      <button type="button" class="tvb-chip is-sort" (click)="sortCol = null" title="Back to the normal order">
+        <i class="fas" [ngClass]="sortDir === 'asc' ? sortWords(sortCol).ascIcon : sortWords(sortCol).descIcon"></i>
+        {{ colLabel(sortCol) }} · {{ sortDir === 'asc' ? sortWords(sortCol).asc : sortWords(sortCol).desc }}
+        <i class="fas fa-xmark tvb-x"></i>
+      </button>
+      }
+      @for (chip of filterChips(); track chip.key) {
+      <button type="button" class="tvb-chip" (click)="clearColFilter(chip.key)" title="Remove this filter">
+        <i class="fas fa-filter"></i>{{ chip.text }}<i class="fas fa-xmark tvb-x"></i>
+      </button>
+      }
+      <button type="button" class="tvb-clear" (click)="clearTableView()">Clear all</button>
+    </div>
+    }
+
     <!-- Task Table -->
     <div class="task-table">
       <div class="table-header">
-        <div class="header-cell category">TASK CATEGORY</div>
-        <div class="header-cell title">TASK TITLE</div>
-        <div class="header-cell start-date">START DATE</div>
-        <div class="header-cell assignee">
-          {{ activeTab === 'ASSIGNED TO OTHERS' ? 'ASSIGNED TO' : 'ASSIGNED BY' }}
+        @for (col of tableCols; track col.key) {
+        <div class="header-cell" [ngClass]="col.key" [class.is-sorted]="sortCol === col.key" [class.is-filtered]="isColFiltered(col.key)">
+          <button type="button" class="hc-sort" (click)="toggleSort(col.key)" [title]="'Sort by ' + colLabel(col.key)">
+            <span class="hc-label">{{ headerLabel(col) }}</span>
+          </button>
+          <span class="hc-tools">
+            <i class="fas hc-sort-ico" [ngClass]="sortIcon(col.key)" (click)="toggleSort(col.key)" aria-hidden="true"></i>
+            <button type="button" class="hc-filter" [class.open]="openFilterCol === col.key" (click)="openColFilter(col.key, $event)"
+              [title]="'Filter ' + colLabel(col.key)" [attr.aria-label]="'Filter ' + colLabel(col.key)" [attr.aria-expanded]="openFilterCol === col.key">
+              <i class="fas fa-filter"></i>
+            </button>
+          </span>
         </div>
-        <div class="header-cell logged">LOG TIME</div>
-        <div class="header-cell total">TOTAL HOURS</div>
-        <div class="header-cell progress">PROGRESS</div>
-        <div class="header-cell status">STATUS</div>
+        }
         <div class="header-cell action">ACTION</div>
       </div>
 
       <div class="table-body">
-        @for (task of getFilteredTasks(); track task.id) {
-        <div class="table-row" (click)="openTaskDetailsModal(task)">
+        @for (task of rows; track task.id) {
+        <div class="table-row" [class.is-running]="task.status === 'RUNNING'" [style.--i]="$index" (click)="openTaskDetailsModal(task)">
           <div class="cell category" data-label="Category">
             <span class="category-badge" [class]="getCategoryClass(task.category)">
               {{ task.category }}
@@ -518,7 +552,7 @@
                     } @else {
                       <div class="stack-avatar stack-avatar-initial" [title]="a.name">{{ (a.name || 'U').charAt(0) }}</div>
                     }
-                    <span class="assignee-multi-name" [title]="a.name">{{ a.name }}</span>
+                    <span class="assignee-multi-name" [title]="a.name">{{ a.name | titlecase }}</span>
                   </div>
                 }
                 @if (task.assignees.length > 3) {
@@ -530,13 +564,14 @@
               <div class="assignee-info">
                 <div class="assignee-avatar" *ngIf="!task.assigneeImage">{{ task.assignee.charAt(0) }}</div>
                 <img *ngIf="task.assigneeImage" [src]="task.assigneeImage" [alt]="task.assignee" class="assignee-avatar" />
-                <span>{{ task.assignee }}</span>
+                <span [title]="task.assignee">{{ task.assignee | titlecase }}</span>
               </div>
             }
           </div>
           <div class="cell logged" data-label="Log Time">{{ task.loggedHours }}</div>
           <div class="cell total" data-label="Total Hours">{{ task.totalHours }}</div>
           <div class="cell progress" data-label="Progress">
+            <span class="progress-mini" aria-hidden="true"><i [style.width.%]="task.progress"></i></span>
             <span class="progress-text-only">{{ task.progress }}%</span>
           </div>
           <div class="cell status" data-label="Status">
@@ -601,9 +636,88 @@
             </div>
           </div>
         </div>
+        } @empty {
+        @if (hasColFilters && baseTasks.length) {
+        <div class="table-empty">
+          <i class="fas fa-filter-circle-xmark"></i>
+          <span>No tasks match these filters</span>
+          <button type="button" (click)="clearColFilters()">Clear filters</button>
+        </div>
+        }
         }
       </div>
     </div>
+
+    <!-- Column filter box (fixed to the window so the table's rounded clipping cannot cut it off) -->
+    @if (openFilterCol; as fc) {
+    <div class="col-filter-pop" [class.above]="filterPopPos.above" [style.top.px]="filterPopPos.top" [style.left.px]="filterPopPos.left" [style.max-height.px]="filterPopPos.maxHeight"
+      (click)="$event.stopPropagation()" role="dialog" [attr.aria-label]="'Sort and filter: ' + colLabel(fc)">
+      <div class="cfp-head">
+        <span class="cfp-title"><i class="fas fa-sliders"></i>{{ colLabel(fc) }}</span>
+        <button type="button" class="cfp-x" (click)="closeColFilter()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+      </div>
+
+      <div class="cfp-sort">
+        <button type="button" [class.on]="sortCol === fc && sortDir === 'asc'" (click)="setSort(fc, 'asc')">
+          <i class="fas" [ngClass]="sortWords(fc).ascIcon"></i>{{ sortWords(fc).asc }}
+        </button>
+        <button type="button" [class.on]="sortCol === fc && sortDir === 'desc'" (click)="setSort(fc, 'desc')">
+          <i class="fas" [ngClass]="sortWords(fc).descIcon"></i>{{ sortWords(fc).desc }}
+        </button>
+      </div>
+
+      @switch (colKind(fc)) {
+        @case ('text') {
+        <label class="cfp-field">
+          <span>Title or description contains</span>
+          <input type="text" [(ngModel)]="titleFilter" placeholder="Type a word…" autocomplete="off">
+        </label>
+        }
+        @case ('date') {
+        <div class="cfp-presets">
+          <button type="button" (click)="setDatePreset('today')">Today</button>
+          <button type="button" (click)="setDatePreset('week')">Last 7 days</button>
+          <button type="button" (click)="setDatePreset('month')">This month</button>
+        </div>
+        <div class="cfp-dates">
+          <label class="cfp-field"><span>From</span><input type="date" [(ngModel)]="dateFrom" [attr.max]="dateTo || null"></label>
+          <label class="cfp-field"><span>To</span><input type="date" [(ngModel)]="dateTo" [attr.min]="dateFrom || null"></label>
+        </div>
+        }
+        @default {
+        @let options = filterOptions(baseTasks, fc);
+        @if (distinctCount(baseTasks, fc) > 6) {
+        <div class="cfp-search">
+          <i class="fas fa-search"></i>
+          <input type="text" [(ngModel)]="filterOptionSearch" placeholder="Search values…" autocomplete="off">
+        </div>
+        }
+        <label class="cfp-opt cfp-all">
+          <input type="checkbox" [checked]="!colFilters[fc]" [indeterminate]="!!colFilters[fc] && colFilters[fc]!.length > 0" (change)="toggleAllOptions(fc)">
+          <span class="cfp-v">Select all</span>
+        </label>
+        <div class="cfp-list">
+          @for (o of options; track o.value) {
+          <label class="cfp-opt" [class.zero]="!o.count">
+            <input type="checkbox" [checked]="isOptionChecked(fc, o.value)" (change)="toggleOption(baseTasks, fc, o.value)">
+            <span class="cfp-v" [title]="o.value">{{ o.value }}</span>
+            <button type="button" class="cfp-only" (click)="$event.preventDefault(); onlyOption(fc, o.value)">only</button>
+            <b class="cfp-n">{{ o.count }}</b>
+          </label>
+          } @empty {
+          <div class="cfp-none">No matching values</div>
+          }
+        </div>
+        }
+      }
+
+      <div class="cfp-foot">
+        <button type="button" class="cfp-clear" (click)="clearColFilter(fc)" [disabled]="!isColFiltered(fc)">Clear</button>
+        <span class="cfp-count">{{ rows.length }} of {{ baseTasks.length }}</span>
+        <button type="button" class="cfp-done" (click)="closeColFilter()">Done</button>
+      </div>
+    </div>
+    }
 
     <!-- Pagination - only show when more than 100 tasks -->
     @if (totalTasks > 100) {
