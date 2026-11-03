@@ -57,7 +57,6 @@ export class OtApprovalsComponent implements OnInit {
   get monthKey(): string { return `${this.y}-${String(this.m + 1).padStart(2, '0')}`; }
   get monthLabel(): string { return new Date(this.y, this.m, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }); }
   get atCurrent(): boolean { const n = new Date(); return this.y === n.getFullYear() && this.m === n.getMonth(); }
-  get payrollLabel(): string { return new Date(this.y, this.m + 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }); }
   shiftMonth(step: number): void {
     const d = new Date(this.y, this.m + step, 1);
     if (d > new Date()) { return; }
@@ -68,7 +67,6 @@ export class OtApprovalsComponent implements OnInit {
 
   // ══ queues ═════════════════════════════════════════════════════════════════
 
-  setQueue(q: Queue): void { this.queue = q; this.status = 'pending'; this.selected.clear(); }
   setStatus(s: Status): void { this.status = s; this.selected.clear(); }
 
   /** everything in a queue for the month, before the status filter */
@@ -83,8 +81,6 @@ export class OtApprovalsComponent implements OnInit {
     const s = q === 'hod' ? r.hod : r.ops;
     return s === 'APPROVED' ? 'approved' : s === 'REJECTED' ? 'rejected' : 'pending';
   }
-
-  pendingCount(q: Queue): number { return this.base(q).filter(r => this.stateIn(q, r) === 'pending').length; }
 
   get counts(): Record<Status, number> {
     const b = this.base(this.queue);
@@ -101,13 +97,6 @@ export class OtApprovalsComponent implements OnInit {
     return this.base(this.queue)
       .filter(r => this.status === 'all' || this.stateIn(this.queue, r) === this.status)
       .filter(r => { const hay = `${r.empName} ${r.empId} ${r.dept} ${r.hodName} ${r.task} ${r.brief}`.toLowerCase(); return words.every(w => hay.includes(w)); });
-  }
-
-  get kpi() {
-    const b = this.base(this.queue);
-    const appr = b.filter(r => this.stateIn(this.queue, r) === 'approved');
-    const days = appr.reduce((s, r) => s + (allowance(r.punches) === 'full' ? 1 : allowance(r.punches) === 'half' ? 0.5 : 0), 0);
-    return { ...this.counts, days, hours: hhmm(appr.reduce((s, r) => s + r.worked, 0)) };
   }
 
   // ══ selection ══════════════════════════════════════════════════════════════

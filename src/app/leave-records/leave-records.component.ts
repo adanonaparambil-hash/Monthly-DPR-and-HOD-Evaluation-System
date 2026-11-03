@@ -208,19 +208,6 @@ export class LeaveRecordsComponent implements OnInit, OnDestroy {
     return Array.from(new Set(this.rows.map(r => r.leaveTypeName).filter(Boolean))).sort();
   }
 
-  /** report summary — over everything loaded (the status/date filters apply, the type filter does too). */
-  get kpi() {
-    const rows = this.filtered;
-    const by = (s: Status) => rows.filter(r => r.status === s);
-    return {
-      total: rows.length,
-      pending: by('Pending').length,
-      approved: by('Approved').length,
-      rejected: by('Rejected').length,
-      daysApproved: by('Approved').reduce((n, r) => n + (Number(r.noOfDays) || 0), 0)
-    };
-  }
-
   /** inbox: rows where it is my turn right now. */
   get myTurnCount(): number { return this.mode === 'inbox' ? this.rows.filter(r => r.canAct && r.status === 'Pending').length : 0; }
 
@@ -233,13 +220,6 @@ export class LeaveRecordsComponent implements OnInit, OnDestroy {
     this.leaveType = 'all';
     this.empSearch = this.empId = '';
     this.filteredEmp = this.empList.slice(0, 200);
-    this.search();
-  }
-
-  /** Clicking a KPI tile filters the report by that status. */
-  quickStatus(code: string): void {
-    if (this.mode !== 'report') { return; }
-    this.status = code;
     this.search();
   }
 

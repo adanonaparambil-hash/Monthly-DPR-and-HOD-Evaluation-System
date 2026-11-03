@@ -91,32 +91,6 @@
     }
   </section>
 
-  <!-- ═══════════ report summary ═══════════ -->
-  @if (mode === 'report' && !loading && !error) {
-    <section class="lr-kpis" aria-label="Summary">
-      <button type="button" class="lr-kpi" style="--k:#0f6b50" [class.on]="status === 'ALL'" (click)="quickStatus('ALL')">
-        <span class="lr-kpi-ic"><i class="fas fa-layer-group"></i></span>
-        <span class="lr-kpi-tx"><b>{{ kpi.total }}</b><small>Applications</small></span>
-      </button>
-      <button type="button" class="lr-kpi" style="--k:#b45309" [class.on]="status === 'P'" (click)="quickStatus('P')">
-        <span class="lr-kpi-ic"><i class="far fa-clock"></i></span>
-        <span class="lr-kpi-tx"><b>{{ kpi.pending }}</b><small>Pending</small></span>
-      </button>
-      <button type="button" class="lr-kpi" style="--k:#047857" [class.on]="status === 'A'" (click)="quickStatus('A')">
-        <span class="lr-kpi-ic"><i class="fas fa-circle-check"></i></span>
-        <span class="lr-kpi-tx"><b>{{ kpi.approved }}</b><small>Approved</small></span>
-      </button>
-      <button type="button" class="lr-kpi" style="--k:#be123c" [class.on]="status === 'R'" (click)="quickStatus('R')">
-        <span class="lr-kpi-ic"><i class="fas fa-circle-xmark"></i></span>
-        <span class="lr-kpi-tx"><b>{{ kpi.rejected }}</b><small>Rejected</small></span>
-      </button>
-      <div class="lr-kpi lr-kpi-static" style="--k:#1d4ed8">
-        <span class="lr-kpi-ic"><i class="fas fa-calendar-check"></i></span>
-        <span class="lr-kpi-tx"><b>{{ kpi.daysApproved }}</b><small>Days approved</small></span>
-      </div>
-    </section>
-  }
-
   @if (loading) {
     <div class="la-card la-loading">
       <app-crane-loader size="auto" [message]="mode === 'inbox' ? 'Loading leave approvals' : 'Loading your leave applications'"
